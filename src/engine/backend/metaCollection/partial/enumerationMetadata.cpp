@@ -56,7 +56,7 @@ ISourceDataObject* CMetaObjectEnumeration::CreateObjectData(IMetaObjectForm* met
 	case eFormList: return
 		new CListDataObjectEnumRef(this, metaObject->GetTypeForm()); break;
 	case eFormSelect: return
-		new CListDataObjectEnumRef(this, metaObject->GetTypeForm(), true); 
+		new CListDataObjectEnumRef(this, metaObject->GetTypeForm(), true);
 		break;
 	}
 
@@ -129,17 +129,19 @@ bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), prop);
 		}
 	}
-	return true; 
+	return true;
 }
 
 bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -149,7 +151,7 @@ bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
 
 wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
 {
-	for (auto &obj : GetObjectEnums()) {
+	for (auto obj : GetObjectEnums()) {
 		if (objValue->GetGuid() == obj->GetGuid()) {
 			return obj->GetSynonym();
 		}

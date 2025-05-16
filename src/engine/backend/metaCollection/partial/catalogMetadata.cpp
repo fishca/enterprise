@@ -261,6 +261,7 @@ bool CMetaObjectCatalog::GetFormObject(CPropertyList*prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -272,6 +273,7 @@ bool CMetaObjectCatalog::GetFormFolder(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormGroup == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -283,6 +285,7 @@ bool CMetaObjectCatalog::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -294,6 +297,7 @@ bool CMetaObjectCatalog::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -305,6 +309,7 @@ bool CMetaObjectCatalog::GetFormFolderSelect(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormFolderSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}

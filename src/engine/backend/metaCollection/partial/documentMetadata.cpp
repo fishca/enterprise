@@ -210,6 +210,7 @@ bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -221,6 +222,7 @@ bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
@@ -232,6 +234,7 @@ bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}

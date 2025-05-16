@@ -131,7 +131,15 @@ class BACKEND_API CPropertyList : public IProperty {
 	void ResetListItem() { (void)m_listPropValue.ResetListItem(); }
 #pragma endregion
 public:
-	int GetValueAsInteger() const { return typeConv::StringToInt(m_propValue); }
+	int GetValueAsInteger() const {
+		const int sel = typeConv::StringToInt(m_propValue);
+		for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
+			if (m_listPropValue.GetItemId(idx) == sel) {
+				return sel;
+			}
+		}
+		return wxNOT_FOUND;
+	}
 #pragma region item 
 	void AppendItem(const wxString& name, const int& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, v); }
 	void AppendItem(const wxString& name, const wxString& label, const int& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, v); }
@@ -177,6 +185,13 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer);
+
+protected:
+
+	virtual void DoSetValue(const wxVariant& val) {
+		if (m_functor != nullptr) m_functor->Invoke(this);
+		IProperty::DoSetValue(val);
+	}
 
 private:
 	CPropertyOptionList m_listPropValue;

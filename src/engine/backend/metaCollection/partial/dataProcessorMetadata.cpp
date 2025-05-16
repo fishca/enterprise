@@ -114,6 +114,7 @@ bool CMetaObjectDataProcessor::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
 	for (auto formObject : GetObjectForms()) {
+		if (!formObject->IsAllowed()) continue;
 		if (eFormDataProcessor == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}

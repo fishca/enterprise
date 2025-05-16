@@ -349,7 +349,7 @@ void CValueForm::NotifyChoice(CValue& vSelected)
 		if (ownerForm != nullptr) ownerForm->UpdateForm();
 	}
 
-	CValueForm::CloseForm();
+	if (m_closeOnChoice) CValueForm::CloseForm();
 }
 
 #include "backend/system/systemManager.h"

@@ -56,6 +56,15 @@ bool CVisualDocument::OnCloseDocument()
 	return CMetaDocument::OnCloseDocument();
 }
 
+bool CVisualDocument::IsCloseOnOwnerClose() const
+{
+	CValueForm* valueForm = m_visualHost ?
+		m_visualHost->GetValueForm() : nullptr;
+	if (valueForm != nullptr)
+		return valueForm->IsCloseOnOwnerClose();
+	return true;
+}
+
 bool CVisualDocument::IsModified() const
 {
 	return m_documentModified;
@@ -105,10 +114,8 @@ bool CVisualDocument::SaveAs()
 
 void CVisualDocument::SetVisualView(CVisualHost* visualHost)
 {
-	if (visualHost->IsDemonstration()) {
+	if (visualHost->IsDemonstration())
 		m_childDoc = false;
-	}
-
 	m_visualHost = visualHost;
 }
 

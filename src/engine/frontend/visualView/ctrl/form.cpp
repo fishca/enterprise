@@ -15,7 +15,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 CValueForm::CValueForm(IControlFrame* ownerControl, IMetaObjectForm* metaForm,
 	ISourceDataObject* ownerSrc, const CUniqueKey& formGuid, bool readOnly) : IValueFrame(), IModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr), m_valueFormDocument(nullptr),
-	m_defaultFormType(defaultFormType), m_formModified(false)
+	m_defaultFormType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
 {
 	//init default params
 	CValueForm::InitializeForm(ownerControl, metaForm, ownerSrc, formGuid, readOnly);
@@ -45,7 +45,7 @@ CValueForm::~CValueForm()
 
 	m_formCollectionControl->DecrRef();
 	m_formCollectionData->DecrRef();
-	
+
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
 		IValueFrame* controlChild =
 			dynamic_cast<IValueFrame*>(GetChild(idx - 1));
@@ -142,7 +142,9 @@ enum Prop {
 	eDataSources,
 	eModified,
 	eFormOwner,
-	eUniqueKey
+	eUniqueKey,
+	eCloseOnChoice,
+	eCloseOnOwnerClose
 };
 
 enum Func
@@ -169,6 +171,9 @@ void CValueForm::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("modified"), eModified, eSystem);
 	m_methodHelper->AppendProp(wxT("formOwner"), eFormOwner, eSystem);
 	m_methodHelper->AppendProp(wxT("uniqueKey"), eUniqueKey, eSystem);
+
+	m_methodHelper->AppendProp(wxT("closeOnChoice"), eCloseOnChoice, eSystem);
+	m_methodHelper->AppendProp(wxT("closeOnOwnerClose"), eCloseOnOwnerClose, eSystem);
 
 	m_methodHelper->AppendProc(wxT("show"), "show()");
 	m_methodHelper->AppendProc(wxT("activate"), "activate()");
@@ -227,6 +232,12 @@ bool CValueForm::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		case eModified:
 			Modify(varPropVal.GetBoolean());
 			return true;
+		case eCloseOnChoice:
+			m_closeOnChoice = varPropVal.GetBoolean();
+			return true;
+		case eCloseOnOwnerClose:
+			m_closeOnOwnerClose = varPropVal.GetBoolean();
+			return true;
 		}
 	}
 	return false;
@@ -265,6 +276,12 @@ bool CValueForm::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 			return true;
 		case eUniqueKey:
 			pvarPropVal = CValue::CreateAndConvertObjectValueRef<CValueGuid>(m_formKey);
+			return true;
+		case eCloseOnChoice:
+			pvarPropVal = m_closeOnChoice;
+			return true;
+		case eCloseOnOwnerClose:
+			pvarPropVal = m_closeOnOwnerClose;
 			return true;
 		}
 	}

@@ -53,6 +53,8 @@ public:
 	virtual bool OnSaveModified() override;
 	virtual bool OnCloseDocument() override;
 
+	virtual bool IsCloseOnOwnerClose() const override;
+
 	virtual bool IsModified() const override;
 	virtual void Modify(bool modify) override;
 	virtual bool Save() override;
@@ -60,13 +62,8 @@ public:
 
 	void SetVisualView(CVisualHost* visualHost);
 
-	CVisualHost* GetVisualView() const {
-		return m_visualHost;
-	}
-
-	CUniqueKey GetGuid() const {
-		return m_guidForm;
-	}
+	CVisualHost* GetVisualView() const { return m_visualHost; }
+	CUniqueKey GetGuid() const { return m_guidForm; }
 
 protected:
 
@@ -358,14 +355,14 @@ public:
 	static CValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
 	static CValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
 	static CValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid);
-	
+
 	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
 
 	//notify
 	virtual void NotifyCreate(const CValue& vCreated);
 	virtual void NotifyChange(const CValue& vChanged);
 	virtual void NotifyDelete(const CValue& vChanged);
-	
+
 	virtual void NotifyChoice(CValue& vSelected);
 
 	CValue CreateControl(const CValueType* classControl, const CValue& vControl);
@@ -374,8 +371,6 @@ public:
 
 public:
 
-	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool demo = false) override;
-
 	virtual void ActivateForm();
 	virtual void RefreshForm();
 	virtual void UpdateForm();
@@ -383,6 +378,7 @@ public:
 	virtual void HelpForm();
 
 	virtual bool GenerateForm(IRecordDataObjectRef* obj) const;
+	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool demo = false) override;
 
 	//set & get modify 
 	virtual void Modify(bool modify = true) {
@@ -392,23 +388,24 @@ public:
 		m_formModified = modify;
 	}
 
-	virtual bool IsModified() const {
-		return m_formModified;
-	}
+	virtual bool IsModified() const { return m_formModified; }
 
 	//shown form 
-	virtual bool IsShown() const {
-		return m_valueFormDocument != nullptr;
-	}
+	virtual bool IsShown() const { return m_valueFormDocument != nullptr; }
+
+	//support close form
+	virtual void CloseOnChoice(bool close = true) { m_closeOnChoice = close; }
+	virtual bool IsCloseOnChoice() const { return m_closeOnChoice; }
+
+	virtual void CloseOnOwnerClose(bool close = true) { m_closeOnOwnerClose = close; }
+	virtual bool IsCloseOnOwnerClose() const { return m_closeOnOwnerClose; }
 
 	//timers 
 	void AttachIdleHandler(const wxString& procedureName, int interval, bool single);
 	void DetachIdleHandler(const wxString& procedureName);
 
 	//get visual document
-	virtual CVisualDocument* GetVisualDocument() const {
-		return m_valueFormDocument;
-	}
+	virtual CVisualDocument* GetVisualDocument() const { return m_valueFormDocument; }
 
 	//special proc
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost);
@@ -426,9 +423,7 @@ public:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-	virtual int GetComponentType() const {
-		return COMPONENT_TYPE_FRAME;
-	}
+	virtual int GetComponentType() const { return COMPONENT_TYPE_FRAME; }
 
 private:
 
@@ -442,10 +437,14 @@ protected:
 		eChildBlock = 0x3570
 	};
 
-	CValue					m_createdValue;
+	form_identifier_t		m_defaultFormType;
 
 	CUniqueKey				m_formKey;
-	form_identifier_t		m_defaultFormType;
+
+	CValue					m_createdValue;
+
+	bool					m_closeOnChoice;
+	bool					m_closeOnOwnerClose;
 
 	IControlFrame* m_controlOwner;
 

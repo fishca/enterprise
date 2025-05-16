@@ -35,21 +35,11 @@ private:
 	wxIcon m_docIcon;
 public:
 
-	virtual void SetIcon(const wxIcon& icon) {
-		m_docIcon = icon;
-	}
+	virtual void SetIcon(const wxIcon& icon) { m_docIcon = icon; }
+	virtual wxIcon GetIcon() const { return m_docIcon; }
 
-	virtual wxIcon GetIcon() const {
-		return m_docIcon;
-	}
-
-	virtual void SetMetaObject(IMetaObject* metaObject) {
-		m_metaObject = metaObject;
-	}
-
-	virtual IMetaObject* GetMetaObject() const {
-		return m_metaObject;
-	}
+	virtual void SetMetaObject(IMetaObject* metaObject) { m_metaObject = metaObject; }
+	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
 
 	template <class T>
 	inline T* ConvertMetaObjectToType() {
@@ -79,23 +69,27 @@ public:
 	virtual bool SaveAs() override;
 	virtual bool Close() override;
 
-	virtual bool IsChildDocument() const {
-		return m_childDoc;
-	}
+	virtual bool IsChildDocument() const { return m_childDoc; }
 
 	virtual void SetDocParent(CMetaDocument* docParent) {
-		wxASSERT(m_docParent == nullptr);
-		docParent->m_childDocs.push_back(this);
-		m_docParent = docParent;
+		if (docParent != nullptr) {
+			docParent->m_childDocs.Append(this);
+			m_docParent = docParent;
+		}
+		else {
+			auto it = m_docParent->m_childDocs.Find(this);
+			wxASSERT(it != nullptr);
+			if (it->GetData() != nullptr) {
+				m_docParent->m_childDocs.Erase(it);
+				m_docParent = nullptr;
+			}
+		}
 	}
 
-	virtual wxDList<CMetaDocument> GetChild() const {
-		return m_childDocs;
-	}
+	virtual bool IsCloseOnOwnerClose() const { return false; }
 
-	virtual wxCommandProcessor* CreateCommandProcessor() const {
-		return nullptr;
-	}
+	virtual wxDList<CMetaDocument> GetChild() const { return m_childDocs; }
+	virtual wxCommandProcessor* CreateCommandProcessor() const { return nullptr; }
 
 	virtual wxDocManager* GetDocumentManager() const override {
 		// For child documents we use the same document manager as the parent, even

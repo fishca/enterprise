@@ -184,6 +184,7 @@ IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const w
 		valueForm->Modify(m_recordSet->IsModified());
 	}
 
+	valueForm->CloseOnOwnerClose(false);
 	return valueForm;
 }
 

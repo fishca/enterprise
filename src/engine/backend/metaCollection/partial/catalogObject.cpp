@@ -105,10 +105,9 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& formNa
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm) {
+	if (foundedForm != nullptr) 
 		return foundedForm;
-	}
-
+	
 	IMetaObjectForm* defList = nullptr;
 
 	if (!formName.IsEmpty()) {
@@ -138,7 +137,8 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& formNa
 		valueForm->BuildForm(m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup);
 		valueForm->Modify(m_objModified);
 	}
-
+	
+	valueForm->CloseOnOwnerClose(false);
 	return valueForm;
 }
 

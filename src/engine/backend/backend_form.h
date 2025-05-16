@@ -75,13 +75,21 @@ public:
 	virtual void HelpForm() = 0;
 
 	virtual bool GenerateForm(class IRecordDataObjectRef* obj) const = 0;
+	virtual void ShowForm(IBackendMetaDocument* doc = nullptr, bool demoRun = false) = 0;
 
+	//set & get modify 
 	virtual void Modify(bool modify = true) = 0;
 	virtual bool IsModified() const = 0;
 
 	//shown form 
 	virtual bool IsShown() const = 0;
-	virtual void ShowForm(IBackendMetaDocument* doc = nullptr, bool demoRun = false) = 0;
+
+	//support close form
+	virtual void CloseOnChoice(bool close = true) = 0;
+	virtual bool IsCloseOnChoice() const = 0;
+	
+	virtual void CloseOnOwnerClose(bool close = true) = 0;
+	virtual bool IsCloseOnOwnerClose() const = 0;
 };
 
 namespace formWrapper {

@@ -714,9 +714,8 @@ void CTreeDataObjectFolderRef::EditValue()
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 	IRecordDataObjectFolderRef* dataValueFolderRef =
 		m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid());
-	wxASSERT(dataValueFolderRef);
-	if (dataValueFolderRef != nullptr)
-		dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	wxASSERT(dataValueFolderRef);	
+	if (dataValueFolderRef != nullptr) dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 }
 
 void CTreeDataObjectFolderRef::DeleteValue()

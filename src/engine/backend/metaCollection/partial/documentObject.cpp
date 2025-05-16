@@ -193,7 +193,7 @@ IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& formN
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm)
+	if (foundedForm != nullptr)
 		return foundedForm;
 
 	IMetaObjectForm* defList = nullptr;
@@ -226,6 +226,7 @@ IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& formN
 		valueForm->Modify(m_objModified);
 	}
 
+	valueForm->CloseOnOwnerClose(false);
 	return valueForm;
 }
 

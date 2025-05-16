@@ -273,7 +273,7 @@ public:
     bool GetVisibleColumn() const { return m_propertyVisible->GetValueAsBoolean(); }
 
     void SetWidthColumn(int width) const { m_propertyWidth->SetValue(width); }
-    int GetWidthColumn() const { return m_propertyWidth->GetValueAsInteger(); }
+    int GetWidthColumn() const { return m_propertyWidth->GetValueAsUInteger(); }
 
     ///////////////////////////////////////////////////////////////////////
 

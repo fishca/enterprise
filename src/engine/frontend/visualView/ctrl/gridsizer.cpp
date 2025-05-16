@@ -13,7 +13,7 @@ CValueGridSizer::CValueGridSizer() : IValueSizer()
 
 wxObject* CValueGridSizer::Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/)
 {
-	return new wxGridSizer(m_propertyRows->GetValueAsInteger(), m_propertyCols->GetValueAsInteger(), 0, 0);
+	return new wxGridSizer(m_propertyRows->GetValueAsUInteger(), m_propertyCols->GetValueAsUInteger(), 0, 0);
 }
 
 void CValueGridSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
@@ -25,8 +25,8 @@ void CValueGridSizer::Update(wxObject* wxobject, IVisualHost *visualHost)
 	wxGridSizer *gridsizer = dynamic_cast<wxGridSizer *>(wxobject);
 
 	if (gridsizer != nullptr) {
-		gridsizer->SetRows(m_propertyRows->GetValueAsInteger());
-		gridsizer->SetCols(m_propertyCols->GetValueAsInteger());
+		gridsizer->SetRows(m_propertyRows->GetValueAsUInteger());
+		gridsizer->SetCols(m_propertyCols->GetValueAsUInteger());
 
 		gridsizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
 	}
@@ -52,8 +52,8 @@ bool CValueGridSizer::LoadData(CMemoryReader &reader)
 
 bool CValueGridSizer::SaveData(CMemoryWriter &writer)
 {
-	writer.w_s32(m_propertyRows->GetValueAsInteger());
-	writer.w_s32(m_propertyCols->GetValueAsInteger());
+	writer.w_s32(m_propertyRows->GetValueAsUInteger());
+	writer.w_s32(m_propertyCols->GetValueAsUInteger());
 
 	return IValueSizer::SaveData(writer);
 }

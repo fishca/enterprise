@@ -44,7 +44,7 @@ bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, i
 		return true;
 	}
 
-	bool res = value.FromString(text.ToStdWstring());
+	bool res = value.FromString(text.ToStdWstring()) == 0;
 	if (res) {
 		if (numberVariant->GetNumber() != value) {
 			numberVariant->SetNumber(value);

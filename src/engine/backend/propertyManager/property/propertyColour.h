@@ -19,6 +19,7 @@ public:
 		colour << m_propValue;
 		return colour;
 	}
+	
 	wxString GetValueAsString() const { return typeConv::ColourToString(GetValueAsColour()); }
 
 	void SetValue(const wxColour& val) { IProperty::SetValue(CreateVariantData(val)); }

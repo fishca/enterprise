@@ -87,8 +87,8 @@ wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHo
 {
     ÑDataViewColumnContainer* columnObject = new ÑDataViewColumnContainer(this, m_propertyCaption->GetValueAsString(),
         wxNOT_FOUND,
-        m_propertyWidth->GetValueAsInteger(),
-        (wxAlignment)m_propertyAlign->GetValueAsInteger(),
+        m_propertyWidth->GetValueAsUInteger(),
+        m_propertyAlign->GetValueAsEnum(),
         wxDATAVIEW_COL_REORDERABLE
     );
 
@@ -96,8 +96,8 @@ wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHo
     columnObject->SetControlID(m_controlId);
 
     columnObject->SetTitle(m_propertyCaption->GetValueAsString());
-    columnObject->SetWidth(m_propertyWidth->GetValueAsInteger());
-    columnObject->SetAlignment((wxAlignment)m_propertyAlign->GetValueAsInteger());
+    columnObject->SetWidth(m_propertyWidth->GetValueAsUInteger());
+    columnObject->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
     columnObject->SetBitmap(m_propertyIcon->GetValueAsBitmap());
     columnObject->SetHidden(!m_propertyVisible->GetValueAsBoolean());
@@ -150,8 +150,8 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 
     columnObject->SetTitle(m_propertyCaption->IsEmptyProperty() ?
         textCaption : m_propertyCaption->GetValueAsString());
-    columnObject->SetWidth(m_propertyWidth->GetValueAsInteger());
-    columnObject->SetAlignment((wxAlignment)m_propertyAlign->GetValueAsInteger());
+    columnObject->SetWidth(m_propertyWidth->GetValueAsUInteger());
+    columnObject->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
     IValueModel* modelValue = GetOwner()->GetModel();
     sortOrder_t::sortData_t* sort = modelValue != nullptr ? modelValue->GetSortByID(GetSourceColumn()) : nullptr;

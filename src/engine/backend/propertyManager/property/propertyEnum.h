@@ -7,8 +7,8 @@
 class BACKEND_API IPropertyEnum : public IProperty {
 public:
 
-	int GetValueAsInteger() const { return typeConv::StringToInt(m_propValue); }
-	void SetValue(const int& i) { m_propValue = stringUtils::IntToStr(i); }
+	long GetValueAsInteger() const { return m_propValue; }
+	void SetValue(const long& i) { m_propValue = i; }
 
 	IPropertyEnum(CPropertyCategory* cat, const wxString& name,
 		const wxVariant& value) : IProperty(cat, name, value)

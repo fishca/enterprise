@@ -32,7 +32,7 @@ void CValueStaticText::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 	if (staticText != nullptr) {
 		staticText->SetLabel(m_propertyCaption->GetValueAsString());
-		staticText->Wrap(m_propertyWrap->GetValueAsInteger());
+		staticText->Wrap(m_propertyWrap->GetValueAsUInteger());
 		if (m_propertyMarkup->GetValueAsBoolean() != false) {
 			staticText->SetLabelMarkup(m_propertyCaption->GetValueAsString());
 		}
@@ -61,7 +61,7 @@ bool CValueStaticText::LoadData(CMemoryReader& reader)
 bool CValueStaticText::SaveData(CMemoryWriter& writer)
 {
 	writer.w_u8(m_propertyMarkup->GetValueAsBoolean());
-	writer.w_u32(m_propertyWrap->GetValueAsInteger());
+	writer.w_u32(m_propertyWrap->GetValueAsUInteger());
 	writer.w_stringZ(m_propertyCaption->GetValueAsString());
 
 	return IValueWindow::SaveData(writer);

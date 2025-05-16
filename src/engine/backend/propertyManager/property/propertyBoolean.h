@@ -7,21 +7,21 @@
 class BACKEND_API CPropertyBoolean : public IProperty {
 public:
 
-	bool GetValueAsBoolean() const { return typeConv::StringToBool(m_propValue); }
-	void SetValue(const bool boolean) { m_propValue = typeConv::BoolToString(boolean); }
+	bool GetValueAsBoolean() const { return m_propValue; }
+	void SetValue(const bool boolean) { m_propValue = boolean; }
 
 	CPropertyBoolean(CPropertyCategory* cat, const wxString& name,
-		const bool& value = false) : IProperty(cat, name, typeConv::BoolToString(value))
+		const bool& value = false) : IProperty(cat, name, value)
 	{
 	}
 
 	CPropertyBoolean(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const bool& value = false) : IProperty(cat, name, label, typeConv::BoolToString(value))
+		const bool& value = false) : IProperty(cat, name, label, value)
 	{
 	}
 
 	CPropertyBoolean(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const bool& value = false) : IProperty(cat, name, label, helpString, typeConv::BoolToString(value))
+		const bool& value = false) : IProperty(cat, name, label, helpString, value)
 	{
 	}
 

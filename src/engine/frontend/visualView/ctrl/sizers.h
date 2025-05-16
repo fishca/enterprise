@@ -48,7 +48,7 @@ public:
     }
 
     int GetProportion() const {
-        return m_propertyProportion->GetValueAsInteger();
+        return m_propertyProportion->GetValueAsUInteger();
     }
 
     void SetFlagBorder(long flag_border) const {
@@ -76,7 +76,7 @@ public:
     }
 
     int GetBorder() const {
-        return m_propertyBorder->GetValueAsInteger();
+        return m_propertyBorder->GetValueAsUInteger();
     }
 
     void SetBorder(long border) const {

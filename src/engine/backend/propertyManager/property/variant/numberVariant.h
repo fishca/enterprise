@@ -8,7 +8,7 @@ class BACKEND_API wxVariantDataNumber : public wxVariantData {
 public:
 
 	void SetNumber(const number_t& number) { m_number = number; }
-	number_t GetNumber() const { return m_number; }
+	number_t& GetNumber() { return m_number; }
 
 	wxVariantDataNumber(const number_t& number = 0.0f) : m_number(number) {}
 

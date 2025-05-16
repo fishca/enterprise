@@ -17,6 +17,8 @@
 //*                                 Declare number type                                     *
 //*******************************************************************************************
 
-typedef ttmath::Big<TTMATH_BITS(128), TTMATH_BITS(128)> number_t;
+#define TTMATH_NUMBER TTMATH_BITS(128)
+
+typedef ttmath::Big<TTMATH_NUMBER, TTMATH_NUMBER> number_t;
 
 #endif

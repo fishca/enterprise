@@ -475,6 +475,8 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 
 	if (!OnAfterRunMetaObject(newObjectFlag))
 		return false;
+
+	return true;
 }
 
 bool IMetaObject::ChangeChildPosition(IPropertyObject* obj, unsigned int pos)

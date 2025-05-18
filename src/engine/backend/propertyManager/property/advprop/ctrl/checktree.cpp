@@ -70,6 +70,9 @@ void wxPropertyCheckTree::mohighlight(const wxTreeItemId& id, bool toggle)
 		wxPropertyCheckTree::SetItemState(id, toggle ? wxPropertyCheckTree::UNCHECKED_MOUSE_OVER : wxPropertyCheckTree::CHECKED_MOUSE_OVER);
 		is_checked = false;
 	}
+	else {
+		return;
+	}
 
 	if (toggle)
 	{

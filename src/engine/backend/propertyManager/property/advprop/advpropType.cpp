@@ -306,7 +306,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
         };
 
         void FillByClsid(const class_identifier_t& clsid,
-            wxPropertyCheckTree* tc, wxVariantDataAttribute* data) {
+            wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
 
             wxImageList* imageList = tc->GetImageList();
             wxASSERT(imageList);
@@ -320,17 +320,17 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
             if (data != nullptr) {
                 const CTypeDescription& td = data->GetTypeDesc();
-                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                 tc->Check(newItem, td.ContainType(so->GetClassType()));
             }
             else {
-                tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                 tc->Check(newItem, false);
             }
         }
 
         void FillByClsid(IMetaData* metaData, const class_identifier_t& clsid,
-            wxPropertyCheckTree* tc, wxVariantDataAttribute* data) {
+            wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
 
             wxImageList* imageList = tc->GetImageList();
             wxASSERT(imageList);
@@ -345,18 +345,18 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
                 if (data != nullptr) {
                     const CTypeDescription& td = data->GetTypeDesc();
-                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                     tc->Check(newItem, td.ContainType(so->GetClassType()));
                 }
                 else {
-                    tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                    tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                     tc->Check(newItem, false);
                 }
             }
         }
 
         void FillByClsid(eSelectorDataType selectorDataType, IMetaData* metaData, const class_identifier_t& clsid,
-            wxPropertyCheckTree* tc, wxVariantDataAttribute* data) {
+            wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
 
             wxImageList* imageList = tc->GetImageList();
             wxASSERT(imageList);
@@ -379,11 +379,11 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
                             if (data != nullptr) {
                                 const CTypeDescription& td = data->GetTypeDesc();
-                                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                 tc->Check(newItem, td.ContainType(so->GetClassType()));
                             }
                             else {
-                                tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                                tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                 tc->Check(newItem, false);
                             }
                         }
@@ -406,11 +406,11 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
                             if (data != nullptr) {
                                 const CTypeDescription& td = data->GetTypeDesc();
-                                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                                tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                 tc->Check(newItem, td.ContainType(so->GetClassType()));
                             }
                             else {
-                                tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                                tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                 tc->Check(newItem, false);
                             }
                         }
@@ -434,11 +434,11 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
                                 if (data != nullptr) {
                                     const CTypeDescription& td = data->GetTypeDesc();
-                                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                     tc->Check(newItem, td.ContainType(so->GetClassType()));
                                 }
                                 else {
-                                    tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                                    tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                     tc->Check(newItem, false);
                                 }
                             }
@@ -461,11 +461,11 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
                                 if (data != nullptr) {
                                     const CTypeDescription& td = data->GetTypeDesc();
-                                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
+                                    tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                     tc->Check(newItem, td.ContainType(so->GetClassType()));
                                 }
                                 else {
-                                    tc->SetItemState(newItem, wxPropertyCheckTree::UNCHECKED);
+                                    tc->SetItemState(newItem, allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
                                     tc->Check(newItem, false);
                                 }
                             }
@@ -553,6 +553,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
             }
             );
 
+            tcSLength->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
             topsizer->Add(stringSizer, 0, 0, 5);
 
             wxBoxSizer* dateSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -577,6 +578,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
             }
             );
 
+            cDDateFormat->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
             topsizer->Add(dateSizer, 0, 0, 5);
 
             wxBoxSizer* numberSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -596,6 +598,8 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                 event.Skip();
             }
             );
+
+            tcNLength->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
 
             wxStaticText* stNScale = new wxStaticText(dlg, wxID_ANY, _("Scale:"), wxDefaultPosition, wxDefaultSize);
             stNScale->Wrap(-1);
@@ -617,10 +621,10 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
             }
             );
 
+            tcNScale->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
             topsizer->Add(numberSizer, 0, 0, 5);
 
             tc->SetDoubleBuffered(true);
-            tc->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
 
             wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(wxOK | wxCANCEL);
             topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));
@@ -681,47 +685,47 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
             );
 
             if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_EMPTY), tc, data);
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_EMPTY), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
 
             if (selectorDataType == eSelectorDataType::eSelectorDataType_any
                 || selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data);
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data);
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_DATE), tc, data);
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_STRING), tc, data);
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_DATE), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_STRING), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
             else if (selectorDataType == eSelectorDataType::eSelectorDataType_boolean) {
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data);
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data);
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
             else if (selectorDataType == eSelectorDataType::eSelectorDataType_resource) {
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data);
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
 
             if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NULL), tc, data);
+                FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NULL), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
 
             /////////////////////////////////////////////////
             if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
-                FillByClsid(g_valueTableCLSID, tc, data);
+                FillByClsid(g_valueTableCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
             }
             /////////////////////////////////////////////////
 
             IMetaData* metaData = typeFactory->GetMetaData();
             wxASSERT(metaData);
             if (metaData != nullptr) {
-                FillByClsid(selectorDataType, metaData, g_metaCatalogCLSID, tc, data);
-                FillByClsid(selectorDataType, metaData, g_metaDocumentCLSID, tc, data);
-                FillByClsid(selectorDataType, metaData, g_metaEnumerationCLSID, tc, data);
+                FillByClsid(selectorDataType, metaData, g_metaCatalogCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(selectorDataType, metaData, g_metaDocumentCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                FillByClsid(selectorDataType, metaData, g_metaEnumerationCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
                 if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-                    FillByClsid(selectorDataType, metaData, g_metaDataProcessorCLSID, tc, data);
-                    FillByClsid(selectorDataType, metaData, g_metaReportCLSID, tc, data);
+                    FillByClsid(selectorDataType, metaData, g_metaDataProcessorCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                    FillByClsid(selectorDataType, metaData, g_metaReportCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
                 }
                 if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
-                    FillByClsid(selectorDataType, metaData, g_metaInformationRegisterCLSID, tc, data);
-                    FillByClsid(selectorDataType, metaData, g_metaAccumulationRegisterCLSID, tc, data);
+                    FillByClsid(selectorDataType, metaData, g_metaInformationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+                    FillByClsid(selectorDataType, metaData, g_metaAccumulationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
                 }
             }
 
@@ -736,7 +740,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                         if (item != nullptr && clsid == item->GetClassType()) { allowType = false; break; }
                     }
                 }
-                if (allowType) { FillByClsid(metaData, clsid, tc, data); }
+                if (allowType) { FillByClsid(metaData, clsid, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY)); }
             }
             tc->ExpandAll(); int res = dlg->ShowModal();
             if (res == wxID_OK) {

@@ -159,7 +159,7 @@ public:
 
 	virtual ~CDebuggerClient() {
 		while (m_listConnection.size()) {
-			m_listConnection[m_listConnection.size() - 1]->Kill();
+			m_listConnection[m_listConnection.size() - 1]->Delete();
 		}
 		wxDELETE(m_adapter);
 	}

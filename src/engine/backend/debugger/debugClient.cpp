@@ -564,11 +564,18 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 	while (!TestDestroy()) {
 
 		while (!CDebuggerThreadClient::IsConnected()) {
+			
 			if (TestDestroy()) break;
+		
 			wxIPV4address addr;
 			addr.Hostname(m_hostName);
 			addr.Service(m_port);
-			m_socketClient->Connect(addr);
+			
+			m_socketClient->Connect(addr, false);
+
+			if (m_socketClient->WaitOnConnect(0, defWait) || 
+				m_socketClient->WaitForLost(0, defWait)) 
+				break;
 		}
 
 		if ((m_connectionType == ConnectionType::ConnectionType_Scanner || m_connectionType == ConnectionType::ConnectionType_Waiter) && m_socketClient->IsConnected()) VerifyConnection();

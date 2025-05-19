@@ -23,13 +23,13 @@ CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, cons
 			wxASSERT(attributeNumber && attributeDate);
 			wxString sqlQuery = "";
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
-				sqlQuery = "SELECT _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + " LIMIT 1;";
+				sqlQuery = "SELECT uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + " LIMIT 1;";
 				if (!vPeriod.IsEmpty()) {
 					sqlQuery += IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "<=");
 				}
 			}
 			else {
-				sqlQuery = "SELECT FIRST 1 _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + ";";
+				sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "LIKE") + ";";
 				if (!vPeriod.IsEmpty()) {
 					sqlQuery += IMetaObjectAttribute::GetCompositeSQLFieldName(attributeNumber, "<=");
 				}

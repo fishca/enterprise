@@ -81,6 +81,8 @@ const class_identifier_t g_metaExternalReportCLSID = string_to_clsid("MD_ERPT");
 #define updateMetaTable	 0x0002000	
 #define deleteMetaTable	 0x0004000	
 
+#define repairMetaTable  0x0008000
+
 class BACKEND_API IMetaObject :
 	public IPropertyObject, public CValue {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
@@ -342,7 +344,7 @@ public:
 	bool DeleteMetaObject(IMetaData* metaData);
 
 	// save & delete object in DB 
-	bool CreateMetaTable(IMetaDataConfiguration* srcMetaData);
+	bool CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags = createMetaTable);
 	bool UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject);
 	bool DeleteMetaTable(IMetaDataConfiguration* srcMetaData);
 

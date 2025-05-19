@@ -15,7 +15,14 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 		CBackendException::Error(_("database is not open!"));
 
 	const wxString& tableName = GetMetaObject()->GetTableNameDB();
-	wxString queryText = wxString::Format("SELECT * FROM %s", tableName);
+
+	wxString queryText = wxT("");
+
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = wxString::Format("SELECT * FROM %s", tableName);
+	else
+		queryText = wxString::Format("SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM %s", tableName);
+
 	wxString whereText; bool firstWhere = true;
 	for (auto filter : m_filterRow.m_filters) {
 		const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
@@ -47,14 +54,19 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 				orderText += (firstOrder ? " " : ", ");
 				orderText += "	CASE \n";
 				for (auto& obj : m_metaObject->GetObjectEnums()) {
-					orderText += "	WHEN _uuid = '" + obj->GetGuid().str() + "' THEN " + stringUtils::IntToStr(GetMetaObject()->FindEnumByGuid(obj->GetGuid().str())->GetParentPosition()) + '\n';
+					orderText += "	WHEN uuid = '" + obj->GetGuid().str() + "' THEN " + stringUtils::IntToStr(GetMetaObject()->FindEnumByGuid(obj->GetGuid().str())->GetParentPosition()) + '\n';
 				}
 				orderText += "	END " + operation_sort + " \n";
 				if (firstOrder) firstOrder = false;
 			}
 		}
 	};
-	queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+	else
+		queryText = queryText + whereText + orderText;
+
 	CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 	CMetaObjectAttributeDefault* metaOrder = m_metaObject->GetDataOrder();
 	IValueTable::Clear();
@@ -101,7 +113,13 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 
 		wxValueTableEnumRow* valueTableListRow = GetViewData<wxValueTableEnumRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -136,8 +154,8 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 					whereText += " CASE \n";
 					for (auto& obj : m_metaObject->GetObjectEnums()) {
 						const wxString& str_guid = obj->GetGuid().str();
-						orderText += " WHEN _uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
-						whereText += " WHEN _uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
+						orderText += " WHEN uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
+						whereText += " WHEN uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
 						if (obj->GetGuid() == valueTableListRow->GetGuid()) current_pos = pos_in_parent;
 						pos_in_parent++;
 					}
@@ -149,7 +167,12 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 				}
 			}
 		};
-		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + orderText;
+
 		CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 		CMetaObjectAttributeDefault* metaOrder = m_metaObject->GetDataOrder();
 		/////////////////////////////////////////////////////////
@@ -202,7 +225,13 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 
 		wxValueTableEnumRow* valueTableListRow = GetViewData<wxValueTableEnumRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -237,8 +266,8 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 					whereText += " CASE \n";
 					for (auto& obj : m_metaObject->GetObjectEnums()) {
 						const wxString& str_guid = obj->GetGuid().str();
-						orderText += " WHEN _uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
-						whereText += " WHEN _uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
+						orderText += " WHEN uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
+						whereText += " WHEN uuid = '" + str_guid + "' THEN " + stringUtils::IntToStr(pos_in_parent) + '\n';
 						if (obj->GetGuid() == valueTableListRow->GetGuid()) current_pos = pos_in_parent;
 						pos_in_parent++;
 					}
@@ -250,7 +279,12 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 				}
 			}
 		};
-		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + orderText;
+
 		CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 		CMetaObjectAttributeDefault* metaOrder = m_metaObject->GetDataOrder();
 		/////////////////////////////////////////////////////////
@@ -311,7 +345,13 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 		CBackendException::Error(_("database is not open!"));
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
-	wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+	wxString queryText;
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = wxString::Format("SELECT * FROM %s ", tableName);
+	else
+		queryText = wxString::Format("SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM % s ", tableName);
+
 	wxString whereText; bool firstWhere = true;
 	for (auto& filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
@@ -375,7 +415,12 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 	};
 
 	const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes();
-	queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+	else
+		queryText = queryText + whereText + orderText;
+
 	CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 	/////////////////////////////////////////////////////////
 	IValueTable::Clear();
@@ -425,7 +470,13 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 
 		wxValueTableListRow* valueTableListRow = GetViewData<wxValueTableListRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -505,7 +556,12 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			}
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes();
-		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + orderText;
+
 		CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
@@ -569,7 +625,13 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 
 		wxValueTableListRow* valueTableListRow = GetViewData<wxValueTableListRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -643,7 +705,12 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			}
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes();
-		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + orderText;
+
 		CMetaObjectAttributeDefault* metaReference = m_metaObject->GetDataReference();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
@@ -715,7 +782,13 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 		CBackendException::Error(_("database is not open!"));
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
-	wxString queryText = "SELECT * FROM " + tableName;
+
+	wxString queryText;
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = "SELECT * FROM " + tableName;
+	else
+		queryText = "SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM " + tableName;
+	
 	wxString whereText; bool firstWhere = true;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
@@ -757,7 +830,11 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 		}
 	};
 	/////////////////////////////////////////////////////////
-	queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
+	else
+		queryText = queryText + whereText + orderText;
+
 	IValueTable::Clear();
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto& filter : m_filterRow.m_filters) {
@@ -807,7 +884,13 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 
 		wxValueTableKeyRow* valueTableListRow = GetViewData<wxValueTableKeyRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -865,7 +948,10 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes(), & vec_dim = m_metaObject->GetGenericDimensions();
 		/////////////////////////////////////////////////////////
-		queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText;
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto& filter : m_filterRow.m_filters) {
@@ -929,7 +1015,13 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 
 		wxValueTableKeyRow* valueTableListRow = GetViewData<wxValueTableKeyRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
-		wxString queryText = wxString::Format("SELECT * FROM %s ", tableName);
+
+		wxString queryText;
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxString::Format("SELECT * FROM %s ", tableName);
+		else
+			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
+
 		wxString whereText; bool firstWhere = true;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
@@ -987,7 +1079,10 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes(), & vec_dim = m_metaObject->GetGenericDimensions();
 		/////////////////////////////////////////////////////////
-		queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
+		else
+			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText;
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
@@ -1062,7 +1157,7 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName;
 	wxString whereText; bool firstWhere = true;
-	for (auto &filter : m_filterRow.m_filters) {
+	for (auto& filter : m_filterRow.m_filters) {
 		const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
 		if (filter.m_filterUse) {
 			IMetaObjectAttribute* attribute = dynamic_cast<IMetaObjectAttribute*>(m_metaObject->FindMetaObjectByID(filter.m_filterModel));
@@ -1136,9 +1231,9 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 		if (node->GetValue(*m_metaObject->GetDataParent(), cReference)) {
 			if (cReference.ConvertToValue(reference)) {
 				auto it = std::find_if(arrTree.begin(), arrTree.end(), [reference](wxValueTreeListNode* node)
-				{
-					return reference->GetGuid() == node->GetGuid();
-				}
+					{
+						return reference->GetGuid() == node->GetGuid();
+					}
 				);
 				if (it != arrTree.end()) node->SetParent(*it);
 				else node->SetParent(GetRoot());

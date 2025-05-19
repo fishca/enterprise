@@ -20,10 +20,10 @@ bool CMetaObjectConstant::CreateConstantSQLTable()
 		int retCode = db_query->RunQuery("CREATE TABLE %s (RECORD_KEY CHAR DEFAULT '6' PRIMARY KEY);", CMetaObjectConstant::GetTableNameDB());
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
-		retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", CMetaObjectConstant::GetTableNameDB());
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
-			return false;
-		}
+		//retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", CMetaObjectConstant::GetTableNameDB());
+		//if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+		//	return false;
+		//}
 	}
 
 	return db_query->IsOpen();

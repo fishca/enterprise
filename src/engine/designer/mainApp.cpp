@@ -35,6 +35,9 @@ wxIMPLEMENT_APP(CDesignerApp);
 
 void CDesignerApp::OnInitCmdLine(wxCmdLineParser& parser)
 {
+	// FILE ENTRY 
+	parser.AddOption(wxT("file"), wxT("pwd"), "Start from current dir", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+
 	// SERVER ENTRY 
 	parser.AddOption(wxT("srv"), wxT("srv"), "Start using server address", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddOption(wxT("p"), wxT("p"), "Start using port", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
@@ -51,6 +54,9 @@ void CDesignerApp::OnInitCmdLine(wxCmdLineParser& parser)
 
 bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
+	// FILE ENTRY 
+	parser.Found(wxT("file"), &m_strFile);
+
 	// SERVER ENTRY
 	parser.Found(wxT("srv"), &m_strServer);
 	parser.Found(wxT("p"), &m_strPort);
@@ -86,9 +92,18 @@ int CDesignerApp::OnRun()
 #endif
 
 	// Get the data directory
-	bool ret = appDataCreate(eRunMode::eDESIGNER_MODE,
-		m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase
-	);
+	bool ret = false;
+	
+	if (m_strFile.IsEmpty()) {
+		ret = appDataCreateServer(eRunMode::eDESIGNER_MODE,
+			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase
+		);
+	}
+	else {
+		ret = appDataCreateFile(eRunMode::eDESIGNER_MODE,
+			m_strFile
+		);
+	}
 
 	if (!ret) {
 		wxMessageBox(CBackendException::GetLastError());

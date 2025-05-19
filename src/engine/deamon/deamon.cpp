@@ -79,7 +79,7 @@ int main(int argc, char** argv)
 	wxSocketBase::Initialize();
 
 	// Init appData
-	bool connected = appDataCreate(eRunMode::eENTERPRISE_MODE,
+	bool connected = appDataCreateServer(eRunMode::eENTERPRISE_MODE,
 		strServer, strPort, strUser, strPassword, strDatabase
 	);
 

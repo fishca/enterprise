@@ -9,8 +9,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <wx/base64.h>
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-#define config_table	  wxT("_config")
-#define config_save_table wxT("_config_save")
+#define config_table	  wxT("sys_config")
+#define config_save_table wxT("sys_config_save")
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 #define config_name       wxT("sys.database")
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,8 +76,8 @@ bool CMetaDataConfiguration::LoadConfiguration(int flags)
 		m_metaGuid = result->GetResultString(wxT("file_guid"));
 		m_md5Hash = wxMD5::ComputeMd5(wxBase64Encode(binaryData.GetData(), binaryData.GetDataLen()));
 	}
-	
-	result->Close();	
+
+	result->Close();
 	return true;
 }
 
@@ -123,7 +123,7 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 				}
 			}
 		}
-		
+
 		//delete tables sql
 		if (m_configNew && !CMetaObjectConstant::DeleteConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -214,24 +214,49 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 		return false;
 #endif
 	}
-	
+
 	m_md5Hash = wxMD5::ComputeMd5(
 		wxBase64Encode(writterData.pointer(), writterData.size())
 	);
 
 	m_configSave = (flags & saveConfigFlag) != 0;
 
-#if _USE_SQL_SERVER_FOR_METADATA == 1
 	if (!db_query->CloseStatement(prepStatement)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-		db_query->RollBack();
+		db_query->RollBack(); return false;
 #else 
 		return false;
 #endif
 	}
-#endif
 
-	Modify(false);
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->Commit();	
+#endif 
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+
+		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+		
+		wxASSERT(commonObject);
+
+		for (auto& obj : m_commonObject->GetObjects()) {
+
+			bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
+			if (!ret) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack(); return false;
+#else
+				return false;
+#endif
+			}
+		}
+	}
+#endif 
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->BeginTransaction();
+#endif 
 
 	if ((flags & saveConfigFlag) != 0) {
 
@@ -258,6 +283,7 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 #endif
 		}
 
+		Modify(false);
 	}
 	else {
 		Modify(true);
@@ -266,6 +292,7 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 	db_query->Commit();
 #endif 
+
 	return true;
 }
 
@@ -314,11 +341,12 @@ void CMetaDataConfigurationStorage::CreateConfigTable() {
 		else
 		{
 			db_query->RunQuery("CREATE TABLE %s ("
-				"fileName VARCHAR(128) NOT NULL PRIMARY KEY,"
-				"file_guid uuid NOT NULL,"
+				"file_name VARCHAR(128) NOT NULL PRIMARY KEY,"
+				"file_guid VARCHAR(36) NOT NULL,"
 				"binary_data BLOB NOT NULL);", config_table);         	//size of binary medatadata
 		}
-		db_query->RunQuery("CREATE INDEX config_index ON %s (file_name);", config_table);
+
+		db_query->RunQuery("CREATE INDEX s_config_index ON %s (file_name);", config_table);
 	}
 }
 
@@ -335,10 +363,10 @@ void CMetaDataConfigurationStorage::CreateConfigSaveTable() {
 		else {
 			db_query->RunQuery("CREATE TABLE %s ("
 				"file_name VARCHAR(128) NOT NULL PRIMARY KEY,"
-				"file_guid uuid NOT NULL,"
+				"file_guid VARCHAR(36) NOT NULL,"
 				"binary_data BLOB NOT NULL);", config_save_table);         	//size of binary medatadata
 		}
-		db_query->RunQuery("CREATE INDEX config_save_index ON %s (file_name);", config_save_table);
+		db_query->RunQuery("CREATE INDEX s_config_save_index ON %s (file_name);", config_save_table);
 	}
 }
 

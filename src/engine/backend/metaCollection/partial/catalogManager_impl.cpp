@@ -24,9 +24,9 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 				wxASSERT(attributeCode);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					sqlQuery = "SELECT _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE") + " LIMIT 1";
+					sqlQuery = "SELECT uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE") + " LIMIT 1";
 				else
-					sqlQuery = "SELECT FIRST 1 _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE");
+					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE");
 				IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
 				if (statement == nullptr)
 					return CReferenceDataObject::Create(m_metaObject);
@@ -63,9 +63,9 @@ CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) c
 				wxASSERT(attributeDescription);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					sqlQuery = "SELECT _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE") + " LIMIT 1";
+					sqlQuery = "SELECT uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE") + " LIMIT 1";
 				else
-					sqlQuery = "SELECT FIRST 1 _uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE");
+					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE");
 				IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
 				if (statement == nullptr) return CReferenceDataObject::Create(m_metaObject);
 				int position = 1;

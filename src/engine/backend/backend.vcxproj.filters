@@ -606,6 +606,36 @@
     <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h">
       <Filter>propertyManager\property\advprop</Filter>
     </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\ib_util.h">
+      <Filter>databaseLayer\firebird\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\ibase.h">
+      <Filter>databaseLayer\firebird\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\iberror.h">
+      <Filter>databaseLayer\firebird\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\gen\iberror.h">
+      <Filter>databaseLayer\firebird\engine\gen</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\blr.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\consts_pub.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\dsc_pub.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\inf_pub.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\sqlda_pub.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\types_pub.h">
+      <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1491,6 +1521,24 @@
     <Filter Include="propertyManager\property\advprop\ctrl\res">
       <UniqueIdentifier>{fc490645-ff4d-4970-8919-6dfc46ea7ed3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="databaseLayer\firebird\engine">
+      <UniqueIdentifier>{7e478872-4863-41fa-a74b-02c3a2f658cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="databaseLayer\firebird\engine\gen">
+      <UniqueIdentifier>{6712d9d5-23f5-408b-b29c-216f6ca5c87c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="databaseLayer\firebird\engine\firebird">
+      <UniqueIdentifier>{ebe4c2a0-5253-4f6f-ba62-f8d6f2a7c342}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="databaseLayer\firebird\engine\firebird\impl">
+      <UniqueIdentifier>{13bf7725-032b-4dc4-bfe2-c627af2ffbc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="databaseLayer\firebird\engine\dll">
+      <UniqueIdentifier>{f1ec2f2d-8e81-491b-aabc-8a3024795d17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="databaseLayer\firebird\engine\dll\plugins">
+      <UniqueIdentifier>{721d0bee-dc99-4ee0-8b81-e0362029e471}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libcrypto-3-x64.dll">
@@ -1510,6 +1558,30 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libssl-3-x86.dll">
       <Filter>databaseLayer\postgres\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\firebird.msg">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\firebird.conf">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\plugins\engine13_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll\plugins</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\plugins\engine13_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll\plugins</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\ib_util_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\fbclient_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\ib_util_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\fbclient_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

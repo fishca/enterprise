@@ -7,6 +7,9 @@
 
 class CDesignerApp : public wxApp {
 
+	// FILE ENTRY
+	wxString m_strFile;
+
 	// SERVER ENTRY
 	wxString m_strServer;
 	wxString m_strPort;

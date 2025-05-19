@@ -9,6 +9,9 @@ class CEnterpriseApp : public wxApp {
 
 	bool m_debugEnable;
 	
+	// FILE ENTRY
+	wxString m_strFile;
+
 	// SERVER ENTRY
 	wxString m_strServer;
 	wxString m_strPort;

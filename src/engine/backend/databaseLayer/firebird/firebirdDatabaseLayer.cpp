@@ -221,10 +221,12 @@ bool CFirebirdDatabaseLayer::Open()
 	// Combine the server and databsae path strings to pass into the isc_attach_databse function
 	wxString strDatabaseUrl;
 
-	if (m_strServer.IsEmpty())
+	if (m_strServer.IsEmpty()) {
 		strDatabaseUrl = m_strDatabase; // Embedded database, just supply the file name
-	else
+	}
+	else {
 		strDatabaseUrl = m_strServer + _(":") + m_strDatabase;
+	}
 
 	wxCharBuffer urlBuffer = ConvertToUnicodeStream(strDatabaseUrl);
 	unsigned int urlLength = GetEncodedStreamLength(strDatabaseUrl);
@@ -285,8 +287,11 @@ bool CFirebirdDatabaseLayer::Open()
 
 	if (m_strServer.IsEmpty())
 	{
-		if (!wxFile::Exists(strDatabaseUrl))
-		{
+		if (!wxFile::Exists(strDatabaseUrl)){
+			
+			wxFileName fileDatabase(m_strDatabase);
+			wxMkDir(fileDatabase.GetPath(), 0777);
+			
 			nReturn = m_pInterface->GetIscCreateDatabase()(*(ISC_STATUS_ARRAY*)m_pStatus, urlLength, (char*)(const char*)urlBuffer,
 				&pDatabase,
 				dpbBuffer.length(), dpbBuffer.c_str(),

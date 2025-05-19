@@ -23,7 +23,7 @@ bool CTabularSectionDataObjectRef::LoadData(const Guid& srcGuid, bool createData
 	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
-	const wxString& sqlQuery = "SELECT * FROM " + tableName + " WHERE _uuid = '" + srcGuid.str() + "'";
+	const wxString& sqlQuery = "SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "'";
 	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(sqlQuery);
 	if (resultSet == nullptr)
 		return false;
@@ -82,7 +82,7 @@ bool CTabularSectionDataObjectRef::SaveData()
 
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	wxString queryText = "INSERT INTO " + tableName + " (";
-	queryText += "_uuid";
+	queryText += "uuid";
 	for (auto& obj : m_metaTable->GetObjectAttributes()) {
 		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(obj);
 	}
@@ -147,6 +147,6 @@ bool CTabularSectionDataObjectRef::DeleteData()
 	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
-	db_query->RunQuery("DELETE FROM " + tableName + " WHERE _uuid = '" + m_objectValue->GetGuid() + "';");
+	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objectValue->GetGuid() + "';");
 	return true;
 }

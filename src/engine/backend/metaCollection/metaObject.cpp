@@ -341,9 +341,9 @@ bool IMetaObject::DeleteMetaObject(IMetaData* metaData)
 	return true;
 }
 
-bool IMetaObject::CreateMetaTable(IMetaDataConfiguration* srcMetaData)
+bool IMetaObject::CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags)
 {
-	return CreateAndUpdateTableDB(srcMetaData, nullptr, createMetaTable);
+	return CreateAndUpdateTableDB(srcMetaData, nullptr, flags);
 }
 
 bool IMetaObject::UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject)

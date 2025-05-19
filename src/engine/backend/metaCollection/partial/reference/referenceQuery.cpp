@@ -20,9 +20,9 @@ bool CReferenceDataObject::ReadData(bool createData)
 	if (db_query->TableExists(tableName)) {
 		IDatabaseResultSet* resultSet = nullptr;	
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			resultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE _uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
+			resultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1;", tableName, m_objGuid.str());
 		else
-			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE _uuid = '%s';", tableName, m_objGuid.str());
+			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM %s WHERE uuid = '%s';", tableName, m_objGuid.str());
 		if (resultSet == nullptr)
 			return false;
 		bool readRef = false;
@@ -63,9 +63,9 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 
 				IDatabaseResultSet* resultSet = nullptr;
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE _uuid = '" + m_objGuid.str() + "' LIMIT 1;");
+					resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "' LIMIT 1;");
 				else
-					resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE _uuid = '" + m_objGuid.str() + "';");
+					resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
 
 				if (!resultSet)
 					return false;
@@ -115,7 +115,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 	};
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	if (db_query->TableExists(tableName)) {
-		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT * FROM %s ORDER BY _uuid; ", tableName);
+		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT * FROM %s ORDER BY uuid; ", tableName);
 		if (resultSet == nullptr)
 			return false;
 		while (resultSet->Next()) {

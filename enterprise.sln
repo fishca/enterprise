@@ -44,12 +44,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "backend", "src\engine\backe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "classChecker", "src\engine\classChecker\classChecker.vcxproj.vcxproj", "{075993A5-770A-40D1-BA65-3A3D2C120E20}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugin", "plugin", "{95B54CB1-6B46-46C3-9DC6-059D6E7DD4CB}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simplePlugin", "src\engine\simplePlugin\simplePlugin.vcxproj.vcxproj", "{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{35245A06-A72D-40B9-92FE-8EF2CCCC9D00} = {35245A06-A72D-40B9-92FE-8EF2CCCC9D00}
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{95B54CB1-6B46-46C3-9DC6-059D6E7DD4CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,14 +118,6 @@ Global
 		{075993A5-770A-40D1-BA65-3A3D2C120E20}.Release|x64.Build.0 = Release|x64
 		{075993A5-770A-40D1-BA65-3A3D2C120E20}.Release|x86.ActiveCfg = Release|Win32
 		{075993A5-770A-40D1-BA65-3A3D2C120E20}.Release|x86.Build.0 = Release|Win32
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Debug|x64.ActiveCfg = Debug|x64
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Debug|x64.Build.0 = Debug|x64
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Debug|x86.ActiveCfg = Debug|Win32
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Debug|x86.Build.0 = Debug|Win32
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Release|x64.ActiveCfg = Release|x64
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Release|x64.Build.0 = Release|x64
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Release|x86.ActiveCfg = Release|Win32
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,7 +129,6 @@ Global
 		{A023016D-0535-4256-AF39-4225F6735EF4} = {C266FC0C-541D-446C-A90A-C85B8AE5F855}
 		{F4F765A7-427F-4C5E-AE19-9D290BB40A78} = {C266FC0C-541D-446C-A90A-C85B8AE5F855}
 		{075993A5-770A-40D1-BA65-3A3D2C120E20} = {C266FC0C-541D-446C-A90A-C85B8AE5F855}
-		{78ED6C1A-49D6-46B9-A6DD-5D3FD876D9E1} = {95B54CB1-6B46-46C3-9DC6-059D6E7DD4CB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {62A00AB3-C019-4434-B91B-9F8CD0216644}

@@ -4,10 +4,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "backend/appData.h"
+
 //databases
 #include "backend/databaseLayer/firebird/firebirdDatabaseLayer.h"
 #include "backend/databaseLayer/postgres/postgresDatabaseLayer.h"
 #include "backend/databaseLayer/sqllite/sqliteDatabaseLayer.h"
+
 //sandbox
 #include "metadataConfiguration.h"
 
@@ -42,6 +44,46 @@ bool CApplicationData::CreateAppDataEnv()
 #endif
 		s_instance = new CApplicationData(eRunMode::eENTERPRISE_MODE);
 		return true;
+#if _USE_DATABASE_LAYER_EXCEPTIONS == 1
+	}
+	catch (const DatabaseLayerException* err) {
+		return false;
+	}
+#endif
+	return false;
+}
+
+#define sys_db wxT("sys.db")
+
+bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase)
+{
+	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
+#if _USE_DATABASE_LAYER_EXCEPTIONS == 1
+	try {
+#endif
+		std::shared_ptr<CFirebirdDatabaseLayer> db(new CFirebirdDatabaseLayer());
+
+		if (db->Open(strDirDatabase + wxT("\\") + sys_db)) {
+
+			s_instance = new CApplicationData(runMode);
+			s_instance->m_strFile = strDirDatabase;
+
+			s_instance->m_db = db;
+			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
+
+			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
+				CApplicationData::CreateTableSession();
+				CApplicationData::CreateTableUser();
+				CApplicationData::CreateTableEvent();
+			}
+			else if (!CApplicationData::TableAlreadyCreated()) {
+				s_instance->DestroyAppDataEnv();
+				return false;
+			}
+
+			return true;
+		}
+		return false;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
 	catch (const DatabaseLayerException* err) {
@@ -154,16 +196,22 @@ long CApplicationData::RunApplication(const wxString& strAppName, bool searchDeb
 {
 	wxString executeCmd = strAppName + " ";
 
-	if (!m_strServer.IsEmpty())
-		executeCmd += " /srv " + m_strServer;
-	if (!m_strPort.IsEmpty())
-		executeCmd += " /p " + m_strPort;
-	if (!m_strDatabase.IsEmpty())
-		executeCmd += " /db " + m_strDatabase;
-	if (!m_strUser.IsEmpty())
-		executeCmd += " /usr " + m_strUser;
-	if (!m_strPassword.IsEmpty())
-		executeCmd += " /pwd " + m_strPassword;
+	if (m_strFile.IsEmpty()) {
+		if (!m_strServer.IsEmpty())
+			executeCmd += " /srv " + m_strServer;
+		if (!m_strPort.IsEmpty())
+			executeCmd += " /p " + m_strPort;
+		if (!m_strDatabase.IsEmpty())
+			executeCmd += " /db " + m_strDatabase;
+		if (!m_strUser.IsEmpty())
+			executeCmd += " /usr " + m_strUser;
+		if (!m_strPassword.IsEmpty())
+			executeCmd += " /pwd " + m_strPassword;
+	}
+	else {
+		executeCmd += " /file " + m_strFile;
+	}
+
 	if (searchDebug)
 		executeCmd += " /debug";
 	if (!m_strUserIB.IsEmpty())
@@ -178,16 +226,23 @@ long CApplicationData::RunApplication(const wxString& strAppName, const wxString
 {
 	wxString executeCmd = strAppName + " ";
 
-	if (!m_strServer.IsEmpty())
-		executeCmd += " /srv " + m_strServer;
-	if (!m_strPort.IsEmpty())
-		executeCmd += " /p " + m_strPort;
-	if (!m_strDatabase.IsEmpty())
-		executeCmd += " /db " + m_strDatabase;
-	if (!m_strUser.IsEmpty())
-		executeCmd += " /usr " + m_strUser;
-	if (!m_strPassword.IsEmpty())
-		executeCmd += " /pwd " + m_strPassword;
+	if (m_strFile.IsEmpty()) {
+
+		if (!m_strServer.IsEmpty())
+			executeCmd += " /srv " + m_strServer;
+		if (!m_strPort.IsEmpty())
+			executeCmd += " /p " + m_strPort;
+		if (!m_strDatabase.IsEmpty())
+			executeCmd += " /db " + m_strDatabase;
+		if (!m_strUser.IsEmpty())
+			executeCmd += " /usr " + m_strUser;
+		if (!m_strPassword.IsEmpty())
+			executeCmd += " /pwd " + m_strPassword;
+	}
+	else {
+		executeCmd += " /file " + m_strFile;
+	}
+
 	if (searchDebug)
 		executeCmd += " /debug";
 	if (!user.IsEmpty())

@@ -42,7 +42,7 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//get table name
-	static wxString GetTableNameDB() { return wxT("_const"); }
+	static wxString GetTableNameDB() { return wxT("sys_const"); }
 
 	//get module object in compose object 
 	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }

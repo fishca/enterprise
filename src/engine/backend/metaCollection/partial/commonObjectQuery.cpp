@@ -31,38 +31,27 @@ int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaO
 int IMetaObjectRecordDataRef::ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum)
 {
 	int retCode = 1;
+	
 	//is null - create
 	if (dstEnum == nullptr) {
-		IPreparedStatement* prepareStatement = nullptr;
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			prepareStatement = db_query->PrepareStatement("INSERT INTO %s (_uuid) VALUES (?) ON CONFLICT(_uuid) DO UPDATE SET _uuid = excluded._uuid;", tableName);
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
 		else
-			prepareStatement = db_query->PrepareStatement("UPDATE OR INSERT INTO %s (_uuid) VALUES (?) MATCHING(_uuid);", tableName);
-
-		if (prepareStatement == nullptr)
-			return 0;
-		prepareStatement->SetParamString(1, srcEnum->GetGuid().str());
-		retCode = prepareStatement->RunQuery();
-		db_query->CloseStatement(prepareStatement);
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
 	}
 	// update 
 	else if (srcEnum != nullptr) {
-		IPreparedStatement* prepareStatement = nullptr;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			prepareStatement = db_query->PrepareStatement("INSERT INTO %s (_uuid) VALUES (?) ON CONFLICT(_uuid) DO UPDATE SET _uuid = excluded._uuid;", tableName);
-		else
-			prepareStatement = db_query->PrepareStatement("UPDATE OR INSERT INTO %s (_uuid) VALUES (?) MATCHING(_uuid);", tableName);
 
-		if (prepareStatement == nullptr)
-			return 0;
-		prepareStatement->SetParamString(1, srcEnum->GetGuid().str());
-		retCode = prepareStatement->RunQuery();
-		db_query->CloseStatement(prepareStatement);
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
+		else
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
+
 	}
 	//delete 
 	else if (srcEnum == nullptr) {
-		retCode = db_query->RunQuery("DELETE FROM %s WHERE _uuid = '%s' ;", tableName, dstEnum->GetGuid().str());
+		retCode = db_query->RunQuery("DELETE FROM %s WHERE uuid = '%s' ;", tableName, dstEnum->GetGuid().str());
 	}
 
 	return retCode;
@@ -74,9 +63,9 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	//is null - create
 	if (dstTable == nullptr) {
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			retCode = db_query->RunQuery("CREATE TABLE %s (_uuid uuid NOT NULL);", tabularName);
+			retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL);", tabularName);
 		else
-			retCode = db_query->RunQuery("CREATE TABLE %s (_uuid VARCHAR(36) NOT NULL);", tabularName);
+			retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL);", tabularName);
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
 		//default attributes
@@ -109,58 +98,77 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
 
-	if ((flags & createMetaTable) != 0) {
+	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			retCode = db_query->RunQuery("CREATE TABLE %s (_uuid uuid NOT NULL PRIMARY KEY);", tableName);
-		else
-			retCode = db_query->RunQuery("CREATE TABLE %s (_uuid VARCHAR(36) NOT NULL PRIMARY KEY);", tableName);
+		if ((flags & createMetaTable) != 0) {
 
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+				retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL PRIMARY KEY);", tableName);
+			else
+				retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL PRIMARY KEY);", tableName);
 
-		retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (_uuid);", tableName, tableName);
-
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
-
-		for (auto& obj : GetDefaultAttributes()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
-			if (IMetaObjectRecordDataRef::IsDataReference(obj->GetMetaID()))
-				continue;
-			retCode = ProcessAttribute(tableName,
-				obj, nullptr);
+
+			retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			for (auto& obj : GetDefaultAttributes()) {
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+				if (IMetaObjectRecordDataRef::IsDataReference(obj->GetMetaID()))
+					continue;
+				retCode = ProcessAttribute(tableName,
+					obj, nullptr);
+			}
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			for (auto& obj : GetObjectAttributes()) {
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+				retCode = ProcessAttribute(tableName,
+					obj, nullptr);
+			}
+
+			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+
+				for (auto& obj : GetObjectEnums()) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessEnumeration(tableName,
+						obj, nullptr);
+				}
+			}
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			for (auto& obj : GetObjectTables()) {
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+				retCode = ProcessTable(obj->GetTableNameDB(),
+					obj, nullptr);
+			}
 		}
+		else if ((flags & repairMetaTable) != 0) {
 
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+				retCode = 1;		
+				for (auto& obj : GetObjectEnums()) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessEnumeration(tableName,
+						obj, nullptr);
+				}
 
-		for (auto& obj : GetObjectAttributes()) {
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-			retCode = ProcessAttribute(tableName,
-				obj, nullptr);
-		}
-
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
-
-		for (auto& obj : GetObjectEnums()) {
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-			retCode = ProcessEnumeration(tableName,
-				obj, nullptr);
-		}
-
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-			return false;
-
-		for (auto& obj : GetObjectTables()) {
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-			retCode = ProcessTable(obj->GetTableNameDB(),
-				obj, nullptr);
+			}
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {
@@ -498,14 +506,14 @@ bool IRecordDataObjectRef::ReadData(const Guid& srcGuid)
 
 		IDatabaseResultSet* resultSet = nullptr;
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE _uuid = '" + srcGuid.str() + "' LIMIT 1;");
+			resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "' LIMIT 1;");
 		else
-			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE _uuid = '" + srcGuid.str() + "';");
+			resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "';");
 
 		if (resultSet == nullptr) return false;
 		bool succes = false;
 		if (resultSet->Next()) {
-			succes = true; 
+			succes = true;
 			//load other attributes 
 			for (auto& obj : m_metaObject->GetGenericAttributes()) {
 				if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
@@ -559,7 +567,7 @@ bool IRecordDataObjectRef::SaveData()
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "INSERT INTO " + tableName + " (";
-	queryText += "_uuid";
+	queryText += "uuid";
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		if (m_metaObject->IsDataReference(obj->GetMetaID()))
 			continue;
@@ -646,7 +654,7 @@ bool IRecordDataObjectRef::DeleteData()
 			return false;
 
 	}
-	db_query->RunQuery("DELETE FROM " + tableName + " WHERE _uuid = '" + m_objGuid.str() + "';");
+	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
 	return true;
 }
 

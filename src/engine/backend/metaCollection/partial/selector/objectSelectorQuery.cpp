@@ -12,7 +12,7 @@ void CSelectorDataObject::Reset()
 	m_objGuid.reset(); m_newObject = false;
 	if (!appData->DesignerMode()) {
 		m_currentValues.clear();
-		IPreparedStatement* statement = db_query->PrepareStatement("SELECT _uuid FROM %s ORDER BY CAST(_uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
+		IPreparedStatement* statement = db_query->PrepareStatement("SELECT uuid FROM %s ORDER BY CAST(uuid AS VARCHAR(36)); ", m_metaObject->GetTableNameDB());
 		IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 		while (resultSet->Next()) {
 			m_currentValues.push_back(
@@ -49,9 +49,9 @@ bool CSelectorDataObject::Read()
 
 	IPreparedStatement* statement = nullptr;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-		statement = db_query->PrepareStatement("SELECT * FROM %s WHERE _uuid = '%s' LIMIT 1; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
+		statement = db_query->PrepareStatement("SELECT * FROM %s WHERE uuid = '%s' LIMIT 1; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
 	else
-		statement = db_query->PrepareStatement("SELECT FIRST 1 * FROM %s WHERE _uuid = '%s'; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
+		statement = db_query->PrepareStatement("SELECT FIRST 1 * FROM %s WHERE uuid = '%s'; ", m_metaObject->GetTableNameDB(), m_objGuid.str());
 
 	if (statement == nullptr)
 		return false;

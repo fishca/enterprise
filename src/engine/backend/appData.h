@@ -5,7 +5,9 @@
 
 #define appData				(CApplicationData::Get())
 
-#define appDataCreate(mode,server,port,user,password,database) (CApplicationData::CreateAppDataEnv(mode,server,port,user,password,database))
+#define appDataCreateFile(mode,database) (CApplicationData::CreateAppDataEnv(mode,database))
+#define appDataCreateServer(mode,server,port,user,password,database) (CApplicationData::CreateAppDataEnv(mode,server,port,user,password,database))
+
 #define appDataDestroy()	(CApplicationData::DestroyAppDataEnv())
 
 #define db_query  (CApplicationData::GetDatabaseLayer())
@@ -43,8 +45,11 @@ public:
 	///////////////////////////////////////////////////////////////////////////
 	static bool CreateAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
-	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strServer = _(""), const wxString& strPort = _(""),
+
+	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase);
+	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
 		const wxString& strUser = _(""), const wxString& strPassword = _(""), const wxString& strDatabase = _(""));
+	
 	static bool DestroyAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
 
@@ -118,10 +123,14 @@ private:
 
 	bool m_connected_to_db = false;
 
+	// FILE ENTRY
+	wxString m_strFile;
+
 	// SERVER ENTRY
 	wxString m_strServer;
 	wxString m_strPort;
 	wxString m_strDatabase;
+	
 	wxString m_strUser;
 	wxString m_strPassword;
 
@@ -129,9 +138,9 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-#define user_table		wxT("_user")
-#define session_table	wxT("_session")
-#define event_table		wxT("_event")
+#define user_table		wxT("sys_user")
+#define session_table	wxT("sys_session")
+#define event_table		wxT("sys_event")
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif

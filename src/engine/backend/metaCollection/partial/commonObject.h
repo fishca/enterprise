@@ -36,7 +36,7 @@ class BACKEND_API IRecordSetObject;
 class BACKEND_API CSourceExplorer;
 
 //special names 
-#define guidName wxT("_uuid")
+#define guidName wxT("uuid")
 
 //********************************************************************************************
 //*                                  Factory & metaData                                      *

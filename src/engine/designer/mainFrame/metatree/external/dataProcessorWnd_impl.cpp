@@ -87,6 +87,7 @@ wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeIte
 
 	m_metaTreeWnd->Thaw();
 
+	m_metaTreeWnd->ScrollTo(createdItem);
 	return createdItem;
 }
 

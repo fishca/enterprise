@@ -254,6 +254,7 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 
 	m_metaTreeWnd->Thaw();
 
+	m_metaTreeWnd->ScrollTo(createdItem);
 	return createdItem;
 }
 

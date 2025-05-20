@@ -524,7 +524,7 @@ void CDebuggerClient::CDebuggerThreadClient::VerifyConnection()
 
 	unsigned int length = 0;
 	while (!TestDestroy() && CDebuggerThreadClient::IsConnected() && !m_verifiedConnection) {
-		if (m_socketClient && m_socketClient->WaitForRead(waitDebuggerTimeout)) {
+		if (m_socketClient && m_socketClient->WaitForRead(waitVerifyDebuggerTimeout)) {
 			m_socketClient->ReadMsg(&length, sizeof(unsigned int));
 			if (m_socketClient && m_socketClient->WaitForRead()) {
 				wxMemoryBuffer bufferData(length);
@@ -553,73 +553,84 @@ void CDebuggerClient::CDebuggerThreadClient::VerifyConnection()
 	}
 }
 
-#define defWait 50 //msec
-
 void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 {
 	if (m_socketClient != nullptr) m_socketClient->Close();
+
+	wxIPV4address addr;
+	addr.Hostname(m_hostName);
+	addr.Service(m_port);
+
 	// set the appropriate flags for the socket
 	m_socketClient = new wxSocketClient(wxSOCKET_WAITALL | wxSOCKET_BLOCK);
 
 	while (!TestDestroy()) {
-
-		while (!CDebuggerThreadClient::IsConnected()) {
-			
-			if (TestDestroy()) break;
 		
-			wxIPV4address addr;
-			addr.Hostname(m_hostName);
-			addr.Service(m_port);
-			
-			m_socketClient->Connect(addr, false);
+		bool connected = m_socketClient->Connect(addr, false);
 
-			if (m_socketClient->WaitOnConnect(0, defWait) || 
-				m_socketClient->WaitForLost(0, defWait)) 
+		while (!TestDestroy()) {
+
+			if (m_socketClient->WaitForLost(0, 0)) {
+				connected = false;
 				break;
+			}
+			else if (m_socketClient->WaitOnConnect(0, 0)) {
+				connected = m_socketClient->IsConnected();
+				break;
+			}
 		}
 
-		if ((m_connectionType == ConnectionType::ConnectionType_Scanner || m_connectionType == ConnectionType::ConnectionType_Waiter) && m_socketClient->IsConnected()) VerifyConnection();
+		if (connected) {
 
-		if (m_verifiedConnection) {
+			if (m_connectionType == ConnectionType::ConnectionType_Scanner) VerifyConnection();
+			else if (m_connectionType == ConnectionType::ConnectionType_Waiter) VerifyConnection();
 
-			if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
-				// Send the start event message to the UI.
-				debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionStart, m_socketClient);
-			}
+			if (m_verifiedConnection) {
 
-			while (CDebuggerThreadClient::IsConnected()) {
-				if (m_socketClient && m_socketClient->WaitForRead(0, defWait)) {
-					unsigned int length = 0;
-					m_socketClient->ReadMsg(&length, sizeof(unsigned int));
-					if (m_socketClient && m_socketClient->WaitForRead(0, defWait)) {
-						wxMemoryBuffer bufferData(length);
-						m_socketClient->ReadMsg(bufferData.GetData(), length);
-						if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
+				if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
+					// Send the start event message to the UI.
+					debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionStart, m_socketClient);
+				}
+
+				while (CDebuggerThreadClient::IsConnected()) {
+
+					if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
+						unsigned int length = 0;
+						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
+						if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
+							wxMemoryBuffer bufferData(length);
+							m_socketClient->ReadMsg(bufferData.GetData(), length);
+							if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
 #if _USE_NET_COMPRESSOR == 1
-							BYTE* dest = nullptr; unsigned int dest_sz = 0;
-							_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
-							RecvCommand(dest, dest_sz); free(dest);
+								BYTE* dest = nullptr; unsigned int dest_sz = 0;
+								_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
+								RecvCommand(dest, dest_sz); free(dest);
 #else
-							RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
+								RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
 #endif 
-							length = 0;
+								length = 0;
+							}
 						}
 					}
-				}
-				if (TestDestroy()) break;
-			}
 
-			if (debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
-				// Send the exit event message to the UI.
-				debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
+					if (TestDestroy()) break;
+				}
+
+				if (debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
+					// Send the exit event message to the UI.
+					debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
+				}
 			}
 		}
 
-		if (m_connectionType != ConnectionType::ConnectionType_Unknown) m_connectionType = ConnectionType::ConnectionType_Scanner;
-		if (m_socketClient != nullptr) m_socketClient->Close();
-
 		m_verifiedConnection = false;
+
+		if (m_connectionType != ConnectionType::ConnectionType_Unknown)
+			m_connectionType = ConnectionType::ConnectionType_Scanner;
 	}
+
+	if (m_socketClient != nullptr)
+		m_socketClient->Close();
 }
 
 void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned int length)
@@ -629,12 +640,12 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	u16 commandFromServer = commandReader.r_u16();
 
 	if (commandFromServer == CommandId_VerifyConnection) {
-		
+
 		commandReader.r_stringZ(m_confGuid);
 		commandReader.r_stringZ(m_md5Hash);
 		commandReader.r_stringZ(m_userName);
 		commandReader.r_stringZ(m_compName);
-	
+
 		m_verifiedConnection = commonMetaData->GetConfigGuid() == m_confGuid;
 
 		if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Waiter)
@@ -643,11 +654,11 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			m_connectionType = ConnectionType::ConnectionType_Scanner;
 		else
 			m_connectionType = ConnectionType::ConnectionType_Unknown;
-		
+
 		CMemoryWriter commandChannel;
 		commandChannel.w_u16(CommandId_SetConnectionType);
 		commandChannel.w_u32(m_connectionType);
-		
+
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 	}
 	else if (commandFromServer == CommandId_SetConnectionType) {

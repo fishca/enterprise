@@ -502,15 +502,13 @@ wxThread::ExitCode CDebuggerServer::CDebuggerThreadServer::Entry()
 	return retCode;
 }
 
-#define defWait 50 //msec
-
 void CDebuggerServer::CDebuggerThreadServer::EntryClient()
 {
 	while (!TestDestroy() && CDebuggerThreadServer::IsConnected()) {
-		if (m_socket && m_socket->WaitForRead(0, defWait)) {
+		if (m_socket != nullptr && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
 			unsigned int length = 0;
 			m_socket->ReadMsg(&length, sizeof(unsigned int));
-			if (m_socket && m_socket->WaitForRead(0, defWait)) {
+			if (m_socket && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
 				wxMemoryBuffer bufferData(length);
 				m_socket->ReadMsg(bufferData.GetData(), length);
 				if (length > 0) {

@@ -53,7 +53,7 @@ bool CApplicationData::CreateAppDataEnv()
 	return false;
 }
 
-#define sys_db wxT("sys.db")
+#define sys_db wxT("sys.fdb")
 
 bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase)
 {

@@ -96,7 +96,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 
 bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
 {
-	const wxString& tableName = GetTableNameDB(); int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
+	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
 	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
 
@@ -334,7 +334,7 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 {
 	const wxString& tableName = GetTableNameDB();
 
-	int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
+	int retCode = 1;
 
 	if ((flags & createMetaTable) != 0) {
 

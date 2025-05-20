@@ -236,19 +236,22 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
 
-		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
-		
+		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();	
 		wxASSERT(commonObject);
-
 		for (auto& obj : m_commonObject->GetObjects()) {
 
-			bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
-			if (!ret) {
+			IMetaObject* foundedMeta =
+				commonObject->FindByName(obj->GetDocPath());
+			wxASSERT(obj);
+			if (foundedMeta == nullptr) {
+				bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
+				if (!ret) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-				db_query->RollBack(); return false;
+					db_query->RollBack(); return false;
 #else
-				return false;
+					return false;
 #endif
+				}
 			}
 		}
 	}

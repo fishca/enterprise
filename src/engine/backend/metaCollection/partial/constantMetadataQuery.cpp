@@ -56,10 +56,25 @@ bool CMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMeta
 
 	int retCode = 1;
 
-	if ((flags & createMetaTable) != 0) {
-		retCode = ProcessAttribute(tableName, this, nullptr);
-		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
-			return false;
+	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
+		
+		if ((flags & createMetaTable) != 0) {
+			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+				retCode = ProcessAttribute(tableName, this, nullptr);
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+					return false;
+				}
+			}
+		}
+		else if ((flags & repairMetaTable) != 0) {
+
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+				retCode = ProcessAttribute(tableName, this, nullptr);
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+					return false;
+				}
+			}
+
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {

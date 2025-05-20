@@ -1539,6 +1539,9 @@
     <Filter Include="databaseLayer\firebird\engine\dll\plugins">
       <UniqueIdentifier>{721d0bee-dc99-4ee0-8b81-e0362029e471}</UniqueIdentifier>
     </Filter>
+    <Filter Include="databaseLayer\firebird\engine\dll\intl">
+      <UniqueIdentifier>{470a7d93-926c-4596-8856-dc497ddd37e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libcrypto-3-x64.dll">
@@ -1582,6 +1585,15 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\fbclient_x86.dll">
       <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\intl\fbintl.conf">
+      <Filter>databaseLayer\firebird\engine\dll\intl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\intl\fbintl_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll\intl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\intl\fbintl_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll\intl</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>

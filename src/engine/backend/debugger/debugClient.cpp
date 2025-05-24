@@ -514,45 +514,6 @@ void CDebuggerClient::CDebuggerThreadClient::OnKill()
 	if (m_socketClient != nullptr && m_socketClient->IsConnected()) m_socketClient->Close();
 }
 
-void CDebuggerClient::CDebuggerThreadClient::VerifyConnection()
-{
-	///////////////////////////////////////////////////////////////////////
-	CMemoryWriter commandChannel;
-	commandChannel.w_u16(CommandId_VerifyConnection);
-	SendCommand(commandChannel.pointer(), commandChannel.size());
-	///////////////////////////////////////////////////////////////////////
-
-	unsigned int length = 0;
-	while (!TestDestroy() && CDebuggerThreadClient::IsConnected() && !m_verifiedConnection) {
-		if (m_socketClient && m_socketClient->WaitForRead(waitVerifyDebuggerTimeout)) {
-			m_socketClient->ReadMsg(&length, sizeof(unsigned int));
-			if (m_socketClient && m_socketClient->WaitForRead()) {
-				wxMemoryBuffer bufferData(length);
-				m_socketClient->ReadMsg(bufferData.GetData(), length);
-				if (length > 0) {
-#if _USE_NET_COMPRESSOR == 1
-					BYTE* dest = nullptr; unsigned int dest_sz = 0;
-					_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
-					RecvCommand(dest, dest_sz); free(dest);
-#else
-					RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
-#endif 
-					length = 0;
-				}
-			}
-		}
-	}
-
-	if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Debugger) {
-		CMemoryWriter commandChannel;
-		commandChannel.w_u16(CommandId_StartSession);
-		SendCommand(commandChannel.pointer(), commandChannel.size());
-	}
-	else if (m_connectionType == ConnectionType::ConnectionType_Unknown) {
-
-	}
-}
-
 void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 {
 	if (m_socketClient != nullptr) m_socketClient->Close();
@@ -565,7 +526,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 	m_socketClient = new wxSocketClient(wxSOCKET_WAITALL | wxSOCKET_BLOCK);
 
 	while (!TestDestroy()) {
-		
+
 		bool connected = m_socketClient->Connect(addr, false);
 
 		while (!TestDestroy()) {
@@ -582,8 +543,44 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 		if (connected) {
 
-			if (m_connectionType == ConnectionType::ConnectionType_Scanner) VerifyConnection();
-			else if (m_connectionType == ConnectionType::ConnectionType_Waiter) VerifyConnection();
+			///////////////////////////////////////////////////////////////////////
+			CMemoryWriter commandChannel;
+			commandChannel.w_u16(CommandId_VerifyConnection);
+			SendCommand(commandChannel.pointer(), commandChannel.size());
+			///////////////////////////////////////////////////////////////////////
+
+			unsigned int length = 0;
+	
+			while (CDebuggerThreadClient::IsConnected()) {
+
+				if (m_verifiedConnection) break;
+
+				if (m_socketClient && m_socketClient->WaitForRead(waitVerifyDebuggerTimeout)) {
+					m_socketClient->ReadMsg(&length, sizeof(unsigned int));
+					if (m_socketClient && m_socketClient->WaitForRead()) {
+						wxMemoryBuffer bufferData(length);
+						m_socketClient->ReadMsg(bufferData.GetData(), length);
+						if (length > 0) {
+#if _USE_NET_COMPRESSOR == 1
+							BYTE* dest = nullptr; unsigned int dest_sz = 0;
+							_decompressLZ(&dest, &dest_sz, bufferData.GetData(), bufferData.GetBufSize());
+							RecvCommand(dest, dest_sz); free(dest);
+#else
+							RecvCommand(bufferData.GetData(), bufferData.GetBufSize());
+#endif 
+							length = 0;
+						}
+					}
+				}
+
+				if (TestDestroy()) break;
+			}
+
+			if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Debugger) {
+				CMemoryWriter commandChannel;
+				commandChannel.w_u16(CommandId_StartSession);
+				SendCommand(commandChannel.pointer(), commandChannel.size());
+			}
 
 			if (m_verifiedConnection) {
 
@@ -595,7 +592,6 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 				while (CDebuggerThreadClient::IsConnected()) {
 
 					if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
-						unsigned int length = 0;
 						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
 						if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 							wxMemoryBuffer bufferData(length);
@@ -681,7 +677,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		CMemoryWriter commandChannel;
 		commandChannel.w_u16(CommandId_SetArrayBreakpoint);
 		commandChannel.w_u32(debugClient->m_listBreakpoint.size());
-	
+
 		//send breakpoints with offsets 
 		for (auto breakpoint : debugClient->m_listBreakpoint) {
 			commandChannel.w_u32(breakpoint.second.size());
@@ -691,9 +687,9 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 				commandChannel.w_s32(line.second);
 			}
 		}
-		
+
 		commandChannel.w_u32(debugClient->m_listOffsetBreakpoint.size());
-		
+
 		//send line offsets 
 		for (auto offset : debugClient->m_listOffsetBreakpoint) {
 			commandChannel.w_u32(offset.second.size());
@@ -708,15 +704,15 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_EnterLoop) {
 		debugClient->m_enterLoop = true;
 		debugClient->m_activeSocket = this;
-		
+
 		wxString strFileName; commandReader.r_stringZ(strFileName);
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
-		
+
 		CDebugLineData data;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
-		
+
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnEnterLoop, m_socketClient, data
 		);
@@ -724,16 +720,16 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_LeaveLoop) {
 		debugClient->m_enterLoop = false;
 		debugClient->m_activeSocket = nullptr;
-		
+
 		const wxString& strFileName = commandReader.r_stringZ();
 		const wxString& strModuleName = commandReader.r_stringZ();
-		
+
 		CDebugLineData data;
-		
+
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
-		
+
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnLeaveLoop, m_socketClient, data
 		);
@@ -759,12 +755,12 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_EvalAutocomplete) {
 
 		wxString strFileName, strModuleName, strExpression, strKeyWord;
-		
+
 		commandReader.r_stringZ(strFileName);
 		commandReader.r_stringZ(strModuleName);
 		commandReader.r_stringZ(strExpression);
 		commandReader.r_stringZ(strKeyWord);
-	
+
 		const int currPos = commandReader.r_s32();
 
 		CDebugAutoCompleteData debugAutocompleteData;
@@ -857,9 +853,9 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		);
 	}
 	else if (commandFromServer == CommandId_SetLocalVariables) {
-		
+
 		CLocalWindowData locData;
-		
+
 		//generate event 	
 		unsigned int attributeCount = commandReader.r_u32();
 		for (unsigned int i = 0; i < attributeCount; i++) {
@@ -872,7 +868,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			if (!tempVar)
 				locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
 		}
-		
+
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnSetLocalVariable, locData
 		);
@@ -888,7 +884,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		commandReader.r_stringZ(strErrorMessage);
 
 		CDebugLineData debugData;
-		
+
 		debugData.m_fileName = strFileName;
 		debugData.m_moduleName = strDocPath;
 		debugData.m_line = currLine;

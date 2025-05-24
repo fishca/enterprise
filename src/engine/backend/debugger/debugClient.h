@@ -136,7 +136,6 @@ protected:
 
 	protected:
 
-		void VerifyConnection();
 		void EntryClient();
 
 		void RecvCommand(void* pointer, unsigned int length);

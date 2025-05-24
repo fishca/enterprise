@@ -45,7 +45,7 @@ CWatchWindow* CWatchWindow::GetWatchWindow()
 	return nullptr;
 }
 
-void CWatchWindow::SetVariable(const watchWindowData_t& watchData)
+void CWatchWindow::SetVariable(const CWatchWindowData& watchData)
 {
 	m_updating = true;
 
@@ -73,7 +73,7 @@ void CWatchWindow::SetVariable(const watchWindowData_t& watchData)
 	mainFrame->Update();
 }
 
-void CWatchWindow::SetExpanded(const watchWindowData_t& watchData)
+void CWatchWindow::SetExpanded(const CWatchWindowData& watchData)
 {
 	const wxTreeItemId& item = watchData.GetItem();
 

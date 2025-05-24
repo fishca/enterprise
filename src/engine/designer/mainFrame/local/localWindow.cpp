@@ -30,7 +30,7 @@ CLocalWindow::CLocalWindow(wxWindow* parent, int id) :
 
 static bool s_initialize = false;
 
-void CLocalWindow::SetLocalVariable(const localWindowData_t& locData)
+void CLocalWindow::SetLocalVariable(const CLocalWindowData& locData)
 {
 	ClearAndCreate();
 

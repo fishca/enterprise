@@ -135,7 +135,7 @@ private:
 public:
 
 	void ShowAutoComplete(
-		const debugAutoCompleteData_t& autoCompleteData);
+		const CDebugAutoCompleteData& autoCompleteData);
 
 public:
 

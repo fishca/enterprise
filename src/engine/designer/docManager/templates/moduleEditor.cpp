@@ -253,7 +253,7 @@ void CModuleEditDocument::SetToolTip(const wxString& resultStr) {
 	}
 }
 
-void CModuleEditDocument::ShowAutoComplete(const debugAutoCompleteData_t& debugData)
+void CModuleEditDocument::ShowAutoComplete(const CDebugAutoCompleteData& debugData)
 {
 	CCodeEditor* codeEditor = GetCodeEditor();
 	wxASSERT(codeEditor);

@@ -22,7 +22,7 @@ public:
 	static CLocalWindow* GetLocalWindow();
 
 	void ClearAndCreate();
-	void SetLocalVariable(const localWindowData_t& locData);
+	void SetLocalVariable(const CLocalWindowData& locData);
 
 protected:
 

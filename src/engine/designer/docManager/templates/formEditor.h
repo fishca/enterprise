@@ -135,7 +135,7 @@ public:
 		}
 	}
 
-	virtual void ShowAutoComplete(const debugAutoCompleteData_t& debugData) override {
+	virtual void ShowAutoComplete(const CDebugAutoCompleteData& debugData) override {
 		CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
 		if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
 			visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);

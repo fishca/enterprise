@@ -130,7 +130,7 @@ public:
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) = 0;
 	virtual void SetToolTip(const wxString& resultStr) = 0;
-	virtual void ShowAutoComplete(const struct debugAutoCompleteData_t& debugData) = 0;
+	virtual void ShowAutoComplete(const struct CDebugAutoCompleteData& debugData) = 0;
 };
 
 #include <wx/aui/auibar.h>

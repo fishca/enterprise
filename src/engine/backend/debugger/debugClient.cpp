@@ -570,11 +570,11 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 		while (!TestDestroy()) {
 
-			if (m_socketClient->WaitForLost(0, 0)) {
+			if (m_socketClient->WaitForLost(0, waitDebuggerTimeout)) {
 				connected = false;
 				break;
 			}
-			else if (m_socketClient->WaitOnConnect(0, 0)) {
+			else if (m_socketClient->WaitOnConnect(0, waitDebuggerTimeout)) {
 				connected = m_socketClient->IsConnected();
 				break;
 			}
@@ -681,6 +681,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		CMemoryWriter commandChannel;
 		commandChannel.w_u16(CommandId_SetArrayBreakpoint);
 		commandChannel.w_u32(debugClient->m_listBreakpoint.size());
+	
 		//send breakpoints with offsets 
 		for (auto breakpoint : debugClient->m_listBreakpoint) {
 			commandChannel.w_u32(breakpoint.second.size());
@@ -690,7 +691,9 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 				commandChannel.w_s32(line.second);
 			}
 		}
+		
 		commandChannel.w_u32(debugClient->m_listOffsetBreakpoint.size());
+		
 		//send line offsets 
 		for (auto offset : debugClient->m_listOffsetBreakpoint) {
 			commandChannel.w_u32(offset.second.size());
@@ -705,12 +708,15 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_EnterLoop) {
 		debugClient->m_enterLoop = true;
 		debugClient->m_activeSocket = this;
+		
 		wxString strFileName; commandReader.r_stringZ(strFileName);
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
-		debugLineData_t data;
+		
+		CDebugLineData data;
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
+		
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnEnterLoop, m_socketClient, data
 		);
@@ -718,12 +724,16 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_LeaveLoop) {
 		debugClient->m_enterLoop = false;
 		debugClient->m_activeSocket = nullptr;
+		
 		const wxString& strFileName = commandReader.r_stringZ();
 		const wxString& strModuleName = commandReader.r_stringZ();
-		debugLineData_t data;
+		
+		CDebugLineData data;
+		
 		data.m_fileName = strFileName;
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
+		
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnLeaveLoop, m_socketClient, data
 		);
@@ -737,7 +747,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		commandReader.r_stringZ(resultStr);
 
 		if (debugClient->IsEnterLoop()) {
-			debugExpressionData_t data;
+			CDebugExpressionData data;
 			data.m_fileName = strFileName;
 			data.m_moduleName = strModuleName;
 			data.m_expression = strExpression;
@@ -749,13 +759,15 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	else if (commandFromServer == CommandId_EvalAutocomplete) {
 
 		wxString strFileName, strModuleName, strExpression, strKeyWord;
+		
 		commandReader.r_stringZ(strFileName);
 		commandReader.r_stringZ(strModuleName);
 		commandReader.r_stringZ(strExpression);
 		commandReader.r_stringZ(strKeyWord);
-		int currPos = commandReader.r_s32();
+	
+		const int currPos = commandReader.r_s32();
 
-		debugAutoCompleteData_t debugAutocompleteData;
+		CDebugAutoCompleteData debugAutocompleteData;
 
 		debugAutocompleteData.m_fileName = strFileName;
 		debugAutocompleteData.m_moduleName = strModuleName;
@@ -786,7 +798,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		);
 	}
 	else if (commandFromServer == CommandId_SetExpressions) {
-		unsigned int countExpression = commandReader.r_u32(); watchWindowData_t watchData;
+		unsigned int countExpression = commandReader.r_u32(); CWatchWindowData watchData;
 		for (unsigned int i = 0; i < countExpression; i++) {
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 			const wxTreeItemId& item = reinterpret_cast<void*>(commandReader.r_u64());
@@ -813,9 +825,9 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 	}
 	else if (commandFromServer == CommandId_ExpandExpression) {
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
-		watchWindowData_t watchData = reinterpret_cast<void*>(commandReader.r_u64());
+		CWatchWindowData watchData = reinterpret_cast<void*>(commandReader.r_u64());
 #else 
-		watchWindowData_t watchData = reinterpret_cast<void*>(commandReader.r_u32());
+		CWatchWindowData watchData = reinterpret_cast<void*>(commandReader.r_u32());
 #endif 
 		//generate event 
 		unsigned int attributeCount = commandReader.r_u32();
@@ -832,7 +844,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		);
 	}
 	else if (commandFromServer == CommandId_SetStack) {
-		unsigned int count = commandReader.r_u32(); stackData_t stackData;
+		unsigned int count = commandReader.r_u32(); CStackData stackData;
 		for (unsigned int i = 0; i < count; i++) {
 			const wxString& strModuleName = commandReader.r_stringZ();
 			stackData.AppendStack(
@@ -845,8 +857,10 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		);
 	}
 	else if (commandFromServer == CommandId_SetLocalVariables) {
-		localWindowData_t locData;
-		//generate event 
+		
+		CLocalWindowData locData;
+		
+		//generate event 	
 		unsigned int attributeCount = commandReader.r_u32();
 		for (unsigned int i = 0; i < attributeCount; i++) {
 			bool tempVar = commandReader.r_u8();
@@ -858,6 +872,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			if (!tempVar)
 				locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
 		}
+		
 		debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerAdapterClient::OnSetLocalVariable, locData
 		);
@@ -872,7 +887,8 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		currLine = commandReader.r_u32();
 		commandReader.r_stringZ(strErrorMessage);
 
-		debugLineData_t debugData;
+		CDebugLineData debugData;
+		
 		debugData.m_fileName = strFileName;
 		debugData.m_moduleName = strDocPath;
 		debugData.m_line = currLine;

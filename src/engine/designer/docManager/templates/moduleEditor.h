@@ -103,7 +103,7 @@ public:
 	
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) override;
 	virtual void SetToolTip(const wxString& resultStr) override;
-	virtual void ShowAutoComplete(const struct debugAutoCompleteData_t& debugData) override;
+	virtual void ShowAutoComplete(const struct CDebugAutoCompleteData& debugData) override;
 
 	wxDECLARE_NO_COPY_CLASS(CModuleEditDocument);
 	wxDECLARE_DYNAMIC_CLASS(CModuleEditDocument);

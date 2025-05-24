@@ -22,7 +22,7 @@ public:
 	static CStackWindow* GetStackWindow();
 
 	void ClearAndCreate();
-	void SetStack(const stackData_t& stackData);
+	void SetStack(const CStackData& stackData);
 
 protected:
 

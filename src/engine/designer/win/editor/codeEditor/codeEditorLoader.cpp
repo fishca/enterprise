@@ -582,7 +582,7 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 
 #include "backend/fileSystem/fs.h"
 
-void CCodeEditor::ShowAutoComplete(const debugAutoCompleteData_t& autoCompleteData)
+void CCodeEditor::ShowAutoComplete(const CDebugAutoCompleteData& autoCompleteData)
 {
 	ac.Cancel();
 

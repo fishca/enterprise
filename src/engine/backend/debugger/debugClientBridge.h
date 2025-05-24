@@ -16,19 +16,19 @@ public:
 	virtual void OnSessionStart(wxSocketClient* sock) = 0;
 	virtual void OnSessionEnd(wxSocketClient* sock) = 0;
 
-	virtual void OnEnterLoop(wxSocketClient* sock, const debugLineData_t& data) = 0;
-	virtual void OnLeaveLoop(wxSocketClient* sock, const debugLineData_t& data) = 0;
+	virtual void OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data) = 0;
+	virtual void OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data) = 0;
 
-	virtual void OnAutoComplete(const debugAutoCompleteData_t& data) = 0;
-	virtual void OnMessageFromServer(const debugLineData_t& data, const wxString& message) = 0;
-	virtual void OnSetToolTip(const debugExpressionData_t& data, const wxString& resultStr) = 0;
+	virtual void OnAutoComplete(const CDebugAutoCompleteData& data) = 0;
+	virtual void OnMessageFromServer(const CDebugLineData& data, const wxString& message) = 0;
+	virtual void OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr) = 0;
 
-	virtual void OnSetStack(const stackData_t& stackData) = 0;
+	virtual void OnSetStack(const CStackData& stackData) = 0;
 
-	virtual void OnSetLocalVariable(const localWindowData_t& watchData) = 0;
+	virtual void OnSetLocalVariable(const CLocalWindowData& watchData) = 0;
 
-	virtual void OnSetVariable(const watchWindowData_t& watchData) = 0;
-	virtual void OnSetExpanded(const watchWindowData_t& watchData) = 0;
+	virtual void OnSetVariable(const CWatchWindowData& watchData) = 0;
+	virtual void OnSetExpanded(const CWatchWindowData& watchData) = 0;
 };
 
 extern BACKEND_API void SetDebuggerClientBridge(IDebuggerClientBridge *bridge);

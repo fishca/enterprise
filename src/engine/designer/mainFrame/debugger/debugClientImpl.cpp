@@ -60,7 +60,7 @@ void CDebuggerClientBridge::OnSessionEnd(wxSocketClient* sock)
 	}
 }
 
-void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const debugLineData_t& data)
+void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data)
 {
 	mainFrame->RaiseFrame();
 
@@ -95,7 +95,7 @@ void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const debugLineDat
 	}
 }
 
-void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const debugLineData_t& data)
+void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data)
 {
 	if (docManager != nullptr) {
 		if (data.m_fileName.IsEmpty()) {
@@ -140,7 +140,7 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const debugLineDat
 	}
 }
 
-void CDebuggerClientBridge::OnAutoComplete(const debugAutoCompleteData_t& data)
+void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)
 {
 	if (docManager != nullptr) {
 		if (data.m_fileName.IsEmpty()) {
@@ -175,7 +175,7 @@ void CDebuggerClientBridge::OnAutoComplete(const debugAutoCompleteData_t& data)
 	}
 }
 
-void CDebuggerClientBridge::OnMessageFromServer(const debugLineData_t& data, const wxString& message)
+void CDebuggerClientBridge::OnMessageFromServer(const CDebugLineData& data, const wxString& message)
 {
 	mainFrame->RaiseFrame();
 
@@ -208,7 +208,7 @@ void CDebuggerClientBridge::OnMessageFromServer(const debugLineData_t& data, con
 		data.m_fileName, data.m_moduleName, data.m_line);
 }
 
-void CDebuggerClientBridge::OnSetToolTip(const debugExpressionData_t& data, const wxString& resultStr)
+void CDebuggerClientBridge::OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr)
 {
 	if (docManager != nullptr) {
 		if (data.m_fileName.IsEmpty()) {
@@ -247,22 +247,22 @@ void CDebuggerClientBridge::OnSetToolTip(const debugExpressionData_t& data, cons
 	}
 }
 
-void CDebuggerClientBridge::OnSetStack(const stackData_t& stackData)
+void CDebuggerClientBridge::OnSetStack(const CStackData& stackData)
 {
 	stackWindow->SetStack(stackData);
 }
 
-void CDebuggerClientBridge::OnSetLocalVariable(const localWindowData_t& data)
+void CDebuggerClientBridge::OnSetLocalVariable(const CLocalWindowData& data)
 {
 	localWindow->SetLocalVariable(data);
 }
 
-void CDebuggerClientBridge::OnSetVariable(const watchWindowData_t& watchData)
+void CDebuggerClientBridge::OnSetVariable(const CWatchWindowData& watchData)
 {
 	watchWindow->SetVariable(watchData);
 }
 
-void CDebuggerClientBridge::OnSetExpanded(const watchWindowData_t& watchData)
+void CDebuggerClientBridge::OnSetExpanded(const CWatchWindowData& watchData)
 {
 	watchWindow->SetExpanded(watchData);
 }

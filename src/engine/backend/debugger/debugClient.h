@@ -42,18 +42,18 @@ protected:
 		void OnSessionStart(wxSocketClient* sock);
 		void OnSessionEnd(wxSocketClient* sock);
 
-		void OnEnterLoop(wxSocketClient* sock, const debugLineData_t& data);
-		void OnLeaveLoop(wxSocketClient* sock, const debugLineData_t& data);
+		void OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data);
+		void OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data);
 
-		void OnAutoComplete(const debugAutoCompleteData_t& data);
-		void OnMessageFromServer(const debugLineData_t& data, const wxString& message);
-		void OnSetToolTip(const debugExpressionData_t& data, const wxString& resultStr);
-		void OnSetStack(const stackData_t& data);
+		void OnAutoComplete(const CDebugAutoCompleteData& data);
+		void OnMessageFromServer(const CDebugLineData& data, const wxString& message);
+		void OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr);
+		void OnSetStack(const CStackData& data);
 
-		void OnSetLocalVariable(const localWindowData_t& data);
+		void OnSetLocalVariable(const CLocalWindowData& data);
 
-		void OnSetVariable(const watchWindowData_t& data);
-		void OnSetExpanded(const watchWindowData_t& data);
+		void OnSetVariable(const CWatchWindowData& data);
+		void OnSetExpanded(const CWatchWindowData& data);
 	};
 
 	class BACKEND_API CDebuggerThreadClient : public wxThread {

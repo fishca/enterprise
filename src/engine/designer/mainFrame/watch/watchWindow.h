@@ -30,12 +30,12 @@ public:
 	/**
 	* Called when the debugger receive an item.
 	*/
-	void SetVariable(const watchWindowData_t& watchData);
+	void SetVariable(const CWatchWindowData& watchData);
 
 	/**
 	* Called when the debugger receive expanded item.
 	*/
-	void SetExpanded(const watchWindowData_t& watchData);
+	void SetExpanded(const CWatchWindowData& watchData);
 
 	/**
 	* Updates the value for the express in the index spot in the list.

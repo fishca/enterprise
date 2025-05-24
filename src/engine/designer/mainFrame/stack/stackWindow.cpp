@@ -29,7 +29,7 @@ CStackWindow::CStackWindow(wxWindow* parent, int id) :
 
 static bool s_initialize = false;
 
-void CStackWindow::SetStack(const stackData_t& stackData)
+void CStackWindow::SetStack(const CStackData& stackData)
 {
 	ClearAndCreate();
 

@@ -426,20 +426,11 @@ void CDebuggerServer::OnSocketServerEvent(wxSocketEvent& event)
 {
 	if (event.GetSocketEvent() == wxSOCKET_CONNECTION) {
 		if (m_socketThread == nullptr && !m_waitConnection) {
-			wxSocketBase* sockClient = m_socketServer->Accept();
-			if (sockClient != nullptr) {
-				m_socketThread = new CDebuggerThreadServer(this, sockClient);
-				if (m_socketThread->Run() == wxTHREAD_NO_ERROR) {
-					if (!m_socketThread->IsConnected()) {
-						if (m_socketThread->IsRunning()) {
-							m_socketThread->Delete();
-						}
-						m_socketThread = nullptr;
-					}
-				}
-				else {
-					wxDELETE(m_socketThread);
-				}
+			while (!m_socketServer->WaitForAccept(0, waitDebuggerTimeout)) {
+				m_socketThread = new CDebuggerThreadServer(this, m_socketServer->Accept(false));
+				if (m_socketThread->Run() == wxTHREAD_NO_ERROR && 
+					m_socketThread->IsConnected()) break;
+				m_socketThread->Delete();
 			}
 		}
 	}
@@ -847,6 +838,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 	else if (commandFromClient == CommandId_Detach) {
 		ms_debugServer->m_bUseDebug = ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 		m_connectionType = ConnectionType::ConnectionType_Scanner;
+		if (m_socket != nullptr) m_socket->Close();
 		ms_debugServer->EnableNotify();
 	}
 	else if (commandFromClient == CommandId_Destroy) {
@@ -854,9 +846,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 #ifdef __WXMSW__
 			::CoUninitialize();
 #endif // !_WXMSW
-			if (m_socket) {
-				m_socket->Destroy();
-			}
+			if (m_socket != nullptr) m_socket->Destroy();
 			std::exit(EXIT_SUCCESS);
 		}
 	}

@@ -617,16 +617,15 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 					debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
 				}
 			}
+
+			wxMilliSleep(waitDebuggerTimeout);
 		}
 
 		m_verifiedConnection = false;
-
-		if (m_connectionType != ConnectionType::ConnectionType_Unknown)
-			m_connectionType = ConnectionType::ConnectionType_Scanner;
+		if (m_connectionType != ConnectionType::ConnectionType_Unknown) m_connectionType = ConnectionType::ConnectionType_Scanner;
 	}
 
-	if (m_socketClient != nullptr)
-		m_socketClient->Close();
+	m_socketClient->Close();
 }
 
 void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned int length)

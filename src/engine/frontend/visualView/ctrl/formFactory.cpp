@@ -55,7 +55,7 @@ IValueFrame* CValueForm::NewObject(const class_identifier_t& clsid, IValueFrame*
 {
 	if (CValue::IsRegisterCtor(clsid)) {
 		IValueFrame* newControl = nullptr;
-		CValue* ppParams[] = {this, controlParent, const_cast<CValue*>(&generateId)};
+		CValue* ppParams[] = { this, controlParent, const_cast<CValue*>(&generateId) };
 		try {
 			newControl = CValue::CreateAndConvertObjectRef< IValueFrame>(clsid, ppParams, 3);
 			newControl->IncrRef();
@@ -96,15 +96,15 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 	std::set<wxString> name_set;
 
 	std::function<void(IValueFrame*, IValueFrame*, std::set< wxString >&)> buildNameSet = [&buildNameSet](IValueFrame* object, IValueFrame* top, std::set< wxString >& name_set)
-	{
-		wxASSERT(object);
-		if (object != top) {
-			name_set.emplace(top->GetControlName());
-		}
-		for (unsigned int i = 0; i < top->GetChildCount(); i++) {
-			buildNameSet(object, top->GetChild(i), name_set);
-		}
-	};
+		{
+			wxASSERT(object);
+			if (object != top) {
+				name_set.emplace(top->GetControlName());
+			}
+			for (unsigned int i = 0; i < top->GetChildCount(); i++) {
+				buildNameSet(object, top->GetChild(i), name_set);
+			}
+		};
 
 	buildNameSet(control, top, name_set);
 
@@ -248,56 +248,63 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 	return object;
 }
 
-IValueFrame* CValueForm::CopyObject(IValueFrame* srcControl)
+#include <wx/clipbrd.h>
+
+#define	copyBlock 0x022290
+
+bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 {
 	if (srcControl->GetComponentType() == COMPONENT_TYPE_FRAME)
-		return nullptr;
+		return false;
 
-	assert(srcControl);
-	IValueFrame* copyObj = NewObject(srcControl->GetClassName(), srcControl->GetParent(), false); // creamos la copia
-	assert(copyObj);
+	// Write some control to clipboard
+	if (wxTheClipboard->Open()) {
 
-	// copiamos las propiedades
-	unsigned int i;
-	unsigned int count = srcControl->GetPropertyCount();
-	for (i = 0; i < count; i++) {
-		IProperty* objProp = srcControl->GetProperty(i);
-		assert(objProp);
+		CMemoryWriter writterMemory;
+		
+		CMemoryWriter writterCopyMemory;
+		writterCopyMemory.w_u8(copyOnPaste);
+	
+		writterMemory.w_chunk(copyBlock, writterCopyMemory.pointer(), writterCopyMemory.size());
 
-		if (objProp->GetName() == wxT("name"))
-			continue;
-
-		IProperty* copyProp = copyObj->GetProperty(objProp->GetName());
-		assert(copyProp);
-
-		wxString propValue = objProp->GetValue();
-		copyProp->SetValue(propValue);
-	}
-
-	// ...and the event handlers
-	count = srcControl->GetEventCount();
-	for (i = 0; i < count; i++) {
-		IEvent* event = srcControl->GetEvent(i);
-		IEvent* copyEvent = copyObj->GetEvent(event->GetName());
-		copyEvent->SetValue(event->GetValue());
-	}
-
-	copyObj->SetParent(srcControl->GetParent());
-
-	copyObj->GenerateGuid();
-	copyObj->GenerateNewID();
-
-	// creamos recursivamente los hijos
-	count = srcControl->GetChildCount();
-	for (i = 0; i < count; i++) {
-		IValueFrame* childCopy =
-			CopyObject(srcControl->GetChild(i));
-		wxASSERT(childCopy);
-		if (copyObj) {
-			copyObj->AddChild(childCopy);
-			childCopy->SetParent(copyObj);
+		if (srcControl->CopyObject(writterMemory)) {
+			// create an RTF data object
+			wxCustomDataObject* pdo = new wxCustomDataObject(oes_clipboard_frame);
+			pdo->SetData(writterMemory.size(), writterMemory.pointer()); // the +1 is used to force copy of the \0 character
+			// tell clipboard about our RTF
+			wxTheClipboard->SetData(pdo);
 		}
+
+		wxTheClipboard->Close();
 	}
 
-	return copyObj;
+	return false;
+}
+
+IValueFrame* CValueForm::PasteObject(CValueForm* dstForm, IValueFrame* dstParent)
+{
+	IValueFrame* clipboard = nullptr;
+
+	if (wxTheClipboard->Open() && wxTheClipboard->IsSupported(oes_clipboard_frame)) {
+		wxCustomDataObject data(oes_clipboard_frame);
+		if (wxTheClipboard->GetData(data)) {
+
+			CMemoryReader readerMemory(data.GetData(), data.GetDataSize());
+
+			std::shared_ptr <CMemoryReader>readerCopyMemory(readerMemory.open_chunk(copyBlock));
+			const bool copyOnPaste = readerCopyMemory->r_u8();
+
+			clipboard = IValueFrame::CreatePasteObject(readerMemory, dstForm, dstParent);
+
+			if (clipboard == nullptr)
+				return nullptr;
+
+			if (!clipboard->PasteObject(readerMemory)) wxDELETE(clipboard);
+
+			if (!copyOnPaste) wxTheClipboard->Clear();
+		}
+		wxTheClipboard->Close();
+	}
+
+	return clipboard;
 }

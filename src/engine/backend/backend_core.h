@@ -14,6 +14,14 @@ extern BACKEND_API unsigned int GetBuildId();
 #include "stringUtils.h"
 
 //*******************************************************************************************
+
+#define oes_clipboard_metadata	wxT("oes_clipboard_metadata")
+#define oes_clipboard_frame		wxT("oes_clipboard_frame")
+#define oes_clipboard_interface	wxT("oes_clipboard_interface")
+#define oes_clipboard_role		wxT("oes_clipboard_role")
+#define oes_clipboard_template	wxT("oes_clipboard_template")
+
+//*******************************************************************************************
 //*                                 Special structures                                      *
 //*******************************************************************************************
 

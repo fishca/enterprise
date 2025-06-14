@@ -274,7 +274,7 @@ void CMetadataTree::CMetadataTreeWnd::OnCopyItem(wxCommandEvent& event)
 			if (metaObject->CopyObject(dataWritter)) {
 				// create an RTF data object
 				wxCustomDataObject* pdo = new wxCustomDataObject();
-				pdo->SetFormat(wxOES_Data);
+				pdo->SetFormat(oes_clipboard_metadata);
 				pdo->SetData(dataWritter.size(), dataWritter.pointer()); // the +1 is used to force copy of the \0 character
 				// tell clipboard about our RTF
 				wxTheClipboard->SetData(pdo);
@@ -295,8 +295,8 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 	if (!item.IsOk())
 		return;
 	if (wxTheClipboard->Open()
-		&& wxTheClipboard->IsSupported(wxOES_Data)) {
-		wxCustomDataObject data(wxOES_Data);
+		&& wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
+		wxCustomDataObject data(oes_clipboard_metadata);
 		if (wxTheClipboard->GetData(data)) {
 
 			IMetaObject* metaObject = m_ownerTree->NewItem(

@@ -194,13 +194,10 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEndDrag(wx
 
 	IValueFrame* objDst =
 		GetObjectFromTreeItem(itemDst);
+	
 	if (!objDst)
 		return;
-
-	// backup clipboard
-	IValueFrame* clipboard =
-		m_formHandler->GetClipboardObject();
-
+	
 	// set object to clipboard
 	if (copy) {
 		m_formHandler->CopyObject(objSrc);
@@ -212,8 +209,6 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEndDrag(wx
 	if (!copy && !m_formHandler->PasteObject(objDst)) {
 		m_formHandler->Undo();
 	}
-
-	m_formHandler->SetClipboardObject(clipboard);
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange(wxTreeEvent& event)

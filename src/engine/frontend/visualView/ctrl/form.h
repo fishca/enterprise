@@ -178,7 +178,8 @@ public:
 	/**
 	* Crea un objeto como copia de otro.
 	*/
-	IValueFrame* CopyObject(IValueFrame* srcControl);
+	static bool CopyObject(IValueFrame* srcControl, bool copyOnPaste = true);
+	static IValueFrame* PasteObject(CValueForm *dstForm, IValueFrame* dstParent);
 
 public:
 

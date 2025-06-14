@@ -595,7 +595,7 @@ void CutObjectCmd::DoExecute()
 	if (m_visualData->m_document != nullptr)
 		m_visualData->m_document->Modify(true);
 
-	m_visualData->SetClipboardObject(m_object);
+	//m_visualData->SetClipboardObject(m_object);
 
 	if (!m_needEvent) {
 		//remove control in visual editor
@@ -651,7 +651,7 @@ void CutObjectCmd::DoRestore()
 	m_parent->ChangeChildPosition(m_object, m_oldPos);
 
 	// restauramos el clipboard
-	m_visualData->SetClipboardObject(nullptr);
+	//m_visualData->SetClipboardObject(nullptr);
 	m_visualData->SelectObject(m_oldSelected, true, false);
 
 	//create control in visual editor
@@ -737,40 +737,33 @@ void CVisualEditorNotebook::CVisualEditor::InsertObject(IValueFrame* obj, IValue
 
 void CVisualEditorNotebook::CVisualEditor::CopyObject(IValueFrame* obj)
 {
-	m_copyOnPaste = true;
-
 	// Make a copy of the object on the clipboard, otherwise
 	// modifications to the object after the copy will also
 	// be made on the clipboard.
 	IValueFrame* objParent = obj->GetParent();
 	wxASSERT(m_valueForm);
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		m_clipboard = m_valueForm->CopyObject(objParent);
-	}
-	else {
-		m_clipboard = m_valueForm->CopyObject(obj);
-	}
+	CValueForm::CopyObject(
+		objParent != nullptr && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM ?
+		objParent : obj
+	);
 }
 
-bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject, IValueFrame* objToPaste)
+#include <wx/clipbrd.h>
+
+bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 {
 	wxASSERT(m_valueForm);
 
 	try {
-		IValueFrame* clipboard = nullptr;
-		if (objToPaste) {
-			clipboard = objToPaste;
-		}
-		else if (m_clipboard) {
-			if (m_copyOnPaste) {
-				clipboard = m_valueForm->CopyObject(m_clipboard);
-			}
-			else {
-				clipboard = m_clipboard;
-			}
-		}
 
-		if (!clipboard)
+		// si no se ha podido crear el objeto vamos a intentar crearlo colgado
+		// del padre de "parent" y ademas vamos a insertarlo en la posicion
+		// siguiente a "parent"
+		IValueFrame* objParent =
+			dstObject != nullptr && dstObject->GetComponentType() == COMPONENT_TYPE_SIZERITEM ? dstObject->GetParent() : dstObject;
+
+		IValueFrame* clipboard = CValueForm::PasteObject(m_valueForm, objParent);
+		if (clipboard == nullptr)
 			return false;
 
 		// Remove parent/child relationship from clipboard object
@@ -841,10 +834,6 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject, I
 
 		// y finalmente insertamos en el arbol
 		Execute(new InsertObjectCmd(this, obj, parentObject, pos));
-
-		if (!m_copyOnPaste)
-			m_clipboard = nullptr;
-
 		NotifyObjectCreated(obj);
 
 		// vamos a mantener seleccionado el nuevo objeto creado
@@ -900,6 +889,13 @@ void CVisualEditorNotebook::CVisualEditor::RemoveObject(IValueFrame* obj)
 
 void CVisualEditorNotebook::CVisualEditor::CutObject(IValueFrame* obj, bool force)
 {
+	IValueFrame* objParent = obj->GetParent();
+	wxASSERT(m_valueForm);
+	CValueForm::CopyObject(
+		objParent != nullptr && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM ?
+		objParent : obj, false
+	);
+
 	DoRemoveObject(obj, true, force);
 }
 
@@ -932,7 +928,7 @@ void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, bool r
 	IValueFrame* noItemObj = obj;
 	IValueFrame* parent = obj->GetParent();
 
-	if (parent) {
+	if (parent != nullptr) {
 		// Si el objeto está incluido dentro de un item hay que desplazar
 		// el item
 
@@ -1023,7 +1019,6 @@ void CVisualEditorNotebook::CVisualEditor::DoRemoveObject(IValueFrame* obj, bool
 		NotifyObjectRemoved(deleted_obj);
 
 		if (cutObject) {
-			m_copyOnPaste = false;
 			Execute(new CutObjectCmd(this, obj, force));
 		}
 		else {
@@ -1033,7 +1028,7 @@ void CVisualEditorNotebook::CVisualEditor::DoRemoveObject(IValueFrame* obj, bool
 		SelectObject(GetSelectedObject(), true, true);
 	}
 	else {
-		if (obj->GetObjectTypeName() != wxT("form")) {
+		if (obj->GetClassType() != g_controlFormCLSID) {
 			assert(false);
 		}
 	}
@@ -1077,23 +1072,25 @@ void CVisualEditorNotebook::CVisualEditor::Redo()
 	NotifyObjectSelected(GetSelectedObject());
 }
 
+#include <wx/clipbrd.h>
+
 bool CVisualEditorNotebook::CVisualEditor::CanPasteObject() const
 {
 	IValueFrame* obj = GetSelectedObject();
-
-	if (obj)
-		return (m_clipboard != nullptr);
-
+	if (obj != nullptr) {
+		bool canPasteObject = wxTheClipboard->Open() &&
+			wxTheClipboard->IsSupported(oes_clipboard_frame);
+		wxTheClipboard->Close();
+		return canPasteObject;
+	}
 	return false;
 }
 
 bool CVisualEditorNotebook::CVisualEditor::CanCopyObject() const
 {
 	IValueFrame* obj = GetSelectedObject();
-
-	if (obj && obj->GetObjectTypeName() != wxT("form"))
+	if (obj && obj->GetClassType() != g_controlFormCLSID)
 		return true;
-
 	return false;
 }
 
@@ -1129,7 +1126,7 @@ void CVisualEditorNotebook::CVisualEditor::ToggleBorderFlag(IValueFrame* obj, in
 	if (!parent->IsSubclassOf(wxT("sizerItem")))
 		return;
 	IProperty* propFlag = parent->GetProperty(wxT("flag"));
-	
+
 	if (!propFlag)
 		return;
 
@@ -1174,7 +1171,7 @@ void CVisualEditorNotebook::CVisualEditor::CreateBoxSizerWithObject(IValueFrame*
 	wxASSERT(m_valueForm);
 
 	// Must first cut the old object in case it is the only allowable object
-	IValueFrame* clipboard = m_clipboard;
+	//IValueFrame* clipboard = m_clipboard;
 
 	CutObject(obj);
 
@@ -1186,11 +1183,11 @@ void CVisualEditorNotebook::CVisualEditor::CreateBoxSizerWithObject(IValueFrame*
 		if (newSizer->GetObjectTypeName() == wxT("sizerItem"))
 			newSizer = newSizer->GetChild(0);
 		PasteObject(newSizer);
-		m_clipboard = clipboard;
+		//m_clipboard = clipboard;
 		NotifyProjectRefresh();
 	}
 	else {
 		Undo();
-		m_clipboard = clipboard;
+		//m_clipboard = clipboard;
 	}
 }

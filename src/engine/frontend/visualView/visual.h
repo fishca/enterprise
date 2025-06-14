@@ -151,7 +151,7 @@ public:
 	virtual void RemoveControl(IValueFrame* obj) = 0;
 	virtual void CutControl(IValueFrame* obj, bool force = false) = 0;
 	virtual void CopyControl(IValueFrame* obj) = 0;
-	virtual bool PasteControl(IValueFrame* parent, IValueFrame* objToPaste = nullptr) = 0;
+	virtual bool PasteControl(IValueFrame* parent) = 0;
 	virtual void InsertControl(IValueFrame* obj, IValueFrame* parent) = 0;
 	virtual void ExpandControl(IValueFrame* obj, bool expand) = 0;
 	virtual void SelectControl(IValueFrame* obj) = 0;

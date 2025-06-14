@@ -339,9 +339,15 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueEventContainer);
 	};
 
-	virtual bool GetControlValue(CValue& pvarControlVal) const {
-		return false;
-	}
+	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
+
+	// memory reader form clpboard 
+	static IValueFrame* CreatePasteObject(const CMemoryReader& reader,
+		CValueForm* dstForm, IValueFrame* dstParent);
+
+	//copy & paste object 
+	virtual bool CopyObject(CMemoryWriter& writer) const;
+	virtual bool PasteObject(CMemoryReader& reader);
 
 	/**
 	* Property events
@@ -396,13 +402,13 @@ protected:
 
 	virtual void OnChoiceProcessing(CValue& vSelected) {}
 
-	//load & save event in control 
-	virtual bool LoadEvent(CMemoryReader& reader);
-	virtual bool SaveEvent(CMemoryWriter& writer = CMemoryWriter());
-
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader) { return true; }
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
+
+	//load & save event in control 
+	bool ReadProperty(CMemoryReader& reader);
+	bool SaveProperty(CMemoryWriter& writer = CMemoryWriter()) const;
 
 protected:
 

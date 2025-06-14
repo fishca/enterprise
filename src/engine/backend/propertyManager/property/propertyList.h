@@ -133,7 +133,7 @@ class BACKEND_API CPropertyList : public IProperty {
 public:
 	int GetValueAsInteger() const {
 		const int sel = typeConv::StringToInt(m_propValue);
-		if (m_functor->Invoke(const_cast<CPropertyList*>(this))) {
+		/*if (m_functor->Invoke(const_cast<CPropertyList*>(this)))*/ {
 			for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 				if (m_listPropValue.GetItemId(idx) == sel) {
 					return sel;

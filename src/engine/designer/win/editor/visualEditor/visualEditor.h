@@ -404,12 +404,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	IValueFrame* m_selObj = nullptr;     // Objeto seleccionado
-	IValueFrame* m_clipboard = nullptr;
+	//IValueFrame* m_clipboard = nullptr;
 
 	std::vector< wxEvtHandler* > m_handlers;
 
 	bool m_bReadOnly;
-	bool m_copyOnPaste; // flag que indica si hay que copiar el objeto al pegar
 
 	// Procesador de comandos Undo/Redo
 	CCommandProcessor* m_cmdProc;
@@ -516,21 +515,21 @@ public:
 	void AddHandler(wxEvtHandler* handler);
 	void RemoveHandler(wxEvtHandler* handler);
 
-	// Servicios específicos, no definidos en DataObservable
-	void SetClipboardObject(IValueFrame* obj) {
-		m_clipboard = obj;
-	}
+	//// Servicios específicos, no definidos en DataObservable
+	//void SetClipboardObject(IValueFrame* obj) {
+	//	m_clipboard = obj;
+	//}
 
-	IValueFrame* GetClipboardObject() const {
-		return m_clipboard;
-	}
+	//IValueFrame* GetClipboardObject() const {
+	//	return m_clipboard;
+	//}
 
 	//Objects 
 	IValueFrame* CreateObject(const wxString& name);
 	void RemoveObject(IValueFrame* obj);
 	void CutObject(IValueFrame* obj, bool force = false);
 	void CopyObject(IValueFrame* obj);
-	bool PasteObject(IValueFrame* parent, IValueFrame* objToPaste = nullptr);
+	bool PasteObject(IValueFrame* parent);
 	void InsertObject(IValueFrame* obj, IValueFrame* parent);
 	void ExpandObject(IValueFrame* obj, bool expand);
 
@@ -685,8 +684,8 @@ public:
 		wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);
 	}
 
-	bool PasteControl(IValueFrame* parent, IValueFrame* objToPaste = nullptr) {
-		bool result = m_visualEditor->PasteObject(parent, objToPaste);
+	bool PasteControl(IValueFrame* parent) {
+		bool result = m_visualEditor->PasteObject(parent);
 		wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);
 		return result;
 	}

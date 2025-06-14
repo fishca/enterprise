@@ -185,6 +185,8 @@ bool CValueToolBarItem::LoadData(CMemoryReader& reader)
     m_propertyEnabled->LoadData(reader);
     m_eventAction->LoadData(reader);
 
+    //events 
+    m_eventAction->LoadData(reader);
     return IValueControl::LoadData(reader);
 }
 
@@ -197,6 +199,8 @@ bool CValueToolBarItem::SaveData(CMemoryWriter& writer)
     m_propertyEnabled->SaveData(writer);
     m_eventAction->SaveData(writer);
 
+    //events 
+    m_eventAction->SaveData(writer);
     return IValueControl::SaveData(writer);
 }
 

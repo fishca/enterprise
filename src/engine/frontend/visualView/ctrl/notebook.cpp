@@ -104,12 +104,18 @@ void CValueNotebook::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 bool CValueNotebook::LoadData(CMemoryReader& reader)
 {
 	m_propertyOrient->SetValue(reader.r_s32());
+
+	//events
+	m_eventOnPageChanged->LoadData(reader);
 	return IValueWindow::LoadData(reader);
 }
 
 bool CValueNotebook::SaveData(CMemoryWriter& writer)
 {
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
+
+	//events
+	m_eventOnPageChanged->SaveData(writer);
 	return IValueWindow::SaveData(writer);
 }
 

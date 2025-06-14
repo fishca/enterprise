@@ -47,6 +47,10 @@ bool CValueButton::LoadData(CMemoryReader& reader)
 {
 	m_propertyCaption->LoadData(reader);
 	m_propertyIcon->LoadData(reader);
+
+	//events
+	m_onButtonPressed->LoadData(reader);
+
 	return IValueWindow::LoadData(reader);
 }
 
@@ -54,6 +58,10 @@ bool CValueButton::SaveData(CMemoryWriter& writer)
 {
 	m_propertyCaption->SaveData(writer);
 	m_propertyIcon->SaveData(writer);
+
+	//events
+	m_onButtonPressed->SaveData(writer);
+
 	return IValueWindow::SaveData(writer);
 }
 

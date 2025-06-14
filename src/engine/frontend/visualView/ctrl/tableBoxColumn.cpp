@@ -281,6 +281,13 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
     if (!m_propertySource->LoadData(reader))
         return false;
 
+    //events
+    m_eventOnChange->LoadData(reader);
+    m_eventStartChoice->LoadData(reader);
+    m_eventStartListChoice->LoadData(reader);
+    m_eventClearing->LoadData(reader);
+    m_eventOpening->LoadData(reader);
+    m_eventChoiceProcessing->LoadData(reader);
     return IValueControl::LoadData(reader);
 }
 
@@ -309,6 +316,13 @@ bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
     if (!m_propertySource->SaveData(writer))
         return false;
 
+    //events
+    m_eventOnChange->SaveData(writer);
+    m_eventStartChoice->SaveData(writer);
+    m_eventStartListChoice->SaveData(writer);
+    m_eventClearing->SaveData(writer);
+    m_eventOpening->SaveData(writer);
+    m_eventChoiceProcessing->SaveData(writer);
     return IValueControl::SaveData(writer);
 }
 

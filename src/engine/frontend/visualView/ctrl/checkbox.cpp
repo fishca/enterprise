@@ -130,6 +130,9 @@ bool CValueCheckbox::LoadData(CMemoryReader& reader)
 	m_propertyTitle->SetValue(reader.r_s32());
 	if (!m_propertySource->LoadData(reader))
 		return false;
+	
+	//events
+	m_onCheckboxClicked->LoadData(reader);	
 	return IValueWindow::LoadData(reader);
 }
 
@@ -139,6 +142,9 @@ bool CValueCheckbox::SaveData(CMemoryWriter& writer)
 	writer.w_s32(m_propertyTitle->GetValueAsInteger());
 	if (!m_propertySource->SaveData(writer))
 		return false;
+
+	//events
+	m_onCheckboxClicked->SaveData(writer);
 	return IValueWindow::SaveData(writer);
 }
 

@@ -3,6 +3,57 @@
 
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
+#pragma region __property_standart_h__
+
+//base property for "inner attribute"
+template <typename T = class CMetaObjectAttributeDefault>
+class CPropertyInnerAttribute : public IProperty {
+	T* m_metaObject;
+public:
+
+	T* GetMetaObject() const { return m_metaObject; }
+
+	CPropertyInnerAttribute(CPropertyCategory* cat, T* metaObject)
+		: IProperty(cat, metaObject->GetName(), metaObject->GetSynonym(), wxNullVariant), m_metaObject(metaObject)
+	{
+		m_metaObject->IncrRef();
+	}
+
+	virtual ~CPropertyInnerAttribute() {
+		m_metaObject->DecrRef();
+	}
+
+	// get meta object 
+	T* operator->() { return GetMetaObject(); }
+
+	//get property for grid 
+	virtual wxPGProperty* GetPGProperty() const { return nullptr; }
+
+	// set/get property data
+	virtual bool SetDataValue(const CValue& varPropVal) { return false; }
+	virtual bool GetDataValue(CValue& pvarPropVal) const {
+		pvarPropVal = m_metaObject;
+		return true;
+	}
+
+	//load & save object in control 
+	virtual bool LoadData(CMemoryReader& reader) { return false; }
+	virtual bool SaveData(CMemoryWriter& writer) { return false; }
+
+	//copy & paste object in control 
+	virtual bool PasteData(CMemoryReader& reader) {
+		m_metaObject->SetCommonGuid(reader.r_stringZ());
+		return true;
+	}
+
+	virtual bool CopyData(CMemoryWriter& writer) {
+		writer.w_stringZ(m_metaObject->GetCommonGuid());
+		return true;
+	}
+};
+
+#pragma endregion
+
 //********************************************************************************************
 //*                                     Defines                                              *
 //********************************************************************************************

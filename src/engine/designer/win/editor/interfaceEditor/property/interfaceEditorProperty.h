@@ -28,9 +28,9 @@ public:
 class CPropertyInterfaceItem : public IPropertyObject {
 
 	bool GetSubMenu(CPropertyList* prop) {
-		prop->AppendItem(_("<Custom submenu>"), wxNOT_FOUND, wxEmptyValue);
-		prop->AppendItem(_("file"), wxID_FILE, wxEmptyValue);
-		prop->AppendItem(_("edit"), wxID_EDIT, wxEmptyValue);
+		prop->AppendItem(_("<Custom submenu>"), wxNOT_FOUND);
+		prop->AppendItem(_("file"), wxID_FILE);
+		prop->AppendItem(_("edit"), wxID_EDIT);
 		//optionlist->AppendItem(_("all operations..."), wxID_ENTERPRISE_ALL_OPERATIONS);
 		return true;
 	}

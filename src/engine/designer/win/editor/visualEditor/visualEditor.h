@@ -317,7 +317,7 @@ public:
 		wxTreeCtrl* m_tcObjects = nullptr;
 		wxTreeItemId m_draggedItem;
 
-		bool m_altKeyIsDown;
+		bool m_altKeyIsDown, m_notifySelecting;
 
 		/**
 		 * Crea el arbol completamente.
@@ -514,15 +514,6 @@ public:
 	// Procedures for register/unregister wxEvtHandlers to be notified of wxOESEvents
 	void AddHandler(wxEvtHandler* handler);
 	void RemoveHandler(wxEvtHandler* handler);
-
-	//// Servicios específicos, no definidos en DataObservable
-	//void SetClipboardObject(IValueFrame* obj) {
-	//	m_clipboard = obj;
-	//}
-
-	//IValueFrame* GetClipboardObject() const {
-	//	return m_clipboard;
-	//}
 
 	//Objects 
 	IValueFrame* CreateObject(const wxString& name);

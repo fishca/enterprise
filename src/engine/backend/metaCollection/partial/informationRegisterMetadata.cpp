@@ -16,8 +16,8 @@ CMetaObjectInformationRegister::CMetaObjectInformationRegister() : IMetaObjectRe
 m_metaRecordManager(new CMetaObjectRecordManager())
 {
 	//set default proc
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel"});
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel"});
+	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 }
 
 CMetaObjectInformationRegister::~CMetaObjectInformationRegister()
@@ -113,7 +113,7 @@ IBackendValueForm* CMetaObjectInformationRegister::GetListForm(const wxString& f
 
 bool CMetaObjectInformationRegister::GetFormRecord(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormRecord == formObject->GetTypeForm()) {
@@ -125,7 +125,7 @@ bool CMetaObjectInformationRegister::GetFormRecord(CPropertyList* prop)
 
 bool CMetaObjectInformationRegister::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
@@ -169,8 +169,8 @@ bool CMetaObjectInformationRegister::LoadData(CMemoryReader& dataReader)
 	m_propertyPeriodicity->SetValue(dataReader.r_u16());
 
 	//load object module
-	m_propertyModuleObject->GetMetaObject()->LoadMeta(dataReader);
-	m_propertyModuleManager->GetMetaObject()->LoadMeta(dataReader);
+	(*m_propertyModuleObject)->LoadMeta(dataReader);
+	(*m_propertyModuleManager)->LoadMeta(dataReader);
 
 	return IMetaObjectRegisterData::LoadData(dataReader);
 }
@@ -186,8 +186,8 @@ bool CMetaObjectInformationRegister::SaveData(CMemoryWriter& dataWritter)
 	dataWritter.w_u16(m_propertyPeriodicity->GetValueAsInteger());
 
 	//Save object module
-	m_propertyModuleObject->GetMetaObject()->SaveMeta(dataWritter);
-	m_propertyModuleManager->GetMetaObject()->SaveMeta(dataWritter);
+	(*m_propertyModuleObject)->SaveMeta(dataWritter);
+	(*m_propertyModuleManager)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return IMetaObjectRegisterData::SaveData(dataWritter);
@@ -204,16 +204,16 @@ bool CMetaObjectInformationRegister::OnCreateMetaObject(IMetaData* metaData, int
 	if (!IMetaObjectRegisterData::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_propertyModuleManager->GetMetaObject()->OnCreateMetaObject(metaData, flags) &&
-		m_propertyModuleObject->GetMetaObject()->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
 }
 
 bool CMetaObjectInformationRegister::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRegisterData::OnLoadMetaObject(metaData);
@@ -221,15 +221,15 @@ bool CMetaObjectInformationRegister::OnLoadMetaObject(IMetaData* metaData)
 
 bool CMetaObjectInformationRegister::OnSaveMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		if (!(m_attributeRecorder->GetClsidCount() > 0))
+		if (!((*m_propertyAttributeRecorder)->GetClsidCount() > 0))
 			return false;
 	}
 #endif
@@ -239,10 +239,10 @@ bool CMetaObjectInformationRegister::OnSaveMetaObject()
 
 bool CMetaObjectInformationRegister::OnDeleteMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRegisterData::OnDeleteMetaObject();
@@ -275,10 +275,10 @@ bool CMetaObjectInformationRegister::OnReloadMetaObject()
 
 bool CMetaObjectInformationRegister::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerSelection();
@@ -332,10 +332,10 @@ bool CMetaObjectInformationRegister::OnBeforeCloseMetaObject()
 
 bool CMetaObjectInformationRegister::OnAfterCloseMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject())
 		return false;
 
 	unregisterSelection();
@@ -380,17 +380,17 @@ std::vector<IMetaObjectAttribute*> CMetaObjectInformationRegister::GetDefaultAtt
 	std::vector<IMetaObjectAttribute*> attributes;
 
 	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_attributeLineActive);
+		attributes.push_back(m_propertyAttributeLineActive->GetMetaObject());
 	}
 
 	if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_attributePeriod);
+		attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
 	}
 
 	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_attributeRecorder);
-		attributes.push_back(m_attributeLineNumber);
+		attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
+		attributes.push_back(m_propertyAttributeLineNumber->GetMetaObject());
 	}
 
 	return attributes;
@@ -402,14 +402,14 @@ std::vector<IMetaObjectAttribute*> CMetaObjectInformationRegister::GetGenericDim
 
 	if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
 		if (GetPeriodicity() != ePeriodicity::eNonPeriodic) {
-			attributes.push_back(m_attributePeriod);
+			attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
 		}
 		for (auto& obj : GetObjectDimensions()) {
 			attributes.push_back(obj);
 		}
 	}
 	else {
-		attributes.push_back(m_attributeRecorder);
+		attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
 	}
 
 	return attributes;

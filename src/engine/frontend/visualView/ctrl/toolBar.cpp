@@ -80,13 +80,13 @@ void CValueToolbar::Cleanup(wxObject* obj, IVisualHost* visualHost)
 
 bool CValueToolbar::LoadData(CMemoryReader& reader)
 {
-	m_actSource->SetValue(reader.r_s32());
+	m_actSource->LoadData(reader);
 	return IValueWindow::LoadData(reader);
 }
 
 bool CValueToolbar::SaveData(CMemoryWriter& writer)
 {
-	writer.w_s32(m_actSource->GetValueAsInteger());
+	m_actSource->SaveData(writer);
 	return IValueWindow::SaveData(writer);
 }
 

@@ -45,6 +45,7 @@ void CMetaView::Activate(bool activate)
 	if (docManager != nullptr && CDocMDIFrame::GetFrame()) {
 		OnActivateView(activate, this, docManager->GetCurrentView());
 		docManager->ActivateView(this, activate);
+		//if (m_viewFrame != nullptr) m_viewFrame->SetFocus();
 	}
 }
 

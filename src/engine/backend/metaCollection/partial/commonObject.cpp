@@ -212,7 +212,7 @@ IMetaObjectRecordDataRef::IMetaObjectRecordDataRef() : IMetaObjectRecordData()
 
 IMetaObjectRecordDataRef::~IMetaObjectRecordDataRef()
 {
-	wxDELETE(m_attributeReference);
+	//wxDELETE((*m_propertyAttributeReference));
 }
 
 //***************************************************************************
@@ -225,7 +225,7 @@ bool IMetaObjectRecordDataRef::LoadData(CMemoryReader& dataReader)
 	m_propertyQuickChoice->SetValue(dataReader.r_u8());
 
 	//load default attributes:
-	m_attributeReference->LoadMeta(dataReader);
+	(*m_propertyAttributeReference)->LoadMeta(dataReader);
 
 	return IMetaObjectRecordData::LoadData(dataReader);
 }
@@ -236,7 +236,7 @@ bool IMetaObjectRecordDataRef::SaveData(CMemoryWriter& dataWritter)
 	dataWritter.w_u8(m_propertyQuickChoice->GetValueAsBoolean());
 
 	//save default attributes:
-	m_attributeReference->SaveMeta(dataWritter);
+	(*m_propertyAttributeReference)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return IMetaObjectRecordData::SaveData(dataWritter);
@@ -251,7 +251,7 @@ bool IMetaObjectRecordDataRef::OnCreateMetaObject(IMetaData* metaData, int flags
 	if (!IMetaObjectRecordData::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeReference->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeReference)->OnCreateMetaObject(metaData, flags);
 }
 
 #include "backend/appData.h"
@@ -259,7 +259,7 @@ bool IMetaObjectRecordDataRef::OnCreateMetaObject(IMetaData* metaData, int flags
 
 bool IMetaObjectRecordDataRef::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeReference->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeReference)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordData::OnLoadMetaObject(metaData);
@@ -267,7 +267,7 @@ bool IMetaObjectRecordDataRef::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObjectRecordDataRef::OnSaveMetaObject()
 {
-	if (!m_attributeReference->OnSaveMetaObject())
+	if (!(*m_propertyAttributeReference)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordData::OnSaveMetaObject();
@@ -275,7 +275,7 @@ bool IMetaObjectRecordDataRef::OnSaveMetaObject()
 
 bool IMetaObjectRecordDataRef::OnDeleteMetaObject()
 {
-	if (!m_attributeReference->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeReference)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordData::OnDeleteMetaObject();
@@ -283,7 +283,7 @@ bool IMetaObjectRecordDataRef::OnDeleteMetaObject()
 
 bool IMetaObjectRecordDataRef::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeReference->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeReference)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerReference();
@@ -293,7 +293,7 @@ bool IMetaObjectRecordDataRef::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_Reference);
-	if (typeCtor != nullptr) m_attributeReference->SetDefaultMetaType(typeCtor->GetClassType());
+	if (typeCtor != nullptr) (*m_propertyAttributeReference)->SetDefaultMetaType(typeCtor->GetClassType());
 	return true;
 }
 
@@ -309,10 +309,11 @@ bool IMetaObjectRecordDataRef::OnBeforeCloseMetaObject()
 
 bool IMetaObjectRecordDataRef::OnAfterCloseMetaObject()
 {
-	if (!m_attributeReference->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeReference)->OnAfterCloseMetaObject())
 		return false;
-	
-	if (m_attributeReference != nullptr) m_attributeReference->SetDefaultMetaType(eValueTypes::TYPE_EMPTY);
+
+	if (m_propertyAttributeReference->GetMetaObject() != nullptr)
+		(*m_propertyAttributeReference)->SetDefaultMetaType(eValueTypes::TYPE_EMPTY);
 
 	unregisterReference();
 	unregisteRefList();
@@ -404,7 +405,7 @@ IMetaObjectRecordDataEnumRef::IMetaObjectRecordDataEnumRef() : IMetaObjectRecord
 
 IMetaObjectRecordDataEnumRef::~IMetaObjectRecordDataEnumRef()
 {
-	wxDELETE(m_attributeOrder);
+	//wxDELETE((*m_propertyAttributeOrder));
 }
 
 //***************************************************************************
@@ -414,14 +415,14 @@ IMetaObjectRecordDataEnumRef::~IMetaObjectRecordDataEnumRef()
 bool IMetaObjectRecordDataEnumRef::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeOrder->LoadMeta(dataReader);
+	(*m_propertyAttributeOrder)->LoadMeta(dataReader);
 	return IMetaObjectRecordDataRef::LoadData(dataReader);
 }
 
 bool IMetaObjectRecordDataEnumRef::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeOrder->SaveMeta(dataWritter);
+	(*m_propertyAttributeOrder)->SaveMeta(dataWritter);
 	return IMetaObjectRecordDataRef::SaveData(dataWritter);
 }
 
@@ -434,12 +435,12 @@ bool IMetaObjectRecordDataEnumRef::OnCreateMetaObject(IMetaData* metaData, int f
 	if (!IMetaObjectRecordDataRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeOrder->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeOrder)->OnCreateMetaObject(metaData, flags);
 }
 
 bool IMetaObjectRecordDataEnumRef::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeOrder->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeOrder)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordDataRef::OnLoadMetaObject(metaData);
@@ -447,7 +448,7 @@ bool IMetaObjectRecordDataEnumRef::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObjectRecordDataEnumRef::OnSaveMetaObject()
 {
-	if (!m_attributeOrder->OnSaveMetaObject())
+	if (!(*m_propertyAttributeOrder)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnSaveMetaObject();
@@ -455,7 +456,7 @@ bool IMetaObjectRecordDataEnumRef::OnSaveMetaObject()
 
 bool IMetaObjectRecordDataEnumRef::OnDeleteMetaObject()
 {
-	if (!m_attributeOrder->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeOrder)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnDeleteMetaObject();
@@ -463,7 +464,7 @@ bool IMetaObjectRecordDataEnumRef::OnDeleteMetaObject()
 
 bool IMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeOrder->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeOrder)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	return IMetaObjectRecordDataRef::OnBeforeRunMetaObject(flags);
@@ -481,7 +482,7 @@ bool IMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject()
 
 bool IMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject()
 {
-	if (!m_attributeOrder->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeOrder)->OnAfterCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnAfterCloseMetaObject();
@@ -497,8 +498,8 @@ IMetaObjectRecordDataMutableRef::IMetaObjectRecordDataMutableRef() : IMetaObject
 
 IMetaObjectRecordDataMutableRef::~IMetaObjectRecordDataMutableRef()
 {
-	wxDELETE(m_attributeDataVersion);
-	wxDELETE(m_attributeDeletionMark);
+	//wxDELETE((*m_propertyAttributeDataVersion);
+	//wxDELETE((*m_propertyAttributeDeletionMark));
 }
 
 //***************************************************************************
@@ -508,8 +509,8 @@ IMetaObjectRecordDataMutableRef::~IMetaObjectRecordDataMutableRef()
 bool IMetaObjectRecordDataMutableRef::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeDataVersion->LoadMeta(dataReader);
-	m_attributeDeletionMark->LoadMeta(dataReader);
+	(*m_propertyAttributeDataVersion)->LoadMeta(dataReader);
+	(*m_propertyAttributeDeletionMark)->LoadMeta(dataReader);
 
 	if (!IMetaObjectRecordDataRef::LoadData(dataReader))
 		return false;
@@ -520,8 +521,8 @@ bool IMetaObjectRecordDataMutableRef::LoadData(CMemoryReader& dataReader)
 bool IMetaObjectRecordDataMutableRef::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeDataVersion->SaveMeta(dataWritter);
-	m_attributeDeletionMark->SaveMeta(dataWritter);
+	(*m_propertyAttributeDataVersion)->SaveMeta(dataWritter);
+	(*m_propertyAttributeDeletionMark)->SaveMeta(dataWritter);
 
 	//create or update table:
 	if (!IMetaObjectRecordDataRef::SaveData(dataWritter))
@@ -539,16 +540,16 @@ bool IMetaObjectRecordDataMutableRef::OnCreateMetaObject(IMetaData* metaData, in
 	if (!IMetaObjectRecordDataRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeDataVersion->OnCreateMetaObject(metaData, flags)
-		&& m_attributeDeletionMark->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeDataVersion)->OnCreateMetaObject(metaData, flags)
+		&& (*m_propertyAttributeDeletionMark)->OnCreateMetaObject(metaData, flags);
 }
 
 bool IMetaObjectRecordDataMutableRef::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeDataVersion->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeDataVersion)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeDeletionMark->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeDeletionMark)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordDataRef::OnLoadMetaObject(metaData);
@@ -556,10 +557,10 @@ bool IMetaObjectRecordDataMutableRef::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObjectRecordDataMutableRef::OnSaveMetaObject()
 {
-	if (!m_attributeDataVersion->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDataVersion)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeDeletionMark->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDeletionMark)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnSaveMetaObject();
@@ -567,10 +568,10 @@ bool IMetaObjectRecordDataMutableRef::OnSaveMetaObject()
 
 bool IMetaObjectRecordDataMutableRef::OnDeleteMetaObject()
 {
-	if (!m_attributeDataVersion->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeDataVersion)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeDeletionMark->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeDeletionMark)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnDeleteMetaObject();
@@ -578,10 +579,10 @@ bool IMetaObjectRecordDataMutableRef::OnDeleteMetaObject()
 
 bool IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeDataVersion->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeDataVersion)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeDeletionMark->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeDeletionMark)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	return IMetaObjectRecordDataRef::OnBeforeRunMetaObject(flags);
@@ -589,10 +590,10 @@ bool IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(int flags)
 {
-	if (!m_attributeDataVersion->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeDataVersion)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeDeletionMark->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeDeletionMark)->OnAfterRunMetaObject(flags))
 		return false;
 
 	return IMetaObjectRecordDataRef::OnAfterRunMetaObject(flags);
@@ -600,10 +601,10 @@ bool IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()
 {
-	if (!m_attributeDataVersion->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeDataVersion)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!m_attributeDeletionMark->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeDeletionMark)->OnBeforeCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnBeforeCloseMetaObject();
@@ -611,10 +612,10 @@ bool IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()
 
 bool IMetaObjectRecordDataMutableRef::OnAfterCloseMetaObject()
 {
-	if (!m_attributeDataVersion->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeDataVersion)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeDeletionMark->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeDeletionMark)->OnAfterCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataRef::OnAfterCloseMetaObject();
@@ -681,10 +682,10 @@ IMetaObjectRecordDataFolderMutableRef::IMetaObjectRecordDataFolderMutableRef()
 
 IMetaObjectRecordDataFolderMutableRef::~IMetaObjectRecordDataFolderMutableRef()
 {
-	wxDELETE(m_attributeCode);
-	wxDELETE(m_attributeDescription);
-	wxDELETE(m_attributeParent);
-	wxDELETE(m_attributeIsFolder);
+	//wxDELETE(m_propertyAttributeCode);
+	//wxDELETE(m_propertyAttributeDescription);
+	//wxDELETE(m_propertyAttributeParent);
+	//wxDELETE(m_propertyAttributeIsFolder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -736,10 +737,10 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CopyObjectVal
 bool IMetaObjectRecordDataFolderMutableRef::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeCode->LoadMeta(dataReader);
-	m_attributeDescription->LoadMeta(dataReader);
-	m_attributeParent->LoadMeta(dataReader);
-	m_attributeIsFolder->LoadMeta(dataReader);
+	(*m_propertyAttributeCode)->LoadMeta(dataReader);
+	(*m_propertyAttributeDescription)->LoadMeta(dataReader);
+	(*m_propertyAttributeParent)->LoadMeta(dataReader);
+	(*m_propertyAttributeIsFolder)->LoadMeta(dataReader);
 
 	return IMetaObjectRecordDataMutableRef::LoadData(dataReader);
 }
@@ -747,10 +748,10 @@ bool IMetaObjectRecordDataFolderMutableRef::LoadData(CMemoryReader& dataReader)
 bool IMetaObjectRecordDataFolderMutableRef::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeCode->SaveMeta(dataWritter);
-	m_attributeDescription->SaveMeta(dataWritter);
-	m_attributeParent->SaveMeta(dataWritter);
-	m_attributeIsFolder->SaveMeta(dataWritter);
+	(*m_propertyAttributeCode)->SaveMeta(dataWritter);
+	(*m_propertyAttributeDescription)->SaveMeta(dataWritter);
+	(*m_propertyAttributeParent)->SaveMeta(dataWritter);
+	(*m_propertyAttributeIsFolder)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return IMetaObjectRecordDataMutableRef::SaveData(dataWritter);
@@ -765,24 +766,24 @@ bool IMetaObjectRecordDataFolderMutableRef::OnCreateMetaObject(IMetaData* metaDa
 	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeCode->OnCreateMetaObject(metaData, flags) &&
-		m_attributeDescription->OnCreateMetaObject(metaData, flags) &&
-		m_attributeParent->OnCreateMetaObject(metaData, flags) &&
-		m_attributeIsFolder->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeCode)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeDescription)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeParent)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeIsFolder)->OnCreateMetaObject(metaData, flags);
 }
 
 bool IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeCode->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeCode)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeDescription->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeDescription)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeParent->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeParent)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeIsFolder->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeIsFolder)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
@@ -790,16 +791,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(IMetaData* metaData
 
 bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject()
 {
-	if (!m_attributeCode->OnSaveMetaObject())
+	if (!(*m_propertyAttributeCode)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeDescription->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDescription)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeParent->OnSaveMetaObject())
+	if (!(*m_propertyAttributeParent)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeIsFolder->OnSaveMetaObject())
+	if (!(*m_propertyAttributeIsFolder)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject();
@@ -807,16 +808,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject()
 
 bool IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject()
 {
-	if (!m_attributeCode->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeCode)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeDescription->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeDescription)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeParent->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeParent)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeIsFolder->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeIsFolder)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnDeleteMetaObject();
@@ -824,16 +825,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject()
 
 bool IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeCode->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeCode)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeDescription->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeDescription)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeParent->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeParent)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeIsFolder->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeIsFolder)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	if (!IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(flags))
@@ -844,16 +845,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(int flags)
 {
-	if (!m_attributeCode->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeCode)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeDescription->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeDescription)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeParent->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeParent)->OnAfterRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeIsFolder->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributeIsFolder)->OnAfterRunMetaObject(flags))
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags);
@@ -861,16 +862,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject()
 {
-	if (!m_attributeCode->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeCode)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!m_attributeDescription->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeDescription)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!m_attributeParent->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeParent)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!m_attributeIsFolder->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeIsFolder)->OnBeforeCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject();
@@ -878,16 +879,16 @@ bool IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject()
 
 bool IMetaObjectRecordDataFolderMutableRef::OnAfterCloseMetaObject()
 {
-	if (!m_attributeCode->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeCode)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeDescription->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeDescription)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeParent->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeParent)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeIsFolder->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeIsFolder)->OnAfterCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnAfterCloseMetaObject();
@@ -959,10 +960,10 @@ IMetaObjectRegisterData::IMetaObjectRegisterData() : IMetaObjectGenericData()
 
 IMetaObjectRegisterData::~IMetaObjectRegisterData()
 {
-	wxDELETE(m_attributeLineActive);
-	wxDELETE(m_attributePeriod);
-	wxDELETE(m_attributeRecorder);
-	wxDELETE(m_attributeLineNumber);
+	//wxDELETE((*m_propertyAttributeLineActive));
+	//wxDELETE((*m_propertyAttributePeriod));
+	//wxDELETE((*m_propertyAttributeRecorder));
+	//wxDELETE((*m_propertyAttributeLineNumber));
 }
 
 //***************************************************************************
@@ -972,10 +973,10 @@ IMetaObjectRegisterData::~IMetaObjectRegisterData()
 bool IMetaObjectRegisterData::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeLineActive->LoadMeta(dataReader);
-	m_attributePeriod->LoadMeta(dataReader);
-	m_attributeRecorder->LoadMeta(dataReader);
-	m_attributeLineNumber->LoadMeta(dataReader);
+	(*m_propertyAttributeLineActive)->LoadMeta(dataReader);
+	(*m_propertyAttributePeriod)->LoadMeta(dataReader);
+	(*m_propertyAttributeRecorder)->LoadMeta(dataReader);
+	(*m_propertyAttributeLineNumber)->LoadMeta(dataReader);
 
 	return IMetaObjectGenericData::LoadData(dataReader);
 }
@@ -983,10 +984,10 @@ bool IMetaObjectRegisterData::LoadData(CMemoryReader& dataReader)
 bool IMetaObjectRegisterData::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeLineActive->SaveMeta(dataWritter);
-	m_attributePeriod->SaveMeta(dataWritter);
-	m_attributeRecorder->SaveMeta(dataWritter);
-	m_attributeLineNumber->SaveMeta(dataWritter);
+	(*m_propertyAttributeLineActive)->SaveMeta(dataWritter);
+	(*m_propertyAttributePeriod)->SaveMeta(dataWritter);
+	(*m_propertyAttributeRecorder)->SaveMeta(dataWritter);
+	(*m_propertyAttributeLineNumber)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return IMetaObjectGenericData::SaveData(dataWritter);
@@ -1001,24 +1002,24 @@ bool IMetaObjectRegisterData::OnCreateMetaObject(IMetaData* metaData, int flags)
 	if (!IMetaObject::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeLineActive->OnCreateMetaObject(metaData, flags) &&
-		m_attributePeriod->OnCreateMetaObject(metaData, flags) &&
-		m_attributeRecorder->OnCreateMetaObject(metaData, flags) &&
-		m_attributeLineNumber->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeLineActive)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributePeriod)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeRecorder)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeLineNumber)->OnCreateMetaObject(metaData, flags);
 }
 
 bool IMetaObjectRegisterData::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeLineActive->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeLineActive)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributePeriod->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributePeriod)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeRecorder->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeRecorder)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeLineNumber->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeLineNumber)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObject::OnLoadMetaObject(metaData);
@@ -1026,16 +1027,16 @@ bool IMetaObjectRegisterData::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObjectRegisterData::OnSaveMetaObject()
 {
-	if (!m_attributeLineActive->OnSaveMetaObject())
+	if (!(*m_propertyAttributeLineActive)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributePeriod->OnSaveMetaObject())
+	if (!(*m_propertyAttributePeriod)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeRecorder->OnSaveMetaObject())
+	if (!(*m_propertyAttributeRecorder)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeLineNumber->OnSaveMetaObject())
+	if (!(*m_propertyAttributeLineNumber)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObject::OnSaveMetaObject();
@@ -1043,16 +1044,16 @@ bool IMetaObjectRegisterData::OnSaveMetaObject()
 
 bool IMetaObjectRegisterData::OnDeleteMetaObject()
 {
-	if (!m_attributeLineActive->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeLineActive)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributePeriod->OnDeleteMetaObject())
+	if (!(*m_propertyAttributePeriod)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeRecorder->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeRecorder)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeLineNumber->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeLineNumber)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObject::OnDeleteMetaObject();
@@ -1060,16 +1061,16 @@ bool IMetaObjectRegisterData::OnDeleteMetaObject()
 
 bool IMetaObjectRegisterData::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeLineActive->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeLineActive)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributePeriod->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributePeriod)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeRecorder->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeRecorder)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeLineNumber->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeLineNumber)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerManager();
@@ -1083,16 +1084,16 @@ bool IMetaObjectRegisterData::OnBeforeRunMetaObject(int flags)
 
 bool IMetaObjectRegisterData::OnAfterCloseMetaObject()
 {
-	if (!m_attributeLineActive->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeLineActive)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributePeriod->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributePeriod)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeRecorder->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeRecorder)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributeLineNumber->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeLineNumber)->OnAfterCloseMetaObject())
 		return false;
 
 	unregisterManager();
@@ -1546,9 +1547,9 @@ bool IRecordDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	else if (lPropAlias == eSystem) {
 		switch (m_methodHelper->GetPropData(lPropNum))
 		{
-			case eThisObject:
-				pvarPropVal = GetValue();
-				return true;
+		case eThisObject:
+			pvarPropVal = GetValue();
+			return true;
 		}
 	}
 	return false;
@@ -1577,15 +1578,15 @@ bool IRecordDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, 
 
 	switch (lMethodNum)
 	{
-		case eGetFormObject:
-			pvarRetValue = GetFormValue(
-				lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
-				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
-			);
-			return true;
-		case eGetMetadata:
-			pvarRetValue = GetMetaObject();
-			return true;
+	case eGetFormObject:
+		pvarRetValue = GetFormValue(
+			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
+		);
+		return true;
+	case eGetMetadata:
+		pvarRetValue = GetMetaObject();
+		return true;
 	}
 
 	return false;
@@ -1797,7 +1798,7 @@ bool IRecordDataObjectRef::InitializeObject(const Guid& copyGuid)
 			m_objModified = true;
 		}
 		else {
-			if (!ReadData()) PrepareEmptyObject();			
+			if (!ReadData()) PrepareEmptyObject();
 		}
 		if (!succes) return succes;
 	}
@@ -2359,7 +2360,7 @@ m_objGuid(source.m_metaObject)
 IRecordManagerObject::~IRecordManagerObject()
 {
 	wxDELETE(m_methodHelper);
-	
+
 	if (m_recordLine != nullptr) m_recordLine->DecrRef();
 	if (m_recordSet != nullptr) m_recordSet->DecrRef();
 }
@@ -3035,15 +3036,15 @@ bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::CRecordSetObjectRegiste
 	wxASSERT(metaAttribute);
 
 	switch (lPropNum) {
-		case eValue:
-			m_recordSet->SetKeyValue(m_metaId, varPropVal);
-			return true;
-		case eUse:
-			if (varPropVal.GetBoolean())
-				m_recordSet->SetKeyValue(m_metaId, metaAttribute->CreateValue());
-			else
-				m_recordSet->EraseKeyValue(m_metaId);
-			return true;
+	case eValue:
+		m_recordSet->SetKeyValue(m_metaId, varPropVal);
+		return true;
+	case eUse:
+		if (varPropVal.GetBoolean())
+			m_recordSet->SetKeyValue(m_metaId, metaAttribute->CreateValue());
+		else
+			m_recordSet->EraseKeyValue(m_metaId);
+		return true;
 	}
 
 	return false;
@@ -3057,15 +3058,15 @@ bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::CRecordSetObjectRegiste
 	wxASSERT(metaAttribute);
 
 	switch (lPropNum) {
-		case eValue:
-			if (m_recordSet->FindKeyValue(m_metaId))
-				pvarPropVal = m_recordSet->GetKeyValue(m_metaId);
-			else
-				pvarPropVal = metaAttribute->CreateValue();
-			return true;
-		case eUse:
-			pvarPropVal = m_recordSet->FindKeyValue(m_metaId);
-			return true;
+	case eValue:
+		if (m_recordSet->FindKeyValue(m_metaId))
+			pvarPropVal = m_recordSet->GetKeyValue(m_metaId);
+		else
+			pvarPropVal = metaAttribute->CreateValue();
+		return true;
+	case eUse:
+		pvarPropVal = m_recordSet->FindKeyValue(m_metaId);
+		return true;
 	}
 
 	return false;
@@ -3077,12 +3078,12 @@ bool CRecordKeyObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, C
 {
 	switch (lMethodNum)
 	{
-		case enEmpty:
-			pvarRetValue = IsEmpty();
-			return true;
-		case enMetadata:
-			pvarRetValue = m_metaObject;
-			return true;
+	case enEmpty:
+		pvarRetValue = IsEmpty();
+		return true;
+	case enMetadata:
+		pvarRetValue = m_metaObject;
+		return true;
 	}
 	return false;
 }
@@ -3100,9 +3101,9 @@ bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::CRecordSetObjectRegiste
 {
 	switch (lMethodNum)
 	{
-		case enSet:
-			m_recordSet->SetKeyValue(m_metaId, paParams[0]);
-			return true;
+	case enSet:
+		m_recordSet->SetKeyValue(m_metaId, paParams[0]);
+		return true;
 	}
 	return false;
 }

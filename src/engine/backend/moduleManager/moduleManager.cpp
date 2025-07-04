@@ -64,12 +64,12 @@ IModuleManager::~IModuleManager()
 //************************************************  support compile module ************************************************
 //*************************************************************************************************************************
 
-bool IModuleManager::AddCompileModule(IMetaObject* mobj, CValue* object)
+bool IModuleManager::AddCompileModule(const IMetaObject* mobj, CValue* object)
 {
 	if (!appData->DesignerMode() || !object)
 		return true;
 
-	std::map<IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(mobj);
+	std::map<const IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(mobj);
 
 	if (founded == m_listCommonModuleValue.end()) {
 		m_listCommonModuleValue.insert_or_assign(mobj, object);
@@ -80,12 +80,12 @@ bool IModuleManager::AddCompileModule(IMetaObject* mobj, CValue* object)
 	return false;
 }
 
-bool IModuleManager::RemoveCompileModule(IMetaObject* obj)
+bool IModuleManager::RemoveCompileModule(const IMetaObject* obj)
 {
 	if (!appData->DesignerMode())
 		return true;
 
-	std::map<IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(obj);
+	std::map<const IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(obj);
 
 	if (founded != m_listCommonModuleValue.end()) {
 		CValue* dataRef = founded->second;

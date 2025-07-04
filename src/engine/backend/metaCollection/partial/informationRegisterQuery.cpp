@@ -13,10 +13,10 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(IMetaDataC
 	if ((flags & createMetaTable) != 0) {
 
 		IMetaObjectAttribute::sqlField_t sqlCol =
-			IMetaObjectAttribute::GetSQLFieldData(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (auto& obj : GetObjectDimensions()) {
 			sqlViewColumn += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -66,7 +66,7 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(IMetaDataC
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod, "MIN");
+		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MIN");
 		for (auto& obj : GetObjectDimensions()) {
 			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -119,10 +119,10 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(IMetaDataC
 	else if ((flags & updateMetaTable) != 0) {
 
 		IMetaObjectAttribute::sqlField_t sqlCol =
-			IMetaObjectAttribute::GetSQLFieldData(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (auto& obj : GetObjectDimensions()) {
 			sqlViewColumn += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -172,7 +172,7 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceFirstTableDB(IMetaDataC
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod, "MAX");
+		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (auto& obj : GetObjectDimensions()) {
 			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -242,10 +242,10 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(IMetaDataCo
 	if ((flags & createMetaTable) != 0) {
 
 		IMetaObjectAttribute::sqlField_t sqlCol =
-			IMetaObjectAttribute::GetSQLFieldData(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (auto& obj : GetObjectDimensions()) {
 			sqlViewColumn += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -295,7 +295,7 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(IMetaDataCo
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod, "MAX");
+		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (auto& obj : GetObjectDimensions()) {
 			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -348,10 +348,10 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(IMetaDataCo
 	else if ((flags & updateMetaTable) != 0) {
 
 		IMetaObjectAttribute::sqlField_t sqlCol =
-			IMetaObjectAttribute::GetSQLFieldData(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldData(m_propertyAttributePeriod->GetMetaObject());
 
 		wxString sqlViewColumn =
-			IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod);
+			IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject());
 		for (auto& obj : GetObjectDimensions()) {
 			sqlViewColumn += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}
@@ -401,7 +401,7 @@ bool CMetaObjectInformationRegister::CreateAndUpdateSliceLastTableDB(IMetaDataCo
 		}
 
 		sqlQuery += " FROM (SELECT ";
-		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_attributePeriod, "MAX");
+		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePeriod->GetMetaObject(), "MAX");
 		for (auto& obj : GetObjectDimensions()) {
 			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
 		}

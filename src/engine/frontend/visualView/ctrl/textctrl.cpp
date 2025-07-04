@@ -10,9 +10,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
 #include "backend/objCtor.h"
 
 bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
-{
-	property->AppendItem(_("default"), wxNOT_FOUND, wxEmptyValue);
-	IMetaData* metaData = GetMetaData();
+{	
+	property->AppendItem(wxT("default"), _("default"), wxNOT_FOUND);
+	
+	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
 		IMetaObjectRecordDataRef* metaObject = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {

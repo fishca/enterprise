@@ -39,6 +39,7 @@ public:
 
     CValueToolbar();
 
+    //control factory 
     virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
     virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
     virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;

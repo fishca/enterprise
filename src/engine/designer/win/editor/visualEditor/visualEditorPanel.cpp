@@ -56,6 +56,13 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 	m_splitter->SplitVertically(panelDesigner, panelTree, -300);
 	SetSizer(m_sizerMain);
 
+	wxAcceleratorEntry entries[2];
+	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
+	entries[1].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
+
+	wxAcceleratorTable accel(2, entries);
+	SetAcceleratorTable(accel);
+
 	wxWindow::Thaw();
 }
 

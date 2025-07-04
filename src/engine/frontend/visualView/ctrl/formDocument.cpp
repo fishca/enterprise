@@ -29,7 +29,17 @@ CVisualView* CVisualDocument::GetFirstView() const
 
 bool CVisualDocument::OnSaveModified()
 {
-	return wxDocument::OnSaveModified();
+	if (wxDocument::OnSaveModified()) {
+		CValueForm* valueForm = m_visualHost ?
+			m_visualHost->GetValueForm() : nullptr;
+		if (valueForm != nullptr) {
+			CValueForm* controlOwner = valueForm->m_controlOwner != nullptr ?
+				valueForm->m_controlOwner->GetOwnerForm() : nullptr;
+			if (controlOwner != nullptr) controlOwner->ActivateForm();
+		}
+		return true;
+	}
+	return false;
 }
 
 bool CVisualDocument::OnCloseDocument()
@@ -38,6 +48,7 @@ bool CVisualDocument::OnCloseDocument()
 		m_visualHost->GetValueForm() : nullptr;
 
 	if (valueForm != nullptr) {
+		//wxDELETE(valueForm->m_valueFormDocument);
 		valueForm->m_valueFormDocument = nullptr;
 		if (!m_visualHost->IsDemonstration()) {
 			wxTheApp->ScheduleForDestruction(m_visualHost);
@@ -148,7 +159,7 @@ void CVisualView::OnUpdate(wxView* sender, wxObject* hint)
 bool CVisualView::OnClose(bool deleteWindow)
 {
 	if (!deleteWindow) {
-		if (m_valueForm->m_valueFormDocument
+		if (m_valueForm != nullptr && m_valueForm->m_valueFormDocument
 			&& !m_valueForm->CloseDocForm())
 			return false;
 	}
@@ -161,8 +172,7 @@ bool CVisualView::OnClose(bool deleteWindow)
 		m_viewFrame = nullptr;
 	}
 
-	return m_viewDocument ?
-		m_viewDocument->Close() : true;
+	return CMetaView::OnClose(deleteWindow);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -434,12 +444,12 @@ bool CValueForm::CloseDocForm()
 	if (m_procUnit != nullptr)
 		m_procUnit->CallAsProc(wxT("onClose"));
 
-	if (m_controlOwner != nullptr) {
-		IBackendValueForm* ownerForm = m_controlOwner->GetOwnerForm();
-		if (ownerForm != nullptr) {
-			ownerForm->ActivateForm();
-		}
-	}
+	//if (m_controlOwner != nullptr) {
+	//	IBackendValueForm* ownerForm = m_controlOwner->GetOwnerForm();
+	//	if (ownerForm != nullptr) {
+	//		ownerForm->ActivateForm();
+	//	}
+	//}
 
 	return true;
 }

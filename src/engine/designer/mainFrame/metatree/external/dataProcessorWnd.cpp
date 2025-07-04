@@ -248,25 +248,24 @@ EVT_MENU(ID_METATREE_EDIT, CDataProcessorTree::CDataProcessorTreeWnd::OnEditItem
 EVT_MENU(ID_METATREE_REMOVE, CDataProcessorTree::CDataProcessorTreeWnd::OnRemoveItem)
 EVT_MENU(ID_METATREE_PROPERTY, CDataProcessorTree::CDataProcessorTreeWnd::OnPropertyItem)
 
+EVT_SET_FOCUS(CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus)
+EVT_KILL_FOCUS(CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus)
+
 EVT_MENU(wxID_COPY, CDataProcessorTree::CDataProcessorTreeWnd::OnCopyItem)
 EVT_MENU(wxID_PASTE, CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem)
-
-//EVT_DEBUG(CDataProcessorTree::CDataProcessorTreeWnd::OnDebugEvent)
 
 wxEND_EVENT_TABLE()
 
 CDataProcessorTree::CDataProcessorTreeWnd::CDataProcessorTreeWnd()
-	: wxTreeCtrl(), m_ownerTree(nullptr)
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMetaView)
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
 CDataProcessorTree::CDataProcessorTreeWnd::CDataProcessorTreeWnd(wxWindow* parentWnd, CDataProcessorTree* ownerWnd)
-	: wxTreeCtrl(parentWnd, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_TWIST_BUTTONS), m_ownerTree(ownerWnd)
+	: wxTreeCtrl(parentWnd, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_TWIST_BUTTONS), m_ownerTree(ownerWnd), m_metaView(new CMetaView)
 {
-	//debugClient->AddHandler(this);
-
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
 	entries[1].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
@@ -280,5 +279,5 @@ CDataProcessorTree::CDataProcessorTreeWnd::CDataProcessorTreeWnd(wxWindow* paren
 
 CDataProcessorTree::CDataProcessorTreeWnd::~CDataProcessorTreeWnd()
 {
-	//debugClient->RemoveHandler(this);
+	wxDELETE(m_metaView);
 }

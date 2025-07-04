@@ -57,7 +57,7 @@ class CValueStaticText : public IValueWindow {
     wxDECLARE_DYNAMIC_CLASS(CValueStaticText);
 protected:
     CPropertyCategory* m_categoryStaticText = IPropertyObject::CreatePropertyCategory(wxT("staticText"), _("static text"));
-    CPropertyBoolean* m_propertyMarkup = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStaticText, wxT("markup"), _("markup"), false);
+    CPropertyBoolean* m_propertyMarkup = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStaticText, wxT("markup"), _("markup"), true);
     CPropertyUInteger* m_propertyWrap = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStaticText, wxT("wrap"), _("wrap"), 0);
     CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryStaticText, wxT("caption"), _("caption"), _("My label"));
 public:
@@ -88,7 +88,7 @@ protected:
 protected:
     bool GetChoiceForm(CPropertyList* property);
 protected:
-    CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory("textControl", _("text control"));
+    CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textControl"), _("text control"));
     CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryText, wxT("caption"), wxEmptyString);
     CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("password mode"), false);
     CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("multilineMode"), _("multiline mode"), false);

@@ -10,7 +10,7 @@
 bool CMetaObjectConfiguration::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_INIT_MODULE, _("Open configuration module"));
-	menuItem->SetBitmap(m_propertyModuleConfiguration->GetMetaObject()->GetIcon());
+	menuItem->SetBitmap((*m_propertyModuleConfiguration)->GetIcon());
 	return true;
 }
 

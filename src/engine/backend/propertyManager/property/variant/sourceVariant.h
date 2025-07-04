@@ -6,6 +6,7 @@
 class BACKEND_API wxVariantDataAttributeSource : public wxVariantDataAttribute {
 protected:
 	virtual void DoSetFromMetaId(const meta_identifier_t& id);
+	virtual void DoRefreshTypeDesc();
 public:
 
 	wxVariantDataAttributeSource(const IBackendTypeSourceFactory* prop, const meta_identifier_t& id)

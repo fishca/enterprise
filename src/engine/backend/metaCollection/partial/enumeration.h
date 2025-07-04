@@ -13,7 +13,7 @@ class CMetaObjectEnumeration : public IMetaObjectRecordDataEnumRef {
 
 	enum
 	{
-		eFormList = 1,
+		eFormList = 2,
 		eFormSelect
 	};
 

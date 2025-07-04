@@ -197,6 +197,11 @@ public:
 
 public:
 
+	// before/after run 
+	virtual bool InitializeControl() { return true; }
+
+public:
+
 	/**
 	* Create an instance of the wxObject and return a pointer
 	*/
@@ -396,7 +401,7 @@ public:
 
 	//load & save object in metaObject 
 	bool LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader);
-	bool SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter());
+	bool SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter(), bool copy_form = false);
 
 protected:
 
@@ -407,8 +412,8 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
 
 	//load & save event in control 
-	bool ReadProperty(CMemoryReader& reader);
-	bool SaveProperty(CMemoryWriter& writer = CMemoryWriter()) const;
+	bool PasteProperty(CMemoryReader& reader);
+	bool CopyProperty(CMemoryWriter& writer = CMemoryWriter()) const;
 
 protected:
 

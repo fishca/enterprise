@@ -220,11 +220,11 @@ public:
 	}
 
 	//compile modules:
-	bool AddCompileModule(IMetaObject* moduleObject, CValue* object);
-	bool RemoveCompileModule(IMetaObject* moduleObject);
+	bool AddCompileModule(const IMetaObject* moduleObject, CValue* object);
+	bool RemoveCompileModule(const IMetaObject* moduleObject);
 
 	//templates:
-	template <class T> inline bool FindCompileModule(IMetaObject* moduleObject, T*& objValue) const {
+	template <class T> inline bool FindCompileModule(const IMetaObject* moduleObject, T*& objValue) const {
 		auto& it = m_listCommonModuleValue.find(moduleObject);
 		if (it != m_listCommonModuleValue.end()) {
 			objValue = dynamic_cast<T*>(it->second);
@@ -234,7 +234,7 @@ public:
 		return false;
 	}
 
-	template <class T> inline bool FindParentCompileModule(IMetaObject* moduleObject, T*& objValue) const {
+	template <class T> inline bool FindParentCompileModule(const IMetaObject* moduleObject, T*& objValue) const {
 		IMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
 		if (parentMetadata != nullptr)
 			return FindCompileModule(parentMetadata, objValue);
@@ -285,7 +285,7 @@ protected:
 	CMetadataUnit* m_metaManager;
 
 	//map with compile data
-	std::map<IMetaObject*, CValue*> m_listCommonModuleValue;
+	std::map<const IMetaObject*, CValue*> m_listCommonModuleValue;
 	//array of common modules
 	std::vector<CModuleUnit*> m_listCommonModuleManager;
 	//array of global variables

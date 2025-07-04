@@ -7,7 +7,8 @@ bool CPropertyList::SetDataValue(const CValue& varPropVal)
 		return false;
 
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
-		if (m_listPropValue.GetItemValue(idx) == varPropVal) {
+		const CValue *selValue = m_listPropValue.GetItemValue(idx); 
+		if ((selValue != nullptr && *selValue == varPropVal) || (selValue == nullptr && varPropVal == wxEmptyValue)) {
 			SetValue(stringUtils::IntToStr(m_listPropValue.GetItemId(idx)));
 			return true;
 		}
@@ -31,7 +32,7 @@ bool CPropertyList::GetDataValue(CValue& pvarPropVal) const
 
 bool CPropertyList::LoadData(CMemoryReader& reader)
 {
-	SetValue(stringUtils::IntToStr(reader.r_s32()));
+	SetValue(reader.r_s32());
 	return true;
 };
 

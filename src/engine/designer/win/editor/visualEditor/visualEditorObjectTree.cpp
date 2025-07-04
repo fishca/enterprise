@@ -45,7 +45,8 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CVisualEditorObje
 	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
-	m_altKeyIsDown = false;
+	m_altKeyIsDown = false; 
+	m_notifySelecting = false; 
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnKeyDown(wxTreeEvent& event)
@@ -125,18 +126,21 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RebuildTree(
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged(wxTreeEvent& event)
 {
-	wxTreeItemId id = event.GetItem();
+	const wxTreeItemId &id = event.GetItem();
 	if (!id.IsOk())
 		return;
-
 	// Make selected items bold
 	wxTreeItemId oldId = event.GetOldItem();
 	if (oldId.IsOk()) {
 		m_tcObjects->SetItemBold(oldId, false);
 	}
+
 	m_tcObjects->SetItemBold(id);
 
 	wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
+
+	if (m_notifySelecting)
+		return;
 
 	if (item_data != nullptr) {
 		IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
@@ -453,7 +457,10 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectSele
 	// Find the tree item associated with the object and select it
 	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
 	if (it != m_listItem.end()) {
-		// Ignore expand/collapse events
+		
+		m_notifySelecting = true; 
+
+		// Ignore expand/collapse events	
 		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
@@ -463,6 +470,8 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectSele
 		// Restore event handling
 		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	
+		m_notifySelecting = false;
 	}
 	else {
 		wxLogError(wxT("There is no tree item associated with this object.\n\tClass: %s\n\tName: %s"), obj->GetClassName().c_str(), obj->GetControlName().c_str());

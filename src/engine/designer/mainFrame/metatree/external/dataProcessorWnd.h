@@ -97,6 +97,7 @@ protected:
 	private:
 
 		CDataProcessorTree* m_ownerTree;
+		CMetaView* m_metaView;
 
 	public:
 
@@ -151,7 +152,7 @@ protected:
 		void OnCopyItem(wxCommandEvent& event);
 		void OnPasteItem(wxCommandEvent& event);
 
-		//void OnDebugEvent(wxDebugEvent& event);
+		void OnSetFocus(wxFocusEvent& event);
 
 		void OnSelecting(wxTreeEvent& event);
 		void OnSelected(wxTreeEvent& event);

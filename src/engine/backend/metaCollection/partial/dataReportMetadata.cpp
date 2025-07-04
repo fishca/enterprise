@@ -122,7 +122,7 @@ IBackendValueForm* CMetaObjectReport::GetObjectForm(const wxString& formName, IB
 
 bool CMetaObjectReport::GetFormObject(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
@@ -171,8 +171,8 @@ bool CMetaObjectReport::OnCreateMetaObject(IMetaData* metaData, int flags)
 	if (!IMetaObjectRecordData::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return (m_objMode == METAOBJECT_NORMAL ? m_propertyModuleManager->GetMetaObject()->OnCreateMetaObject(metaData, flags) : true) &&
-		m_propertyModuleObject->GetMetaObject()->OnCreateMetaObject(metaData, flags);
+	return (m_objMode == METAOBJECT_NORMAL ? (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) : true) &&
+		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
 }
 
 bool CMetaObjectReport::OnLoadMetaObject(IMetaData* metaData)
@@ -182,19 +182,19 @@ bool CMetaObjectReport::OnLoadMetaObject(IMetaData* metaData)
 
 	if (m_objMode == METAOBJECT_NORMAL) {
 
-		if (!m_propertyModuleManager->GetMetaObject()->OnLoadMetaObject(metaData))
+		if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 			return false;
 
-		m_propertyModuleObject->GetMetaObject()->SetMetaData(m_metaData);
+		(*m_propertyModuleObject)->SetMetaData(m_metaData);
 	
-		if (!m_propertyModuleObject->GetMetaObject()->OnLoadMetaObject(metaData))
+		if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
 			return false;
 	}
 	else {
 
-		m_propertyModuleObject->GetMetaObject()->SetMetaData(m_metaData);
+		(*m_propertyModuleObject)->SetMetaData(m_metaData);
 
-		if (!m_propertyModuleObject->GetMetaObject()->OnLoadMetaObject(metaData))
+		if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
 			return false;
 	}
 
@@ -204,11 +204,11 @@ bool CMetaObjectReport::OnLoadMetaObject(IMetaData* metaData)
 bool CMetaObjectReport::OnSaveMetaObject()
 {
 	if (m_objMode == METAOBJECT_NORMAL) {
-		if (!m_propertyModuleManager->GetMetaObject()->OnSaveMetaObject())
+		if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 			return false;
 	}
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordData::OnSaveMetaObject();
@@ -217,11 +217,11 @@ bool CMetaObjectReport::OnSaveMetaObject()
 bool CMetaObjectReport::OnDeleteMetaObject()
 {
 	if (m_objMode == METAOBJECT_NORMAL) {
-		if (!m_propertyModuleManager->GetMetaObject()->OnDeleteMetaObject())
+		if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 			return false;
 	}
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordData::OnDeleteMetaObject();
@@ -246,12 +246,12 @@ bool CMetaObjectReport::OnReloadMetaObject()
 bool CMetaObjectReport::OnBeforeRunMetaObject(int flags)
 {
 	if (m_objMode == METAOBJECT_NORMAL) {
-		if (!m_propertyModuleManager->GetMetaObject()->OnBeforeRunMetaObject(flags)) {
+		if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) {
 			return false;
 		}
 	}
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnBeforeRunMetaObject(flags)) {
+	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags)) {
 		return false;
 	}
 
@@ -289,11 +289,11 @@ bool CMetaObjectReport::OnBeforeCloseMetaObject()
 bool CMetaObjectReport::OnAfterCloseMetaObject()
 {
 	if (m_objMode == METAOBJECT_NORMAL) {
-		if (!m_propertyModuleManager->GetMetaObject()->OnAfterCloseMetaObject())
+		if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 			return false;
 	}
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnAfterCloseMetaObject()) {
+	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject()) {
 		return false;
 	}
 

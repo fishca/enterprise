@@ -7,12 +7,11 @@
 
 void CMetadataTree::CMetadataTreeWnd::OnLeftDClick(wxMouseEvent& event)
 {
-	wxTreeItemId curItem = HitTest(event.GetPosition());
-
+	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
-		SelectItem(curItem);
-		m_ownerTree->ActivateItem(curItem);
-	} event.Skip();
+		SelectItem(curItem); m_ownerTree->ActivateItem(curItem);
+	}
+	//event.Skip();
 }
 
 #include "frontend/mainFrame/mainFrame.h"
@@ -314,6 +313,23 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 			}
 		}
 		wxTheClipboard->Close();
+	}
+
+	event.Skip();
+}
+
+#include "frontend/docView/docManager.h"
+#include "frontend/mainFrame/mainFrameChild.h"
+
+void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
+{
+	if (event.GetEventType() == wxEVT_SET_FOCUS) {
+		docManager->ActivateView(m_metaView);
+	}
+	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+		const CAuiDocChildFrame* child = 
+			dynamic_cast<CAuiDocChildFrame *>(mainFrame->GetActiveChild());
+		docManager->ActivateView(child ? child->GetView() : nullptr);
 	}
 
 	event.Skip();

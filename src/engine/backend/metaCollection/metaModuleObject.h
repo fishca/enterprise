@@ -29,6 +29,9 @@ public:
 		m_metaObject->DecrRef();
 	}
 
+	// get meta object 
+	T* operator->() { return GetMetaObject(); }
+
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
 		return new wxPGHyperLinkProperty(m_metaObject, m_propLabel, m_propName, m_propValue);
@@ -176,6 +179,9 @@ public:
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterRunMetaObject(int flags);
+
+	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
 	//get property
@@ -222,6 +228,9 @@ public:
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterRunMetaObject(int flags);
+
+	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 };
 

@@ -14,13 +14,13 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectAccumulationRegister, IMetaObjectRegisterDa
 CMetaObjectAccumulationRegister::CMetaObjectAccumulationRegister() : IMetaObjectRegisterData()
 {
 	//set default proc
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 }
 
 CMetaObjectAccumulationRegister::~CMetaObjectAccumulationRegister()
 {
-	wxDELETE(m_attributeRecordType);
+	//wxDELETE((*m_propertyAttributeRecordType));
 }
 
 CMetaObjectForm* CMetaObjectAccumulationRegister::GetDefaultFormByID(const form_identifier_t& id)
@@ -35,8 +35,6 @@ CMetaObjectForm* CMetaObjectAccumulationRegister::GetDefaultFormByID(const form_
 
 	return nullptr;
 }
-
-
 
 IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
@@ -74,7 +72,7 @@ IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& 
 
 bool CMetaObjectAccumulationRegister::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
@@ -91,7 +89,7 @@ bool CMetaObjectAccumulationRegister::GetFormList(CPropertyList* prop)
 bool CMetaObjectAccumulationRegister::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeRecordType->LoadMeta(dataReader);
+	(*m_propertyAttributeRecordType)->LoadMeta(dataReader);
 
 	//load default form 
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
@@ -100,8 +98,8 @@ bool CMetaObjectAccumulationRegister::LoadData(CMemoryReader& dataReader)
 	m_propertyRegisterType->SetValue(dataReader.r_u16());
 
 	//load object module
-	m_propertyModuleObject->GetMetaObject()->LoadMeta(dataReader);
-	m_propertyModuleManager->GetMetaObject()->LoadMeta(dataReader);
+	(*m_propertyModuleObject)->LoadMeta(dataReader);
+	(*m_propertyModuleManager)->LoadMeta(dataReader);
 
 	return IMetaObjectRegisterData::LoadData(dataReader);
 }
@@ -109,7 +107,7 @@ bool CMetaObjectAccumulationRegister::LoadData(CMemoryReader& dataReader)
 bool CMetaObjectAccumulationRegister::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeRecordType->SaveMeta(dataWritter);
+	(*m_propertyAttributeRecordType)->SaveMeta(dataWritter);
 
 	//save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
@@ -118,8 +116,8 @@ bool CMetaObjectAccumulationRegister::SaveData(CMemoryWriter& dataWritter)
 	dataWritter.w_u16(m_propertyRegisterType->GetValueAsInteger());
 
 	//Save object module
-	m_propertyModuleObject->GetMetaObject()->SaveMeta(dataWritter);
-	m_propertyModuleManager->GetMetaObject()->SaveMeta(dataWritter);
+	(*m_propertyModuleObject)->SaveMeta(dataWritter);
+	(*m_propertyModuleManager)->SaveMeta(dataWritter);
 
 	//create or update table:
 	return IMetaObjectRegisterData::SaveData(dataWritter);
@@ -136,20 +134,20 @@ bool CMetaObjectAccumulationRegister::OnCreateMetaObject(IMetaData* metaData, in
 	if (!IMetaObjectRegisterData::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeRecordType->OnCreateMetaObject(metaData, flags) &&
-		m_propertyModuleManager->GetMetaObject()->OnCreateMetaObject(metaData, flags) &&
-		m_propertyModuleObject->GetMetaObject()->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeRecordType)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
 }
 
 bool CMetaObjectAccumulationRegister::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeRecordType->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeRecordType)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRegisterData::OnLoadMetaObject(metaData);
@@ -157,17 +155,17 @@ bool CMetaObjectAccumulationRegister::OnLoadMetaObject(IMetaData* metaData)
 
 bool CMetaObjectAccumulationRegister::OnSaveMetaObject()
 {
-	if (!m_attributeRecordType->OnSaveMetaObject())
+	if (!(*m_propertyAttributeRecordType)->OnSaveMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	if (!(m_attributeRecorder->GetClsidCount() > 0))
+	if (!((*m_propertyAttributeRecorder)->GetClsidCount() > 0))
 		return false;
 #endif 
 
@@ -176,13 +174,13 @@ bool CMetaObjectAccumulationRegister::OnSaveMetaObject()
 
 bool CMetaObjectAccumulationRegister::OnDeleteMetaObject()
 {
-	if (!m_attributeRecordType->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeRecordType)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRegisterData::OnDeleteMetaObject();
@@ -208,13 +206,13 @@ bool CMetaObjectAccumulationRegister::OnReloadMetaObject()
 
 bool CMetaObjectAccumulationRegister::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_attributeRecordType->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeRecordType)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerSelection();
@@ -262,13 +260,13 @@ bool CMetaObjectAccumulationRegister::OnBeforeCloseMetaObject()
 
 bool CMetaObjectAccumulationRegister::OnAfterCloseMetaObject()
 {
-	if (!m_attributeRecordType->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeRecordType)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject())
 		return false;
 
 	unregisterSelection();
@@ -301,20 +299,20 @@ void CMetaObjectAccumulationRegister::OnRemoveMetaForm(IMetaObjectForm* metaForm
 std::vector<IMetaObjectAttribute*> CMetaObjectAccumulationRegister::GetDefaultAttributes() const
 {
 	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_attributeLineActive);
+	attributes.push_back(m_propertyAttributeLineActive->GetMetaObject());
 	if (GetRegisterType() == eRegisterType::eBalances) {
-		attributes.push_back(m_attributeRecordType);
+		attributes.push_back(m_propertyAttributeRecordType->GetMetaObject());
 	}
-	attributes.push_back(m_attributePeriod);
-	attributes.push_back(m_attributeRecorder);
-	attributes.push_back(m_attributeLineNumber);
+	attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
+	attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
+	attributes.push_back(m_propertyAttributeLineNumber->GetMetaObject());
 	return attributes;
 }
 
 std::vector<IMetaObjectAttribute*> CMetaObjectAccumulationRegister::GetGenericDimensions() const
 {
 	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_attributeRecorder);
+	attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
 	return attributes;
 }
 

@@ -93,6 +93,9 @@ public:
     virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
     virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
+    // before/after run 
+    virtual bool InitializeControl() { CreateModel(); return true; }
+
     //control factory 
     virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
     virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;

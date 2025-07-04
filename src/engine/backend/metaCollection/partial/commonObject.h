@@ -350,19 +350,22 @@ protected:
 class BACKEND_API IMetaObjectRecordDataRef : public IMetaObjectRecordData {
     wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataRef);
 protected:
+    
     CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
     CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("presentation"));
     CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("quick choice"), false);
-protected:
-    CMetaObjectAttributeDefault* m_attributeReference = IMetaObjectSourceData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY));
+
+ // CMetaObjectAttributeDefault* m_attributeReference = IMetaObjectSourceData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY));
+    CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
+
 protected:
     //ctor
     IMetaObjectRecordDataRef();
     virtual ~IMetaObjectRecordDataRef();
 public:
 
-    virtual CMetaObjectAttributeDefault* GetDataReference() const { return m_attributeReference; }
-    virtual bool IsDataReference(const meta_identifier_t& id) const { return id == m_attributeReference->GetMetaID(); }
+    virtual CMetaObjectAttributeDefault* GetDataReference() const { return m_propertyAttributeReference->GetMetaObject(); }
+    virtual bool IsDataReference(const meta_identifier_t& id) const { return id == (*m_propertyAttributeReference)->GetMetaID(); }
 
     virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
 
@@ -456,8 +459,11 @@ protected:
 class BACKEND_API IMetaObjectRecordDataEnumRef : public IMetaObjectRecordDataRef {
     wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataEnumRef);
 private:
+   
     //default attributes 
-    CMetaObjectAttributeDefault* m_attributeOrder = IMetaObjectSourceData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true);
+    //CMetaObjectAttributeDefault* m_attributeOrder = IMetaObjectSourceData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true);
+    CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
+
 protected:
 
     //ctor
@@ -466,8 +472,8 @@ protected:
 
 public:
 
-    CMetaObjectAttributeDefault* GetDataOrder() const { return m_attributeOrder; }
-    bool IsDataOrder(const meta_identifier_t& id) const { return id == m_attributeOrder->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataOrder() const { return m_propertyAttributeOrder->GetMetaObject(); }
+    bool IsDataOrder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeOrder)->GetMetaID(); }
 
     //events: 
     virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
@@ -498,10 +504,13 @@ private:
     Role* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
     Role* m_roleDelete = IMetaObject::CreateRole("delete", _("delete"));
 protected:
+   
     CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("list generation"));
-protected:
-    CMetaObjectAttributeDefault* m_attributeDataVersion = IMetaObjectSourceData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item);
-    CMetaObjectAttributeDefault* m_attributeDeletionMark = IMetaObjectSourceData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString);
+    //CMetaObjectAttributeDefault* m_attributeDataVersion = IMetaObjectSourceData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item);
+    //CMetaObjectAttributeDefault* m_attributeDeletionMark = IMetaObjectSourceData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString);
+    CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
+    CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
+
 protected:
     //ctor
     IMetaObjectRecordDataMutableRef();
@@ -510,11 +519,11 @@ public:
 
     CMetaDescription& GetGenerationDescription() const { return m_propertyGeneration->GetValueAsMetaDesc(); }
 
-    CMetaObjectAttributeDefault* GetDataVersion() const { return m_attributeDataVersion; }
-    bool IsDataVersion(const meta_identifier_t& id) const { return id == m_attributeDataVersion->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataVersion() const { return m_propertyAttributeDataVersion->GetMetaObject(); }
+    bool IsDataVersion(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDataVersion)->GetMetaID(); }
 
-    CMetaObjectAttributeDefault* GetDataDeletionMark() const { return m_attributeDeletionMark; }
-    bool IsDataDeletionMark(const meta_identifier_t& id) const { return id == m_attributeDeletionMark->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataDeletionMark() const { return m_propertyAttributeDeletionMark->GetMetaObject(); }
+    bool IsDataDeletionMark(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDeletionMark)->GetMetaID(); }
 
     virtual bool HasQuickChoice() const { return false; }
 
@@ -564,24 +573,31 @@ protected:
 class BACKEND_API IMetaObjectRecordDataFolderMutableRef : public IMetaObjectRecordDataMutableRef {
     wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataFolderMutableRef);
 protected:
+    
     //create default attributes
-    CMetaObjectAttributeDefault* m_attributeCode = IMetaObjectSourceData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item);
-    CMetaObjectAttributeDefault* m_attributeDescription = IMetaObjectSourceData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item);
-    CMetaObjectAttributeDefault* m_attributeParent = IMetaObjectSourceData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders);
-    CMetaObjectAttributeDefault* m_attributeIsFolder = IMetaObjectSourceData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item);
+    //CMetaObjectAttributeDefault* m_attributeCode = IMetaObjectSourceData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item);
+    //CMetaObjectAttributeDefault* m_attributeDescription = IMetaObjectSourceData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item);
+    //CMetaObjectAttributeDefault* m_attributeParent = IMetaObjectSourceData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders);
+    //CMetaObjectAttributeDefault* m_propertyAttributeIsFolder = IMetaObjectSourceData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item);
+
+    CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
+    CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+    CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+    CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
+
 public:
 
-    CMetaObjectAttributeDefault* GetDataCode() const { return m_attributeCode; }
-    virtual bool IsDataCode(const meta_identifier_t& id) const { return id == m_attributeCode->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
+    virtual bool IsDataCode(const meta_identifier_t& id) const { return id == (*m_propertyAttributeCode)->GetMetaID(); }
 
-    CMetaObjectAttributeDefault* GetDataDescription() const { return m_attributeDescription; }
-    virtual bool IsDataDescription(const meta_identifier_t& id) const { return id == m_attributeDescription->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataDescription() const { return m_propertyAttributeDescription->GetMetaObject(); }
+    virtual bool IsDataDescription(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDescription)->GetMetaID(); }
 
-    CMetaObjectAttributeDefault* GetDataParent() const { return m_attributeParent; }
-    virtual bool IsDataParent(const meta_identifier_t& id) const { return id == m_attributeParent->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataParent() const { return m_propertyAttributeParent->GetMetaObject(); }
+    virtual bool IsDataParent(const meta_identifier_t& id) const { return id == (*m_propertyAttributeParent)->GetMetaID(); }
 
-    CMetaObjectAttributeDefault* GetDataIsFolder() const { return m_attributeIsFolder; }
-    virtual bool IsDataFolder(const meta_identifier_t& id) const { return id == m_attributeIsFolder->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetDataIsFolder() const { return m_propertyAttributeIsFolder->GetMetaObject(); }
+    virtual bool IsDataFolder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeIsFolder)->GetMetaID(); }
 
     virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
 
@@ -649,11 +665,18 @@ class BACKEND_API IMetaObjectRegisterData :
     public IMetaObjectGenericData {
     wxDECLARE_ABSTRACT_CLASS(IMetaObjectRegisterData);
 protected:
+    
     //create default attributes
-    CMetaObjectAttributeDefault* m_attributeLineActive = IMetaObjectSourceData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true);
-    CMetaObjectAttributeDefault* m_attributePeriod = IMetaObjectSourceData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
-    CMetaObjectAttributeDefault* m_attributeRecorder = IMetaObjectSourceData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString);
-    CMetaObjectAttributeDefault* m_attributeLineNumber = IMetaObjectSourceData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0);
+    //CMetaObjectAttributeDefault* m_attributeLineActive = IMetaObjectSourceData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true);
+    //CMetaObjectAttributeDefault* m_attributePeriod = IMetaObjectSourceData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
+    //CMetaObjectAttributeDefault* m_attributeRecorder = IMetaObjectSourceData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString);
+    //CMetaObjectAttributeDefault* m_attributeLineNumber = IMetaObjectSourceData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0);
+
+    CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
+    CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+    CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
+    CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
+
 private:
     Role* m_roleRead = IMetaObject::CreateRole("read", _("read"));
     Role* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
@@ -662,14 +685,14 @@ protected:
     virtual ~IMetaObjectRegisterData();
 public:
 
-    CMetaObjectAttributeDefault* GetRegisterActive() const { return m_attributeLineActive; }
-    bool IsRegisterActive(const meta_identifier_t& id) const { return id == m_attributeLineActive->GetMetaID(); }
-    CMetaObjectAttributeDefault* GetRegisterPeriod() const { return m_attributePeriod; }
-    bool IsRegisterPeriod(const meta_identifier_t& id) const { return id == m_attributePeriod->GetMetaID(); }
-    CMetaObjectAttributeDefault* GetRegisterRecorder() const { return m_attributeRecorder; }
-    bool IsRegisterRecorder(const meta_identifier_t& id) const { return id == m_attributeRecorder->GetMetaID(); }
-    CMetaObjectAttributeDefault* GetRegisterLineNumber() const { return m_attributeLineNumber; }
-    bool IsRegisterLineNumber(const meta_identifier_t& id) const { return id == m_attributeLineNumber->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetRegisterActive() const { return m_propertyAttributeLineActive->GetMetaObject(); }
+    bool IsRegisterActive(const meta_identifier_t& id) const { return id == (*m_propertyAttributeLineActive)->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetRegisterPeriod() const { return m_propertyAttributePeriod->GetMetaObject(); }
+    bool IsRegisterPeriod(const meta_identifier_t& id) const { return id == (*m_propertyAttributePeriod)->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetRegisterRecorder() const { return m_propertyAttributeRecorder->GetMetaObject(); }
+    bool IsRegisterRecorder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeRecorder)->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetRegisterLineNumber() const { return m_propertyAttributeLineNumber->GetMetaObject(); }
+    bool IsRegisterLineNumber(const meta_identifier_t& id) const { return id == (*m_propertyAttributeLineNumber)->GetMetaID(); }
 
     ///////////////////////////////////////////////////////////////////
 

@@ -9,7 +9,7 @@ class CMetaObjectAccumulationRegister : public IMetaObjectRegisterData {
 private:
 	enum
 	{
-		eFormList = 1,
+		eFormList = 2,
 	};
 
 	virtual CFormTypeList GetFormType() const override {
@@ -24,8 +24,8 @@ private:
 		ID_METATREE_OPEN_MANAGER = 19001,
 	};
 
-private:
-	CMetaObjectAttributeDefault* m_attributeRecordType = IMetaObjectSourceData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
+//private:
+	//CMetaObjectAttributeDefault* m_attributeRecordType = IMetaObjectSourceData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
 protected:
 
 	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("record set module")));
@@ -36,16 +36,18 @@ protected:
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
 	CPropertyEnum<CValueEnumAccumulationRegisterType>* m_propertyRegisterType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumAccumulationRegisterType>>(m_categoryData, wxT("register_type"), _("register type"), eRegisterType::eBalances);
 
+	CPropertyInnerAttribute<>* m_propertyAttributeRecordType = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
+
 private:
 	bool GetFormList(CPropertyList* prop);
 public:
 
 	CMetaObjectAttributeDefault* GetRegisterRecordType() const {
-		return m_attributeRecordType;
+		return m_propertyAttributeRecordType->GetMetaObject();
 	}
 
 	bool IsRegisterRecordType(const meta_identifier_t& id) const {
-		return id == m_attributeRecordType->GetMetaID();
+		return id == (*m_propertyAttributeRecordType)->GetMetaID();
 	}
 
 	///////////////////////////////////////////////////////////////////

@@ -7,7 +7,7 @@
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftDClick(wxMouseEvent &event)
 {
-	wxTreeItemId curItem = HitTest(event.GetPosition());
+	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) { 
 		SelectItem(curItem); m_ownerTree->ActivateItem(curItem);
 	} 
@@ -212,15 +212,22 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem(wxCommandEvent &even
 	event.Skip();
 }
 
-//void CDataProcessorTree::CDataProcessorTreeWnd::OnDebugEvent(wxDebugEvent &event)
-//{
-//	switch (event.GetEventId())
-//	{
-//	case EventId_EnterLoop: 
-//		m_ownerTree->EditModule(event.GetModuleName(), event.GetLine(), true); 	
-//		break;
-//	}
-//}
+#include "frontend/docView/docManager.h"
+#include "frontend/mainFrame/mainFrameChild.h"
+
+void CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus(wxFocusEvent& event)
+{
+	if (event.GetEventType() == wxEVT_SET_FOCUS) {
+		docManager->ActivateView(m_metaView);
+	}
+	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+		const CAuiDocChildFrame* child =
+			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+		docManager->ActivateView(child ? child->GetView() : nullptr);
+	}
+
+	event.Skip();
+}
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnSelecting(wxTreeEvent &event)
 {

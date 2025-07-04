@@ -116,37 +116,38 @@ private:
 				if (m_currentSel != nullptr) {
 					m_currentSel->OnPropertyCreated(prop);
 				}
-
-				wxPGProperty* id = m_pg->Append(GetProperty(prop));
-
-				if (m_style != wxOES_OI_MULTIPAGE_STYLE) {
-					// Most common classes will be showed with a slightly different colour.
-					if (stringUtils::CompareString(name, wxT("window")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(255, 255, 205)); // yellow
-					else if (stringUtils::CompareString(name, wxT("common")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(240, 240, 255)); // light blue
-					else if (stringUtils::CompareString(name, wxT("sizerItem")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(220, 255, 255)); // cyan
-				}
-
-				std::map< wxString, bool >::iterator it = m_isExpanded.find(strPropName);
-				if (it != m_isExpanded.end()) {
-					if (it->second) {
-						m_pg->Expand(id);
+				wxPGProperty* pg = GetProperty(prop);
+				if (pg != nullptr) {
+					wxPGProperty* id = m_pg->Append(pg);
+					if (m_style != wxOES_OI_MULTIPAGE_STYLE) {
+						// Most common classes will be showed with a slightly different colour.
+						if (stringUtils::CompareString(name, wxT("window")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(255, 255, 205)); // yellow
+						else if (stringUtils::CompareString(name, wxT("common")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(240, 240, 255)); // light blue
+						else if (stringUtils::CompareString(name, wxT("sizerItem")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(220, 255, 255)); // cyan
 					}
-					else {
-						m_pg->Collapse(id);
-					}
-				}
 
-				id->RefreshChildren();
+					std::map< wxString, bool >::iterator it = m_isExpanded.find(strPropName);
+					if (it != m_isExpanded.end()) {
+						if (it->second) {
+							m_pg->Expand(id);
+						}
+						else {
+							m_pg->Collapse(id);
+						}
+					}
+
+					id->RefreshChildren();
+
+					properties.insert(std::map<wxString, IProperty*>::value_type(strPropName, prop));
+					m_propMap.insert(std::map< wxPGProperty*, IProperty*>::value_type(id, prop));
+				}
 
 				if (m_currentSel != nullptr) {
 					m_currentSel->OnPropertyCreated(prop);
 				}
-
-				properties.insert(std::map<wxString, IProperty*>::value_type(strPropName, prop));
-				m_propMap.insert(std::map< wxPGProperty*, IProperty*>::value_type(id, prop));
 			}
 		}
 
@@ -186,33 +187,32 @@ private:
 
 			// We do not want to duplicate inherited events
 			if (events.find(eventName) == events.end()) {
-
-				wxPGProperty* id = m_pg->Append(GetEvent(event));				
-
-				m_pg->SetPropertyHelpString(id, wxGetTranslation(event->GetHelp()));
-
-				if (m_style != wxOES_OI_MULTIPAGE_STYLE) {
-					// Most common classes will be showed with a slightly different colour.
-					if (stringUtils::CompareString(name, wxT("window")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(255, 255, 205)); // yellow
-					else if (stringUtils::CompareString(name, wxT("common")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(240, 240, 255)); // light blue
-					else if (stringUtils::CompareString(name, wxT("sizerItem")))
-						m_pg->SetPropertyBackgroundColour(id, wxColour(220, 255, 255)); // cyan
-				}
-
-				std::map< wxString, bool >::iterator it = m_isExpanded.find(eventName);
-				if (it != m_isExpanded.end()) {
-					if (it->second) {
-						m_pg->Expand(id);
+				wxPGProperty* eg = GetEvent(event);
+				if (eg != nullptr) {
+					wxPGProperty* id = m_pg->Append(eg);
+					m_pg->SetPropertyHelpString(id, wxGetTranslation(event->GetHelp()));
+					if (m_style != wxOES_OI_MULTIPAGE_STYLE) {
+						// Most common classes will be showed with a slightly different colour.
+						if (stringUtils::CompareString(name, wxT("window")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(255, 255, 205)); // yellow
+						else if (stringUtils::CompareString(name, wxT("common")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(240, 240, 255)); // light blue
+						else if (stringUtils::CompareString(name, wxT("sizerItem")))
+							m_pg->SetPropertyBackgroundColour(id, wxColour(220, 255, 255)); // cyan
 					}
-					else {
-						m_pg->Collapse(id);
-					}
-				}
 
-				events.insert(std::map<wxString, IEvent*>::value_type(eventName, event));
-				m_eventMap.insert(std::map< wxPGProperty*, IEvent*>::value_type(id, event));
+					std::map< wxString, bool >::iterator it = m_isExpanded.find(eventName);
+					if (it != m_isExpanded.end()) {
+						if (it->second) {
+							m_pg->Expand(id);
+						}
+						else {
+							m_pg->Collapse(id);
+						}
+					}
+					events.insert(std::map<wxString, IEvent*>::value_type(eventName, event));
+					m_eventMap.insert(std::map< wxPGProperty*, IEvent*>::value_type(id, event));
+				}
 			}
 		}
 

@@ -10,7 +10,7 @@ private:
 	enum
 	{
 		eFormRecord = 1,
-		eFormList,
+		eFormList = 2,
 	};
 
 	virtual CFormTypeList GetFormType() const override {

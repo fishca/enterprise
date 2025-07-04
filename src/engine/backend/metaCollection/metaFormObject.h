@@ -38,6 +38,9 @@ public:
 	virtual void SetFormData(const wxMemoryBuffer& formData) = 0;
 	virtual wxMemoryBuffer GetFormData() const = 0;
 
+	// copy form data
+	wxMemoryBuffer CopyFormData() const;
+
 	/**
 	* Get type form
 	*/
@@ -148,6 +151,9 @@ public:
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterRunMetaObject(int flags);
+
+	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
 	//get property

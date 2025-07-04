@@ -35,7 +35,7 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 	}
 	IValueFrame* foundedControl = FindControlByID(event.GetId());
 	if (foundedControl != nullptr) {
-		CAuiToolBar* toolBar = wxDynamicCast( +GetWxObject(), CAuiToolBar);
+		CAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), CAuiToolBar);
 		wxASSERT(toolBar);
 		if (toolBar != nullptr)
 			toolBar->SetFocus();

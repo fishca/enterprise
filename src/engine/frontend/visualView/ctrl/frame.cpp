@@ -74,7 +74,7 @@ bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& da
 	return LoadData(dataReader);
 }
 
-bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter)
+bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter, bool copy_form)
 {
 	//Save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
@@ -97,7 +97,7 @@ bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& da
 #define propBlock 0x00023456
 #define eventBlock 0x00023457
 
-bool IValueFrame::ReadProperty(CMemoryReader& reader)
+bool IValueFrame::PasteProperty(CMemoryReader& reader)
 {
 	std::shared_ptr <CMemoryReader>propReader(reader.open_chunk(propBlock));
 	if (propReader != nullptr) {
@@ -106,7 +106,7 @@ bool IValueFrame::ReadProperty(CMemoryReader& reader)
 			if (propDataReader == nullptr)
 				break;
 			IProperty* prop = GetProperty(propDataReader->r_stringZ());
-			if (prop != nullptr && !prop->LoadData(*propDataReader))
+			if (prop != nullptr && !prop->PasteData(*propDataReader))
 				return false;
 		}
 	}
@@ -117,7 +117,7 @@ bool IValueFrame::ReadProperty(CMemoryReader& reader)
 			if (eventDataReader == nullptr)
 				break;
 			IEvent* event = GetEvent(eventDataReader->r_stringZ());
-			if (event != nullptr && !event->LoadData(*eventDataReader))
+			if (event != nullptr && !event->PasteData(*eventDataReader))
 				return false;
 		};
 	}
@@ -125,7 +125,7 @@ bool IValueFrame::ReadProperty(CMemoryReader& reader)
 	return true;
 }
 
-bool IValueFrame::SaveProperty(CMemoryWriter& writter) const
+bool IValueFrame::CopyProperty(CMemoryWriter& writter) const
 {
 	CMemoryWriter propWritter;
 	for (unsigned int idx = 0; idx < GetPropertyCount(); idx++) {
@@ -133,7 +133,7 @@ bool IValueFrame::SaveProperty(CMemoryWriter& writter) const
 		wxASSERT(prop);
 		CMemoryWriter propDataWritter;
 		propDataWritter.w_stringZ(prop->GetName());
-		if (!prop->SaveData(propDataWritter))
+		if (!prop->CopyData(propDataWritter))
 			return false;
 		propWritter.w_chunk(idx, propDataWritter.pointer(), propDataWritter.size());
 	}
@@ -146,7 +146,7 @@ bool IValueFrame::SaveProperty(CMemoryWriter& writter) const
 		wxASSERT(event);
 		CMemoryWriter eventDataWritter;
 		eventDataWritter.w_stringZ(event->GetName());
-		if (!event->SaveData(eventDataWritter))
+		if (!event->CopyData(eventDataWritter))
 			return false;
 		eventWritter.w_chunk(idx, eventDataWritter.pointer(), eventDataWritter.size());
 	}
@@ -211,7 +211,7 @@ bool IValueFrame::CopyObject(CMemoryWriter& writer) const
 	writterHeaderMemory.w_u64(GetClassType()); //get class type 
 	writer.w_chunk(headerBlock, writterHeaderMemory.pointer(), writterHeaderMemory.size());
 	CMemoryWriter writterDataMemory;
-	if (!SaveProperty(writterDataMemory))
+	if (!CopyProperty(writterDataMemory))
 		return false;
 	writer.w_chunk(dataBlock, writterDataMemory.pointer(), writterDataMemory.size());
 	CMemoryWriter writterChildMemory;
@@ -236,7 +236,7 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 	class_identifier_t clsid = readerHeaderMemory->r_u64();
 	std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
 
-	if (!ReadProperty(*readerDataMemory))
+	if (!PasteProperty(*readerDataMemory))
 		return false;
 
 	valueForm->ResolveNameConflict(this);

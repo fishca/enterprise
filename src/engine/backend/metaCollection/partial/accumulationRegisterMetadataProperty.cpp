@@ -3,10 +3,10 @@
 void CMetaObjectAccumulationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (GetRegisterType() == eRegisterType::eBalances) {
-		m_attributeRecordType->ClearFlag(metaDisableFlag);
+		(*m_propertyAttributeRecordType)->ClearFlag(metaDisableFlag);
 	}
 	else if (GetRegisterType() == eRegisterType::eTurnovers) {
-		m_attributeRecordType->SetFlag(metaDisableFlag);
+		(*m_propertyAttributeRecordType)->SetFlag(metaDisableFlag);
 	}
 
 	IMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);

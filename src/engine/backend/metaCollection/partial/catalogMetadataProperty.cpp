@@ -24,9 +24,11 @@ void CMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVariant&
 				typeDesc.AppendMetaType(so->GetClassType());
 			}
 		}
-		m_attributeOwner->SetDefaultMetaType(typeDesc);
+		(*m_propertyAttributeOwner)->SetDefaultMetaType(typeDesc);
 	}
-	if (m_attributeOwner->GetClsidCount() > 0) m_attributeOwner->ClearFlag(metaDisableFlag);
-	else m_attributeOwner->SetFlag(metaDisableFlag);
+
+	if ((*m_propertyAttributeOwner)->GetClsidCount() > 0) (*m_propertyAttributeOwner)->ClearFlag(metaDisableFlag);
+	else (*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
+	
 	IMetaObjectRecordDataMutableRef::OnPropertyChanged(property, oldValue, newValue);
 }

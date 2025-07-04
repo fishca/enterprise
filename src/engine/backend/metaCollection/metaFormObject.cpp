@@ -77,6 +77,18 @@ IBackendValueForm* IMetaObjectForm::GenerateFormAndRun(IBackendControlFrame* own
 
 ///////////////////////////////////////////////////////////////////////////
 
+wxMemoryBuffer IMetaObjectForm::CopyFormData() const
+{
+	IBackendValueForm* valueForm = nullptr;	
+	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+	if (moduleManager->FindCompileModule(this, valueForm)) 
+		return valueForm->SaveForm();	
+	return wxMemoryBuffer();
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 IMetaObjectForm::IMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) :
 	IMetaObjectModule(name, synonym, comment), m_firstInitialized(false)
 {
@@ -119,7 +131,7 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 		GetParent(), IMetaObjectGenericData
 	);
 	wxASSERT(metaObject);
-	prop->AppendItem(formDefaultName, defaultFormType, wxEmptyValue);
+	prop->AppendItem(formDefaultName, defaultFormType);
 	CFormTypeList formList = metaObject->GetFormType();
 	for (unsigned int idx = 0; idx < formList.GetItemCount(); idx++) {
 		prop->AppendItem(
@@ -127,7 +139,7 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 			formList.GetItemLabel(idx),
 			formList.GetItemHelp(idx),
 			formList.GetItemId(idx),
-			formList.GetItemName(idx)
+			formList.GetItemName(idx) 
 		);
 	}
 	return true;
@@ -262,6 +274,11 @@ bool CMetaObjectCommonForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 
 bool CMetaObjectCommonForm::OnBeforeRunMetaObject(int flags)
 {
+	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+}
+
+bool CMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
+{
 	if (appData->DesignerMode()) {
 		IModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
@@ -273,16 +290,22 @@ bool CMetaObjectCommonForm::OnBeforeRunMetaObject(int flags)
 	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectCommonForm::OnAfterCloseMetaObject()
+bool CMetaObjectCommonForm::OnBeforeCloseMetaObject()
 {
 	if (appData->DesignerMode()) {
 		IModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (moduleManager->RemoveCompileModule(this)) {
-			return IMetaObjectModule::OnAfterCloseMetaObject();
+			return IMetaObjectModule::OnBeforeCloseMetaObject();
 		}
 		return false;
 	}
+
+	return IMetaObjectModule::OnBeforeCloseMetaObject();
+}
+
+bool CMetaObjectCommonForm::OnAfterCloseMetaObject()
+{
 	return IMetaObjectModule::OnAfterCloseMetaObject();
 }
 

@@ -30,23 +30,23 @@ public:
 CMetaObjectDocument::CMetaObjectDocument() : IMetaObjectRecordDataMutableRef()
 {
 	//set default proc
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel", "writeMode", "postingMode"});
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel", "writeMode", "postingMode"});
+	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
 
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("posting", eContentHelper::eProcedureHelper, { "cancel", "postingMode" });
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("undoPosting", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("posting", eContentHelper::eProcedureHelper, { "cancel", "postingMode" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("undoPosting", eContentHelper::eProcedureHelper, { "cancel" });
 
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("filling", eContentHelper::eProcedureHelper, { "source", "standartProcessing" });
-	m_propertyModuleObject->GetMetaObject()->SetDefaultProcedure("onCopy", eContentHelper::eProcedureHelper, { "source" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("filling", eContentHelper::eProcedureHelper, { "source", "standartProcessing" });
+	(*m_propertyModuleObject)->SetDefaultProcedure("onCopy", eContentHelper::eProcedureHelper, { "source" });
 }
 
 CMetaObjectDocument::~CMetaObjectDocument()
 {
-	wxDELETE(m_attributeNumber);
-	wxDELETE(m_attributeDate);
-	wxDELETE(m_attributePosted);
+	//wxDELETE((*m_propertyAttributeNumber));
+	//wxDELETE((*m_propertyAttributeDate));
+	//wxDELETE((*m_propertyAttributePosted));
 }
 
 CMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t& id)
@@ -208,7 +208,8 @@ IBackendValueForm* CMetaObjectDocument::GetSelectForm(const wxString& formName, 
 
 bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
+
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
@@ -220,7 +221,8 @@ bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 
 bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
+
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
@@ -232,7 +234,8 @@ bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
 
 bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
+
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
@@ -245,9 +248,9 @@ bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
 wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	CValue vDate, vNumber;
-	if (!objValue->GetValueByMetaID(m_attributeDate->GetMetaID(), vDate))
+	if (!objValue->GetValueByMetaID((*m_propertyAttributeDate)->GetMetaID(), vDate))
 		return wxEmptyString;
-	if (!objValue->GetValueByMetaID(m_attributeNumber->GetMetaID(), vNumber))
+	if (!objValue->GetValueByMetaID((*m_propertyAttributeNumber)->GetMetaID(), vNumber))
 		return wxEmptyString;
 	return GetSynonym() << wxT(" ") << vNumber.GetString() << wxT(" ") << vDate.GetString();
 }
@@ -255,11 +258,13 @@ wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objVal
 std::vector<IMetaObjectAttribute*> CMetaObjectDocument::GetDefaultAttributes() const
 {
 	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_attributeNumber);
-	attributes.push_back(m_attributeDate);
-	attributes.push_back(m_attributePosted);
-	attributes.push_back(m_attributeReference);
-	attributes.push_back(m_attributeDeletionMark);
+	
+	attributes.push_back(m_propertyAttributeNumber->GetMetaObject());
+	attributes.push_back(m_propertyAttributeDate->GetMetaObject());
+	attributes.push_back(m_propertyAttributePosted->GetMetaObject());
+	attributes.push_back(m_propertyAttributeReference->GetMetaObject());
+	attributes.push_back(m_propertyAttributeDeletionMark->GetMetaObject());
+	
 	return attributes;
 }
 
@@ -267,8 +272,8 @@ std::vector<IMetaObjectAttribute*> CMetaObjectDocument::GetSearchedAttributes() 
 {
 	std::vector<IMetaObjectAttribute*> attributes;
 
-	attributes.push_back(m_attributeNumber);
-	attributes.push_back(m_attributeDate);
+	attributes.push_back(m_propertyAttributeNumber->GetMetaObject());
+	attributes.push_back(m_propertyAttributeDate->GetMetaObject());
 
 	return attributes;
 }
@@ -280,13 +285,13 @@ std::vector<IMetaObjectAttribute*> CMetaObjectDocument::GetSearchedAttributes() 
 bool CMetaObjectDocument::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
-	m_attributeNumber->LoadMeta(dataReader);
-	m_attributeDate->LoadMeta(dataReader);
-	m_attributePosted->LoadMeta(dataReader);
+	(*m_propertyAttributeNumber)->LoadMeta(dataReader);
+	(*m_propertyAttributeDate)->LoadMeta(dataReader);
+	(*m_propertyAttributePosted)->LoadMeta(dataReader);
 	
 	//load object module
-	m_propertyModuleObject->GetMetaObject()->LoadMeta(dataReader);
-	m_propertyModuleManager->GetMetaObject()->LoadMeta(dataReader);
+	(*m_propertyModuleObject)->LoadMeta(dataReader);
+	(*m_propertyModuleManager)->LoadMeta(dataReader);
 
 	//load default form 
 	m_propertyDefFormObject->SetValue(GetIdByGuid(dataReader.r_stringZ()));
@@ -302,13 +307,13 @@ bool CMetaObjectDocument::LoadData(CMemoryReader& dataReader)
 bool CMetaObjectDocument::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
-	m_attributeNumber->SaveMeta(dataWritter);
-	m_attributeDate->SaveMeta(dataWritter);
-	m_attributePosted->SaveMeta(dataWritter);
+	(*m_propertyAttributeNumber)->SaveMeta(dataWritter);
+	(*m_propertyAttributeDate)->SaveMeta(dataWritter);
+	(*m_propertyAttributePosted)->SaveMeta(dataWritter);
 
 	//save object module
-	m_propertyModuleObject->GetMetaObject()->SaveMeta(dataWritter);
-	m_propertyModuleManager->GetMetaObject()->SaveMeta(dataWritter);
+	(*m_propertyModuleObject)->SaveMeta(dataWritter);
+	(*m_propertyModuleManager)->SaveMeta(dataWritter);
 
 	//save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormObject->GetValueAsInteger()));
@@ -333,28 +338,28 @@ bool CMetaObjectDocument::OnCreateMetaObject(IMetaData* metaData, int flags)
 	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_attributeNumber->OnCreateMetaObject(metaData, flags) &&
-		m_attributeDate->OnCreateMetaObject(metaData, flags) &&
-		m_attributePosted->OnCreateMetaObject(metaData, flags) &&
-		m_propertyModuleObject->GetMetaObject()->OnCreateMetaObject(metaData, flags) &&
-		m_propertyModuleManager->GetMetaObject()->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyAttributeNumber)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeDate)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributePosted)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
 bool CMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_attributeNumber->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeNumber)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributeDate->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributeDate)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_attributePosted->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributePosted)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData))
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
@@ -362,19 +367,19 @@ bool CMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
 
 bool CMetaObjectDocument::OnSaveMetaObject()
 {
-	if (!m_attributeNumber->OnSaveMetaObject())
+	if (!(*m_propertyAttributeNumber)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributeDate->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDate)->OnSaveMetaObject())
 		return false;
 
-	if (!m_attributePosted->OnSaveMetaObject())
+	if (!(*m_propertyAttributePosted)->OnSaveMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject();
@@ -382,19 +387,19 @@ bool CMetaObjectDocument::OnSaveMetaObject()
 
 bool CMetaObjectDocument::OnDeleteMetaObject()
 {
-	if (!m_attributeNumber->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeNumber)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributeDate->OnDeleteMetaObject())
+	if (!(*m_propertyAttributeDate)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_attributePosted->OnDeleteMetaObject())
+	if (!(*m_propertyAttributePosted)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataMutableRef::OnDeleteMetaObject();
@@ -430,19 +435,19 @@ bool CMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	if (!m_attributeNumber->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeNumber)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributeDate->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributeDate)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_attributePosted->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributePosted)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	registerSelection();
@@ -486,19 +491,19 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 
 bool CMetaObjectDocument::OnAfterCloseMetaObject()
 {
-	if (!m_attributePosted->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributePosted->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_attributePosted->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_propertyModuleObject->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!m_propertyModuleManager->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
 	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
@@ -507,7 +512,7 @@ bool CMetaObjectDocument::OnAfterCloseMetaObject()
 		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
 			CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
 			wxASSERT(infoRecorder);
-			infoRecorder->GetTypeDesc().ClearMetaType(m_attributeReference->GetTypeDesc());
+			infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
 		}
 	}
 

@@ -197,6 +197,10 @@ public:
 	virtual bool LoadData(CMemoryReader& reader) = 0;
 	virtual bool SaveData(CMemoryWriter& writer) = 0;
 
+	//copy & paste object in control 
+	virtual bool PasteData(CMemoryReader& reader) { return LoadData(reader); }
+	virtual bool CopyData(CMemoryWriter& writer) { return SaveData(writer); }
+
 	//Set/Get property data
 	virtual bool SetDataValue(const CValue& varPropVal) = 0;
 	virtual bool GetDataValue(CValue& pvarPropVal) const = 0;

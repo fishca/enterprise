@@ -120,6 +120,7 @@ class BACKEND_API CEventList : public IEvent {
 		{
 		}
 		virtual bool Invoke(CEventList* property) override {
+			const CEventOptionList listPropValue = property->m_listPropValue;
 			if (property != nullptr) property->ResetListItem();
 			return (m_handler->*m_funcHandler)(property);
 		}
@@ -130,7 +131,17 @@ class BACKEND_API CEventList : public IEvent {
 	void ResetListItem() { (void)m_listPropValue.ResetListItem(); }
 #pragma endregion
 public:
-	int GetValueAsInteger() const { return typeConv::StringToInt(m_propValue); }
+	int GetValueAsInteger() const {
+		const int sel = typeConv::StringToInt(m_propValue);
+		if (m_functor->Invoke(const_cast<CEventList*>(this))) {
+			for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
+				if (m_listPropValue.GetItemId(idx) == sel) {
+					return sel;
+				}
+			}
+		}
+		return wxNOT_FOUND;
+	}
 #pragma region item 
 	void AppendItem(const wxString& name, const int& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, v); }
 	void AppendItem(const wxString& name, const wxString& label, const int& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, v); }

@@ -785,7 +785,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 
 				newDocument->SetIcon(metaObject->GetIcon());
 
-				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {
+				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {					
 					wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
 					if (cmdProc != nullptr)
 						newDocument->SetCommandProcessor(cmdProc);

@@ -41,6 +41,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer);
+
+	//copy & paste object in control 
+	virtual bool PasteData(CMemoryReader& reader); 
+	virtual bool CopyData(CMemoryWriter& writer); 
 };
 
 #endif

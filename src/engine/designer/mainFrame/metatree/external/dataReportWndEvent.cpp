@@ -7,8 +7,11 @@
 
 void CDataReportTree::CDataReportTreeWnd::OnLeftDClick(wxMouseEvent &event)
 {
-	wxTreeItemId curItem = HitTest(event.GetPosition());
-	if (curItem.IsOk()) { SelectItem(curItem); m_ownerTree->ActivateItem(curItem); } //event.Skip();
+	const wxTreeItemId curItem = HitTest(event.GetPosition());
+	if (curItem.IsOk()) {
+		SelectItem(curItem); m_ownerTree->ActivateItem(curItem);
+	}
+	//event.Skip();
 }
 
 #include "frontend/mainFrame/mainFrame.h"
@@ -233,13 +236,22 @@ void CDataReportTree::CDataReportTreeWnd::OnPasteItem(wxCommandEvent &event)
 	event.Skip();
 }
 
-//void CDataReportTree::CDataReportTreeWnd::OnDebugEvent(wxDebugEvent &event)
-//{
-//	switch (event.GetEventId())
-//	{
-//	case EventId_EnterLoop: m_ownerTree->EditModule(event.GetModuleName(), event.GetLine(), true); break;
-//	}
-//}
+#include "frontend/docView/docManager.h"
+#include "frontend/mainFrame/mainFrameChild.h"
+
+void CDataReportTree::CDataReportTreeWnd::OnSetFocus(wxFocusEvent& event)
+{
+	if (event.GetEventType() == wxEVT_SET_FOCUS) {
+		docManager->ActivateView(m_metaView);
+	}
+	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+		const CAuiDocChildFrame* child =
+			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+		docManager->ActivateView(child ? child->GetView() : nullptr);
+	}
+
+	event.Skip();
+}
 
 void CDataReportTree::CDataReportTreeWnd::OnSelecting(wxTreeEvent &event)
 {

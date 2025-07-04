@@ -46,11 +46,15 @@ protected:
 
 	CPropertyRecord* m_propertyRegisterRecord = IPropertyObject::CreateProperty<CPropertyRecord>(m_categoryData, wxT("listRegisterRecord"), _("list register record"));
 
-private:
 	//create default attributes
-	CMetaObjectAttributeDefault* m_attributeNumber = IMetaObjectSourceData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true);
-	CMetaObjectAttributeDefault* m_attributeDate = IMetaObjectSourceData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
-	CMetaObjectAttributeDefault* m_attributePosted = IMetaObjectSourceData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString);
+	//CMetaObjectAttributeDefault* m_attributeNumber = IMetaObjectSourceData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true);
+	//CMetaObjectAttributeDefault* m_attributeDate = IMetaObjectSourceData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
+	//CMetaObjectAttributeDefault* m_attributePosted = IMetaObjectSourceData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString);
+
+	CPropertyInnerAttribute<>* m_propertyAttributeNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeDate = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePosted = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString));
+
 private:
 	bool GetFormObject(CPropertyList* prop);
 	bool GetFormList(CPropertyList* prop);
@@ -59,9 +63,9 @@ public:
 
 	CMetaDescription& GetRecordDescription() const { return m_propertyRegisterRecord->GetValueAsMetaDesc(); }
 
-	CMetaObjectAttributeDefault* GetDocumentNumber() const { return m_attributeNumber; }
-	CMetaObjectAttributeDefault* GetDocumentDate() const { return m_attributeDate; }
-	CMetaObjectAttributeDefault* GetDocumentPosted() const { return m_attributePosted; }
+	CMetaObjectAttributeDefault* GetDocumentNumber() const { return m_propertyAttributeNumber->GetMetaObject(); }
+	CMetaObjectAttributeDefault* GetDocumentDate() const { return m_propertyAttributeDate->GetMetaObject(); }
+	CMetaObjectAttributeDefault* GetDocumentPosted() const { return m_propertyAttributePosted->GetMetaObject(); }
 
 	//default constructor 
 	CMetaObjectDocument();
@@ -99,9 +103,7 @@ public:
 	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
 
 	//get attribute code 
-	virtual IMetaObjectAttribute* GetAttributeForCode() const {
-		return m_attributeNumber;
-	}
+	virtual IMetaObjectAttribute* GetAttributeForCode() const { return m_propertyAttributeNumber->GetMetaObject(); }
 
 	//override base objects 
 	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const override;

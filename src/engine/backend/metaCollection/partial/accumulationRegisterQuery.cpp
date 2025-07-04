@@ -17,7 +17,7 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(IMetaDataCo
 			return false;
 
 		retCode = ProcessAttribute(tableName,
-			m_attributePeriod, nullptr);
+			m_propertyAttributePeriod->GetMetaObject(), nullptr);
 
 		for (auto& obj : GetObjectDimensions()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -108,7 +108,7 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(IMetaDataCo
 			return false;
 
 		retCode = ProcessAttribute(tableName,
-			m_attributePeriod, nullptr);
+			m_propertyAttributePeriod->GetMetaObject(), nullptr);
 
 		for (auto& obj : GetObjectDimensions()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)

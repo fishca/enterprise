@@ -174,6 +174,11 @@ bool CMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
 
 bool CMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 {
+	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+}
+
+bool CMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
+{
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -183,7 +188,7 @@ bool CMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectCommonModule::OnAfterCloseMetaObject()
+bool CMetaObjectCommonModule::OnBeforeCloseMetaObject()
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -194,11 +199,21 @@ bool CMetaObjectCommonModule::OnAfterCloseMetaObject()
 	return IMetaObjectModule::OnAfterCloseMetaObject();
 }
 
+bool CMetaObjectCommonModule::OnAfterCloseMetaObject()
+{
+	return IMetaObjectModule::OnAfterCloseMetaObject();
+}
+
 //***********************************************************************
 //*                          manager value object                       *
 //***********************************************************************
 
 bool CMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
+{
+	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+}
+
+bool CMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -206,10 +221,10 @@ bool CMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
 	if (!moduleManager->AddCommonModule(this, true, (flags & newObjectFlag) != 0))
 		return false;
 
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return IMetaObjectModule::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectManagerModule::OnAfterCloseMetaObject()
+bool CMetaObjectManagerModule::OnBeforeCloseMetaObject()
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -217,6 +232,11 @@ bool CMetaObjectManagerModule::OnAfterCloseMetaObject()
 	if (!moduleManager->RemoveCommonModule(this))
 		return false;
 
+	return IMetaObjectModule::OnBeforeCloseMetaObject();
+}
+
+bool CMetaObjectManagerModule::OnAfterCloseMetaObject()
+{
 	return IMetaObjectModule::OnAfterCloseMetaObject();
 }
 

@@ -95,6 +95,7 @@ protected:
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
 		CDataReportTree* m_ownerTree;
+		CMetaView* m_metaView;
 	public:
 
 		CDataReportTreeWnd();
@@ -148,7 +149,7 @@ protected:
 		void OnCopyItem(wxCommandEvent& event);
 		void OnPasteItem(wxCommandEvent& event);
 
-		//void OnDebugEvent(wxDebugEvent& event);
+		void OnSetFocus(wxFocusEvent& event);
 
 		void OnSelecting(wxTreeEvent& event);
 		void OnSelected(wxTreeEvent& event);

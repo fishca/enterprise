@@ -19,10 +19,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectConfiguration, IMetaObject);
 CMetaObjectConfiguration::CMetaObjectConfiguration() : IMetaObject(configurationDefaultName)
 {
 	//set default proc
-	m_propertyModuleConfiguration->GetMetaObject()->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, {"cancel"});
-	m_propertyModuleConfiguration->GetMetaObject()->SetDefaultProcedure("onStart", eContentHelper::eProcedureHelper);
-	m_propertyModuleConfiguration->GetMetaObject()->SetDefaultProcedure("beforeExit", eContentHelper::eProcedureHelper, { "cancel" });
-	m_propertyModuleConfiguration->GetMetaObject()->SetDefaultProcedure("onExit", eContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, {"cancel"});
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onStart", eContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeExit", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onExit", eContentHelper::eProcedureHelper);
 
 	//set def metaid
 	m_metaId = defaultMetaID;
@@ -35,13 +35,13 @@ CMetaObjectConfiguration::~CMetaObjectConfiguration()
 bool CMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
 {
 	m_propertyVersion->SetValue(dataReader.r_s32());
-	return m_propertyModuleConfiguration->GetMetaObject()->LoadMeta(dataReader);
+	return (*m_propertyModuleConfiguration)->LoadMeta(dataReader);
 }
 
 bool CMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 {
 	dataWritter.w_s32(m_propertyVersion->GetValueAsInteger());
-	return m_propertyModuleConfiguration->GetMetaObject()->SaveMeta(dataWritter);
+	return (*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
 }
 
 //***********************************************************************
@@ -52,7 +52,7 @@ bool CMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 
 bool CMetaObjectConfiguration::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnCreateMetaObject(metaData, flags)) {
+	if (!(*m_propertyModuleConfiguration)->OnCreateMetaObject(metaData, flags)) {
 		return false;
 	}
 
@@ -61,7 +61,7 @@ bool CMetaObjectConfiguration::OnCreateMetaObject(IMetaData* metaData, int flags
 
 bool CMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnLoadMetaObject(metaData)) {
+	if (!(*m_propertyModuleConfiguration)->OnLoadMetaObject(metaData)) {
 		return false;
 	}
 
@@ -70,7 +70,7 @@ bool CMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
 
 bool CMetaObjectConfiguration::OnSaveMetaObject()
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnSaveMetaObject()) {
+	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject()) {
 		return false;
 	}
 
@@ -79,7 +79,7 @@ bool CMetaObjectConfiguration::OnSaveMetaObject()
 
 bool CMetaObjectConfiguration::OnDeleteMetaObject()
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnDeleteMetaObject()) {
+	if (!(*m_propertyModuleConfiguration)->OnDeleteMetaObject()) {
 		return false;
 	}
 
@@ -88,7 +88,7 @@ bool CMetaObjectConfiguration::OnDeleteMetaObject()
 
 bool CMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleConfiguration)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
@@ -102,7 +102,7 @@ bool CMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectConfiguration::OnAfterCloseMetaObject()
 {
-	if (!m_propertyModuleConfiguration->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleConfiguration)->OnAfterCloseMetaObject())
 		return false;
 
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();

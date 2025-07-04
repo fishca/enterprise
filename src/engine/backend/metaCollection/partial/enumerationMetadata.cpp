@@ -127,11 +127,11 @@ IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& formNam
 
 bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), prop);
+			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
 	}
 	return true;
@@ -139,7 +139,7 @@ bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 
 bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
 {
-	prop->AppendItem(_("<not selected>"), wxNOT_FOUND, wxEmptyValue);
+	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetObjectForms()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
@@ -166,7 +166,7 @@ wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* obj
 bool CMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
 {
 	//Load object module
-	m_propertyModuleManager->GetMetaObject()->LoadMeta(dataReader);
+	(*m_propertyModuleManager)->LoadMeta(dataReader);
 
 	//save default form 
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
@@ -178,7 +178,7 @@ bool CMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
 bool CMetaObjectEnumeration::SaveData(CMemoryWriter& dataWritter)
 {
 	//Save object module
-	m_propertyModuleManager->GetMetaObject()->SaveMeta(dataWritter);
+	(*m_propertyModuleManager)->SaveMeta(dataWritter);
 
 	//save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
@@ -197,12 +197,12 @@ bool CMetaObjectEnumeration::OnCreateMetaObject(IMetaData* metaData, int flags)
 	if (!IMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return m_propertyModuleManager->GetMetaObject()->OnCreateMetaObject(metaData, flags);
+	return (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
 bool CMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnLoadMetaObject(metaData))
+	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
 	return IMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
@@ -210,7 +210,7 @@ bool CMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
 
 bool CMetaObjectEnumeration::OnSaveMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataEnumRef::OnSaveMetaObject();
@@ -218,7 +218,7 @@ bool CMetaObjectEnumeration::OnSaveMetaObject()
 
 bool CMetaObjectEnumeration::OnDeleteMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnDeleteMetaObject())
+	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
@@ -231,7 +231,7 @@ bool CMetaObjectEnumeration::OnReloadMetaObject()
 
 bool CMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	return IMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
@@ -239,7 +239,7 @@ bool CMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectEnumeration::OnAfterCloseMetaObject()
 {
-	if (!m_propertyModuleManager->GetMetaObject()->OnAfterCloseMetaObject())
+	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
 	return IMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();
@@ -280,7 +280,7 @@ void CMetaObjectEnumeration::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 std::vector<IMetaObjectAttribute*> CMetaObjectEnumeration::GetDefaultAttributes() const
 {
 	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_attributeReference);
+	attributes.push_back(m_propertyAttributeReference->GetMetaObject());
 	return attributes;
 }
 

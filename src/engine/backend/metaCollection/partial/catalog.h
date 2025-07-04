@@ -20,9 +20,9 @@ private:
     enum
     {
         eFormObject = 1,
-        eFormGroup,
         eFormList,
         eFormSelect,
+        eFormGroup,
         eFormFolderSelect
     };
 
@@ -52,10 +52,9 @@ protected:
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("listOwner"), _("list owner"));
 
-private:
-
     //default attributes 
-    CMetaObjectAttributeDefault* m_attributeOwner = IMetaObjectSourceData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item);
+    //CMetaObjectAttributeDefault* m_attributeOwner = IMetaObjectSourceData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item);
+    CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
 private:
     bool GetFormObject(CPropertyList* prop);
@@ -65,7 +64,7 @@ private:
     bool GetFormFolderSelect(CPropertyList* prop);
 public:
 
-    CMetaObjectAttributeDefault* GetCatalogOwner() const { return m_attributeOwner; }
+    CMetaObjectAttributeDefault* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
 
     //default constructor 
     CMetaObjectCatalog();
@@ -97,7 +96,7 @@ public:
 
     //get attribute code 
     virtual IMetaObjectAttribute* GetAttributeForCode() const {
-        return m_attributeCode;
+        return m_propertyAttributeCode->GetMetaObject();
     }
 
     //override base objects 

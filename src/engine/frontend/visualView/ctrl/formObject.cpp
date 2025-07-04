@@ -302,7 +302,22 @@ bool CValueForm::InitializeFormModule()
 		m_procUnit->Execute(m_compileModule->m_cByteCode, true);
 	}
 
-	return true;
+#pragma region _control_guard_
+
+	struct CControlGuard {
+
+		static bool Initialize(IValueFrame* controlParent) {
+			for (unsigned int idx = controlParent->GetChildCount(); idx > 0; idx--) {
+				if (!Initialize(controlParent->GetChild(idx - 1)))
+					return false;
+			}
+			return controlParent->InitializeControl();
+		}
+	};
+
+	return CControlGuard::Initialize(this);
+
+#pragma endregion 
 }
 
 #include "backend/system/value/valueType.h"
@@ -477,12 +492,7 @@ bool CValueForm::CloseForm(bool force)
 	}
 
 	if (m_valueFormDocument != nullptr) {
-		if (m_valueFormDocument->OnSaveModified()) {
-			m_valueFormDocument->DeleteAllViews();
-			m_valueFormDocument = nullptr;
-			return true;
-		}
-		return false;
+		return m_valueFormDocument->DeleteAllViews();
 	}
 
 	return true;

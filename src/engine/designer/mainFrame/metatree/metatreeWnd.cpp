@@ -181,23 +181,24 @@ EVT_MENU(ID_METATREE_INSERT, CMetadataTree::CMetadataTreeWnd::OnInsertItem)
 EVT_MENU(ID_METATREE_REPLACE, CMetadataTree::CMetadataTreeWnd::OnReplaceItem)
 EVT_MENU(ID_METATREE_SAVE, CMetadataTree::CMetadataTreeWnd::OnSaveItem)
 
+EVT_SET_FOCUS(CMetadataTree::CMetadataTreeWnd::OnSetFocus)
+EVT_KILL_FOCUS(CMetadataTree::CMetadataTreeWnd::OnSetFocus)
+
 EVT_MENU(wxID_COPY, CMetadataTree::CMetadataTreeWnd::OnCopyItem)
 EVT_MENU(wxID_PASTE, CMetadataTree::CMetadataTreeWnd::OnPasteItem)
 
 wxEND_EVENT_TABLE()
 
 CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd()
-	: wxTreeCtrl(), m_ownerTree(nullptr)
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMetaView)
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
 CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd(CMetadataTree* parent)
-	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_TWIST_BUTTONS), m_ownerTree(parent)
+	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMetaView)
 {
-	//debugClient->AddHandler(this);
-
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
 	entries[1].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
@@ -211,4 +212,5 @@ CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd(CMetadataTree* parent)
 
 CMetadataTree::CMetadataTreeWnd::~CMetadataTreeWnd()
 {
+	wxDELETE(m_metaView);
 }

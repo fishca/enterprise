@@ -172,6 +172,7 @@ private:
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
 		CMetadataTree* m_ownerTree;
+		CMetaView* m_metaView; 
 	private:
 		wxTreeItemId m_draggedItem;
 	public:
@@ -234,7 +235,7 @@ private:
 		void OnCopyItem(wxCommandEvent& event);
 		void OnPasteItem(wxCommandEvent& event);
 
-		//void OnDebugEvent(wxDebugEvent& event);
+		void OnSetFocus(wxFocusEvent& event);
 
 		void OnSelecting(wxTreeEvent& event);
 		void OnSelected(wxTreeEvent& event);

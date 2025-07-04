@@ -57,6 +57,10 @@ public:
 	CMetaDocument(CMetaDocument* docParent = nullptr);
 	virtual ~CMetaDocument();
 
+	// Called after a view is added or removed. The default implementation
+	// deletes the document if this is there are no more views.
+	virtual void OnChangedViewList() { if (m_documentViews.empty()) delete this; }
+
 	virtual bool OnCreate(const wxString& WXUNUSED(path), long flags) override;
 
 	virtual bool OnSaveModified() override;

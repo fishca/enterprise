@@ -3,7 +3,6 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-
 void wxVariantDataAttributeSource::DoSetFromMetaId(const meta_identifier_t& id)
 {
 	if (m_ownerSrcProperty != nullptr && id != wxNOT_FOUND) {
@@ -18,6 +17,37 @@ void wxVariantDataAttributeSource::DoSetFromMetaId(const meta_identifier_t& id)
 	}
 
 	wxVariantDataAttribute::DoSetFromMetaId(id);
+}
+
+#include "backend/objCtor.h"
+
+void wxVariantDataAttributeSource::DoRefreshTypeDesc()
+{
+	if (m_ownerSrcProperty != nullptr) {
+
+		std::set<class_identifier_t> clear_list;
+
+		const IMetaData* metaData = m_ownerSrcProperty->GetMetaData();
+		wxASSERT(metaData);
+		const ISourceObject* srcObject = m_ownerSrcProperty->GetSourceObject();
+
+		for (auto clsid : m_typeDesc.GetClsidList()) {
+			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+			if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == eCtorMetaType_TabularSection) {
+				if (srcObject != nullptr) {
+					const IMetaObject* metaTable = typeCtor->GetMetaObject();
+					if (metaTable == nullptr) clear_list.insert(clsid);
+					else if (metaTable->GetParent() != srcObject->GetSourceMetaObject()) clear_list.insert(clsid);
+				}
+				else if (srcObject == nullptr)clear_list.insert(clsid);
+			}
+		}
+
+		for (auto clsid : clear_list) { m_typeDesc.ClearMetaType(clsid); }
+		if (!m_typeDesc.IsOk()) SetDefaultMetaType();
+	}
+
+	wxVariantDataAttribute::DoRefreshTypeDesc();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -60,10 +90,10 @@ Guid wxVariantDataSource::GetGuidByID(const meta_identifier_t& id) const
 	if (id != wxNOT_FOUND && sourceObject != nullptr) {
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(objMetaValue);
-		IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+		const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
 			genericObject->FindMetaObjectByID(id) : nullptr;
 		//wxASSERT(metaObject);
-		return metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetGuid() : wxNullGuid;
+		return metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetCommonGuid() : wxNullGuid;
 
 	}
 	return wxNullGuid;
@@ -92,7 +122,7 @@ void wxVariantDataSource::SetSource(const meta_identifier_t& id, bool fillTypeDe
 	if (id != wxNOT_FOUND && sourceObject != nullptr) {
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
-		IMetaObject* metaObject = genericObject->FindMetaObjectByID(id);
+		const IMetaObject* metaObject = genericObject->FindMetaObjectByID(id);
 		wxASSERT(metaObject);
 		m_dataSource = metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetGuid() : wxNullGuid;
 	}
@@ -123,9 +153,10 @@ Guid wxVariantDataSource::GetSourceGuid() const
 	if (m_dataSource.isValid() && sourceObject != nullptr) {
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return wxNullGuid;
-		IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
+		const IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
 		wxASSERT(metaObject);
-		return metaObject != nullptr && metaObject->IsAllowed() ? m_dataSource : wxNullGuid;
+		return metaObject != nullptr && metaObject->IsAllowed() ?
+			metaObject->GetCommonGuid() : wxNullGuid;
 	}
 	return wxNullGuid;
 }
@@ -163,7 +194,7 @@ bool wxVariantDataSource::IsPropAllowed() const
 	if (m_dataSource.isValid() && sourceObject != nullptr) {
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return true;
-		IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
+		const IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
 		wxASSERT(metaObject);
 		if (metaObject != nullptr)
 			return !metaObject->IsAllowed();

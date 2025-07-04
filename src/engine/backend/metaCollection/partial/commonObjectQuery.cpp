@@ -316,7 +316,7 @@ bool IMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IM
 			return false;
 		const CTypeDescription& typeDesc = metaRec->GetTypeDesc();
 		for (auto& clsid : typeDesc.GetClsidList()) {
-			if (!m_attributeRecorder->ContainType(clsid)) {
+			if (!(*m_propertyAttributeRecorder)->ContainType(clsid)) {
 				int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR; wxString clsStr; clsStr << wxLongLong_t(clsid);
 				retCode = db_query->RunQuery("DELETE FROM %s WHERE %s_RTRef = " + clsStr, tableName, metaRec->GetFieldNameDB());
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)

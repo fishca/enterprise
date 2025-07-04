@@ -99,7 +99,7 @@ protected:
 	CPropertyName* m_propertyName = IPropertyObject::CreateProperty<CPropertyName>(m_categoryCommon, wxT("name"), _("name"), wxEmptyString);
 	CPropertyCaption* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryCommon, wxT("synonym"), _("synonym"), wxEmptyString);
 	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("comment"), wxEmptyString);
-	
+
 	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("secondary"));
 
 protected:
@@ -204,9 +204,9 @@ public:
 		if (roleName.IsEmpty())
 			return false;
 		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, Role*>& pair)
-		{
-			return roleName == pair.first;
-		}
+			{
+				return roleName == pair.first;
+			}
 		);
 		if (it == m_roles.end())
 			return false;
@@ -218,9 +218,9 @@ public:
 		if (roleName.IsEmpty())
 			return false;
 		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, Role*>& pair)
-		{
-			return roleName == pair.first;
-		}
+			{
+				return roleName == pair.first;
+			}
 		);
 		if (it == m_roles.end())
 			return false;
@@ -255,21 +255,28 @@ public:
 	virtual ~IMetaObject();
 
 	//system override 
-	virtual int GetComponentType() const final {
-		return COMPONENT_TYPE_METADATA;
-	}
+	virtual int GetComponentType() const final { return COMPONENT_TYPE_METADATA; }
 
-	virtual wxString GetClassName() const final {
-		return CValue::GetClassName();
-	}
+	virtual wxString GetClassName() const final { return CValue::GetClassName(); }
+	virtual wxString GetObjectTypeName() const final { return CValue::GetClassName(); }
 
-	virtual wxString GetObjectTypeName() const final {
-		return CValue::GetClassName();
-	};
-
-	Guid GetGuid() const {
-		return m_metaGuid;
+	Guid GetGuid() const { return m_metaGuid; }
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	void SetCommonGuid(const Guid& guid) {
+		m_metaCopyGuid.reset(); m_metaGuid = guid;
 	}
+	
+	Guid GetCommonGuid() const {
+		return m_metaCopyGuid.isValid() ? m_metaCopyGuid : m_metaGuid;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	void SetCopyGuid(const Guid& guid) const { m_metaCopyGuid = guid; }
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	wxString GetFileName() const;
 	wxString GetFullName() const;
@@ -413,10 +420,6 @@ public:
 		return true;
 	}
 
-	//copy & paste object 
-	virtual bool CopyObject(CMemoryWriter& writer) const;
-	virtual bool PasteObject(CMemoryReader& reader);
-
 	/**
 	* Property events
 	*/
@@ -429,6 +432,10 @@ public:
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
 	*/
 	virtual bool ChangeChildPosition(IPropertyObject* obj, unsigned int pos);
+
+	//copy & paste object 
+	bool CopyObject(CMemoryWriter& writer) const;
+	bool PasteObject(CMemoryReader& reader);
 
 protected:
 
@@ -444,8 +451,9 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
 	virtual bool DeleteData() { return true; }
 
-	bool ReadProperty(CMemoryReader& reader);
-	bool SaveProperty(CMemoryWriter& writer) const;
+	//copy & paste property 
+	bool CopyProperty(CMemoryWriter& writer) const;
+	bool PasteProperty(CMemoryReader& reader);
 
 protected:
 
@@ -461,16 +469,16 @@ protected:
 				metaItem->m_listMetaObject.end(),
 				std::back_inserter(m_listObject),
 				[](auto const& obj)
-			{
-				return dynamic_cast<convType*>(obj);
-			}
+				{
+					return dynamic_cast<convType*>(obj);
+				}
 			);
 			m_listObject.erase(
 				std::remove_if(m_listObject.begin(), m_listObject.end(), [clsid](auto const& obj)
-			{
-				if (obj != nullptr) return clsid != obj->GetClassType(); return obj == nullptr;
-			}), m_listObject.end()
-				);
+					{
+						if (obj != nullptr) return clsid != obj->GetClassType(); return obj == nullptr;
+					}), m_listObject.end()
+						);
 		}
 		CMetaVector(const std::vector<IMetaObject*>& listObject) {
 			m_listObject.reserve(listObject.size());
@@ -479,9 +487,9 @@ protected:
 				std::end(listObject),
 				std::back_inserter(m_listObject),
 				[](auto const& obj)
-			{
-				return dynamic_cast<convType*>(obj);
-			}
+				{
+					return dynamic_cast<convType*>(obj);
+				}
 			);
 			m_listObject.erase(
 				std::remove_if(m_listObject.begin(), m_listObject.end(), [](auto const& obj) { return obj == nullptr; }), m_listObject.end()
@@ -519,6 +527,8 @@ protected:
 	}
 
 protected:
+
+	mutable Guid m_metaCopyGuid;
 
 	int m_metaFlags;
 	meta_identifier_t m_metaId;			//type id (default is undefined)

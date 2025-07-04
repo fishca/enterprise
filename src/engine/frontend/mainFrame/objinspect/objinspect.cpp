@@ -215,16 +215,20 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 wxPGProperty* CObjectInspector::GetProperty(IProperty* prop)
 {
 	wxPGProperty* result = prop->GetPGProperty();
-	result->SetHelpString(prop->GetHelp());
-	result->Enable(prop->IsEditable());
+	if (result != nullptr) {
+		result->SetHelpString(prop->GetHelp());
+		result->Enable(prop->IsEditable());
+	}
 	return result;
 }
 
 wxPGProperty* CObjectInspector::GetEvent(IEvent* event)
 {
 	wxPGProperty* result = event->GetPGProperty();
-	result->SetHelpString(event->GetHelp());
-	result->Enable(event->IsEditable());
+	if (result != nullptr) {
+		result->SetHelpString(event->GetHelp());
+		result->Enable(event->IsEditable());
+	}
 	return result;
 }
 

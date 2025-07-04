@@ -28,7 +28,7 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
             if (m_metaData->GetMetaObject(registerData, old_metaDesc.GetByIdx(idx))) {
                 CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
                 wxASSERT(infoRecorder);
-                infoRecorder->GetTypeDesc().ClearMetaType(m_attributeReference->GetTypeDesc());
+                infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
             }
         }
         for (unsigned int idx = 0; idx < new_metaDesc.GetTypeCount(); idx++) {
@@ -37,7 +37,7 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
             if (m_metaData->GetMetaObject(registerData, new_metaDesc.GetByIdx(idx))) {
                 CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
                 wxASSERT(infoRecorder);
-                infoRecorder->GetTypeDesc().AppendMetaType(m_attributeReference->GetTypeDesc());
+                infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
             }
         }
     }

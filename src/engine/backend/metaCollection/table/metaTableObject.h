@@ -6,16 +6,19 @@
 class BACKEND_API CMetaObjectTableData : public IMetaObjectSourceData {
     wxDECLARE_DYNAMIC_CLASS(CMetaObjectTableData);
 private:
-    CMetaObjectAttributeDefault* m_numberLine = IMetaObjectSourceData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0);
+    //CMetaObjectAttributeDefault* m_numberLine = IMetaObjectSourceData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0);
 protected:
+   
     CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory("group", _("group"));
     CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("item mode"), eItemMode::eItemMode_Item);
+    CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectSourceData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0));
+
 public:
 
     eItemMode GetTableUse() const { return m_propertyUse->GetValueAsEnum(); }
 
-    CMetaObjectAttributeDefault* GetNumberLine() const { return m_numberLine; }
-    bool IsNumberLine(const meta_identifier_t& id) const { return id == m_numberLine->GetMetaID(); }
+    CMetaObjectAttributeDefault* GetNumberLine() const { return m_propertyNumberLine->GetMetaObject(); }
+    bool IsNumberLine(const meta_identifier_t& id) const { return id == (*m_propertyNumberLine)->GetMetaID(); }
 
     //get table class
     CTypeDescription GetTypeDesc() const;

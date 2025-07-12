@@ -67,7 +67,7 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 		);
 
 		//always create meta object
-		bool success = newMetaObject->OnCreateMetaObject(this, runObject ? newObjectFlag : copyObjectFlag);
+		bool success = newMetaObject->OnCreateMetaObject(this, runObject ? newObjectFlag : pasteObjectFlag);
 
 		//first initialization
 		if (!success || !newMetaObject->OnLoadMetaObject(this)) {

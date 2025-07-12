@@ -112,6 +112,8 @@ public:
 
 		m_attributeSource = new wxVariantDataAttributeSource(prop, fillTypeDesc ? GetIdByGuid(id) : wxNOT_FOUND);
 		m_attributeSource->IncRef();
+
+		//m_dataSource = GetSourceGuid();
 	}
 
 	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const CTypeDescription& typeDesc) : wxVariantData(),

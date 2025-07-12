@@ -495,45 +495,106 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 
 bool IMetaObject::PasteObject(CMemoryReader& reader)
 {
-	std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
+#pragma region _paste_fill_h_
 
-	const version_identifier_t& version = readerHeaderMemory->r_s32();
-	const Guid guid = readerHeaderMemory->r_stringZ();
+	class CControlMemoryReader {
 
-	//and running initialization
-	if (!OnBeforeRunMetaObject(newObjectFlag))
-		return false;
+		static bool PasteObject(IMetaObject* pasteObject, CMemoryReader& reader)
+		{
+			IMetaData* metaData = pasteObject->GetMetaData();
 
-	m_metaGuid = guid; 
+			std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
 
-	std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
-	if (readerChildMemory != nullptr) {
-		CMemoryReader* prevReaderMemory = nullptr;
-		do {
-			class_identifier_t clsid = 0;
-			CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(clsid, &*prevReaderMemory);
-			if (readerMemory == nullptr)
-				break;
-			if (clsid > 0) {
-				IMetaObject* metaObject = m_metaData->CreateMetaObject(clsid, this, false);
-				if (metaObject != nullptr && !metaObject->PasteObject(*readerMemory))
-					return false;
+			/*const version_identifier_t& version =*/ readerHeaderMemory->r_s32();
+			pasteObject->m_metaGuid = readerHeaderMemory->r_stringZ();
+
+			//and running initialization
+			if (!pasteObject->OnBeforeRunMetaObject(pasteObjectFlag))
+				return false;
+
+			std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
+			if (readerChildMemory != nullptr) {
+				CMemoryReader* prevReaderMemory = nullptr;
+				do {
+					class_identifier_t clsid = 0;
+					CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(clsid, &*prevReaderMemory);
+					if (readerMemory == nullptr)
+						break;
+					if (clsid > 0) {
+						IMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
+						if (metaObject != nullptr && !PasteObject(metaObject, *readerMemory)) {
+							wxDELETE(metaObject);
+							return false;
+						}
+					}
+					prevReaderMemory = readerMemory;
+				} while (true);
 			}
-			prevReaderMemory = readerMemory;
-		} while (true);
-	}
 
-	std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
 
-	if (!PasteProperty(*readerDataMemory))
-		return false;
+			if (!pasteObject->PasteProperty(*readerDataMemory))
+				return false;
 
-	BuildNewName();
+			pasteObject->BuildNewName();
 
-	if (!OnAfterRunMetaObject(newObjectFlag))
-		return false;
+			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
+				return false;
 
-	return true;
+			return true;
+		}
+
+	public:
+
+		static bool PasteAndRunObject(IMetaObject* pasteObject, CMemoryReader& reader)
+		{
+			IMetaData* metaData = pasteObject->GetMetaData();
+
+			std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
+
+			/*const version_identifier_t& version =*/ readerHeaderMemory->r_s32();
+			/*pasteObject->m_metaGuid =*/ readerHeaderMemory->r_stringZ();
+
+			//and running initialization
+			if (!pasteObject->OnBeforeRunMetaObject(pasteObjectFlag))
+				return false;
+
+			std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
+			if (readerChildMemory != nullptr) {
+				CMemoryReader* prevReaderMemory = nullptr;
+				do {
+					class_identifier_t clsid = 0;
+					CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(clsid, &*prevReaderMemory);
+					if (readerMemory == nullptr)
+						break;
+					if (clsid > 0) {
+						IMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
+						if (metaObject != nullptr && !PasteObject(metaObject, *readerMemory)) {
+							wxDELETE(metaObject);
+							return false;
+						}
+					}
+					prevReaderMemory = readerMemory;
+				} while (true);
+			}
+
+			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+
+			if (!pasteObject->PasteProperty(*readerDataMemory))
+				return false;
+
+			pasteObject->BuildNewName();
+
+			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
+				return false;
+
+			return true;
+		}
+	};
+
+#pragma endregion 
+
+	return CControlMemoryReader::PasteAndRunObject(this, reader);
 }
 
 bool IMetaObject::ChangeChildPosition(IPropertyObject* obj, unsigned int pos)

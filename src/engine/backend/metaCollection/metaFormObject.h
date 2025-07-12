@@ -40,6 +40,7 @@ public:
 
 	// copy form data
 	wxMemoryBuffer CopyFormData() const;
+	bool PasteFormData();
 
 	/**
 	* Get type form
@@ -133,7 +134,7 @@ protected:
 class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonForm);
 protected:
-	
+
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("form"));
 
 	Role* m_roleUse = IMetaObject::CreateRole("use", _("use"));

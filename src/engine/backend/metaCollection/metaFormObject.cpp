@@ -87,6 +87,18 @@ wxMemoryBuffer IMetaObjectForm::CopyFormData() const
 	return wxMemoryBuffer();
 }
 
+bool IMetaObjectForm::PasteFormData()
+{
+	//IBackendValueForm* valueForm = nullptr;
+	//IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	//wxASSERT(moduleManager);
+	//
+	//if (moduleManager->FindCompileModule(this, valueForm))
+	//	return valueForm->LoadForm(GetFormData());
+
+	return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 IMetaObjectForm::IMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) :
@@ -156,7 +168,7 @@ bool CMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 	if (!IMetaObjectForm::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	if (flags != copyObjectFlag) {
+	if ((flags & newObjectFlag) != 0) {
 		
 		IMetaObjectGenericData* metaObject = wxDynamicCast(
 			m_parent, IMetaObjectGenericData

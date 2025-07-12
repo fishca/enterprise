@@ -113,7 +113,7 @@ bool CMetaObjectTableData::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectTableData::OnAfterRunMetaObject(int flags)
 {
-	if ((flags & newObjectFlag) != 0) OnReloadMetaObject();
+	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) OnReloadMetaObject();
 	return IMetaObject::OnAfterRunMetaObject(flags);
 }
 

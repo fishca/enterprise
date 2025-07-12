@@ -365,7 +365,7 @@ bool CMetaDataDataProcessor::LoadCommonMetadata(const class_identifier_t& clsid,
 		return false;
 
 	if (m_commonObject->GetObjectMode() == METAOBJECT_NORMAL) {
-		m_commonObject->ResetId();
+		m_commonObject->ResetAll();
 	}
 
 	return true;

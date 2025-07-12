@@ -127,7 +127,7 @@ bool IMetaObjectAttribute::OnBeforeRunMetaObject(int flags)
 
 bool IMetaObjectAttribute::OnAfterRunMetaObject(int flags)
 {
-	if ((flags & newObjectFlag) != 0) OnReloadMetaObject();
+	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) OnReloadMetaObject();
 	return IMetaObject::OnAfterRunMetaObject(flags);
 }
 

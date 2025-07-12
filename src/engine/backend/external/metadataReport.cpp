@@ -370,7 +370,7 @@ bool CMetaDataReport::LoadCommonMetadata(const class_identifier_t& clsid, CMemor
 	if (!m_commonObject->LoadMetaObject(m_ownerMeta, *readerDataMemory))
 		return false;
 	if (m_commonObject->GetObjectMode() == METAOBJECT_NORMAL) {
-		m_commonObject->ResetId();
+		m_commonObject->ResetAll();
 	}
 
 	return true;

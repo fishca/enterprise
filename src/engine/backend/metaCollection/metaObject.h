@@ -57,24 +57,28 @@ const class_identifier_t g_metaExternalReportCLSID = string_to_clsid("MD_ERPT");
 
 #define defaultMetaID 1000
 
-//flags metaData 
-#define defaultFlag		  0x0000000
+//flags metaobject event 
+enum metaObjectFlags {
 
-#define onlyLoadFlag	  0x0001000
-#define saveConfigFlag	  0x0002000
-#define saveToFileFlag	  0x0004000
-#define forceCloseFlag	  0x0008000
-#define forceRunFlag	  0x0016000
-#define newObjectFlag	  0x0032000
+	defaultFlag = 0x0000,
 
-#define copyObjectFlag	  0x0064000
+	onlyLoadFlag = 0x0001,
+	saveConfigFlag = 0x0002,
+	saveToFileFlag = 0x0004,
+	forceCloseFlag = 0x0008,
+	forceRunFlag = 0x0010,
+	newObjectFlag = 0x0020,
+
+	copyObjectFlag = 0x0040,
+	pasteObjectFlag = 0x0080,
+};
 
 //flags metaobject 
-#define metaDeletedFlag	  0x0001000
-#define metaCanSaveFlag	  0x0002000
-#define metaDisableFlag	  0x0008000
+#define metaDeletedFlag 0x0001000
+#define metaCanSaveFlag 0x0002000
+#define metaDisableFlag 0x0008000
 
-#define metaDefaultFlag	  metaCanSaveFlag
+#define metaDefaultFlag metaCanSaveFlag
 
 //flags save
 #define createMetaTable  0x0001000
@@ -138,6 +142,10 @@ public:
 
 	void ResetGuid();
 	void ResetId();
+	
+	void ResetAll() { 
+		ResetGuid(); ResetId(); 
+	}
 
 	void GenerateGuid() {
 		wxASSERT(!m_metaGuid.isValid());
@@ -261,17 +269,32 @@ public:
 	virtual wxString GetObjectTypeName() const final { return CValue::GetClassName(); }
 
 	Guid GetGuid() const { return m_metaGuid; }
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
+	bool IsCopyMode() const {
+		return m_metaCopyGuid.isValid();
+	}
+
+	bool IsPasteMode() const {
+		return m_metaPasteGuid.isValid();
+	}
+
 	void SetCommonGuid(const Guid& guid) {
-		m_metaCopyGuid.reset(); m_metaGuid = guid;
+		m_metaCopyGuid.reset(); m_metaPasteGuid.reset(); m_metaGuid = guid;
 	}
-	
+
 	Guid GetCommonGuid() const {
-		return m_metaCopyGuid.isValid() ? m_metaCopyGuid : m_metaGuid;
+
+		if (m_metaPasteGuid.isValid())
+			return m_metaPasteGuid;
+
+		if (m_metaCopyGuid.isValid())
+			return m_metaCopyGuid;
+
+		return m_metaGuid;
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void SetCopyGuid(const Guid& guid) const { m_metaCopyGuid = guid; }
@@ -528,7 +551,7 @@ protected:
 
 protected:
 
-	mutable Guid m_metaCopyGuid;
+	mutable Guid m_metaCopyGuid, m_metaPasteGuid;
 
 	int m_metaFlags;
 	meta_identifier_t m_metaId;			//type id (default is undefined)

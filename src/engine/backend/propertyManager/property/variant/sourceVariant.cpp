@@ -123,7 +123,7 @@ void wxVariantDataSource::SetSource(const meta_identifier_t& id, bool fillTypeDe
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
 		const IMetaObject* metaObject = genericObject->FindMetaObjectByID(id);
-		wxASSERT(metaObject);
+		//wxASSERT(metaObject);
 		m_dataSource = metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetGuid() : wxNullGuid;
 	}
 	else {
@@ -154,7 +154,7 @@ Guid wxVariantDataSource::GetSourceGuid() const
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return wxNullGuid;
 		const IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
-		wxASSERT(metaObject);
+		//wxASSERT(metaObject);
 		return metaObject != nullptr && metaObject->IsAllowed() ?
 			metaObject->GetCommonGuid() : wxNullGuid;
 	}
@@ -195,7 +195,7 @@ bool wxVariantDataSource::IsPropAllowed() const
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return true;
 		const IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
-		wxASSERT(metaObject);
+		//wxASSERT(metaObject);
 		if (metaObject != nullptr)
 			return !metaObject->IsAllowed();
 		return true;

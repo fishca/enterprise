@@ -139,10 +139,11 @@ m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaul
 
 IMetaObject::~IMetaObject()
 {
-	for (auto& role : m_roles) {
-		wxDELETE(role.second);
-	}
+	//if (GetParent()) GetParent()->RemoveChild(this);
+
+	for (auto& role : m_roles) { wxDELETE(role.second); }
 	m_roles.clear();
+
 	wxDELETE(m_methodHelper);
 }
 
@@ -377,6 +378,8 @@ bool IMetaObject::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObject::OnDeleteMetaObject()
 {
+	if (GetParent()) 
+		GetParent()->RemoveChild(this);
 	return true;
 }
 

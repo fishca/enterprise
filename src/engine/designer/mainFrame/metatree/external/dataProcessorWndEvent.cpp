@@ -221,9 +221,13 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus(wxFocusEvent& event)
 		docManager->ActivateView(m_metaView);
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+
 		const CAuiDocChildFrame* child =
 			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
-		docManager->ActivateView(child ? child->GetView() : nullptr);
+		
+		docManager->ActivateView(
+			child ? child->GetView() : docManager->GetAnyUsableView()
+		);
 	}
 
 	event.Skip();

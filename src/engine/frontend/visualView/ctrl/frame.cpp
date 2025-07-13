@@ -232,25 +232,20 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 	if (valueForm == nullptr) return false;
 
 	std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
-	version_identifier_t version = readerHeaderMemory->r_s32(); //reserved
-	class_identifier_t clsid = readerHeaderMemory->r_u64();
-	std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
-
-	if (!PasteProperty(*readerDataMemory))
-		return false;
-
-	valueForm->ResolveNameConflict(this);
+	
+	const version_identifier_t& version = readerHeaderMemory->r_s32(); //reserved
+	const class_identifier_t& clsid = readerHeaderMemory->r_u64();
 
 	std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
 	if (readerChildMemory != nullptr) {
 		CMemoryReader* prevReaderMemory = nullptr;
 		do {
-			class_identifier_t clsid = 0;
-			CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(clsid, &*prevReaderMemory);
+			class_identifier_t founded_clsid = 0;
+			CMemoryReader* readerMemory = readerChildMemory->open_chunk_iterator(founded_clsid, &*prevReaderMemory);
 			if (readerMemory == nullptr)
 				break;
-			if (clsid > 0) {
-				IValueFrame* valueFrame = valueForm->NewObject(clsid, this, false);
+			if (founded_clsid > 0) {
+				IValueFrame* valueFrame = valueForm->NewObject(founded_clsid, this, false);
 				if (valueFrame != nullptr && !valueFrame->PasteObject(*readerMemory))
 					return false;
 			}
@@ -258,6 +253,11 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 		} while (true);
 	}
 
+	std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+	if (!PasteProperty(*readerDataMemory))
+		return false;
+
+	valueForm->ResolveNameConflict(this);
 	return true;
 }
 

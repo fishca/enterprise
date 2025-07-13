@@ -37,7 +37,7 @@ class FRONTEND_API CDialogSelectTypeForm : public wxDialog {
 		}
 	};
 
-	std::vector<choiceData_t> m_aChoices;
+	std::vector<choiceData_t> m_listChoice;
 	unsigned int m_choice;
 
 public:
@@ -48,7 +48,7 @@ public:
 	void CreateSelector();
 
 	void AppendTypeForm(const wxString& name, const wxString &label, int index) {
-		m_aChoices.emplace_back(name, label, index);
+		m_listChoice.emplace_back(name, label, index);
 	}
 
 protected:

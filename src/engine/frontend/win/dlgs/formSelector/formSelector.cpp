@@ -8,7 +8,7 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-CDialogSelectTypeForm::CDialogSelectTypeForm(IMetaObject*metaValue, IMetaObjectForm *metaObject)
+CDialogSelectTypeForm::CDialogSelectTypeForm(IMetaObject* metaValue, IMetaObjectForm* metaObject)
 	: wxDialog(CDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
 {
 	SetTitle(metaValue->GetSynonym() + _(" form wizard"));
@@ -23,13 +23,13 @@ void CDialogSelectTypeForm::CreateSelector()
 	wxBoxSizer* bSizerMain = new wxBoxSizer(wxVERTICAL);
 	wxStaticBoxSizer* sbSizerMain = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Select form type")), wxVERTICAL);
 
-	for (auto choice : m_aChoices) {
-		wxRadioButton *radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), choice.m_value, choice.m_label, wxDefaultPosition, wxDefaultSize);
+	for (auto choice : m_listChoice) {
+		wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), choice.m_value, choice.m_label, wxDefaultPosition, wxDefaultSize);
 		radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
 		sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
 	}
 
-	wxRadioButton *radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), defaultFormType, _("Generic form"), wxDefaultPosition, wxDefaultSize);
+	wxRadioButton* radioButton = new wxRadioButton(sbSizerMain->GetStaticBox(), defaultFormType, _("Generic form"), wxDefaultPosition, wxDefaultSize);
 	radioButton->Connect(wxEVT_RADIOBUTTON, wxCommandEventHandler(CDialogSelectTypeForm::OnFormTypeChanged), nullptr, this);
 	sbSizerMain->Add(radioButton, 1, wxALL | wxEXPAND, 5);
 
@@ -86,12 +86,10 @@ void CDialogSelectTypeForm::CreateSelector()
 	this->Layout();
 }
 
-
-
-void CDialogSelectTypeForm::OnTextEnter(wxCommandEvent &event)
+void CDialogSelectTypeForm::OnTextEnter(wxCommandEvent& event)
 {
-	wxString systemName = 
-		m_textCtrlName->GetValue(); 
+	wxString systemName =
+		m_textCtrlName->GetValue();
 
 	int pos = stringUtils::CheckCorrectName(systemName);
 	if (pos > 0) {
@@ -105,7 +103,7 @@ void CDialogSelectTypeForm::OnTextEnter(wxCommandEvent &event)
 	event.Skip();
 }
 
-void CDialogSelectTypeForm::OnButtonOk(wxCommandEvent &event)
+void CDialogSelectTypeForm::OnButtonOk(wxCommandEvent& event)
 {
 	m_metaObject->SetName(m_textCtrlName->GetValue());
 	m_metaObject->SetSynonym(m_textCtrlSynonym->GetValue());
@@ -115,7 +113,7 @@ void CDialogSelectTypeForm::OnButtonOk(wxCommandEvent &event)
 	event.Skip();
 }
 
-void CDialogSelectTypeForm::OnButtonCancel(wxCommandEvent & event)
+void CDialogSelectTypeForm::OnButtonCancel(wxCommandEvent& event)
 {
 	EndModal(wxID_CANCEL);
 	event.Skip();
@@ -123,17 +121,22 @@ void CDialogSelectTypeForm::OnButtonCancel(wxCommandEvent & event)
 
 #include "backend/metaData.h"
 
-void CDialogSelectTypeForm::OnFormTypeChanged(wxCommandEvent &event)
+void CDialogSelectTypeForm::OnFormTypeChanged(wxCommandEvent& event)
 {
-	m_choice = event.GetId();
+	IMetaData* metaData = m_metaObject->GetMetaData();
 
-	if ((m_choice - 1) < m_aChoices.size()) {
-		auto &choiceData = m_aChoices.at(m_choice - 1);
-		IMetaData *metaData = m_metaObject->GetMetaData();
-		wxString newName = metaData->GetNewName(
+	unsigned int choice = event.GetId();
+	auto founded_choice = std::find_if(m_listChoice.begin(), m_listChoice.end(),
+		[choice](auto& v) {return choice == v.m_value; }
+	);
+
+	m_choice = choice;
+
+	if (founded_choice != m_listChoice.end()) {
+		const wxString& newName = metaData->GetNewName(
 			m_metaObject->GetClassType(),
 			m_metaObject->GetParent(),
-			choiceData.m_name,
+			founded_choice->m_name,
 			true
 		);
 		m_textCtrlName->SetValue(newName);
@@ -142,8 +145,7 @@ void CDialogSelectTypeForm::OnFormTypeChanged(wxCommandEvent &event)
 		);
 	}
 	else {
-		IMetaData *metaData = m_metaObject->GetMetaData();
-		wxString newName = metaData->GetNewName(
+		const wxString& newName = metaData->GetNewName(
 			m_metaObject->GetClassType(),
 			m_metaObject->GetParent(),
 			formDefaultName,

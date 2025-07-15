@@ -45,10 +45,11 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 	if (!m_compileModule) {
 		m_compileModule = new CCompileModule(m_metaObject->GetModuleObject());
 		m_compileModule->SetParent(moduleManager->GetCompileModule());
+		m_compileModule->AddContextVariable(wxT("thisObject"), this);
 	}
 
 	try {
-		m_constVal = GetConstValue();
+		m_constValue = GetConstValue();
 	}
 	catch (const CBackendException* err) {
 		CSystemFunction::Raise(err->what());
@@ -74,15 +75,20 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 }
 
 CRecordDataObjectConstant::CRecordDataObjectConstant(CMetaObjectConstant* metaObject)
-	: m_metaObject(metaObject)
+	: m_metaObject(metaObject), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject();
 }
 
 CRecordDataObjectConstant::CRecordDataObjectConstant(const CRecordDataObjectConstant& source)
-	: m_metaObject(source.m_metaObject)
+	: m_metaObject(source.m_metaObject), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject(&source);
+}
+
+CRecordDataObjectConstant::~CRecordDataObjectConstant()
+{
+	wxDELETE(m_methodHelper);
 }
 
 IBackendValueForm* CRecordDataObjectConstant::GetForm() const
@@ -176,7 +182,7 @@ bool CRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, co
 {
 	if (id == m_metaObject->GetMetaID()) {
 		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_metaObject->GetGuid());
-		m_constVal = m_metaObject->AdjustValue(varMetaVal);
+		m_constValue = m_metaObject->AdjustValue(varMetaVal);
 		if (foundedForm != nullptr) {
 			foundedForm->Modify(true);
 		}
@@ -188,12 +194,84 @@ bool CRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, co
 bool CRecordDataObjectConstant::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	if (id == m_metaObject->GetMetaID()) {
-		pvarMetaVal = m_constVal;
+		pvarMetaVal = m_constValue;
 		return true;
 	}
 
 	return false;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CRecordDataObjectConstant::PrepareNames() const
+{
+	m_methodHelper->ClearHelper();
+	m_methodHelper->AppendProp(wxT("value"),
+		true, true, eValue, eSystem
+	);
+
+	if (m_procUnit != nullptr) {
+		CByteCode* byteCode = m_procUnit->GetByteCode();
+		if (byteCode != nullptr) {
+			for (auto exportFunction : byteCode->m_listExportFunc) {
+				m_methodHelper->AppendMethod(
+					exportFunction.first,
+					byteCode->GetNParams(exportFunction.second),
+					byteCode->HasRetVal(exportFunction.second),
+					exportFunction.second,
+					eProcUnit
+				);
+			}
+			for (auto exportVariable : byteCode->m_listExportVar) {
+				m_methodHelper->AppendProp(
+					exportVariable.first,
+					exportVariable.second,
+					eProcUnit
+				);
+			}
+		}
+	}
+}
+
+bool CRecordDataObjectConstant::SetPropVal(const long lPropNum, const CValue& varPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
+	if (lPropAlias == eProcUnit) {
+		if (m_procUnit != nullptr) {
+			return m_procUnit->SetPropVal(
+				GetPropName(lPropNum), varPropVal
+			);
+		}
+	}
+	else if (lPropAlias == eSystem) {
+		m_constValue = varPropVal;
+		return true;
+	}
+	return false;
+}
+
+bool CRecordDataObjectConstant::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
+	if (lPropAlias == eProcUnit) {
+		if (m_procUnit != nullptr) {
+			return m_procUnit->GetPropVal(
+				GetPropName(lPropNum), pvarPropVal
+			);
+		}
+	}
+	else if (lPropAlias == eSystem) {
+		switch (m_methodHelper->GetPropData(lPropNum))
+		{
+		case eValue:
+			pvarPropVal = m_constValue;
+			return true;
+		}
+	}
+	return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "backend/databaseLayer/databaseLayer.h"
 
@@ -230,15 +308,21 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 			resultSet->Close();
 		}
 	}
+	else {
+		ret = m_metaObject->AdjustValue();
+	}
 
 	return ret;
 }
 
+#include "backend/backend_mainFrame.h"
 #include "backend/databaseLayer/databaseErrorCodes.h" 
 
 bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 {
 	if (!appData->DesignerMode()) {
+
+		const CValue& constValue = m_constValue;
 
 		if (db_query != nullptr && !db_query->IsOpen())
 			CBackendException::Error(_("database is not open!"));
@@ -247,13 +331,15 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();
+
 		if (db_query->TableExists(tableName)) {
 
-			IBackendValueForm* const foundedForm = GetForm();
+			IBackendValueForm* const valueForm = GetForm();
 
 			db_query->BeginTransaction();
 			{
 				CValue cancel = false;
+
 				m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 				if (cancel.GetBoolean()) {
@@ -261,13 +347,13 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 				}
 			}
 
-			const CValue& adjustVal = m_metaObject->AdjustValue(cValue);
+			m_constValue = m_metaObject->AdjustValue(cValue);
 
 			//check fill attributes 
 			bool fillCheck = true;
 
 			if (m_metaObject->FillCheck()) {
-				if (adjustVal.IsEmpty()) {
+				if (m_constValue.IsEmpty()) {
 					wxString fillError =
 						wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
 					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
@@ -276,6 +362,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 			}
 
 			if (!fillCheck) {
+				m_constValue = constValue;
 				return false;
 			}
 
@@ -302,6 +389,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 				db_query->PrepareStatement(sqlText, tableName, IMetaObjectAttribute::GetSQLFieldName(m_metaObject));
 
 			if (statement == nullptr) {
+				m_constValue = constValue;
 				return false;
 			}
 
@@ -309,7 +397,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 			IMetaObjectAttribute::SetValueAttribute(
 				m_metaObject,
-				adjustVal,
+				m_constValue,
 				statement,
 				position
 			);
@@ -318,6 +406,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 			db_query->CloseStatement(statement);
 
 			if (hasError) {
+				m_constValue = constValue;
 				db_query->RollBack(); CSystemFunction::Raise("failed to write object in db!"); return false;
 			}
 
@@ -331,12 +420,10 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 			db_query->Commit();
 
-			if (foundedForm != nullptr) {
-				foundedForm->Modify(false);
-			}
+			if (valueForm != nullptr) valueForm->Modify(false);
+			if (backend_mainFrame != nullptr) backend_mainFrame->RefreshFrame();
 		}
 	}
 
 	return true;
 }
-

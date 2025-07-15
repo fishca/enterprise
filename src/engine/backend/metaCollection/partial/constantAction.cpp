@@ -10,8 +10,8 @@ enum
 CRecordDataObjectConstant::CActionCollection CRecordDataObjectConstant::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection catalogActions(this);
-	catalogActions.AddAction("saveAndClose", _("Save and close"), eDefActionAndClose);
-	catalogActions.AddAction("save", _("Save"), eSave);
+	catalogActions.AddAction(wxT("saveAndClose"), _("Save and close"), eDefActionAndClose);
+	catalogActions.AddAction(wxT("save"), _("Save"), eSave);
 	return catalogActions;
 }
 
@@ -20,11 +20,11 @@ void CRecordDataObjectConstant::ExecuteAction(const action_identifier_t& lNumAct
 	switch (lNumAction)
 	{
 	case eDefActionAndClose:
-		if (SetConstValue(m_constVal))
+		if (SetConstValue(m_constValue))
 			srcForm->CloseForm();
 		break;
 	case eSave: 
-		SetConstValue(m_constVal); 
+		SetConstValue(m_constValue); 
 		break;
 	}
 }

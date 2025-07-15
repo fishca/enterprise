@@ -87,13 +87,38 @@ class BACKEND_API CRecordDataObjectConstant : public CValue, public IActionDataO
 	public ISourceDataObject, public IModuleDataObject {
 	virtual bool InitializeObject(const CRecordDataObjectConstant* source = nullptr);
 protected:
+	enum helperAlias {
+		eSystem,
+		eProcUnit
+	};
+	enum helperProp {
+		eValue
+	};
+protected:
+	//override copy constructor
 	CRecordDataObjectConstant(CMetaObjectConstant* metaObject);
 	CRecordDataObjectConstant(const CRecordDataObjectConstant& source);
+
+	//standart override 
+	virtual CMethodHelper* GetPMethods() const final { // get a reference to the class helper for parsing attribute and method names
+		//PrepareNames(); 
+		return m_methodHelper;
+	}
+
 public:
+
+	virtual ~CRecordDataObjectConstant();
 
 	CValue GetConstValue() const;
 	bool SetConstValue(const CValue& cValue);
 
+	//standart override 
+	virtual void PrepareNames() const;
+
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+
+	//check is empty
 	inline virtual bool IsEmpty() const { return false; }
 
 	//get metaData from object 
@@ -123,7 +148,7 @@ public:
 
 	//get unique identifier 
 	virtual CUniqueKey GetGuid() const { return m_metaObject->GetGuid(); }
-	virtual bool SaveModify() override { return SetConstValue(m_constVal); }
+	virtual bool SaveModify() override { return SetConstValue(m_constValue); }
 
 	//get frame
 	virtual IBackendValueForm* GetForm() const;
@@ -152,8 +177,9 @@ public:
 	}
 
 protected:
+	CMethodHelper* m_methodHelper;
 	CMetaObjectConstant* m_metaObject;
-	CValue m_constVal;
+	CValue m_constValue;
 protected:
 	friend class IMetaData;
 	friend class CMetaObjectConstant;

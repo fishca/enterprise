@@ -125,8 +125,9 @@ void CCompileCode::PrepareModuleData()
         m_rootContext->AddVariable(externValue.first, wxEmptyString, true);
         m_cByteCode.m_listExternValue.push_back(externValue.second);
     }
+    
     for (auto& contextValue : m_listContextValue) {
-        m_rootContext->AddVariable(contextValue.first, wxEmptyString, true);
+        m_rootContext->AddVariable(contextValue.first, wxEmptyString, true, true);
         m_cByteCode.m_listExternValue.push_back(contextValue.second);
     }
 

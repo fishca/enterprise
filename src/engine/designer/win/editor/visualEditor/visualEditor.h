@@ -261,6 +261,18 @@ public:
 
 		/////////////////////////////////////////////////////////////////////////////////////////
 
+		//override designer host  
+		virtual bool IsDesignerHost() const { return true; }
+		virtual bool IsShownHost() const { return IVisualHost::IsShown(); }
+
+		virtual CValueForm* GetValueForm() const;
+		virtual void SetValueForm(CValueForm* valueForm);
+
+		virtual wxWindow* GetParentBackgroundWindow() const { return m_back; }
+		virtual wxWindow* GetBackgroundWindow() const { return m_back->GetFrameContentPanel(); }
+
+		/////////////////////////////////////////////////////////////////////////////////////////
+
 		void OnResizeBackPanel(wxCommandEvent& event);
 		void OnClickBackPanel(wxMouseEvent& event);
 		void PreventOnSelected(bool prevent = true);
@@ -271,34 +283,12 @@ public:
 
 		virtual void OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event);
 
-		virtual wxWindow* GetParentBackgroundWindow() const {
-			return m_back;
-		}
-
-		virtual wxWindow* GetBackgroundWindow() const {
-			return m_back->GetFrameContentPanel();
-		}
-
-		//override designer host  
-		virtual bool IsDesignerHost() const {
-			return true;
-		}
-
-		virtual CValueForm* GetValueForm() const;
-		virtual void SetValueForm(CValueForm* valueForm);
-
 		//set and create window
 		void SetObjectSelect(IValueFrame* obj);
 
-		//Setup window 
-		void CreateVisualEditor();
-
-		//Update window 
-		void UpdateVisualEditor();
-
-		//Clear visualeditor
-		void ClearVisualEditor();
-
+	protected:
+		virtual void SetCaption(const wxString& strCaption);
+		virtual void SetOrientation(int orient);
 	protected:
 		wxDECLARE_EVENT_TABLE();
 	};
@@ -546,7 +536,7 @@ public:
 	void RefreshEditor() {
 		if (m_visualEditor != nullptr) {
 			// then update control 
-			m_visualEditor->UpdateVisualEditor();
+			m_visualEditor->UpdateVisualHost();
 		}
 		NotifyProjectRefresh();
 	}
@@ -787,7 +777,7 @@ public:
 		return m_codeEditor;
 	}
 
-	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow *wnd) const {
+	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const {
 		return new CDesignerWindow::CHighlightPaintHandler(wnd);
 	}
 

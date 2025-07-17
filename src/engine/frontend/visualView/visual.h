@@ -36,22 +36,33 @@ public:
 	IValueFrame* GetObjectBase(wxObject* wxobject) const;
 	wxObject* GetWxObject(IValueFrame* baseobject) const;
 
-	wxBoxSizer* GetFrameSizer() const {
-		return m_mainBoxSizer;
+	wxBoxSizer* GetFrameSizer() const { return m_mainBoxSizer; }
+
+	bool CreateAndUpdateVisualHost() {
+		return ClearVisualHost() && 
+			CreateVisualHost() && UpdateVisualHost();
 	}
 
-	virtual bool IsDemonstration() const {
-		return false;
-	}
+	bool CreateVisualHost();
+	bool UpdateVisualHost();
+	bool ClearVisualHost();
 
-	virtual bool IsDesignerHost() const {
-		return false;
-	}
+	virtual bool IsShownHost() const { return true; }
+
+	virtual bool IsDemonstration() const { return false; }
+	virtual bool IsDesignerHost() const { return false; }
+
+	virtual class CValueForm* GetValueForm() const = 0;
 
 	virtual wxWindow* GetParentBackgroundWindow() const = 0;
 	virtual wxWindow* GetBackgroundWindow() const = 0;
 
 	virtual void OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event) {}
+
+protected:
+
+	virtual void SetCaption(const wxString &strCaption) = 0;
+	virtual void SetOrientation(int orient) = 0;
 
 protected:
 
@@ -71,9 +82,11 @@ protected:
 	//Generate component 
 	void GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
 	//Update component
-	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject);
+	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool refreshForm = false);
 	// Give components an opportunity to cleanup
 	void DeleteRecursive(IValueFrame* control, bool force = false);
+	// Calculate label size for static text
+	bool CalculateLabelSize(IValueFrame* control = nullptr);
 	//Update virtual size
 	void UpdateVirtualSize();
 

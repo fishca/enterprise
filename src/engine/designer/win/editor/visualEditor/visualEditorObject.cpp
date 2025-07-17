@@ -434,7 +434,7 @@ void ModifyPropertyCmd::DoExecute()
 		m_visualData->m_document->Modify(true);
 
 	if (g_controlFormCLSID == m_object->GetClassType()) {
-		visulEditor->UpdateVisualEditor();
+		visulEditor->UpdateVisualHost();
 	}
 	else {
 		visulEditor->UpdateControl(m_object);
@@ -450,7 +450,7 @@ void ModifyPropertyCmd::DoRestore()
 	m_property->SetValue(m_oldValue);
 
 	if (g_controlFormCLSID == m_object->GetClassType()) {
-		visulEditor->UpdateVisualEditor();
+		visulEditor->UpdateVisualHost();
 	}
 	else {
 		visulEditor->UpdateControl(m_object);

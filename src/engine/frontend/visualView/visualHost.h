@@ -19,21 +19,24 @@ public:
 	CVisualHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent, bool demonstration = false);
 	virtual ~CVisualHost();
 
-	void CreateFrame();
-	void UpdateFrame();
-
 	virtual bool IsDemonstration() const { return m_formDemonstration; }
+	virtual bool IsShownHost() const { return m_valueForm->IsShown(); }
+	
 	virtual CValueForm* GetValueForm() const { return m_valueForm; }
 	virtual void SetValueForm(CValueForm* valueForm) { m_valueForm = valueForm; }
 
 	virtual wxWindow* GetParentBackgroundWindow() const { return const_cast<CVisualHost*>(this); }
-
 	virtual wxWindow* GetBackgroundWindow() const { return const_cast<CVisualHost*>(this); }
 
 	void ShowForm();
 	void ActivateForm();
 	void UpdateForm();
 	bool CloseForm();
+
+protected:
+
+	virtual void SetCaption(const wxString& strCaption);
+	virtual void SetOrientation(int orient);
 
 protected:
 	void OnSize(wxSizeEvent& event);

@@ -33,7 +33,6 @@ public:
 protected:
 
     void UpdateWindow(wxWindow* window);
-    void UpdateLabelSize(class IDynamicBorder* textCtrl);
 };
 
 #endif 

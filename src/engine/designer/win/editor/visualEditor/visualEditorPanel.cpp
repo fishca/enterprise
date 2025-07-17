@@ -102,11 +102,8 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	SelectObject(m_valueForm, true);
 
 	// first create control 
-	m_visualEditor->CreateVisualEditor();
-	
-	// then update control 
-	m_visualEditor->UpdateVisualEditor();
-	
+	m_visualEditor->CreateVisualHost();
+		
 	//refresh project
 	NotifyProjectRefresh();
 

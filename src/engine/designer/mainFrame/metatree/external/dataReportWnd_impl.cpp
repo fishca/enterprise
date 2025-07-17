@@ -48,7 +48,11 @@ IMetaObject* CDataReportTree::CreateItem(bool showValue)
 
 	if (showValue) { OpenFormMDI(createdObject); }
 	UpdateToolbar(createdObject, FillItem(createdObject, item));
-	for (auto doc : docManager->GetDocumentsVector()) { doc->UpdateAllViews(); }
+	
+	for (auto& doc : docManager->GetDocumentsVector()) {
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+	}
 
 	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
@@ -131,6 +135,11 @@ void CDataReportTree::RemoveItem()
 	m_metaTreeWnd->Delete(selection);
 
 	const wxTreeItemId nextSelection = m_metaTreeWnd->GetFocusedItem();
+
+	for (auto& doc : docManager->GetDocumentsVector()) {
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+	}
 
 	if (nextSelection.IsOk()) {
 		UpdateToolbar(GetMetaObject(nextSelection), nextSelection);

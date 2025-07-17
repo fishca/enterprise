@@ -88,150 +88,6 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnResizeBackPanel(
 	event.Skip();
 }
 
-/**
-* Crea la vista preliminar borrando la previa.
-*/
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::CreateVisualEditor()
-{
-#if !defined(__WXGTK__ )
-	if (IsShown()) {
-		Freeze();   // Prevent flickering on wx 2.8,
-		// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-	}
-#endif
-
-	CValueForm* valueForm = m_formHandler->GetValueForm();
-
-	// Clear selections, delete objects
-	m_back->SetSelectedItem(nullptr);
-	m_back->SetSelectedSizer(nullptr);
-	m_back->SetSelectedObject(nullptr);
-	m_back->SetSelectedPanel(nullptr);
-
-	m_back->Enable(true);
-
-	if (IsShown()) {
-		// --- [1] Set the color of the form -------------------------------
-		m_back->GetFrameContentPanel()->SetForegroundColour(valueForm->GetForegroundColour());
-		m_back->GetFrameContentPanel()->SetBackgroundColour(valueForm->GetBackgroundColour());
-
-		// --- [2] Title bar Setup
-		m_back->SetTitle(valueForm->GetCaption());
-
-		m_back->SetTitleStyle(wxCAPTION);
-		m_back->ShowTitleBar(true);
-
-		// --- [3] Default sizer Setup 
-		m_mainBoxSizer = new wxBoxSizer(valueForm->GetOrient());
-		m_back->GetFrameContentPanel()->SetSizer(m_mainBoxSizer);
-
-		for (unsigned int i = 0; i < valueForm->GetChildCount(); i++)
-		{
-			IValueFrame* child = valueForm->GetChild(i);
-
-			// Recursively generate the ObjectTree
-			try {
-				// we have to put the content valueForm panel as parentObject in order
-				// to SetSizeHints be called.
-				GenerateControl(child, m_back->GetFrameContentPanel(), GetFrameSizer());
-			}
-			catch (std::exception& ex)
-			{
-				wxLogError(ex.what());
-			}
-
-		}
-
-		m_back->Layout();
-
-		m_back->GetSizer()->Fit(m_back);
-		m_back->SetClientSize(m_back->GetBestSize());
-
-		m_back->Refresh();
-		Refresh();
-
-#if !defined(__WXGTK__)
-		Thaw();
-#endif
-	}
-
-	UpdateVirtualSize();
-}
-
-/**
-* Crea la vista preliminar borrando la previa.
-*/
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::UpdateVisualEditor()
-{
-#if !defined(__WXGTK__ )
-	if (IsShown()) {
-		wxScrolledWindow::Freeze();   // Prevent flickering on wx 2.8,
-		// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-	}
-#endif
-
-	CValueForm* valueForm = m_formHandler->GetValueForm();
-
-	if (wxScrolledWindow::IsShown()) {
-
-		wxASSERT(m_mainBoxSizer);
-
-		// --- [1] Set the color of the form -------------------------------
-		m_back->GetFrameContentPanel()->SetForegroundColour(valueForm->GetForegroundColour());
-		m_back->GetFrameContentPanel()->SetBackgroundColour(valueForm->GetBackgroundColour());
-
-		// --- [2] Title bar Setup
-		m_back->SetTitle(valueForm->GetCaption());
-
-		m_back->SetTitleStyle(wxCAPTION);
-		m_back->ShowTitleBar(true);
-
-		// --- [3] Default sizer Setup 
-		m_mainBoxSizer->SetOrientation(valueForm->GetOrient());
-
-		for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
-			IValueFrame* child = valueForm->GetChild(i);
-			// Recursively generate the ObjectTree
-			try {
-				// we have to put the content valueForm panel as parentObject in order
-				// to SetSizeHints be called.
-				RefreshControl(child, m_back->GetFrameContentPanel(), GetFrameSizer());
-			}
-			catch (std::exception& ex) {
-				wxLogError(ex.what());
-			}
-		}
-
-		m_back->Layout();
-
-		m_back->GetSizer()->Fit(m_back);
-		m_back->SetClientSize(m_back->GetBestSize());
-
-		m_back->Refresh();
-		wxScrolledWindow::Refresh();
-
-#if !defined(__WXGTK__)
-		wxScrolledWindow::Thaw();
-#endif
-	}
-
-	UpdateVirtualSize();
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::ClearVisualEditor()
-{
-	CValueForm* valueForm = m_formHandler->GetValueForm();
-	wxASSERT(valueForm);
-
-	for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
-		IValueFrame* objChild = valueForm->GetChild(i);
-		DeleteRecursive(objChild, true);
-	}
-
-	m_back->GetFrameContentPanel()->DestroyChildren();
-	m_back->GetFrameContentPanel()->SetSizer(nullptr); // *!*
-}
-
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::PreventOnSelected(bool prevent)
 {
 	m_stopSelectedEvent = prevent;
@@ -428,6 +284,29 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 
 	m_back->Refresh();
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const wxString& strCaption)
+{
+	m_back->SetTitle(strCaption);
+	m_back->SetTitleStyle(wxCAPTION);
+	
+	m_back->ShowTitleBar(true);
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetOrientation(int orient)
+{
+	if (m_mainBoxSizer == nullptr) {
+		m_mainBoxSizer = new wxBoxSizer(orient);
+		m_back->GetFrameContentPanel()->SetSizer(m_mainBoxSizer);
+	}
+	else {
+		m_mainBoxSizer->SetOrientation(orient);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 
 wxIMPLEMENT_CLASS(CDesignerWindow, CInnerFrame);
 

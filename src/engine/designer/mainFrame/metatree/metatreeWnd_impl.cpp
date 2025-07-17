@@ -199,15 +199,19 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 	if (!item.IsOk()) return nullptr;
 
 	IMetaObject* createdObject = NewItem(
-		GetClassIdentifier(), 
+		GetClassIdentifier(),
 		GetMetaIdentifier()
 	);
-	
-	if (createdObject == nullptr) return nullptr;	
-	
+
+	if (createdObject == nullptr) return nullptr;
+
 	if (showValue) { OpenFormMDI(createdObject); }
 	UpdateToolbar(createdObject, FillItem(createdObject, item));
-	for (auto doc : docManager->GetDocumentsVector()) { doc->UpdateAllViews(); }
+	
+	for (auto& doc : docManager->GetDocumentsVector()) {
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+	}
 
 	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
@@ -238,7 +242,7 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 
 		CMetaObjectTableData* metaItemRecord = dynamic_cast<CMetaObjectTableData*>(metaItem);
 		wxASSERT(metaItemRecord);
-		
+
 		for (auto attribute : metaItemRecord->GetObjectAttributes()) {
 			if (attribute->IsDeleted())
 				continue;
@@ -271,7 +275,7 @@ void CMetadataTree::EditItem()
 
 void CMetadataTree::RemoveItem()
 {
-	wxTreeItemId selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 
 	if (!selection.IsOk())
 		return;
@@ -292,12 +296,12 @@ void CMetadataTree::RemoveItem()
 	//Delete item from tree
 	m_metaTreeWnd->Delete(selection);
 
-	for (auto doc : docManager->GetDocumentsVector()) {
-		doc->UpdateAllViews();
+	for (auto& doc : docManager->GetDocumentsVector()) {
+		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
 
 	const wxTreeItemId nextSelection = m_metaTreeWnd->GetFocusedItem();
-
 	if (nextSelection.IsOk()) {
 		UpdateToolbar(GetMetaObject(nextSelection), nextSelection);
 	}

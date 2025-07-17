@@ -14,7 +14,7 @@
 
 #define st_demonstration _("preview")
 
-static std::map<const CUniqueKey, CVisualDocument*> ms_formOpened = {};
+static std::map<const CUniqueKey, CVisualDocument*> sm_listForm = {};
 
 //********************************************************************************************
 //*                                  Visual Document & View                                  *
@@ -58,7 +58,7 @@ bool CVisualDocument::OnCloseDocument()
 			else {
 				wxTheApp->ScheduleForDestruction(valueForm);
 			}
-			ms_formOpened.erase(m_guidForm);
+			sm_listForm.erase(m_guidForm);
 			m_guidForm.reset();
 		}
 		valueForm->m_formModified = false;
@@ -181,13 +181,13 @@ CValueForm* CValueForm::FindFormByUniqueKey(const CUniqueKey& guid)
 {
 	if (guid.isValid()) {
 		std::map<const CUniqueKey, CVisualDocument*>::iterator foundedForm =
-			std::find_if(ms_formOpened.begin(), ms_formOpened.end(),
+			std::find_if(sm_listForm.begin(), sm_listForm.end(),
 				[guid](std::pair<const CUniqueKey, CVisualDocument* >& pair) {
 					const CUniqueKey& uniqueKey = pair.first; return uniqueKey == guid;
 				}
 			);
 
-		if (foundedForm != ms_formOpened.end()) {
+		if (foundedForm != sm_listForm.end()) {
 			CVisualDocument* foundedVisualDocument = foundedForm->second;
 			wxASSERT(foundedVisualDocument);
 			CVisualView* visualView = foundedVisualDocument->GetFirstView();
@@ -202,7 +202,7 @@ CValueForm* CValueForm::FindFormByControlUniqueKey(const CUniqueKey& guid)
 {
 	if (guid.isValid()) {
 		std::map<const CUniqueKey, CVisualDocument*>::iterator foundedSourceForm =
-			std::find_if(ms_formOpened.begin(), ms_formOpened.end(),
+			std::find_if(sm_listForm.begin(), sm_listForm.end(),
 				[guid](std::pair<const CUniqueKey, CVisualDocument* >& pair) {
 					CVisualDocument* foundedVisualDocument = pair.second;
 					wxASSERT(foundedVisualDocument);
@@ -216,7 +216,7 @@ CValueForm* CValueForm::FindFormByControlUniqueKey(const CUniqueKey& guid)
 				}
 			);
 
-		if (foundedSourceForm != ms_formOpened.end()) {
+		if (foundedSourceForm != sm_listForm.end()) {
 			CVisualDocument* foundedVisualDocument = foundedSourceForm->second;
 			wxASSERT(foundedVisualDocument);
 			CVisualView* visualView = foundedVisualDocument->GetFirstView();
@@ -232,7 +232,7 @@ CValueForm* CValueForm::FindFormBySourceUniqueKey(const CUniqueKey& guid)
 {
 	if (guid.isValid()) {
 		std::map<const CUniqueKey, CVisualDocument*>::iterator foundedSourceForm =
-			std::find_if(ms_formOpened.begin(), ms_formOpened.end(),
+			std::find_if(sm_listForm.begin(), sm_listForm.end(),
 				[guid](std::pair<const CUniqueKey, CVisualDocument* >& pair) {
 					CVisualDocument* foundedVisualDocument = pair.second;
 					wxASSERT(foundedVisualDocument);
@@ -246,7 +246,7 @@ CValueForm* CValueForm::FindFormBySourceUniqueKey(const CUniqueKey& guid)
 				}
 			);
 
-		if (foundedSourceForm != ms_formOpened.end()) {
+		if (foundedSourceForm != sm_listForm.end()) {
 			CVisualDocument* foundedVisualDocument = foundedSourceForm->second;
 			wxASSERT(foundedVisualDocument);
 			CVisualView* visualView = foundedVisualDocument->GetFirstView();
@@ -261,17 +261,17 @@ CValueForm* CValueForm::FindFormBySourceUniqueKey(const CUniqueKey& guid)
 bool CValueForm::UpdateFormUniqueKey(const CUniquePairKey& formKey)
 {
 	std::map<const CUniqueKey, CVisualDocument*>::iterator foundedForm =
-		std::find_if(ms_formOpened.begin(), ms_formOpened.end(),
+		std::find_if(sm_listForm.begin(), sm_listForm.end(),
 			[formKey](std::pair<const CUniqueKey, CVisualDocument* >& pair) {
 				const CUniqueKey& uniqueKey = pair.first; return uniqueKey.GetGuid() == formKey.GetGuid();
 			}
 		);
 
-	if (foundedForm != ms_formOpened.end()) {
+	if (foundedForm != sm_listForm.end()) {
 		CVisualDocument* visualDocument = foundedForm->second;
 		wxASSERT(visualDocument);
-		ms_formOpened.erase(foundedForm);
-		ms_formOpened.insert_or_assign(formKey, visualDocument);
+		sm_listForm.erase(foundedForm);
+		sm_listForm.insert_or_assign(formKey, visualDocument);
 		CVisualView* visualView = visualDocument->GetFirstView();
 		wxASSERT(visualView);
 		CValueForm* formValue = visualView->GetValueForm();
@@ -304,7 +304,7 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 	else {
 		const CUniqueKey& formKey = m_formKey;
 		std::map<const CUniqueKey, CVisualDocument*>::iterator foundedForm =
-			std::find_if(ms_formOpened.begin(), ms_formOpened.end(),
+			std::find_if(sm_listForm.begin(), sm_listForm.end(),
 				[formKey](std::pair<const CUniqueKey, CVisualDocument* >& pair) {
 					const CUniqueKey& uniqueKey = pair.first; return uniqueKey == formKey;
 				}
@@ -312,7 +312,7 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 
 		ISourceDataObject* srcData = GetSourceObject();
 		if (srcData != nullptr && !srcData->IsNewObject()) {
-			if (foundedForm != ms_formOpened.end()) {
+			if (foundedForm != sm_listForm.end()) {
 				CVisualDocument* foundedVisualDocument = foundedForm->second;
 				wxASSERT(foundedVisualDocument);
 				foundedVisualDocument->Activate();
@@ -320,7 +320,7 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 			}
 		}
 		else if (srcData == nullptr) {
-			if (foundedForm != ms_formOpened.end()) {
+			if (foundedForm != sm_listForm.end()) {
 				CVisualDocument* foundedVisualDocument = foundedForm->second;
 				wxASSERT(foundedVisualDocument);
 				foundedVisualDocument->Activate();
@@ -330,12 +330,11 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 		m_valueFormDocument = new CVisualDocument(m_formKey);
 	}
 
+	//if doc has parent - special delete!
 	if (docParent != nullptr) {
 		m_valueFormDocument->SetDocParent(docParent);
 	}
-
-	//if doc has parent - special delete!
-	if (docParent == nullptr) {
+	else if (docParent == nullptr) {
 		docManager->AddDocument(m_valueFormDocument);
 	}
 
@@ -372,10 +371,11 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 	}
 
 	view->SetDocument(m_valueFormDocument);
+	if (!demoRun) m_valueFormDocument->Modify(m_formModified);
 
 	//set window if is not demonstation
 	if (!demoRun)
-		ms_formOpened.insert_or_assign(m_formKey, m_valueFormDocument);
+		sm_listForm.insert_or_assign(m_formKey, m_valueFormDocument);
 
 	if (!appData->DesignerMode()) {
 
@@ -384,7 +384,7 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 			m_procUnit->CallAsProc(wxT("beforeOpen"), bCancel);
 		}
 		if (bCancel.GetBoolean()) {
-			ms_formOpened.erase(m_formKey);
+			sm_listForm.erase(m_formKey);
 			m_valueFormDocument = nullptr;
 			return false;
 		}
@@ -413,14 +413,8 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 	//set visual view
 	m_valueFormDocument->SetVisualView(visualView);
 
-	if (!visualView->IsDemonstration())
-		m_valueFormDocument->Modify(m_formModified);
-
 	//create and update show frame
-	visualView->Freeze();
-	visualView->CreateFrame();
-	visualView->UpdateFrame();
-	visualView->Thaw();
+	visualView->CreateAndUpdateVisualHost();
 
 	if (!view->ShowFrame())
 		return false;
@@ -438,6 +432,7 @@ bool CValueForm::CloseDocForm()
 	CValue bCancel = false;
 	if (m_procUnit != nullptr)
 		m_procUnit->CallAsProc(wxT("beforeClose"), bCancel);
+
 	if (bCancel.GetBoolean())
 		return false;
 

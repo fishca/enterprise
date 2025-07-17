@@ -474,7 +474,7 @@ void CValueForm::UpdateForm()
 
 		if (visualView != nullptr) {
 			visualView->Freeze();
-			visualView->UpdateFrame();
+			visualView->UpdateVisualHost();
 			visualView->Thaw();
 		}
 	}

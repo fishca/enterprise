@@ -40,9 +40,9 @@ class wxTextContainerCtrl : public wxWindow,
 			const wxPoint& pos = wxDefaultPosition,
 			const wxSize& size = wxDefaultSize,
 			long style = 0,
-			const wxValidator& validator = wxDefaultValidator, 
-			const wxString& name = wxASCII_STR(wxTextCtrlNameStr)) 
-			: 
+			const wxValidator& validator = wxDefaultValidator,
+			const wxString& name = wxASCII_STR(wxTextCtrlNameStr))
+			:
 			wxTextCtrl(parent, id, value, pos, size, style, validator, name)
 		{
 		}
@@ -61,9 +61,9 @@ class wxTextContainerCtrl : public wxWindow,
 		wxDECLARE_DYNAMIC_CLASS(wxTextButtonCtrl);
 		wxDECLARE_NO_COPY_CLASS(wxTextButtonCtrl);
 
-		wxButton *m_buttonSelect = nullptr;
-		wxButton *m_buttonClear = nullptr;
-		wxButton *m_buttonOpen = nullptr;
+		wxButton* m_buttonSelect = nullptr;
+		wxButton* m_buttonClear = nullptr;
+		wxButton* m_buttonOpen = nullptr;
 
 		bool m_dvcMode = false;
 
@@ -138,11 +138,11 @@ class wxTextContainerCtrl : public wxWindow,
 			wxTextCtrl::Unbind(wxEVT_SIZE, &wxTextButtonCtrl::OnSizeTextCtrl, this);
 
 			if (m_parent->IsKindOf(CLASSINFO(wxTextContainerCtrl))) {
-				((wxTextContainerCtrl *)m_parent)->m_textCtrl = nullptr;
+				((wxTextContainerCtrl*)m_parent)->m_textCtrl = nullptr;
 			}
 		}
 
-		bool Create(wxWindow *parent, const wxPoint& pos = wxDefaultPosition,
+		bool Create(wxWindow* parent, const wxPoint& pos = wxDefaultPosition,
 			const wxSize& size = wxDefaultSize, int style = wxBORDER_SIMPLE)
 		{
 			if (!wxTextCtrl::Create(parent, wxID_ANY, wxEmptyString, pos, size, style))
@@ -179,19 +179,19 @@ class wxTextContainerCtrl : public wxWindow,
 
 		// Bind functors to an event:
 		template <typename Functor, typename EventHandler>
-		void BindButtonSelect(const Functor &functor, EventHandler handler) { m_buttonSelect->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
+		void BindButtonSelect(const Functor& functor, EventHandler handler) { m_buttonSelect->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
 		template <typename Functor, typename EventHandler>
-		void BindButtonClear(const Functor &functor, EventHandler handler) { m_buttonClear->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonClear); }
+		void BindButtonClear(const Functor& functor, EventHandler handler) { m_buttonClear->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonClear); }
 		template <typename Functor, typename EventHandler>
 		void BindButtonOpen(const Functor& functor, EventHandler handler) { m_buttonOpen->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonOpen); }
 
 		// Unbind functors to an event:
 		template <typename Functor, typename EventHandler>
-		void UnbindButtonSelect(const Functor &functor, EventHandler handler) { m_buttonSelect->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
+		void UnbindButtonSelect(const Functor& functor, EventHandler handler) { m_buttonSelect->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
 		template <typename Functor, typename EventHandler>
 		void UnbindButtonClear(const Functor& functor, EventHandler handler) { m_buttonClear->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonClear); }
 		template <typename Functor, typename EventHandler>
-		void UnbindButtonOpen(const Functor &functor, EventHandler handler) { m_buttonOpen->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonOpen); }
+		void UnbindButtonOpen(const Functor& functor, EventHandler handler) { m_buttonOpen->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonOpen); }
 
 		//buttons:
 		void SetButtonSelect(bool select = true) {
@@ -288,13 +288,13 @@ class wxTextContainerCtrl : public wxWindow,
 		}
 
 #if wxUSE_TOOLTIPS
-		virtual void DoSetToolTipText(const wxString &tip) override {
+		virtual void DoSetToolTipText(const wxString& tip) override {
 			m_buttonSelect->SetToolTip(tip);
 			m_buttonOpen->SetToolTip(tip);
 			m_buttonClear->SetToolTip(tip);
 		}
 
-		virtual void DoSetToolTip(wxToolTip *tip) override {
+		virtual void DoSetToolTip(wxToolTip* tip) override {
 			m_buttonSelect->SetToolTip(tip);
 			m_buttonOpen->SetToolTip(tip);
 			m_buttonClear->SetToolTip(tip);
@@ -305,11 +305,11 @@ class wxTextContainerCtrl : public wxWindow,
 
 private:
 
-	wxBoxSizer *m_boxSizer = nullptr;
-	wxStaticText *m_staticText = nullptr;
-	wxTextCtrl *m_textCtrl = nullptr;
+	wxBoxSizer* m_boxSizer = nullptr;
+	wxStaticText* m_staticText = nullptr;
+	wxTextCtrl* m_textCtrl = nullptr;
 
-	wxTextButtonCtrl *m_winButton = nullptr;
+	wxTextButtonCtrl* m_winButton = nullptr;
 
 	bool m_dvcMode;
 
@@ -324,12 +324,12 @@ private:
 private:
 
 	void CreateControl(const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-		const wxString &val = wxEmptyString)
+		const wxString& val = wxEmptyString)
 	{
 		m_boxSizer = new wxBoxSizer(wxHORIZONTAL);
 
 		if (!m_dvcMode) {
-			m_staticText = new wxStaticText(this, wxID_ANY, wxEmptyString, pos, wxDefaultSize);
+			m_staticText = new wxStaticText(this, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxST_NO_AUTORESIZE);
 			m_staticText->Wrap(-1);
 			m_boxSizer->Add(m_staticText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		}
@@ -344,7 +344,7 @@ private:
 		m_winButton->SetDVCMode(m_dvcMode);
 		m_winButton->Create(this, pos, wxSize(-1, m_dvcMode ? buttonSize + 3 : buttonSize));
 		m_boxSizer->Add(m_winButton, 0, wxALIGN_NOT);
-		
+
 		if (m_textCtrl != nullptr) {
 			const long style = m_textCtrl->GetWindowStyle();
 			if (m_multilineMode) {
@@ -389,7 +389,7 @@ private:
 	}
 
 	//events:
-	void OnFocusEvent(wxFocusEvent &event)
+	void OnFocusEvent(wxFocusEvent& event)
 	{
 		if (event.GetEventType() == wxEVT_SET_FOCUS) {
 
@@ -406,7 +406,7 @@ private:
 		}
 		else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
 
-			if (m_textCtrl != event.GetWindow() 
+			if (m_textCtrl != event.GetWindow()
 				&& m_winButton->m_buttonSelect != event.GetWindow()
 				&& m_winButton->m_buttonOpen != event.GetWindow()
 				&& m_winButton->m_buttonClear != event.GetWindow()) {
@@ -425,12 +425,12 @@ private:
 	{
 		event.Skip();
 	}
-	
+
 	void OnCharEvent(wxKeyEvent& event)
 	{
 		event.Skip();
 	}
-	
+
 public:
 
 	wxTextContainerCtrl() :
@@ -440,9 +440,9 @@ public:
 	{
 	}
 
-	wxTextContainerCtrl(wxWindow *parent,
+	wxTextContainerCtrl(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
-		const wxString &val = wxEmptyString,
+		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE) :
 		m_selbutton(true), m_openbutton(false), m_clearbutton(false),
@@ -458,15 +458,15 @@ public:
 
 			m_textCtrl->Unbind(wxEVT_KEY_DOWN, &wxTextContainerCtrl::OnKeyEvent, this);
 			m_textCtrl->Unbind(wxEVT_CHAR, &wxTextContainerCtrl::OnCharEvent, this);
-		
-			m_textCtrl->Unbind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);	
+
+			m_textCtrl->Unbind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
 			m_textCtrl->Unbind(wxEVT_KILL_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
 		}
 	}
 
-	bool Create(wxWindow *parent = nullptr,
+	bool Create(wxWindow* parent = nullptr,
 		wxWindowID id = wxID_ANY,
-		const wxString &val = wxEmptyString,
+		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = 0)
 	{
@@ -479,7 +479,7 @@ public:
 
 		m_textCtrl->Bind(wxEVT_KEY_DOWN, &wxTextContainerCtrl::OnKeyEvent, this);
 		m_textCtrl->Bind(wxEVT_CHAR, &wxTextContainerCtrl::OnCharEvent, this);
-		
+
 		m_textCtrl->Bind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
 		m_textCtrl->Bind(wxEVT_KILL_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
 
@@ -506,31 +506,31 @@ public:
 
 	// Bind functors to an event:
 	template <typename Functor, typename EventHandler>
-	void BindButtonSelect(const Functor &functor, EventHandler handler) { m_winButton->BindButtonSelect(functor, handler); }
+	void BindButtonSelect(const Functor& functor, EventHandler handler) { m_winButton->BindButtonSelect(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void BindButtonOpen(const Functor &functor, EventHandler handler) { m_winButton->BindButtonOpen(functor, handler); }
+	void BindButtonOpen(const Functor& functor, EventHandler handler) { m_winButton->BindButtonOpen(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void BindButtonClear(const Functor &functor, EventHandler handler) { m_winButton->BindButtonClear(functor, handler); }
+	void BindButtonClear(const Functor& functor, EventHandler handler) { m_winButton->BindButtonClear(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void BindTextEnter(const Functor &functor, EventHandler handler) { m_textCtrl->Bind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
+	void BindTextEnter(const Functor& functor, EventHandler handler) { m_textCtrl->Bind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
 	template <typename Functor, typename EventHandler>
 	void BindTextUpdated(const Functor& functor, EventHandler handler) { m_textCtrl->Bind(wxEVT_COMMAND_TEXT_UPDATED, functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void BindKillFocus(const Functor &functor, EventHandler handler) { wxTextContainerCtrl::Bind(wxEVT_KILL_FOCUS, functor, handler); }
+	void BindKillFocus(const Functor& functor, EventHandler handler) { wxTextContainerCtrl::Bind(wxEVT_KILL_FOCUS, functor, handler); }
 
 	// Unbind functors to an event:
 	template <typename Functor, typename EventHandler>
-	void UnbindButtonSelect(const Functor &functor, EventHandler handler) { m_winButton->UnbindButtonSelect(functor, handler); }
+	void UnbindButtonSelect(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonSelect(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void UnbindButtonOpen(const Functor &functor, EventHandler handler) { m_winButton->UnbindButtonOpen(functor, handler); }
+	void UnbindButtonOpen(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonOpen(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void UnbindButtonClear(const Functor &functor, EventHandler handler) { m_winButton->UnbindButtonClear(functor, handler); }
+	void UnbindButtonClear(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonClear(functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void UnbindTextEnter(const Functor &functor, EventHandler handler) { m_textCtrl->Unbind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
+	void UnbindTextEnter(const Functor& functor, EventHandler handler) { m_textCtrl->Unbind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
 	template <typename Functor, typename EventHandler>
 	void UnbindTextUpdated(const Functor& functor, EventHandler handler) { m_textCtrl->Unbind(wxEVT_COMMAND_TEXT_UPDATED, functor, handler); }
 	template <typename Functor, typename EventHandler>
-	void UnbindKillFocus(const Functor &functor, EventHandler handler) { wxTextContainerCtrl::Unbind(wxEVT_KILL_FOCUS, functor, handler); }
+	void UnbindKillFocus(const Functor& functor, EventHandler handler) { wxTextContainerCtrl::Unbind(wxEVT_KILL_FOCUS, functor, handler); }
 
 	void SetMultilineMode(bool mode) {
 		if (m_textCtrl != nullptr) {
@@ -619,14 +619,14 @@ public:
 	}
 
 	void CalculateButton() {
-		m_textCtrl->SetMinSize(wxSize(-1, m_textCtrl->GetMinSize().y));
+		m_textCtrl->SetMinSize(wxSize(wxNOT_FOUND, m_textCtrl->GetMinSize().y));
 		m_winButton->Hide();
 		int x = wxWindow::GetBestSize().x + 20;// -5;
 		m_winButton->Show();
-		int delta = m_winButton->CalculateButton();
+		const int delta = m_winButton->CalculateButton();
 		x -= delta;
 		if (!m_dvcMode) {
-			wxSize minSize = m_staticText->GetMinSize(); 
+			const wxSize& minSize = m_staticText->GetMinSize();
 			if (minSize != wxDefaultSize) {
 				x -= minSize.x;
 			}
@@ -706,14 +706,14 @@ public:
 		return wxWindow::SetFont(font);
 	}
 
-	virtual bool Enable(bool enable = true) {	
+	virtual bool Enable(bool enable = true) {
 		bool result = m_textCtrl->Enable(enable);
 		m_winButton->Enable(enable);
 		return result;
 	}
 
 #if wxUSE_TOOLTIPS
-	virtual void DoSetToolTipText(const wxString &tip) override {
+	virtual void DoSetToolTipText(const wxString& tip) override {
 		if (!m_dvcMode) {
 			m_staticText->SetToolTip(tip);
 		}
@@ -721,7 +721,7 @@ public:
 		m_winButton->SetToolTip(tip);
 	}
 
-	virtual void DoSetToolTip(wxToolTip *tip) override {
+	virtual void DoSetToolTip(wxToolTip* tip) override {
 		if (!m_dvcMode) {
 			m_staticText->SetToolTip(tip);
 		}
@@ -730,7 +730,7 @@ public:
 	}
 #endif // wxUSE_TOOLTIPS
 
-	virtual void SetInsertionPointEnd() { 
+	virtual void SetInsertionPointEnd() {
 		m_textCtrl->SetInsertionPointEnd();
 	}
 
@@ -739,11 +739,11 @@ public:
 	}
 
 	virtual wxSize GetControlSize() const {
-		 return m_textCtrl->GetSize() + 
-			 m_winButton->GetSize();
+		return m_textCtrl->GetSize() +
+			m_winButton->GetSize();
 	}
 
-	virtual wxStaticText *GetStaticText() const { 
+	virtual wxStaticText* GetStaticText() const {
 		return m_staticText;
 	}
 
@@ -752,7 +752,7 @@ public:
 	}
 
 	virtual void AfterCalc() {
-		CalculateButton(); 
+		CalculateButton();
 	}
 };
 

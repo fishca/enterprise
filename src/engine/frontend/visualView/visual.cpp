@@ -4,12 +4,154 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "visual.h"
+
 #include "ctrl/control.h"
+#include "ctrl/form.h"
+
 #include "pageWindow.h"
 
 #include <wx/collpane.h>
 
 wxIMPLEMENT_ABSTRACT_CLASS(IVisualHost, wxScrolledWindow)
+
+bool IVisualHost::CreateVisualHost()
+{
+	const CValueForm* valueForm = GetValueForm();
+
+#if !defined(__WXGTK__ )
+	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
+	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
+#endif
+
+	if (valueForm != nullptr && IsShownHost()) {
+
+		// --- [1] Show form 
+		GetParentBackgroundWindow()->Show(true);
+
+		// --- [2] Set the color of the form -------------------------------
+		GetBackgroundWindow()->SetForegroundColour(valueForm->GetForegroundColour());
+		GetBackgroundWindow()->SetBackgroundColour(valueForm->GetBackgroundColour());
+
+		// --- [3] Title bar Setup
+		SetCaption(valueForm->GetCaption());
+
+		// --- [4] Default sizer Setup 
+		SetOrientation(valueForm->GetOrient());
+
+		// --- [5] Create the components of the form -------------------------
+		// Used to save valueForm objects for later display
+
+		for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
+			IValueFrame* child = valueForm->GetChild(i);
+			// Recursively generate the ObjectTree
+			try {
+				// we have to put the content valueForm panel as parentObject in order
+				// to SetSizeHints be called.
+				GenerateControl(child, GetBackgroundWindow(), GetFrameSizer());
+			}
+			catch (std::exception& ex) {
+				wxLogError(ex.what());
+			}
+		}
+	}
+	else {
+		// There is no form to display
+		GetParentBackgroundWindow()->Show(false);
+	}
+
+#if !defined(__WXGTK__)
+	GetParentBackgroundWindow()->Thaw();
+#endif
+
+	return true;
+}
+
+bool IVisualHost::UpdateVisualHost()
+{
+	const CValueForm* valueForm = GetValueForm();
+
+#if !defined(__WXGTK__ )
+	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
+	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
+#endif
+
+	if (valueForm != nullptr && IsShownHost()) {
+
+		// --- [1] Show form 
+		GetParentBackgroundWindow()->Show(true);
+
+		// --- [2] Set the color of the form -------------------------------
+		GetBackgroundWindow()->SetForegroundColour(valueForm->GetForegroundColour());
+		GetBackgroundWindow()->SetBackgroundColour(valueForm->GetBackgroundColour());
+
+		// --- [3] Title bar Setup
+		SetCaption(valueForm->GetCaption());
+
+		// --- [4] Default sizer Setup 
+		SetOrientation(valueForm->GetOrient());
+
+		// --- [5] Update the components of the form -------------------------
+		// Used to save valueForm objects for later display
+		for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
+
+			IValueFrame* child = valueForm->GetChild(i);
+
+			// Recursively generate the ObjectTree
+			try {
+				// we have to put the content valueForm panel as parentObject in order
+				// to SetSizeHints be called.
+				RefreshControl(child, GetBackgroundWindow(), GetFrameSizer(), true);
+			}
+			catch (std::exception& ex) {
+				wxLogError(ex.what());
+			}
+		}
+
+		// --- [6] Calculate label size 
+		CalculateLabelSize();
+
+		// --- [7] Set sizer properties
+		GetParentBackgroundWindow()->Layout();
+
+		if (GetParentBackgroundWindow() != this) {
+			GetParentBackgroundWindow()->GetSizer()->Fit(GetParentBackgroundWindow());
+			GetParentBackgroundWindow()->SetClientSize(GetParentBackgroundWindow()->GetBestSize());
+		}
+		
+		// --- [8] Refresh main window
+		GetParentBackgroundWindow()->Refresh();
+	}
+	else {
+		// There is no form to display
+		GetParentBackgroundWindow()->Show(false);
+		GetParentBackgroundWindow()->Refresh();
+	}
+
+#if !defined(__WXGTK__)
+	GetParentBackgroundWindow()->Thaw();
+#endif
+
+	UpdateVirtualSize();
+	return true;
+}
+
+bool IVisualHost::ClearVisualHost()
+{
+	const CValueForm* valueForm = GetValueForm();
+	wxASSERT(valueForm);
+
+	for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
+		IValueFrame* objChild = valueForm->GetChild(i);
+		DeleteRecursive(objChild, true);
+	}
+
+	if (GetParentBackgroundWindow() != this) {
+		GetParentBackgroundWindow()->DestroyChildren();
+		GetParentBackgroundWindow()->SetSizer(nullptr); // *!*
+	}
+
+	return true;
+}
 
 IValueFrame* IVisualHost::GetObjectBase(wxObject* wxobject) const
 {
@@ -27,8 +169,6 @@ IValueFrame* IVisualHost::GetObjectBase(wxObject* wxobject) const
 		return nullptr;
 	}
 }
-
-#include "ctrl/form.h"
 
 wxObject* IVisualHost::GetWxObject(IValueFrame* baseobject) const
 {
@@ -327,170 +467,282 @@ void IVisualHost::RemoveControl(IValueFrame* obj, IValueFrame* parent)
 
 void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated)
 {
-	// Create Object
-	wxObject* createdObject = Create(obj, wxparent);
-	wxWindow* createdWindow = nullptr;
-	wxSizer* createdSizer = nullptr;
-
-	wxWindow* parentObj = wxparent;
-
-	switch (obj->GetComponentType())
+	class CControlCreator
 	{
-	case COMPONENT_TYPE_WINDOW:
-	{
-		if (obj->GetClassName() == wxT("notebookPage")) {
-			CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
-			if (pageWindow) {
-				createdWindow = pageWindow;
-				createdSizer = pageWindow->GetSizer();
-
-				parentObj = pageWindow;
-			}
-		}
-		else {
-			createdWindow = wxDynamicCast(createdObject, wxWindow);
-		}
-		break;
-	}
-	case COMPONENT_TYPE_SIZER:
-	case COMPONENT_TYPE_SIZERITEM:
-	{
-		if (obj->GetClassName() == wxT("staticboxsizer")) {
-			wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
-			if (staticBoxSizer) {
-				createdWindow = staticBoxSizer->GetStaticBox();
-				createdSizer = staticBoxSizer;
-			}
-		}
-		else
+	public:
+		static void CreateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated)
 		{
-			createdSizer = wxDynamicCast(createdObject, wxSizer);
+			// Create Object
+			wxObject* createdObject = visualHost->Create(obj, wxparent);
+			wxWindow* createdWindow = nullptr;
+			wxSizer* createdSizer = nullptr;
+
+			wxWindow* parentObj = wxparent;
+
+			switch (obj->GetComponentType())
+			{
+			case COMPONENT_TYPE_WINDOW:
+			{
+				if (obj->GetClassName() == wxT("notebookPage")) {
+					CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
+					if (pageWindow) {
+						createdWindow = pageWindow;
+						createdSizer = pageWindow->GetSizer();
+
+						parentObj = pageWindow;
+					}
+				}
+				else {
+					createdWindow = wxDynamicCast(createdObject, wxWindow);
+				}
+				break;
+			}
+			case COMPONENT_TYPE_SIZER:
+			case COMPONENT_TYPE_SIZERITEM:
+			{
+				if (obj->GetClassName() == wxT("staticboxsizer")) {
+					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
+					if (staticBoxSizer) {
+						createdWindow = staticBoxSizer->GetStaticBox();
+						createdSizer = staticBoxSizer;
+					}
+				}
+				else
+				{
+					createdSizer = wxDynamicCast(createdObject, wxSizer);
+				}
+				break;
+			}
+			default: break;
+			}
+
+			// Associate the wxObject* with the IValueFrame*
+			visualHost->m_baseObjects.insert_or_assign(obj, createdObject);
+			visualHost->m_wxObjects.insert_or_assign(createdObject, obj);
+
+			// Access to collapsible pane
+			wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
+			if (collpane != nullptr) {
+				createdWindow = collpane->GetPane();
+				createdObject = createdWindow;
+			}
+
+			// New wxparent for the window's children
+			wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
+
+			// Recursively generate the children
+			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
+				CreateControl(visualHost, obj->GetChild(i), new_wxparent, createdObject, firstCreated);
+			}
+
+			//if new obj then call on created 
+			visualHost->OnCreated(obj, createdObject, wxparent, firstCreated);
 		}
-		break;
-	}
-	default: break;
-	}
+	};
 
-	// Associate the wxObject* with the IValueFrame*
-	m_baseObjects.insert_or_assign(obj, createdObject);
-	m_wxObjects.insert_or_assign(createdObject, obj);
-
-	// Access to collapsible pane
-	wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
-	if (collpane != nullptr) {
-		createdWindow = collpane->GetPane();
-		createdObject = createdWindow;
-	}
-
-	// New wxparent for the window's children
-	wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
-
-	// Recursively generate the children
-	for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
-		GenerateControl(obj->GetChild(i), new_wxparent, createdObject, firstCreated);
-	}
-
-	//if new obj then call on created 
-	OnCreated(obj, createdObject, wxparent, firstCreated);
-
-	// If the created object is a sizer and the parent object is a window, set the sizer to the window
-	if (
-		(createdSizer != nullptr && nullptr != wxDynamicCast(parentObject, wxWindow))
-		||
-		(nullptr == parentObject && createdSizer != nullptr)
-		)
-	{
-		parentObj->SetSizer(createdSizer);
-
-		if (parentObject)
-			createdSizer->SetSizeHints(parentObj);
-
-		parentObj->SetAutoLayout(true);
-		parentObj->Layout();
-	}
+	CControlCreator::CreateControl(this, obj, wxparent, parentObject, firstCreated);
 }
 
-void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject)
+void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool refreshForm)
 {
-	// Create Object
-	wxObject* createdObject = m_baseObjects.at(obj);
-	wxWindow* createdWindow = nullptr;
-	wxSizer* createdSizer = nullptr;
-
-	wxWindow* parentObj = wxparent;
-
-	switch (obj->GetComponentType())
+	class CControlUpdater
 	{
-	case COMPONENT_TYPE_WINDOW:
-	{
-		if (obj->GetClassName() == wxT("notebookPage")) {
-			CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
-			if (pageWindow)
+	public:
+		static void UpdateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject)
+		{
+			// Create Object
+			wxObject* createdObject = visualHost->GetWxObject(obj);
+			wxWindow* createdWindow = nullptr;
+			wxSizer* createdSizer = nullptr;
+
+			wxWindow* parentObj = wxparent;
+
+			switch (obj->GetComponentType())
 			{
-				createdWindow = pageWindow;
-				createdSizer = pageWindow->GetSizer();
+			case COMPONENT_TYPE_WINDOW:
+			{
+				if (obj->GetClassName() == wxT("notebookPage")) {
+					CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
+					if (pageWindow)
+					{
+						createdWindow = pageWindow;
+						createdSizer = pageWindow->GetSizer();
 
-				parentObj = pageWindow;
+						parentObj = pageWindow;
+					}
+				}
+				else {
+					createdWindow = wxDynamicCast(createdObject, wxWindow);
+				}
+
+				break;
+			}
+			case COMPONENT_TYPE_SIZER:
+			case COMPONENT_TYPE_SIZERITEM:
+			{
+				if (obj->GetClassName() == wxT("staticboxsizer")) {
+					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
+					if (staticBoxSizer) {
+						createdWindow = staticBoxSizer->GetStaticBox();
+						createdSizer = staticBoxSizer;
+					}
+				}
+				else {
+					createdSizer = wxDynamicCast(createdObject, wxSizer);
+				} break;
+			}
+			default: break;
+			}
+
+			visualHost->Update(obj, createdObject);
+
+			// Access to collapsible pane
+			wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
+			if (collpane != nullptr) {
+				createdWindow = collpane->GetPane();
+				createdObject = createdWindow;
+			}
+
+			// New wxparent for the window's children
+			wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
+
+			// Recursively generate the children
+			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
+				UpdateControl(visualHost, obj->GetChild(i), new_wxparent, createdObject);
+			}
+
+			//if new obj then call on created 
+			visualHost->OnUpdated(obj, createdObject, wxparent);
+
+			// If the created object is a sizer and the parent object is a window, set the sizer to the window
+			if (
+				(createdSizer != nullptr && nullptr != wxDynamicCast(parentObject, wxWindow))
+				||
+				(nullptr == parentObject && createdSizer != nullptr)
+				)
+			{
+				parentObj->SetSizer(createdSizer);
+
+				if (parentObject)
+					createdSizer->SetSizeHints(parentObj);
+
+				parentObj->SetAutoLayout(true);
+				parentObj->Layout();
 			}
 		}
-		else {
-			createdWindow = wxDynamicCast(createdObject, wxWindow);
-		}
+	};
 
-		break;
-	}
-	case COMPONENT_TYPE_SIZER:
-	case COMPONENT_TYPE_SIZERITEM:
+	CControlUpdater::UpdateControl(this, obj, wxparent, parentObject);
+
+	if (!refreshForm) CalculateLabelSize(obj);
+}
+
+#include "frontend/win/ctrls/dynamicBorder.h"
+
+bool IVisualHost::CalculateLabelSize(IValueFrame* control)
+{
+	const CValueForm* valueForm = GetValueForm();
+	if (valueForm == nullptr) return false;
+
+	class CCalculateSize
 	{
-		if (obj->GetClassName() == wxT("staticboxsizer")) {
-			wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
-			if (staticBoxSizer) {
-				createdWindow = staticBoxSizer->GetStaticBox();
-				createdSizer = staticBoxSizer;
+		static void Calculate(IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+				child = child->GetChild(0);
 			}
+			wxASSERT(child);
+
+			wxObject* wx_object = child->GetWxObject();
+
+			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
+			IDynamicBorder* childCtrl = dynamic_cast<IDynamicBorder*>(wx_object);
+
+			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
+				wxStaticText* childStaticText = childCtrl->GetStaticText();
+				const wxString& strLabel = childStaticText->GetLabelText();
+				if (!strLabel.IsEmpty()) {
+					const wxSize& childSize = childStaticText->GetTextExtent(strLabel);
+					if (childSize.GetX() > maxX) {
+						maxX = childSize.GetX();
+					}
+				}
+			}
+
+			if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
+				return;
+			}
+
+			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
+				Calculate(child->GetChild(idx), sizer ? sizer : parentSizer, maxX);
+			}
+		};
+
+		static void Apply(IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+			IValueFrame* childParent = child->GetParent();
+			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+				child = child->GetChild(0);
+			}
+			wxASSERT(child);
+
+			wxObject* wx_object = child->GetWxObject();
+
+			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
+			IDynamicBorder* childCtrl = dynamic_cast<IDynamicBorder*>(wx_object);
+
+			int currMax = maxX;
+
+			if (maxX != wxNOT_FOUND ||
+				parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
+				Calculate(childParent, sizer ? sizer : parentSizer, maxX);
+			}
+
+			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
+				childCtrl->BeforeCalc();
+			}
+
+			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
+				Apply(child->GetChild(idx), sizer ? sizer : parentSizer, currMax);
+			}
+
+			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
+				wxStaticText* childStaticText = childCtrl->GetStaticText();
+				if (maxX != wxNOT_FOUND) {
+					childStaticText->SetMinSize(wxSize(maxX, wxNOT_FOUND));
+				}
+				else {
+					childStaticText->SetMinSize(wxDefaultSize);
+				}
+				if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
+					maxX = wxNOT_FOUND;
+				}
+				childCtrl->AfterCalc();
+			}
+		};
+
+	public:
+
+		static bool CalculateAndApply(const CValueForm* valueForm, IDynamicBorder* control = nullptr)
+		{
+			if (control != nullptr && control->AllowCalc()) {
+				control->BeforeCalc();
+			}
+
+			wxBoxSizer* parentSizer = dynamic_cast<wxBoxSizer*>(valueForm->GetWxObject());
+			int currMaxX = 0;
+			for (unsigned int idx = 0; idx < valueForm->GetChildCount(); idx++) {
+				Apply(valueForm->GetChild(idx), parentSizer, currMaxX);
+			}
+
+			if (control != nullptr && control->AllowCalc()) {
+				control->AfterCalc();
+			}
+
+			return true;
 		}
-		else {
-			createdSizer = wxDynamicCast(createdObject, wxSizer);
-		} break;
-	}
-	default: break;
-	}
+	};
 
-	Update(obj, createdObject);
-
-	// Access to collapsible pane
-	wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
-	if (collpane != nullptr) {
-		createdWindow = collpane->GetPane();
-		createdObject = createdWindow;
-	}
-
-	// New wxparent for the window's children
-	wxWindow* new_wxparent = (createdWindow ? createdWindow : wxparent);
-
-	// Recursively generate the children
-	for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
-		RefreshControl(obj->GetChild(i), new_wxparent, createdObject);
-	}
-
-	//if new obj then call on created 
-	OnUpdated(obj, createdObject, wxparent);
-
-	// If the created object is a sizer and the parent object is a window, set the sizer to the window
-	if (
-		(createdSizer != nullptr && nullptr != wxDynamicCast(parentObject, wxWindow))
-		||
-		(nullptr == parentObject && createdSizer != nullptr)
-		)
-	{
-		parentObj->SetSizer(createdSizer);
-
-		if (parentObject)
-			createdSizer->SetSizeHints(parentObj);
-
-		parentObj->SetAutoLayout(true);
-		parentObj->Layout();
-	}
+	return CCalculateSize::CalculateAndApply(valueForm,
+		dynamic_cast<IDynamicBorder*>(control));
 }
 
 void IVisualHost::UpdateVirtualSize()

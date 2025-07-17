@@ -149,7 +149,6 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 	}
 
 	UpdateWindow(textEditor);
-	UpdateLabelSize(textEditor);
 }
 
 void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)

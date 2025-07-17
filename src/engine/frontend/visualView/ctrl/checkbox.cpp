@@ -72,7 +72,6 @@ void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 	}
 
 	UpdateWindow(checkbox);
-	UpdateLabelSize(checkbox);
 }
 
 void CValueCheckbox::Cleanup(wxObject* obj, IVisualHost* visualHost)

@@ -19,15 +19,14 @@ wxEND_EVENT_TABLE()
 
 bool CModuleEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_viewFrame->Freeze();
 	m_codeEditor = new CCodeEditor(doc, m_viewFrame, wxID_ANY,
 		wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
 	m_codeEditor->SetSTCFocus(true);
-	m_viewFrame->Thaw();
 
-	return CMetaView::OnCreate(doc, flags);
+	return CMetaView::OnCreate(doc, flags)
+		&& m_codeEditor->LoadModule();
 }
 
 enum
@@ -160,7 +159,8 @@ bool CModuleDocument::OnCreate(const wxString& path, long flags)
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	return GetCodeEditor()->LoadModule();
+	//return GetCodeEditor()->LoadModule();
+	return true; 
 }
 
 bool CModuleDocument::OnOpenDocument(const wxString& filename)

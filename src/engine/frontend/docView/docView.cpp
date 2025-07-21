@@ -56,11 +56,14 @@ bool CMetaDocument::OnCreate(const wxString& path, long flags)
 	wxScopedPtr<CMetaView> view(DoCreateView());
 	if (!view)
 		return false;
+	
 	view->SetDocument(this);
+	
 	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE);
-	if (!view->OnCreate(this, flags)) {
+		
+	if (!view->OnCreate(this, flags)) 
 		return false;
-	}
+	
 	view->ShowFrame();
 	return view.release() != nullptr;
 }

@@ -1100,7 +1100,7 @@ void CMetadataTree::InitTree()
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
-	int imageCommonIndex = imageList->Add(wxArtProvider::GetIcon(wxART_COMMON_FOLDER, wxART_METATREE));
+	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmap(wxART_COMMON_FOLDER, wxART_METATREE));
 	m_treeCOMMON = m_metaTreeWnd->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////

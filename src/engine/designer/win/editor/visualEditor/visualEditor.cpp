@@ -282,6 +282,15 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 	m_back->SetSelectedObject(obj);
 	m_back->SetSelectedPanel(selPanel);
 
+	//if (componentType == COMPONENT_TYPE_WINDOW) {
+
+	//	int scroll_rate_y = 0;
+	//	wxScrolledWindow::GetScrollPixelsPerUnit(NULL, &scroll_rate_y);
+
+	//	wxPoint window_pos = ((wxWindow*)item)->GetPosition();
+	//	wxScrolledWindow::Scroll(0, ((window_pos.y) / scroll_rate_y));
+	//}
+
 	m_back->Refresh();
 }
 

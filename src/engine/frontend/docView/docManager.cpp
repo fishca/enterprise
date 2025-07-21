@@ -790,7 +790,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 					if (cmdProc != nullptr)
 						newDocument->SetCommandProcessor(cmdProc);
 					newDocument->UpdateAllViews();
-					newDocument->Activate();
+					//newDocument->Activate();
 					return newDocument;
 				}
 

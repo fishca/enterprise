@@ -11,18 +11,18 @@
 void CDocDesignerMDIFrame::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
-	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_FRAME_ICON, wxSize(16, 16)), "New", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), "Open", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), "Save", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), "Save as", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->SetToolBitmapSize(wxSize(24, 24));
+	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_MENU, wxSize(24, 24)), "New", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(24, 24)), "Open", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(24, 24)), "Save", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(24, 24)), "Save as", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), "Find", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(24, 24)), "Find", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), "Redo", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), "Undo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(24, 24)), "Redo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(24, 24)), "Undo", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_DESIGNER_UPDATE_METADATA, _("Save metaData"), wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(16, 16)), _("Save metaData"), wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_DESIGNER_UPDATE_METADATA, _("Save metaData"), wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(24, 24)), _("Save metaData"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->Realize();
 	m_mainFrameToolbar->Connect(wxEVT_MENU, wxEventHandler(CDocDesignerMDIFrame::OnToolbarClicked), nullptr, this);
 
@@ -38,7 +38,7 @@ void CDocDesignerMDIFrame::CreateWideGui()
 	m_mgr.AddPane(m_mainFrameToolbar, paneInfoMainTool);
 
 	m_docToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_docToolbar->SetToolBitmapSize(wxSize(16, 16));
+	m_docToolbar->SetToolBitmapSize(wxSize(24, 24));
 
 	wxAuiPaneInfo paneInfoDocTool;
 	paneInfoDocTool.Name(wxT("docTool"));

@@ -1,5 +1,6 @@
 #include "artProvider.h"
 
+#include <array>
 #include <map>
 
 #include "artProvider/codeEditor/intelli/functionBlue.xpm"
@@ -35,60 +36,84 @@
 // ----------------------------------------------------------------------------
 
 class wxFrontendArtProvider : public wxArtProvider {
-	std::map<
-		std::pair<wxArtClient, wxArtID>, wxIcon
-	> m_dataIcon;
 public:
-	wxFrontendArtProvider() : wxArtProvider() {
-		m_dataIcon = {
-			{ { wxART_AUTOCOMPLETE, wxART_FUNCTION_RED }, s_functionBlue_xpm },
-			{ { wxART_AUTOCOMPLETE, wxART_FUNCTION_BLUE }, s_functionRed_xpm },
-			{ { wxART_AUTOCOMPLETE, wxART_PROCEDURE_RED }, s_procedureRed_xpm },
-			{ { wxART_AUTOCOMPLETE, wxART_PROCEDURE_BLUE }, s_procedureBlue_xpm },
-			{ { wxART_AUTOCOMPLETE, wxART_VARIABLE }, s_variable_xpm },
-			{ { wxART_AUTOCOMPLETE, wxART_VARIABLE_ALTERNATIVE }, s_variable_alt_xpm },
-
-			{ { wxART_DOC_MODULE, wxART_ADD_COMMENT }, s_addComment_xpm },
-			{ { wxART_DOC_MODULE, wxART_REMOVE_COMMENT }, s_removeComment_xpm },
-			{ { wxART_DOC_MODULE, wxART_SYNTAX_CONTROL }, s_syntaxControl_xpm },
-			{ { wxART_DOC_MODULE, wxART_GOTO_LINE }, s_gotoLine_xpm },
-			{ { wxART_DOC_MODULE, wxART_PROC_AND_FUNC }, s_proceduresFunctions_xpm },
-
-			{ { wxART_DOC_FORM, wxART_DESIGNER_PAGE }, s_designerPage_xpm },
-			{ { wxART_DOC_FORM, wxART_CODE_PAGE }, s_codePage_xpm },
-
-			{ { wxART_DOC_TEMPLATE, wxART_MERGE_CELL }, s_mergeCells_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_ADD_SECTION }, s_addSection_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_REMOVE_SECTION }, s_removeSection_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_SHOW_CELL }, s_showCells_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_SHOW_HEADER }, s_showHeaders_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_SHOW_SECTION }, s_showSections_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_BORDER }, s_borders_xpm },
-			{ { wxART_DOC_TEMPLATE, wxART_DOCK_TABLE }, s_dockTable_xpm },
-
-			{ { wxART_METATREE, wxART_COMMON_FOLDER }, s_commonFolder_xpm },
-			{ { wxART_METATREE, wxART_SAVE_METADATA }, s_saveMetadata_xpm }
-		};
-	}
+	wxFrontendArtProvider() : wxArtProvider() {}
 protected:
+
 	virtual wxBitmap CreateBitmap(
 		const wxArtID& id,
 		const wxArtClient& client,
 		const wxSize& size) override {
-		auto foundedIconIt = m_dataIcon.find(
-			std::pair<wxArtClient, wxArtID>(client, id)
-		);
-		if (foundedIconIt != m_dataIcon.end())
-			return foundedIconIt->second;
-		// Not one of the bitmaps that we support.
-		return wxBitmap();
+	
+		static const struct wxFrontendArtProviderIconEntry {
+
+			struct wxFrontendArtProviderIconData {
+
+				wxFrontendArtProviderIconData(const char* data[]) :
+					m_data(data), m_len(0) {
+					unsigned int idx = 0;
+					while (m_data[idx++] != nullptr) {
+						m_len += sizeof(m_data[idx]);
+					}
+				}
+
+				const char** m_data;
+				size_t m_len;
+			};
+
+			wxArtClient client;
+			wxArtID id;
+			wxFrontendArtProviderIconData data;
+		}
+
+		s_allBitmaps[] =
+		{
+			// ******* wxART_AUTOCOMPLETE *******
+			{ wxART_AUTOCOMPLETE, wxART_FUNCTION_RED, s_functionBlue_xpm},
+			{ wxART_AUTOCOMPLETE, wxART_FUNCTION_BLUE, s_functionRed_xpm },
+			{ wxART_AUTOCOMPLETE, wxART_PROCEDURE_RED, s_procedureRed_xpm },
+			{ wxART_AUTOCOMPLETE, wxART_PROCEDURE_BLUE, s_procedureBlue_xpm },
+			{ wxART_AUTOCOMPLETE, wxART_VARIABLE, s_variable_xpm },
+			{ wxART_AUTOCOMPLETE, wxART_VARIABLE_ALTERNATIVE, s_variable_alt_xpm },
+
+			// ******* wxART_DOC_MODULE *******
+			{ wxART_DOC_MODULE, wxART_ADD_COMMENT, s_addComment_xpm },
+			{ wxART_DOC_MODULE, wxART_REMOVE_COMMENT, s_removeComment_xpm },
+			{ wxART_DOC_MODULE, wxART_SYNTAX_CONTROL, s_syntaxControl_xpm },
+			{ wxART_DOC_MODULE, wxART_GOTO_LINE, s_gotoLine_xpm },
+			{ wxART_DOC_MODULE, wxART_PROC_AND_FUNC, s_proceduresFunctions_xpm },
+
+			// ******* wxART_DOC_FORM *******
+			{ wxART_DOC_FORM, wxART_DESIGNER_PAGE, s_designerPage_xpm },
+			{ wxART_DOC_FORM, wxART_CODE_PAGE, s_codePage_xpm },
+
+			// ******* wxART_DOC_TEMPLATE *******
+			{ wxART_DOC_TEMPLATE, wxART_MERGE_CELL , s_mergeCells_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_ADD_SECTION , s_addSection_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_REMOVE_SECTION , s_removeSection_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_SHOW_CELL, s_showCells_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_SHOW_HEADER, s_showHeaders_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_SHOW_SECTION, s_showSections_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_BORDER, s_borders_xpm },
+			{ wxART_DOC_TEMPLATE, wxART_DOCK_TABLE , s_dockTable_xpm },
+
+			// ******* wxART_METATREE *******
+			{ wxART_METATREE, wxART_COMMON_FOLDER, s_commonFolder_xpm },
+			{ wxART_METATREE, wxART_SAVE_METADATA, s_saveMetadata_xpm }
+		};
+
+		for (unsigned n = 0; n < WXSIZEOF(s_allBitmaps); n++)
+		{
+			const wxFrontendArtProviderIconEntry& entry = s_allBitmaps[n];
+			if (entry.id != id)
+				continue;
+			
+			return wxIcon(entry.data.m_data);
+		}
+
+		return wxNullBitmap;
 	}
 
-	virtual wxIconBundle CreateIconBundle(const wxArtID& WXUNUSED(id),
-		const wxArtClient& WXUNUSED(client))
-	{
-		return wxNullIconBundle;
-	}
 private:
 	wxDECLARE_NO_COPY_CLASS(wxFrontendArtProvider);
 };
@@ -98,7 +123,7 @@ private:
 class wxOESArtModule : public wxModule
 {
 public:
-	wxOESArtModule() : wxModule() { }
+	wxOESArtModule() : wxModule() {}
 	virtual bool OnInit() {
 		wxArtProvider::Push(new wxFrontendArtProvider);
 		return true;
@@ -108,4 +133,4 @@ private:
 	wxDECLARE_DYNAMIC_CLASS(wxOESArtModule);
 };
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxOESArtModule, wxModule)
+wxIMPLEMENT_DYNAMIC_CLASS(wxOESArtModule, wxModule);

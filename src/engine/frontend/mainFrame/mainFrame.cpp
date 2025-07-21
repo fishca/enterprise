@@ -119,9 +119,9 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 		CDialogDocChildFrame* subframe = new CDialogDocChildFrame(document, view, parent, wxID_ANY, document->GetTitle(), pos, size, style & ~wxCREATE_SDI_FRAME);
 		subframe->SetIcon(document->GetIcon());
 
-		subframe->Iconize(false); // restore the window if minimized
-		subframe->SetFocus();     // focus on my window
-		subframe->Raise();        // bring window to front
+		//subframe->Iconize(false); // restore the window if minimized
+		//subframe->SetFocus();     // focus on my window
+		//subframe->Raise();        // bring window to front
 		subframe->Center();
 
 		subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
@@ -131,10 +131,10 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 	CAuiDocChildFrame* subframe = new CAuiDocChildFrame(document, view, s_instance, wxID_ANY, document->GetTitle(), pos, size, style);
 	subframe->SetIcon(document->GetIcon());
 
-	subframe->Iconize(false); // restore the window if minimized
-	subframe->SetFocus();     // focus on my window
-	subframe->Raise();        // bring window to front
-	subframe->Maximize();
+	//subframe->Iconize(false); // restore the window if minimized
+	//subframe->SetFocus();     // focus on my window
+	//subframe->Raise();        // bring window to front
+	//subframe->Maximize();
 
 	subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 	return subframe;

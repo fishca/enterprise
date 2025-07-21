@@ -23,10 +23,10 @@ static wxWindowID nextId = wxID_HIGHEST + 3000;
 
 bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_viewFrame->Freeze();
 	m_visualNotebook = new CVisualEditorNotebook(doc, m_viewFrame, wxID_ANY, flags);
-	m_viewFrame->Thaw();
-	return CMetaView::OnCreate(doc, flags);
+
+	return CMetaView::OnCreate(doc, flags) &&
+		m_visualNotebook->LoadForm();
 }
 
 enum {
@@ -208,7 +208,7 @@ bool CFormDocument::OnCreate(const wxString& path, long flags)
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	return GetVisualNotebook()->LoadForm();
+	return true;
 }
 
 bool CFormDocument::OnOpenDocument(const wxString& filename)

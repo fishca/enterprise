@@ -6,7 +6,6 @@
 
 void CVisualEditorNotebook::CreateVisualEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
 {
-	wxAuiNotebook::Freeze();
 	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmap(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
 	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmap(wxART_CODE_PAGE, wxART_DOC_FORM));
 	m_visualEditor->SetReadOnly(flags == wxDOC_READONLY);
@@ -15,7 +14,6 @@ void CVisualEditorNotebook::CreateVisualEditor(CMetaDocument* document, wxWindow
 
 	wxAuiNotebook::Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CVisualEditorNotebook::OnPageChanged, this);
 	wxAuiNotebook::SetArtProvider(new wxAuiLunaTabArt());
-	wxAuiNotebook::Thaw();
 }
 
 void CVisualEditorNotebook::DestroyVisualEditor()

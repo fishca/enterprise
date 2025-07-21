@@ -101,21 +101,11 @@ public:
 
 	static wxWindow* CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
-	virtual wxMenu* GetDefaultMenu(int idMenu) const {
-		return nullptr;
-	}
+	virtual wxMenu* GetDefaultMenu(int idMenu) const { return nullptr; }
 
-	KeyBinder             GetKeyBinder() const {
-		return m_keyBinder;
-	}
-
-	FontColorSettings     GetFontColorSettings() const {
-		return m_fontColorSettings;
-	}
-
-	EditorSettings        GetEditorSettings() const {
-		return m_editorSettings;
-	}
+	KeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	FontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	EditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	virtual void CreateGUI() = 0;
 

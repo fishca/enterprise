@@ -118,8 +118,13 @@ bool IVisualHost::UpdateVisualHost()
 			GetParentBackgroundWindow()->SetClientSize(GetParentBackgroundWindow()->GetBestSize());
 		}
 		
-		// --- [8] Refresh main window
+		// --- [8] Refresh frame window
 		GetParentBackgroundWindow()->Refresh();
+
+		// --- [9] Refresh main window (designer)
+		if (GetParentBackgroundWindow() != this) {
+			wxScrolledWindow::Refresh();
+		}
 	}
 	else {
 		// There is no form to display

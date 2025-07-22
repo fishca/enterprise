@@ -6,8 +6,8 @@
 #include "visualHost.h"
 #include <wx/collpane.h>
 
-CVisualHost::CVisualHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent, bool demonstration) : IVisualHost(parent, wxID_ANY, wxDefaultPosition, parent->GetSize()),
-	m_document(document), m_valueForm(valueForm), m_formDemonstration(demonstration), m_dataViewSizeChanged(false) {
+CVisualHost::CVisualHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent) : IVisualHost(parent, wxID_ANY, wxDefaultPosition, parent->GetSize()),
+	m_document(document), m_valueForm(valueForm), m_dataViewSizeChanged(false) {
 	
 	CVisualHost::Bind(wxEVT_SIZE, &CVisualHost::OnSize, this);
 	CVisualHost::Bind(wxEVT_IDLE, &CVisualHost::OnIdle, this);

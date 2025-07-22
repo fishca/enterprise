@@ -408,7 +408,12 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool demoRun)
 	// create a child valueForm of appropriate class for the current mode
 	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
 
-	CVisualHost* visualView = new CVisualHost(m_valueFormDocument, this, view->GetFrame(), demoRun);
+	CVisualHost* visualView = nullptr;
+
+	if (demoRun)
+		visualView = new CVisualDemoHost(m_valueFormDocument, this, view->GetFrame());
+	else
+		visualView = new CVisualHost(m_valueFormDocument, this, view->GetFrame());
 
 	//set visual view
 	m_valueFormDocument->SetVisualView(visualView);

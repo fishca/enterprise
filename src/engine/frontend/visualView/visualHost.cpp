@@ -7,7 +7,7 @@
 #include <wx/collpane.h>
 
 CVisualHost::CVisualHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent) : IVisualHost(parent, wxID_ANY, wxDefaultPosition, parent->GetSize()),
-	m_document(document), m_valueForm(valueForm), m_dataViewSizeChanged(false) {
+	m_document(document), m_valueForm(valueForm), m_dataViewSize(wxDefaultSize), m_dataViewSizeChanged(false) {
 	
 	CVisualHost::Bind(wxEVT_SIZE, &CVisualHost::OnSize, this);
 	CVisualHost::Bind(wxEVT_IDLE, &CVisualHost::OnIdle, this);
@@ -28,7 +28,7 @@ CVisualHost::~CVisualHost()
 
 void CVisualHost::OnSize(wxSizeEvent& event)
 {
-	m_dataViewSizeChanged = (m_dataViewSize != GetSize());
+	m_dataViewSizeChanged = (m_dataViewSize != GetSize()) && (m_dataViewSize != wxDefaultSize);
 	event.Skip();
 }
 
@@ -36,8 +36,10 @@ void CVisualHost::OnIdle(wxIdleEvent& event)
 {
 	if (m_dataViewSizeChanged)
 		m_valueForm->RefreshForm();
+	
 	m_dataViewSize = GetSize();
 	m_dataViewSizeChanged = false;
+
 	event.Skip();
 }
 

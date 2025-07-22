@@ -273,7 +273,7 @@ void CValueTableBox::OnSize(wxSizeEvent& event)
     wxDataModelViewCtrl* dataViewCtrl =
         dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
     if (m_dataViewUpdated)
-        m_dataViewSizeChanged = (m_dataViewSize != dataViewCtrl->GetSize());
+        m_dataViewSizeChanged = (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
     event.Skip();
 }
 
@@ -281,7 +281,8 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 {
     wxDataModelViewCtrl* dataViewCtrl =
         dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
-    if (m_dataViewSizeChanged && m_tableModel != nullptr) m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
+    if (m_dataViewSizeChanged && m_tableModel != nullptr) 
+        m_tableModel->CallRefreshModel(dataViewCtrl->GetTopItem(), dataViewCtrl->GetCountPerPage());
     m_dataViewSize = dataViewCtrl->GetSize();
     m_dataViewSizeChanged = false;
     event.Skip();

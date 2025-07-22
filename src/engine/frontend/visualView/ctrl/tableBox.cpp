@@ -416,7 +416,7 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 		}
 
 		if (!appData->DesignerMode()) m_dataViewUpdated = true;
-		m_dataViewSize = tableCtrl->GetSize();
+		m_dataViewSize = wxDefaultSize;
 	}
 }
 

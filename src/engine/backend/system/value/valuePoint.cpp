@@ -20,11 +20,11 @@ CValuePoint::CValuePoint(const wxPoint& point) : CValue(eValueTypes::TYPE_VALUE)
 
 bool CValuePoint::Init(CValue** paParams, const long lSizeArray)
 {
-	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		m_point = typeConv::StringToPoint(paParams[0]->GetString());
 		return true;
 	}
-	else {
+	else if (lSizeArray > 1) {
 		m_point = wxPoint(paParams[0]->GetInteger(), paParams[1]->GetInteger());
 		return true;
 	}

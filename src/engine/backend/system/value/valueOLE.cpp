@@ -521,6 +521,9 @@ CValueOLE::~CValueOLE()
 
 bool CValueOLE::Init(CValue** paParams, const long lSizeArray)
 {
+	if (lSizeArray < 1)
+		return false;
+
 	const wxString& strOleName = paParams[0]->GetString();
 #ifdef __WXMSW__
 	if (!Create(strOleName)) {

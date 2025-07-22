@@ -24,11 +24,11 @@ CValueColour::CValueColour(const wxColour& colour) :
 
 bool CValueColour::Init(CValue** paParams, const long lSizeArray)
 {
-	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray > 0 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		m_colour = typeConv::StringToColour(paParams[0]->GetString());
 		return true;
 	}
-	else {
+	else if (lSizeArray > 2) {
 		m_colour = wxColour(
 			paParams[0]->GetInteger(),
 			paParams[1]->GetInteger(),

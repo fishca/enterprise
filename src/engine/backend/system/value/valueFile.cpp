@@ -108,6 +108,8 @@ CValueFile::~CValueFile()
 
 bool CValueFile::Init(CValue** paParams, const long lSizeArray)
 {
+	if (lSizeArray < 1)
+		return false;
 	m_fileName = paParams[0]->GetString();
 	return true;
 }

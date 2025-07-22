@@ -21,11 +21,11 @@ CValueFont::CValueFont(const wxFont& font) : CValue(eValueTypes::TYPE_VALUE), m_
 
 bool CValueFont::Init(CValue** paParams, const long lSizeArray)
 {
-	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) { 
+	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		m_font = typeConv::StringToFont(paParams[0]->GetString()); 
 		return true;
 	}
-	else { 
+	else if (lSizeArray > 4) {
 		m_font = wxFont(
 			(wxFontFamily)paParams[0]->GetInteger(), 
 			(wxFontFamily)paParams[1]->GetInteger(), 

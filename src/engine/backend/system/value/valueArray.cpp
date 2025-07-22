@@ -20,6 +20,9 @@ bool CValueArray::Init()
 
 bool CValueArray::Init(CValue** paParams, const long lSizeArray)
 {
+	if (lSizeArray < 1)
+		return false;
+
 	if (paParams[0]->GetType() == eValueTypes::TYPE_NUMBER) {
 		const number_t& number = paParams[0]->GetNumber();
 		if (number > 0) {

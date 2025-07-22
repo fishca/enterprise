@@ -159,6 +159,9 @@ CValueTypeDescription::~CValueTypeDescription()
 
 bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 {
+	if (lSizeArray < 1)
+		return false;
+
 	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		wxString classType = paParams[0]->GetString();
 		if (commonMetaData->IsRegisterCtor(classType)) {

@@ -20,11 +20,11 @@ CValueSize::CValueSize(const wxSize& size) : CValue(eValueTypes::TYPE_VALUE), m_
 
 bool CValueSize::Init(CValue** paParams, const long lSizeArray)
 {
-	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		m_size = typeConv::StringToSize(paParams[0]->GetString());
 		return true;
 	}
-	else {
+	else if (lSizeArray > 1) {
 		m_size = wxSize(paParams[0]->GetInteger(), paParams[1]->GetInteger());
 		return true;
 	}

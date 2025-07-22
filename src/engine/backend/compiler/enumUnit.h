@@ -51,6 +51,8 @@ public:
 	virtual bool Init() { return true; }
 
 	virtual bool Init(CValue** paParams, const long lSizeArray) {
+		if (lSizeArray < 1)
+			return false;
 		SetEnumValue(
 			static_cast<valT>(paParams[0]->GetInteger())
 		);
@@ -178,7 +180,7 @@ public:
 	virtual bool Init() { return true; }
 
 	virtual bool Init(CValue** paParams, const long lSizeArray) {
-		if (lSizeArray == 0)
+		if (lSizeArray < 1)
 			return false;
 		const valT& defValue = static_cast<valT>(paParams[0]->GetInteger());
 		IEnumeration::InitializeEnumeration(defValue);

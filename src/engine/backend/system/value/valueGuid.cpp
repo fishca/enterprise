@@ -19,6 +19,9 @@ bool CValueGuid::Init()
 
 bool CValueGuid::Init(CValue** paParams, const long lSizeArray)
 {
+	if (lSizeArray < 1)
+		return false;
+
 	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		const Guid& newGuid = paParams[0]->GetString();
 		if (newGuid.isValid())

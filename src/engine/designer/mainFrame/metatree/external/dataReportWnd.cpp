@@ -286,7 +286,14 @@ CDataReportTree::CDataReportTreeWnd::CDataReportTreeWnd(wxWindow* parentWnd, CDa
 	SetDoubleBuffered(true);
 }
 
+#include "frontend/docView/docManager.h"
+
 CDataReportTree::CDataReportTreeWnd::~CDataReportTreeWnd()
 {
+	if (docManager != nullptr &&
+		m_metaView == docManager->GetAnyUsableView()) {
+		docManager->ActivateView(nullptr);
+	}
+
 	wxDELETE(m_metaView);
 }

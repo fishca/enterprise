@@ -277,7 +277,14 @@ CDataProcessorTree::CDataProcessorTreeWnd::CDataProcessorTreeWnd(wxWindow* paren
 	SetDoubleBuffered(true);
 }
 
+#include "frontend/docView/docManager.h"
+
 CDataProcessorTree::CDataProcessorTreeWnd::~CDataProcessorTreeWnd()
 {
+	if (docManager != nullptr &&
+		m_metaView == docManager->GetAnyUsableView()) {
+		docManager->ActivateView(nullptr);
+	}
+	
 	wxDELETE(m_metaView);
 }

@@ -210,7 +210,14 @@ CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd(CMetadataTree* parent)
 	SetDoubleBuffered(true);
 }
 
+#include "frontend/docView/docManager.h"
+
 CMetadataTree::CMetadataTreeWnd::~CMetadataTreeWnd()
 {
+	if (docManager != nullptr &&
+		m_metaView == docManager->GetAnyUsableView()) {
+		docManager->ActivateView(nullptr);
+	}
+
 	wxDELETE(m_metaView);
 }

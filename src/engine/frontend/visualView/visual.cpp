@@ -755,7 +755,7 @@ void IVisualHost::UpdateVirtualSize()
 	int w, h, panelW, panelH;
 	GetVirtualSize(&w, &h);
 	GetBackgroundWindow()->GetSize(&panelW, &panelH);
-	panelW += 20; panelH += 20;
+	panelW += 50; panelH += 50;
 	if (panelW != w || panelH != h)
 		SetVirtualSize(panelW, panelH);
 }

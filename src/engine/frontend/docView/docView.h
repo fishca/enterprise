@@ -46,10 +46,8 @@ public:
 		return GetMetaObject()->ConvertToType<T>();
 	}
 
-private:
-
-	CMetaView* DoCreateView();
-
+protected:
+	virtual CMetaView* DoCreateView();
 public:
 
 	wxString GetModuleName() const;
@@ -90,7 +88,7 @@ public:
 		}
 	}
 
-	virtual bool IsCloseOnOwnerClose() const { return false; }
+	virtual bool IsCloseOnOwnerClose() const { return true; }
 
 	virtual wxDList<CMetaDocument> GetChild() const { return m_childDocs; }
 	virtual wxCommandProcessor* CreateCommandProcessor() const { return nullptr; }
@@ -148,12 +146,14 @@ public:
 	}
 
 	bool ShowFrame(bool show = true) {
-		if (m_viewFrame != nullptr) {
-			if (m_viewFrame->Show(show)) {
-				m_viewFrame->Layout();
-				return true;
-			}
+		
+		if (m_viewFrame != nullptr &&
+			m_viewFrame->Show(show)) {
+			//m_viewFrame->Layout();
+			//m_viewFrame->Update();
+			return true;
 		}
+
 		return false;
 	}
 

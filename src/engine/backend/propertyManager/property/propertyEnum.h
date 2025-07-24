@@ -55,17 +55,17 @@ public:
 	void SetValue(const int& i) { IPropertyEnum::SetValue(i); }
 
 	CPropertyEnum(CPropertyCategory* cat, const wxString& name,
-		const valueEnumType& value) : IPropertyEnum(cat, name, stringUtils::IntToStr(static_cast<int>(value)))
+		const valueEnumType& value) : IPropertyEnum(cat, name, static_cast<long>(value))
 	{
 	}
 
 	CPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const valueEnumType& value) : IPropertyEnum(cat, name, label, stringUtils::IntToStr(static_cast<int>(value)))
+		const valueEnumType& value) : IPropertyEnum(cat, name, label, static_cast<long>(value))
 	{
 	}
 
 	CPropertyEnum(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const valueEnumType& value) : IPropertyEnum(cat, name, label, helpString, stringUtils::IntToStr(static_cast<int>(value)))
+		const valueEnumType& value) : IPropertyEnum(cat, name, label, helpString, static_cast<long>(value))
 	{
 	}
 

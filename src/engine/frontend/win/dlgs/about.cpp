@@ -21,7 +21,7 @@ CDialogAbout::CDialogAbout(wxWindow *parent, int id) : wxDialog(parent, id, _("A
 	sizer2->Add(m_staticText2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 	m_staticText3 = new wxStaticText(this, wxID_ANY, _("a RAD tool powered by wxWidgets framework"), wxDefaultPosition, wxDefaultSize, 0);
 	sizer2->Add(m_staticText3, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-	m_staticText6 = new wxStaticText(this, wxID_ANY, _("(C) 2022 Maxim 'nouverbe' Kornienko"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticText6 = new wxStaticText(this, wxID_ANY, _("(C) 2025 Maxim 'nouverbe' Kornienko"), wxDefaultPosition, wxDefaultSize, 0);
 	sizer2->Add(m_staticText6, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 	window1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
 	sizer2->Add(window1, 0, wxALL | wxEXPAND, 5);

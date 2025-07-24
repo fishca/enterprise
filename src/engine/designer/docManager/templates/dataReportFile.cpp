@@ -1,8 +1,8 @@
 #include "dataReportFile.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(CReportView, CMetaView);
 
-bool CReportEditView::OnCreate(CMetaDocument *doc, long flags)
+bool CReportView::OnCreate(CMetaDocument *doc, long flags)
 {
 	m_metaTree = new CDataReportTree(doc, m_viewFrame);
 	m_metaTree->SetReadOnly(false);
@@ -10,12 +10,12 @@ bool CReportEditView::OnCreate(CMetaDocument *doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
-void CReportEditView::OnDraw(wxDC *WXUNUSED(dc))
+void CReportView::OnDraw(wxDC *WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CReportEditView::OnClose(bool deleteWindow)
+bool CReportView::OnClose(bool deleteWindow)
 {
 	Activate(false);
 
@@ -31,9 +31,9 @@ bool CReportEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportEditDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CReportFileDocument, CMetaDocument);
 
-bool CReportEditDocument::OnCreate(const wxString& path, long flags)
+bool CReportFileDocument::OnCreate(const wxString& path, long flags)
 {
 	m_metaData = new CMetaDataReport();
 	if (!CMetaDocument::OnCreate(path, flags))
@@ -43,9 +43,9 @@ bool CReportEditDocument::OnCreate(const wxString& path, long flags)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-bool CReportEditDocument::OnCloseDocument()
+bool CReportFileDocument::OnCloseDocument()
 {
-	if (!m_metaData->CloseConfiguration(forceCloseFlag)) {
+	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
 
@@ -55,7 +55,7 @@ bool CReportEditDocument::OnCloseDocument()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CReportEditDocument::DoOpenDocument(const wxString& filename)
+bool CReportFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -66,7 +66,7 @@ bool CReportEditDocument::DoOpenDocument(const wxString& filename)
 	return true;
 }
 
-bool CReportEditDocument::DoSaveDocument(const wxString& filename)
+bool CReportFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetMetaTree()->Save())
 		return false;
@@ -77,18 +77,18 @@ bool CReportEditDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool CReportEditDocument::IsModified() const
+bool CReportFileDocument::IsModified() const
 {
 	return CMetaDocument::IsModified();
 }
 
-void CReportEditDocument::Modify(bool modified)
+void CReportFileDocument::Modify(bool modified)
 {
 	CMetaDocument::Modify(modified);
 }
 
-CDataReportTree *CReportEditDocument::GetMetaTree() const
+CDataReportTree *CReportFileDocument::GetMetaTree() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CReportEditView)->GetMetaTree() : nullptr;
+	return view ? wxDynamicCast(view, CReportView)->GetMetaTree() : nullptr;
 }

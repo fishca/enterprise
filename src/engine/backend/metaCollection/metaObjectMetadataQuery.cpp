@@ -7,6 +7,8 @@
 
 bool CMetaObjectConfiguration::ExecuteSystemSQLCommand()
 {
+	s_restructureInfo.AppendWarning("Execute system sql command");
+
 	int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 		//create max

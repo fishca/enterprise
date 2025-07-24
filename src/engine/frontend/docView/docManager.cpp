@@ -99,8 +99,8 @@ CMetaDocManager::CMetaDocManager()
 
 	//if (appData->DesignerMode()) {
 
-	//	AddDocTemplate("External data processor", "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorEditDocument), CLASSINFO(CDataProcessorEditView), wxTEMPLATE_VISIBLE);
-	//	AddDocTemplate("External report", "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportEditDocument), CLASSINFO(CReportEditView), wxTEMPLATE_VISIBLE);
+	//	AddDocTemplate("External data processor", "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorFileDocument), CLASSINFO(CDataProcessorView), wxTEMPLATE_VISIBLE);
+	//	AddDocTemplate("External report", "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportFileDocument), CLASSINFO(CReportView), wxTEMPLATE_VISIBLE);
 	//	AddDocTemplate("Configuration", "*.conf", "", "conf", "Configuration Doc", "Configuration View", CLASSINFO(CMetataEditDocument), CLASSINFO(CMetadataView), wxTEMPLATE_ONLY_OPEN);
 
 	//	//common objects 
@@ -182,7 +182,7 @@ void CMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
 
 	if (!doc) {
 		if (commonMetaData->IsModified()) {
-			commonMetaData->SaveConfiguration();
+			commonMetaData->SaveDatabase();
 		}
 		return;
 	}
@@ -706,7 +706,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 	return theTemplate;
 }
 
-void CMetaDocManager::AddDocTemplate(
+Guid CMetaDocManager::AddDocTemplate(
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& dir,
@@ -716,22 +716,52 @@ void CMetaDocManager::AddDocTemplate(
 	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
 	long flags)
 {
-	docElement_t data;
+	CDocElement data;
 	data.m_className = docTypeName;
 	data.m_classDescr = descr;
-	data.m_docTemplate = new CMetaDocTemplate(this, descr, filter, dir, ext, docTypeName, viewTypeName, docClassInfo, viewClassInfo, flags);
+	data.m_docTemplate = new CMetaDocTemplate(
+		this, 
+		descr, 
+		filter,
+		dir, 
+		ext, 
+		docTypeName, 
+		viewTypeName,
+		docClassInfo, 
+		viewClassInfo, 
+		flags
+	);
+
+	data.m_guidTemplate = wxNewUniqueGuid;
 	m_metaTemplates.push_back(data);
+
+	return data.m_guidTemplate;
 }
 
-void CMetaDocManager::AddDocTemplate(
+Guid CMetaDocManager::AddDocTemplate(
 	const class_identifier_t& clsid,
 	wxClassInfo* docClassInfo,
 	wxClassInfo* viewClassInfo)
 {
-	docElement_t data;
+	CDocElement data;
 	data.m_clsid = clsid;
-	data.m_docTemplate = new CMetaDocTemplate(this, wxEmptyString, wxEmptyString, wxEmptyString, wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo, wxTEMPLATE_INVISIBLE);
+	data.m_docTemplate = new CMetaDocTemplate(
+		this,
+		wxEmptyString,
+		wxEmptyString,
+		wxEmptyString,
+		wxEmptyString,
+		wxEmptyString,
+		wxEmptyString,
+		docClassInfo,
+		viewClassInfo,
+		wxTEMPLATE_INVISIBLE
+	);
+
+	data.m_guidTemplate = wxNewUniqueGuid;
 	m_metaTemplates.push_back(data);
+
+	return data.m_guidTemplate;
 }
 
 CMetaDocument* CMetaDocManager::GetCurrentDocument() const

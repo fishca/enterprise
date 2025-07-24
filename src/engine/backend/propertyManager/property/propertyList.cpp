@@ -32,7 +32,7 @@ bool CPropertyList::GetDataValue(CValue& pvarPropVal) const
 
 bool CPropertyList::LoadData(CMemoryReader& reader)
 {
-	SetValue(reader.r_s32());
+	SetValue((long)reader.r_s32());
 	return true;
 };
 

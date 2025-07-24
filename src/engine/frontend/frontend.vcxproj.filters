@@ -770,6 +770,9 @@
     <ClCompile Include="visualView\special\enum\valueEnum.cpp">
       <Filter>visualView\special\enum</Filter>
     </ClCompile>
+    <ClCompile Include="win\dlgs\applyChange.cpp">
+      <Filter>win\dlg</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -1348,6 +1351,9 @@
     </ClInclude>
     <ClInclude Include="visualView\special\enum\valueEnum.h">
       <Filter>visualView\special\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="win\dlgs\applyChange.h">
+      <Filter>win\dlg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

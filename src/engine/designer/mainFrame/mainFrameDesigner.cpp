@@ -249,7 +249,7 @@ bool CDocDesignerMDIFrame::AllowClose() const
 	if (IsModified()) {
 		const int answer = wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
 		if (answer == wxYES) {
-			allowClose = commonMetaData->SaveConfiguration();
+			allowClose = commonMetaData->SaveDatabase();
 		}
 		else if (answer == wxCANCEL) {
 			allowClose = false;

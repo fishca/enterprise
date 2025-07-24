@@ -260,6 +260,11 @@ void COdbcDatabaseLayer::RollBack()
 	}
 }
 
+bool COdbcDatabaseLayer::IsActiveTransaction()
+{
+	return false;
+}
+
 int COdbcDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {
 	ResetErrorCodes();

@@ -78,8 +78,8 @@ CMetaDataDataProcessor::~CMetaDataDataProcessor()
 			m_moduleManager->DecrRef();
 		}
 		//clear data 
-		if (!ClearConfiguration()) {
-			wxASSERT_MSG(false, "ClearConfiguration() == false");
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
 		}
 	}
 	if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
@@ -88,17 +88,17 @@ CMetaDataDataProcessor::~CMetaDataDataProcessor()
 	}
 }
 
-bool CMetaDataDataProcessor::LoadConfiguration()
+bool CMetaDataDataProcessor::LoadDatabase()
 {
-	return RunConfiguration();
+	return RunDatabase();
 }
 
-bool CMetaDataDataProcessor::SaveConfiguration()
+bool CMetaDataDataProcessor::SaveDatabase()
 {
 	return true;
 }
 
-bool CMetaDataDataProcessor::ClearConfiguration()
+bool CMetaDataDataProcessor::ClearDatabase()
 {
 	if (!ClearChildMetadata(m_commonObject))
 		return false;
@@ -121,7 +121,7 @@ bool CMetaDataDataProcessor::ClearChildMetadata(IMetaObject* metaParent)
 	return true;
 }
 
-bool CMetaDataDataProcessor::RunConfiguration(int flags)
+bool CMetaDataDataProcessor::RunDatabase(int flags)
 {
 	if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 
@@ -188,7 +188,7 @@ bool CMetaDataDataProcessor::RunChildMetadata(IMetaObject* metaParent, int flags
 	return true;
 }
 
-bool CMetaDataDataProcessor::CloseConfiguration(int flags)
+bool CMetaDataDataProcessor::CloseDatabase(int flags)
 {
 	wxASSERT(m_configOpened);
 
@@ -235,13 +235,13 @@ bool CMetaDataDataProcessor::LoadFromFile(const wxString& strFileName)
 	}
 	else if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 		//close data 
-		if (m_configOpened && !CloseConfiguration(forceCloseFlag)) {
-			wxASSERT_MSG(false, "CloseConfiguration() == false");
+		if (m_configOpened && !CloseDatabase(forceCloseFlag)) {
+			wxASSERT_MSG(false, "CloseDatabase() == false");
 			return false;
 		}
 		//clear data 
-		if (!ClearConfiguration()) {
-			wxASSERT_MSG(false, "ClearConfiguration() == false");
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
 			return false;
 		}
 	}
@@ -278,8 +278,8 @@ bool CMetaDataDataProcessor::LoadFromFile(const wxString& strFileName)
 	if (!LoadCommonMetadata(g_metaExternalDataProcessorCLSID, readerData)) {
 		if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 			//clear data 
-			if (!ClearConfiguration()) {
-				wxASSERT_MSG(false, "ClearConfiguration() == false");
+			if (!ClearDatabase()) {
+				wxASSERT_MSG(false, "ClearDatabase() == false");
 			}
 		}
 		return false;
@@ -289,7 +289,7 @@ bool CMetaDataDataProcessor::LoadFromFile(const wxString& strFileName)
 		m_commonObject->BuildNewName();
 	}
 
-	return LoadConfiguration();
+	return LoadDatabase();
 }
 
 bool CMetaDataDataProcessor::SaveToFile(const wxString& strFileName)

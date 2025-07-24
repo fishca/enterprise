@@ -46,7 +46,7 @@ bool CDataProcessorDocument::OnCreate(const wxString& path, long flags)
 
 bool CDataProcessorDocument::OnCloseDocument()
 {
-	if (!m_metaData->CloseConfiguration(forceCloseFlag)) {
+	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
 

@@ -11,7 +11,7 @@ class BACKEND_API CPropertyList : public IProperty {
 		if (m_functor->Invoke(const_cast<CPropertyList*>(this))) {
 			for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 				wxPGChoiceEntry item(
-					m_listPropValue.GetItemName(idx),
+					m_listPropValue.GetItemLabel(idx),
 					m_listPropValue.GetItemId(idx)
 				);
 				constants.Add(item);
@@ -123,9 +123,9 @@ class BACKEND_API CPropertyList : public IProperty {
 
 		void ResetListItem() { m_listValue.clear(); }
 
-		void AppendItem(const wxString& name, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, l, v); }
+		void AppendItem(const wxString& name, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, name, l, v); }
 		void AppendItem(const wxString& name, const wxString& label, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, l, v); }
-		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(label, help, l, v); }
+		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, help, l, v); }
 
 		bool HasValue(const long& l) const { return GetItemById(l); }
 
@@ -167,7 +167,7 @@ class BACKEND_API CPropertyList : public IProperty {
 #pragma endregion
 public:
 	int GetValueAsInteger() const {
-		const int sel = typeConv::StringToInt(m_propValue);
+		const long sel = m_propValue;
 		if (m_functor->Invoke(const_cast<CPropertyList*>(this))) {
 			for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 				if (m_listPropValue.GetItemId(idx) == sel) {
@@ -186,21 +186,21 @@ public:
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const int& value) : IProperty(cat, name, stringUtils::IntToStr(value))
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, value)
 	{
 		m_functor = new CPropertyValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const int& value) : IProperty(cat, name, label, stringUtils::IntToStr(value))
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, label, value)
 	{
 		m_functor = new CPropertyValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const int& value) : IProperty(cat, name, label, helpString, stringUtils::IntToStr())
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, label, helpString, value)
 	{
 		m_functor = new CPropertyValueFunctor<optClass>s(funcHandler, (optClass*)cat->GetPropertyObject());
 	}

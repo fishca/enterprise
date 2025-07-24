@@ -173,7 +173,7 @@ bool CApplicationData::Connect(const wxString& user, const wxString& password, c
 		return false;
 	if (!StartSession(user, password)) return false;  //start session	
 	m_connected_to_db = true;
-	return commonMetaData->RunConfiguration();
+	return commonMetaData->RunDatabase();
 }
 
 bool CApplicationData::Disconnect()
@@ -183,7 +183,7 @@ bool CApplicationData::Disconnect()
 	const bool isConfigOpen = commonMetaData->IsConfigOpen();
 	if (!CloseSession())
 		return false;
-	if (isConfigOpen && !commonMetaData->CloseConfiguration(forceCloseFlag))
+	if (isConfigOpen && !commonMetaData->CloseDatabase(forceCloseFlag))
 		return false;
 	metaDataDestroy();
 	m_connected_to_db = false;

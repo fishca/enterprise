@@ -569,7 +569,7 @@ bool CDataProcessorTree::Save()
 	wxASSERT(m_metaData);
 
 	if (m_metaData->IsModified())
-		return m_metaData->SaveConfiguration();
+		return m_metaData->SaveDatabase();
 
 	return false;
 }

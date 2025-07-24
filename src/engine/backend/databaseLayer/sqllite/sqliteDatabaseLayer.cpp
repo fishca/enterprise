@@ -121,6 +121,11 @@ void CSqliteDatabaseLayer::RollBack()
 	DoRunQuery(_("rollback transaction;"), false);
 }
 
+bool CSqliteDatabaseLayer::IsActiveTransaction()
+{
+	return false;
+}
+
 // query database
 int CSqliteDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {

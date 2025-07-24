@@ -31,7 +31,8 @@ CMetaView* CMetaDocument::DoCreateView()
 
 wxString CMetaDocument::GetModuleName() const
 {
-	return m_metaObject->GetFullName();
+	return m_metaObject ? 
+		m_metaObject->GetFullName() : wxEmptyString;
 }
 
 CMetaDocument::CMetaDocument(CMetaDocument* docParent) :
@@ -142,7 +143,7 @@ bool CMetaDocument::Save()
 
 	if (m_docParent == nullptr && IsChildDocument() &&
 		m_metaObject != nullptr) {
-		if (commonMetaData->SaveConfiguration()) {
+		if (commonMetaData->SaveDatabase()) {
 			return false;
 		}
 	}

@@ -5,13 +5,13 @@
 #include "mainFrame/metatree/external/dataProcessorWnd.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CDataProcessorEditView : public CMetaView
+class CDataProcessorView : public CMetaView
 {
 	CDataProcessorTree* m_metaTree;
 
 public:
 
-	CDataProcessorEditView() : CMetaView() {}
+	CDataProcessorView() : CMetaView() {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
@@ -21,12 +21,12 @@ public:
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorEditView);
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorView);
 };
 
 static int s_defaultDataProcessorNameCounter = 1;
 
-class CDataProcessorEditDocument : public IMetaDataDocument {
+class CDataProcessorFileDocument : public IMetaDataDocument {
 	CMetaDataDataProcessor* m_metaData;
 public:
 
@@ -39,8 +39,8 @@ public:
 		return wxNullIcon;
 	}
 
-	CDataProcessorEditDocument() : IMetaDataDocument() { m_childDoc = false; }
-	virtual ~CDataProcessorEditDocument() {
+	CDataProcessorFileDocument() : IMetaDataDocument() { m_childDoc = false; }
+	virtual ~CDataProcessorFileDocument() {
 		wxDELETE(m_metaData);
 	}
 
@@ -73,7 +73,7 @@ public:
 
 		m_metaData->Modify(true);
 
-		if (!m_metaData->RunConfiguration())
+		if (!m_metaData->RunDatabase())
 			return false;
 
 		if (!GetMetaTree()->Load(m_metaData))
@@ -94,8 +94,8 @@ protected:
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CDataProcessorEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorEditDocument);
+	wxDECLARE_NO_COPY_CLASS(CDataProcessorFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorFileDocument);
 };
 
 #endif 

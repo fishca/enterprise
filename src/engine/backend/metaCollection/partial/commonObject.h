@@ -437,7 +437,7 @@ public:
     virtual wxString GetTableNameDB() const;
 
     //create and update table 
-    virtual bool CreateAndUpdateTableDB(class IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+    virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
 
     //load & save metaData from DB 
     virtual bool LoadData(CMemoryReader& reader);

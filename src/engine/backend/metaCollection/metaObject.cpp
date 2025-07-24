@@ -378,7 +378,7 @@ bool IMetaObject::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObject::OnDeleteMetaObject()
 {
-	if (GetParent()) 
+	if (GetParent())
 		GetParent()->RemoveChild(this);
 	return true;
 }
@@ -419,6 +419,60 @@ bool IMetaObject::Init(CValue** paParams, const long lSizeArray)
 	}
 
 	return false;
+}
+
+bool IMetaObject::CompareObject(IMetaObject* compareObject) const
+{
+#pragma region _compare_fill_h_
+	class CControlComparator {
+	public:
+
+		static bool CompareObject(
+			const IMetaObject* compareObject1,
+			const IMetaObject* compareObject2
+		)
+		{
+			if (compareObject2 == nullptr)
+				return false; 
+
+			//for (auto& obj : compareObject1->m_listMetaObject) {
+
+			//	if (obj->IsDeleted())
+			//		continue;
+			//	
+			//	if (!CompareObject(obj,
+			//		compareObject2->FindByName(obj->GetDocPath())))
+			//		return false;
+			//}
+
+			if (compareObject1->GetClassType() != compareObject2->GetClassType())
+				return false;
+			
+			if (compareObject1->GetMetaID() != compareObject2->GetMetaID())
+				return false;
+			
+			for (unsigned int idx = 0; idx < compareObject1->GetPropertyCount(); idx++) {
+				
+				const IProperty* propDst = compareObject1->GetProperty(idx);
+				wxASSERT(propDst);
+				
+				const IProperty* propSrc = compareObject2->GetProperty(propDst->GetName());		
+				
+				if (propSrc == nullptr)
+					return false;
+				
+				if (propDst->GetValue() != propSrc->GetValue())
+					return false;
+			}
+
+			return (compareObject1->GetPropertyCount() == compareObject2->GetPropertyCount() && compareObject1->GetEventCount() == compareObject2->GetEventCount()) && 
+				compareObject1->GetChildCount() == compareObject2->GetChildCount();
+		}
+	};
+
+#pragma endregion 
+
+	return CControlComparator::CompareObject(this, compareObject);
 }
 
 bool IMetaObject::CopyObject(CMemoryWriter& writer) const
@@ -617,7 +671,7 @@ bool IMetaObject::ChangeChildPosition(IPropertyObject* obj, unsigned int pos)
 wxString IMetaObject::GetModuleName() const
 {
 	IMetaObject* metaParent = GetParent();
-	wxASSERT(metaParent);
+	//wxASSERT(metaParent);
 	if (metaParent != nullptr) {
 		return metaParent->GetName() + wxT(": ") + GetName();
 	}
@@ -696,3 +750,5 @@ bool IMetaObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	if (property != nullptr) return property->GetDataValue(pvarPropVal);
 	return false;
 }
+
+CRestructureInfo s_restructureInfo;

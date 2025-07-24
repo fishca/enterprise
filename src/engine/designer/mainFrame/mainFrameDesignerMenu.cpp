@@ -4,7 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "mainFrameDesigner.h"
-#include <wx/config.h>
 
 //********************************************************************************
 //*                                Hotkey support                                *
@@ -45,6 +44,11 @@ enum MDI_MENU_ID
 	wxWINDOWNEXT,
 	wxWINDOWPREV
 };
+
+#include <wx/artprov.h>
+#include <wx/config.h>
+
+#include "frontend/artProvider/artProvider.h"
 
 void CDocDesignerMDIFrame::InitializeDefaultMenu()
 {
@@ -110,10 +114,15 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS, _("Remove all breakpoits"));
 
 	m_menuConfiguration = new wxMenu;
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_RETURN_DATABASE, _("Return to database configuration"));
+	
+	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
+	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
+	wxMenuItem *menuUpdate = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
+	menuUpdate->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(24, 24)));
+	
 	m_menuConfiguration->AppendSeparator();
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD, _("Load configuraion"));
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE, _("Save configuration"));
+	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuraion"));
+	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE, _("Save configuration"));
 
 	m_menuBar->Append(m_menuConfiguration, _("Configuration"));
 	m_menuBar->Append(m_menuDebug, _("Debug"));
@@ -134,8 +143,11 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuHelp->Append(wxID_DESIGNER_ABOUT, _("About"));
 	m_menuBar->Append(m_menuHelp, wxGetStockLabel(wxID_HELP, wxSTOCK_NOFLAGS));
 
-	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnRollbackConfiguration, this, wxID_DESIGNER_CONFIGURATION_RETURN_DATABASE);
-	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD, wxID_DESIGNER_CONFIGURATION_SAVE);
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnOpenConfiguration, this, wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE);
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnRollbackConfiguration, this, wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE);
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnUpdateConfiguration, this, wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE);
+
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnConfiguration, this, wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE);
 
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnStartDebug, this, wxID_DESIGNER_DEBUG_START);
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnStartDebugWithoutDebug, this, wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING);

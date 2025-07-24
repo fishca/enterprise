@@ -165,8 +165,10 @@ bool CMetaObjectAccumulationRegister::OnSaveMetaObject()
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	if (!((*m_propertyAttributeRecorder)->GetClsidCount() > 0))
+	if (!((*m_propertyAttributeRecorder)->GetClsidCount() > 0)) {
+		s_restructureInfo.AppendError(_("! Doesn't have any recorder ") + GetFullName());
 		return false;
+	}
 #endif 
 
 	return IMetaObjectRegisterData::OnSaveMetaObject();

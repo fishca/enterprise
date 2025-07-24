@@ -14,6 +14,8 @@
 
 bool CMetaObjectConstant::CreateConstantSQLTable()
 {
+	s_restructureInfo.AppendWarning("Create constant table");
+
 	//create constats 	
 	if (!db_query->TableExists(CMetaObjectConstant::GetTableNameDB())) {
 
@@ -31,6 +33,8 @@ bool CMetaObjectConstant::CreateConstantSQLTable()
 
 bool CMetaObjectConstant::DeleteConstantSQLTable()
 {
+	s_restructureInfo.AppendWarning("Create new database");
+
 	//create constats 	
 	if (db_query->TableExists(CMetaObjectConstant::GetTableNameDB())) {
 
@@ -46,6 +50,20 @@ bool CMetaObjectConstant::DeleteConstantSQLTable()
 
 int CMetaObjectConstant::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
+	//is null - create
+	if (dstAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Create constant ") + srcAttr->GetFullName());
+	}
+	// update 
+	else if (srcAttr != nullptr) {
+		if (!srcAttr->CompareObject(dstAttr))
+			s_restructureInfo.AppendInfo(_("Changing constant ") + srcAttr->GetFullName());
+	}
+	//delete 
+	else if (srcAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Removed constant ") + dstAttr->GetFullName());
+	}
+
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
@@ -74,7 +92,6 @@ bool CMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMeta
 					return false;
 				}
 			}
-
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {

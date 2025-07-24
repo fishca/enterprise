@@ -20,6 +20,12 @@ class BACKEND_API IMetaDataConfiguration : public IMetaData {
 	static IMetaDataConfiguration* s_instance;
 public:
 
+	virtual bool OnBeforeSaveDatabase(int flags) { return false; }
+	virtual bool OnSaveDatabase(int flags) { return false; }
+	virtual bool OnAfterSaveDatabase(bool roolback, int flags) { return false; }
+
+public:
+
 	IMetaDataConfiguration(bool readOnly) : IMetaData(readOnly) {}
 
 	virtual wxString GetConfigMD5() const = 0;
@@ -31,11 +37,11 @@ public:
 	virtual bool IsConfigOpen() const { return false; }
 	virtual bool IsConfigSave() const { return true; }
 
-	virtual bool LoadConfiguration(int flags = defaultFlag) { return true; }
-	virtual bool SaveConfiguration(int flags = defaultFlag) { return true; }
+	virtual bool LoadDatabase(int flags = defaultFlag) { return true; }
+	virtual bool SaveDatabase(int flags = defaultFlag) { return true; }
 
 	//rollback to config db
-	virtual bool RoolbackConfiguration() { return true; }
+	virtual bool RoolbackDatabase() { return true; }
 
 	//load/save form file
 	virtual bool LoadFromFile(const wxString& strFileName) { return true; }
@@ -50,6 +56,8 @@ public:
 
 	//get config type 
 	virtual eConfigType GetConfigType() const = 0;
+
+protected:
 
 protected:
 
@@ -86,10 +94,10 @@ public:
 	}
 
 	//run/close 
-	virtual bool RunConfiguration(int flags = defaultFlag);
-	virtual bool CloseConfiguration(int flags = defaultFlag);
+	virtual bool RunDatabase(int flags = defaultFlag);
+	virtual bool CloseDatabase(int flags = defaultFlag);
 
-	virtual bool ClearConfiguration();
+	virtual bool ClearDatabase();
 
 	//load/save form file
 	virtual bool LoadFromFile(const wxString& strFileName);
@@ -111,7 +119,7 @@ protected:
 
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
-	bool LoadConfiguration(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
+	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
 	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
 
 	//run/close recursively:
@@ -136,7 +144,7 @@ public:
 	virtual bool LoadFromFile(const wxString& strFileName) {
 		if (CMetaDataConfigurationFile::LoadFromFile(strFileName)) {
 			Modify(true); //set modify for check metaData
-			return RunConfiguration();
+			return RunDatabase();
 		}
 		return false;
 	}
@@ -145,7 +153,7 @@ public:
 	virtual Guid GetConfigGuid() const { return m_metaGuid; }
 
 	//metaData 
-	virtual bool LoadConfiguration(int flags = defaultFlag);
+	virtual bool LoadDatabase(int flags = defaultFlag);
 
 	//get config type 
 	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_Load; };
@@ -161,52 +169,57 @@ protected:
 	bool m_configNew;
 };
 
-class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {
-	bool m_configSave;
+class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {	
 	CMetaDataConfiguration* m_configMetadata;
+public:
+	virtual bool OnBeforeSaveDatabase(int flags);
+	virtual bool OnSaveDatabase(int flags);
+	virtual bool OnAfterSaveDatabase(bool roolback, int flags);
 public:
 
 	CMetaDataConfigurationStorage(bool readOnly = false);
 	virtual ~CMetaDataConfigurationStorage();
 
 	//is config save
-	virtual bool IsConfigSave() const { return m_configSave; }
-
-	//metadata  
-	virtual bool LoadConfiguration(int flags = defaultFlag);
-	virtual bool SaveConfiguration(int flags = defaultFlag);
-
-	//run/close 
-	virtual bool RunConfiguration(int flags = defaultFlag) {
-		if (!CMetaDataConfiguration::RunConfiguration(flags))
-			return false;
-		return m_configMetadata->RunConfiguration(flags);
+	virtual bool IsConfigSave() const {
+		return CompareMetadata(m_configMetadata);
 	}
 
-	virtual bool CloseConfiguration(int flags = defaultFlag) {
-		if (!CMetaDataConfiguration::CloseConfiguration(flags))
+	//metadata  
+	virtual bool LoadDatabase(int flags = defaultFlag);
+	virtual bool SaveDatabase(int flags = defaultFlag);
+
+	//run/close 
+	virtual bool RunDatabase(int flags = defaultFlag) {
+		if (!CMetaDataConfiguration::RunDatabase(flags))
 			return false;
-		return m_configMetadata->CloseConfiguration(flags);
+		return m_configMetadata->RunDatabase(flags);
+	}
+
+	virtual bool CloseDatabase(int flags = defaultFlag) {
+		if (!CMetaDataConfiguration::CloseDatabase(flags))
+			return false;
+		return m_configMetadata->CloseDatabase(flags);
 	}
 
 	//rollback to config db
-	virtual bool RoolbackConfiguration();
+	virtual bool RoolbackDatabase();
 
 	//save form file
 	virtual bool SaveToFile(const wxString& strFileName);
 
 	// get config metaData 
-	virtual IMetaDataConfiguration* GetConfiguration() const {
-		return m_configMetadata;
-	}
+	virtual IMetaDataConfiguration* GetConfiguration() const { return m_configMetadata; }
 
 	//get config type 
 	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_Load_And_Save; };
 
 	////////////////////////////////////////////////////////////////
+
 	static bool TableAlreadyCreated();
 	static void CreateConfigTable();
 	static void CreateConfigSaveTable();
+
 	////////////////////////////////////////////////////////////////
 
 protected:
@@ -219,11 +232,13 @@ protected:
 
 	//loader/saver/deleter: 
 	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveConfiguration(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
+	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
 	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* parentObj, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteMetadata(const class_identifier_t& clsid);
 	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parentObj);
 };
+
 #define sign_metadata 0x1236F362122FE
+
 #endif

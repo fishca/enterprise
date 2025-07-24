@@ -60,6 +60,8 @@ public:
 	virtual void Commit();
 	virtual void RollBack();
 
+	virtual bool IsActiveTransaction();
+
 	// Database schema API contributed by M. Szeftel (author of wxActiveRecordGenerator)
 	virtual bool DatabaseExists(const wxString& table);
 	virtual bool TableExists(const wxString& table);

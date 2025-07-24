@@ -54,6 +54,9 @@ public:
 	/// Rollback the current transaction
 	virtual void RollBack() = 0;
 
+	/// Is the transaction to the database active?
+	virtual bool IsActiveTransaction() = 0;
+
 	// Define formatted run query 
 
 	/// Run an insert, update, or delete query on the database

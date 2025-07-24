@@ -48,18 +48,19 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 			long flags = 0);
 	};
 
-	struct docElement_t {
+	struct CDocElement {
 		class_identifier_t m_clsid;
 		wxString m_className;
 		wxString m_classDescr;
+		Guid m_guidTemplate;
 		CMetaDocTemplate* m_docTemplate;
 	public:
-		
-		docElement_t() : m_clsid(0), m_docTemplate(nullptr)
+
+		CDocElement() : m_clsid(0), m_docTemplate(nullptr)
 		{
 		}
-	
-		docElement_t(const docElement_t& src) :
+
+		CDocElement(const CDocElement& src) :
 			m_clsid(src.m_clsid),
 			m_className(src.m_className),
 			m_classDescr(src.m_classDescr),
@@ -68,7 +69,7 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 		}
 	};
 
-	std::vector <docElement_t> m_metaTemplates;
+	std::vector <CDocElement> m_metaTemplates;
 
 	wxFindReplaceData m_findData;
 	wxFindReplaceDialog* m_findDialog;
@@ -124,17 +125,17 @@ public:
 	CMetaDocManager();
 	virtual ~CMetaDocManager();
 
-	void AddDocTemplate(const wxString& descr,
+	Guid AddDocTemplate(const wxString& descr,
 		const wxString& filter,
 		const wxString& dir,
 		const wxString& ext,
 		const wxString& docTypeName,
 		const wxString& viewTypeName,
-		wxClassInfo* docClassInfo,
-		wxClassInfo* viewClassInfo,
-		long flags);
+		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
+		long flags = wxTEMPLATE_VISIBLE
+	);
 
-	void AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
+	Guid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
 
 	CMetaDocument* GetCurrentDocument() const;
 

@@ -120,8 +120,8 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
 	//run/close 
-	virtual bool RunConfiguration(int flags = defaultFlag) = 0;
-	virtual bool CloseConfiguration(int flags = defaultFlag) = 0;
+	virtual bool RunDatabase(int flags = defaultFlag) = 0;
+	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
 
 	//metaobject
 	IMetaObject* CreateMetaObject(const class_identifier_t& clsid, IMetaObject* parentMetaObj, bool runObject = true);

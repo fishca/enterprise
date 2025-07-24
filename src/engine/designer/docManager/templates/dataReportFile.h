@@ -5,13 +5,13 @@
 #include "mainFrame/metatree/external/dataReportWnd.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CReportEditView : public CMetaView
+class CReportView : public CMetaView
 {
 	CDataReportTree* m_metaTree;
 
 public:
 
-	CReportEditView() : CMetaView() {}
+	CReportView() : CMetaView() {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnDraw(wxDC* dc) override;
@@ -21,12 +21,12 @@ public:
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CReportEditView);
+	wxDECLARE_DYNAMIC_CLASS(CReportView);
 };
 
 static int s_defaultReportNameCounter = 1;
 
-class CReportEditDocument : public IMetaDataDocument {
+class CReportFileDocument : public IMetaDataDocument {
 	CMetaDataReport* m_metaData;
 public:
 
@@ -39,8 +39,8 @@ public:
 		return wxNullIcon;
 	}
 
-	CReportEditDocument() : IMetaDataDocument() { m_childDoc = false; }
-	virtual ~CReportEditDocument() { 
+	CReportFileDocument() : IMetaDataDocument() { m_childDoc = false; }
+	virtual ~CReportFileDocument() { 
 		wxDELETE(m_metaData); 
 	}
 
@@ -73,7 +73,7 @@ public:
 
 		m_metaData->Modify(true);
 
-		if (!m_metaData->RunConfiguration())
+		if (!m_metaData->RunDatabase())
 			return false;
 
 		if (!GetMetaTree()->Load(m_metaData))
@@ -94,8 +94,8 @@ protected:
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CReportEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(CReportEditDocument);
+	wxDECLARE_NO_COPY_CLASS(CReportFileDocument);
+	wxDECLARE_DYNAMIC_CLASS(CReportFileDocument);
 };
 
 #endif 

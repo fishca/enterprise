@@ -106,7 +106,7 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
-	CMetaDataReport* metaData = ((CReportEditDocument*)docParent)->GetMetaData();
+	CMetaDataReport* metaData = ((CReportFileDocument*)docParent)->GetMetaData();
 	CMetaObjectReport* commonMeta = metaData->GetReport();
 	CMetaObjectModule* moduleMeta = commonMeta->GetModuleObject();
 

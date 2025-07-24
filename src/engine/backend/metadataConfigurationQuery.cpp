@@ -32,18 +32,18 @@ inline wxString GetCommonConfigTable(eConfigType cfg_type) {
 //*                                          ConfigMetadata                                        *
 //**************************************************************************************************
 
-bool CMetaDataConfiguration::LoadConfiguration(int flags)
+bool CMetaDataConfiguration::LoadDatabase(int flags)
 {
 	//close if opened
 	if (CMetaDataConfiguration::IsConfigOpen()) {
-		if (!CloseConfiguration(forceCloseFlag)) {
+		if (!CloseDatabase(forceCloseFlag)) {
 			return false;
 		}
 	}
 
 	//clear data 
-	if (!ClearConfiguration()) {
-		wxASSERT_MSG(false, "ClearConfiguration() == false");
+	if (!ClearDatabase()) {
+		wxASSERT_MSG(false, "ClearDatabase() == false");
 		return false;
 	}
 
@@ -87,12 +87,26 @@ bool CMetaDataConfiguration::LoadConfiguration(int flags)
 
 #include "metaCollection/partial/constant.h"
 
-bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
+////////////////////////////////////////////////////////////////////////////////
+
+bool CMetaDataConfigurationStorage::OnBeforeSaveDatabase(int flags)
 {
+	if (db_query->IsActiveTransaction())
+		return false;
+
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
 	//begin transaction 
 	db_query->BeginTransaction();
 #endif 
+
+	s_restructureInfo.ResetRestructureInfo();
+	return db_query->IsActiveTransaction();
+}
+
+bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
+{
+	if (!db_query->IsActiveTransaction())
+		return false;
 
 	//remove old tables (if need)
 	if ((flags & saveConfigFlag) != 0) {
@@ -125,29 +139,34 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 		}
 
 		//delete tables sql
-		if (m_configNew && !CMetaObjectConstant::DeleteConstantSQLTable()) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-			db_query->RollBack(); return false;
-#else 
-			return false;
-#endif
-		}
+		if (m_configNew) {
 
-		if (m_configNew && !CMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-			db_query->RollBack(); return false;
-#else 
-			return false;
-#endif
-		}
+			s_restructureInfo.AppendInfo("Create new database");
 
-		//create & update tables sql
-		if (m_configNew && !CMetaObjectConstant::CreateConstantSQLTable()) {
+			if (!CMetaObjectConstant::DeleteConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-			db_query->RollBack(); return false;
+				db_query->RollBack(); return false;
 #else 
-			return false;
+				return false;
 #endif
+			}
+
+			if (!CMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack(); return false;
+#else 
+				return false;
+#endif
+			}
+
+			//create & update tables sql
+			if (!CMetaObjectConstant::CreateConstantSQLTable()) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack(); return false;
+#else 
+				return false;
+#endif
+			}
 		}
 
 		for (auto& obj : m_commonObject->GetObjects()) {
@@ -215,12 +234,6 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 #endif
 	}
 
-	m_md5Hash = wxMD5::ComputeMd5(
-		wxBase64Encode(writterData.pointer(), writterData.size())
-	);
-
-	m_configSave = (flags & saveConfigFlag) != 0;
-
 	if (!db_query->CloseStatement(prepStatement)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 		db_query->RollBack(); return false;
@@ -229,37 +242,9 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 #endif
 	}
 
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->Commit();	
-#endif 
-
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
-
-		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();	
-		wxASSERT(commonObject);
-		for (auto& obj : m_commonObject->GetObjects()) {
-
-			IMetaObject* foundedMeta =
-				commonObject->FindByName(obj->GetDocPath());
-			wxASSERT(obj);
-			if (foundedMeta == nullptr) {
-				bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
-				if (!ret) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-					db_query->RollBack(); return false;
-#else
-					return false;
-#endif
-				}
-			}
-		}
-	}
-#endif 
-
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->BeginTransaction();
-#endif 
+	m_md5Hash = wxMD5::ComputeMd5(
+		wxBase64Encode(writterData.pointer(), writterData.size())
+	);
 
 	if ((flags & saveConfigFlag) != 0) {
 
@@ -269,57 +254,136 @@ bool CMetaDataConfigurationStorage::SaveConfiguration(int flags)
 			db_query->RunQuery("INSERT INTO %s SELECT * FROM %s;", config_table, config_save_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 		if (hasError)
 			return false;
-
-		if (!m_configMetadata->LoadConfiguration(onlyLoadFlag)) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-			db_query->RollBack();
-#else 
-			return false;
-#endif
-		}
-
-		if (!m_configNew && !m_configMetadata->RunConfiguration()) {
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-			db_query->RollBack();
-#else 
-			return false;
-#endif
-		}
-
-		Modify(false);
-	}
-	else {
-		Modify(true);
 	}
 
-#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	db_query->Commit();
-#endif 
-
-	return true;
+	return db_query->IsActiveTransaction();
 }
 
-bool CMetaDataConfigurationStorage::RoolbackConfiguration()
+bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags)
+{
+	//s_restructureInfo.ResetRestructureInfo();
+
+	if (roolback) {
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+		if (db_query->IsActiveTransaction())
+			db_query->RollBack();
+#endif 
+
+		return !db_query->IsActiveTransaction();
+	}
+	else {
+
+		if (!db_query->IsActiveTransaction())
+			return false;
+
+		if ((flags & saveConfigFlag) != 0) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->Commit();
+#endif 
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1	
+
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+
+				CRestructureInfo restructureInfo;
+
+				IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+				wxASSERT(commonObject);
+				for (auto& obj : m_commonObject->GetObjects()) {
+
+					IMetaObject* foundedMeta =
+						commonObject->FindByName(obj->GetDocPath());
+					wxASSERT(obj);
+					if (foundedMeta == nullptr) {
+						bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
+						if (!ret) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+							db_query->RollBack(); return false;
+#else
+							return false;
+#endif
+						}
+					}
+				}
+			}
+#endif
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->BeginTransaction();
+#endif 
+
+			if (!m_configMetadata->LoadDatabase(onlyLoadFlag)) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack();
+#else 
+				return false;
+#endif
+			}
+
+			if (!m_configNew && !m_configMetadata->RunDatabase()) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack();
+#else 
+				return false;
+#endif
+			}
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			db_query->Commit();
+#endif 
+			Modify(false);
+		}
+		else {
+
+			Modify(false);
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			db_query->Commit();
+#endif 
+			Modify(true);
+		}
+
+		return !db_query->IsActiveTransaction();
+	}
+
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool CMetaDataConfigurationStorage::SaveDatabase(int flags)
+{
+	if (OnBeforeSaveDatabase(flags)) {
+		bool succes = OnSaveDatabase(flags);
+		OnAfterSaveDatabase(!succes, flags);
+		return succes;
+	}
+
+	return false;
+}
+
+bool CMetaDataConfigurationStorage::RoolbackDatabase()
 {
 	bool hasError = db_query->RunQuery("DELETE FROM %s;", config_save_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	hasError = hasError || db_query->RunQuery("INSERT INTO %s SELECT * FROM %s;", config_save_table, config_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	if (hasError) return false;
 	//close data 
 	if (CMetaDataConfiguration::IsConfigOpen()) {
-		if (!CloseConfiguration(forceCloseFlag)) {
-			wxASSERT_MSG(false, "CloseConfiguration() == false");
+		if (!CloseDatabase(forceCloseFlag)) {
+			wxASSERT_MSG(false, "CloseDatabase() == false");
 			return false;
 		}
 	}
 
 	//clear data 
-	if (!ClearConfiguration()) {
-		wxASSERT_MSG(false, "ClearConfiguration() == false");
+	if (!ClearDatabase()) {
+		wxASSERT_MSG(false, "ClearDatabase() == false");
 		return false;
 	}
 
-	if (LoadConfiguration())
-		return RunConfiguration();
+	if (LoadDatabase())
+		return RunDatabase();
 	return false;
 }
 

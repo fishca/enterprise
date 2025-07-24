@@ -453,6 +453,11 @@ void CFirebirdDatabaseLayer::RollBack()
 	}
 }
 
+bool CFirebirdDatabaseLayer::IsActiveTransaction()
+{
+	return m_pDatabase && m_fbNode->m_pTransaction;
+}
+
 // query database
 int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 {

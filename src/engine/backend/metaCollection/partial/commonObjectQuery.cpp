@@ -25,15 +25,31 @@ wxString IMetaObjectRecordDataRef::GetTableNameDB() const
 
 int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
+	//is null - create
+	if (dstAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Create attribute ") + srcAttr->GetFullName());
+	}
+	// update 
+	else if (srcAttr != nullptr) {
+		if (!srcAttr->CompareObject(dstAttr)) 
+			s_restructureInfo.AppendInfo(_("Changing attribute ") + srcAttr->GetFullName());
+	}
+	//delete 
+	else if (srcAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
+	}
+
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
 int IMetaObjectRecordDataRef::ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum)
 {
 	int retCode = 1;
-	
+
 	//is null - create
 	if (dstEnum == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Create enumeration ") + srcEnum->GetFullName());
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
@@ -43,14 +59,18 @@ int IMetaObjectRecordDataRef::ProcessEnumeration(const wxString& tableName, CMet
 	// update 
 	else if (srcEnum != nullptr) {
 
+		if (!srcEnum->CompareObject(dstEnum)) s_restructureInfo.AppendInfo(_("Changing enumeration ") + srcEnum->GetFullName());
+
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
 		else
 			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
-
 	}
 	//delete 
 	else if (srcEnum == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Removed enumeration ") + dstEnum->GetFullName());
+
 		retCode = db_query->RunQuery("DELETE FROM %s WHERE uuid = '%s' ;", tableName, dstEnum->GetGuid().str());
 	}
 
@@ -62,12 +82,16 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	int retCode = 1;
 	//is null - create
 	if (dstTable == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Create tabular section ") + srcTable->GetFullName());
+
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL);", tabularName);
 		else
 			retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL);", tabularName);
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
+		
 		//default attributes
 		for (auto& obj : srcTable->GetGenericAttributes()) {
 			retCode = ProcessAttribute(tabularName,
@@ -76,6 +100,9 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	}
 	// update 
 	else if (srcTable != nullptr) {
+
+		if (!srcTable->CompareObject(dstTable)) s_restructureInfo.AppendInfo(_("Changing tabular section ") + srcTable->GetFullName());
+
 		for (auto& obj : srcTable->GetGenericAttributes()) {
 			retCode = ProcessAttribute(tabularName,
 				obj, dstTable->FindAttributeByGuid(obj->GetDocPath())
@@ -86,6 +113,9 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	}
 	//delete 
 	else if (srcTable == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Removed tabular section ") + dstTable->GetFullName());
+		
 		retCode = db_query->RunQuery("DROP TABLE %s", tabularName);
 	}
 
@@ -101,6 +131,8 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
 
 		if ((flags & createMetaTable) != 0) {
+
+			s_restructureInfo.AppendInfo(_("Create ") + GetFullName());
 
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 				retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL PRIMARY KEY);", tableName);
@@ -160,15 +192,15 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		else if ((flags & repairMetaTable) != 0) {
 
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
-				retCode = 1;		
+				retCode = 1;
 				for (auto& obj : GetObjectEnums()) {
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 					retCode = ProcessEnumeration(tableName,
 						obj, nullptr);
 				}
-
 			}
+
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {
@@ -176,6 +208,9 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		//if src is null then delete
 		IMetaObjectRecordDataRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
+
+			if (!dstValue->CompareObject(this))
+				s_restructureInfo.AppendInfo(_("Changed ") + GetFullName());
 
 			//attributes from dst 
 			for (auto& obj : dstValue->GetDefaultAttributes()) {
@@ -249,6 +284,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 						return false;
 				}
 			}
+			
 			//tables current 
 			for (auto& obj : GetObjectTables()) {
 				retCode = ProcessTable(obj->GetTableNameDB(),
@@ -260,11 +296,15 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		}
 	}
 	else if ((flags & deleteMetaTable) != 0) {
+		
+		s_restructureInfo.AppendInfo(_("Removed ") + GetFullName());
+
 		if (db_query->TableExists(tableName)) {
 			retCode = db_query->RunQuery("DROP TABLE %s", tableName);
 		}
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
+		
 		for (auto& obj : GetObjectTables()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
@@ -293,16 +333,58 @@ wxString IMetaObjectRegisterData::GetTableNameDB() const
 
 int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
+	//is null - create
+	if (dstAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Create dimension ") + srcAttr->GetFullName());
+	}
+	// update 
+	else if (srcAttr != nullptr) {
+		if (!srcAttr->CompareObject(dstAttr))
+			s_restructureInfo.AppendInfo(_("Changing dimension ") + srcAttr->GetFullName());
+	}
+	//delete 
+	else if (srcAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Removed dimension ") + dstAttr->GetFullName());
+	}
+
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
 int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
+	//is null - create
+	if (dstAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Create resource ") + srcAttr->GetFullName());
+	}
+	// update 
+	else if (srcAttr != nullptr) {
+		if (!srcAttr->CompareObject(dstAttr))
+			s_restructureInfo.AppendInfo(_("Changing resource ") + srcAttr->GetFullName());
+	}
+	//delete 
+	else if (srcAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Removed resource ") + dstAttr->GetFullName());
+	}
+
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
 int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
+	//is null - create
+	if (dstAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Create attribute ") + srcAttr->GetFullName());
+	}
+	// update 
+	else if (srcAttr != nullptr) {
+		if (!srcAttr->CompareObject(dstAttr))
+			s_restructureInfo.AppendInfo(_("Changing attribute ") + srcAttr->GetFullName());
+	}
+	//delete 
+	else if (srcAttr == nullptr) {
+		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
+	}
+
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
@@ -337,6 +419,8 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 	int retCode = 1;
 
 	if ((flags & createMetaTable) != 0) {
+
+		s_restructureInfo.AppendInfo(_("Append register ") + GetFullName());
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			retCode = db_query->RunQuery("CREATE TABLE %s (rowData BYTEA);", tableName);
@@ -388,6 +472,9 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 			if (!UpdateCurrentRecords(tableName, dstValue))
 				return false;
+
+			if (!dstValue->CompareObject(this))
+				s_restructureInfo.AppendInfo(_("Changed register") + GetFullName());
 
 			//attributes from dst 
 			for (auto& obj : dstValue->GetDefaultAttributes()) {
@@ -471,6 +558,9 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 		}
 	}
 	else if ((flags & deleteMetaTable) != 0) {
+
+		s_restructureInfo.AppendInfo(_("Remove register") + GetFullName());
+
 		retCode = db_query->RunQuery("DROP TABLE %s", tableName);
 	}
 

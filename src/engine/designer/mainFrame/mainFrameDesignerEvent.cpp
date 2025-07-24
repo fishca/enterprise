@@ -12,6 +12,8 @@
 #include "frontend/mainFrame/settings/fontcolorsettingspanel.h"
 #include "frontend/mainFrame/settings/editorsettingspanel.h"
 
+#include "frontend/win/dlgs/applyChange.h"
+
 //********************************************************************************
 //*                                 Debug commands                               *
 //********************************************************************************
@@ -27,7 +29,7 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 
 	if (commonMetaData->IsModified()) {
 		if (wxMessageBox(_("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-			if (!commonMetaData->SaveConfiguration(saveConfigFlag)) {
+			if (!commonMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
 		}
@@ -41,7 +43,7 @@ void CDocDesignerMDIFrame::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(eve
 {
 	if (commonMetaData->IsModified()) {
 		if (wxMessageBox(_("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-			if (!commonMetaData->SaveConfiguration(saveConfigFlag)) {
+			if (!commonMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
 		}
@@ -61,24 +63,144 @@ void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 #include "backend/metaData.h"
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
+#include "docManager/docManager.h"
+#include "docManager/templates/metaFile.h"
+
+void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
+{
+	IMetaDataConfiguration* configDatabase = commonMetaData->GetConfiguration();
+	wxASSERT(configDatabase);
+
+	for (auto& doc : docManager->GetDocumentsVector()) {
+		CMetadataBrowserDocument* metaDoc = wxDynamicCast(doc, CMetadataBrowserDocument);
+		if (metaDoc != nullptr &&
+			metaDoc->GetMetaObject() == configDatabase->GetCommonMetaObject()) {
+			metaDoc->Activate();
+			return;
+		}
+	}
+
+	CMetadataBrowserDocument* newDocument =
+		new CMetadataBrowserDocument(configDatabase);
+
+	wxASSERT(newDocument);
+	try {
+
+		m_docManager->AddDocument(newDocument);
+
+		IMetaObject* metaObject = configDatabase->GetCommonMetaObject();
+
+		newDocument->SetTitle(metaObject->GetModuleName());
+		newDocument->SetFilename(metaObject->GetDocPath());
+		newDocument->SetMetaObject(metaObject);
+
+		if (newDocument->OnCreate(metaObject->GetModuleName(), wxDOC_NEW)) {
+
+			wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
+
+			if (cmdProc != nullptr)
+				newDocument->SetCommandProcessor(cmdProc);
+
+			newDocument->UpdateAllViews();
+		}
+		else {
+
+			// The document may be already destroyed, this happens if its view
+			// creation fails as then the view being created is destroyed
+			// triggering the destruction of the document as this first view is
+			// also the last one. However if OnCreate() fails for any reason other
+			// than view creation failure, the document is still alive and we need
+			// to clean it up ourselves to avoid having a zombie document.
+			newDocument->DeleteAllViews();
+		}
+	}
+	catch (...) {
+		if (m_docManager->GetDocuments().Member(newDocument)) {
+			newDocument->DeleteAllViews();
+		}
+	}
+
+}
+
 void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 {
 	objectInspector->ClearProperty();
 
-	if (!m_docManager->CloseDocuments())
-		return;
+	wxAuiMDIClientWindow* client_window = GetClientWindow();
+	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
 
-	if (commonMetaData->RoolbackConfiguration()) {
-		if (m_metadataTree->Load()) {
-			objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	if (m_docManager->CloseDocuments()) {
+
+		if (commonMetaData->RoolbackDatabase()) {
+
+			if (m_metadataTree->Load()) {
+				objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+			}
+
+			wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
 		}
-		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
+	}
+}
+
+#include "backend/appData.h"
+
+void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
+{
+	bool canSave = true;
+	if (debugClient->HasConnections()) {
+		if (wxMessageBox(
+			_("To update the database configuration you need stop debugging.\nDo you want to continue?"), wxMessageBoxCaptionStr,
+			wxYES_NO | wxCENTRE | wxICON_INFORMATION, this) == wxNO) {
+			return;
+		}
+		debugClient->Stop(true);
+	}
+	for (auto& doc : m_docManager->GetDocumentsVector()) {
+		if (!canSave)
+			break;
+		canSave = doc->OnSaveModified();
+	}
+
+	// stage one - save database  
+	if (canSave && !commonMetaData->SaveDatabase()) {
+		
+		for (unsigned int idx = 0; idx < s_restructureInfo.GetCount(); idx++) {
+			if (s_restructureInfo.GetType(idx) == ERestructure::restructure_error)
+				outputWindow->OutputError(s_restructureInfo.GetDescription(idx));
+		}
+
+		wxMessageBox(_("Failed to save database!"),
+			wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR, this
+		);
+		
+		return;
+	}
+
+	// stage one - update database  
+	if (canSave && commonMetaData->OnBeforeSaveDatabase(saveConfigFlag)) {
+		
+		bool roolback = false, succes = true;
+		
+		if (commonMetaData->OnSaveDatabase(saveConfigFlag)) {
+			roolback = !CDialogApplyChange::ShowApplyChange(s_restructureInfo, this);
+		}
+		else {
+			succes = false;
+		}
+
+		succes = commonMetaData->OnAfterSaveDatabase(roolback || !succes, saveConfigFlag);
+
+		if (!succes) {
+			wxMessageBox(_("Failed to update database!"),
+				wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR, this
+			);
+		}
 	}
 }
 
 void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 {
-	if (wxID_DESIGNER_CONFIGURATION_LOAD == event.GetId())
+	if (wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE == event.GetId())
 	{
 		wxFileDialog openFileDialog(this, _("Open configuration file"), "", "",
 			"Configuration files (*.conf)|*.conf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
@@ -95,14 +217,14 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 			if (m_metadataTree->Load()) {
 				if (commonMetaData->IsModified()) {
 					if (wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-						commonMetaData->SaveConfiguration(saveConfigFlag);
+						commonMetaData->SaveDatabase(saveConfigFlag);
 					}
 				}
 				objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
 			}
 		}
 	}
-	else if (wxID_DESIGNER_CONFIGURATION_SAVE == event.GetId())
+	else if (wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE == event.GetId())
 	{
 		wxFileDialog saveFileDialog(this, _("Save configuration file"), "", "",
 			"Configuration files (*.conf)|*.conf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -119,26 +241,26 @@ void CDocDesignerMDIFrame::OnRunDebugCommand(wxCommandEvent& event)
 {
 	switch (event.GetId())
 	{
-	case wxID_DESIGNER_DEBUG_STEP_OVER: 
-		debugClient->StepOver(); 
+	case wxID_DESIGNER_DEBUG_STEP_OVER:
+		debugClient->StepOver();
 		break;
-	case wxID_DESIGNER_DEBUG_STEP_INTO: 
-		debugClient->StepInto(); 
+	case wxID_DESIGNER_DEBUG_STEP_INTO:
+		debugClient->StepInto();
 		break;
 	case wxID_DESIGNER_DEBUG_PAUSE:
 		debugClient->Pause();
 		break;
 	case wxID_DESIGNER_DEBUG_STOP_DEBUGGING:
-		debugClient->Stop(false); 
+		debugClient->Stop(false);
 		break;
-	case wxID_DESIGNER_DEBUG_STOP_PROGRAM: 
-		debugClient->Stop(true); 
+	case wxID_DESIGNER_DEBUG_STOP_PROGRAM:
+		debugClient->Stop(true);
 		break;
-	case wxID_DESIGNER_DEBUG_NEXT_POINT: 
-		debugClient->Continue(); 
+	case wxID_DESIGNER_DEBUG_NEXT_POINT:
+		debugClient->Continue();
 		break;
-	case wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS: 
-		debugClient->RemoveAllBreakpoint(); 
+	case wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS:
+		debugClient->RemoveAllBreakpoint();
 		break;
 	}
 }
@@ -189,7 +311,7 @@ void CDocDesignerMDIFrame::OnToolsSettings(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnUsers(wxCommandEvent& event)
 {
-	CDialogUserList *dlg = new CDialogUserList(this, wxID_ANY);
+	CDialogUserList* dlg = new CDialogUserList(this, wxID_ANY);
 	dlg->Show();
 }
 
@@ -206,17 +328,15 @@ void CDocDesignerMDIFrame::OnActiveUsers(wxCommandEvent& event)
 void CDocDesignerMDIFrame::OnConnection(wxCommandEvent& event)
 {
 	CDialogConnection* dlg = new CDialogConnection(this, wxID_ANY);
-	dlg->LoadConnectionData();
 	dlg->ShowModal();
-	
-	dlg->Destroy();
+
 }
 
 #include "frontend/win/dlgs/about.h"
 
 void CDocDesignerMDIFrame::OnAbout(wxCommandEvent& event)
 {
-	CDialogAbout *dlg = new CDialogAbout(this, wxID_ANY);
+	CDialogAbout* dlg = new CDialogAbout(this, wxID_ANY);
 	const int ret = dlg->ShowModal();
 	dlg->Destroy();
 }
@@ -227,27 +347,5 @@ void CDocDesignerMDIFrame::OnAbout(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnToolbarClicked(wxEvent& event)
 {
-	if (event.GetId() == wxID_DESIGNER_UPDATE_METADATA) {
-		bool canSave = true;
-		if (debugClient->HasConnections()) {
-			if (wxMessageBox(
-				_("To update the database configuration you need stop debugging.\nDo you want to continue?"), wxMessageBoxCaptionStr, 
-				wxYES_NO | wxCENTRE | wxICON_INFORMATION, this) == wxNO) {
-				return;
-			}
-			debugClient->Stop(true);
-		}
-		for (auto &doc : m_docManager->GetDocumentsVector()) {
-			if (!canSave)
-				break;
-			canSave = doc->OnSaveModified();
-		}
-		if (canSave && !commonMetaData->SaveConfiguration(saveConfigFlag)) {
-			wxMessageBox("Failed to save metaData!", 
-				wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR, this
-			);
-		}
-	}
-
 	event.Skip();
 }

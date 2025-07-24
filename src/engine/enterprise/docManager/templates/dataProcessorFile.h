@@ -17,7 +17,7 @@ public:
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorEditView);
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorView);
 };
 
 class CDataProcessorDocument : public IMetaDataDocument {
@@ -55,7 +55,7 @@ public:
 		wxASSERT(commonObject);
 		commonObject->SetName(name);
 
-		if (!m_metaData->RunConfiguration())
+		if (!m_metaData->RunDatabase())
 			return false;
 
 		return true;

@@ -1613,8 +1613,8 @@ IRecordDataObjectExt::~IRecordDataObjectExt()
 	if (m_metaObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 		if (!appData->DesignerMode()) {
 			IMetaData* metaData = m_metaObject->GetMetaData();
-			if (!metaData->CloseConfiguration(forceCloseFlag)) {
-				wxASSERT_MSG(false, "m_moduleManager->CloseConfiguration() == false");
+			if (!metaData->CloseDatabase(forceCloseFlag)) {
+				wxASSERT_MSG(false, "m_moduleManager->CloseDatabase() == false");
 			}
 			wxDELETE(metaData);
 		}

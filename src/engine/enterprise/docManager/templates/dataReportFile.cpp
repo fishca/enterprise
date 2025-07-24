@@ -47,7 +47,7 @@ bool CReportDocument::OnCreate(const wxString& path, long flags)
 
 bool CReportDocument::OnCloseDocument()
 {
-	if (!m_metaData->CloseConfiguration(forceCloseFlag)) {
+	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
 

@@ -298,6 +298,10 @@ void CMysqlDatabaseLayer::RollBack()
 	}
 }
 
+bool CMysqlDatabaseLayer::IsActiveTransaction()
+{
+	return false;
+}
 
 // query database
 int CMysqlDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)

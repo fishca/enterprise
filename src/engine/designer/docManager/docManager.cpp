@@ -19,10 +19,8 @@
 #include "templates/metaFile.h"
 
 wxBEGIN_EVENT_TABLE(CDesignerDocManager, CMetaDocManager)
-
-EVT_UPDATE_UI(wxID_DESIGNER_CONFIGURATION_RETURN_DATABASE, CDesignerDocManager::OnUpdateSaveMetadata)
-EVT_UPDATE_UI(wxID_DESIGNER_UPDATE_METADATA, CDesignerDocManager::OnUpdateSaveMetadata)
-
+EVT_UPDATE_UI(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, CDesignerDocManager::OnUpdateSaveMetadata)
+EVT_UPDATE_UI(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, CDesignerDocManager::OnUpdateSaveMetadata)
 wxEND_EVENT_TABLE()
 
 wxIMPLEMENT_DYNAMIC_CLASS(CDesignerDocManager, CMetaDocManager);
@@ -30,9 +28,9 @@ wxIMPLEMENT_DYNAMIC_CLASS(CDesignerDocManager, CMetaDocManager);
 CDesignerDocManager::CDesignerDocManager()
 	: CMetaDocManager()
 {
-	AddDocTemplate("External data processor", "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorEditDocument), CLASSINFO(CDataProcessorEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate("External report", "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportEditDocument), CLASSINFO(CReportEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate("Configuration", "*.conf", "", "conf", "Configuration Doc", "Configuration View", CLASSINFO(CMetataEditDocument), CLASSINFO(CMetadataView), wxTEMPLATE_ONLY_OPEN);
+	AddDocTemplate(wxT("External data processor"), "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorFileDocument), CLASSINFO(CDataProcessorView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(wxT("External report"), "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportFileDocument), CLASSINFO(CReportView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(wxT("Configuration"), "*.conf", "", "conf", "Configuration Doc", "Configuration View", CLASSINFO(CMetadataFileDocument), CLASSINFO(CMetadataView), wxTEMPLATE_ONLY_OPEN);
 
 	//common objects 
 	AddDocTemplate(g_metaCommonModuleCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));

@@ -52,6 +52,63 @@ const class_identifier_t g_metaExternalDataProcessorCLSID = string_to_clsid("MD_
 const class_identifier_t g_metaExternalReportCLSID = string_to_clsid("MD_ERPT");
 
 //*******************************************************************************
+//*                             Structure changes                               *
+//*******************************************************************************
+
+enum ERestructure {
+
+	restructure_info,
+	restructure_warning,
+	restructure_error,
+};
+
+class BACKEND_API CRestructureInfo {
+
+	struct CRestructureData {
+
+		ERestructure m_type;
+		wxString m_strDescr;
+
+		CRestructureData(ERestructure t, const wxString& str) :
+			m_type(t), m_strDescr(str)
+		{
+		}
+	};
+
+	std::vector<CRestructureData> m_listRestructure;
+
+public:
+
+	bool HasRestructureInfo() const { return m_listRestructure.size() > 0; }
+
+	void AppendInfo(const wxString& str) {
+		m_listRestructure.emplace_back(
+			ERestructure::restructure_info, str
+		);
+	}
+
+	void AppendWarning(const wxString& str) {
+		m_listRestructure.emplace_back(
+			ERestructure::restructure_warning, str
+		);
+	}
+
+	void AppendError(const wxString& str) {
+		m_listRestructure.emplace_back(
+			ERestructure::restructure_error, str
+		);
+	}
+
+	void ResetRestructureInfo() { return m_listRestructure.clear(); }
+
+	wxString GetDescription(unsigned int idx) const { return m_listRestructure.at(idx).m_strDescr; }
+	ERestructure GetType(unsigned int idx) const { return m_listRestructure.at(idx).m_type; }
+
+	unsigned int GetCount() const { return m_listRestructure.size(); }
+
+};
+
+//*******************************************************************************
 //*                             IMetaObject                                     *
 //*******************************************************************************
 
@@ -142,9 +199,9 @@ public:
 
 	void ResetGuid();
 	void ResetId();
-	
-	void ResetAll() { 
-		ResetGuid(); ResetId(); 
+
+	void ResetAll() {
+		ResetGuid(); ResetId();
 	}
 
 	void GenerateGuid() {
@@ -426,22 +483,7 @@ public:
 	virtual bool Init(CValue** paParams, const long lSizeArray) final override;
 
 	//compare object 
-	virtual bool CompareObject(IMetaObject* metaObject) const {
-		if (GetClassType() != metaObject->GetClassType())
-			return false;
-		if (m_metaId != metaObject->GetMetaID())
-			return false;
-		for (unsigned int idx = 0; idx < GetPropertyCount(); idx++) {
-			IProperty* propDst = GetProperty(idx);
-			wxASSERT(propDst);
-			IProperty* propSrc = metaObject->GetProperty(propDst->GetName());
-			if (propSrc == nullptr)
-				return false;
-			if (propDst->GetValue() != propSrc->GetValue())
-				return false;
-		}
-		return true;
-	}
+	virtual bool CompareObject(IMetaObject* metaObject) const;
 
 	/**
 	* Property events
@@ -568,4 +610,7 @@ protected:
 
 	CMethodHelper* m_methodHelper;
 };
+
+extern BACKEND_API CRestructureInfo s_restructureInfo;
+
 #endif

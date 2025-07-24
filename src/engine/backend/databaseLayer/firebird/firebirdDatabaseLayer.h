@@ -54,6 +54,8 @@ public:
 	virtual void BeginTransaction();
 	virtual void Commit();
 	virtual void RollBack();
+	
+	virtual bool IsActiveTransaction();
 
 	static int TranslateErrorCode(int nCode);
 	//static wxString TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, ISC_STATUS_ARRAY status);

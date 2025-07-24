@@ -14,9 +14,8 @@
 #include "mainFrame/watch/watchWindow.h"
 
 enum {
-	wxID_DESIGNER_UPDATE_METADATA = 10000,
-
-	wxID_DESIGNER_DEBUG_START,
+	
+	wxID_DESIGNER_DEBUG_START = 10000,
 	wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING,
 	wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING,
 	wxID_DESIGNER_DEBUG_EDIT_POINT,
@@ -28,10 +27,12 @@ enum {
 	wxID_DESIGNER_DEBUG_NEXT_POINT,
 	wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS,
 
-	wxID_DESIGNER_CONFIGURATION_RETURN_DATABASE,
+	wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE,
+	wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE,
+	wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE,
 
-	wxID_DESIGNER_CONFIGURATION_LOAD,
-	wxID_DESIGNER_CONFIGURATION_SAVE,
+	wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE,
+	wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE,
 
 	wxID_DESIGNER_ABOUT,
 	wxID_DESIGNER_END
@@ -139,7 +140,10 @@ protected:
 	void OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event));
 	void OnAttachForDebugging(wxCommandEvent& WXUNUSED(event));
 
+	void OnOpenConfiguration(wxCommandEvent& event);
 	void OnRollbackConfiguration(wxCommandEvent& event);
+	void OnUpdateConfiguration(wxCommandEvent& event);
+
 	void OnConfiguration(wxCommandEvent& event);
 	void OnRunDebugCommand(wxCommandEvent& event);
 	void OnToolsSettings(wxCommandEvent& event);

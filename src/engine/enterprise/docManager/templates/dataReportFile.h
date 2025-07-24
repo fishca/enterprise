@@ -55,7 +55,7 @@ public:
 		wxASSERT(commonObject);
 		commonObject->SetName(name);
 
-		if (!m_metaData->RunConfiguration())
+		if (!m_metaData->RunDatabase())
 			return false;
 
 		return true;

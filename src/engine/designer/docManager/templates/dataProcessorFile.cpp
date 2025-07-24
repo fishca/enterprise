@@ -1,8 +1,8 @@
 #include "dataProcessorFile.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorView, CMetaView);
 
-bool CDataProcessorEditView::OnCreate(CMetaDocument* doc, long flags)
+bool CDataProcessorView::OnCreate(CMetaDocument* doc, long flags)
 {
 	m_metaTree = new CDataProcessorTree(doc, m_viewFrame);
 	m_metaTree->SetReadOnly(false);
@@ -10,12 +10,12 @@ bool CDataProcessorEditView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
-void CDataProcessorEditView::OnDraw(wxDC* WXUNUSED(dc))
+void CDataProcessorView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CDataProcessorEditView::OnClose(bool deleteWindow)
+bool CDataProcessorView::OnClose(bool deleteWindow)
 {
 	Activate(false);
 
@@ -30,9 +30,9 @@ bool CDataProcessorEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorEditDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorFileDocument, CMetaDocument);
 
-bool CDataProcessorEditDocument::OnCreate(const wxString& path, long flags)
+bool CDataProcessorFileDocument::OnCreate(const wxString& path, long flags)
 {
 	m_metaData = new CMetaDataDataProcessor();
 	if (!CMetaDocument::OnCreate(path, flags))
@@ -42,9 +42,9 @@ bool CDataProcessorEditDocument::OnCreate(const wxString& path, long flags)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-bool CDataProcessorEditDocument::OnCloseDocument()
+bool CDataProcessorFileDocument::OnCloseDocument()
 {
-	if (!m_metaData->CloseConfiguration(forceCloseFlag)) {
+	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
 	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
@@ -53,7 +53,7 @@ bool CDataProcessorEditDocument::OnCloseDocument()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CDataProcessorEditDocument::DoOpenDocument(const wxString& filename)
+bool CDataProcessorFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -64,7 +64,7 @@ bool CDataProcessorEditDocument::DoOpenDocument(const wxString& filename)
 	return true;
 }
 
-bool CDataProcessorEditDocument::DoSaveDocument(const wxString& filename)
+bool CDataProcessorFileDocument::DoSaveDocument(const wxString& filename)
 {
 	if (!GetMetaTree()->Save())
 		return false;
@@ -75,18 +75,18 @@ bool CDataProcessorEditDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool CDataProcessorEditDocument::IsModified() const
+bool CDataProcessorFileDocument::IsModified() const
 {
 	return CMetaDocument::IsModified();
 }
 
-void CDataProcessorEditDocument::Modify(bool modified)
+void CDataProcessorFileDocument::Modify(bool modified)
 {
 	CMetaDocument::Modify(modified);
 }
 
-CDataProcessorTree* CDataProcessorEditDocument::GetMetaTree() const
+CDataProcessorTree* CDataProcessorFileDocument::GetMetaTree() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CDataProcessorEditView)->GetMetaTree() : nullptr;
+	return view ? wxDynamicCast(view, CDataProcessorView)->GetMetaTree() : nullptr;
 }

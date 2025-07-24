@@ -213,6 +213,13 @@ bool CMetaObjectEnumeration::OnSaveMetaObject()
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
 		return false;
 
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	if (GetObjectEnums().size() == 0) {
+		s_restructureInfo.AppendError(_("! Doesn't have any enumeration ") + GetFullName());
+		return false;
+	}
+#endif 
+
 	return IMetaObjectRecordDataEnumRef::OnSaveMetaObject();
 }
 

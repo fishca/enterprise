@@ -78,8 +78,8 @@ CMetaDataReport::~CMetaDataReport()
 			m_moduleManager->DecrRef();
 		}
 		//clear data 
-		if (!ClearConfiguration()) {
-			wxASSERT_MSG(false, "ClearConfiguration() == false");
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
 		}
 	}
 
@@ -89,17 +89,17 @@ CMetaDataReport::~CMetaDataReport()
 	}
 }
 
-bool CMetaDataReport::LoadConfiguration()
+bool CMetaDataReport::LoadDatabase()
 {
-	return RunConfiguration();
+	return RunDatabase();
 }
 
-bool CMetaDataReport::SaveConfiguration()
+bool CMetaDataReport::SaveDatabase()
 {
 	return true;
 }
 
-bool CMetaDataReport::ClearConfiguration()
+bool CMetaDataReport::ClearDatabase()
 {
 	if (!ClearChildMetadata(m_commonObject))
 		return false;
@@ -123,7 +123,7 @@ bool CMetaDataReport::ClearChildMetadata(IMetaObject* metaParent)
 	return true;
 }
 
-bool CMetaDataReport::RunConfiguration(int flags)
+bool CMetaDataReport::RunDatabase(int flags)
 {
 	if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 
@@ -194,7 +194,7 @@ bool CMetaDataReport::RunChildMetadata(IMetaObject* metaParent, int flags, bool 
 	return true;
 }
 
-bool CMetaDataReport::CloseConfiguration(int flags)
+bool CMetaDataReport::CloseDatabase(int flags)
 {
 	wxASSERT(m_configOpened);
 
@@ -240,14 +240,14 @@ bool CMetaDataReport::LoadFromFile(const wxString& strFileName)
 	}
 	else if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 		//close data 
-		if (m_configOpened && !CloseConfiguration(forceCloseFlag)) {
-			wxASSERT_MSG(false, "CloseConfiguration() == false");
+		if (m_configOpened && !CloseDatabase(forceCloseFlag)) {
+			wxASSERT_MSG(false, "CloseDatabase() == false");
 			return false;
 		}
 
 		//clear data 
-		if (!ClearConfiguration()) {
-			wxASSERT_MSG(false, "ClearConfiguration() == false");
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
 			return false;
 		}
 	}
@@ -284,8 +284,8 @@ bool CMetaDataReport::LoadFromFile(const wxString& strFileName)
 	if (!LoadCommonMetadata(g_metaExternalReportCLSID, readerData)) {
 		if (m_commonObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
 			//clear data 
-			if (!ClearConfiguration()) {
-				wxASSERT_MSG(false, "ClearConfiguration() == false");
+			if (!ClearDatabase()) {
+				wxASSERT_MSG(false, "ClearDatabase() == false");
 			}
 		}
 		return false;
@@ -295,7 +295,7 @@ bool CMetaDataReport::LoadFromFile(const wxString& strFileName)
 		m_commonObject->BuildNewName();
 	}
 
-	return LoadConfiguration();
+	return LoadDatabase();
 }
 
 bool CMetaDataReport::SaveToFile(const wxString& strFileName)

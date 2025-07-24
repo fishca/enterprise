@@ -106,7 +106,7 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
-	CMetaDataDataProcessor* metaData = ((CDataProcessorEditDocument*)docParent)->GetMetaData();
+	CMetaDataDataProcessor* metaData = ((CDataProcessorFileDocument*)docParent)->GetMetaData();
 	CMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
 	CMetaObjectModule *moduleMeta = commonMeta->GetModuleObject();
 

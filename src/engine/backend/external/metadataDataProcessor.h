@@ -59,13 +59,13 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
 	//metaData 
-	virtual bool LoadConfiguration();
-	virtual bool SaveConfiguration();
-	virtual bool ClearConfiguration();
+	virtual bool LoadDatabase();
+	virtual bool SaveDatabase();
+	virtual bool ClearDatabase();
 
 	//run/close 
-	virtual bool RunConfiguration(int flags = defaultFlag);
-	virtual bool CloseConfiguration(int flags = defaultFlag);
+	virtual bool RunDatabase(int flags = defaultFlag);
+	virtual bool CloseDatabase(int flags = defaultFlag);
 
 	//load/save form file
 	bool LoadFromFile(const wxString& strFileName);

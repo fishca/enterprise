@@ -1464,9 +1464,6 @@
     <Filter Include="metaCollection">
       <UniqueIdentifier>{9bb88d5f-8ec9-4280-a591-9d5ce4472e70}</UniqueIdentifier>
     </Filter>
-    <Filter Include="metaCollection\attribute">
-      <UniqueIdentifier>{1658db8e-2fb5-4db1-8bac-a0bc5589a6c2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="metaCollection\dimension">
       <UniqueIdentifier>{33239027-ee04-4fe5-9c06-558dc0996576}</UniqueIdentifier>
     </Filter>
@@ -1541,6 +1538,9 @@
     </Filter>
     <Filter Include="databaseLayer\firebird\engine\dll\intl">
       <UniqueIdentifier>{470a7d93-926c-4596-8856-dc497ddd37e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="metaCollection\attribute">
+      <UniqueIdentifier>{1658db8e-2fb5-4db1-8bac-a0bc5589a6c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

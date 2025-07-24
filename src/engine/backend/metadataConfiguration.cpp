@@ -73,15 +73,15 @@ CMetaDataConfigurationFile::~CMetaDataConfigurationFile()
 	wxDELETE(m_moduleManager);
 
 	//clear data 
-	if (!ClearConfiguration()) {
-		wxASSERT_MSG(false, "ClearConfiguration() == false");
+	if (!ClearDatabase()) {
+		wxASSERT_MSG(false, "ClearDatabase() == false");
 	}
 
 	//delete common metaObject
 	wxDELETE(m_commonObject);
 }
 
-bool CMetaDataConfigurationFile::RunConfiguration(int flags)
+bool CMetaDataConfigurationFile::RunDatabase(int flags)
 {
 	wxASSERT(!m_configOpened);
 
@@ -141,7 +141,7 @@ bool CMetaDataConfigurationFile::RunChildMetadata(IMetaObject* metaParent, int f
 	return true;
 }
 
-bool CMetaDataConfigurationFile::CloseConfiguration(int flags)
+bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 {
 	wxASSERT(m_configOpened);
 
@@ -208,7 +208,7 @@ bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* metaParent, int
 	return true;
 }
 
-bool CMetaDataConfigurationFile::ClearConfiguration()
+bool CMetaDataConfigurationFile::ClearDatabase()
 {
 	for (auto& obj : m_commonObject->GetObjects()) {
 
@@ -252,16 +252,16 @@ bool CMetaDataConfigurationFile::LoadFromFile(const wxString& strFileName)
 {
 	//close data 
 	if (IsConfigOpen()) {
-		if (!CloseConfiguration(forceCloseFlag)) {
-			wxASSERT_MSG(false, "CloseConfiguration() == false");
+		if (!CloseDatabase(forceCloseFlag)) {
+			wxASSERT_MSG(false, "CloseDatabase() == false");
 			return false;
 
 		}
 	}
 
 	//clear data 
-	if (!ClearConfiguration()) {
-		wxASSERT_MSG(false, "ClearConfiguration() == false");
+	if (!ClearDatabase()) {
+		wxASSERT_MSG(false, "ClearDatabase() == false");
 		return false;
 	}
 
@@ -294,8 +294,8 @@ bool CMetaDataConfigurationFile::LoadFromFile(const wxString& strFileName)
 	//loading common metaData and child item
 	if (!LoadCommonMetadata(g_metaCommonMetadataCLSID, readerData)) {
 		//clear data 
-		if (!ClearConfiguration()) {
-			wxASSERT_MSG(false, "ClearConfiguration() == false");
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
 		}
 		return false;
 	}
@@ -345,14 +345,14 @@ bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& cl
 	std::shared_ptr <CMemoryReader> readerChildMemory(readerMetaMemory->open_chunk(eChildBlock));
 
 	if (readerChildMemory) {
-		if (!LoadConfiguration(clsid, *readerChildMemory, m_commonObject))
+		if (!LoadDatabase(clsid, *readerChildMemory, m_commonObject))
 			return false;
 	}
 
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadConfiguration(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* metaParent)
+bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* metaParent)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -470,7 +470,7 @@ bool CMetaDataConfiguration::OnInitialize(const int flags)
 	if (!CMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
 	debugServerInit(flags);
-	if (!LoadConfiguration()) return false;
+	if (!LoadDatabase()) return false;
 	if (backend_mainFrame != nullptr) backend_mainFrame->OnInitializeConfiguration(GetConfigType());
 	if ((flags & _app_start_create_debug_server_flag) != 0) debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
 	return true;
@@ -505,7 +505,7 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 
 	//Initialize debugger
 	debugClientInit();
-	if (!LoadConfiguration()) return false;
+	if (!LoadDatabase()) return false;
 	if (backend_mainFrame != nullptr)
 		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
 	return true;
@@ -522,7 +522,7 @@ bool CMetaDataConfigurationStorage::OnDestroy()
 ////////////////////////////////////////////////////////////////////////////////
 
 CMetaDataConfigurationStorage::CMetaDataConfigurationStorage(bool readOnly) : CMetaDataConfiguration(readOnly),
-m_configMetadata(new CMetaDataConfiguration(readOnly)), m_configSave(true) {
+m_configMetadata(new CMetaDataConfiguration(readOnly)) {
 }
 
 CMetaDataConfigurationStorage::~CMetaDataConfigurationStorage() {
@@ -531,20 +531,20 @@ CMetaDataConfigurationStorage::~CMetaDataConfigurationStorage() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CMetaDataConfigurationStorage::LoadConfiguration(int flags)
+bool CMetaDataConfigurationStorage::LoadDatabase(int flags)
 {
-	if (m_configMetadata->LoadConfiguration(onlyLoadFlag)) {
+	if (m_configMetadata->LoadDatabase(onlyLoadFlag)) {
 
 		//close if opened
 		if (CMetaDataConfiguration::IsConfigOpen()
-			&& !CloseConfiguration(forceCloseFlag)) {
+			&& !CloseDatabase(forceCloseFlag)) {
 			return false;
 		}
 
-		if (CMetaDataConfiguration::LoadConfiguration()) {
-			m_configSave = CompareMetadata(m_configMetadata);
-			Modify(!m_configSave);
-			if (m_configNew) SaveConfiguration(saveConfigFlag);
+		if (CMetaDataConfiguration::LoadDatabase()) {
+			Modify(!CompareMetadata(m_configMetadata));
+			if (m_configNew) 
+				SaveDatabase(saveConfigFlag);
 			m_configNew = false;
 			return true;
 		}
@@ -600,7 +600,7 @@ bool CMetaDataConfigurationStorage::SaveCommonMetadata(const class_identifier_t&
 
 	CMemoryWriter writterChildMemory;
 
-	if (!SaveConfiguration(clsid, writterChildMemory, flags))
+	if (!SaveDatabase(clsid, writterChildMemory, flags))
 		return false;
 
 	writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
@@ -610,7 +610,7 @@ bool CMetaDataConfigurationStorage::SaveCommonMetadata(const class_identifier_t&
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveConfiguration(const class_identifier_t&, CMemoryWriter& writterData, int flags)
+bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMemoryWriter& writterData, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 

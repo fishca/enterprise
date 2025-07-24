@@ -19,6 +19,8 @@ void CMetadataView::OnDraw(wxDC* WXUNUSED(dc))
 	// nothing to do here, CMetadataTree draws itself
 }
 
+#include "docManager/docManager.h"
+
 bool CMetadataView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
@@ -28,11 +30,9 @@ bool CMetadataView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
-		m_metaTree->Freeze();
+	if (CMetaView::OnClose(deleteWindow))
 		return m_metaTree->Destroy();
-	}
-	
+
 	return false;
 }
 
@@ -40,23 +40,51 @@ bool CMetadataView::OnClose(bool deleteWindow)
 // CTextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(CMetadataDocument, CMetaDocument);
+#include "frontend/mainFrame/mainFrame.h"
 
-bool CMetadataDocument::OnCreate(const wxString& path, long flags)
+wxIMPLEMENT_DYNAMIC_CLASS(CMetadataBrowserDocument, CMetaDocument);
+
+bool CMetadataBrowserDocument::OnCreate(const wxString& path, long flags)
+{
+	if (!CMetaDocument::OnCreate(path, flags))
+		return false;
+
+	return GetMetaTree()->Load(m_metaData);
+}
+
+bool CMetadataBrowserDocument::OnCloseDocument()
+{
+	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	return true;
+}
+
+// ----------------------------------------------------------------------------
+
+CMetadataTree* CMetadataBrowserDocument::GetMetaTree() const
+{
+	wxView* view = GetFirstView();
+	return view ? wxDynamicCast(view, CMetadataView)->GetMetaTree() : nullptr;
+}
+
+// ----------------------------------------------------------------------------
+// CTextDocument: wxDocument and wxTextCtrl married
+// ----------------------------------------------------------------------------
+
+wxIMPLEMENT_DYNAMIC_CLASS(CMetadataFileDocument, CMetaDocument);
+
+bool CMetadataFileDocument::OnCreate(const wxString& path, long flags)
 {
 	m_metaData = new CMetaDataConfigurationFile(true);
 
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
-	
-	return true; 
-}
 
-#include "frontend/mainFrame/mainFrame.h"
+	return true;
+}
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CMetadataDocument::DoOpenDocument(const wxString& filename)
+bool CMetadataFileDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -64,12 +92,12 @@ bool CMetadataDocument::DoOpenDocument(const wxString& filename)
 	if (!GetMetaTree()->Load(m_metaData))
 		return false;
 
-	return m_metaData->RunConfiguration(onlyLoadFlag);
+	return m_metaData->RunDatabase(onlyLoadFlag);
 }
 
-bool CMetadataDocument::OnCloseDocument()
+bool CMetadataFileDocument::OnCloseDocument()
 {
-	if (!m_metaData->CloseConfiguration(forceCloseFlag)) {
+	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
 
@@ -77,7 +105,7 @@ bool CMetadataDocument::OnCloseDocument()
 	return true;
 }
 
-bool CMetadataDocument::DoSaveDocument(const wxString& filename)
+bool CMetadataFileDocument::DoSaveDocument(const wxString& filename)
 {
 	/*if (!m_metaData->SaveToFile(filename))
 		return false;*/
@@ -85,23 +113,11 @@ bool CMetadataDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool CMetadataDocument::IsModified() const
+bool CMetadataFileDocument::IsModified() const
 {
 	return false;
 }
 
-void CMetadataDocument::Modify(bool modified)
+void CMetadataFileDocument::Modify(bool modified)
 {
-}
-
-// ----------------------------------------------------------------------------
-// CTextEditDocument implementation
-// ----------------------------------------------------------------------------
-
-wxIMPLEMENT_DYNAMIC_CLASS(CMetataEditDocument, CMetadataDocument);
-
-CMetadataTree* CMetataEditDocument::GetMetaTree() const
-{
-	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CMetadataView)->GetMetaTree() : nullptr;
 }

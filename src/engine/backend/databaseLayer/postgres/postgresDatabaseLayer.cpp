@@ -329,6 +329,11 @@ void CPostgresDatabaseLayer::RollBack()
 	DoRunQuery(_("ROLLBACK"), false);
 }
 
+bool CPostgresDatabaseLayer::IsActiveTransaction()
+{
+	return DoRunQuery(_("SELECT in_transaction() IS NOT NULL AS is_transaction;"), false);
+}
+
 // query database
 int CPostgresDatabaseLayer::DoRunQuery(const wxString& strQuery, bool WXUNUSED(bParseQuery))
 {

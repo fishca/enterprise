@@ -21,7 +21,8 @@ public:
 		wxVariantDataForm* srcData = dynamic_cast<wxVariantDataForm*>(&data);
 		if (srcData != nullptr) {
 			return m_moduleData == srcData->m_moduleData &&
-				m_formData == srcData->m_formData;
+				std::memcmp(m_formData.GetData(), srcData->m_formData.GetData(), m_formData.GetDataLen()) == 0 && 
+				srcData->m_formData.GetDataLen() == m_formData.GetDataLen();
 		}
 		return false;
 	}

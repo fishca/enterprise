@@ -44,3 +44,20 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
 
     if (CMetaObjectDocument::OnReloadMetaObject()) IMetaObject::OnPropertyChanged(property, oldValue, newValue);
 }
+
+void CMetaObjectDocument::OnPropertyPasted(IProperty* property)
+{
+    if (m_propertyRegisterRecord == property) {
+        const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc(property->GetValue());
+        for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+            IMetaObjectRegisterData* registerData = nullptr;
+            if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
+                CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
+                wxASSERT(infoRecorder);
+                infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
+            }
+        }
+    }
+
+    IMetaObjectRecordDataMutableRef::OnPropertyPasted(property);
+}

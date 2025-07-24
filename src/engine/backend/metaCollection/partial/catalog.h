@@ -139,6 +139,9 @@ public:
     virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
     virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
+    //paste property from data
+    virtual void OnPropertyPasted(IProperty* property);
+
 protected:
     //create empty object
     virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const Guid& guid = wxNullGuid);

@@ -82,6 +82,9 @@ public:
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
+	//paste property from data
+	virtual void OnPropertyPasted(IProperty* property);
+
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);

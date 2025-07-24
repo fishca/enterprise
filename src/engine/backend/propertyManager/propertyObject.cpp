@@ -28,6 +28,16 @@ void IEvent::InitEvent(CPropertyCategory* cat, const wxVariant& value)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool IProperty::PasteData(CMemoryReader& reader)
+{
+	if (!LoadData(reader))
+		return false;
+	m_owner->OnPropertyPasted(this);
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "backend/backend_mainFrame.h"
 
 IPropertyObject::~IPropertyObject()

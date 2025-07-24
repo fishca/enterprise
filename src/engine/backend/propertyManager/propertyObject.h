@@ -222,6 +222,8 @@ protected:
 	IProperty(CPropertyCategory* cat, const wxString& name, const wxVariant& value) : IBackendCellField(cat, name, value) { InitProperty(cat, value); }
 	IProperty(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : IBackendCellField(cat, name, label, value) { InitProperty(cat, value); }
 	IProperty(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : IBackendCellField(cat, name, label, helpString, value) { InitProperty(cat, value); }
+public:
+	virtual bool PasteData(CMemoryReader& reader);
 };
 
 class BACKEND_API IEvent : public IBackendCellField {
@@ -413,15 +415,28 @@ public:
 	virtual int GetComponentType() const = 0;
 
 	/**
+	* IBackendCellField events
+	*/
+
+	virtual void OnCellChanged(IBackendCellField* cell, 
+		const wxVariant& oldValue, const wxVariant& newValue) {}
+
+	/**
 	* IProperty events
 	*/
 	virtual void OnPropertyCreated() {}
 	virtual void OnPropertyCreated(IProperty* property) {}
 	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property) {}
-	virtual void OnPropertySelected(IProperty* property) {}
+	virtual void OnPropertySelected(IProperty* property) {}	
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue) { return true; }
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
+	//paste property from data
+	virtual void OnPropertyPasted(IProperty* property) {}
+
+	/**
+	* IEvent events
+	*/
 	virtual void OnEventCreated() {}
 	virtual void OnEventCreated(IEvent* event) {}
 	virtual void OnEventRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IEvent* event) {}

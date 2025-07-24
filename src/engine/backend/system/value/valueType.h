@@ -101,8 +101,11 @@ public:
 
 public:
 
-	static CValue AdjustValue(const CTypeDescription& typeDescription);
-	static CValue AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue);
+	static CValue AdjustValue(const CTypeDescription& typeDescription,
+		class IMetaData* metaData = nullptr);
+
+	static CValue AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue,
+		class IMetaData* metaData = nullptr);
 
 	CValueTypeDescription();
 

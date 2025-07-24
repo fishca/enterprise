@@ -84,6 +84,23 @@ CValue* IBackendTypeConfigFactory::CreateValueRef() const
 	return IBackendTypeFactory::CreateValueRef();
 }
 
+CValue IBackendTypeConfigFactory::AdjustValue() const
+{
+	return CValueTypeDescription::AdjustValue(
+		GetTypeDesc(), 
+		GetMetaData()
+	);
+}
+
+CValue IBackendTypeConfigFactory::AdjustValue(const CValue& varValue) const
+{
+	return CValueTypeDescription::AdjustValue(
+		GetTypeDesc(),
+		varValue, 
+		GetMetaData()
+	);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 bool IBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id)

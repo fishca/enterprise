@@ -74,6 +74,10 @@ public:
 	virtual CValue CreateValue() const;
 	virtual CValue* CreateValueRef() const;
 
+	//Adjust value
+	virtual CValue AdjustValue() const;
+	virtual CValue AdjustValue(const CValue& varValue) const;
+
 	//get metadata 
 	virtual class IMetaData* GetMetaData() const = 0;
 };

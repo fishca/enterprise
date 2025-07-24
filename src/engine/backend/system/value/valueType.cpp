@@ -51,21 +51,30 @@ wxString CValueType::GetString() const
 
 #include "backend/system/systemManager.h"
 
-CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription)
+CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription,
+	IMetaData* metaData)
 {
 	if (!typeDescription.IsOk())
-		return CValue();
+		return wxEmptyValue;
 
-	if (1 == typeDescription.m_listTypeClass.size()) {
-		auto posIt = typeDescription.m_listTypeClass.begin();
-		std::advance(posIt, 0);
-		return commonMetaData->CreateObject(*posIt);
+	if (typeDescription.GetClsidCount() == 1) {
+
+		if (metaData != nullptr) {
+			return metaData->CreateObject(
+				typeDescription.GetFirstClsid()
+			);
+		}
+
+		return commonMetaData->CreateObject(
+			typeDescription.GetFirstClsid()
+		);
 	}
 
-	return CValue();
+	return wxEmptyValue;
 }
 
-CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue)
+CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescription, const CValue& varValue,
+	IMetaData* metaData)
 {
 	if (!typeDescription.IsOk())
 		return varValue;
@@ -91,11 +100,11 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 		return varValue;
 	}
 
-	if (typeDescription.m_listTypeClass.size() == 1) {
-		auto posIt = typeDescription.m_listTypeClass.begin();
-		std::advance(posIt, 0);
-		if (commonMetaData->IsRegisterCtor(*posIt)) {
-			eValueTypes vt = CValue::GetVTByID(*posIt);
+	if (typeDescription.GetClsidCount() == 1) {
+		
+		if (metaData != nullptr ? metaData->IsRegisterCtor(typeDescription.GetFirstClsid()) : commonMetaData->IsRegisterCtor(typeDescription.GetFirstClsid())) {
+			
+			eValueTypes vt = CValue::GetVTByID(typeDescription.GetFirstClsid());
 			if (vt < eValueTypes::TYPE_REFFER) {
 				if (vt == eValueTypes::TYPE_NUMBER) {
 					return CSystemFunction::Round(varValue, typeDescription.m_typeData.m_number.m_scale);
@@ -112,10 +121,18 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 
 				}
 			}
-			return commonMetaData->CreateObject(*posIt);
+			
+			if (metaData != nullptr)
+				return metaData->CreateObject(
+					typeDescription.GetFirstClsid()
+				);
+
+			return commonMetaData->CreateObject(
+				typeDescription.GetFirstClsid()
+			);
 		}
 	}
-	return CValue();
+	return wxEmptyValue;
 }
 
 //////////////////////////////////////////////////////////////////////

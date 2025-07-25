@@ -35,7 +35,6 @@ void IMetaDataTree::CreateToolBar(wxWindow* parent)
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 }
 
-
 CMetadataTree::CMetadataTree()
 	: IMetaDataTree(), m_metaData(nullptr)
 {
@@ -67,6 +66,11 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
+	m_searchTree = new wxSearchCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	m_searchTree->Bind(wxEVT_SEARCH, &CMetadataTree::CMetadataTreeWnd::OnStartSearch, m_metaTreeWnd);
+	m_searchTree->Bind(wxEVT_COMMAND_TEXT_UPDATED, &CMetadataTree::CMetadataTreeWnd::OnCancelSearch, m_metaTreeWnd);
+	m_searchTree->ShowCancelButton(true);
+
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
@@ -77,6 +81,7 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 
 	// Set up the sizer for the panel
 	wxBoxSizer* panelSizer = new wxBoxSizer(wxVERTICAL);
+	panelSizer->Add(m_searchTree, 0, wxEXPAND, 1);
 	panelSizer->Add(m_metaTreeToolbar, 0, wxEXPAND, 1);
 	panelSizer->Add(m_metaTreeWnd, 1, wxEXPAND, 1);
 	SetSizer(panelSizer);
@@ -140,7 +145,6 @@ CMetadataTree::~CMetadataTree()
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
-
 }
 
 //**********************************************************************************

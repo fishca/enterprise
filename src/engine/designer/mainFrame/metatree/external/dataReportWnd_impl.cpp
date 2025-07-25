@@ -496,14 +496,14 @@ void CDataReportTree::FillData()
 			continue;
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeATTRIBUTES, metaAttribute);
+		const wxTreeItemId& hItem = AppendItem(m_treeATTRIBUTES, metaAttribute);
 	}
 
 	//Список табличных частей 
 	for (auto metaTable : commonMetadata->GetObjectTables()) {
 		if (metaTable->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendGroupItem(m_treeTABLES, g_metaAttributeCLSID, metaTable);
+		const wxTreeItemId& hItem = AppendGroupItem(m_treeTABLES, g_metaAttributeCLSID, metaTable);
 		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
 			if (metaAttribute->IsDeleted())
 				continue;
@@ -517,14 +517,14 @@ void CDataReportTree::FillData()
 	for (auto metaForm : commonMetadata->GetObjectForms()) {
 		if (metaForm->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeFORM, metaForm);
+		const wxTreeItemId& hItem = AppendItem(m_treeFORM, metaForm);
 	}
 
 	//Таблицы
 	for (auto metaTemplates : commonMetadata->GetObjectTemplates()) {
 		if (metaTemplates->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeTEMPLATES, metaTemplates);
+		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, metaTemplates);
 	}
 
 	//update choice selection

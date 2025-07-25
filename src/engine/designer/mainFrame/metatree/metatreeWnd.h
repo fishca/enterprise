@@ -6,6 +6,7 @@
 #include "backend/debugger/debugDefs.h"
 
 #include <wx/aui/aui.h>
+#include <wx/srchctrl.h>
 #include <wx/treectrl.h>
 
 class IMetaDataTree : public wxPanel,
@@ -84,6 +85,7 @@ protected:
 
 protected:
 
+	wxSearchCtrl* m_searchTree; 
 	wxAuiToolBar* m_metaTreeToolbar;
 	CMetaDocument* m_docParent;
 
@@ -116,6 +118,8 @@ private:
 
 private:
 
+	mutable wxString m_strSearch;
+
 	enum
 	{
 		ID_METATREE_INSERT = ID_METATREE_SORT + 1,
@@ -124,7 +128,13 @@ private:
 	};
 
 	wxTreeItemId GetSelectionIdentifier() const {
-		wxTreeItemId parentItem = m_metaTreeWnd->GetSelection();
+		return GetSelectionIdentifier(
+			m_metaTreeWnd->GetSelection()
+		);
+	}
+
+	wxTreeItemId GetSelectionIdentifier(const wxTreeItemId& id) const {
+		wxTreeItemId parentItem = id;
 		while (parentItem != nullptr) {
 			wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
 			if (item != nullptr) {
@@ -137,7 +147,11 @@ private:
 	}
 
 	class_identifier_t GetClassIdentifier() const {
-		wxTreeItemData* item = m_metaTreeWnd->GetItemData(GetSelectionIdentifier());
+		return GetClassIdentifier(GetSelectionIdentifier());
+	}
+
+	class_identifier_t GetClassIdentifier(const wxTreeItemId& id) const {
+		wxTreeItemData* item = m_metaTreeWnd->GetItemData(id);
 		if (item != nullptr) {
 			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) return item_clsid->m_clsid;
@@ -146,7 +160,11 @@ private:
 	}
 
 	IMetaObject* GetMetaIdentifier() const {
-		wxTreeItemId parentItem = GetSelectionIdentifier();
+		return GetMetaIdentifier(GetSelectionIdentifier());
+	}
+
+	IMetaObject* GetMetaIdentifier(const wxTreeItemId& id) const {
+		wxTreeItemId parentItem = id;
 		wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
 		if (item != nullptr) {
 			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
@@ -215,6 +233,9 @@ private:
 
 		void OnBeginDrag(wxTreeEvent& event);
 		void OnEndDrag(wxTreeEvent& event);
+
+		void OnStartSearch(wxCommandEvent& event);
+		void OnCancelSearch(wxCommandEvent& event);
 
 		void OnCreateItem(wxCommandEvent& event);
 		void OnEditItem(wxCommandEvent& event);
@@ -371,6 +392,8 @@ public:
 
 	bool Load(IMetaDataConfiguration* metadata = nullptr);
 	bool Save();
+
+	void Search(const wxString strSearch);
 
 	void ClearTree();
 };

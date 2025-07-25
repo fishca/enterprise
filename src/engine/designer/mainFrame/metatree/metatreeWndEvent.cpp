@@ -182,17 +182,50 @@ void CMetadataTree::CMetadataTreeWnd::OnEndDrag(wxTreeEvent& event) {
 	bool copy = ::wxGetKeyState(WXK_CONTROL);
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
 	m_draggedItem = (wxTreeItemId)0l;
+	
 	// ensure that itemDst is not itemSrc or a child of itemSrc
-	wxTreeItemId item = itemDst;
-	while (item.IsOk()) {
-		if (item == itemSrc)
+	IMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
+
+	if (metaSrcObject != nullptr) {
+
+		const wxTreeItemId &item = m_ownerTree->GetSelectionIdentifier(itemDst);
+
+		if (!item.IsOk())
 			return;
-		item = GetItemParent(item);
+
+		IMetaObject* createdMetaObject = m_ownerTree->NewItem(
+			m_ownerTree->GetClassIdentifier(item),
+			m_ownerTree->GetMetaIdentifier(item),
+			false
+		);
+
+		if (createdMetaObject != nullptr) {
+
+			CMemoryWriter dataWritter; 		
+			if (metaSrcObject->CopyObject(dataWritter)) {
+
+				CMemoryReader reader(dataWritter.pointer(), dataWritter.size());
+				if (createdMetaObject->PasteObject(reader)) {
+					m_ownerTree->FillItem(createdMetaObject, item);
+				}
+			}
+		}
 	}
 
-	IMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
-	IMetaObject* metaDstObject = m_ownerTree->GetMetaObject(itemDst);
+	event.Skip();
+}
 
+void CMetadataTree::CMetadataTreeWnd::OnStartSearch(wxCommandEvent& event)
+{
+	m_ownerTree->Search(event.GetString()); //Fill all data from metaData
+	event.Skip();
+}
+
+void CMetadataTree::CMetadataTreeWnd::OnCancelSearch(wxCommandEvent& event)
+{
+	const wxString &strSearch = event.GetString(); 
+	if (strSearch.IsEmpty()) 
+		m_ownerTree->Search(wxEmptyString); //Fill all data from metaData	
 	event.Skip();
 }
 

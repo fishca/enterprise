@@ -207,7 +207,7 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 
 	if (showValue) { OpenFormMDI(createdObject); }
 	UpdateToolbar(createdObject, FillItem(createdObject, item));
-	
+
 	for (auto& doc : docManager->GetDocumentsVector()) {
 		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
@@ -766,324 +766,603 @@ bool CMetadataTree::RenameMetaObject(IMetaObject* metaObject, const wxString& ne
 
 void CMetadataTree::AddCatalogItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordDataRef* metaObjectValue = dynamic_cast<IMetaObjectRecordDataRef*>(metaObject);
+	IMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<IMetaObjectRecordDataRef>();
 	wxASSERT(metaObject);
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//список табличных частей 
-	wxTreeItemId hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
+	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
 	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+
 		if (metaTable->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
+
+		//const wxString strName = metaTable->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
+
 		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+
 			if (metaAttribute->IsDeleted())
 				continue;
+
 			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 				continue;
+
+			//const wxString strName = metaAttribute->GetName();
+
+			//if (!m_strSearch.IsEmpty()
+			//	&& strName.Find(m_strSearch) < 0)
+			//	continue;
+
 			AppendItem(hItem, metaAttribute);
 		}
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddDocumentItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordDataRef* metaObjectValue = dynamic_cast<IMetaObjectRecordDataRef*>(metaObject);
+	IMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType<IMetaObjectRecordDataRef>();
+
 	wxASSERT(metaObject);
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//список табличных частей 
-	wxTreeItemId hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
+	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
 	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+
 		if (metaTable->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
+
+		//const wxString strName = metaTable->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
 		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+
 			if (metaAttribute->IsDeleted())
 				continue;
+
 			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 				continue;
+
+			//const wxString strName = metaAttribute->GetName();
+
+			//if (!m_strSearch.IsEmpty()
+			//	&& strName.Find(m_strSearch) < 0)
+			//	continue;
+
 			AppendItem(hItem, metaAttribute);
 		}
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddEnumerationItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordDataRef* metaObjectValue = dynamic_cast<IMetaObjectRecordDataRef*>(metaObject);
+	IMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType <IMetaObjectRecordDataRef>();
 	wxASSERT(metaObjectValue);
 
 	//Enumerations
 	wxTreeItemId hEnums = AppendGroupItem(hParentID, g_metaEnumCLSID, objectEnumerationsName);
 
 	for (auto metaEnumerations : metaObjectValue->GetObjectEnums()) {
+
 		if (metaEnumerations->IsDeleted())
 			continue;
+
+		//const wxString strName = metaEnumerations->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hEnums, metaEnumerations);
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddDataProcessorItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordData* metaObjectValue = dynamic_cast<IMetaObjectRecordData*>(metaObject);
+	IMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType <IMetaObjectRecordData>();
 	wxASSERT(metaObjectValue);
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//список табличных частей 
-	wxTreeItemId hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
+	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
 	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+
 		if (metaTable->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
+
+		//const wxString strName = metaTable->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
 		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+
 			if (metaAttribute->IsDeleted())
 				continue;
+
 			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 				continue;
+
+			//const wxString strName = metaAttribute->GetName();
+
+			//if (!m_strSearch.IsEmpty()
+			//	&& strName.Find(m_strSearch) < 0)
+			//	continue;
+
 			AppendItem(hItem, metaAttribute);
 		}
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddReportItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordData* metaObjectValue = dynamic_cast<IMetaObjectRecordData*>(metaObject);
+	IMetaObjectRecordData* metaObjectValue = metaObject->ConvertToType<IMetaObjectRecordData>();
 	wxASSERT(metaObjectValue);
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//список табличных частей 
-	wxTreeItemId hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
+	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
 	for (auto metaTable : metaObjectValue->GetObjectTables()) {
 		if (metaTable->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
+
+		//const wxString strName = metaTable->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
 		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+
 			if (metaAttribute->IsDeleted())
 				continue;
+
 			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 				continue;
+
+			//const wxString strName = metaAttribute->GetName();
+
+			//if (!m_strSearch.IsEmpty()
+			//	&& strName.Find(m_strSearch) < 0)
+			//	continue;
+
 			AppendItem(hItem, metaAttribute);
 		}
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddInformationRegisterItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRegisterData* metaObjectValue = dynamic_cast<IMetaObjectRegisterData*>(metaObject);
+	IMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<IMetaObjectRegisterData>();
 	wxASSERT(metaObjectValue);
 
 	//Список измерений 
-	wxTreeItemId hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
+	const wxTreeItemId& hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
 	for (auto metaDimension : metaObjectValue->GetObjectDimensions()) {
+
 		if (metaDimension->IsDeleted())
 			continue;
+
 		if (metaDimension->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaDimension->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hDimentions, metaDimension);
 	}
 
 	//Список ресурсов 
-	wxTreeItemId hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
+	const wxTreeItemId& hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
 	for (auto metaResource : metaObjectValue->GetObjectResources()) {
+
 		if (metaResource->IsDeleted())
 			continue;
+
 		if (metaResource->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaResource->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hResources, metaResource);
 	}
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
 void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRegisterData* metaObjectValue = dynamic_cast<IMetaObjectRegisterData*>(metaObject);
+	IMetaObjectRegisterData* metaObjectValue = metaObject->ConvertToType<IMetaObjectRegisterData>();
 	wxASSERT(metaObjectValue);
 
 	//Список измерений 
-	wxTreeItemId hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
+	const wxTreeItemId& hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
 	for (auto metaDimension : metaObjectValue->GetObjectDimensions()) {
+
 		if (metaDimension->IsDeleted())
 			continue;
+
 		if (metaDimension->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaDimension->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hDimentions, metaDimension);
 	}
 
 	//Список ресурсов 
-	wxTreeItemId hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
+	const wxTreeItemId& hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
 	for (auto metaResource : metaObjectValue->GetObjectResources()) {
+
 		if (metaResource->IsDeleted())
 			continue;
+
 		if (metaResource->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaResource->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hResources, metaResource);
 	}
 
 	//Список аттрибутов 	
-	wxTreeItemId hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
+	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
 	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+
 		if (metaAttribute->IsDeleted())
 			continue;
+
 		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
 			continue;
+
+		//const wxString strName = metaAttribute->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hAttributes, metaAttribute);
 	}
 
 	//Формы
-	wxTreeItemId hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
+	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
 	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+
 		if (metaForm->IsDeleted())
 			continue;
+
+		//const wxString strName = metaForm->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
 		AppendItem(hForm, metaForm);
 	}
 
 	//Таблицы
-	wxTreeItemId hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplates : metaObjectValue->GetObjectTemplates()) {
-		if (metaTemplates->IsDeleted())
+	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
+	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+
+		if (metaTemplate->IsDeleted())
 			continue;
-		AppendItem(hTemplates, metaTemplates);
+
+		//const wxString strName = metaTemplate->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AppendItem(hTemplates, metaTemplate);
 	}
 }
 
@@ -1198,125 +1477,268 @@ void CMetadataTree::FillData()
 	//*                          CommonModules                       *
 	//****************************************************************
 	for (auto commonModule : m_metaData->GetMetaObject(g_metaCommonModuleCLSID)) {
+
 		if (commonModule->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeMODULES, commonModule);
+
+		const wxString& strName = commonModule->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeMODULES, commonModule);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeMODULES))
+		m_metaTreeWnd->Delete(m_treeMODULES);
 
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
 	for (auto commonForm : m_metaData->GetMetaObject(g_metaCommonFormCLSID)) {
+
 		if (commonForm->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeFORMS, commonForm);
+
+		const wxString& strName = commonForm->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeFORMS, commonForm);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeFORMS))
+		m_metaTreeWnd->Delete(m_treeFORMS);
 
 	//****************************************************************
 	//*                          CommonMakets                        *
 	//****************************************************************
 	for (auto commonTemlate : m_metaData->GetMetaObject(g_metaCommonTemplateCLSID)) {
+
 		if (commonTemlate->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeTEMPLATES, commonTemlate);
+
+		const wxString& strName = commonTemlate->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, commonTemlate);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeTEMPLATES))
+		m_metaTreeWnd->Delete(m_treeTEMPLATES);
 
 	//****************************************************************
 	//*                          Interfaces							 *
 	//****************************************************************
 	for (auto commonInterface : m_metaData->GetMetaObject(g_metaInterfaceCLSID)) {
+
 		if (commonInterface->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeINTERFACES, commonInterface);
+
+		const wxString& strName = commonInterface->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeINTERFACES, commonInterface);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeINTERFACES))
+		m_metaTreeWnd->Delete(m_treeINTERFACES);
 
 	//****************************************************************
 	//*                          Roles								 *
 	//****************************************************************
 	for (auto commonRole : m_metaData->GetMetaObject(g_metaRoleCLSID)) {
+
 		if (commonRole->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeROLES, commonRole);
+
+		const wxString& strName = commonRole->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeROLES, commonRole);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeROLES))
+		m_metaTreeWnd->Delete(m_treeROLES);
 
 	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
 	for (auto constant : m_metaData->GetMetaObject(g_metaConstantCLSID)) {
+
 		if (constant->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeCONSTANTS, constant);
+
+		const wxString& strName = constant->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeCONSTANTS, constant);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeCONSTANTS))
+		m_metaTreeWnd->Delete(m_treeCONSTANTS);
 
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
 	for (auto catalog : m_metaData->GetMetaObject(g_metaCatalogCLSID)) {
+
 		if (catalog->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeCATALOGS, catalog);
+
+		const wxString& strName = catalog->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeCATALOGS, catalog);
 		AddCatalogItem(catalog, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeCATALOGS))
+		m_metaTreeWnd->Delete(m_treeCATALOGS);
 
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
 	for (auto document : m_metaData->GetMetaObject(g_metaDocumentCLSID)) {
+
 		if (document->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeDOCUMENTS, document);
+
+		const wxString& strName = document->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeDOCUMENTS, document);
 		AddDocumentItem(document, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeDOCUMENTS))
+		m_metaTreeWnd->Delete(m_treeDOCUMENTS);
 
 	//****************************************************************
 	//*                          Enumerations                        *
 	//****************************************************************
 	for (auto enumeration : m_metaData->GetMetaObject(g_metaEnumerationCLSID)) {
+
 		if (enumeration->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeENUMERATIONS, enumeration);
+
+		const wxString& strName = enumeration->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeENUMERATIONS, enumeration);
 		AddEnumerationItem(enumeration, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeENUMERATIONS))
+		m_metaTreeWnd->Delete(m_treeENUMERATIONS);
 
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
 	for (auto dataProcessor : m_metaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+
 		if (dataProcessor->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeDATAPROCESSORS, dataProcessor);
+
+		const wxString& strName = dataProcessor->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeDATAPROCESSORS, dataProcessor);
 		AddDataProcessorItem(dataProcessor, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeDATAPROCESSORS))
+		m_metaTreeWnd->Delete(m_treeDATAPROCESSORS);
 
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
 	for (auto report : m_metaData->GetMetaObject(g_metaReportCLSID)) {
+
 		if (report->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeREPORTS, report);
+
+		const wxString& strName = report->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeREPORTS, report);
 		AddReportItem(report, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeREPORTS))
+		m_metaTreeWnd->Delete(m_treeREPORTS);
 
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
 	for (auto informationRegister : m_metaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+
 		if (informationRegister->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
+
+		const wxString& strName = informationRegister->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
 		AddInformationRegisterItem(informationRegister, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeINFORMATION_REGISTERS))
+		m_metaTreeWnd->Delete(m_treeINFORMATION_REGISTERS);
 
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
 	for (auto accumulationRegister : m_metaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+
 		if (accumulationRegister->IsDeleted())
 			continue;
-		wxTreeItemId hItem = AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);
+
+		const wxString& strName = accumulationRegister->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);
 		AddAccumulationRegisterItem(accumulationRegister, hItem);
 	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeACCUMULATION_REGISTERS))
+		m_metaTreeWnd->Delete(m_treeACCUMULATION_REGISTERS);
 
 	//set modify 
 	Modify(m_metaData->IsModified());
@@ -1327,9 +1749,9 @@ void CMetadataTree::FillData()
 
 bool CMetadataTree::Load(IMetaDataConfiguration* metaData)
 {
+	m_metaTreeWnd->Freeze();
 	ClearTree();
 	m_metaData = metaData ? metaData : IMetaDataConfiguration::Get();
-	m_metaTreeWnd->Freeze();
 	FillData(); //Fill all data from metaData
 	m_metaData->SetMetaTree(this);
 	m_metaTreeWnd->SelectItem(m_treeMETADATA);
@@ -1348,3 +1770,30 @@ bool CMetadataTree::Save()
 
 	return false;
 }
+
+/////////////////////////////////////////////////////////////
+
+void CMetadataTree::Search(const wxString strSearch)
+{
+	m_metaTreeWnd->Freeze();
+
+	//InitTree();
+	ClearTree();
+
+	m_strSearch = strSearch;
+
+	FillData(); //Fill all data from metaData
+
+	m_metaTreeWnd->SelectItem(m_treeMETADATA);
+	m_metaTreeWnd->Expand(m_treeMETADATA);
+	m_metaTreeWnd->Expand(m_treeCOMMON);
+
+	if (!m_strSearch.IsEmpty())
+		m_metaTreeWnd->ExpandAll();
+
+	m_strSearch = wxEmptyString;
+
+	m_metaTreeWnd->Thaw();
+}
+
+/////////////////////////////////////////////////////////////

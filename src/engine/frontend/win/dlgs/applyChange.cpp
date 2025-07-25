@@ -1,7 +1,7 @@
 #include "applyChange.h"
 
 CDialogApplyChange::CDialogApplyChange(const CRestructureInfo& info, wxWindow* parent) :
-	wxDialog(parent, wxID_ANY, _("Changing metadata"), wxDefaultPosition, wxSize(500, 200), wxDEFAULT_DIALOG_STYLE)
+	wxDialog(parent, wxID_ANY, _("Design changes"), wxDefaultPosition, wxSize(500, 200), wxDEFAULT_DIALOG_STYLE)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 

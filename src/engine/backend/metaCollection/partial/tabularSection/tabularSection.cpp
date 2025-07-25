@@ -238,7 +238,7 @@ bool ITabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 		return false;
 
 	wxArrayString columnName;
-	for (unsigned int idx = 0; idx < colData->GetColumnCount() - 1; idx++) {
+	for (unsigned int idx = 0; idx < colData->GetColumnCount(); idx++) {
 		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(idx);
 		wxASSERT(colInfo);
 		if (m_dataColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {

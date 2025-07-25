@@ -1986,7 +1986,9 @@ void IRecordDataObjectRef::PrepareEmptyObject()
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		if (obj->IsDeleted())
 			continue;
-		m_listObjectValue.insert_or_assign(obj->GetMetaID(), obj->CreateValue());
+		if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
+			m_listObjectValue.insert_or_assign(obj->GetMetaID(), obj->CreateValue());
+		}
 	}
 	// table is collection values 
 	for (auto& obj : m_metaObject->GetObjectTables()) {
@@ -2000,17 +2002,21 @@ void IRecordDataObjectRef::PrepareEmptyObject()
 void IRecordDataObjectRef::PrepareEmptyObject(const IRecordDataObjectRef* source)
 {
 	m_listObjectValue.clear();
+	
 	IMetaObjectAttribute* codeAttribute = m_metaObject->GetAttributeForCode();
 	wxASSERT(codeAttribute);
-	m_listObjectValue[codeAttribute->GetMetaID()] = codeAttribute->CreateValue();
+	
 	//attributes can refValue 
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		if (obj->IsDeleted())
 			continue;
-		if (obj != codeAttribute) {
+		if (obj != codeAttribute && !m_metaObject->IsDataReference(obj->GetMetaID())) {
 			source->GetValueByMetaID(obj->GetMetaID(), m_listObjectValue[obj->GetMetaID()]);
 		}
 	}
+
+	m_listObjectValue[codeAttribute->GetMetaID()] = codeAttribute->CreateValue();
+
 	// table is collection values 
 	for (auto& obj : m_metaObject->GetObjectTables()) {
 		if (obj->IsDeleted())

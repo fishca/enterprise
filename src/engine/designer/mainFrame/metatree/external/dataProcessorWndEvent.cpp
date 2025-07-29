@@ -209,6 +209,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem(wxCommandEvent &even
 		wxTheClipboard->Close();
 	}
 
+	Update();
 	event.Skip();
 }
 

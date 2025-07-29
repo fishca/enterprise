@@ -233,6 +233,7 @@ void CDataReportTree::CDataReportTreeWnd::OnPasteItem(wxCommandEvent &event)
 		wxTheClipboard->Close();
 	}
 
+	Update();
 	event.Skip();
 }
 

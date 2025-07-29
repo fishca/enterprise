@@ -212,6 +212,7 @@ void CMetadataTree::CMetadataTreeWnd::OnEndDrag(wxTreeEvent& event) {
 		}
 	}
 
+	Update();
 	event.Skip();
 }
 
@@ -347,7 +348,8 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 		}
 		wxTheClipboard->Close();
 	}
-
+	
+	Update();
 	event.Skip();
 }
 

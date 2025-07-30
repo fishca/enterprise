@@ -171,6 +171,35 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	Open(strDatabase);
 }
 
+CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src) 
+{
+	m_pDatabase = NULL;
+
+	m_fbNode = new fb_tr_list_t;
+	m_fbNode->prev = NULL;
+
+	m_fbNode->m_pTransaction = 0L;
+
+	m_pStatus = new ISC_STATUS_ARRAY();
+#if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
+	m_pInterface = new CFirebirdInterface();
+	if (!m_pInterface->Init())
+	{
+		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
+		SetErrorMessage(wxT("Error loading Firebird library"));
+		ThrowDatabaseException();
+		return;
+	}
+#endif
+
+	m_strServer = src.m_strServer;
+	m_strUser = src.m_strUser;
+	m_strPassword = src.m_strPassword;
+	m_strRole = src.m_strRole;
+
+	Open(src.m_strDatabase);
+}
+
 // dtor()
 CFirebirdDatabaseLayer::~CFirebirdDatabaseLayer()
 {
@@ -215,8 +244,8 @@ bool CFirebirdDatabaseLayer::Open()
 	if (m_pInterface == NULL)
 		return false;
 
-	wxCSConv conv(_("UTF-8"));
-	SetEncoding(&conv);
+	//wxCSConv conv(_("UTF-8"));
+	//SetEncoding(&conv);
 
 	// Combine the server and databsae path strings to pass into the isc_attach_databse function
 	wxString strDatabaseUrl;
@@ -606,8 +635,14 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 			{
 				bManageTransaction = true;
 
+				std::string tpbBuffer;
+				{
+					//tpbBuffer.push_back(isc_tpb_lock_timeout);
+					//tpbBuffer.push_back(60);
+				}
+
 				isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
-				int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pQueryTransaction, 1, &pDatabase, 0, NULL);
+				int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pQueryTransaction, 1, &pDatabase, tpbBuffer.size(), tpbBuffer.data());
 				m_pDatabase = pDatabase;
 				if (nReturn != 0)
 				{

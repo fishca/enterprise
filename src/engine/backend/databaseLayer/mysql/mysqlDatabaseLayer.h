@@ -40,6 +40,7 @@ public:
 	CMysqlDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
 	CMysqlDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
 	CMysqlDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
+	CMysqlDatabaseLayer(const CMysqlDatabaseLayer& src);
 
 	// dtor
 	virtual ~CMysqlDatabaseLayer();
@@ -56,7 +57,9 @@ public:
 	// Is the connection to the database open?
 	virtual bool IsOpen();
 
-	// transaction support
+	/// clone database  
+	virtual IDatabaseLayer* Clone() { return new CMysqlDatabaseLayer(*this); }
+
 	// transaction support
 	virtual void BeginTransaction();
 	virtual void Commit();

@@ -14,6 +14,41 @@
 #include "metadataConfiguration.h"
 
 ///////////////////////////////////////////////////////////////////////////////
+//								CApplicationDataSessionArray
+///////////////////////////////////////////////////////////////////////////////
+
+wxString CApplicationDataSessionArray::GetUserName(unsigned int idx) const {
+	if (idx > m_listSession.size())
+		return wxEmptyString;
+	return m_listSession[idx].m_strUserName;
+}
+
+wxString CApplicationDataSessionArray::GetComputerName(unsigned int idx) const {
+	if (idx > m_listSession.size())
+		return wxEmptyString;
+	return m_listSession[idx].m_strComputerName;
+}
+
+wxString CApplicationDataSessionArray::GetSession(unsigned int idx) const {
+	if (idx > m_listSession.size())
+		return wxEmptyString;
+	return m_listSession[idx].m_strSession;
+}
+
+wxString CApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
+	if (idx > m_listSession.size())
+		return wxEmptyString;
+	const wxDateTime& startedDate = m_listSession[idx].m_startedDate;
+	return startedDate.Format("%d.%m.%Y %H:%M:%S");
+}
+
+wxString CApplicationDataSessionArray::GetApplication(unsigned int idx) const {
+	if (idx > m_listSession.size())
+		return wxEmptyString;
+	return appData->GetModeDescr(m_listSession[idx].m_runMode);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 //								CApplicationData
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +61,7 @@ CApplicationData::CApplicationData(eRunMode runMode) :
 	m_sessionGuid(wxNewUniqueGuid),
 	m_startedDate(wxDateTime::Now()),
 	m_strComputer(wxGetHostName()),
-	m_sessionThread(new CApplicationDataSessionThread())
+	m_sessionUpdater(nullptr)
 {
 }
 

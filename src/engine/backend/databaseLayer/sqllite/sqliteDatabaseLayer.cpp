@@ -29,6 +29,15 @@ CSqliteDatabaseLayer::CSqliteDatabaseLayer(const wxString& strDatabase, bool mus
 	Open(strDatabase, mustExist);
 }
 
+CSqliteDatabaseLayer::CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src)
+	: IDatabaseLayer()
+{
+	m_pDatabase = nullptr; //new sqlite3;
+	wxCSConv conv(_("UTF-8"));
+	SetEncoding(&conv);
+	Open(wxEmptyString, false);
+}
+
 // dtor()
 CSqliteDatabaseLayer::~CSqliteDatabaseLayer()
 {

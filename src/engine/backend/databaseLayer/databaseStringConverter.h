@@ -17,16 +17,18 @@
 class BACKEND_API CDatabaseStringConverter
 {
 public:
+
 	// ctor
 	CDatabaseStringConverter();
-	CDatabaseStringConverter(const wxChar* charset);
+	CDatabaseStringConverter(const CDatabaseStringConverter& src);
 
 	// dtor
-	virtual ~CDatabaseStringConverter() { }
+	virtual ~CDatabaseStringConverter() {
+		wxDELETE(m_Encoding);
+	}
 
-	void SetEncoding(wxFontEncoding encoding);
 	void SetEncoding(const wxCSConv* conv);
-	const wxCSConv* GetEncoding() { return &m_Encoding; }
+	const wxCSConv* GetEncoding();
 
 	virtual const wxCharBuffer ConvertToUnicodeStream(const wxString& inputString);
 	virtual unsigned int GetEncodedStreamLength(const wxString& inputString);
@@ -35,8 +37,9 @@ public:
 	static const wxCharBuffer ConvertToUnicodeStream(const wxString& inputString, const char* encoding);
 	static wxString ConvertFromUnicodeStream(const char* inputBuffer, const char* encoding);
 	static unsigned int GetEncodedStreamLength(const wxString& inputString, const char* encoding);
+
 private:
-	wxCSConv m_Encoding;
+	wxCSConv* m_Encoding;
 };
 
 #endif // __DATABASE_STRING_CONVERTER_H__

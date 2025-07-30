@@ -3,43 +3,42 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/appData.h"
 
-void CDialogActiveUser::RefreshTable()
+void CDialogActiveUser::RefreshActiveUserTable()
 {
-	wxString current_session;
-	const long selected = m_activeTable->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	if (selected != -1) current_session = m_activeTable->GetItemText(selected, 4);
+	const CApplicationDataSessionArray& arr = appData->GetSessionArray();
 
-	m_activeTable->ClearAll();
+	if (m_sessionArrayHash != arr.GetSessionArrayHash()) {
 
-	m_activeTable->AppendColumn(_("User"), wxLIST_FORMAT_LEFT, 190);
-	m_activeTable->AppendColumn(_("Application"), wxLIST_FORMAT_LEFT, 120);
-	m_activeTable->AppendColumn(_("Started"), wxLIST_FORMAT_LEFT, 120);
-	m_activeTable->AppendColumn(_("Computer"), wxLIST_FORMAT_LEFT, 145);
-	m_activeTable->AppendColumn(_("Session"), wxLIST_FORMAT_LEFT, 0); //hide 
+		wxString current_session;
+		const long selected = m_activeTable->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if (selected != -1) current_session = m_activeTable->GetItemText(selected, 4);
 
-	IDatabaseResultSet* result =
-		db_query->RunQueryWithResults("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session", session_table);
+		m_activeTable->ClearAll();
 
-	while (result->Next()) {
+		m_activeTable->AppendColumn(_("User"), wxLIST_FORMAT_LEFT, 190);
+		m_activeTable->AppendColumn(_("Application"), wxLIST_FORMAT_LEFT, 120);
+		m_activeTable->AppendColumn(_("Started"), wxLIST_FORMAT_LEFT, 120);
+		m_activeTable->AppendColumn(_("Computer"), wxLIST_FORMAT_LEFT, 145);
+		m_activeTable->AppendColumn(_("Session"), wxLIST_FORMAT_LEFT, 0); //hide 
 
-		wxString userName = result->GetResultString("userName");
-		eRunMode runMode = (eRunMode)result->GetResultInt("application");
-		wxDateTime startedDate = result->GetResultDate("started");
-		wxString computerName = result->GetResultString("computer");
-		wxString session = result->GetResultString("session");
+		for (unsigned int idx = 0; idx < arr.GetSessionCount(); idx++) {
 
-		const long index = m_activeTable->InsertItem(m_activeTable->GetItemCount(), userName);
+			const long index = m_activeTable->InsertItem(m_activeTable->GetItemCount(), arr.GetUserName(idx));
 
-		m_activeTable->SetItem(index, 0, userName);
-		m_activeTable->SetItem(index, 1, appData->GetModeDescr(runMode));
-		m_activeTable->SetItem(index, 2, startedDate.Format("%d.%m.%Y %H:%M:%S"));
-		m_activeTable->SetItem(index, 3, computerName);
-		m_activeTable->SetItem(index, 4, session);
+			m_activeTable->SetItem(index, 0, arr.GetUserName(idx));
+			m_activeTable->SetItem(index, 1, arr.GetApplication(idx));
+			m_activeTable->SetItem(index, 2, arr.GetStartedDate(idx));
+			m_activeTable->SetItem(index, 3, arr.GetComputerName(idx));
+			m_activeTable->SetItem(index, 4, arr.GetSession(idx));
 
-		if (current_session == session)
-			m_activeTable->SetItemState(index, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
+			if (current_session == arr.GetSession(idx))
+				m_activeTable->SetItemState(index, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
+
+		}
+	
 	}
-	result->Close();
+
+	m_sessionArrayHash = arr.GetSessionArrayHash();
 }
 
 CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
@@ -56,7 +55,7 @@ CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxSt
 	this->Layout();
 	this->Centre(wxBOTH);
 
-	RefreshTable();
+	RefreshActiveUserTable();
 
 	m_activeTableScanner->Bind(wxEVT_TIMER, &CDialogActiveUser::OnIdleHandler, this);
 	m_activeTableScanner->Start(1000);
@@ -66,10 +65,4 @@ CDialogActiveUser::~CDialogActiveUser()
 {
 	if (m_activeTableScanner->IsRunning())  m_activeTableScanner->Stop();
 	m_activeTableScanner->Unbind(wxEVT_TIMER, &CDialogActiveUser::OnIdleHandler, this);
-}
-
-void CDialogActiveUser::OnIdleHandler(wxTimerEvent& event)
-{
-	RefreshTable();
-	event.Skip();
 }

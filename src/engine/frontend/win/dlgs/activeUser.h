@@ -13,20 +13,24 @@
 #include <wx/dialog.h>
 #include <wx/timer.h>
 
+#include "backend/guid.h"
 #include "frontend/frontend.h"
 
 class FRONTEND_API CDialogActiveUser : public wxDialog {
 	wxListCtrl* m_activeTable;
 	std::shared_ptr<wxTimer> m_activeTableScanner;
+	Guid m_sessionArrayHash; 
 public:
 
-	void RefreshTable();
+	void RefreshActiveUserTable();
 
 	CDialogActiveUser(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Active users"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 250), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 	virtual ~CDialogActiveUser();
 
 protected:
-	void OnIdleHandler(wxTimerEvent& event);
+	void OnIdleHandler(wxTimerEvent& event) { 
+		RefreshActiveUserTable();
+	}
 };
 
 #endif 

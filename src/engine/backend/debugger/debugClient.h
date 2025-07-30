@@ -11,7 +11,7 @@
 
 class BACKEND_API CDebuggerClient {
 
-	static CDebuggerClient* ms_debugClient;
+	static CDebuggerClient* sm_debugClient;
 
 	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
 	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions
@@ -88,21 +88,10 @@ protected:
 				error == wxSOCKET_WOULDBLOCK;
 		}
 
-		wxString GetHostName() const {
-			return m_hostName;
-		}
-
-		unsigned short GetPort() const {
-			return m_port;
-		}
-
-		wxString GetComputerName() const {
-			return m_compName;
-		}
-
-		wxString GetUserName() const {
-			return m_userName;
-		}
+		wxString GetHostName() const { return m_hostName; }
+		unsigned short GetPort() const { return m_port; }
+		wxString GetComputerName() const { return m_compName; }
+		wxString GetUserName() const { return m_userName; }
 
 		bool AttachConnection();
 		bool DetachConnection(bool kill = false);
@@ -130,9 +119,7 @@ protected:
 		// of this thread.
 		virtual ExitCode Entry();
 
-		virtual ConnectionType GetConnectionType() const {
-			return m_connectionType;
-		};
+		virtual ConnectionType GetConnectionType() const { return m_connectionType; }
 
 	protected:
 
@@ -148,13 +135,12 @@ protected:
 
 	CDebuggerThreadClient* m_activeSocket = nullptr;
 	CDebuggerAdapterClient* m_adapter = nullptr;
+
 	std::vector<CDebuggerThreadClient*>	m_listConnection;
 
 public:
 
-	void SetBridge(IDebuggerClientBridge* bridge) {
-		m_adapter->SetBridge(bridge);
-	}
+	void SetBridge(IDebuggerClientBridge* bridge) { m_adapter->SetBridge(bridge); }
 
 	virtual ~CDebuggerClient() {
 		while (m_listConnection.size()) {
@@ -163,9 +149,7 @@ public:
 		wxDELETE(m_adapter);
 	}
 
-	static CDebuggerClient* Get() {
-		return ms_debugClient;
-	}
+	static CDebuggerClient* Get() { return sm_debugClient; }
 
 	// Force the static appData instance to Init()
 	static bool Initialize();
@@ -226,9 +210,7 @@ public:
 		return false;
 	}
 
-	bool IsEnterLoop() const {
-		return m_enterLoop;
-	}
+	bool IsEnterLoop() const { return m_enterLoop; }
 
 public:
 
@@ -274,9 +256,18 @@ protected:
 	bool RemoveAllBreakpointInDB();
 
 	//commands:
-	void AppendConnection(CDebuggerThreadClient* client) {
-		m_listConnection.push_back(client);
+	bool CreateConnection(const wxString& hostName, unsigned short port) {
+		CDebuggerThreadClient* createdConnection = FindConnection(hostName, port);
+		if (createdConnection == nullptr) {
+			createdConnection = new CDebuggerThreadClient(this, hostName, port);
+			//m_listConnection.push_back(createdConnection);
+			createdConnection->SetPriority(wxPRIORITY_MIN);
+			return createdConnection->Run() != wxTHREAD_NO_ERROR;
+		}
+		return true;
 	}
+
+	void AppendConnection(CDebuggerThreadClient* client) { m_listConnection.push_back(client); }
 
 	void DeleteConnection(CDebuggerThreadClient* client) {
 		if (m_activeSocket == client) {

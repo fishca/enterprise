@@ -57,6 +57,56 @@ COdbcDatabaseLayer::COdbcDatabaseLayer()
 #endif
 }
 
+COdbcDatabaseLayer::COdbcDatabaseLayer(const COdbcDatabaseLayer& src)
+{
+	m_bIsConnected = false;
+	ResetErrorCodes();
+
+	m_pInterface = new COdbcInterface();
+	if (!m_pInterface->Init())
+	{
+		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
+		SetErrorMessage(wxT("Error loading ODBC library"));
+		ThrowDatabaseException();
+		return;
+	}
+
+	SQLHENV sqlEnvHandle = (SQLHENV)m_sqlEnvHandle;
+	SQLRETURN nRet = m_pInterface->GetSQLAllocHandle()(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnvHandle);
+	m_sqlEnvHandle = sqlEnvHandle;
+	if (nRet != SQL_SUCCESS)
+	{
+		InterpretErrorCodes(nRet);
+		ThrowDatabaseException();
+	}
+
+	nRet = m_pInterface->GetSQLSetEnvAttr()((SQLHENV)m_sqlEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0);
+	if (nRet != SQL_SUCCESS)
+	{
+		InterpretErrorCodes(nRet);
+		ThrowDatabaseException();
+	}
+
+	SQLHDBC sqlHDBC = (SQLHDBC)m_sqlHDBC;
+	nRet = m_pInterface->GetSQLAllocHandle()(SQL_HANDLE_DBC, (SQLHENV)m_sqlEnvHandle, &sqlHDBC);
+	m_sqlHDBC = sqlHDBC;
+	if (nRet != SQL_SUCCESS)
+	{
+		InterpretErrorCodes(nRet);
+		ThrowDatabaseException();
+	}
+
+	m_strDSN = wxEmptyString;
+	m_strUser = wxEmptyString;
+	m_strPassword = wxEmptyString;
+	m_strConnection = wxEmptyString;
+
+#if wxUSE_GUI
+	m_bPrompt = false;
+	m_parentContext = nullptr;
+#endif
+}
+
 COdbcDatabaseLayer::~COdbcDatabaseLayer()
 {
 	Close();

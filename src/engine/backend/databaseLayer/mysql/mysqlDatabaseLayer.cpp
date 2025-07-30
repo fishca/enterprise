@@ -115,6 +115,26 @@ CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strServer, const wxStri
 	Open(strDatabase);
 }
 
+CMysqlDatabaseLayer::CMysqlDatabaseLayer(const CMysqlDatabaseLayer& src)
+{
+#if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
+	m_pInterface = new CMysqlInterface();
+	if (!m_pInterface->Init())
+	{
+		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
+		SetErrorMessage(wxT("Error loading MySQL library"));
+		ThrowDatabaseException();
+		return;
+	}
+#endif
+	InitDatabase();
+	m_strServer = src.m_strServer;
+	m_iPort = src.m_iPort; // default
+	m_strUser = src.m_strUser;
+	m_strPassword = src.m_strPassword;
+	Open(src.m_strDatabase);
+}
+
 // dtor
 CMysqlDatabaseLayer::~CMysqlDatabaseLayer()
 {

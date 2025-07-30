@@ -26,6 +26,7 @@ public:
 	CSqliteDatabaseLayer();
 	CSqliteDatabaseLayer(const wxString& strDatabase, bool mustExist = false);
 	CSqliteDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
+	CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src);
 
 	// dtor()
 	virtual ~CSqliteDatabaseLayer();
@@ -39,6 +40,9 @@ public:
 
 	// Is the connection to the database open?
 	virtual bool IsOpen();
+
+	/// clone database  
+	virtual IDatabaseLayer* Clone() { return new CSqliteDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();

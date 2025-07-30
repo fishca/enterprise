@@ -8,7 +8,7 @@
 
 // ctor
 CPostgresDatabaseLayer::CPostgresDatabaseLayer()
-	: IDatabaseLayer(), m_pDatabase(nullptr)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -28,7 +28,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer()
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
-	: IDatabaseLayer(), m_pDatabase(nullptr)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -49,7 +49,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase)
-	: IDatabaseLayer(), m_pDatabase(nullptr)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -70,7 +70,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: IDatabaseLayer(), m_pDatabase(nullptr)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -91,7 +91,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase, cons
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: IDatabaseLayer(), m_pDatabase(nullptr)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -112,7 +112,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
-	: IDatabaseLayer()
+	: IDatabaseLayer(), m_transaction_is_active(false)
 {
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	m_pInterface = new CPostgresInterface();
@@ -130,6 +130,28 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	m_strPort = strPort;
 
 	Open(strDatabase);
+}
+
+CPostgresDatabaseLayer::CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src)
+	: IDatabaseLayer(), m_pDatabase(nullptr), m_transaction_is_active(false)
+{
+#if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
+	m_pInterface = new CPostgresInterface();
+	if (!m_pInterface->Init())
+	{
+		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		ThrowDatabaseException();
+		return;
+	}
+#endif
+	m_strServer = src.m_strServer;
+	m_strUser = src.m_strUser;
+	m_strPassword = src.m_strPassword;
+	m_strDatabase = src.m_strDatabase;
+	m_strPort = src.m_strPort;
+
+	Open(src.m_strDatabase);
 }
 
 // dtor
@@ -195,7 +217,7 @@ bool CPostgresDatabaseLayer::Open()
 	else
 	{
 		m_pInterface->GetPQsetClientEncoding()((PGconn*)m_pDatabase, "UTF-8");
-		wxCSConv conv((const wxChar*)(m_pInterface->GetPQencodingToChar()(m_pInterface->GetPQclientEncoding()((PGconn*)m_pDatabase))));
+		wxCSConv conv((const char*)(m_pInterface->GetPQencodingToChar()(m_pInterface->GetPQclientEncoding()((PGconn*)m_pDatabase))));
 		SetEncoding(&conv);
 	}
 
@@ -211,7 +233,7 @@ bool CPostgresDatabaseLayer::Open()
 		databaseBuffer = ConvertToUnicodeStream(m_strDatabase);
 		pDatabase = databaseBuffer;
 
-		if (!DatabaseExists(m_strDatabase)) 
+		if (!DatabaseExists(m_strDatabase))
 		{
 			bool result = DoRunQuery("CREATE DATABASE " + m_strDatabase, false) != DATABASE_LAYER_QUERY_RESULT_ERROR;
 			if (!result)
@@ -233,10 +255,10 @@ bool CPostgresDatabaseLayer::Open()
 		ThrowDatabaseException();
 		return false;
 	}
-	else 
+	else
 	{
 		m_pInterface->GetPQsetClientEncoding()((PGconn*)m_pDatabase, "UTF-8");
-		wxCSConv conv((const wxChar*)(m_pInterface->GetPQencodingToChar()(m_pInterface->GetPQclientEncoding()((PGconn*)m_pDatabase))));
+		wxCSConv conv((const char*)(m_pInterface->GetPQencodingToChar()(m_pInterface->GetPQclientEncoding()((PGconn*)m_pDatabase))));
 		SetEncoding(&conv);
 	}
 
@@ -317,21 +339,24 @@ bool CPostgresDatabaseLayer::IsOpen()
 void CPostgresDatabaseLayer::BeginTransaction()
 {
 	DoRunQuery(_("BEGIN"), false);
+	m_transaction_is_active = true;
 }
 
 void CPostgresDatabaseLayer::Commit()
 {
 	DoRunQuery(_("COMMIT"), false);
+	m_transaction_is_active = false;
 }
 
 void CPostgresDatabaseLayer::RollBack()
 {
 	DoRunQuery(_("ROLLBACK"), false);
+	m_transaction_is_active = false; 
 }
 
 bool CPostgresDatabaseLayer::IsActiveTransaction()
 {
-	return DoRunQuery(_("SELECT in_transaction() IS NOT NULL AS is_transaction;"), false);
+	return m_transaction_is_active;
 }
 
 // query database
@@ -572,7 +597,7 @@ bool CPostgresDatabaseLayer::ViewExists(const wxString& view)
 	{
 		CloseStatement(pStatement);
 		pStatement = nullptr;
-}
+	}
 
 	return bReturn;
 }
@@ -592,9 +617,9 @@ wxArrayString CPostgresDatabaseLayer::GetTables()
 		while (pResult->Next())
 		{
 			returnArray.Add(pResult->GetResultString(1));
-}
+		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-}
+	}
 	catch (DatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
@@ -611,10 +636,10 @@ wxArrayString CPostgresDatabaseLayer::GetTables()
 	{
 		CloseResultSet(pResult);
 		pResult = nullptr;
-}
+	}
 
 	return returnArray;
-	}
+}
 
 wxArrayString CPostgresDatabaseLayer::GetViews()
 {
@@ -631,7 +656,7 @@ wxArrayString CPostgresDatabaseLayer::GetViews()
 		while (pResult->Next())
 		{
 			returnArray.Add(pResult->GetResultString(1));
-}
+		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
 	catch (DatabaseLayerException& e)

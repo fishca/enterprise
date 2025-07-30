@@ -12,12 +12,12 @@
 #endif 
 
 ///////////////////////////////////////////////////////////////////////
-CDebuggerClient* CDebuggerClient::ms_debugClient = nullptr;
+CDebuggerClient* CDebuggerClient::sm_debugClient = nullptr;
 ///////////////////////////////////////////////////////////////////////
 
 void CDebuggerClient::Destroy()
 {
-	wxDELETE(ms_debugClient);
+	wxDELETE(sm_debugClient);
 }
 
 bool CDebuggerClient::Initialize()
@@ -26,22 +26,20 @@ bool CDebuggerClient::Initialize()
 		CDebuggerClient::CreateBreakpointDatabase();
 	}
 
-	if (ms_debugClient != nullptr) ms_debugClient->Destroy();
+	if (sm_debugClient != nullptr) sm_debugClient->Destroy();
 
-	ms_debugClient = new CDebuggerClient();
-	ms_debugClient->LoadBreakpointCollection();
+	sm_debugClient = new CDebuggerClient();
+	sm_debugClient->LoadBreakpointCollection();
 
-	for (unsigned short currentPort = defaultDebuggerPort; currentPort < defaultDebuggerPort + diapasonDebuggerPort; currentPort++) {
-		CDebuggerThreadClient* foundedConnection = ms_debugClient->FindConnection(defaultHost, currentPort);
-		if (foundedConnection == nullptr) {
-			CDebuggerThreadClient* connection = new CDebuggerThreadClient(ms_debugClient, defaultHost, currentPort);
-			//run threading
-			if (connection->Run() != wxTHREAD_NO_ERROR) {
-				wxDELETE(connection);
-			}
-		}
+	unsigned int debugOffsetPort = 0;
+	while (debugOffsetPort < diapasonDebuggerPort) {	
+		sm_debugClient->CreateConnection(
+			defaultHost, 
+			defaultDebuggerPort + debugOffsetPort
+		);
+		debugOffsetPort++;
 	}
-
+	
 	return true;
 }
 

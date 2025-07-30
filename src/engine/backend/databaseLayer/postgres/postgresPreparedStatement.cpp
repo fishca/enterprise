@@ -49,7 +49,7 @@ CPostgresPreparedStatement* CPostgresPreparedStatement::CreateStatement(CPostgre
 
 	CPostgresPreparedStatement* pStatement = new CPostgresPreparedStatement(pInterface);
 	const char* strEncoding = pInterface->GetPQencodingToChar()(pInterface->GetPQclientEncoding()(pDatabase));
-	wxCSConv conv((const wxChar*)strEncoding);
+	wxCSConv conv((const char*)strEncoding);
 	pStatement->SetEncoding(&conv);
 	while (start != stop)
 	{

@@ -37,6 +37,7 @@ public:
 	CPostgresDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
 	CPostgresDatabaseLayer(const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
 	CPostgresDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
+	CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src);
 
 	// dtor
 	virtual ~CPostgresDatabaseLayer();
@@ -54,6 +55,9 @@ public:
 
 	// Is the connection to the database open?
 	virtual bool IsOpen();
+
+	/// clone database  
+	virtual IDatabaseLayer* Clone() { return new CPostgresDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -88,6 +92,9 @@ protected:
 	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
 private:
+
+	bool m_transaction_is_active; 
+
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
 	CPostgresInterface* m_pInterface;
 #endif

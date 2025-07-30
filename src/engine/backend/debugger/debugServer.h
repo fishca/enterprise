@@ -17,7 +17,7 @@ struct CRunContext;
 
 class BACKEND_API CDebuggerServer {
 
-	static CDebuggerServer* ms_debugServer;
+	static CDebuggerServer* sm_debugServer;
 
 	bool		m_bUseDebug;
 	bool		m_bDoLoop;
@@ -27,7 +27,7 @@ class BACKEND_API CDebuggerServer {
 	unsigned int m_numCurrentNumberStopContext;
 
 	bool		m_waitConnection;
-	
+
 	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
 	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions
 
@@ -48,9 +48,7 @@ class BACKEND_API CDebuggerServer {
 public:
 
 	virtual ~CDebuggerServer();
-	static CDebuggerServer* Get() {
-		return ms_debugServer;
-	}
+	static CDebuggerServer* Get() { return sm_debugServer; }
 
 	// Force the static appData instance to Init()
 	static void Initialize(const int flags);
@@ -62,9 +60,7 @@ public:
 		return true;
 	}
 
-	bool AllowDebugging() const {
-		return !m_waitConnection;
-	}
+	bool AllowDebugging() const { return !m_waitConnection; }
 
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
@@ -94,9 +90,7 @@ public:
 
 		void Disconnect();
 
-		ConnectionType GetConnectionType() const {
-			return m_connectionType;
-		}
+		ConnectionType GetConnectionType() const { return m_connectionType; }
 
 		CDebuggerThreadServer(CDebuggerServer* server, wxSocketBase* socket);
 		virtual ~CDebuggerThreadServer();

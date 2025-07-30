@@ -32,8 +32,10 @@ public:
 #if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
 	CFirebirdDatabaseLayer(unsigned int pDatabase) { m_pDatabase = pDatabase; }
 #else 
-	CFirebirdDatabaseLayer(void *pDatabase) { m_pDatabase = pDatabase; }
+	CFirebirdDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
 #endif
+
+	CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src);
 
 	// dtor()
 	virtual ~CFirebirdDatabaseLayer();
@@ -49,6 +51,9 @@ public:
 
 	// Is the connection to the database open?
 	virtual bool IsOpen();
+
+	/// clone database  
+	virtual IDatabaseLayer* Clone() { return new CFirebirdDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -107,7 +112,7 @@ private:
 #if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
 	unsigned int m_pDatabase;
 #else
-	void *m_pDatabase;
+	void* m_pDatabase;
 #endif
 
 	void *m_pStatus;

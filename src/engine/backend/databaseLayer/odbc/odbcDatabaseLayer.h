@@ -27,6 +27,7 @@ class BACKEND_API COdbcDatabaseLayer : public IDatabaseLayer
 public:
 	// ctor()
 	COdbcDatabaseLayer();
+	COdbcDatabaseLayer(const COdbcDatabaseLayer& src);
 
 	// dtor()
 	virtual ~COdbcDatabaseLayer();
@@ -44,6 +45,9 @@ public:
 
 	// Is the connection to the database open?
 	virtual bool IsOpen();
+
+	/// clone database  
+	virtual IDatabaseLayer* Clone() { return new COdbcDatabaseLayer(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -66,7 +70,7 @@ public:
 	static bool IsAvailable();
 
 protected:
-	
+
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
 	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);

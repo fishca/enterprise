@@ -1,28 +1,41 @@
 #include "databaseStringConverter.h"
 
-static wxCriticalSection m_stringConverterCS;
+static wxCriticalSection s_dbStringConverterCS;
+static wxCSConv g_def_encoding = wxT("UTF-8");
 
 // Default the encoding converter
 CDatabaseStringConverter::CDatabaseStringConverter()
-	: m_Encoding(wxT("UTF-8"))
+	: m_Encoding(nullptr)
 {
-	wxCriticalSectionLocker enter(m_stringConverterCS);
 }
 
-CDatabaseStringConverter::CDatabaseStringConverter(const wxChar* charset)
-	: m_Encoding(charset)
+CDatabaseStringConverter::CDatabaseStringConverter(const CDatabaseStringConverter& src)
+	: m_Encoding(nullptr)
 {
-	wxCriticalSectionLocker enter(m_stringConverterCS);
-}
-
-void CDatabaseStringConverter::SetEncoding(wxFontEncoding encoding)
-{
-	m_Encoding = wxCSConv(encoding);
+	if (src.m_Encoding != nullptr) {
+		m_Encoding = new wxCSConv(*src.m_Encoding);
+	}
 }
 
 void CDatabaseStringConverter::SetEncoding(const wxCSConv* conv)
 {
-	m_Encoding = *conv;
+	if (conv != &g_def_encoding) {
+
+		wxCriticalSectionLocker enter(s_dbStringConverterCS);
+
+		if (m_Encoding != nullptr)
+			wxDELETE(m_Encoding);
+
+		m_Encoding = new wxCSConv(*conv);
+	}
+}
+
+const wxCSConv* CDatabaseStringConverter::GetEncoding()
+{
+	if (m_Encoding == nullptr)
+		return &g_def_encoding;
+
+	return m_Encoding;
 }
 
 const wxCharBuffer CDatabaseStringConverter::ConvertToUnicodeStream(const wxString& inputString)

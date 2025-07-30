@@ -24,19 +24,114 @@ enum eRunMode {
 #define _app_start_create_debug_server_flag 0x0080
 //////////////////////////////////////////////////////////////////
 
-class IDatabaseLayer;
+class BACKEND_API IDatabaseLayer;
+
+#pragma region session  
+class BACKEND_API CApplicationDataSessionArray {
+
+	Guid m_sessionArrayHash;
+
+	struct CApplicationDataSessionUnit {
+
+		eRunMode m_runMode;
+		wxDateTime m_startedDate;
+		wxString m_strUserName, m_strComputerName, m_strSession;
+
+		CApplicationDataSessionUnit(eRunMode runMode, const wxDateTime& startedDateTime,
+			const wxString strUserName, const wxString strComputerName, const Guid& strSession) :
+			m_runMode(runMode),
+			m_startedDate(startedDateTime),
+			m_strUserName(strUserName),
+			m_strComputerName(strComputerName),
+			m_strSession(strSession.str())
+		{
+		}
+
+		CApplicationDataSessionUnit(const CApplicationDataSessionUnit& src) :
+			m_runMode(src.m_runMode),
+			m_startedDate(src.m_startedDate),
+			m_strUserName(src.m_strUserName),
+			m_strComputerName(src.m_strComputerName),
+			m_strSession(src.m_strSession)
+		{
+		}
+
+		bool operator == (const CApplicationDataSessionUnit& other) const { return m_strSession == other.m_strSession && other.m_strUserName == m_strUserName; }
+		bool operator != (const CApplicationDataSessionUnit& other) const { return m_strSession != other.m_strSession || other.m_strUserName != m_strUserName; }
+
+		// default comparison to use if nothing else is specified:
+		bool operator < (const CApplicationDataSessionUnit& other) const { return m_strSession < other.m_strSession && m_strUserName < other.m_strUserName; }
+	};
+
+	std::vector<CApplicationDataSessionUnit> m_listSession;
+
+public:
+
+	bool operator == (const CApplicationDataSessionArray& other) const { return m_listSession == other.m_listSession; }
+	bool operator != (const CApplicationDataSessionArray& other) const { return m_listSession != other.m_listSession; }
+
+	CApplicationDataSessionArray() : m_sessionArrayHash(wxNewUniqueGuid) {}
+	CApplicationDataSessionArray(const CApplicationDataSessionArray& src) : m_sessionArrayHash(src.m_sessionArrayHash), m_listSession(src.m_listSession) {}
+
+	void AppendSession(eRunMode runMode, const wxDateTime& startedTime,
+		const wxString strUserName, const wxString strComputerName, const Guid& strSession) {
+		m_listSession.emplace_back(
+			runMode,
+			startedTime,
+			strUserName,
+			strComputerName,
+			strSession
+		);
+	}
+
+	wxString GetSessionArrayHash() const { return m_sessionArrayHash; }
+
+	wxString GetUserName(unsigned int idx) const;
+	wxString GetComputerName(unsigned int idx) const;
+	wxString GetSession(unsigned int idx) const;
+	wxString GetStartedDate(unsigned int idx) const;
+	wxString GetApplication(unsigned int idx) const;
+
+	void ClearSession() {
+		m_sessionArrayHash = wxNewUniqueGuid;
+		m_listSession.clear();
+	}
+
+	unsigned int const GetSessionCount() const { return m_listSession.size(); }
+};
+#pragma endregion
 
 // This class is a singleton class.
 class BACKEND_API CApplicationData {
 
-	class CApplicationDataSessionThread : public wxThread {
+#pragma region session  
+	class CApplicationDataSessionUpdater : public wxThread {
+		bool m_sessionCreated, m_sessionStarted;
+		CApplicationDataSessionArray m_sessionArray;
+		std::shared_ptr<IDatabaseLayer> m_session_db;
+		const Guid m_session;
+		wxDateTime m_currentDateTime;
+		static wxCriticalSection sm_sessionLocker;
+	private:
+		void Job_ClearLostSession();
+		void Job_CalcActiveSession();
+		void Job_UpdateActiveSession();
+	private:
+		void ClearLostSessionUpdater();
+		bool VerifySessionUpdater() const;
 	public:
-		CApplicationDataSessionThread() : wxThread(wxTHREAD_JOINABLE) {}
+		CApplicationDataSessionUpdater(CApplicationData* application, const Guid& session);
+		virtual ~CApplicationDataSessionUpdater();
+		bool InitSessionUpdater();
+		void StartSessionUpdater();
+		const CApplicationDataSessionArray GetSessionArray() const;
 	protected:
 		virtual ExitCode Entry();
 	};
+#pragma endregion
 
 	CApplicationData(eRunMode runMode);
+
 public:
 
 	virtual ~CApplicationData();
@@ -49,7 +144,7 @@ public:
 	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase);
 	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
 		const wxString& strUser = _(""), const wxString& strPassword = _(""), const wxString& strDatabase = _(""));
-	
+
 	static bool DestroyAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
 
@@ -95,9 +190,14 @@ public:
 	wxString GetComputerName() const { return m_strComputer; }
 	wxArrayString GetAllowedUser() const;
 
+#pragma region session  
+	const CApplicationDataSessionArray GetSessionArray() const {
+		return m_sessionUpdater->GetSessionArray();
+	}
+#pragma endregion 
+
 private:
 	bool HasAllowedUser() const;
-	void RefreshActiveUser();
 	bool AuthenticationUser(const wxString& userName, const wxString& md5Password) const;
 	bool StartSession(const wxString& userName, const wxString& md5Password);
 	bool CloseSession();
@@ -118,8 +218,9 @@ private:
 	wxDateTime m_startedDate;
 	wxDateTime m_lastActivity;
 	Guid m_sessionGuid;
+
 	std::shared_ptr<IDatabaseLayer> m_db;
-	std::shared_ptr<wxThread> m_sessionThread;
+	std::shared_ptr<CApplicationDataSessionUpdater> m_sessionUpdater;
 
 	bool m_connected_to_db = false;
 
@@ -130,7 +231,7 @@ private:
 	wxString m_strServer;
 	wxString m_strPort;
 	wxString m_strDatabase;
-	
+
 	wxString m_strUser;
 	wxString m_strPassword;
 

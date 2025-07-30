@@ -43,6 +43,9 @@ public:
 	/// Is the connection to the database open?
 	virtual bool IsOpen() = 0;
 
+	/// clone database  
+	virtual IDatabaseLayer *Clone() = 0;
+
 	// transaction support
 	
 	/// Begin a transaction

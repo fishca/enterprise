@@ -145,6 +145,32 @@ void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 
 	m_session_db->CloseResultSet(dbResultSetRecord);
 	m_session_db->Commit();
+
+	//clear session 
+	m_sessionArray.ClearSession();
+
+	//append sessions 
+	IDatabaseResultSet* dbSessionResult = m_session_db->RunQueryWithResults(
+		//wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session WITH LOCK SKIP LOCKED;"),
+		wxT("SELECT userName, application, started, computer, session FROM %s ORDER BY started, session;"),
+		session_table
+	);
+
+	if (dbSessionResult != nullptr) {
+
+		while (dbSessionResult->Next()) {
+
+			m_sessionArray.AppendSession(
+				static_cast<eRunMode>(dbSessionResult->GetResultInt("application")),
+				dbSessionResult->GetResultDate("started"),
+				dbSessionResult->GetResultString("userName"),
+				dbSessionResult->GetResultString("computer"),
+				dbSessionResult->GetResultString("session")
+			);
+		};
+	}
+
+	m_session_db->CloseResultSet(dbSessionResult);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -190,22 +216,25 @@ const CApplicationDataSessionArray CApplicationData::CApplicationDataSessionUpda
 
 bool CApplicationData::CApplicationDataSessionUpdater::VerifySessionUpdater() const
 {
-	IDatabaseResultSet* resultSet =
-		m_session_db->RunQueryWithResults(
-			wxT("SELECT * FROM %s WHERE application = %i"),
-			session_table,
-			appData->m_runMode
-		);
+	for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); idx++) {
 
-	if (resultSet == nullptr)
-		return false;
-	unsigned int countSession = 0;
-	if (resultSet->Next())
-		countSession++;
-	resultSet->Close();
+		if (appData->m_runMode == m_sessionArray.GetSessionApplication(idx) &&
+			appData->m_runMode == eDESIGNER_MODE) {
 
-	if (appData->m_runMode == eDESIGNER_MODE && countSession > 0)
-		return false;
+			try {
+				CBackendException::Error(
+					_("Another designer process is already running:\n%s, %s, %s"),		
+					m_sessionArray.GetStartedDate(idx),
+					m_sessionArray.GetComputerName(idx),
+					m_sessionArray.GetUserName(idx)
+				);
+			}
+			catch (...) {
+			}
+
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -222,17 +251,11 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 	//ñlear lost session 
 	ClearLostSessionUpdater();
 
+	Job_UpdateActiveSession();
+
 	//verify session updater
 	if (!VerifySessionUpdater())
 		return (wxThread::ExitCode)1;
-
-	m_sessionArray.AppendSession(
-		appData->m_runMode,
-		appData->m_startedDate,
-		appData->m_strUserIB,
-		appData->m_strComputer,
-		m_session
-	);
 
 	//start empty session 
 	IPreparedStatement* dbSessionPrepareData = m_session_db->PrepareStatement(
@@ -251,6 +274,14 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 
 	dbSessionPrepareData->RunQuery();
 	dbSessionPrepareData->Close();
+
+	m_sessionArray.AppendSession(
+		appData->m_runMode,
+		appData->m_startedDate,
+		appData->m_strUserIB,
+		appData->m_strComputer,
+		m_session
+	);
 
 	m_session_db->CloseStatement(dbSessionPrepareData);
 
@@ -505,9 +536,9 @@ bool CApplicationData::StartSession(const wxString& userName, const wxString& us
 bool CApplicationData::CloseSession()
 {
 	if (m_sessionUpdater != nullptr) {
-		
+
 		if (m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
-			return false; 
+			return false;
 
 		m_sessionUpdater->Wait();
 	}

@@ -97,6 +97,7 @@ public:
 		m_listSession.clear();
 	}
 
+	eRunMode GetSessionApplication(unsigned int idx) const;
 	unsigned int const GetSessionCount() const { return m_listSession.size(); }
 };
 #pragma endregion

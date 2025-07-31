@@ -42,13 +42,13 @@ bool IProperty::PasteData(CMemoryReader& reader)
 
 IPropertyObject::~IPropertyObject()
 {
-	//wxDELETE(m_category);
+	wxDELETE(m_category);
 
-	//for (auto& property : m_properties)
-	//	wxDELETE(property.second);
+	for (auto& property : m_properties)
+		wxDELETE(property.second);
 
-	//for (auto& event : m_events)
-	//	wxDELETE(event.second);
+	for (auto& event : m_events)
+		wxDELETE(event.second);
 
 	IPropertyObject* pobj(GetThis());
 

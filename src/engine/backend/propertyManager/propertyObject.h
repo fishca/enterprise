@@ -123,6 +123,7 @@ public:
 
 class BACKEND_API IBackendCellField {
 protected:
+
 	IBackendCellField(CPropertyCategory* cat, const wxString& name,
 		const wxVariant& value) :
 		m_propName(name),
@@ -147,6 +148,9 @@ protected:
 		m_owner(cat->GetPropertyObject())
 	{
 	}
+
+public:
+	virtual ~IBackendCellField() {}
 public:
 
 	virtual bool IsOk() const { return !m_propValue.IsNull(); }
@@ -281,9 +285,6 @@ protected:
 
 	wxString GetIndentString(int indent) const; // obtiene la cadena con el indentado
 
-	std::vector<IPropertyObject*>& GetChildren() { return m_children; }
-	std::map<wxString, IProperty*>& GetProperties() { return m_properties; }
-
 	// devuelve el puntero "this"
 	IPropertyObject* GetThis() { return this; }
 
@@ -342,7 +343,6 @@ public:
 	* Obtiene el número de propiedades del objeto.
 	*/
 	unsigned int GetPropertyCount() const { return (unsigned int)m_properties.size(); }
-
 	unsigned int GetEventCount() const { return m_events.size(); }
 
 	IProperty* GetProperty(unsigned int idx) const; // throws ...;
@@ -451,12 +451,8 @@ public:
 	bool IsSubclassOf(const wxString& clsName) const;
 
 	CPropertyCategory* GetCategory() const { return m_category; }
-	IPropertyObject* GetChildPtr(unsigned int idx) const { return GetChild(idx); }
-
+	
 	virtual void DeleteRecursive();
-
-	// get metaData from object
-	//virtual IMetaData* GetMetaData() const { return nullptr; }
 
 protected:
 

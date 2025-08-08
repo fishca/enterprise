@@ -113,45 +113,44 @@ public:
 	virtual CVisualEditorNotebook* GetVisualNotebook() const override;
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) override {
-		CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
-		if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
-			visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
+
+		if (lineBreakpoint > 0) {
+			CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+			if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
+				visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
+			}
 		}
 
-		CCodeEditor* autoComplete = GetCodeEditor();
+		CCodeEditor* const autoComplete = GetCodeEditor();
 		wxASSERT(autoComplete);
 		autoComplete->SetCurrentLine(lineBreakpoint, setBreakpoint);
 	}
 
 	virtual void SetToolTip(const wxString& resultStr) override {
-		CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
-		if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
-			visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
-		}
-		CCodeEditor* codeEditor = GetCodeEditor();
+		//CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+		//if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
+		//	visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
+		//}
+		CCodeEditor* const codeEditor = GetCodeEditor();
 		wxASSERT(codeEditor);
-		if (codeEditor != nullptr) {
-			codeEditor->SetToolTip(resultStr);
-		}
+		codeEditor->SetToolTip(resultStr);
+
 	}
 
 	virtual void ShowAutoComplete(const CDebugAutoCompleteData& debugData) override {
-		CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
+		CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
 		if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
 			visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
 		}
-		CCodeEditor* codeEditor = GetCodeEditor();
+		CCodeEditor* const codeEditor = GetCodeEditor();
 		wxASSERT(codeEditor);
-		if (codeEditor != nullptr) {
-			codeEditor->ShowAutoComplete(debugData);
-		}
+		codeEditor->ShowAutoComplete(debugData);
 	}
 
 	virtual CCodeEditor* GetCodeEditor() const {
-		CVisualEditorNotebook* visualNotebook = GetVisualNotebook();
-		if (visualNotebook != nullptr) {
+		CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+		if (visualNotebook != nullptr) 
 			return visualNotebook->GetCodeEditor();
-		}
 		return nullptr;
 	};
 

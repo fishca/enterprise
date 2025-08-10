@@ -14,8 +14,18 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueTable, IValueModel);
 wxIMPLEMENT_ABSTRACT_CLASS(IValueTree, IValueModel);
 
 IValueModel::IValueModel()
-	: CValue(eValueTypes::TYPE_VALUE), m_srcNotifier(nullptr), m_refreshModel(false)
+	: CValue(eValueTypes::TYPE_VALUE), 
+	m_modelProvider(nullptr), 
+	m_srcNotifier(nullptr), 
+	m_refreshModel(false)
 {
+	m_modelProvider = new CDataViewModelProvider(this);
+	//m_modelProvider->IncRef(); // always one 
+}
+
+IValueModel::~IValueModel()
+{
+	m_modelProvider->DecRef();
 }
 
 wxDataViewItem IValueModel::GetSelection() const

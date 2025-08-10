@@ -224,6 +224,8 @@ private:
 	std::shared_ptr<CApplicationDataSessionUpdater> m_sessionUpdater;
 
 	bool m_connected_to_db = false;
+	bool m_created_metadata = false;
+	bool m_run_metadata = false;
 
 	// FILE ENTRY
 	wxString m_strFile;

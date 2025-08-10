@@ -184,10 +184,7 @@ bool CApplicationData::DestroyAppDataEnv()
 {
 	if (s_instance != nullptr && s_instance->m_db != nullptr) {
 
-		bool result = false;
-		if (s_instance->m_connected_to_db)
-			result = s_instance->Disconnect();
-		if (!result) return false;
+		if (!s_instance->Disconnect()) return false;
 
 		s_instance->m_strServer = wxEmptyString;
 		s_instance->m_strPort = wxEmptyString;
@@ -211,26 +208,37 @@ bool CApplicationData::DestroyAppDataEnv()
 
 bool CApplicationData::Connect(const wxString& user, const wxString& password, const int flags)
 {
-	if (m_connected_to_db)
+	if (m_created_metadata)
 		return false;
 	if (!metaDataCreate(m_runMode, flags))
 		return false;
-	if (!StartSession(user, password)) return false;  //start session	
-	m_connected_to_db = true;
-	return commonMetaData->RunDatabase();
+	m_created_metadata = true; 
+	if (!StartSession(user, password))
+		return false;  //start session	 
+	m_run_metadata = commonMetaData->RunDatabase();
+	return m_connected_to_db && 
+		m_created_metadata && 
+		m_run_metadata;
 }
 
 bool CApplicationData::Disconnect()
 {
-	if (!m_connected_to_db)
-		return false;
-	const bool isConfigOpen = commonMetaData->IsConfigOpen();
-	if (!CloseSession())
-		return false;
-	if (isConfigOpen && !commonMetaData->CloseDatabase(forceCloseFlag))
-		return false;
-	metaDataDestroy();
-	m_connected_to_db = false;
+	if (m_created_metadata) {
+
+		if (!CloseSession())
+			return false;
+
+		if (m_run_metadata) {
+			const bool isConfigOpen = commonMetaData->IsConfigOpen();
+			if (isConfigOpen && !commonMetaData->CloseDatabase(forceCloseFlag))
+				return false;
+			m_connected_to_db = false;
+		}
+		
+		metaDataDestroy();
+		m_created_metadata = false;
+	}
+	
 	return true;
 }
 

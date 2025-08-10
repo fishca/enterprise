@@ -452,29 +452,35 @@ bool CApplicationData::HasAllowedUser() const
 	if (dbUserResult == nullptr) return false;
 	bool hasUsers = false;
 	if (dbUserResult->Next()) hasUsers = true;
-	dbUserResult->Close();
+	db_query->CloseResultSet(dbUserResult);
 	return hasUsers;
 }
-
 
 #include "fileSystem/fs.h"
 
 bool CApplicationData::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
 {
 	if (!HasAllowedUser()) return true;
+	
 	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
 		wxT("SELECT * FROM %s WHERE name = '%s';"),
 		user_table, userName
 	);
+	
 	if (dbUserResult == nullptr) return false;
+
+	bool succes = false; 
+
 	if (dbUserResult->Next()) {
 		wxString md5Password; wxMemoryBuffer buffer;
 		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
 		CMemoryReader reader(buffer.GetData(), buffer.GetDataLen());
 		reader.r_stringZ(md5Password);
-		if (md5Password == CApplicationData::ComputeMd5(userPassword)) return true;
+		if (md5Password == CApplicationData::ComputeMd5(userPassword)) succes = true; 
 	}
-	return false;
+	
+	db_query->CloseResultSet(dbUserResult);	
+	return succes;
 }
 
 bool CApplicationData::AuthenticationAndSetUser(const wxString& userName, const wxString& userPassword)
@@ -496,8 +502,8 @@ wxArrayString CApplicationData::GetAllowedUser() const
 		);
 	if (dbUserResult == nullptr) return wxArrayString();
 	wxArrayString arrayUsers;
-	while (dbUserResult->Next()) arrayUsers.Add(dbUserResult->GetResultString("name"));
-	dbUserResult->Close();
+	while (dbUserResult->Next()) arrayUsers.Add(dbUserResult->GetResultString(wxT("name")));
+	db_query->CloseResultSet(dbUserResult);
 	return arrayUsers;
 }
 
@@ -530,6 +536,7 @@ bool CApplicationData::StartSession(const wxString& userName, const wxString& us
 	else if (!succes && !CloseSession())
 		return false;
 
+	m_connected_to_db = succes;
 	return succes;
 }
 
@@ -540,8 +547,9 @@ bool CApplicationData::CloseSession()
 		if (m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
 			return false;
 
-		m_sessionUpdater->Wait();
+		m_sessionUpdater = nullptr;
 	}
 
+	m_connected_to_db = false;
 	return true;
 }

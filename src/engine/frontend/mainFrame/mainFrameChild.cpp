@@ -30,6 +30,8 @@ CAuiDocChildFrame::~CAuiDocChildFrame()
 
 void CAuiDocChildFrame::SetLabel(const wxString& label)
 {
-	wxAuiMDIChildFrame::SetLabel(label);
-	wxAuiMDIChildFrame::SetTitle(label);
+	if (label != GetLabel()) {
+		wxAuiMDIChildFrame::SetLabel(label);
+		wxAuiMDIChildFrame::SetTitle(label);
+	}
 }

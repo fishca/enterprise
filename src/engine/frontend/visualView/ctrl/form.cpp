@@ -12,13 +12,13 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 //*                              Frame                                       *
 //****************************************************************************
 
-CValueForm::CValueForm(IControlFrame* ownerControl, IMetaObjectForm* metaForm,
-	ISourceDataObject* ownerSrc, const CUniqueKey& formGuid, bool readOnly) : IValueFrame(), IModuleDataObject(),
-	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr), m_valueFormDocument(nullptr),
+CValueForm::CValueForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
+	ISourceDataObject* srcObject, const CUniqueKey& formGuid) : IValueFrame(), IModuleDataObject(),
+	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
 	m_defaultFormType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
 {
 	//init default params
-	CValueForm::InitializeForm(ownerControl, metaForm, ownerSrc, formGuid, readOnly);
+	CValueForm::InitializeForm(creator, ownerControl, srcObject, formGuid);
 
 	//set default params
 	m_controlId = defaultFormId;
@@ -34,7 +34,7 @@ CValueForm::CValueForm(IControlFrame* ownerControl, IMetaObjectForm* metaForm,
 
 CValueForm::~CValueForm()
 {
-	for (auto pair : m_aIdleHandlers) {
+	for (auto pair : m_idleHandlerArray) {
 		wxTimer* timer = pair.second;
 		if (timer->IsRunning()) {
 			timer->Stop();
@@ -55,9 +55,8 @@ CValueForm::~CValueForm()
 		}
 	}
 
-	if (m_sourceObject) {
-		m_sourceObject->DecrRef();
-	}
+	if (m_controlOwner != nullptr) m_controlOwner->ControlDecrRef();
+	if (m_sourceObject != nullptr) m_sourceObject->SourceDecrRef();
 }
 
 void CValueForm::Update(wxObject* wxobject, IVisualHost* visualHost)
@@ -115,9 +114,8 @@ IMetaData* CValueForm::GetMetaData() const
 {
 	if (m_sourceObject != nullptr) {
 		const IMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
-		if (metaObject != nullptr) {
+		if (metaObject != nullptr)
 			return metaObject->GetMetaData();
-		}
 	}
 
 	return m_metaFormObject ?
@@ -130,6 +128,19 @@ form_identifier_t CValueForm::GetTypeForm() const
 	return m_metaFormObject ?
 		m_metaFormObject->GetTypeForm() :
 		m_defaultFormType;
+}
+
+bool CValueForm::IsEditable() const
+{
+	if (m_sourceObject != nullptr) {
+		const IMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
+		if (metaObject != nullptr) 
+			return metaObject->IsEditable();		
+	}
+
+	return m_metaFormObject != nullptr ?
+		m_metaFormObject->IsEditable() :
+		true;
 }
 
 //****************************************************************************
@@ -334,4 +345,4 @@ bool CValueForm::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue*
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueForm, "frontendForm", "form", g_controlFormCLSID);
+S_CONTROL_TYPE_REGISTER(CValueForm, "clientForm", "form", g_controlFormCLSID);

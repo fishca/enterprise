@@ -16,13 +16,13 @@ wxIMPLEMENT_DYNAMIC_CLASS(CListRegisterObject, IListDataObject);
 wxIMPLEMENT_ABSTRACT_CLASS(ITreeDataObject, IValueTree);
 wxIMPLEMENT_DYNAMIC_CLASS(CTreeDataObjectFolderRef, ITreeDataObject);
 
-IListDataObject::IListDataObject(IMetaObjectGenericData* metaTable, const form_identifier_t& formType) :
-	ISourceDataObject(), m_objGuid(Guid::newGuid()), m_methodHelper(new CMethodHelper())
+IListDataObject::IListDataObject(IMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
+	ISourceDataObject(), m_objGuid(choiceMode ? Guid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
-	m_dataColumnCollection = new CDataObjectListColumnCollection(this, metaTable);
+	m_dataColumnCollection = new CDataObjectListColumnCollection(this, metaObject);
 	m_dataColumnCollection->IncrRef();
 
-	for (auto& obj : metaTable->GetGenericAttributes()) {
+	for (auto& obj : metaObject->GetGenericAttributes()) {
 		m_filterRow.AppendFilter(
 			obj->GetMetaID(),
 			obj->GetName(),
@@ -45,13 +45,13 @@ IListDataObject::~IListDataObject()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ITreeDataObject::ITreeDataObject(IMetaObjectGenericData* metaTable, const form_identifier_t& formType) :
-	ISourceDataObject(), m_objGuid(Guid::newGuid()), m_methodHelper(new CMethodHelper())
+ITreeDataObject::ITreeDataObject(IMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
+	ISourceDataObject(), m_objGuid(choiceMode ? Guid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
-	m_dataColumnCollection = new CDataObjectTreeColumnCollection(this, metaTable);
+	m_dataColumnCollection = new CDataObjectTreeColumnCollection(this, metaObject);
 	m_dataColumnCollection->IncrRef();
 
-	for (auto& obj : metaTable->GetGenericAttributes()) {
+	for (auto& obj : metaObject->GetGenericAttributes()) {
 		m_filterRow.AppendFilter(
 			obj->GetMetaID(),
 			obj->GetName(),
@@ -82,12 +82,12 @@ IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollectio
 {
 }
 
-IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollection(IListDataObject* ownerTable, IMetaObjectGenericData* metaTable) :
+IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollection(IListDataObject* ownerTable, IMetaObjectGenericData* metaObject) :
 	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
-	wxASSERT(metaTable);
+	wxASSERT(metaObject);
 
-	for (auto& obj : metaTable->GetGenericAttributes()) {
+	for (auto& obj : metaObject->GetGenericAttributes()) {
 		CDataObjectListColumnInfo* columnInfo = new CDataObjectListColumnInfo(obj);
 		m_listColumnInfo.insert_or_assign(obj->GetMetaID(), columnInfo);
 		columnInfo->IncrRef();
@@ -133,12 +133,12 @@ ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollectio
 {
 }
 
-ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollection(ITreeDataObject* ownerTable, IMetaObjectGenericData* metaTable) :
+ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollection(ITreeDataObject* ownerTable, IMetaObjectGenericData* metaObject) :
 	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
-	wxASSERT(metaTable);
+	wxASSERT(metaObject);
 
-	for (auto& obj : metaTable->GetGenericAttributes()) {
+	for (auto& obj : metaObject->GetGenericAttributes()) {
 		CDataObjectTreeColumnInfo* columnInfo = new CDataObjectTreeColumnInfo(obj);
 		m_listColumnInfo.insert_or_assign(obj->GetMetaID(), columnInfo);
 		columnInfo->IncrRef();
@@ -329,8 +329,8 @@ wxDataViewItem CListDataObjectEnumRef::FindRowValue(IValueModelReturnLine* retLi
 	return wxDataViewItem(nullptr);
 }
 
-CListDataObjectEnumRef::CListDataObjectEnumRef(IMetaObjectRecordDataEnumRef* metaObject, const form_identifier_t& formType, bool choiceMode) : IListDataObject(metaObject, formType),
-m_metaObject(metaObject), m_choiceMode(choiceMode)
+CListDataObjectEnumRef::CListDataObjectEnumRef(IMetaObjectRecordDataEnumRef* metaObject, const form_identifier_t& formType, bool choiceMode) : 
+	IListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
 	IListDataObject::AppendSort(m_metaObject->GetDataOrder(), true, true, true);
 	IListDataObject::AppendSort(m_metaObject->GetDataReference(), true, true, true);
@@ -424,8 +424,8 @@ wxDataViewItem CListDataObjectRef::FindRowValue(IValueModelReturnLine* retLine) 
 	return wxDataViewItem(nullptr);
 }
 
-CListDataObjectRef::CListDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const form_identifier_t& formType, bool choiceMode) : IListDataObject(metaObject, formType),
-m_metaObject(metaObject), m_choiceMode(choiceMode)
+CListDataObjectRef::CListDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const form_identifier_t& formType, bool choiceMode) : 
+	IListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
 }
 
@@ -613,7 +613,7 @@ wxDataViewItem CTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* ret
 }
 
 CTreeDataObjectFolderRef::CTreeDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const form_identifier_t& formType,
-	int listMode, bool choiceMode) : ITreeDataObject(metaObject, formType),
+	int listMode, bool choiceMode) : ITreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
 	ITreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);

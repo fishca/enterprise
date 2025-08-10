@@ -171,7 +171,7 @@ public:
 	}
 
 	//ctor
-	IListDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND);
+	IListDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 	virtual ~IListDataObject();
 
 	//****************************************************************************
@@ -184,6 +184,13 @@ public:
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
 
+	//Get presentation 
+	virtual wxString GetSourceCaption() const {
+		return GetMetaObject() ?
+			stringUtils::GenerateSynonym(GetMetaObject()->GetClassName()) + wxT(": ") + GetMetaObject()->GetSynonym() : GetString();
+	}
+
+	//Is new object? 
 	virtual bool IsNewObject() const { return false; }
 
 	//get unique identifier 
@@ -193,8 +200,8 @@ public:
 	virtual IMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
-	virtual void IncrRef() { CValue::IncrRef(); }
-	virtual void DecrRef() { CValue::DecrRef(); }
+	virtual void SourceIncrRef() { CValue::IncrRef(); }
+	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	virtual inline bool IsEmpty() const { return false; }
 
@@ -659,7 +666,7 @@ public:
 	}
 
 	//ctor
-	ITreeDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND);
+	ITreeDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 	virtual ~ITreeDataObject();
 
 	//****************************************************************************
@@ -672,6 +679,13 @@ public:
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
 
+	//Get presentation 
+	virtual wxString GetSourceCaption() const { 
+		return GetMetaObject() ? 
+			stringUtils::GenerateSynonym(GetMetaObject()->GetClassName()) + wxT(": ") + GetMetaObject()->GetSynonym() : GetString();
+	}
+
+	//Is new object?
 	virtual bool IsNewObject() const { return false; }
 
 	//get unique identifier 
@@ -681,8 +695,8 @@ public:
 	virtual IMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
-	virtual void IncrRef() { CValue::IncrRef(); }
-	virtual void DecrRef() { CValue::DecrRef(); }
+	virtual void SourceIncrRef() { CValue::IncrRef(); }
+	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	virtual inline bool IsEmpty() const { return false; }
 

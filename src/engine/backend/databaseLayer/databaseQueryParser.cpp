@@ -21,9 +21,7 @@ wxArrayString ParseQueries(const wxString& strQuery)
 	wxArrayString returnArray; returnArray.Alloc(1); bool bInQuote = false;
 	wxString strRaw; strRaw.Alloc(strQuery.Length());
 
-	for (int i = 0; i < (int)strQuery.Length(); i++) {
-
-		const wxUniChar& c = strQuery[i];
+	for (auto& c : strQuery) {
 
 		strRaw += c;
 

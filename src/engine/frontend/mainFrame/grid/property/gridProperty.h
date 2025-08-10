@@ -51,6 +51,8 @@ public:
 	CPropertyObjectGrid(CGrid* ownerGrid);
 	virtual ~CPropertyObjectGrid();
 
+	virtual bool IsEditable() const;
+
 	//system override 
 	virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
 

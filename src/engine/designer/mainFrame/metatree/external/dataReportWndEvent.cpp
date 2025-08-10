@@ -205,7 +205,7 @@ void CDataReportTree::CDataReportTreeWnd::OnCopyItem(wxCommandEvent &event)
 
 void CDataReportTree::CDataReportTreeWnd::OnPasteItem(wxCommandEvent &event)
 {
-	if (m_ownerTree->m_bReadOnly)
+	if (!m_ownerTree->IsEditable())
 		return;
 
 	const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier();

@@ -181,7 +181,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnCopyItem(wxCommandEvent &event
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem(wxCommandEvent &event)
 {
-	if (m_ownerTree->m_bReadOnly)
+	if (!m_ownerTree->IsEditable())
 		return;
 
 	const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier();

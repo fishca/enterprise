@@ -46,7 +46,7 @@ bool CReferenceDataObject::ReadData(bool createData)
 
 			readRef = true;
 		}	
-		resultSet->Close();
+		db_query->CloseResultSet(resultSet);
 		return readRef;
 	}
 	return false;
@@ -77,7 +77,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 						IMetaObjectAttribute::GetValueAttribute(obj, m_listObjectValue[obj->GetMetaID()], resultSet);
 					}
 				}
-				resultSet->Close();
+				db_query->CloseResultSet(resultSet);
 				return true;
 			}
 			return false;
@@ -127,7 +127,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 			}
 		}
 		std::sort(listValue.begin(), listValue.end(), [](const CValue& a, const CValue& b) { return a.GetString() < b.GetString(); });
-		resultSet->Close();
+		db_query->CloseResultSet(resultSet);
 		return listValue.size() > 0;
 	}
 

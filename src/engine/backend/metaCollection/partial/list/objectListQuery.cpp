@@ -1224,7 +1224,7 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 		//////////////////////////////////////////////////
 	};
 
-	/* wxDataViewModel::*/ BeforeReset();
+	/* wxDataViewModel::*/ m_modelProvider->BeforeReset();
 	static CValue cReference;
 	for (auto& node : arrTree) {
 		CReferenceDataObject* reference = NULL;
@@ -1241,7 +1241,7 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 		}
 	}
 
-	/* wxDataViewModel:: */ AfterReset();
+	/* wxDataViewModel:: */ m_modelProvider->AfterReset();
 
 	db_query->CloseResultSet(resultSet);
 	db_query->CloseStatement(statement);

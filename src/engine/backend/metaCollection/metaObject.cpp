@@ -16,12 +16,12 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue)
 //*                                  MetaObject                                           *
 //*****************************************************************************************
 
-void IMetaObject::AddRole(Role* role)
+void IMetaObject::AddRole(CRole* role)
 {
 	m_roles.emplace_back(role->GetName(), role);
 }
 
-bool IMetaObject::AccessRight(const Role* role, const meta_identifier_t& id) const
+bool IMetaObject::AccessRight(const CRole* role, const meta_identifier_t& id) const
 {
 	auto roleData = m_valRoles.find(id);
 	if (roleData != m_valRoles.end()) {
@@ -37,7 +37,7 @@ bool IMetaObject::AccessRight(const Role* role, const meta_identifier_t& id) con
 	return role->GetDefValue();
 }
 
-bool IMetaObject::SetRight(const Role* role, const meta_identifier_t& id, const bool& val)
+bool IMetaObject::SetRight(const CRole* role, const meta_identifier_t& id, const bool& val)
 {
 	if (role == nullptr)
 		return false;
@@ -45,10 +45,10 @@ bool IMetaObject::SetRight(const Role* role, const meta_identifier_t& id, const 
 	m_metaData->Modify(true);
 	return true;
 }
-Role* IMetaObject::GetRole(const wxString& nameParam) const
+CRole* IMetaObject::GetRole(const wxString& nameParam) const
 {
 	auto it = std::find_if(m_roles.begin(), m_roles.end(),
-		[nameParam](const std::pair<wxString, Role*>& pair)
+		[nameParam](const std::pair<wxString, CRole*>& pair)
 		{
 			return stringUtils::CompareString(nameParam, pair.first);
 		}
@@ -60,7 +60,7 @@ Role* IMetaObject::GetRole(const wxString& nameParam) const
 	return nullptr;
 }
 
-Role* IMetaObject::GetRole(unsigned int idx) const
+CRole* IMetaObject::GetRole(unsigned int idx) const
 {
 	assert(idx < m_roles.size());
 
@@ -129,7 +129,7 @@ bool IMetaObject::BuildNewName()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true), IPropertyObject(),
+IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true), 
 m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaultFlag), m_metaId(0)
 {
 	m_propertyName->SetValue(strName);
@@ -385,7 +385,7 @@ bool IMetaObject::OnDeleteMetaObject()
 
 bool IMetaObject::OnAfterCloseMetaObject()
 {
-	IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
+	IBackendMetadataTree* const metaTree = m_metaData->GetMetaTree();
 	if (metaTree != nullptr)
 		metaTree->CloseMetaObject(this);
 	return true;
@@ -413,12 +413,25 @@ bool IMetaObject::Init(CValue** paParams, const long lSizeArray)
 			SetParent(metaParent);
 			metaParent->AddChild(this);
 		}
-		SetReadOnly(metaParent != nullptr ? metaParent->IsEditable() : true);
+		//SetReadOnly(metaParent != nullptr ? metaParent->IsEditable() : true);
 		return metaParent != nullptr ?
 			metaParent->AppendChild(this) : true;
 	}
 
 	return false;
+}
+
+bool IMetaObject::IsEditable() const
+{
+	if (!IsEnabled() || IsDeleted())
+		return false;
+
+	IBackendMetadataTree* const metaTree = m_metaData->GetMetaTree();
+	if (metaTree != nullptr)
+		return metaTree->IsEditable();
+
+	return m_parent != nullptr ?
+		m_parent->IsEditable() : true;
 }
 
 bool IMetaObject::CompareObject(IMetaObject* compareObject) const
@@ -433,7 +446,7 @@ bool IMetaObject::CompareObject(IMetaObject* compareObject) const
 		)
 		{
 			if (compareObject2 == nullptr)
-				return false; 
+				return false;
 
 			//for (auto& obj : compareObject1->m_listMetaObject) {
 
@@ -447,25 +460,25 @@ bool IMetaObject::CompareObject(IMetaObject* compareObject) const
 
 			if (compareObject1->GetClassType() != compareObject2->GetClassType())
 				return false;
-			
+
 			if (compareObject1->GetMetaID() != compareObject2->GetMetaID())
 				return false;
-			
+
 			for (unsigned int idx = 0; idx < compareObject1->GetPropertyCount(); idx++) {
-				
+
 				const IProperty* propDst = compareObject1->GetProperty(idx);
 				wxASSERT(propDst);
-				
-				const IProperty* propSrc = compareObject2->GetProperty(propDst->GetName());		
-				
+
+				const IProperty* propSrc = compareObject2->GetProperty(propDst->GetName());
+
 				if (propSrc == nullptr)
 					return false;
-				
+
 				if (propDst->GetValue() != propSrc->GetValue())
 					return false;
 			}
 
-			return (compareObject1->GetPropertyCount() == compareObject2->GetPropertyCount() && compareObject1->GetEventCount() == compareObject2->GetEventCount()) && 
+			return (compareObject1->GetPropertyCount() == compareObject2->GetPropertyCount() && compareObject1->GetEventCount() == compareObject2->GetEventCount()) &&
 				compareObject1->GetChildCount() == compareObject2->GetChildCount();
 		}
 	};
@@ -654,7 +667,7 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 	return CControlMemoryReader::PasteAndRunObject(this, reader);
 }
 
-bool IMetaObject::ChangeChildPosition(IPropertyObject* obj, unsigned int pos)
+bool IMetaObject::ChangeChildPosition(IMetaObject* obj, unsigned int pos)
 {
 	unsigned int obj_pos = GetChildPosition(obj);
 	if (obj_pos == GetChildCount() || pos >= GetChildCount())
@@ -665,7 +678,7 @@ bool IMetaObject::ChangeChildPosition(IPropertyObject* obj, unsigned int pos)
 	auto src = std::find(m_listMetaObject.begin(), m_listMetaObject.end(), obj);
 	std::swap(*dst, *src);
 	m_metaData->Modify(true);
-	return IPropertyObject::ChangeChildPosition(obj, pos);
+	return IPropertyObjectHelper::ChangeChildPosition(obj, pos);
 }
 
 wxString IMetaObject::GetModuleName() const

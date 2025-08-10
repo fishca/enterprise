@@ -1726,7 +1726,7 @@ void CGrid::OnKeyUp(wxKeyEvent& event)
 
 void CGrid::OnSelectCell(wxGridEvent& event)
 {
-	m_gridProperty->SetReadOnly(wxGrid::IsEditable());
+	//m_gridProperty->SetReadOnly(wxGrid::IsEditable());
 
 	if (event.Selecting()) {
 		m_gridProperty->AddSelectedCell(
@@ -1745,7 +1745,7 @@ void CGrid::OnSelectCell(wxGridEvent& event)
 
 void CGrid::OnSelectCells(wxGridRangeSelectEvent& event)
 {
-	m_gridProperty->SetReadOnly(wxGrid::IsEditable());
+	//m_gridProperty->SetReadOnly(wxGrid::IsEditable());
 
 	if (event.Selecting()) {
 		m_gridProperty->AddSelectedCell({

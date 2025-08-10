@@ -321,7 +321,7 @@ void CMetadataTree::CMetadataTreeWnd::OnCopyItem(wxCommandEvent& event)
 
 void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 {
-	if (m_ownerTree->m_bReadOnly)
+	if (!m_ownerTree->IsEditable())
 		return;
 
 	const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier();

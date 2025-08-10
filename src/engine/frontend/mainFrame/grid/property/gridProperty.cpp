@@ -146,6 +146,11 @@ CPropertyObjectGrid::~CPropertyObjectGrid()
 	}
 }
 
+bool CPropertyObjectGrid::IsEditable() const
+{
+	return m_ownerGrid->IsEditable(); 
+}
+
 void CPropertyObjectGrid::OnPropertyCreated(IProperty* property)
 {
 	for (auto& coords : m_currentBlocks) {

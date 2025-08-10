@@ -74,7 +74,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetadataFileDocument, CMetaDocument);
 
 bool CMetadataFileDocument::OnCreate(const wxString& path, long flags)
 {
-	m_metaData = new CMetaDataConfigurationFile(true);
+	m_metaData = new CMetaDataConfigurationFile();
 
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;

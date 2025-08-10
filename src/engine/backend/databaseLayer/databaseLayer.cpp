@@ -111,7 +111,7 @@ void IDatabaseLayer::CloseStatements()
 	DatabaseStatementHashSet::iterator stop = m_Statements.end();
 	while (start != stop)
 	{
-		wxLogDebug(_("IPreparedStatement NOT closed and cleaned up by the IDatabaseLayer dtor"));
+		wxLogDebug(_("PreparedStatement NOT closed and cleaned up by the DatabaseLayer dtor"));
 		//delete (*start); start++;
 		delete(*start++);
 	}

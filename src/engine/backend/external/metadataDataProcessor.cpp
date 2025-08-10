@@ -19,7 +19,7 @@ m_version(version_oes_last)
 		IMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 	);
 	
-	m_commonObject->SetReadOnly(!m_metaReadOnly);
+	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
 		m_moduleManager = new CModuleManagerExternalDataProcessor(this, m_commonObject);
@@ -359,7 +359,7 @@ bool CMetaDataDataProcessor::LoadCommonMetadata(const class_identifier_t& clsid,
 	}
 
 	std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
-	m_commonObject->SetReadOnly(!m_metaReadOnly);
+	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (!m_commonObject->LoadMetaObject(m_ownerMeta, *readerDataMemory))
 		return false;

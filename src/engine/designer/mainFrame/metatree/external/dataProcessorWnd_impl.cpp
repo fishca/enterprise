@@ -453,8 +453,8 @@ void CDataProcessorTree::InitTree()
 void CDataProcessorTree::ClearTree()
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
-		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
-		IMetaObject* metaObject = metaDoc->GetMetaObject();
+		const CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+		const IMetaObject* metaObject = metaDoc->GetMetaObject();
 		if (metaObject != nullptr && this == metaObject->GetMetaDataTree()) {
 			doc->DeleteAllViews();
 		}

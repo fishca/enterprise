@@ -45,12 +45,12 @@ bool IMetaDataConfiguration::Destroy()
 //*                                          ConfigMetadata										   *
 //**************************************************************************************************
 
-CMetaDataConfigurationFile::CMetaDataConfigurationFile(bool readOnly) : IMetaDataConfiguration(readOnly),
+CMetaDataConfigurationFile::CMetaDataConfigurationFile() : IMetaDataConfiguration(),
 m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 {
 	//create main metaObject
 	m_commonObject = new CMetaObjectConfiguration();
-	m_commonObject->SetReadOnly(!m_metaReadOnly);
+	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
 		m_moduleManager = new CModuleManagerConfiguration(this, m_commonObject);
@@ -337,7 +337,7 @@ bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& cl
 
 	std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 
-	m_commonObject->SetReadOnly(!m_metaReadOnly);
+	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (!m_commonObject->LoadMetaObject(this, *readerDataMemory))
 		return false;
@@ -485,8 +485,8 @@ bool CMetaDataConfiguration::OnDestroy()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CMetaDataConfiguration::CMetaDataConfiguration(bool readOnly) : CMetaDataConfigurationFile(readOnly),
-m_configNew(true)
+CMetaDataConfiguration::CMetaDataConfiguration() :
+	CMetaDataConfigurationFile(), m_configNew(true)
 {
 }
 
@@ -521,8 +521,8 @@ bool CMetaDataConfigurationStorage::OnDestroy()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CMetaDataConfigurationStorage::CMetaDataConfigurationStorage(bool readOnly) : CMetaDataConfiguration(readOnly),
-m_configMetadata(new CMetaDataConfiguration(readOnly)) {
+CMetaDataConfigurationStorage::CMetaDataConfigurationStorage() :
+	CMetaDataConfiguration(), m_configMetadata(new CMetaDataConfiguration()) {
 }
 
 CMetaDataConfigurationStorage::~CMetaDataConfigurationStorage() {
@@ -543,7 +543,7 @@ bool CMetaDataConfigurationStorage::LoadDatabase(int flags)
 
 		if (CMetaDataConfiguration::LoadDatabase()) {
 			Modify(!CompareMetadata(m_configMetadata));
-			if (m_configNew) 
+			if (m_configNew)
 				SaveDatabase(saveConfigFlag);
 			m_configNew = false;
 			return true;

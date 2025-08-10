@@ -26,7 +26,7 @@ public:
 
 public:
 
-	IMetaDataConfiguration(bool readOnly) : IMetaData(readOnly) {}
+	IMetaDataConfiguration() : IMetaData() {}
 
 	virtual wxString GetConfigMD5() const = 0;
 	virtual wxString GetConfigName() const = 0;
@@ -77,7 +77,7 @@ public:
 
 	virtual bool IsConfigOpen() const { return m_configOpened; }
 
-	CMetaDataConfigurationFile(bool readOnly = false);
+	CMetaDataConfigurationFile();
 	virtual ~CMetaDataConfigurationFile();
 
 	virtual wxString GetConfigMD5() const { return m_md5Hash; }
@@ -140,7 +140,7 @@ protected:
 
 class BACKEND_API CMetaDataConfiguration : public CMetaDataConfigurationFile {
 public:
-	CMetaDataConfiguration(bool readOnly = false);
+	CMetaDataConfiguration();
 	virtual bool LoadFromFile(const wxString& strFileName) {
 		if (CMetaDataConfigurationFile::LoadFromFile(strFileName)) {
 			Modify(true); //set modify for check metaData
@@ -177,7 +177,7 @@ public:
 	virtual bool OnAfterSaveDatabase(bool roolback, int flags);
 public:
 
-	CMetaDataConfigurationStorage(bool readOnly = false);
+	CMetaDataConfigurationStorage();
 	virtual ~CMetaDataConfigurationStorage();
 
 	//is config save

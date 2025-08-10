@@ -23,9 +23,8 @@ private:
 	IMetaObject* DoGetMetaObject(const meta_identifier_t& id, IMetaObject* top) const;
 	IMetaObject* DoGetMetaObject(const Guid& guid, IMetaObject* top) const;
 public:
-	IMetaData(bool readOnly = false) :
+	IMetaData() :
 		m_metaTree(nullptr),
-		m_metaReadOnly(readOnly),
 		m_metaModify(false) {
 	}
 	virtual ~IMetaData() {}
@@ -166,7 +165,6 @@ public:
 protected:
 
 	bool m_metaModify;
-	bool m_metaReadOnly;
 
 	enum
 	{

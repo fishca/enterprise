@@ -13,8 +13,8 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
 //*                          ValueControl		                          *
 //*************************************************************************
 
-IValueFrame::IValueFrame() : IPropertyObject(), CValue(eValueTypes::TYPE_VALUE),
-m_methodHelper(new CMethodHelper()), m_valEventContainer(nullptr), m_controlId(0)
+IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
+m_methodHelper(new CMethodHelper()), m_valEventContainer(nullptr), m_controlId(0), m_controlGuid(Guid::newGuid())
 {
 	m_valEventContainer = CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this);
 	m_valEventContainer->IncrRef();
@@ -54,13 +54,21 @@ wxString IValueFrame::GetObjectTypeName() const
 #define	dataBlock 0x012250
 #define	childBlock 0x012270
 
+bool IValueFrame::IsEditable() const
+{
+	const CValueForm* handler = GetOwnerForm();
+	if (handler != nullptr) 
+		return handler->IsEditable();
+	return false;
+}
+
 bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader)
 {
 	//Save meta version 
 	const version_identifier_t& version = dataReader.r_u32(); //reserved 
 
 	//Load unique guid 
-	m_controlGuid = dataReader.r_stringZ();
+	const Guid& class_guid = dataReader.r_stringZ();
 
 	//Load meta id
 	m_controlId = dataReader.r_u32();
@@ -80,7 +88,7 @@ bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& da
 	dataWritter.w_u32(version_oes_last); //reserved 
 
 	//Save unique guid
-	dataWritter.w_stringZ(m_controlGuid);
+	dataWritter.w_stringZ(wxNewUniqueGuid);
 
 	//Save meta id 
 	dataWritter.w_u32(m_controlId);
@@ -175,7 +183,7 @@ bool IValueFrame::Init(CValue** paParams, const long lSizeArray)
 			controlParent->AddChild(this);
 			SetParent(controlParent);
 		}
-		SetReadOnly(ownerForm ? ownerForm->IsEditable() : true);
+		//SetReadOnly(ownerForm ? ownerForm->IsEditable() : true);
 		SetOwnerForm(ownerForm);
 		ownerForm->ResolveNameConflict(this);
 		if (paParams[2]->GetBoolean()) {
@@ -232,7 +240,7 @@ bool IValueFrame::PasteObject(CMemoryReader& reader)
 	if (valueForm == nullptr) return false;
 
 	std::shared_ptr <CMemoryReader>readerHeaderMemory(reader.open_chunk(headerBlock));
-	
+
 	const version_identifier_t& version = readerHeaderMemory->r_s32(); //reserved
 	const class_identifier_t& clsid = readerHeaderMemory->r_u64();
 
@@ -331,7 +339,9 @@ wxObject* IValueFrame::GetWxObject() const
 	if (visualDoc == nullptr)
 		return nullptr;
 
-	CVisualHost* const visualView = visualDoc->GetVisualView();
+	CVisualHost* const visualView = visualDoc->GetFirstView() ?
+		visualDoc->GetFirstView()->GetVisualHost() : nullptr;
+
 	if (visualView == nullptr)
 		return nullptr;
 
@@ -397,7 +407,9 @@ bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	if (visualDoc == nullptr)
 		return false;
 
-	CVisualHost* visualView = visualDoc->GetVisualView();
+	CVisualHost* visualView = visualDoc->GetFirstView() ?
+		visualDoc->GetFirstView()->GetVisualHost() : nullptr;
+
 	if (visualView == nullptr)
 		return false;
 

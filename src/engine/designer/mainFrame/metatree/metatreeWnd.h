@@ -16,9 +16,7 @@ public:
 
 	virtual form_identifier_t SelectFormType(CMetaObjectForm* metaObject) const;
 
-	virtual void SetReadOnly(bool readOnly = true) {
-		m_bReadOnly = readOnly;
-	}
+	virtual void SetReadOnly(bool readOnly = true) { m_bReadOnly = readOnly; }
 
 	virtual IMetaData* GetMetaData() const = 0;
 
@@ -28,7 +26,7 @@ public:
 
 	virtual void Modify(bool modify);
 
-	virtual void SetMetaName(const wxString& confName) {};
+	virtual void SetMetaName(const wxString& strConfigName) {}
 
 	virtual bool OpenFormMDI(IMetaObject* metaObject);
 	virtual bool OpenFormMDI(IMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
@@ -44,6 +42,8 @@ public:
 			doc->DeleteAllViews();
 		}
 	}
+
+	virtual bool IsEditable() const { return !m_bReadOnly; }
 
 protected:
 
@@ -85,7 +85,7 @@ protected:
 
 protected:
 
-	wxSearchCtrl* m_searchTree; 
+	wxSearchCtrl* m_searchTree;
 	wxAuiToolBar* m_metaTreeToolbar;
 	CMetaDocument* m_docParent;
 
@@ -190,7 +190,7 @@ private:
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
 		CMetadataTree* m_ownerTree;
-		CMetaView* m_metaView; 
+		CMetaView* m_metaView;
 	private:
 		wxTreeItemId m_draggedItem;
 	public:

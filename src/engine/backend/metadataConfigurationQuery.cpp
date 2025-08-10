@@ -48,15 +48,15 @@ bool CMetaDataConfiguration::LoadDatabase(int flags)
 	}
 
 	// load config
-	IDatabaseResultSet* result = db_query->RunQueryWithResults("SELECT binary_data, file_guid FROM %s; ", GetCommonConfigTable(GetConfigType()));
-	if (result == nullptr)
+	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT binary_data, file_guid FROM %s; ", GetCommonConfigTable(GetConfigType()));
+	if (resultSet == nullptr)
 		return false;
 
 	//load metadata from DB 
-	if (result->Next()) {
+	if (resultSet->Next()) {
 
 		wxMemoryBuffer binaryData;
-		result->GetResultBlob(wxT("binary_data"), binaryData);
+		resultSet->GetResultBlob(wxT("binary_data"), binaryData);
 		CMemoryReader metaReader(binaryData.GetData(), binaryData.GetBufSize());
 
 		//check is file empty
@@ -73,11 +73,11 @@ bool CMetaDataConfiguration::LoadDatabase(int flags)
 
 		m_configNew = false;
 
-		m_metaGuid = result->GetResultString(wxT("file_guid"));
+		m_metaGuid = resultSet->GetResultString(wxT("file_guid"));
 		m_md5Hash = wxMD5::ComputeMd5(wxBase64Encode(binaryData.GetData(), binaryData.GetDataLen()));
 	}
 
-	result->Close();
+	db_query->CloseResultSet(resultSet);
 	return true;
 }
 

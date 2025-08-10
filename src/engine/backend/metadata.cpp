@@ -210,7 +210,7 @@ IMetaObject* IMetaData::DoGetMetaObject(const meta_identifier_t& id, IMetaObject
 		IMetaObject* foundedMeta = DoGetMetaObject(id, child);
 		if (foundedMeta != nullptr) return foundedMeta;
 	}
-	if (id == top->GetMetaID()) return top;
+	if (top->CompareId(id)) return top;
 	return nullptr;
 }
 
@@ -222,7 +222,8 @@ IMetaObject* IMetaData::DoGetMetaObject(const Guid& guid, IMetaObject* top) cons
 		IMetaObject* foundedMeta = DoGetMetaObject(guid, child);
 		if (foundedMeta != nullptr) return foundedMeta;
 	}
-	if (guid == top->GetGuid()) return top;
+
+	if (top->CompareGuid(guid)) return top;
 	return nullptr;
 }
 

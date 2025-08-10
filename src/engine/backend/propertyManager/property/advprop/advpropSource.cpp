@@ -1,4 +1,5 @@
 #include "advpropSource.h"
+
 #include "backend/propertyManager/property/variant/sourceVariant.h"
 #include "backend/system/value/valueTable.h"
 

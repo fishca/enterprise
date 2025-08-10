@@ -73,17 +73,9 @@ public:
 	void AddEvent(IEvent* event);
 	void AddCategory(CPropertyCategory* cat);
 
-	wxString GetName() const {
-		return m_catName;
-	}
-
-	wxString GetLabel() const {
-		return (m_catLabel.IsEmpty()) ? m_catName : m_catLabel;
-	}
-
-	wxString GetHelp() const {
-		return m_catHelp;
-	}
+	wxString GetName() const { return m_catName; }
+	wxString GetLabel() const { return (m_catLabel.IsEmpty()) ? m_catName : m_catLabel; }
+	wxString GetHelp() const { return m_catHelp; }
 
 	wxString GetPropertyName(unsigned int index) const {
 		if (index < m_properties.size()) return m_properties[index];
@@ -100,21 +92,11 @@ public:
 		return new CPropertyCategory(m_owner);
 	}
 
-	IPropertyObject* GetPropertyObject() const {
-		return m_owner;
-	}
+	IPropertyObject* GetPropertyObject() const { return m_owner; }
 
-	unsigned int GetPropertyCount() const {
-		return m_properties.size();
-	}
-
-	unsigned int GetEventCount() const {
-		return m_events.size();
-	}
-
-	unsigned int GetCategoryCount() const {
-		return m_categories.size();
-	}
+	unsigned int GetPropertyCount() const { return m_properties.size(); }
+	unsigned int GetEventCount() const { return m_events.size(); }
+	unsigned int GetCategoryCount() const { return m_categories.size(); }
 
 	friend class IPropertyObject;
 };
@@ -233,12 +215,12 @@ public:
 class BACKEND_API IEvent : public IBackendCellField {
 	void InitEvent(CPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& value) : IBackendCellField(cat, name, value) { InitEvent(cat, value); }
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& value) : IBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxString& value) : IBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxString& value) : IBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxString& value) : IBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
-	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxString& value) :IBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxVariant& value) : IBackendCellField(cat, name, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : IBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : IBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : IBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : IBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
+	IEvent(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :IBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
 public:
 	const wxArrayString& GetArgs() const { return m_args; }
 protected:
@@ -285,10 +267,7 @@ protected:
 
 	wxString GetIndentString(int indent) const; // obtiene la cadena con el indentado
 
-	// devuelve el puntero "this"
-	IPropertyObject* GetThis() { return this; }
-
-	IPropertyObject() : m_parent(nullptr) { m_category = new CPropertyCategory(this); }
+	IPropertyObject() /*: m_parent(nullptr)*/ { m_category = new CPropertyCategory(this); }
 
 	friend class IProperty;
 	friend class IEvent;
@@ -307,9 +286,6 @@ public:
 
 	virtual ~IPropertyObject();
 
-	virtual bool IsEditable() const { return m_propEnabled; }
-	virtual void SetReadOnly(bool enabled = true) { m_propEnabled = enabled; }
-
 	/**
 	* Obtiene el nombre del objeto.
 	*
@@ -319,16 +295,8 @@ public:
 	*/
 	virtual wxString GetClassName() const = 0;
 
-	/// Gets the parent object
-	virtual IPropertyObject* GetParent() const { return m_parent; }
-
-	/// Links the object to a parent
-	virtual void SetParent(IPropertyObject* parent) { m_parent = parent; }
-
-	/**
-	* Devuelve la posicion del hijo o GetParentPosition() en caso de no encontrarlo
-	*/
-	virtual unsigned int GetParentPosition() const;
+	/// Gets the owner object
+	virtual IPropertyObject* GetOwner() const { return nullptr; }
 
 	/**
 	* Obtiene la propiedad identificada por el nombre.
@@ -349,48 +317,9 @@ public:
 	IEvent* GetEvent(unsigned int idx) const; // throws ...;
 
 	/**
-	* Devuelve el primer antecesor cuyo tipo coincida con el que se pasa
-	* como parámetro.
-	*
-	* Será útil para encontrar el widget padre.
-	*/
-	IPropertyObject* FindNearAncestor(const wxString& type) const;
-	IPropertyObject* FindNearAncestorByBaseClass(const wxString& type) const;
-
-	/**
-	* Añade un hijo al objeto.
-	* Esta función es virtual, debido a que puede variar el comportamiento
-	* según el tipo de objeto.
-	*
-	* @return true si se añadió el hijo con éxito y false en caso contrario.
-	*/
-	virtual bool AddChild(IPropertyObject*);
-	virtual bool AddChild(unsigned int idx, IPropertyObject* obj);
-
-	/**
-	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
-	*/
-	virtual unsigned int GetChildPosition(IPropertyObject* obj) const;
-	virtual bool ChangeChildPosition(IPropertyObject* obj, unsigned int pos);
-
-	/**
-	* Elimina un hijo del objeto.
-	*/
-	virtual void RemoveChild(IPropertyObject* obj);
-	virtual void RemoveChild(unsigned int idx);
-
-	virtual void RemoveAllChildren() { m_children.clear(); }
-
-	/**
-	* Obtiene un hijo del objeto.
-	*/
-	IPropertyObject* GetChild(unsigned int idx) const;
-	IPropertyObject* GetChild(unsigned int idx, const wxString& type) const;
-
-	/**
 	* Obtiene el número de hijos del objeto.
 	*/
-	unsigned int GetChildCount() const { return (unsigned int)m_children.size(); }
+	//unsigned int GetChildCount() const { return (unsigned int)m_children.size(); }
 
 	unsigned int GetPropertyIndex(const wxString& nameParam) const;
 
@@ -415,19 +344,12 @@ public:
 	virtual int GetComponentType() const = 0;
 
 	/**
-	* IBackendCellField events
-	*/
-
-	virtual void OnCellChanged(IBackendCellField* cell, 
-		const wxVariant& oldValue, const wxVariant& newValue) {}
-
-	/**
 	* IProperty events
 	*/
 	virtual void OnPropertyCreated() {}
 	virtual void OnPropertyCreated(IProperty* property) {}
 	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property) {}
-	virtual void OnPropertySelected(IProperty* property) {}	
+	virtual void OnPropertySelected(IProperty* property) {}
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue) { return true; }
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
@@ -448,23 +370,204 @@ public:
 	* Comprueba si el tipo es derivado del que se pasa como parámetro.
 	*/
 
-	bool IsSubclassOf(const wxString& clsName) const;
-
 	CPropertyCategory* GetCategory() const { return m_category; }
-	
-	virtual void DeleteRecursive();
+	virtual bool IsEditable() const = 0;
 
 protected:
 
-	bool m_propEnabled = true;
-	IPropertyObject* m_parent = nullptr;
 	CPropertyCategory* m_category;
-	std::vector<IPropertyObject*> m_children;
 
 private:
 
 	std::map<wxString, IProperty*> m_properties;
 	std::map<wxString, IEvent*> m_events;
+};
+
+template <typename T>
+class IPropertyObjectHelper : public IPropertyObject {
+	void RemovePropertyObject(IPropertyObject* obj) {
+		std::vector< T* >::iterator it = m_children.begin();
+		while (it != m_children.end() && *it != obj) it++;
+		if (it != m_children.end()) m_children.erase(it);
+	}
+protected:
+	IPropertyObjectHelper() : m_parent(nullptr) {}
+public:
+
+	virtual ~IPropertyObjectHelper() {
+		// remove the reference in the parent
+		if (m_parent != nullptr) m_parent->RemovePropertyObject(this);
+		for (auto& child : m_children) child->SetParent(nullptr);
+	}
+
+	/// Gets the owner object
+	virtual IPropertyObjectHelper* GetOwner() const { return GetParent(); }
+
+	// Gets the parent object
+	T* GetParent() const { return m_parent; }
+
+	/// Links the object to a parent
+	void SetParent(T* parent) { m_parent = parent; }
+
+	/**
+	* Devuelve la posicion del hijo o GetParentPosition() en caso de no encontrarlo
+	*/
+	unsigned int GetParentPosition() const {
+		if (m_parent == nullptr)
+			return 0;
+		unsigned int pos = 0;
+		while (pos < m_parent->GetChildCount() && m_parent->m_children[pos] != this)
+			pos++;
+		return pos;
+	}
+
+	/**
+	* Devuelve el primer antecesor cuyo tipo coincida con el que se pasa
+	* como parámetro.
+	*
+	* Será útil para encontrar el widget padre.
+	*/
+	T* FindNearAncestor(const wxString& type) const {
+		T* result = nullptr;
+		T* parent = GetParent();
+		if (parent != nullptr) {
+			if (stringUtils::CompareString(parent->GetObjectTypeName(), type))
+				result = parent;
+			else
+				result = parent->FindNearAncestor(type);
+		}
+
+		return result;
+	}
+
+	T* FindNearAncestorByBaseClass(const wxString& type) const {
+		T* result = nullptr;
+		T* parent = GetParent();
+		if (parent != nullptr) {
+			if (stringUtils::CompareString(parent->GetObjectTypeName(), type))
+				result = parent;
+			else
+				result = parent->FindNearAncestorByBaseClass(type);
+		}
+
+		return result;
+	}
+
+	/**
+	* Añade un hijo al objeto.
+	* Esta función es virtual, debido a que puede variar el comportamiento
+	* según el tipo de objeto.
+	*
+	* @return true si se añadió el hijo con éxito y false en caso contrario.
+	*/
+	bool AddChild(T* obj) {
+		m_children.push_back(obj);
+		return true;
+	}
+
+	bool AddChild(unsigned int idx, T* obj) {
+		m_children.insert(m_children.begin() + idx, obj);
+		return true;
+	}
+
+	/**
+	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
+	*/
+	unsigned int GetChildPosition(T* obj) const {
+		unsigned int pos = 0;
+		while (pos < GetChildCount() && m_children[pos] != obj)
+			pos++;
+		return pos;
+	}
+
+	bool ChangeChildPosition(T* obj, unsigned int pos) {
+
+		unsigned int obj_pos = GetChildPosition(obj);
+
+		if (obj_pos == GetChildCount() || pos >= GetChildCount())
+			return false;
+
+		if (pos == obj_pos)
+			return true;
+
+		// Procesamos el cambio de posición
+		RemoveChild(obj);
+		AddChild(pos, obj);
+		return true;
+	}
+
+	/**
+	* Elimina un hijo del objeto.
+	*/
+	void RemoveChild(T* obj) { RemovePropertyObject(obj); }
+
+	void RemoveChild(unsigned int idx) {
+		assert(idx < m_children.size());
+		std::vector< T* >::iterator it = m_children.begin() + idx;
+		m_children.erase(it);
+	}
+
+	void RemoveAllChildren() { m_children.clear(); }
+
+	/**
+	* Obtiene un hijo del objeto.
+	*/
+	T* GetChild(unsigned int idx) const {
+		assert(idx < m_children.size());
+		return m_children[idx];
+	}
+
+	T* GetChild(unsigned int idx, const wxString& type) const {
+		unsigned int cnt = 0;
+		for (std::vector< T* >::const_iterator it = m_children.begin(); it != m_children.end(); ++it) {
+			if (stringUtils::CompareString((*it)->GetObjectTypeName(), type) && ++cnt == idx)
+				return *it;
+		}
+		return nullptr;
+	}
+
+	/**
+	* Obtiene el número de hijos del objeto.
+	*/
+	unsigned int GetChildCount() const { return (unsigned int)m_children.size(); }
+
+	/**
+	* Comprueba si el tipo es derivado del que se pasa como parámetro.
+	*/
+
+	bool IsSubclassOf(const wxString& clsName) const {
+		bool found = false;
+		if (stringUtils::CompareString(clsName, GetClassName())) {
+			found = true;
+		}
+		else {
+			T* parent = GetParent();
+			while (parent != nullptr) {
+				found = parent->IsSubclassOf(clsName);
+				if (found)
+					break;
+				else
+					parent = parent->GetParent();
+			}
+		}
+		return found;
+	}
+
+	void DeleteRecursive() {
+		for (auto objChild : m_children) {
+			objChild->SetParent(nullptr);
+			objChild->DeleteRecursive();
+			wxDELETE(objChild);
+		}
+		m_children.clear();
+	}
+
+	using propertyObject = typename T;
+
+protected:
+
+	T* m_parent = nullptr;
+	std::vector<T*> m_children;
 };
 
 #include "backend/compiler/value.h"

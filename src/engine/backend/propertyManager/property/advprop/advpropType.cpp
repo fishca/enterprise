@@ -1,4 +1,5 @@
 #include "advpropType.h"
+
 #include "backend/propertyManager/property/propertyType.h"
 #include "backend/propertyManager/property/variant/typeVariant.h"
 #include "backend/propertyManager/propertyEditor.h"

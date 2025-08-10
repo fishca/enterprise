@@ -3,7 +3,7 @@
 
 #include "backend/system/value/valueEvent.h"
 
-bool CValueToolBarItem::GetToolAction(CEventList* evtList)
+bool CValueToolBarItem::GetToolAction(CEventAction* evtList)
 {
 	CValueToolbar* toolbar = dynamic_cast<CValueToolbar*> (m_parent);
 	if (toolbar == nullptr) return false;

@@ -4,7 +4,7 @@
 bool CValueToolbar::GetActionSource(CPropertyList* property)
 {
 	property->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	property->AppendItem(wxT("form"), _("form"), FORM_ACTION, (IValueFrame*)m_formOwner);
+	property->AppendItem(wxT("form"), _("Form"), FORM_ACTION, (IValueFrame*)m_formOwner);
 
 	class CValueToolbarActionParser {
 	public:

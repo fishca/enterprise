@@ -13,34 +13,38 @@ class BACKEND_API IPropertyObject;
 class wxEventToolProperty : public wxPGProperty {
 	WX_PG_DECLARE_PROPERTY_CLASS(wxEventToolProperty)
 private:
-	mutable class toolData_t {
+
+	mutable class wxEventToolPropertyData {
 	public:
-		void SetNumber(long number) {
-			m_customEvent = false; m_toolID = number; m_strEvent = wxEmptyString;
+		void SetNumber(const long& lAction) {
+			m_lAction = lAction;
+			m_strEventAction.clear();
+			m_customEvent = false;
 		}
-		int GetNumber() const { return m_toolID; }
-		void SetString(const wxString& string) {
-			m_customEvent = true; m_strEvent = string; m_toolID = wxNOT_FOUND;
+		long GetNumber() const { return m_lAction; }
+		void SetString(const wxString& strEventAction) {
+			m_lAction = wxNOT_FOUND;
+			m_strEventAction = strEventAction;
+			m_customEvent = true;
 		}
-		wxString GetString() const { return m_strEvent; }
-		bool IsCustomEvent() const { return m_customEvent; }
+		wxString GetString() const { return m_strEventAction; }
+		bool IsCustomAction() const { return m_customEvent; }
 	private:
-		int m_toolID = wxNOT_FOUND;
+		int m_lAction = wxNOT_FOUND;
 		bool m_customEvent = false;
-		wxString m_strEvent = wxEmptyString;
-	} m_toolData;
+		wxString m_strEventAction = wxEmptyString;
+	} m_actionData;
+
 public:
 
-	bool IsCustomEvent() const {
-		return m_toolData.IsCustomEvent();
-	}
+	bool IsCustomAction() const { return m_actionData.IsCustomAction(); }
 
-	int GetNumber() const { return m_toolData.GetNumber(); }
-	wxString GetString() const { return m_toolData.GetString(); }
+	long GetNumber() const { return m_actionData.GetNumber(); }
+	wxString GetString() const { return m_actionData.GetString(); }
 
 	wxEventToolProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxPGChoices& choices = wxPGChoices(),
-		const wxString& value = wxEmptyString);
+		const wxVariant& value = wxNullVariant);
 
 	virtual ~wxEventToolProperty();
 

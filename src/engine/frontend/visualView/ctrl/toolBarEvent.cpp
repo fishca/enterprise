@@ -24,41 +24,45 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 
 void CValueToolbar::OnTool(wxCommandEvent& event)
 {
-	CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
-	if (visualDoc != nullptr) {
-		IVisualHost* visualHost = visualDoc->GetVisualView();
-		bool isDemonstation = visualHost ? visualHost->IsDemonstration() : false;
-		if (isDemonstation) {
-			event.Skip();
-			return;
-		}
-	}
-	IValueFrame* foundedControl = FindControlByID(event.GetId());
-	if (foundedControl != nullptr) {
-		CAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), CAuiToolBar);
-		wxASSERT(toolBar);
-		if (toolBar != nullptr)
-			toolBar->SetFocus();
-		CValueToolBarItem* toolItem = dynamic_cast<CValueToolBarItem*>(foundedControl);
-		if (toolItem != nullptr) {
-			action_identifier_t actionId = wxNOT_FOUND;
-			IValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
-			const wxString& actionStr = toolItem->GetAction();
-			if (sourceElement != nullptr && actionStr.ToInt(&actionId)) {
-				try {
-					sourceElement->ExecuteAction(actionId, toolItem->GetOwnerForm());
-				}
-				catch (const CBackendException* err) {
-					wxMessageBox(err->what(), m_formOwner->GetCaption());
-				}
-			}
-			else if (actionStr.Length() > 0) {
-				CallAsEvent(actionStr, toolItem->GetValue());
-			}
-		}
+	const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
+		
+		IValueFrame* parentToolControl = FindControlByID(event.GetId());
+		if (parentToolControl != nullptr) {
 
-		if (g_visualHostContext != nullptr) {
-			g_visualHostContext->SelectControl(foundedControl);
+			CAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), CAuiToolBar);
+			wxASSERT(toolBar);
+
+			if (toolBar != nullptr)
+				toolBar->SetFocus();
+
+			CValueToolBarItem* foundedToolControl = dynamic_cast<CValueToolBarItem*>(parentToolControl);
+			if (foundedToolControl != nullptr) {
+
+				const CActionDescription& actionDesc = foundedToolControl->GetAction();
+				const wxString& strAction = actionDesc.GetCustomAction();
+
+				IValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
+				if (sourceElement != nullptr && actionDesc.GetSystemAction() != wxNOT_FOUND) {
+					try {
+						sourceElement->ExecuteAction(
+							actionDesc.GetSystemAction(),
+							GetOwnerForm()
+						);
+					}
+					catch (const CBackendException* err) {
+						wxMessageBox(err->what(), m_formOwner->GetCaption());
+					}
+				}
+				else if (strAction.Length() > 0) {
+					CallAsEvent(strAction, parentToolControl->GetValue());
+				}
+			
+			}
+
+			if (g_visualHostContext != nullptr) {
+				g_visualHostContext->SelectControl(parentToolControl);
+			}
 		}
 	}
 

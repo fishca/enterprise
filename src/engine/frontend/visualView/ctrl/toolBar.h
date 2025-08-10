@@ -21,146 +21,130 @@ const class_identifier_t g_controlToolBarSeparatorCLSID = string_to_clsid("CT_TL
 //********************************************************************************************
 
 class CValueToolbar : public IValueWindow {
-    wxDECLARE_DYNAMIC_CLASS(CValueToolbar);
+	wxDECLARE_DYNAMIC_CLASS(CValueToolbar);
 protected:
-    bool GetActionSource(CPropertyList*);
+	bool GetActionSource(CPropertyList*);
 protected:
-    CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("action"));
-    CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("action source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
+	CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("action"));
+	CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("action source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
 public:
 
-    void SetActionSrc(const form_identifier_t& action) {
-        return m_actSource->SetValue(action);
-    }
+	void SetActionSrc(const form_identifier_t& action) { return m_actSource->SetValue(action); }
+	form_identifier_t GetActionSrc() const { return m_actSource->GetValueAsInteger(); }
 
-    form_identifier_t GetActionSrc() const {
-        return m_actSource->GetValueAsInteger();
-    }
+	CValueToolbar();
 
-    CValueToolbar();
+	//control factory 
+	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
+	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
 
-    //control factory 
-    virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
-    virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-    virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-    virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
-    virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	//support icons
+	virtual wxIcon GetIcon() const;
+	static wxIcon GetIconGroup();
 
-    //support icons
-    virtual wxIcon GetIcon() const;
-    static wxIcon GetIconGroup();
+	/**
+	* Property events
+	*/
+	virtual void OnPropertyCreated(IProperty* property);
+	virtual void OnPropertySelected(IProperty* property);
+	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-    /**
-    * Property events
-    */
-    virtual void OnPropertyCreated(IProperty* property);
-    virtual void OnPropertySelected(IProperty* property);
-    virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	//load & save object in control 
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-    //load & save object in control 
-    virtual bool LoadData(CMemoryReader& reader);
-    virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	/**
+	* Support default menu
+	*/
+	virtual void PrepareDefaultMenu(wxMenu* m_menu);
+	virtual void ExecuteMenu(IVisualHost* visualHost, int id);
 
-    /**
-    * Support default menu
-    */
-    virtual void PrepareDefaultMenu(wxMenu* m_menu);
-    virtual void ExecuteMenu(IVisualHost* visualHost, int id);
-
-    //specific function 
-    void AddToolItem();
-    void AddToolSeparator();
+	//specific function 
+	void AddToolItem();
+	void AddToolSeparator();
 
 protected:
 
-    //events 
-    void OnToolBarLeftDown(wxMouseEvent& event);
-    void OnTool(wxCommandEvent& event);
-    void OnToolDropDown(wxAuiToolBarEvent& event);
-    void OnRightDown(wxMouseEvent& event);
+	//events 
+	void OnToolBarLeftDown(wxMouseEvent& event);
+	void OnTool(wxCommandEvent& event);
+	void OnToolDropDown(wxAuiToolBarEvent& event);
+	void OnRightDown(wxMouseEvent& event);
 
-    friend class CValueForm;
+	friend class CValueForm;
 };
 
 class CValueToolBarItem : public IValueControl {
-    wxDECLARE_DYNAMIC_CLASS(CValueToolBarItem);
+	wxDECLARE_DYNAMIC_CLASS(CValueToolBarItem);
 private:
-    bool GetToolAction(CEventList* evtList);
+	bool GetToolAction(CEventAction* evtList);
 private:
 
-    CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("toolbar item"));
+	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("toolbar item"));
 
-    CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("caption"), _("New tool"));
-    CPropertyPicture* m_propertyBitmap = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("bitmap"), _("bitmap"));
-    CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("context menu"), false);
-    CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("tooltip"), wxEmptyString);
-    CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("enabled"), true);
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("caption"), _("New tool"));
+	CPropertyPicture* m_propertyBitmap = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("bitmap"), _("bitmap"));
+	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("context menu"), false);
+	CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("tooltip"), wxEmptyString);
+	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("enabled"), true);
 
-    CEventList* m_eventAction = IPropertyObject::CreateEvent<CEventList>(m_categoryToolbar, wxT("action"), wxArrayString{wxT("control")}, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
+	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), wxArrayString{ wxT("control") }, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 public:
 
-    void SetCaption(const wxString& caption) {
-        return m_propertyCaption->SetValue(caption);
-    }
+	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyCaption->GetValueAsString(); }
 
-    wxString GetCaption() const {
-        return m_propertyCaption->GetValueAsString();
-    }
+	void SetAction(const CActionDescription& action) { return m_eventAction->SetValue(action); }
+	const CActionDescription& GetAction() const { return m_eventAction->GetValueAsActionDesc(); }
 
-    void SetAction(const wxString& action) {
-        return m_eventAction->SetValue(action);
-    }
+	CValueToolBarItem();
 
-    wxString GetAction() const {
-        return m_eventAction->GetValue();
-    }
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
 
-    CValueToolBarItem();
+	virtual bool CanDeleteControl() const;
+	virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
 
-    virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-    virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
-    virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	//support icons
+	virtual wxIcon GetIcon() const;
+	static wxIcon GetIconGroup();
 
-    virtual bool CanDeleteControl() const;
+	//load & save object in control 
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-    virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
-
-    //support icons
-    virtual wxIcon GetIcon() const;
-    static wxIcon GetIconGroup();
-
-    //load & save object in control 
-    virtual bool LoadData(CMemoryReader& reader);
-    virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
-
-    friend class CValueForm;
-    friend class CValueToolbar;
+	friend class CValueForm;
+	friend class CValueToolbar;
 };
 
 class CValueToolBarSeparator : public IValueControl {
-    wxDECLARE_DYNAMIC_CLASS(CValueToolBarSeparator);
+	wxDECLARE_DYNAMIC_CLASS(CValueToolBarSeparator);
 public:
 
-    CValueToolBarSeparator();
-    virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-    virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
-    virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	CValueToolBarSeparator();
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
 
-    virtual bool CanDeleteControl() const;
+	virtual bool CanDeleteControl() const;
 
-    virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
+	virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
 
-    //support icons
-    virtual wxIcon GetIcon() const;
-    static wxIcon GetIconGroup();
+	//support icons
+	virtual wxIcon GetIcon() const;
+	static wxIcon GetIconGroup();
 
-    //load & save object in control 
-    virtual bool LoadData(CMemoryReader& reader);
-    virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	//load & save object in control 
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-    friend class CValueForm;
-    friend class CValueToolbar;
+	friend class CValueForm;
+	friend class CValueToolbar;
 };
 
 #endif

@@ -1,7 +1,8 @@
 #include "advpropEventTool.h"
-#include "backend/propertyManager/propertyEditor.h"
 
-#include "backend/stringUtils.h"
+#include "backend/propertyManager/property/eventAction.h"
+#include "backend/propertyManager/property/variant/actionVariant.h"
+#include "backend/propertyManager/propertyEditor.h"
 
 // -----------------------------------------------------------------------
 // wxEventToolProperty
@@ -11,26 +12,30 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxEventToolProperty, wxStringProperty, ComboBoxAnd
 
 wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& strName,
 	const wxPGChoices& choices,
-	const wxString& value) : wxPGProperty(label, strName)
+	const wxVariant& value) : wxPGProperty(label, strName)
 {
+	wxVariantDataAction* dataAction = property_cast(value, wxVariantDataAction);
+	wxASSERT(dataAction);
+
 	SetChoices(choices);
-	long action_id = wxNOT_FOUND;
-	if (value.ToLong(&action_id)) {
+
+	const CActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
+	if (actionDesc.GetSystemAction() != wxNOT_FOUND) {
 		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
-			int val = m_choices.GetValue(i);
-			if (action_id == val) {
+			const int val = m_choices.GetValue(i);
+			if (actionDesc.GetSystemAction() == val) {
 				m_flags &= ~(wxPG_PROP_ACTIVE_BTN);
-				SetValue(m_choices.GetLabel(i));
-				m_toolData.SetNumber(val);
+				m_actionData.SetNumber(val);
+				SetValue(value);
 				return;
 			}
 		}
-		m_toolData.SetString(value);
+		m_actionData.SetString(value);
 		m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
 		SetValue(value);
 	}
 	else {
-		m_toolData.SetString(value);
+		m_actionData.SetString(value);
 		m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
 		SetValue(value);
 	}
@@ -42,19 +47,17 @@ wxEventToolProperty::~wxEventToolProperty()
 
 wxString wxEventToolProperty::ValueToString(wxVariant& value, int argFlags) const
 {
-	long action_id = wxNOT_FOUND;
-	if (value.Convert(&action_id)) {
-		if (action_id == wxNOT_FOUND)
-			return wxEmptyString;
-		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
-			const int sel_val = m_choices.GetValue(i);
-			if (action_id == sel_val) {
-				return m_choices.GetLabel(i);
-			}
-		}
+	wxVariantDataAction* dataAction = property_cast(value, wxVariantDataAction);
+	wxASSERT(dataAction);
+	const CActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
+
+	for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
+		const int sel_val = m_choices.GetValue(i);
+		if (sel_val == actionDesc.GetSystemAction()) 
+			return m_choices.GetLabel(i);		
 	}
 
-	return value;
+	return actionDesc.GetCustomAction();
 }
 
 bool wxEventToolProperty::StringToValue(wxVariant& variant,
@@ -69,9 +72,9 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 
 	if (variant != text) {
 		if (text.IsEmpty()) {
-			m_toolData.SetString(text);
+			m_actionData.SetString(text);
 		}
-		variant = text;
+		variant = new wxVariantDataAction(text);
 		return true;
 	}
 
@@ -80,8 +83,8 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 
 bool wxEventToolProperty::IntToValue(wxVariant& value, int number, int argFlags) const
 {
-	value = (long)m_choices.GetValue(number);
-	m_toolData.SetNumber(
+	value = new wxVariantDataAction(m_choices.GetValue(number));
+	m_actionData.SetNumber(
 		m_choices.GetValue(number)
 	);
 	return true;
@@ -89,7 +92,7 @@ bool wxEventToolProperty::IntToValue(wxVariant& value, int number, int argFlags)
 
 void wxEventToolProperty::OnSetValue()
 {
-	if (m_toolData.IsCustomEvent()) {
+	if (m_actionData.IsCustomAction()) {
 		SetFlag(wxPG_PROP_ACTIVE_BTN); // Property button always enabled.
 	}
 	else {
@@ -102,30 +105,22 @@ void wxEventToolProperty::OnSetValue()
 wxPGEditorDialogAdapter* wxEventToolProperty::GetEditorDialog() const
 {
 	class wxPGEditorEventDialogAdapter : public wxPGEditorDialogAdapter {
-		wxString GetUncommittedPropertyValue(wxPropertyGrid* pg) {
-			const wxString& eventName = pg->GetUncommittedPropertyValue();
-			long action_id = wxNOT_FOUND;
-			if (eventName.ToLong(&action_id)) {
-				if (action_id == wxNOT_FOUND)
-					return wxEmptyString;
-			}
-			return eventName;
-		}
 	public:
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
 			wxEventToolProperty* dlgProp = wxDynamicCast(prop, wxEventToolProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
-			const wxString& eventName = GetUncommittedPropertyValue(pg);
-			if (eventName.IsEmpty()) {
+
+			const wxString& strActionEvent = pg->GetUncommittedPropertyValue();		
+			if (strActionEvent.IsEmpty()) {
 				wxPGProperty* pgProp = pg->GetPropertyByLabel(wxT("name"));
-				prop->SetValueFromString(
-					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + wxT("_") + prop->GetLabel());
-				SetValue(prop->GetValue());
+				const wxString& strActionEvent =
+					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + wxT("_") + prop->GetLabel();
+				SetValue(new wxVariantDataAction(strActionEvent));
+				return true;
 			}
-			else {
-				SetValue(eventName);
-			}
+		
+			SetValue(new wxVariantDataAction(strActionEvent));
 			return true;
 		}
 	};

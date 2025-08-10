@@ -106,7 +106,8 @@ int CDesignerApp::OnRun()
 	}
 
 	if (!ret) {
-		wxMessageBox(CBackendException::GetLastError());
+		const wxString& strLastError = CBackendException::GetLastError();
+		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}
 
@@ -166,7 +167,8 @@ int CDesignerApp::OnRun()
 #endif
 	mainFrameCreate(CDocDesignerMDIFrame);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword)) {
-		wxMessageBox(CBackendException::GetLastError());
+		const wxString& strLastError = CBackendException::GetLastError();
+		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		mainFrameDestroy();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();		
 		return 1;

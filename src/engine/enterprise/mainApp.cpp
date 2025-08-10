@@ -114,7 +114,8 @@ int CEnterpriseApp::OnRun()
 	}
 
 	if (!ret) {
-		wxMessageBox(CBackendException::GetLastError());
+		const wxString &strLastError = CBackendException::GetLastError(); 
+		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}
 
@@ -174,7 +175,8 @@ int CEnterpriseApp::OnRun()
 #endif
 	mainFrameCreate(CDocEnterpriseMDIFrame);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword, m_debugEnable ? _app_start_create_debug_server_flag : _app_start_default_flag)) {
-		wxMessageBox(CBackendException::GetLastError());
+		const wxString& strLastError = CBackendException::GetLastError();
+		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		mainFrameDestroy();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
 		return 1;

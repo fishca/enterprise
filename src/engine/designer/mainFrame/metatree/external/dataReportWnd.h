@@ -196,11 +196,9 @@ private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
 		const class_identifier_t& clsid, IMetaObject* metaObject) const {
-		IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(metaObject->GetClassType());
-		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeWnd->GetImageList();
 		wxASSERT(imageList);
-		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		return m_metaTreeWnd->AppendItem(parent, metaObject->GetName(),
 			imageIndex,
 			imageIndex,

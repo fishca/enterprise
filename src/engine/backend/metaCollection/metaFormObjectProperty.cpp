@@ -10,10 +10,12 @@
 
 void CMetaObjectForm::OnPropertyCreated(IProperty* property)
 {
+	IMetaObjectForm::OnPropertyCreated(property);
 }
 
 void CMetaObjectForm::OnPropertySelected(IProperty* property)
 {
+	IMetaObjectForm::OnPropertySelected(property);
 }
 
 void CMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
@@ -37,5 +39,5 @@ void CMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& ol
 		}
 	}
 
-	m_metaData->Modify(true);
+	IMetaObjectForm::OnPropertyChanged(property, oldValue, newValue);
 }

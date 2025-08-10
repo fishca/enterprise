@@ -490,16 +490,18 @@ public:
 	//destructor:
 	virtual ~CValue();
 
-	//Clear values
+	//clear values
 	inline void Reset();
 
-	//Ref counter
-	unsigned int GetRefCount() const {
-		return m_refCount;
-	}
+	//ref counted data "manager"
+	int GetRefCount() const { return m_refCount; }
 
-	virtual void IncrRef() { m_refCount++; }
-	virtual void DecrRef();
+	//ref counter
+	void IncrRef() { wxAtomicInc(m_refCount); }
+	void DecrRef() {
+		wxASSERT_MSG(m_refCount > 0, "invalid ref data count");
+		if (!wxAtomicDec(m_refCount)) delete this;
+	}
 
 	//operators:
 	void operator = (const CValue& cParam);

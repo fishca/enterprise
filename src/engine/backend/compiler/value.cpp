@@ -22,7 +22,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValue, wxObject);
 #ifdef DEBUG_VALUE
 static unsigned int s_nCreateCount = 0;
 #define DEBUG_VALUE_CREATE() \
-	wxLogDebug("Create %d", s_nCreateCount++);
+	wxLogDebug("Create %d", s_nCreateCount++); 
 #else 
 #define DEBUG_VALUE_CREATE() 
 #endif
@@ -147,12 +147,6 @@ CValue::~CValue()
 #ifdef DEBUG_VALUE
 	wxLogDebug("Delete %d", --s_nCreateCount);
 #endif
-}
-
-void CValue::DecrRef()
-{
-	wxASSERT_MSG(m_refCount > 0, "invalid ref data count");
-	if (--m_refCount == 0) delete this;
 }
 
 void CValue::Reset()

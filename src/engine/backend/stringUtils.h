@@ -138,25 +138,24 @@ namespace stringUtils
 		return c >= '0' && c <= '9';
 	}
 
-	inline wxString GenerateSynonym(const wxString& systemName) {
-		wxString newSynonym;
-		for (unsigned int i = 0; i < systemName.length(); i++) {
-			wxUniChar c = systemName[i];
-			if (i == 0) {
-				newSynonym += wxToupper(c);
+	inline wxString GenerateSynonym(const wxString& strSystemName) {
+		wxString strSynonym; 
+		for (auto &c : strSystemName) {
+			if (strSynonym.IsEmpty()) {
+				strSynonym += wxToupper(c);
 			}
 			else if (c >= 'A' && c <= 'Z' ||
 				(c >= 'À' && c <= 'ß')) {
-				newSynonym += ' ';
-				newSynonym += wxTolower(c);
+				strSynonym += ' ';
+				strSynonym += wxTolower(c);
 			}
 			else {
-				newSynonym += (i > 0 ?
+				strSynonym += (strSynonym.Length() > 0 ?
 					c : wxToupper(c)
 					);
 			}
 		}
-		return newSynonym;
+		return strSynonym;
 	}
 
 	inline int CheckCorrectName(const wxString& systemName) {

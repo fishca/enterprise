@@ -330,7 +330,10 @@ bool Guid::operator <= (const Guid& other) const
 // overload equality operator
 bool Guid::operator==(const Guid& other) const
 {
-	return _bytes == other._bytes;
+	for (unsigned int idx = 0; idx < 16; idx++)
+		if (_bytes[idx] != other._bytes[idx]) return false; 
+
+	return true; 
 }
 
 // overload inequality operator

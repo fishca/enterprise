@@ -110,10 +110,10 @@ bool CMetaObjectConstant::OnAfterRunMetaObject(int flags)
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-	
+
 		if (CMetaObjectAttribute::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateObjectValue());
-		
+
 		return false;
 	}
 
@@ -126,10 +126,10 @@ bool CMetaObjectConstant::OnBeforeCloseMetaObject()
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		
+
 		if (moduleManager->RemoveCompileModule(m_propertyModule->GetMetaObject()))
 			return CMetaObjectAttribute::OnAfterCloseMetaObject();
-		
+
 		return false;
 	}
 
@@ -151,13 +151,10 @@ bool CMetaObjectConstant::OnAfterCloseMetaObject()
 
 IBackendValueForm* CMetaObjectConstant::GetObjectForm()
 {
-	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr,
-		CreateObjectValue(), m_metaGuid
-	);
-	valueForm->BuildForm(defaultFormType);
-	valueForm->Modify(false);
-
-	return valueForm;
+	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
+	if (foundedForm == nullptr)
+		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateObjectValue(), m_metaGuid);
+	return foundedForm;
 }
 
 //***********************************************************************

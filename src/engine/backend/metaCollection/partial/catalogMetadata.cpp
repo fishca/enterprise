@@ -65,7 +65,7 @@ CMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t&
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectCatalog::CreateObjectData(IMetaObjectForm* metaObject)
+ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -103,159 +103,57 @@ IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode
 	return pDataRef;
 }
 
-
-
-IBackendValueForm* CMetaObjectCatalog::GetObjectForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+#pragma region _form_builder_h_
+IBackendValueForm* CMetaObjectCatalog::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectCatalog::eFormObject == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectCatalog::eFormObject);
-	}
-
-	if (defList == nullptr) {
-		IRecordDataObject* objectData = CreateObjectValue(eObjectMode::OBJECT_ITEM);
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			objectData, formGuid
-		);
-		valueForm->BuildForm(CMetaObjectCatalog::eFormObject);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(
-		ownerControl, CreateObjectValue(eObjectMode::OBJECT_ITEM), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName, 
+		CMetaObjectCatalog::eFormObject, 
+		ownerControl, CreateObjectValue(eObjectMode::OBJECT_ITEM), 
+		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetFolderForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CMetaObjectCatalog::GetFolderForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectCatalog::eFormGroup == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectCatalog::eFormGroup);
-	}
-
-	if (defList == nullptr) {
-		IRecordDataObject* objectData = CreateObjectValue(eObjectMode::OBJECT_FOLDER);
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			objectData, formGuid
-		);
-		valueForm->BuildForm(CMetaObjectCatalog::eFormGroup);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(
-		ownerControl, CreateObjectValue(eObjectMode::OBJECT_FOLDER), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectCatalog::eFormGroup,
+		ownerControl, CreateObjectValue(eObjectMode::OBJECT_FOLDER),
+		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetListForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CMetaObjectCatalog::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectCatalog::eFormList == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectCatalog::eFormList);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormList, CTreeDataObjectFolderRef::LIST_ITEM_FOLDER), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectCatalog::eFormList);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(ownerControl,
-		m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, defList->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER)
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectCatalog::eFormList,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormList, CTreeDataObjectFolderRef::LIST_ITEM_FOLDER),
+		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetSelectForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CMetaObjectCatalog::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectCatalog::eFormSelect == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectCatalog::eFormSelect);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_ITEM, true), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectCatalog::eFormSelect);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, defList->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM, true), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectCatalog::eFormSelect,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_ITEM, true),
+		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectCatalog::eFormSelect == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectCatalog::eFormFolderSelect);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormFolderSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectCatalog::eFormFolderSelect);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, defList->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectCatalog::eFormSelect,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true),
+		formGuid
 	);
 }
+#pragma endregion
 
 bool CMetaObjectCatalog::GetFormObject(CPropertyList*prop)
 {

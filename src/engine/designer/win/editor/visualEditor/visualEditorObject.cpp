@@ -754,6 +754,9 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 {
 	wxASSERT(m_valueForm);
 
+	if (!m_valueForm->IsEditable())
+		return false; 
+
 	try {
 
 		// si no se ha podido crear el objeto vamos a intentar crearlo colgado

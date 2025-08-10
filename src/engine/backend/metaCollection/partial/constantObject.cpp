@@ -146,6 +146,7 @@ bool CRecordDataObjectConstant::GetModel(IValueModel*& tableValue, const meta_id
 	return false;
 }
 
+#pragma region _form_builder_h_
 void CRecordDataObjectConstant::ShowFormValue()
 {
 	IBackendValueForm* const foundedForm = GetForm();
@@ -156,7 +157,7 @@ void CRecordDataObjectConstant::ShowFormValue()
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm = GetFormValue();
+	IBackendValueForm* const valueForm = GetFormValue();
 
 	valueForm->Modify(false);
 	valueForm->ShowForm();
@@ -166,17 +167,12 @@ IBackendValueForm* CRecordDataObjectConstant::GetFormValue()
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm != nullptr)
-		return foundedForm;
+	if (foundedForm == nullptr)
+		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, this, m_metaObject->GetGuid());
 
-	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr,
-		this, m_metaObject->GetGuid()
-	);;
-	valueForm->BuildForm(defaultFormType);
-	valueForm->Modify(false);
-
-	return valueForm;
+	return foundedForm;
 }
+#pragma endregion
 
 bool CRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
 {
@@ -305,7 +301,7 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 			else {
 				ret = m_metaObject->CreateValue();
 			}
-			resultSet->Close();
+			db_query->CloseResultSet(resultSet);
 		}
 	}
 	else {

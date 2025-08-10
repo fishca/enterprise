@@ -37,7 +37,7 @@ CFunctionList::CFunctionList(CMetaDocument* moduleDoc, CCodeEditor* parent)
 	int funcRed = imageList->Add(wxArtProvider::GetIcon(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE));
 	m_listProcedures->SetImageList(imageList, wxIMAGE_LIST_SMALL);
 
-	IMetaObjectModule* metaModule = dynamic_cast<IMetaObjectModule*>(moduleDoc->GetMetaObject());
+	const IMetaObjectModule* metaModule = dynamic_cast<const IMetaObjectModule*>(moduleDoc->GetMetaObject());
 	wxASSERT(metaModule);
 
 	CParserModule moduleParser; std::vector<wxString> arrayProcedures; int maxLine = 0;

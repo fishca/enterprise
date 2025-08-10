@@ -90,7 +90,8 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* tableCtrl)
 		IValueFrame* childColumn = GetChild(idx);
 		wxASSERT(childColumn);
 		if (visualDocument != nullptr) {
-			CVisualHost* visualView = visualDocument->GetVisualView();
+			CVisualHost* visualView = visualDocument->GetFirstView() ?
+				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 			wxASSERT(visualView);
 			visualView->RemoveControl(childColumn, this);
 		}
@@ -123,14 +124,20 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* tableCtrl)
 		newTableBoxColumn->SetSource(columnInfo->GetColumnID());
 
 		if (visualDocument != nullptr) {
-			CVisualHost* visualView = visualDocument->GetVisualView();
+
+			CVisualHost* visualView = visualDocument->GetFirstView() ?
+				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
+
 			wxASSERT(visualView);
 			visualView->CreateControl(newTableBoxColumn, this);
 		}
 	}
 
 	if (visualDocument != nullptr) {
-		CVisualHost* visualView = visualDocument->GetVisualView();
+
+		CVisualHost* visualView = visualDocument->GetFirstView() ?
+			visualDocument->GetFirstView()->GetVisualHost() : nullptr;
+
 		wxASSERT(visualView);
 		//fix size in parent window 
 		wxWindow* wndParent = visualView->GetParent();
@@ -260,7 +267,9 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		wxDefaultSize,
 		wxDV_SINGLE | wxDV_HORIZ_RULES | wxDV_VERT_RULES | wxDV_ROW_LINES | wxDV_VARIABLE_LINE_HEIGHT | wxBORDER_SIMPLE);
 
-	if (!visualHost->IsDemonstration()) {
+	const CVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
+	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
+
 		tableCtrl->Bind(wxEVT_DATAVIEW_COLUMN_HEADER_CLICK, &CValueTableBox::OnColumnClick, this);
 		tableCtrl->Bind(wxEVT_DATAVIEW_COLUMN_REORDERED, &CValueTableBox::OnColumnReordered, this);
 
@@ -358,8 +367,11 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 		CValueTableBox::RefreshModel();
 
-		if (m_tableModel != tableCtrl->GetModel()) {
-			tableCtrl->AssociateModel(m_tableModel);
+		wxDataViewModel* dataViewModel = m_tableModel ?
+			m_tableModel->GetDataViewModel() : nullptr;
+
+		if (dataViewModel != tableCtrl->GetModel()) {
+			tableCtrl->AssociateModel(dataViewModel);
 		}
 
 		if (needRefresh) {

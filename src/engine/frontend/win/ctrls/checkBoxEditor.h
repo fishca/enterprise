@@ -10,12 +10,13 @@
 class CCheckBox : public wxPanel,
 	public IDynamicBorder {
 
-	wxBoxSizer *m_boxSizer;
+	wxBoxSizer* m_boxSizer;
 
-	wxStaticText *m_staticText;
-	wxCheckBox *m_checkBox;
+	wxStaticText* m_staticText;
+	wxCheckBox* m_checkBox;
 
 	void CreateControls() {
+		
 		m_boxSizer = new wxBoxSizer(wxHORIZONTAL);
 
 		m_staticText = new wxStaticText(this, wxID_ANY, wxT("<labelText>"), wxDefaultPosition, wxDefaultSize);
@@ -27,9 +28,9 @@ class CCheckBox : public wxPanel,
 
 public:
 
-	CCheckBox(wxWindow *parent,
+	CCheckBox(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
-		const wxString &val = wxEmptyString,
+		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxBORDER_THEME | wxTAB_TRAVERSAL) :
 		wxPanel(parent, id, pos, size)
@@ -39,40 +40,28 @@ public:
 		CreateControls();
 
 		wxPanel::SetSizer(m_boxSizer);
-		wxPanel::Layout();
+		//wxPanel::Layout();
 		wxPanel::Centre(wxBOTH);
 	}
 
-	virtual ~CCheckBox() {
-	}
+	virtual ~CCheckBox() {}
 
 	// Bind functors to an event:
 	template <typename Functor, typename EventHandler>
-	void BindCheckBoxCtrl(const Functor &functor, EventHandler handler) {
+	void BindCheckBoxCtrl(const Functor& functor, EventHandler handler) {
 		m_checkBox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, functor, handler);
 	}
 
 	// Unbind functors to an event:
 	template <typename Functor, typename EventHandler>
-	void UnbindCheckBoxCtrl(const Functor &functor, EventHandler handler) { 
+	void UnbindCheckBoxCtrl(const Functor& functor, EventHandler handler) {
 		m_checkBox->Unbind(wxEVT_COMMAND_CHECKBOX_CLICKED, functor, handler);
 	}
 
-	void SetCheckBoxLabel(const wxString& label) {
-		m_staticText->SetLabel(label);
-	}
-
-	wxString GetCheckBoxLabel() const {
-		return m_staticText->GetLabel();
-	}
-
-	void SetCheckBoxValue(bool value) {
-		m_checkBox->SetValue(value);
-	}
-
-	bool GetCheckBoxValue() const {
-		return m_checkBox->GetValue();
-	}
+	void SetCheckBoxLabel(const wxString& label) { m_staticText->SetLabel(label); }
+	wxString GetCheckBoxLabel() const { return m_staticText->GetLabel(); }
+	void SetCheckBoxValue(bool value) { m_checkBox->SetValue(value); }
+	bool GetCheckBoxValue() const { return m_checkBox->GetValue(); }
 
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
@@ -100,10 +89,10 @@ public:
 		return m_checkBox->Enable(enable);
 	}
 
-	virtual void SetWindowStyleFlag(long style) override
-	{
+	virtual void SetWindowStyleFlag(long style) override {
+		
 		m_boxSizer->Clear();
-
+		
 		if ((style & wxAlignment::wxALIGN_LEFT) != 0 || style == wxAlignment::wxALIGN_LEFT) {
 			m_boxSizer->Add(m_checkBox, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 			m_boxSizer->Add(m_staticText, 1, wxEXPAND);
@@ -117,36 +106,30 @@ public:
 	}
 
 #if wxUSE_TOOLTIPS
-	virtual void DoSetToolTipText(const wxString &tip) override {
+	
+	virtual void DoSetToolTipText(const wxString& tip) override {
 		m_staticText->SetToolTip(tip);
 		m_checkBox->SetToolTip(tip);
 	}
 
-	virtual void DoSetToolTip(wxToolTip *tip) override {
+	virtual void DoSetToolTip(wxToolTip* tip) override {
 		m_staticText->SetToolTip(tip);
 		m_checkBox->SetToolTip(tip);
 	}
+
 #endif // wxUSE_TOOLTIPS
 
-	virtual bool AllowCalc() const { 
+	virtual bool AllowCalc() const {
 		if ((GetWindowStyleFlag() & wxAlignment::wxALIGN_LEFT) != 0 ||
 			GetWindowStyleFlag() == wxAlignment::wxALIGN_LEFT) {
 			return false;
-		}	
-		return true; 
+		}
+		return true;
 	};
 
-	virtual wxSize GetControlSize() const {
-		return m_checkBox->GetSize();
-	}
-
-	virtual wxStaticText *GetStaticText() const {
-		return m_staticText;
-	}
-
-	virtual wxWindow* GetControl() const {
-		return m_checkBox;
-	}
+	virtual wxSize GetControlSize() const { return m_checkBox->GetSize(); }
+	virtual wxStaticText* GetStaticText() const { return m_staticText; }
+	virtual wxWindow* GetControl() const { return m_checkBox; }
 };
 
 #endif 

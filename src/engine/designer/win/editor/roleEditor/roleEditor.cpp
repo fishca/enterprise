@@ -44,7 +44,7 @@ void CRoleEditor::OnCheckItem(wxTreeEvent& event)
 		m_roleCtrl->GetItemData(event.GetItem())
 		);
 	if (data != nullptr) {
-		Role* role = data->GetRole();
+		CRole* role = data->GetRole();
 		wxASSERT(role);
 		IMetaObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
@@ -65,7 +65,7 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 		wxASSERT(metaObject);
 		wxTreeItemId root = m_checkCtrl->AddRoot(wxEmptyString);
 		for (unsigned int idx = 0; idx < metaObject->GetRoleCount(); idx++) {
-			Role* role = metaObject->GetRole(idx);
+			CRole* role = metaObject->GetRole(idx);
 			wxASSERT(role);
 			wxTreeItemId newItem = m_checkCtrl->AppendItem(root, role->GetLabel(), wxNOT_FOUND, wxNOT_FOUND, new wxTreeItemRoleData(role));
 			m_checkCtrl->SetItemState(newItem, wxCheckTree::UNCHECKED);

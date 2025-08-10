@@ -487,7 +487,7 @@
     </ClInclude>
     <ClInclude Include="backend_type.h" />
     <ClInclude Include="typeDescription.h" />
-    <ClInclude Include="propertyManager\property\eventList.h">
+    <ClInclude Include="propertyManager\property\eventAction.h">
       <Filter>propertyManager\property</Filter>
     </ClInclude>
     <ClInclude Include="propertyManager\property\eventControl.h">
@@ -635,6 +635,9 @@
     </ClInclude>
     <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\types_pub.h">
       <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\actionVariant.h">
+      <Filter>propertyManager\property\variant</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1273,7 +1276,7 @@
       <Filter>propertyManager</Filter>
     </ClCompile>
     <ClCompile Include="backend_type.cpp" />
-    <ClCompile Include="propertyManager\property\eventList.cpp">
+    <ClCompile Include="propertyManager\property\eventAction.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
     <ClCompile Include="propertyManager\property\eventControl.cpp">
@@ -1404,6 +1407,9 @@
     </ClCompile>
     <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp">
       <Filter>propertyManager\property\advprop</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\actionVariant.cpp">
+      <Filter>propertyManager\property\variant</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

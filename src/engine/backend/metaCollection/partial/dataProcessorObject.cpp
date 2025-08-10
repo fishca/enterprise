@@ -29,7 +29,8 @@ CRecordDataObjectDataProcessor::CRecordDataObjectDataProcessor(const CRecordData
 {
 }
 
-void CRecordDataObjectDataProcessor::ShowFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+#pragma region _form_builder_h_
+void CRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* foundedForm = GetForm();
 
@@ -39,46 +40,29 @@ void CRecordDataObjectDataProcessor::ShowFormValue(const wxString& formName, IBa
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm = GetFormValue(formName, ownerControl);
+	IBackendValueForm* valueForm = GetFormValue(strFormName, ownerControl);
 
 	valueForm->Modify(false);
 	valueForm->ShowForm();
 }
 
-IBackendValueForm* CRecordDataObjectDataProcessor::GetFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CRecordDataObjectDataProcessor::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
-	IBackendValueForm* foundedForm = GetForm();
+	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm)
-		return foundedForm;
+	if (foundedForm == nullptr) {
 
-	IMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : m_metaObject->GetObjectForms()) {
-			if (stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = m_metaObject->GetDefaultFormByID(CMetaObjectDataProcessor::eFormDataProcessor);
-	}
-
-	IBackendValueForm* valueForm = nullptr;
-
-	if (defList) {
-		valueForm = defList->GenerateFormAndRun(
-			ownerControl, this, m_objGuid
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+			strFormName,
+			CMetaObjectDataProcessor::eFormDataProcessor,
+			ownerControl,
+			this,
+			m_objGuid
 		);
-	}
-	else {
-		valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			this, m_objGuid
-		);
-		valueForm->BuildForm(CMetaObjectDataProcessor::eFormDataProcessor);
+
+		return createdForm;
 	}
 
-	return valueForm;
+	return foundedForm;
 }
+#pragma endregion

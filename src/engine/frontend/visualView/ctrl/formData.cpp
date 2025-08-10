@@ -90,7 +90,7 @@ bool CValueForm::CValueFormCollectionData::GetAt(const CValue& varKeyValue, CVal
 			return control->GetControlValue(pvarValue);
 		}
 	}
-	if (!appData->DesignerMode()) 
+	if (!appData->DesignerMode())
 		CBackendException::Error("Index goes beyond array");
 	return false;
 }
@@ -156,9 +156,13 @@ bool CValueForm::CValueFormCollectionData::SetPropVal(const long lPropNum, const
 		CVisualDocument* visualDoc = m_formOwner->GetVisualDocument();
 		if (!visualDoc)
 			return false;
-		CVisualHost* visualView = visualDoc->GetVisualView();
+
+		CVisualHost* visualView = visualDoc->GetFirstView() ?
+			visualDoc->GetFirstView()->GetVisualHost() : nullptr;
+
 		if (!visualView)
 			return false;
+
 		wxObject* object = visualView->GetWxObject(currentControl);
 		if (object) {
 			wxWindow* parentWnd = nullptr;

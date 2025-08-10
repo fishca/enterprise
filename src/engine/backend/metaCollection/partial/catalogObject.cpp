@@ -84,7 +84,8 @@ CSourceExplorer CRecordDataObjectCatalog::GetSourceExplorer() const
 	return srcHelper;
 }
 
-void CRecordDataObjectCatalog::ShowFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+#pragma region _form_builder_h_
+void CRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -95,52 +96,33 @@ void CRecordDataObjectCatalog::ShowFormValue(const wxString& formName, IBackendC
 
 	//if form is not initialized then generate  
 	IBackendValueForm* valueForm =
-		GetFormValue(formName, ownerControl);
+		GetFormValue(strFormName, ownerControl);
 
 	valueForm->Modify(m_objModified);
 	valueForm->ShowForm();
 }
 
-IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
-
-	if (foundedForm != nullptr) 
-		return foundedForm;
 	
-	IMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : m_metaObject->GetObjectForms()) {
-			if (stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = m_metaObject->GetDefaultFormByID(m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup);
-	}
-
-	IBackendValueForm* valueForm = nullptr;
-
-	if (defList) {
-		valueForm = defList->GenerateFormAndRun(
-			ownerControl, this, m_objGuid
+	if (foundedForm == nullptr) {
+		
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+			strFormName,
+			m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup,
+			ownerControl,
+			this,
+			m_objGuid
 		);
-		valueForm->Modify(m_objModified);
-	}
-	else {
-		valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			this, m_objGuid
-		);
-		valueForm->BuildForm(m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup);
-		valueForm->Modify(m_objModified);
+
+		createdForm->CloseOnOwnerClose(false);
+		return createdForm;
 	}
 	
-	valueForm->CloseOnOwnerClose(false);
-	return valueForm;
+	return foundedForm;
 }
+#pragma endregion
 
 //***********************************************************************************************
 //*                                   Catalog events                                            *

@@ -242,7 +242,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 				wxASSERT(staticBoxSizer);
 				selPanel = staticBoxSizer->GetStaticBox();
 			}
-			else if (nextParent->GetClassName() == wxT("notebook") || 
+			else if (nextParent->GetClassName() == wxT("notebook") ||
 				nextParent->GetClassName() == wxT("tablebox")) {
 				wxWindow* notebook = wxDynamicCast(it->second, wxWindow);
 				wxASSERT(notebook);
@@ -268,11 +268,11 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 		if (nextObj->GetComponentType() == COMPONENT_TYPE_SIZER ||
 			nextObj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 			it = m_baseObjects.find(nextObj);
-			if (it != m_baseObjects.end()) { 
-				sizer = wxDynamicCast(it->second, wxSizer); 
+			if (it != m_baseObjects.end()) {
+				sizer = wxDynamicCast(it->second, wxSizer);
 			} break;
 		}
-		else if (nextObj->GetComponentType() == COMPONENT_TYPE_WINDOW) 
+		else if (nextObj->GetComponentType() == COMPONENT_TYPE_WINDOW)
 			break;
 		nextObj = nextObj->GetParent();
 	}
@@ -282,37 +282,151 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 	m_back->SetSelectedObject(obj);
 	m_back->SetSelectedPanel(selPanel);
 
-	//if (componentType == COMPONENT_TYPE_WINDOW) {
+#ifdef _select_control_
+	if (componentType == COMPONENT_TYPE_WINDOW) {
 
-	//	int scroll_rate_y = 0;
-	//	wxScrolledWindow::GetScrollPixelsPerUnit(NULL, &scroll_rate_y);
+		const wxRect viewRect(m_targetWindow->GetClientRect());
 
-	//	wxPoint window_pos = ((wxWindow*)item)->GetPosition();
-	//	wxScrolledWindow::Scroll(0, ((window_pos.y) / scroll_rate_y));
-	//}
+		// For composite controls such as wxComboCtrl we should try to fit the
+		// entire control inside the visible area of the target window, not just
+		// the focused child of the control. Otherwise we'd make only the textctrl
+		// part of a wxComboCtrl visible and the button would still be outside the
+		// scrolled area.  But do so only if the parent fits *entirely* inside the
+		// scrolled window. In other situations, such as nested wxPanel or
+		// wxScrolledWindows, the parent might be way too big to fit inside the
+		// scrolled window. If that is the case, then make only the focused window
+		// visible
+
+		const wxWindow* win = dynamic_cast<wxWindow*>(item);
+		wxASSERT(win);
+
+		if (win->GetParent() != m_targetWindow)
+		{
+			wxWindow* parent = win->GetParent();
+			wxSize parent_size = parent->GetSize();
+			if (parent_size.GetWidth() <= viewRect.GetWidth() &&
+				parent_size.GetHeight() <= viewRect.GetHeight())
+				// make the immediate parent visible instead of the focused control
+				win = parent;
+		}
+
+		// make win position relative to the m_targetWindow viewing area instead of
+		// its parent
+		const wxRect
+			winRect(m_targetWindow->ScreenToClient(win->GetScreenPosition()),
+				win->GetSize());
+
+		// check if it's fully visible
+		if (viewRect.Contains(winRect))
+		{
+			// it is, nothing to do
+			return;
+		}
+
+		// do make the window fit inside the view area by scrolling to it
+		int stepx, stepy;
+		GetScrollPixelsPerUnit(&stepx, &stepy);
+
+		int startx, starty;
+		GetViewStart(&startx, &starty);
+
+		// first in vertical direction:
+		if (stepy > 0)
+		{
+			int diff = 0;
+
+			if (winRect.GetTop() < 0)
+			{
+				diff = winRect.GetTop();
+			}
+			else if (winRect.GetBottom() > viewRect.GetHeight())
+			{
+				diff = winRect.GetBottom() - viewRect.GetHeight() + 1;
+				// round up to next scroll step if we can't get exact position,
+				// so that the window is fully visible:
+				diff += stepy - 1;
+			}
+
+			starty = (starty * stepy + diff) / stepy;
+		}
+
+		// then horizontal:
+		if (stepx > 0)
+		{
+			int diff = 0;
+
+			if (winRect.GetLeft() < 0)
+			{
+				diff = winRect.GetLeft();
+			}
+			else if (winRect.GetRight() > viewRect.GetWidth())
+			{
+				diff = winRect.GetRight() - viewRect.GetWidth() + 1;
+				// round up to next scroll step if we can't get exact position,
+				// so that the window is fully visible:
+				diff += stepx - 1;
+			}
+
+			startx = (startx * stepx + diff) / stepx;
+		}
+
+		wxScrolledWindow::Freeze();
+		wxScrolledWindow::Scroll(startx, starty);
+		wxScrolledWindow::Thaw();
+	}
+#endif // _select_control_
 
 	m_back->Refresh();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::UpdateHostSize()
+{
+	// --- Set sizer properties
+	if (m_back != nullptr) {
+		m_back->Layout();
+		m_back->SetClientSize(m_back->GetBestSize());
+	}
+}
+
+#include "backend/metaCollection/partial/commonObject.h"
+
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const wxString& strCaption)
 {
-	m_back->SetTitle(strCaption);
+	const CValueForm* handler = m_formHandler->GetValueForm();
+	if (strCaption.IsEmpty()) {
+		const ISourceDataObject *srcObject = handler->GetSourceObject(); 
+		if (srcObject != nullptr) {
+			const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+			const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			if (genericObject != nullptr) {
+				m_back->SetTitle(genericObject->GetSynonym() + wxT(": ") + metaFormObject->GetSynonym());
+			}
+			else if (metaFormObject != nullptr) {
+				m_back->SetTitle(metaFormObject->GetSynonym());
+			}
+		}
+		else {
+			const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+			if (metaFormObject != nullptr) m_back->SetTitle(metaFormObject->GetSynonym());
+		}
+	}
+	else {
+		m_back->SetTitle(strCaption);
+	}
+
 	m_back->SetTitleStyle(wxCAPTION);
-	
 	m_back->ShowTitleBar(true);
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetOrientation(int orient)
 {
-	if (m_mainBoxSizer == nullptr) {
-		m_mainBoxSizer = new wxBoxSizer(orient);
-		m_back->GetFrameContentPanel()->SetSizer(m_mainBoxSizer);
-	}
-	else {
-		m_mainBoxSizer->SetOrientation(orient);
-	}
+	const wxWindow* backgroundWindow = GetBackgroundWindow();
+	wxASSERT(backgroundWindow);
+	wxBoxSizer* createdBoxSizer = dynamic_cast<wxBoxSizer*>(backgroundWindow->GetSizer());
+	if (createdBoxSizer != nullptr) createdBoxSizer->SetOrientation(orient);
+	wxASSERT(createdBoxSizer);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +479,7 @@ void CDesignerWindow::OnPaint(wxPaintEvent& event)
 	event.Skip();
 }
 
-void CDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IPropertyObject* object)
+void CDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IValueFrame* object)
 {
 	int min = (object->GetObjectTypeName() == wxT("sizer") ? 0 : 1);
 
@@ -395,7 +509,7 @@ void CDesignerWindow::DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize
 void CDesignerWindow::HighlightSelection(wxDC& dc)
 {
 	wxSize size;
-	IPropertyObject* object = m_selObj;
+	IValueFrame* object = m_selObj;
 
 	if (m_selSizer != nullptr) {
 		wxScrolledWindow* scrolwin = wxDynamicCast(m_selSizer->GetContainingWindow(), wxScrolledWindow);
@@ -449,7 +563,7 @@ void CDesignerWindow::HighlightSelection(wxDC& dc)
 		// This is the closest parent of type COMPONENT_TYPE_WINDOW
 		while (object != nullptr) {
 			if ((object->GetComponentType() == COMPONENT_TYPE_WINDOW)
-				&& object->GetClassName() != wxT("notebookPage") 
+				&& object->GetClassName() != wxT("notebookPage")
 				&& object->GetClassName() != wxT("tableboxColumn"))
 				break;
 			object = object->GetParent();

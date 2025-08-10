@@ -15,18 +15,18 @@ wxClassInfo* IBackendControlFrame::GetClassInfo() const {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 IBackendValueForm* IBackendValueForm::CreateNewForm(
+    const IMetaObjectForm* creator,
     IBackendControlFrame* ownerControl,
-    IMetaObjectForm* metaForm,
-    ISourceDataObject* ownerSrc,
-    const CUniqueKey& formGuid, bool readOnly
+    ISourceDataObject* srcObject,
+    const CUniqueKey& formGuid
 )
 {
     if (backend_mainFrame != nullptr) {
         IBackendValueForm* createdForm = backend_mainFrame->CreateNewForm(
+            creator,
             ownerControl,
-            metaForm,
-            ownerSrc,
-            formGuid, readOnly
+            srcObject,
+            formGuid
         );
 
         if (createdForm == nullptr) {
@@ -36,6 +36,20 @@ IBackendValueForm* IBackendValueForm::CreateNewForm(
         return createdForm;
     }
 
+    CSystemFunction::Raise(_("Context functions are not available!"));
+    return nullptr;
+}
+
+CUniqueKey IBackendValueForm::CreateFormUniqueKey(IBackendControlFrame* ownerControl, ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
+{
+    if (backend_mainFrame != nullptr)  return backend_mainFrame->CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
+    CSystemFunction::Raise(_("Context functions are not available!"));
+    return CUniqueKey();
+}
+
+IBackendValueForm* IBackendValueForm::FindFormByUniqueKey(IBackendControlFrame* ownerControl, ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
+{
+    if (backend_mainFrame != nullptr) return backend_mainFrame->FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
     CSystemFunction::Raise(_("Context functions are not available!"));
     return nullptr;
 }

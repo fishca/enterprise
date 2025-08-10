@@ -71,6 +71,9 @@ public:
     //get ref class 
     virtual class_identifier_t GetSourceClassType() const;
 
+    //Get presentation 
+    virtual wxString GetSourceCaption() const { return GetString(); }
+
 #pragma endregion 
 
     //get form owner 

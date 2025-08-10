@@ -1,8 +1,35 @@
 #ifndef __ACTION_INFO_H__
 #define __ACTION_INFO_H__
 
+class CActionDescription {
+	wxString m_strAction;
+	action_identifier_t m_lAction;
+public:
+
+	bool operator == (const CActionDescription& rhs) const { 
+		if (m_lAction == wxNOT_FOUND) 
+			return m_strAction == rhs.m_strAction;
+		return m_lAction == rhs.m_lAction; 
+	}
+
+	CActionDescription(const action_identifier_t& lAction) :m_strAction(), m_lAction(lAction) {}
+	CActionDescription(const wxString& strAction) :m_strAction(strAction), m_lAction(wxNOT_FOUND) {}
+
+	wxString GetCustomAction() const { return m_strAction; }
+	action_identifier_t GetSystemAction() const { return m_lAction; }
+
+	friend class CActionDescriptionMemory;
+};
+
+class CActionDescriptionMemory {
+public:
+	//load & save object in control 
+	static bool LoadData(class CMemoryReader& reader, CActionDescription& typeDesc);
+	static bool SaveData(class CMemoryWriter& writer, CActionDescription& typeDesc);
+};
+
 class IActionDataObject {
-protected:	
+protected:
 	class CActionCollection {
 		CValue* m_srcData;
 		struct CAction {
@@ -154,7 +181,7 @@ protected:
 			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
 				return lNumAction == act.m_act_id; }
 			);
-			if (it != m_vecAction.end()) 
+			if (it != m_vecAction.end())
 				return it->m_createDef;
 
 			return true;
@@ -181,7 +208,7 @@ protected:
 	};
 
 public:
-	
+
 	//support action 
 	virtual CActionCollection GetActionCollection(const form_identifier_t& formType) = 0;
 	virtual void AppendActionCollection(CActionCollection& actionData, const form_identifier_t& formType) {
@@ -193,7 +220,7 @@ public:
 					data.GetNameByID(id),
 					data.GetCaptionByID(id),
 					id,
-					data.IsCreateInForm(id), 
+					data.IsCreateInForm(id),
 					data.GetSourceDataByID(id)
 				);
 			}
@@ -202,7 +229,7 @@ public:
 			}
 		}
 	}
-		
+
 	// execute action 
 	virtual void ExecuteAction(const action_identifier_t& lNumAction, class IBackendValueForm* srcForm) = 0;
 };

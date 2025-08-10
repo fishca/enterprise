@@ -62,6 +62,8 @@ public:
 		m_propertyMenuType->SetValue(menuType);
 	}
 
+	virtual bool IsEditable() const { return false; }
+
 	virtual ~CPropertyInterfaceItem();
 
 	//system override 

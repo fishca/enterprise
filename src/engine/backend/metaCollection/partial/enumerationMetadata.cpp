@@ -49,7 +49,7 @@ CMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifie
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectEnumeration::CreateObjectData(IMetaObjectForm* metaObject)
+ISourceDataObject* CMetaObjectEnumeration::CreateSourceObject(IMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -63,67 +63,27 @@ ISourceDataObject* CMetaObjectEnumeration::CreateObjectData(IMetaObjectForm* met
 	return nullptr;
 }
 
-
-
-IBackendValueForm* CMetaObjectEnumeration::GetListForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+#pragma region _form_builder_h_
+IBackendValueForm* CMetaObjectEnumeration::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectEnumeration::eFormList == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectEnumeration::eFormList);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			new CListDataObjectEnumRef(this, CMetaObjectEnumeration::eFormList), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectEnumeration::eFormList);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(ownerControl,
-		new CListDataObjectEnumRef(this, defList->GetTypeForm()), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectEnumeration::eFormList,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormList),
+		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectEnumeration::eFormSelect == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectEnumeration::eFormSelect);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			new CListDataObjectEnumRef(this, CMetaObjectEnumeration::eFormSelect, true), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectEnumeration::eFormSelect);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(ownerControl,
-		new CListDataObjectEnumRef(this, defList->GetTypeForm(), true), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectEnumeration::eFormSelect,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormSelect, true),
+		formGuid
 	);
 }
+#pragma endregion
 
 bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 {

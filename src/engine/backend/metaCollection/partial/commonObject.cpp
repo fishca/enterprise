@@ -39,40 +39,51 @@ IMetaObjectAttribute* IMetaObjectGenericData::FindGenericAttribute(const meta_id
 	return nullptr;
 }
 
-IBackendValueForm* IMetaObjectGenericData::GetGenericForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+#pragma region _form_builder_h_
+IBackendValueForm* IMetaObjectGenericData::GetGenericForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetGenericForms()) {
-			if (stringUtils::CompareString(formName, metaForm->GetName())) {
-				return metaForm->GenerateFormAndRun(ownerControl,
-					nullptr, formGuid
-				);
+	return CreateAndBuildForm(strFormName, defaultFormType, ownerControl, nullptr, formGuid);
+}
+#pragma endregion
+#pragma region _form_creator_h_
+IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& strFormName, const form_identifier_t& form_id, IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
+{
+	IMetaObjectForm* creator = nullptr;
+
+	if (srcObject != nullptr) srcObject->SourceIncrRef();
+
+	if (!strFormName.IsEmpty()) {
+
+		for (auto obj : GetGenericForms()) {
+			if ((form_id == obj->GetTypeForm() || form_id == defaultFormType)
+				&& stringUtils::CompareString(strFormName, obj->GetName())) {
+				creator = obj;
+				break;
 			}
 		}
-	}
 
-	if (!formName.IsEmpty())
-		CSystemFunction::Raise(_("Ñommon form not found '") + formName + "'");
-
-	return nullptr;
-}
-
-IBackendValueForm* IMetaObjectGenericData::GetGenericForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-	for (auto metaForm : GetGenericForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
+		if (creator == nullptr) {
+			if (srcObject != nullptr) srcObject->SourceDecrRef();
+			CSystemFunction::Raise(_("Form not found '") + strFormName + "'");
+			return nullptr;
 		}
 	}
 
-	if (defList == nullptr)
-		return nullptr;
+	IBackendValueForm* result = IBackendValueForm::FindFormByUniqueKey(ownerControl, srcObject, formGuid);
 
-	return GetGenericForm(defList->GetName(),
-		ownerControl, formGuid
-	);
+	if (result == nullptr) {
+
+		result = IMetaObjectForm::CreateAndBuildForm(
+			creator != nullptr ? creator : GetDefaultFormByID(form_id),
+			form_id,
+			ownerControl, srcObject, formGuid
+		);
+	}
+
+	if (srcObject != nullptr) srcObject->SourceDecrRef();
+	return result;
 }
+#pragma endregion
 
 //***********************************************************************
 //*                           IMetaObjectRecordData					    *
@@ -121,23 +132,6 @@ bool IMetaObjectRecordData::OnAfterCloseMetaObject()
 
 	unregisterManager();
 	return IMetaObject::OnAfterCloseMetaObject();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-IBackendValueForm* IMetaObjectRecordData::GetObjectForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetObjectForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
 }
 
 //***********************************************************************
@@ -326,50 +320,21 @@ bool IMetaObjectRecordDataRef::OnAfterCloseMetaObject()
 //***********************************************************************
 
 //process choice 
-bool IMetaObjectRecordDataRef::ProcessChoice(IBackendControlFrame* ownerValue, const meta_identifier_t& id, eSelectMode selMode)
+bool IMetaObjectRecordDataRef::ProcessChoice(IBackendControlFrame* ownerValue, const wxString& strFormName, eSelectMode selMode)
 {
-	IBackendValueForm* selectForm = IMetaObjectRecordDataRef::GetSelectForm(id, ownerValue);
-	if (selectForm == nullptr)
+	IBackendValueForm* const selectChoiceForm = GetSelectForm(strFormName, ownerValue);
+	if (selectChoiceForm == nullptr)
 		return false;
-	selectForm->ShowForm();
+
+	selectChoiceForm->ShowForm();
 	return true;
 }
 
-CReferenceDataObject* IMetaObjectRecordDataRef::FindObjectValue(const Guid& guid)
+CReferenceDataObject* IMetaObjectRecordDataRef::FindObjectValue(const Guid& objGuid)
 {
-	if (!guid.isValid())
+	if (!objGuid.isValid())
 		return nullptr;
-	return CReferenceDataObject::Create(this, guid);
-}
-
-IBackendValueForm* IMetaObjectRecordDataRef::GetListForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetListForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
-}
-
-IBackendValueForm* IMetaObjectRecordDataRef::GetSelectForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetSelectForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
+	return CReferenceDataObject::Create(this, objGuid);
 }
 
 //***********************************************************************
@@ -896,51 +861,25 @@ bool IMetaObjectRecordDataFolderMutableRef::OnAfterCloseMetaObject()
 
 //////////////////////////////////////////////////////////////////////
 
-bool IMetaObjectRecordDataFolderMutableRef::ProcessChoice(IBackendControlFrame* ownerValue, const meta_identifier_t& id, eSelectMode selMode)
+bool IMetaObjectRecordDataFolderMutableRef::ProcessChoice(IBackendControlFrame* ownerValue, const wxString& strFormName, eSelectMode selMode)
 {
-	IBackendValueForm* selectForm = nullptr;
-	if (selMode == eSelectMode::eSelectMode_Items || selMode == eSelectMode::eSelectMode_FoldersAndItems) {
-		selectForm = IMetaObjectRecordDataFolderMutableRef::GetSelectForm(id, ownerValue);
-	}
-	else if (selMode == eSelectMode::eSelectMode_Folders) {
-		selectForm = IMetaObjectRecordDataFolderMutableRef::GetFolderSelectForm(id, ownerValue);
-	}
-	if (selectForm == nullptr)
+	if (ownerValue == nullptr)
 		return false;
-	selectForm->ShowForm();
+
+	IBackendValueForm* selectChoiceForm = nullptr;
+
+	if (selectChoiceForm == nullptr && selMode == eSelectMode::eSelectMode_Items || selMode == eSelectMode::eSelectMode_FoldersAndItems) {
+		selectChoiceForm = GetSelectForm(strFormName, ownerValue);
+	}
+	else if (selectChoiceForm == nullptr && selMode == eSelectMode::eSelectMode_Folders) {
+		selectChoiceForm = GetFolderSelectForm(strFormName, ownerValue);
+	}
+
+	if (selectChoiceForm == nullptr)
+		return false;
+
+	selectChoiceForm->ShowForm();
 	return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-IBackendValueForm* IMetaObjectRecordDataFolderMutableRef::GetFolderForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetFolderForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
-}
-
-IBackendValueForm* IMetaObjectRecordDataFolderMutableRef::GetFolderSelectForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetFolderSelectForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1103,21 +1042,6 @@ bool IMetaObjectRegisterData::OnAfterCloseMetaObject()
 	unregisterRecordManager();
 
 	return IMetaObject::OnAfterCloseMetaObject();
-}
-
-IBackendValueForm* IMetaObjectRegisterData::GetListForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
-
-	return GetListForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
 }
 
 //***********************************************************************
@@ -1930,8 +1854,10 @@ bool IRecordDataObjectRef::GetModel(IValueModel*& tableValue, const meta_identif
 void IRecordDataObjectRef::Modify(bool mod)
 {
 	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objGuid);
+
 	if (foundedForm != nullptr)
 		foundedForm->Modify(mod);
+
 	m_objModified = mod;
 }
 
@@ -1941,9 +1867,8 @@ bool IRecordDataObjectRef::Generate()
 		return false;
 
 	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objGuid);
-	if (foundedForm != nullptr) {
+	if (foundedForm != nullptr)
 		return foundedForm->GenerateForm(this);
-	}
 
 	return false;
 }
@@ -2002,10 +1927,10 @@ void IRecordDataObjectRef::PrepareEmptyObject()
 void IRecordDataObjectRef::PrepareEmptyObject(const IRecordDataObjectRef* source)
 {
 	m_listObjectValue.clear();
-	
+
 	IMetaObjectAttribute* codeAttribute = m_metaObject->GetAttributeForCode();
 	wxASSERT(codeAttribute);
-	
+
 	//attributes can refValue 
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		if (obj->IsDeleted())
@@ -2459,7 +2384,13 @@ wxString IRecordManagerObject::GetString() const
 
 void IRecordManagerObject::PrepareEmptyObject(const IRecordManagerObject* source)
 {
+	if (m_recordLine != nullptr) {
+		m_recordLine->DecrRef();
+		m_recordLine = nullptr;
+	}
+
 	if (source == nullptr) {
+
 		m_recordLine = new IRecordSetObject::CRecordSetObjectRegisterReturnLine(
 			m_recordSet,
 			m_recordSet->GetItem(
@@ -2710,21 +2641,6 @@ IValueTable* IRecordSetObject::SaveDataToTable() const
 
 	return valueTable;
 	return valueTable;
-}
-
-bool IRecordSetObject::IsEmpty() const
-{
-	return !m_selected;
-}
-
-void IRecordSetObject::Modify(bool mod)
-{
-	m_objModified = mod;
-}
-
-bool IRecordSetObject::IsModified() const
-{
-	return m_objModified;
 }
 
 bool IRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)

@@ -42,12 +42,12 @@ void CDebuggerClient::LoadBreakpointCollection()
 {
 	if (m_listBreakpoint.size() > 0) m_listBreakpoint.clear();
 	
-	IDatabaseResultSet* resultSetDebug = db_query->RunQueryWithResults("SELECT * FROM %s", dbg_table);
-	wxASSERT(resultSetDebug);
-	while (resultSetDebug->Next()) {
-		m_listBreakpoint[resultSetDebug->GetResultString("moduleName")][resultSetDebug->GetResultInt("moduleLine")] = 0;
+	IDatabaseResultSet* databaseResultSet = db_query->RunQueryWithResults("SELECT * FROM %s", dbg_table);
+	wxASSERT(databaseResultSet);
+	while (databaseResultSet->Next()) {
+		m_listBreakpoint[databaseResultSet->GetResultString("moduleName")][databaseResultSet->GetResultInt("moduleLine")] = 0;
 	}
-	resultSetDebug->Close();
+	db_query->CloseResultSet(databaseResultSet);
 }
 
 bool CDebuggerClient::ToggleBreakpointInDB(const wxString& moduleName, unsigned int line)
@@ -102,10 +102,6 @@ bool CDebuggerClient::OffsetBreakpointInDB(const wxString& moduleName, unsigned 
 
 bool CDebuggerClient::RemoveAllBreakpointInDB()
 {
-	IPreparedStatement* preparedStatement = db_query->PrepareStatement("DELETE FROM %s;", dbg_table);
-	wxASSERT(preparedStatement);
-	if (preparedStatement == nullptr) 
-		return false; 
-	preparedStatement->RunQuery(); 
+	db_query->RunQuery("DELETE FROM %s;", dbg_table);
 	return true;
 }

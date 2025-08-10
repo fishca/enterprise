@@ -19,7 +19,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectForm, CMetaObjectModule);
 //*                          common value object                        *
 //***********************************************************************
 
-bool IMetaObjectForm::LoadFormData(IBackendValueForm* valueForm) {
+bool IMetaObjectForm::LoadFormData(IBackendValueForm* valueForm) const {
 	return valueForm->LoadForm(GetFormData());
 }
 
@@ -31,78 +31,86 @@ bool IMetaObjectForm::SaveFormData(IBackendValueForm* valueForm) {
 
 //***********************************************************************
 
-IBackendValueForm* IMetaObjectForm::GenerateForm(IBackendControlFrame* ownerControl,
-	ISourceDataObject* ownerSrc, const CUniqueKey& guidForm)
+#pragma region _form_creator_h_
+
+IBackendValueForm* IMetaObjectForm::CreateAndBuildForm(const IMetaObjectForm* creator,
+	IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
-	if (GetFormData().IsEmpty()) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(
-			ownerControl, this, ownerSrc, guidForm, m_propEnabled
-		);
-		//build form
-		if (m_firstInitialized) {
-			m_firstInitialized = false;
-			valueForm->BuildForm(GetTypeForm());
-			SaveFormData(valueForm);
-		}
-		return valueForm;
-	}
-
-	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(
-		ownerControl, this, ownerSrc, guidForm, m_propEnabled
-	);
-
-	if (!LoadFormData(valueForm)) {
-		wxDELETE(valueForm);
-	}
-
-	return valueForm;
+	return CreateAndBuildForm(creator,
+		creator != nullptr ? creator->GetTypeForm() : defaultFormType, ownerControl, srcObject, formGuid);
 }
 
-IBackendValueForm* IMetaObjectForm::GenerateFormAndRun(IBackendControlFrame* ownerControl,
-	ISourceDataObject* ownerSrc, const CUniqueKey& guidForm)
+IBackendValueForm* IMetaObjectForm::CreateAndBuildForm(const IMetaObjectForm* creator, const form_identifier_t& form_id,
+	IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
-	IBackendValueForm* valueForm = nullptr;
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-	if (!moduleManager->FindCompileModule(this, valueForm)) {
-		valueForm = GenerateForm(ownerControl, ownerSrc, guidForm);
-		if (!valueForm->InitializeFormModule()) {
-			wxDELETE(valueForm);
+	IBackendValueForm* result = nullptr;
+
+	if (creator != nullptr) {	
+		const IMetaData* metaData = creator->GetMetaData();
+		wxASSERT(metaData);
+		const IModuleManager* moduleManager = metaData->GetModuleManager();		
+		wxASSERT(moduleManager);
+		if (!moduleManager->FindCompileModule(creator, result)) {
+			result = IBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
+			if (!creator->GetFormData().IsEmpty() && !creator->LoadFormData(result)) {
+				wxDELETE(result);
+				return nullptr;
+			}
+			else if (creator->GetFormData().IsEmpty()) {
+				result->BuildForm(form_id);
+			}
+		}
+	}
+	else {
+		result = IBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
+		result->BuildForm(form_id);
+	}
+
+	if (result != nullptr) {
+
+		bool success = true;
+
+		try {
+			success = result->InitializeFormModule();
+		}
+		catch (...) {
+			success = false;
+		}
+
+		if (!success) {
+			wxDELETE(result);
 			return nullptr;
 		}
+
+		if (srcObject != nullptr) result->Modify(srcObject->IsModified());
 	}
 
-	return valueForm;
+	return result;
 }
+
+#pragma endregion
 
 ///////////////////////////////////////////////////////////////////////////
 
 wxMemoryBuffer IMetaObjectForm::CopyFormData() const
 {
-	IBackendValueForm* valueForm = nullptr;	
+	IBackendValueForm* valueForm = nullptr;
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	if (moduleManager->FindCompileModule(this, valueForm)) 
-		return valueForm->SaveForm();	
+	if (moduleManager->FindCompileModule(this, valueForm))
+		return valueForm->SaveForm();
 	return wxMemoryBuffer();
 }
 
 bool IMetaObjectForm::PasteFormData()
 {
-	//IBackendValueForm* valueForm = nullptr;
-	//IModuleManager* moduleManager = m_metaData->GetModuleManager();
-	//wxASSERT(moduleManager);
-	//
-	//if (moduleManager->FindCompileModule(this, valueForm))
-	//	return valueForm->LoadForm(GetFormData());
-
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 IMetaObjectForm::IMetaObjectForm(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IMetaObjectModule(name, synonym, comment), m_firstInitialized(false)
+	IMetaObjectModule(name, synonym, comment)
 {
 	//set default proc
 	SetDefaultProcedure("beforeOpen", eContentHelper::eProcedureHelper, { "cancel" });
@@ -151,7 +159,7 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 			formList.GetItemLabel(idx),
 			formList.GetItemHelp(idx),
 			formList.GetItemId(idx),
-			formList.GetItemName(idx) 
+			formList.GetItemName(idx)
 		);
 	}
 	return true;
@@ -163,19 +171,17 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 
 bool CMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	m_firstInitialized = true;
-
 	if (!IMetaObjectForm::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	if ((flags & newObjectFlag) != 0) {
-		
+
 		IMetaObjectGenericData* metaObject = wxDynamicCast(
 			m_parent, IMetaObjectGenericData
 		);
-		
+
 		wxASSERT(metaObject);
-		
+
 		form_identifier_t res = wxID_CANCEL;
 		if (metaData != nullptr) {
 			IBackendMetadataTree* metaTree = metaData->GetMetaTree();
@@ -280,7 +286,6 @@ bool CMetaObjectCommonForm::SaveData(CMemoryWriter& writer)
 
 bool CMetaObjectCommonForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	m_firstInitialized = true;
 	return IMetaObjectModule::OnCreateMetaObject(metaData, flags);
 }
 
@@ -294,7 +299,7 @@ bool CMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 	if (appData->DesignerMode()) {
 		IModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
-		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(GenerateFormAndRun()))) {
+		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(IMetaObjectForm::CreateAndBuildForm(this, defaultFormType)))) {
 			return IMetaObjectModule::OnBeforeRunMetaObject(flags);
 		}
 		return false;

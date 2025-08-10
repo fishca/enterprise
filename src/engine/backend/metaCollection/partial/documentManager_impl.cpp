@@ -55,7 +55,8 @@ CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, cons
 				const Guid& foundedGuid = databaseResultSet->GetResultString(guidName);
 				if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);
 			}
-			databaseResultSet->Close();
+			db_query->CloseResultSet(databaseResultSet);
+			db_query->CloseStatement(statement);
 			if (foundedReference != nullptr) return foundedReference;		
 		}
 	}

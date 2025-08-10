@@ -40,7 +40,7 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 		}
 		IModuleDataObject* moduleInfo = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
 		if (moduleInfo != nullptr) {
-			IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
+			const IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
 			if (computeModuleObject != nullptr) {
 				CParserModule cParser;
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -95,7 +95,7 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 		CPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
 		if (currContext && currContext->FindVariable(m_precompileModule->sLastParentKeyword)) {
 			ac.Cancel();
-			IMetaObject *metaObject = m_document->GetMetaObject(); 
+			const IMetaObject *metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateAutocomplete(
 				metaObject->GetFileName(), 
@@ -344,7 +344,7 @@ void CCodeEditor::LoadToolTip(const wxPoint& pos)
 		);
 
 		if (it == m_expressions.end()) {
-			IMetaObject* metaObject = m_document->GetMetaObject();
+			const IMetaObject* metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateToolTip(
 				metaObject->GetFileName(),
@@ -381,7 +381,7 @@ void CCodeEditor::LoadCallTip()
 
 				IModuleDataObject* moduleInfo = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
 				if (moduleInfo) {
-					IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
+					const IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
 					if (computeModuleObject) {
 						CParserModule cParser;
 						if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -549,7 +549,7 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		if (m_document) {
-			IMetaObject* metaObject = m_document->GetMetaObject();
+			const IMetaObject* metaObject = m_document->GetMetaObject();
 			if (metaObject) {
 				IMetaData* metaData = metaObject->GetMetaData();
 				wxASSERT(metaData);
@@ -570,7 +570,7 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 	else if (stringUtils::CompareString(strKeyWord, wxT("showCommonForm"))
 		|| stringUtils::CompareString(strKeyWord, wxT("getCommonForm")))
 	{
-		IMetaObject* metaObject = m_document->GetMetaObject();
+		const IMetaObject* metaObject = m_document->GetMetaObject();
 		wxASSERT(metaObject);
 		IMetaData* metaData = metaObject->GetMetaData();
 		wxASSERT(metaData);

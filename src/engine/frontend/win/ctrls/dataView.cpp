@@ -20,17 +20,17 @@ wxEND_EVENT_TABLE()
 bool wxDataModelViewCtrl::AssociateModel(wxDataViewModel* model)
 {
 	if (model != nullptr) {
-		IValueModel* new_model = dynamic_cast<IValueModel*>(model);
-		if (new_model != nullptr) {
-			m_genNotitfier = new wxTableModelNotifier(this);
-			new_model->AppendNotifier(m_genNotitfier);
+		IDataViewModelProvider* dataModel = dynamic_cast<IDataViewModelProvider*>(model);
+		if (dataModel != nullptr) {
+			m_genNotifier = new wxTableModelNotifier(this);
+			dataModel->GetOwnerValueModel()->AppendNotifier(m_genNotifier);
 		}
 	}
 	else {
-		IValueModel* old_model = dynamic_cast<IValueModel*>(GetModel());
-		if (old_model != nullptr)
-			old_model->RemoveNotifier(m_genNotitfier);
-		wxDELETE(m_genNotitfier);
+		IDataViewModelProvider* dataModel = dynamic_cast<IDataViewModelProvider*>(GetModel());
+		if (dataModel != nullptr)
+			dataModel->GetOwnerValueModel()->RemoveNotifier(m_genNotifier);
+		wxDELETE(m_genNotifier);
 	}
 	return wxDataViewCtrl::AssociateModel(model);
 }
@@ -47,7 +47,7 @@ bool wxDataModelViewCtrl::AssociateModel(wxDataViewModel* model)
 #include "backend/metadataConfiguration.h"
 #include "backend/objCtor.h"
 
-bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
+bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 {
 	enum {
 		eModelUse = 1,
@@ -59,19 +59,19 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 	class wxFilterDialog : public wxDialog {
 
 		class wxDataViewFilterModel : public wxDataViewVirtualListModel {
-			filterRow_t m_filter;
+			CFilterRow m_filter;
 		public:
 
 			inline void CopyValue(wxVariant& variant, const CValue& cValue) const {
 				variant = cValue.GetString();
 			}
 
-			void SetFilter(const filterRow_t& filter) {
+			void SetFilter(const CFilterRow& filter) {
 				m_filter = filter;
 				Reset(filter.m_filters.size());
 			};
 
-			filterRow_t& GetFilter() {
+			CFilterRow& GetFilter() {
 				return m_filter;
 			};
 
@@ -265,6 +265,10 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				return true;
 			}
 
+			// Counter reference
+			virtual void ControlIncrRef() {}
+			virtual void ControlDecrRef() {}
+
 		public:
 
 			virtual bool GetControlValue(CValue& pvarControlVal) const {
@@ -272,10 +276,20 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				filterRow_t& filter = m_filterDialog->m_filterModel->GetFilter();
-				filterRow_t::filterData_t& filterData = filter.m_filters[index - 1];
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				pvarControlVal = filterData.m_filterValue;
 				return true;
+			}
+
+			virtual Guid GetControlGuid() const { 
+				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				if (!item.IsOk())
+					return wxNullGuid;
+				size_t index = reinterpret_cast<size_t>(item.GetID());
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				return filterData.m_filterGuid; 
 			}
 
 			virtual bool SetControlValue(const CValue& varValue) const {
@@ -283,8 +297,8 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				filterRow_t& filter = m_filterDialog->m_filterModel->GetFilter();
-				filterRow_t::filterData_t& filterData = filter.m_filters[index - 1];
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = varValue;
 				return true;
 			}
@@ -317,8 +331,8 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				filterRow_t& filter = m_filterDialog->m_filterModel->GetFilter();
-				filterRow_t::filterData_t& filterData = filter.m_filters[index - 1];
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				CTypeDescription& typeDescription = filterData.m_filterTypeDescription;
 				if (filterData.m_filterValue.GetType() == eValueTypes::TYPE_EMPTY) {
 					const class_identifier_t& clsid = ITypeControlFactory::ShowSelectType(commonMetaData,
@@ -338,7 +352,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 						eSelectMode selMode = eSelectMode::eSelectMode_Items; IMetaObjectAttribute* attribute = nullptr;
 						if (commonMetaData->GetMetaObject(attribute, filterData.m_filterModel, metaObject))
 							selMode = attribute->GetSelectMode();
-						metaObject->ProcessChoice(this, wxNOT_FOUND, selMode);
+						metaObject->ProcessChoice(this, wxEmptyString, selMode);
 					}
 				}
 			}
@@ -348,8 +362,8 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				filterRow_t& filter = m_filterDialog->m_filterModel->GetFilter();
-				filterRow_t::filterData_t& filterData = filter.m_filters[index - 1];
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = CValueTypeDescription::AdjustValue(filterData.m_filterTypeDescription);
 				filterData.m_filterUse = true;
 				FinishSelecting();
@@ -360,8 +374,8 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				filterRow_t& filter = m_filterDialog->m_filterModel->GetFilter();
-				filterRow_t::filterData_t& filterData = filter.m_filters[index - 1];
+				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = vSelected;
 				filterData.m_filterUse = true;
 				FinishSelecting();
@@ -385,14 +399,14 @@ bool wxDataModelViewCtrl::ShowFilter(struct filterRow_t& filter)
 
 	public:
 
-		void SetFilter(const filterRow_t& filter) {
+		void SetFilter(const CFilterRow& filter) {
 			m_filterModel->SetFilter(filter);
 		}
 
-		filterRow_t GetFilter() const {
+		CFilterRow GetFilter() const {
 			if (m_filterModel != nullptr)
 				return m_filterModel->GetFilter();
-			return filterRow_t();
+			return CFilterRow();
 		}
 
 		wxFilterDialog::wxFilterDialog(wxWindow* parent, wxWindowID id,
@@ -733,7 +747,7 @@ bool wxTableModelNotifier::SendEvent(const wxEventType& eventType, const wxDataV
 	return m_mainWindow->ProcessWindowEvent(le);
 }
 
-bool wxTableModelNotifier::ShowFilter(filterRow_t& filter)
+bool wxTableModelNotifier::ShowFilter(CFilterRow& filter)
 {
 	return m_mainWindow->ShowFilter(filter);
 }

@@ -83,22 +83,30 @@ IBackendValueForm* CDocMDIFrame::ActiveWindow() const {
 		wxDocChildFrameAnyBase* activeChild =
 			dynamic_cast<wxDocChildFrameAnyBase*>(CDocMDIFrame::GetActiveChild());
 		if (activeChild != nullptr) {
-			CVisualView* formView = dynamic_cast<CVisualView*>(activeChild->GetView());
-			if (formView != nullptr) {
-				return formView->GetValueForm();
+			CVisualDocument* const ownerFormDoc = dynamic_cast<CVisualDocument*>(activeChild->GetDocument());
+			if (ownerFormDoc != nullptr) {
+				return ownerFormDoc->GetValueForm();
 			}
 		}
 	}
 	return nullptr;
 }
 
-IBackendValueForm* CDocMDIFrame::CreateNewForm(IBackendControlFrame* ownerControl, IMetaObjectForm* metaForm, ISourceDataObject* ownerSrc, const CUniqueKey& formGuid, bool readOnly)
+IBackendValueForm* CDocMDIFrame::CreateNewForm(const IMetaObjectForm* creator, IBackendControlFrame* backendControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
-	IControlFrame* frameControl = dynamic_cast<IControlFrame*>(ownerControl);
-	wxASSERT(!(frameControl == nullptr && ownerControl != nullptr));
-	return CValue::CreateAndConvertObjectValueRef<CValueForm>(
-		frameControl, metaForm, ownerSrc, formGuid, readOnly
-	);
+	IControlFrame* ownerControl = dynamic_cast<IControlFrame*>(backendControl);
+	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));
+	return CValue::CreateAndConvertObjectValueRef<CValueForm>(creator, ownerControl, srcObject, formGuid);
+}
+
+CUniqueKey CDocMDIFrame::CreateFormUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
+{
+	return CValueForm::CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
+}
+
+IBackendValueForm* CDocMDIFrame::FindFormByUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
+{
+	return CValueForm::FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
 }
 
 IBackendValueForm* CDocMDIFrame::FindFormByUniqueKey(const CUniqueKey& guid)

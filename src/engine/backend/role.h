@@ -7,7 +7,7 @@
 class BACKEND_API IMetaObject;
 //*******************************************************************************
 
-class Role {
+class CRole {
 	wxString m_roleName;
 	wxString m_roleLabel;
 	IMetaObject* m_owner; // pointer to the owner object
@@ -16,7 +16,7 @@ class Role {
 private:
 	void InitRole(IMetaObject* metaObject, const bool& value = true);
 protected:
-	Role(IMetaObject* metaObject, const wxString& roleName, const wxString& roleLabel,
+	CRole(IMetaObject* metaObject, const wxString& roleName, const wxString& roleLabel,
 		const bool& value = true) :
 		m_roleName(roleName),
 		m_roleLabel(roleLabel),

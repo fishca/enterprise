@@ -13,12 +13,17 @@ class BACKEND_API IMetaObjectSourceData;
 
 class ISourceObject {
 public:
+
+	virtual ~ISourceObject() {}
 	
 	//get metaData from object 
 	virtual IMetaObjectSourceData* GetSourceMetaObject() const = 0;
 	
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const = 0;
+
+	//Get presentation 
+	virtual wxString GetSourceCaption() const = 0;
 };
 
 //********************************************************************************************
@@ -27,6 +32,8 @@ public:
 
 class ITabularObject {
 public:
+
+	virtual ~ITabularObject() {}
 
 	//get metaData from object 
 	virtual IMetaObjectSourceData* GetSourceMetaObject() const = 0;

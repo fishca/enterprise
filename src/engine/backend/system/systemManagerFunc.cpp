@@ -915,31 +915,39 @@ void CSystemFunction::UserInterruptProcessing()
 	}
 }
 
-CValue CSystemFunction::GetCommonForm(const wxString& formName, IBackendControlFrame* ownerControl, CValueGuid* unique)
+CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
 	if (!appData->DesignerMode()) {
 		for (auto& obj : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
-			if (stringUtils::CompareString(formName, obj->GetName())) {
-				CMetaObjectCommonForm* commonForm = obj->ConvertToType<CMetaObjectCommonForm>();
-				wxASSERT(commonForm);
-				IBackendValueForm* valueForm = commonForm->GenerateForm(ownerControl, nullptr, unique ? ((Guid)*unique) : Guid());
-				if (valueForm != nullptr) {
-					const CValue cValue = valueForm->GetImplValueRef();
-					valueForm->InitializeFormModule();
-					return cValue;
-				}
+			if (stringUtils::CompareString(strFormName, obj->GetName())) {
+			
+				CMetaObjectCommonForm* creator = obj->ConvertToType<CMetaObjectCommonForm>();
+				wxASSERT(creator);
+				
+				//IBackendValueForm* valueForm = commonForm->GenerateForm(ownerControl, nullptr, unique ? ((Guid)*unique) : Guid());
+				//if (valueForm != nullptr) {
+				//	const CValue cValue = valueForm->GetImplValueRef();
+				//	valueForm->InitializeFormModule();
+				//	return cValue;
+				//}
+				
+				return CMetaObjectCommonForm::CreateAndBuildForm(
+					creator,
+					ownerControl, 
+					nullptr, unique ? ((Guid)*unique) : Guid()
+				);
 			}
 		}
-		CSystemFunction::Raise(_("Common form not found '") + formName + "'");
+		CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
 	}
 	return CValue();
 }
 
-void CSystemFunction::ShowCommonForm(const wxString& formName, IBackendControlFrame* ownerControl, CValueGuid* unique)
+void CSystemFunction::ShowCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
 	if (CBackendException::IsEvalMode())
 		return;
-	const CValue& cValue = GetCommonForm(formName, ownerControl, unique);
+	const CValue& cValue = GetCommonForm(strFormName, ownerControl, unique);
 	IBackendValueForm* valueForm = dynamic_cast<IBackendValueForm*>(cValue.GetRef());
 	if (valueForm != nullptr) {
 		valueForm->ShowForm();

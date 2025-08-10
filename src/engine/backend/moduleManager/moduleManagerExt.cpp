@@ -144,24 +144,39 @@ bool CModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	);
 
 	if (defFormObject != nullptr) {
-		IBackendValueForm* valueForm = nullptr;
-		if (!IModuleManager::FindCompileModule(defFormObject, valueForm)) {
-			valueForm = defFormObject->GenerateForm(
-				nullptr, m_objectValue
-			);
-			try {
-				if (valueForm->InitializeFormModule()) {
-					valueForm->ShowForm();
-				}
+
+		IBackendValueForm* result = nullptr;
+
+		if (!IModuleManager::FindCompileModule(defFormObject, result)) {
+
+			//valueForm = defFormObject->CreateForm(
+			//	nullptr, m_objectValue
+			//);
+			//try {
+			//	if (valueForm->InitializeFormModule()) {
+			//		valueForm->ShowForm();
+			//	}
+			//}
+			//catch (...) {
+			//	wxDELETE(valueForm);
+			//	if (!appData->DesignerMode()) {
+			//		//decrRef - for control delete 
+			//		m_objectValue->DecrRef();
+			//		return false;
+			//	}
+			//}
+
+			result = IMetaObjectForm::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
+
+			if (result != nullptr) {
+				result->ShowForm();
 			}
-			catch (...) {
-				wxDELETE(valueForm);
-				if (!appData->DesignerMode()) {
-					//decrRef - for control delete 
-					m_objectValue->DecrRef();
-					return false;
-				}
+			else if (!appData->DesignerMode()) {
+				//decrRef - for control delete 
+				m_objectValue->DecrRef();
+				return false;
 			}
+
 		}
 	}
 	//else {
@@ -337,23 +352,35 @@ bool CModuleManagerExternalReport::StartMainModule(bool force)
 	);
 
 	if (defFormObject != nullptr) {
-		IBackendValueForm* valueForm = nullptr;
-		if (!IModuleManager::FindCompileModule(defFormObject, valueForm)) {
-			valueForm = defFormObject->GenerateForm(
-				nullptr, m_objectValue
-			);
-			try {
-				if (valueForm->InitializeFormModule()) {
-					valueForm->ShowForm();
-				}
+		IBackendValueForm* result = nullptr;
+		if (!IModuleManager::FindCompileModule(defFormObject, result)) {
+
+			//valueForm = defFormObject->CreateForm(
+			//	nullptr, m_objectValue
+			//);
+			//try {
+			//	if (valueForm->InitializeFormModule()) {
+			//		valueForm->ShowForm();
+			//	}
+			//}
+			//catch (...) {
+			//	wxDELETE(valueForm);
+			//	if (!appData->DesignerMode()) {
+			//		//decrRef - for control delete 
+			//		m_objectValue->DecrRef();
+			//		return false;
+			//	}
+			//}
+
+			result = IMetaObjectForm::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
+
+			if (result != nullptr) {
+				result->ShowForm();
 			}
-			catch (...) {
-				wxDELETE(valueForm);
-				if (!appData->DesignerMode()) {
-					//decrRef - for control delete 
-					m_objectValue->DecrRef();
-					return false;
-				}
+			else if (!appData->DesignerMode()) {
+				//decrRef - for control delete 
+				m_objectValue->DecrRef();
+				return false;
 			}
 		}
 	}

@@ -22,8 +22,18 @@ public:
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {}
 
 	virtual class IBackendValueForm* ActiveWindow() const { return nullptr; }
-	virtual class IBackendValueForm* CreateNewForm(class IBackendControlFrame* ownerControl = nullptr, class IMetaObjectForm* metaForm = nullptr,
-		class ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey, bool readOnly = false) {
+	virtual class IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr, 
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) {
+		return nullptr;
+	}
+
+	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid) {
+		return wxNullUniqueKey;
+	}
+
+	virtual class IBackendValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid) {
 		return nullptr;
 	}
 

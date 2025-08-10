@@ -116,13 +116,11 @@ void CVisualEditorNotebook::CVisualEditor::Execute(CCommand* cmd)
 		m_cmdProc->Execute(cmd);
 	}
 
-	IMetaObjectForm* formObject = m_document->ConvertMetaObjectToType<IMetaObjectForm>();
-
-	wxASSERT(formObject);
-
+	IMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IMetaObjectForm>();
+	wxASSERT(creator);
 	// Create a std::string and copy your document data in to the string    
-	if (formObject != nullptr) {
-		formObject->SaveFormData(m_valueForm);
+	if (creator != nullptr) {
+		creator->SaveFormData(m_valueForm);
 	}
 }
 

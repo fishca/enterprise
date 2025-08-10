@@ -616,7 +616,7 @@ bool IRecordDataObjectRef::ReadData(const Guid& srcGuid)
 				m_listObjectValue.insert_or_assign(obj->GetMetaID(), tabularSection);
 			}
 		}
-		resultSet->Close();
+		db_query->CloseResultSet(resultSet);
 		return succes;
 	}
 	return false;
@@ -1301,7 +1301,7 @@ CValue IRecordDataObjectRef::CCodeGenerator::GenerateCode() const
 				code++;
 			}
 		}
-		resultSet->Close();
+		db_query->CloseResultSet(resultSet);
 		return code;
 	}
 	else if (m_metaAttribute->ContainType(eValueTypes::TYPE_STRING)) {
@@ -1316,7 +1316,7 @@ CValue IRecordDataObjectRef::CCodeGenerator::GenerateCode() const
 				strCode = code.ToString(conv);
 			}
 		}
-		resultSet->Close();
+		db_query->CloseResultSet(resultSet);
 		return strCode;
 	}
 

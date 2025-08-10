@@ -76,20 +76,12 @@ public:
 	//create associate value 
 	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
-	//create object data with metaForm
-	virtual ISourceDataObject* CreateObjectData(IMetaObjectForm* metaObject);
-
-	//create form with data 
-	virtual IBackendValueForm* CreateObjectForm(IMetaObjectForm* metaForm) override {
-		return metaForm->GenerateFormAndRun(
-			nullptr, CreateObjectData(metaForm)
-		);
-	}
-
+#pragma region _form_builder_h_
 	//support form 
-	virtual IBackendValueForm* GetObjectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) { return nullptr; }
-	virtual IBackendValueForm* GetListForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
-	virtual IBackendValueForm* GetSelectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) { return nullptr; }
+	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+#pragma endregion
 
 	//get module object in compose object 
 	virtual CMetaObjectModule* GetModuleObject() const { return nullptr; }
@@ -103,6 +95,9 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 protected:
+
+	//create object data with meta form
+	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);

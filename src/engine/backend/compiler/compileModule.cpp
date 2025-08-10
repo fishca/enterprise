@@ -4,7 +4,7 @@
 #pragma warning(push)
 #pragma warning(disable : 4018)
 
-CCompileModule::CCompileModule(IMetaObjectModule* moduleObject, bool onlyFunction) :
+CCompileModule::CCompileModule(const IMetaObjectModule* moduleObject, bool onlyFunction) :
 	CCompileCode(moduleObject->GetFullName(), moduleObject->GetDocPath(), onlyFunction),
 	m_moduleObject(moduleObject)
 {

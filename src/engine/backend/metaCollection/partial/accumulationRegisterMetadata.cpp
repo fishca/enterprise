@@ -36,37 +36,17 @@ CMetaObjectForm* CMetaObjectAccumulationRegister::GetDefaultFormByID(const form_
 	return nullptr;
 }
 
-IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& formName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+#pragma region _form_builder_h_
+IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : GetObjectForms()) {
-			if (CMetaObjectAccumulationRegister::eFormList == metaForm->GetTypeForm()
-				&& stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = GetDefaultFormByID(CMetaObjectAccumulationRegister::eFormList);
-	}
-
-	if (defList == nullptr) {
-		IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, CMetaObjectAccumulationRegister::eFormList), formGuid
-		);
-		valueForm->BuildForm(CMetaObjectAccumulationRegister::eFormList);
-		return valueForm;
-	}
-
-	return defList->GenerateFormAndRun(
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, defList->GetTypeForm()), formGuid
+	return IMetaObjectGenericData::CreateAndBuildForm(
+		strFormName,
+		CMetaObjectAccumulationRegister::eFormList,
+		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, CMetaObjectAccumulationRegister::eFormList),
+		formGuid
 	);
-
-	return nullptr;
 }
+#pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -318,7 +298,7 @@ std::vector<IMetaObjectAttribute*> CMetaObjectAccumulationRegister::GetGenericDi
 	return attributes;
 }
 
-ISourceDataObject* CMetaObjectAccumulationRegister::CreateObjectData(IMetaObjectForm* metaObject)
+ISourceDataObject* CMetaObjectAccumulationRegister::CreateSourceObject(IMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{

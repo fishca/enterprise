@@ -39,12 +39,10 @@ class CRoleEditor : public wxSplitterWindow {
 	};
 
 	class wxTreeItemRoleData : public wxTreeItemMetaData {
-		Role* m_role; //тип элемента
+		CRole* m_role; //тип элемента
 	public:
-		wxTreeItemRoleData(Role* role) : wxTreeItemMetaData(role->GetRoleObject()), m_role(role) {}
-		Role* GetRole() const {
-			return m_role;
-		}
+		wxTreeItemRoleData(CRole* role) : wxTreeItemMetaData(role->GetRoleObject()), m_role(role) {}
+		CRole* GetRole() const { return m_role; }
 	};
 
 	wxTreeCtrl* m_roleCtrl;

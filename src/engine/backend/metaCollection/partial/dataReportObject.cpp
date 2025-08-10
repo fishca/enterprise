@@ -28,7 +28,8 @@ CRecordDataObjectReport::CRecordDataObjectReport(const CRecordDataObjectReport& 
 {
 }
 
-void CRecordDataObjectReport::ShowFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+#pragma region _form_builder_h_
+void CRecordDataObjectReport::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -39,46 +40,29 @@ void CRecordDataObjectReport::ShowFormValue(const wxString& formName, IBackendCo
 
 	//if form is not initialized then generate  
 	IBackendValueForm* valueForm =
-		GetFormValue(formName, ownerControl);
+		GetFormValue(strFormName, ownerControl);
 
 	valueForm->Modify(false);
 	valueForm->ShowForm();
 }
 
-IBackendValueForm* CRecordDataObjectReport::GetFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CRecordDataObjectReport::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm)
-		return foundedForm;
+	if (foundedForm == nullptr) {
 
-	IMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : m_metaObject->GetObjectForms()) {
-			if (stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = m_metaObject->GetDefaultFormByID(CMetaObjectReport::eFormReport);
-	}
-
-	IBackendValueForm* valueForm = nullptr;
-
-	if (defList) {
-		valueForm = defList->GenerateFormAndRun(
-			ownerControl, this, m_objGuid
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+			strFormName,
+			CMetaObjectReport::eFormReport,
+			ownerControl,
+			this,
+			m_objGuid
 		);
-	}
-	else {
-		valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			this, m_objGuid
-		);
-		valueForm->BuildForm(CMetaObjectReport::eFormReport);
+
+		return createdForm;
 	}
 
-	return valueForm;
+	return foundedForm;
 }
+#pragma endregion

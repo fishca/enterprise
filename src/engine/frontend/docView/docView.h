@@ -113,11 +113,10 @@ public:
 protected:
 
 	CMetaDocument* m_docParent;
+	IMetaObject* m_metaObject;	// current metadata object
+
 	wxDList<CMetaDocument> m_childDocs;
-
 	bool m_childDoc;
-
-	IMetaObject* m_metaObject;	//текущий объект метаданных
 };
 
 class FRONTEND_API IMetaDataDocument : public CMetaDocument {
@@ -149,8 +148,6 @@ public:
 		
 		if (m_viewFrame != nullptr &&
 			m_viewFrame->Show(show)) {
-			//m_viewFrame->Layout();
-			//m_viewFrame->Update();
 			return true;
 		}
 
@@ -174,8 +171,9 @@ public:
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) {}
 	virtual void OnRemoveToolbar(wxAuiToolBar* toolbar) {}
 
-	virtual void OnMenuItemClicked(int id) {
-	}
+	virtual void OnMenuItemClicked(int id) {}
+
+	virtual void OnUpdate(wxView* sender, wxObject* hint = NULL) {}
 
 	virtual void OnDraw(wxDC* dc) override {}
 	virtual bool OnClose(bool deleteWindow = true) override {

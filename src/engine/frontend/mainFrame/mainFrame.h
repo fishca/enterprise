@@ -117,8 +117,14 @@ public:
 	virtual IMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
 	virtual IBackendValueForm* ActiveWindow() const override;
-	virtual IBackendValueForm* CreateNewForm(class IBackendControlFrame* ownerControl = nullptr, class IMetaObjectForm* metaForm = nullptr,
-		class ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey, bool readOnly = false) override;
+	virtual IBackendValueForm* CreateNewForm(const IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) override;
+
+	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
+
+	virtual class IBackendValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
 	virtual class IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid) override;
 	virtual class IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid) override;

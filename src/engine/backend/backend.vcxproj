@@ -195,7 +195,7 @@
     <ClInclude Include="propertyManager\property\advprop\advpropType.h" />
     <ClInclude Include="propertyManager\property\advprop\ctrl\checktree.h" />
     <ClInclude Include="propertyManager\property\eventControl.h" />
-    <ClInclude Include="propertyManager\property\eventList.h" />
+    <ClInclude Include="propertyManager\property\eventAction.h" />
     <ClInclude Include="propertyManager\property\propertyBoolean.h" />
     <ClInclude Include="propertyManager\property\propertyColour.h" />
     <ClInclude Include="propertyManager\property\propertyDate.h" />
@@ -215,6 +215,7 @@
     <ClInclude Include="propertyManager\property\propertyString.h" />
     <ClInclude Include="propertyManager\property\propertyTemplate.h" />
     <ClInclude Include="propertyManager\property\propertyType.h" />
+    <ClInclude Include="propertyManager\property\variant\actionVariant.h" />
     <ClInclude Include="propertyManager\property\variant\formVariant.h" />
     <ClInclude Include="propertyManager\property\variant\genVariant.h" />
     <ClInclude Include="propertyManager\property\variant\moduleVariant.h" />
@@ -470,7 +471,7 @@
     <ClCompile Include="propertyManager\property\advprop\advpropType.cpp" />
     <ClCompile Include="propertyManager\property\advprop\ctrl\checktree.cpp" />
     <ClCompile Include="propertyManager\property\eventControl.cpp" />
-    <ClCompile Include="propertyManager\property\eventList.cpp" />
+    <ClCompile Include="propertyManager\property\eventAction.cpp" />
     <ClCompile Include="propertyManager\property\propertyBoolean.cpp" />
     <ClCompile Include="propertyManager\property\propertyColour.cpp" />
     <ClCompile Include="propertyManager\property\propertyDate.cpp" />
@@ -490,6 +491,7 @@
     <ClCompile Include="propertyManager\property\propertyString.cpp" />
     <ClCompile Include="propertyManager\property\propertyTemplate.cpp" />
     <ClCompile Include="propertyManager\property\propertyType.cpp" />
+    <ClCompile Include="propertyManager\property\variant\actionVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\formVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\genVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\moduleVariant.cpp" />

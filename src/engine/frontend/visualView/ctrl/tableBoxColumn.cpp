@@ -154,7 +154,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	columnObject->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
 	IValueModel* modelValue = GetOwner()->GetModel();
-	sortOrder_t::sortData_t* sort = modelValue != nullptr ? modelValue->GetSortByID(GetSourceColumn()) : nullptr;
+	CSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(GetSourceColumn()) : nullptr;
 
 	columnObject->SetBitmap(m_propertyIcon->GetValueAsBitmap());
 	columnObject->SetHidden(!m_propertyVisible->GetValueAsBoolean());

@@ -44,10 +44,10 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 				GetSourceColumn(), vSelected
 			);
 		}
-		
+
 		ÑDataViewColumnContainer* columnObject =
 			dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
-		
+
 		if (columnObject != nullptr) {
 			CValueViewRenderer* renderer = columnObject->GetRenderer();
 			wxASSERT(renderer);
@@ -80,7 +80,7 @@ void CValueTableBoxColumn::OnKillFocus(wxFocusEvent& event)
 {
 	ÑDataViewColumnContainer* columnObject =
 		dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
-	
+
 	if (columnObject != nullptr) {
 		CValueViewRenderer* renderer = columnObject->GetRenderer();
 		wxASSERT(renderer);
@@ -123,7 +123,16 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
 					IMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {
-						metaObject->ProcessChoice(this, m_propertyChoiceForm->GetValueAsInteger(), GetSelectMode());
+						const meta_identifier_t& id = m_propertyChoiceForm->GetValueAsInteger();
+						if (id != wxNOT_FOUND) {
+							const IMetaData* metaData = GetMetaData();
+							const IMetaObject* foundedObject = metaData != nullptr
+								? metaData->GetMetaObject(id) : nullptr;
+							metaObject->ProcessChoice(this, foundedObject != nullptr ? foundedObject->GetName() : wxEmptyString, GetSelectMode());
+						}
+						else {
+							metaObject->ProcessChoice(this, wxEmptyString, GetSelectMode());
+						}
 					}
 				}
 			}
@@ -136,7 +145,7 @@ void CValueTableBoxColumn::OnOpenButtonPressed(wxCommandEvent& event)
 	CValue standartProcessing = true;
 	IValueControl::CallAsEvent(m_eventOpening, GetValue(), standartProcessing);
 	if (standartProcessing.GetBoolean()) {
-		CValue selValue; 
+		CValue selValue;
 		if (GetControlValue(selValue) && !selValue.IsEmpty())
 			selValue.ShowValue();
 	}

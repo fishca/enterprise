@@ -57,10 +57,22 @@ bool CMetaDocument::OnCreate(const wxString& path, long flags)
 	wxScopedPtr<CMetaView> view(DoCreateView());
 	if (!view)
 		return false;
+
+	bool createModal = false;
+	for (wxWindow* window : wxTopLevelWindows) {
+		if (window->IsKindOf(CLASSINFO(wxDialog))) {
+			if (((wxDialog*)window)->IsModal()) {
+				createModal = true; break;
+			}
+		}
+	}
+
+	long style = wxDEFAULT_FRAME_STYLE;
+	if (createModal) style = style | wxCREATE_SDI_FRAME;
 	
 	view->SetDocument(this);
-	
-	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE);
+
+	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
 		
 	if (!view->OnCreate(this, flags)) 
 		return false;

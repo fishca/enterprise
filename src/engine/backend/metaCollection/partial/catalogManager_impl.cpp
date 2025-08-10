@@ -39,7 +39,7 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 					const Guid &foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);		
 				}
-				databaseResultSet->Close();
+				db_query->CloseResultSet(databaseResultSet);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}
@@ -77,7 +77,7 @@ CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) c
 					const Guid &foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);			
 				}
-				databaseResultSet->Close();
+				db_query->CloseResultSet(databaseResultSet);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}

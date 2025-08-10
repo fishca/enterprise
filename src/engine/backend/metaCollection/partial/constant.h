@@ -8,10 +8,10 @@ class BACKEND_API CRecordDataObjectConstant;
 class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandData {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
 private:
-	Role* m_roleRead = IMetaObject::CreateRole("read", _("read"));
-	Role* m_roleInsert = IMetaObject::CreateRole("insert", _("insert"));
-	Role* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
-	Role* m_roleDelete = IMetaObject::CreateRole("delete", _("delete"));
+	CRole* m_roleRead = IMetaObject::CreateRole("read", _("read"));
+	CRole* m_roleInsert = IMetaObject::CreateRole("insert", _("insert"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
+	CRole* m_roleDelete = IMetaObject::CreateRole("delete", _("delete"));
 protected:
 	enum
 	{
@@ -127,6 +127,11 @@ public:
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); };
 
+	//Get presentation 
+	virtual wxString GetSourceCaption() const {
+		return GetMetaObject() ? stringUtils::GenerateSynonym(GetMetaObject()->GetClassName()) + wxT(": ") + GetMetaObject()->GetSynonym() : GetString();
+	}
+
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(IValueModel*& tableValue, const meta_identifier_t& id);
@@ -136,8 +141,8 @@ public:
 	virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 	//counter
-	virtual void IncrRef() { CValue::IncrRef(); }
-	virtual void DecrRef() { CValue::DecrRef(); }
+	virtual void SourceIncrRef() { CValue::IncrRef(); }
+	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetMetaObject() const {
@@ -153,9 +158,11 @@ public:
 	//get frame
 	virtual IBackendValueForm* GetForm() const;
 
+#pragma region _form_builder_h_
 	//support show 
 	virtual void ShowFormValue();
 	virtual IBackendValueForm* GetFormValue();
+#pragma endregion
 
 	//support actionData
 	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);

@@ -15,7 +15,7 @@ void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
     }
 
     if (m_tableModel != nullptr) {
-        sortOrder_t::sortData_t* sort = m_tableModel->GetSortByID(event.GetColumn());
+        CSortOrder::CSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
         if (sort != nullptr && !sort->m_sortSystem) {
             m_tableModel->ResetSort();
             sort->m_sortAscending = !sort->m_sortAscending;

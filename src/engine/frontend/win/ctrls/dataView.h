@@ -4,7 +4,7 @@
 #include "backend/tableInfo.h"
 
 class wxDataModelViewCtrl : public wxDataViewCtrl {
-	class wxTableModelNotifier* m_genNotitfier;
+	class wxTableModelNotifier* m_genNotifier;
 protected:
 	class CDataViewFreezeRowsWindow : public wxWindow
 	{
@@ -68,7 +68,7 @@ protected:
 public:
 	
 	wxDataModelViewCtrl() : wxDataViewCtrl(),
-		m_genNotitfier(nullptr), m_freezeRows(nullptr)
+		m_genNotifier(nullptr), m_freezeRows(nullptr)
 	{
 		m_kbdScrollingEnabled = true;
 	}
@@ -78,7 +78,7 @@ public:
 		const wxSize& size = wxDefaultSize, long style = 0,
 		const wxValidator& validator = wxDefaultValidator,
 		const wxString& name = wxASCII_STR(wxDataViewCtrlNameStr)) : wxDataViewCtrl(parent, id, pos, size, style, validator, name),
-		m_genNotitfier(nullptr), m_freezeRows(nullptr)
+		m_genNotifier(nullptr), m_freezeRows(nullptr)
 	{
 		m_freezeRows = new CDataViewFreezeRowsWindow(this);
 		m_windowSizer->Insert(1, m_freezeRows, 0, wxGROW);
@@ -89,10 +89,10 @@ public:
 	}
 
 	virtual ~wxDataModelViewCtrl() {
-		wxDELETE(m_genNotitfier);
+		wxDELETE(m_genNotifier);
 	}
 
-	bool ShowFilter(struct filterRow_t& filter);
+	bool ShowFilter(struct CFilterRow& filter);
 	virtual bool AssociateModel(wxDataViewModel* model) override;
 
 protected:
@@ -121,7 +121,7 @@ public:
 
 	virtual wxDataViewColumn* GetCurrentColumn() const;
 	virtual void StartEditing(const wxDataViewItem& item, unsigned int col) const;
-	virtual bool ShowFilter(struct filterRow_t& filter);
+	virtual bool ShowFilter(struct CFilterRow& filter);
 
 	virtual void Select(const wxDataViewItem& item) const;
 	virtual int GetCountPerPage() const;

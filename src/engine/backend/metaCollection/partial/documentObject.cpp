@@ -173,7 +173,8 @@ CSourceExplorer CRecordDataObjectDocument::GetSourceExplorer() const
 	return srcHelper;
 }
 
-void CRecordDataObjectDocument::ShowFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+#pragma region _form_builder_h_
+void CRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -183,52 +184,33 @@ void CRecordDataObjectDocument::ShowFormValue(const wxString& formName, IBackend
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm = GetFormValue(formName, ownerControl);
+	IBackendValueForm* valueForm = GetFormValue(strFormName, ownerControl);
 
 	valueForm->Modify(m_objModified);
 	valueForm->ShowForm();
 }
 
-IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& formName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
-	if (foundedForm != nullptr)
-		return foundedForm;
+	if (foundedForm == nullptr) {
 
-	IMetaObjectForm* defList = nullptr;
-
-	if (!formName.IsEmpty()) {
-		for (auto metaForm : m_metaObject->GetObjectForms()) {
-			if (stringUtils::CompareString(formName, metaForm->GetName())) {
-				defList = metaForm; break;
-			}
-		}
-		wxASSERT(defList);
-	}
-	else {
-		defList = m_metaObject->GetDefaultFormByID(CMetaObjectDocument::eFormObject);
-	}
-
-	IBackendValueForm* valueForm = nullptr;
-
-	if (defList) {
-		valueForm = defList->GenerateFormAndRun(
-			ownerControl, this, m_objGuid
+		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
+			strFormName,
+			CMetaObjectDocument::eFormObject,
+			ownerControl,
+			this,
+			m_objGuid
 		);
-		valueForm->Modify(m_objModified);
-	}
-	else {
-		valueForm = IBackendValueForm::CreateNewForm(ownerControl, nullptr,
-			this, m_objGuid
-		);
-		valueForm->BuildForm(CMetaObjectDocument::eFormObject);
-		valueForm->Modify(m_objModified);
+
+		createdForm->CloseOnOwnerClose(false);
+		return createdForm;
 	}
 
-	valueForm->CloseOnOwnerClose(false);
-	return valueForm;
+	return foundedForm;
 }
+#pragma endregion
 
 //***********************************************************************************************
 //*                                   Document events                                            *

@@ -22,16 +22,6 @@ IValueControl::~IValueControl()
 	SetOwnerForm(nullptr);
 }
 
-IValueControl* IValueControl::GetChild(unsigned int idx) const
-{
-	return dynamic_cast<IValueControl*>(IPropertyObject::GetChild(idx));
-}
-
-IValueControl* IValueControl::GetChild(unsigned int idx, const wxString& type) const
-{
-	return dynamic_cast<IValueControl*>(IPropertyObject::GetChild(idx, type));
-}
-
 #include "backend/metaData.h"
 
 void IValueControl::SetOwnerForm(CValueForm* ownerForm)
@@ -54,7 +44,7 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 
 IMetaData* IValueControl::GetMetaData() const
 {
-	IMetaObjectForm* metaFormObject = m_formOwner ?
+	const IMetaObjectForm* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() :
 		nullptr;
 
@@ -84,7 +74,7 @@ form_identifier_t IValueControl::GetTypeForm() const
 		return 0;
 	}
 
-	IMetaObjectForm* metaFormObj =
+	const IMetaObjectForm* metaFormObj =
 		m_formOwner->GetFormMetaObject();
 	wxASSERT(metaFormObj);
 	return metaFormObj->GetTypeForm();

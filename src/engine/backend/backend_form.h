@@ -10,7 +10,7 @@ class BACKEND_API IBackendValueForm;
 class BACKEND_API IBackendMetaDocument {
 public:
 	virtual ~IBackendMetaDocument() {}
-	virtual class IMetaObject* GetMetaObject() const = 0;
+	virtual const class IMetaObject* GetMetaObject() const = 0;
 };
 
 class BACKEND_API IBackendControlFrame {
@@ -29,14 +29,25 @@ public:
 
 	virtual IBackendValueForm* GetBackendForm() const { return nullptr; }
 
-	//Get ref class 
+	// Get reference class 
 	virtual class_identifier_t GetClassType() const = 0;
+
+	// Counter reference
+	virtual void ControlIncrRef() = 0;
+	virtual void ControlDecrRef() = 0;
 };
 
 class BACKEND_API IBackendValueForm : public IBackendValue {
 public:
-	static IBackendValueForm* CreateNewForm(IBackendControlFrame* ownerControl = nullptr, class IMetaObjectForm* metaForm = nullptr,
-		class ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey, bool readOnly = false);
+	
+	static IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator = nullptr, IBackendControlFrame* ownerControl = nullptr,
+		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
+
+	static CUniqueKey CreateFormUniqueKey(IBackendControlFrame* ownerControl,
+		ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
+
+	static IBackendValueForm* FindFormByUniqueKey(IBackendControlFrame* ownerControl,
+		ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
 	static IBackendValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
 	static IBackendValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
@@ -54,7 +65,7 @@ public:
 	///////////////////////////////////////////////////////////////////////////
 
 	virtual ISourceDataObject* GetSourceObject() const = 0;
-	virtual IMetaObjectForm* GetFormMetaObject() const = 0;
+	virtual const IMetaObjectForm* GetFormMetaObject() const = 0;
 
 	///////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +86,7 @@ public:
 	virtual void HelpForm() = 0;
 
 	virtual bool GenerateForm(class IRecordDataObjectRef* obj) const = 0;
-	virtual void ShowForm(IBackendMetaDocument* doc = nullptr, bool demoRun = false) = 0;
+	virtual void ShowForm(IBackendMetaDocument* doc = nullptr, bool createContext = true) = 0;
 
 	//set & get modify 
 	virtual void Modify(bool modify = true) = 0;

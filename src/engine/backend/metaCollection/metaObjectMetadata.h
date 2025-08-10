@@ -17,12 +17,12 @@
 class BACKEND_API CMetaObjectConfiguration : public IMetaObject {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConfiguration);
 private:
-	Role* m_roleAdministration = IMetaObject::CreateRole("administration", _("administration"));
-	Role* m_roleDataAdministration = IMetaObject::CreateRole("dataAdministration", _("data administration"));
-	Role* m_roleUpdateDatabaseConfiguration = IMetaObject::CreateRole("updateDatabaseConfiguration", _("update database configuration"));
-	Role* m_roleActiveUsers = IMetaObject::CreateRole("activeUsers", _("active users"));
-	Role* m_roleExclusiveMode = IMetaObject::CreateRole("exclusiveMode", _("exclusive mode"));
-	Role* m_roleModeAllFunction = IMetaObject::CreateRole("modeAllFunctions", _("mode \"All functions\""));
+	CRole* m_roleAdministration = IMetaObject::CreateRole("administration", _("administration"));
+	CRole* m_roleDataAdministration = IMetaObject::CreateRole("dataAdministration", _("data administration"));
+	CRole* m_roleUpdateDatabaseConfiguration = IMetaObject::CreateRole("updateDatabaseConfiguration", _("update database configuration"));
+	CRole* m_roleActiveUsers = IMetaObject::CreateRole("activeUsers", _("active users"));
+	CRole* m_roleExclusiveMode = IMetaObject::CreateRole("exclusiveMode", _("exclusive mode"));
+	CRole* m_roleModeAllFunction = IMetaObject::CreateRole("modeAllFunctions", _("mode \"All functions\""));
 protected:
 
 	enum

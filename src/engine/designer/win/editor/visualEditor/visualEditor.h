@@ -135,11 +135,11 @@ private:
 	int m_y;
 	wxSizer* m_selSizer = nullptr;
 	wxObject* m_selItem = nullptr;
-	IPropertyObject* m_selObj = nullptr;
+	IValueFrame* m_selObj = nullptr;
 	wxWindow* m_actPanel = nullptr;
 private:
 
-	void DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IPropertyObject* object);
+	void DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IValueFrame* object);
 
 public:
 
@@ -163,24 +163,13 @@ public:
 	void SetGrid(int x, int y);
 	void SetSelectedSizer(wxSizer* sizer) { m_selSizer = sizer; }
 	void SetSelectedItem(wxObject* item) { m_selItem = item; }
-	void SetSelectedObject(IPropertyObject* object) { m_selObj = object; }
+	void SetSelectedObject(IValueFrame* object) { m_selObj = object; }
 	void SetSelectedPanel(wxWindow* actPanel) { m_actPanel = actPanel; }
 
-	wxSizer* GetSelectedSizer() const {
-		return m_selSizer;
-	}
-
-	wxObject* GetSelectedItem() const {
-		return m_selItem;
-	}
-
-	IPropertyObject* GetSelectedObject() const {
-		return m_selObj;
-	}
-
-	wxWindow* GetActivePanel() const {
-		return m_actPanel;
-	}
+	wxSizer* GetSelectedSizer() const { return m_selSizer; }
+	wxObject* GetSelectedItem() const { return m_selItem; }
+	IValueFrame* GetSelectedObject() const { return m_selObj; }
+	wxWindow* GetActivePanel() const { return m_actPanel; }
 
 	void HighlightSelection(wxDC& dc);
 	void OnPaint(wxPaintEvent& event);
@@ -289,6 +278,7 @@ public:
 	protected:
 		virtual void SetCaption(const wxString& strCaption);
 		virtual void SetOrientation(int orient);
+		virtual void UpdateHostSize();
 	protected:
 		wxDECLARE_EVENT_TABLE();
 	};
@@ -394,11 +384,8 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	IValueFrame* m_selObj = nullptr;     // Objeto seleccionado
-	//IValueFrame* m_clipboard = nullptr;
 
 	std::vector< wxEvtHandler* > m_handlers;
-
-	bool m_bReadOnly;
 
 	// Procesador de comandos Undo/Redo
 	CCommandProcessor* m_cmdProc;
@@ -439,29 +426,14 @@ private:
 
 public:
 
-	CVisualEditorHost* GetVisualEditor() const {
-		return m_visualEditor;
-	}
+	CVisualEditorHost* GetVisualEditor() const { return m_visualEditor; }
+	CVisualEditorObjectTree* GetObjectTree() const { return m_objectTree; }
 
-	CVisualEditorObjectTree* GetObjectTree() const {
-		return m_objectTree;
-	}
+	CValueForm* GetValueForm() const { return m_valueForm; }
+	void SetValueForm(CValueForm* valueForm) { m_valueForm = valueForm; }
 
-	CValueForm* GetValueForm() const {
-		return m_valueForm;
-	}
-
-	void SetValueForm(CValueForm* valueForm) {
-		m_valueForm = valueForm;
-	}
-
-	bool IsEditable() const {
-		return !m_bReadOnly;
-	}
-
-	void SetReadOnly(bool readOnly = true) {
-		m_bReadOnly = readOnly;
-	}
+	bool IsEditable() const { return true; }
+	void SetReadOnly(bool readOnly = true) {}
 
 protected:
 
@@ -736,9 +708,7 @@ public:
 			m_codeEditor->SaveModule();
 	}
 
-	void TestForm() {
-		m_visualEditor->TestForm();
-	}
+	void TestForm() { m_visualEditor->TestForm(); }
 
 	void RefreshEditor() {
 
@@ -761,21 +731,11 @@ public:
 			m_codeEditor->IsEditable();
 	}
 
-	CValueForm* GetValueForm() const {
-		return m_visualEditor->GetValueForm();
-	}
+	CValueForm* GetValueForm() const { return m_visualEditor->GetValueForm(); }
+	IVisualHost* GetVisualHost() const { return m_visualEditor->GetVisualEditor(); }
 
-	IVisualHost* GetVisualHost() const {
-		return m_visualEditor->GetVisualEditor();
-	}
-
-	CVisualEditor* GetVisualEditor() const {
-		return m_visualEditor;
-	}
-
-	CCodeEditor* GetCodeEditor() const {
-		return m_codeEditor;
-	}
+	CVisualEditor* GetVisualEditor() const { return m_visualEditor; }
+	CCodeEditor* GetCodeEditor() const { return m_codeEditor; }
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const {
 		return new CDesignerWindow::CHighlightPaintHandler(wnd);

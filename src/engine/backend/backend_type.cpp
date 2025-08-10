@@ -14,8 +14,9 @@ CValue IBackendTypeFactory::CreateValue() const
 
 CValue* IBackendTypeFactory::CreateValueRef() const
 {
-	if (GetTypeDesc().GetClsidCount() == 1) {
-		const class_identifier_t& clsid = GetTypeDesc().GetFirstClsid();
+	const CTypeDescription& typeDesc = GetTypeDesc();
+	if (typeDesc.GetClsidCount() == 1) {
+		const class_identifier_t& clsid = typeDesc.GetFirstClsid();
 		if (CValue::IsRegisterCtor(clsid)) {
 			IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
 			if (so->GetObjectTypeCtor() == eCtorObjectType::eCtorObjectType_object_enum) {
@@ -37,7 +38,6 @@ CValue* IBackendTypeFactory::CreateValueRef() const
 			}
 		}
 	}
-
 	return nullptr;
 }
 
@@ -70,8 +70,9 @@ CValue* IBackendTypeConfigFactory::CreateValueRef() const
 {
 	IMetaData const* metaData = GetMetaData();
 	wxASSERT(metaData);
-	if (GetTypeDesc().GetClsidCount() == 1) {
-		IMetaValueTypeCtor* so = metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
+	const CTypeDescription& typeDesc = GetTypeDesc();
+	if (typeDesc.GetClsidCount() == 1) {
+		IMetaValueTypeCtor* so = metaData->GetTypeCtor(typeDesc.GetFirstClsid());
 		if (so != nullptr) {
 			try {
 				return metaData->CreateObjectRef(so->GetClassType());
@@ -87,7 +88,7 @@ CValue* IBackendTypeConfigFactory::CreateValueRef() const
 CValue IBackendTypeConfigFactory::AdjustValue() const
 {
 	return CValueTypeDescription::AdjustValue(
-		GetTypeDesc(), 
+		GetTypeDesc(),
 		GetMetaData()
 	);
 }
@@ -96,7 +97,7 @@ CValue IBackendTypeConfigFactory::AdjustValue(const CValue& varValue) const
 {
 	return CValueTypeDescription::AdjustValue(
 		GetTypeDesc(),
-		varValue, 
+		varValue,
 		GetMetaData()
 	);
 }

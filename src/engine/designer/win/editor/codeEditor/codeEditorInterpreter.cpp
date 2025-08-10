@@ -186,7 +186,7 @@ void CPrecompileModule::PrepareModuleData()
 		CValue* pRefData = nullptr;
 		CCompileModule* compileModule = contextVariable->GetCompileModule();
 		while (compileModule != nullptr) {
-			IMetaObjectModule* moduleObject = compileModule->GetModuleObject();
+			const IMetaObjectModule* moduleObject = compileModule->GetModuleObject();
 			if (moduleObject != nullptr) {
 				IMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);

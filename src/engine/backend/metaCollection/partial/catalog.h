@@ -108,22 +108,14 @@ public:
     //create associate value 
     virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
-    //create object data with metaForm
-    virtual ISourceDataObject* CreateObjectData(IMetaObjectForm* metaObject);
-
-    //create form with data 
-    virtual IBackendValueForm* CreateObjectForm(IMetaObjectForm* metaForm) override {
-        return metaForm->GenerateFormAndRun(
-            nullptr, CreateObjectData(metaForm)
-        );
-    }
-
+#pragma region _form_builder_h_
     //support form 
-    virtual IBackendValueForm* GetObjectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
-    virtual IBackendValueForm* GetFolderForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
-    virtual IBackendValueForm* GetListForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
-    virtual IBackendValueForm* GetSelectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
-    virtual IBackendValueForm* GetFolderSelectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+    virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+    virtual IBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+    virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+    virtual IBackendValueForm* GetSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+    virtual IBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+#pragma endregion
 
     //descriptions...
     wxString GetDataPresentation(const IValueDataObject* objValue) const;
@@ -143,6 +135,10 @@ public:
     virtual void OnPropertyPasted(IProperty* property);
 
 protected:
+
+    //create object data with meta form
+    virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+
     //create empty object
     virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const Guid& guid = wxNullGuid);
 
@@ -155,6 +151,7 @@ protected:
     virtual void ProcessCommand(unsigned int id);
 
 protected:
+  
     friend class IMetaData;
     friend class CRecordDataObjectCatalog;
 };
@@ -208,9 +205,11 @@ public:
     //support source data 
     virtual CSourceExplorer GetSourceExplorer() const;
 
+#pragma region _form_builder_h_
     //support show 
-    virtual void ShowFormValue(const wxString& formName = wxEmptyString, IBackendControlFrame* owner = nullptr);
-    virtual IBackendValueForm* GetFormValue(const wxString& formName = wxEmptyString, IBackendControlFrame* owner = nullptr);
+    virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* owner = nullptr);
+    virtual IBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* owner = nullptr);
+#pragma endregion
 
     //support actionData
     virtual CActionCollection GetActionCollection(const form_identifier_t& formType);

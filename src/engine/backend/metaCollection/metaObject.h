@@ -105,7 +105,6 @@ public:
 	ERestructure GetType(unsigned int idx) const { return m_listRestructure.at(idx).m_type; }
 
 	unsigned int GetCount() const { return m_listRestructure.size(); }
-
 };
 
 //*******************************************************************************
@@ -145,13 +144,13 @@ enum metaObjectFlags {
 #define repairMetaTable  0x0008000
 
 class BACKEND_API IMetaObject :
-	public IPropertyObject, public CValue {
+	public IPropertyObjectHelper<IMetaObject>, public CValue {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
 protected:
 
 	template <typename... Args>
-	inline Role* CreateRole(Args&&... args) {
-		return new Role(this, std::forward<Args>(args)...);
+	inline CRole* CreateRole(Args&&... args) {
+		return new CRole(this, std::forward<Args>(args)...);
 	}
 
 protected:
@@ -165,11 +164,7 @@ protected:
 
 protected:
 
-	std::vector<std::pair<wxString, Role*>>& GetRoles() {
-		return m_roles;
-	}
-
-	friend class Role;
+	friend class CRole;
 
 	/**
 	* Añade una propiedad al objeto.
@@ -178,7 +173,7 @@ protected:
 	* instancia del objeto.
 	* Los objetos siempre se crearán a través del registro de descriptores.
 	*/
-	void AddRole(Role* value);
+	void AddRole(CRole* value);
 
 public:
 
@@ -188,7 +183,7 @@ public:
 	wxString GetName() const { return m_propertyName->GetValueAsString(); }
 	void SetName(const wxString& strName) { m_propertyName->SetValue(strName); }
 
-	wxString GetSynonym() const { return m_propertySynonym->IsEmptyProperty() ? GetName() : m_propertySynonym->GetValueAsString(); }
+	wxString GetSynonym() const { return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) : m_propertySynonym->GetValueAsString(); }
 	void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
 
 	wxString GetComment() const { return m_propertyComment->GetValueAsString(); }
@@ -210,6 +205,9 @@ public:
 			ResetGuid();
 		}
 	}
+
+	inline bool CompareId(const meta_identifier_t& id) const { return m_metaId == id; }
+	inline bool CompareGuid(const Guid& guid) const { return m_metaGuid == guid;}
 
 	operator meta_identifier_t() const { return m_metaId; }
 
@@ -252,23 +250,23 @@ public:
 
 #pragma region role 
 
-	bool AccessRight(const Role* role) const {
+	bool AccessRight(const CRole* role) const {
 		return AccessRight(role->GetName());
 	}
 	bool AccessRight(const wxString& roleName) const {
 		return true;
 	}
-	bool AccessRight(const Role* role, const wxString& userName) const {
+	bool AccessRight(const CRole* role, const wxString& userName) const {
 		return AccessRight(role->GetName(), userName);
 	}
 	bool AccessRight(const wxString& roleName, const wxString& userName) const {
 		return AccessRight(roleName);
 	}
-	bool AccessRight(const Role* role, const meta_identifier_t& id) const;
+	bool AccessRight(const CRole* role, const meta_identifier_t& id) const;
 	bool AccessRight(const wxString& roleName, const meta_identifier_t& id) const {
 		if (roleName.IsEmpty())
 			return false;
-		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, Role*>& pair)
+		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, CRole*>& pair)
 			{
 				return roleName == pair.first;
 			}
@@ -278,11 +276,11 @@ public:
 		return AccessRight(it->second, id);
 	}
 
-	bool SetRight(const Role* role, const meta_identifier_t& id, const bool& val);
+	bool SetRight(const CRole* role, const meta_identifier_t& id, const bool& val);
 	bool SetRight(const wxString& roleName, const meta_identifier_t& id, const bool& val) {
 		if (roleName.IsEmpty())
 			return false;
-		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, Role*>& pair)
+		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, CRole*>& pair)
 			{
 				return roleName == pair.first;
 			}
@@ -298,7 +296,7 @@ public:
 	* @note Notar que no existe el método SetProperty, ya que la modificación
 	*       se hace a través de la referencia.
 	*/
-	Role* GetRole(const wxString& nameParam) const;
+	CRole* GetRole(const wxString& nameParam) const;
 
 	/**
 	* Obtiene el número de propiedades del objeto.
@@ -307,7 +305,7 @@ public:
 		return (unsigned int)m_roles.size();
 	}
 
-	Role* GetRole(unsigned int idx) const; // throws ...;
+	CRole* GetRole(unsigned int idx) const; // throws ...;
 
 #pragma endregion
 
@@ -384,7 +382,7 @@ public:
 
 	//process choice 
 	virtual bool ProcessChoice(IBackendControlFrame* ownerValue,
-		const meta_identifier_t& id, enum eSelectMode selMode) {
+		const wxString& strFormName, enum eSelectMode selMode) {
 		return true;
 	}
 
@@ -457,30 +455,14 @@ public:
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu) { return false; }
 	virtual void ProcessCommand(unsigned int id) {}
 
-	// Gets the parent object
-	template <typename retType = IMetaObject >
-	inline retType* GetParent() const {
-		return wxDynamicCast(m_parent, retType);
-	}
-
-	/**
-	* Obtiene un hijo del objeto.
-	*/
-	IMetaObject* GetChild(unsigned int idx) const {
-		return wxDynamicCast(IPropertyObject::GetChild(idx), IMetaObject);
-	}
-
-	IMetaObject* GetChild(unsigned int idx, const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::GetChild(idx, type), IMetaObject);
-	}
-
 	//check is empty
-	virtual inline bool IsEmpty() const {
-		return false;
-	}
+	virtual inline bool IsEmpty() const { return false; }
 
 	virtual bool Init() final override;
 	virtual bool Init(CValue** paParams, const long lSizeArray) final override;
+
+	//Is editable object? 
+	virtual bool IsEditable() const;
 
 	//compare object 
 	virtual bool CompareObject(IMetaObject* metaObject) const;
@@ -496,7 +478,7 @@ public:
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
 	*/
-	virtual bool ChangeChildPosition(IPropertyObject* obj, unsigned int pos);
+	bool ChangeChildPosition(IMetaObject* obj, unsigned int pos);
 
 	//copy & paste object 
 	bool CopyObject(CMemoryWriter& writer) const;
@@ -601,13 +583,12 @@ protected:
 
 	IMetaData* m_metaData;
 
-	std::vector<std::pair<wxString, Role*>> m_roles;
+	std::vector<std::pair<wxString, CRole*>> m_roles;
 	std::map<meta_identifier_t,
 		std::map<wxString, bool>
 	> m_valRoles;
 
 	std::vector<IMetaObject*> m_listMetaObject;
-
 	CMethodHelper* m_methodHelper;
 };
 

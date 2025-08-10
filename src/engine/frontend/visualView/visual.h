@@ -27,19 +27,21 @@ public:
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
-		long style = wxScrolledWindowStyle) : wxScrolledWindow(parent, id, pos, size, style | wxBORDER_SUNKEN), m_mainBoxSizer(nullptr)
+		long style = wxScrolledWindowStyle) : wxScrolledWindow(parent, id, pos, size, style | wxBORDER_SUNKEN)
 	{
 		wxScrolledWindow::SetDoubleBuffered(true);
 		wxScrolledWindow::SetScrollRate(5, 5);
 	}
 
+	virtual ~IVisualHost() { /*ClearVisualHost();*/ }
+
 	IValueFrame* GetObjectBase(wxObject* wxobject) const;
 	wxObject* GetWxObject(IValueFrame* baseobject) const;
 
-	wxBoxSizer* GetFrameSizer() const { return m_mainBoxSizer; }
+	wxSizer* GetFrameSizer() const { return GetBackgroundWindow()->GetSizer(); }
 
 	bool CreateAndUpdateVisualHost() {
-		return ClearVisualHost() && 
+		return ClearVisualHost() &&
 			CreateVisualHost() && UpdateVisualHost();
 	}
 
@@ -48,8 +50,6 @@ public:
 	bool ClearVisualHost();
 
 	virtual bool IsShownHost() const { return true; }
-
-	virtual bool IsDemonstration() const { return false; }
 	virtual bool IsDesignerHost() const { return false; }
 
 	virtual class CValueForm* GetValueForm() const = 0;
@@ -61,8 +61,10 @@ public:
 
 protected:
 
-	virtual void SetCaption(const wxString &strCaption) = 0;
+	virtual void SetCaption(const wxString& strCaption) = 0;
 	virtual void SetOrientation(int orient) = 0;
+
+	virtual void UpdateHostSize() {}
 
 protected:
 
@@ -75,18 +77,25 @@ protected:
 
 	//Insert new control
 	void CreateControl(IValueFrame* obj, IValueFrame* parent = nullptr, bool firstCreated = false);
+
 	//Update exist control
 	void UpdateControl(IValueFrame* obj, IValueFrame* parent = nullptr);
+
 	//Remove control
 	void RemoveControl(IValueFrame* obj, IValueFrame* parent = nullptr);
+
 	//Generate component 
 	void GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
+
 	//Update component
 	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool refreshForm = false);
+
 	// Give components an opportunity to cleanup
 	void DeleteRecursive(IValueFrame* control, bool force = false);
+
 	// Calculate label size for static text
 	bool CalculateLabelSize(IValueFrame* control = nullptr);
+
 	//Update virtual size
 	void UpdateVirtualSize();
 
@@ -135,28 +144,28 @@ protected:
 	 */
 	virtual void Cleanup(IValueFrame* control, wxObject* obj);
 
+private:
+
+	void AppendControl(wxObject* wx_object, IValueFrame* control) {
+		m_wxObjects.insert_or_assign(wx_object, control);
+		m_baseObjects.insert_or_assign(control, wx_object);
+	}
+
 protected:
 
 	//controls
-	wxBoxSizer* m_mainBoxSizer;
-
 	std::map<wxObject*, IValueFrame*> m_wxObjects;
 	std::map<IValueFrame*, wxObject* > m_baseObjects;
 };
 
 class FRONTEND_API IVisualEditorNotebook {
-	static std::vector<IVisualEditorNotebook*> sm_visualEditor;
+	static std::set<IVisualEditorNotebook*> ms_visualEditorArray;
 public:
 
-	static IVisualEditorNotebook* FindEditorByForm(IValueFrame* valueForm);
+	static IVisualEditorNotebook* FindEditorByForm(const IValueFrame* valueForm);
 
-	IVisualEditorNotebook() {
-		CreateVisualEditor();
-	}
-
-	virtual ~IVisualEditorNotebook() {
-		DestroyVisualEditor();
-	}
+	IVisualEditorNotebook() { CreateVisualEditor(); }
+	virtual ~IVisualEditorNotebook() { DestroyVisualEditor(); }
 
 	virtual IVisualHost* GetVisualHost() const = 0;
 

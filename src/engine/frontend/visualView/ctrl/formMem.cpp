@@ -20,7 +20,7 @@ bool CValueForm::LoadForm(const wxMemoryBuffer& formData)
 		}
 	}
 	std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
-	SetReadOnly(m_metaFormObject->IsEditable());
+	//SetReadOnly(m_metaFormObject->IsEditable());
 	if (!LoadControl(m_metaFormObject, *readerDataMemory)) {
 		return false;
 	}
@@ -51,7 +51,7 @@ bool CValueForm::LoadChildForm(CMemoryReader& readerData, IValueFrame* controlPa
 				break;
 			wxASSERT(clsid != 0);
 			IValueFrame* newControl = CValueForm::NewObject(clsid, controlParent, false);
-			newControl->SetReadOnly(m_propEnabled);
+			//newControl->SetReadOnly(m_propEnabled);
 			std::shared_ptr <CMemoryReader>readerDataMemory(readerMetaMemory->open_chunk(eDataBlock));
 			if (!newControl->LoadControl(m_metaFormObject, *readerDataMemory))
 				return false;

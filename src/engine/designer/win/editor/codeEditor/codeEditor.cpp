@@ -127,10 +127,14 @@ void CCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 
 	if (setBreakLine) MarkerAdd(lineBreakpoint - 1, CCodeEditor::BreakLine);
 
-	if (firstVisibleLine > (lineBreakpoint - 1))
-		ScrollToLine(lineBreakpoint - 1);
-	else if (firstVisibleLine + linesOnScreen < (lineBreakpoint - 1))
-		ScrollToLine(lineBreakpoint - 1);
+	if (lineBreakpoint > 0) {
+
+		if (firstVisibleLine > (lineBreakpoint - 1))
+			ScrollToLine(lineBreakpoint - 1);
+		else if (firstVisibleLine + linesOnScreen < (lineBreakpoint - 1))
+			ScrollToLine(lineBreakpoint - 1);
+
+	}
 
 	//Set standart focus
 	if (lineBreakpoint > 0) CCodeEditor::SetFocus();
@@ -292,7 +296,7 @@ void CCodeEditor::AppendText(const wxString& text)
 	wxStyledTextCtrl::AppendText(text);
 	m_bInitialized = true;
 
-	IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+	const IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
 
 	if (moduleObject != nullptr) {
 
@@ -332,7 +336,7 @@ void CCodeEditor::Replace(long from, long to, const wxString& text)
 	wxStyledTextCtrl::Replace(from, to, text);
 	m_bInitialized = true;
 
-	IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+	const IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
 
 	if (moduleObject != nullptr) {
 		try {
@@ -392,7 +396,9 @@ bool CCodeEditor::LoadModule()
 bool CCodeEditor::SaveModule()
 {
 	if (m_document != nullptr) {
+
 		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+
 		if (moduleObject != nullptr) {
 			moduleObject->SetModuleText(GetText());
 			return true;
@@ -459,7 +465,7 @@ void CCodeEditor::FindText(const wxString& findString, int wxflags)
 
 void CCodeEditor::ShowGotoLine()
 {
-	CDialogLineInput *lineInput = new CDialogLineInput(this);
+	CDialogLineInput* lineInput = new CDialogLineInput(this);
 	const int ret = lineInput->ShowModal();
 	if (ret != wxNOT_FOUND) {
 		CCodeEditor::SetFocus();
@@ -470,7 +476,7 @@ void CCodeEditor::ShowGotoLine()
 
 void CCodeEditor::ShowMethods()
 {
-	CFunctionList *funcList = new CFunctionList(m_document, this);
+	CFunctionList* funcList = new CFunctionList(m_document, this);
 	const int ret = funcList->ShowModal();
 	funcList->Destroy();
 }
@@ -479,11 +485,11 @@ void CCodeEditor::ShowMethods()
 
 bool CCodeEditor::SyntaxControl(bool throwMessage) const
 {
-	IMetaObject* metaObject = m_document->GetMetaObject();
+	const IMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
-	IMetaData* metaData = metaObject->GetMetaData();
+	const IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	const IModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	IModuleDataObject* dataRef = nullptr;
@@ -863,7 +869,9 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 		return;
 
 	if (m_bInitialized) {
+
 		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+
 		if (moduleObject != nullptr) {
 
 			IMetaData* metaData = moduleObject->GetMetaData();
@@ -972,7 +980,7 @@ void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 	case WXK_RIGHT:
 		SetEmptySelection(GetCurrentPos() + 1);
 		break;
-	case WXK_UP:{
+	case WXK_UP: {
 		if (!event.ShiftDown()) {
 			int currentPos = GetCurrentPos();
 			int line = LineFromPosition(currentPos);

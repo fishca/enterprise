@@ -21,20 +21,6 @@ public:
 	}
 
 	/**
-	* Obtiene un hijo del objeto.
-	*/
-	IValueControl* GetChild(unsigned int idx) const;
-	IValueControl* GetChild(unsigned int idx, const wxString& type) const;
-
-	IValueControl* FindNearAncestor(const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::FindNearAncestor(type), IValueControl);
-	}
-
-	IValueControl* FindNearAncestorByBaseClass(const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::FindNearAncestorByBaseClass(type), IValueControl);
-	}
-
-	/**
 	* Property events
 	*/
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);

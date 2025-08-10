@@ -75,18 +75,10 @@ public:
 	//create associate value 
 	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
-	//create object data with metaForm
-	virtual ISourceDataObject* CreateObjectData(IMetaObjectForm* metaObject);
-
-	//create form with data 
-	virtual IBackendValueForm* CreateObjectForm(IMetaObjectForm* metaForm) override {
-		return metaForm->GenerateFormAndRun(
-			nullptr, CreateObjectData(metaForm)
-		);
-	}
-
+#pragma region _form_builder_h_
 	//support form
-	virtual IBackendValueForm* GetObjectForm(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+#pragma endregion
 
 	//get module object in compose object 
 	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
@@ -97,8 +89,13 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 protected:
+
+	//create object data with meta form
+	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+
 	//create empty object
 	virtual IRecordDataObjectExt* CreateObjectExtValue();  //create object 
+	
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
@@ -127,9 +124,11 @@ class CRecordDataObjectReport : public IRecordDataObjectExt {
 	CRecordDataObjectReport(CMetaObjectReport* metaObject);
 public:
 
+#pragma region _form_builder_h_
 	//support show 
-	virtual void ShowFormValue(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
-	virtual IBackendValueForm* GetFormValue(const wxString& formName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
+	virtual void ShowFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
+	virtual IBackendValueForm* GetFormValue(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr);
+#pragma endregion
 
 	//support actionData
 	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);

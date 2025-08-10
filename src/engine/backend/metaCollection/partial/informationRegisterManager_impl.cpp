@@ -153,8 +153,8 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 			wxDELETE(retLine);
 		}
 
-		resultSet->Close();
-		statement->Close();
+		db_query->CloseResultSet(resultSet);
+		db_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -332,8 +332,8 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			}
 		}
 
-		resultSet->Close();
-		statement->Close();
+		db_query->CloseResultSet(resultSet);
+		db_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -511,8 +511,8 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			}
 		}
 
-		resultSet->Close();
-		statement->Close();
+		db_query->CloseResultSet(resultSet);
+		db_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -701,8 +701,8 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 			wxDELETE(retLine);
 		}
 
-		resultSet->Close();
-		statement->Close();
+		db_query->CloseResultSet(resultSet);
+		db_query->CloseStatement(statement);
 	}
 
 	return retTable;
@@ -891,8 +891,8 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 			wxDELETE(retLine);
 		}
 
-		resultSet->Close();
-		statement->Close();
+		db_query->CloseResultSet(resultSet);
+		db_query->CloseStatement(statement);
 	}
 
 	return retTable;

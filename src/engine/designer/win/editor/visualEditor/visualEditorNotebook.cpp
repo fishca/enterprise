@@ -26,13 +26,13 @@ void CVisualEditorNotebook::DestroyVisualEditor()
 
 //CVisualEditorNotebook* CVisualEditorNotebook::FindEditorByForm(CValueForm* valueForm)
 //{
-//	auto& it = std::find_if(sm_visualEditor.begin(), sm_visualEditor.end(),
+//	auto& it = std::find_if(ms_visualEditorArray.begin(), ms_visualEditorArray.end(),
 //		[valueForm](CVisualEditorNotebook* visualNotebook) {
 //			return valueForm == visualNotebook->GetValueForm();
 //		}
 //	);
 //
-//	if (it != sm_visualEditor.end())
+//	if (it != ms_visualEditorArray.end())
 //		return *it;
 //
 //	return nullptr;

@@ -22,13 +22,20 @@ public:
 
 	IMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
-	bool LoadFormData(IBackendValueForm* value);
+	bool LoadFormData(IBackendValueForm* value) const;
 	bool SaveFormData(IBackendValueForm* value);
 
-	IBackendValueForm* GenerateForm(IBackendControlFrame* ownerControl = nullptr,
-		ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& guidForm = wxNullGuid);
-	IBackendValueForm* GenerateFormAndRun(IBackendControlFrame* ownerControl = nullptr,
-		ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& guidForm = wxNullGuid);
+#pragma region _form_creator_h_
+
+	static IBackendValueForm* CreateAndBuildForm(const IMetaObjectForm* creator,
+		IBackendControlFrame* ownerControl = nullptr,
+		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+
+	static IBackendValueForm* CreateAndBuildForm(const IMetaObjectForm* creator, const form_identifier_t& form_id = defaultFormType,
+		IBackendControlFrame* ownerControl = nullptr,
+		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+
+#pragma endregion 
 
 	//set module code 
 	virtual void SetModuleText(const wxString& moduleText) = 0;
@@ -55,9 +62,6 @@ protected:
 
 	virtual bool LoadData(CMemoryReader& reader) = 0;
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) = 0;
-
-protected:
-	bool m_firstInitialized;
 };
 
 class BACKEND_API CMetaObjectForm : public IMetaObjectForm {
@@ -137,7 +141,7 @@ protected:
 
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("form"));
 
-	Role* m_roleUse = IMetaObject::CreateRole("use", _("use"));
+	CRole* m_roleUse = IMetaObject::CreateRole("use", _("use"));
 
 public:
 

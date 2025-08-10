@@ -113,8 +113,8 @@ public:
 
 	static void UserInterruptProcessing();
 
-	static CValue GetCommonForm(const wxString& formName, class IBackendControlFrame* owner, class CValueGuid* unique);
-	static void ShowCommonForm(const wxString& formName, class IBackendControlFrame* owner, class CValueGuid* unique);
+	static CValue GetCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);
+	static void ShowCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);
 
 	static void BeginTransaction();
 	static void CommitTransaction();

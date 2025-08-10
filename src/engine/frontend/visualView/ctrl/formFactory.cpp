@@ -141,7 +141,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 		//de forms (como childType de project), pero hay mucho código no válido
 		//para forms que no sean de tipo "form". Dicho de otra manera, hay
 		//código que dependen del nombre del tipo, cosa que hay que evitar.
-		if (controlParent->GetObjectTypeName() == wxT("form") && controlParent->GetClassName() != wxT("frontendForm") &&
+		if (controlParent->GetObjectTypeName() == wxT("form") && controlParent->GetClassName() != wxT("clientForm") &&
 			(classType == wxT("statusbar") ||
 				classType == wxT("menubar") ||
 				classType == wxT("ribbonbar") ||
@@ -167,7 +167,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			{
 				object = NewObject(className, controlParent);
 				//set enabled item
-				object->SetReadOnly(controlParent->IsEditable());
+				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
 		else if (controlParent->GetObjectTypeName() == wxT("notebook"))
@@ -175,7 +175,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			if (classType == wxT("notebookPage")) {
 				object = NewObject(className, controlParent);
 				//set enabled item
-				object->SetReadOnly(controlParent->IsEditable());
+				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
 		else if (controlParent->GetObjectTypeName() == wxT("container")
@@ -185,7 +185,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			{
 				object = NewObject(className, controlParent);
 				//set enabled item
-				object->SetReadOnly(controlParent->IsEditable());
+				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
 		else if (controlParent->GetObjectTypeName() == wxT("notebookPage"))
@@ -194,14 +194,14 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			IValueFrame* obj = NewObject(className, sizerItem);
 
 			if (controlParent) {
-				sizerItem->SetReadOnly(controlParent->IsEditable());
+				//sizerItem->SetReadOnly(controlParent->IsEditable());
 			}
 
 			// la siguiente condición debe cumplirse siempre
 			// ya que un item debe siempre contener a otro objeto
 			if (obj) {
 				//set enabled item
-				obj->SetReadOnly(sizerItem->IsEditable());
+				//obj->SetReadOnly(sizerItem->IsEditable());
 
 				// sizerItem es un tipo de objeto reservado, para que el uso sea
 				// más práctico se asignan unos valores por defecto en función
@@ -220,15 +220,15 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			CValueSizerItem* sizerItem = NewObject< CValueSizerItem>("sizerItem", controlParent);
 			IValueFrame* obj = NewObject(className, sizerItem);
 
-			if (controlParent) {
-				sizerItem->SetReadOnly(controlParent->IsEditable());
-			}
+			//if (controlParent) {
+			//	sizerItem->SetReadOnly(controlParent->IsEditable());
+			//}
 
 			// la siguiente condición debe cumplirse siempre
 			// ya que un item debe siempre contener a otro objeto
 			if (obj) {
 				//set enabled item
-				obj->SetReadOnly(sizerItem->IsEditable());
+				//obj->SetReadOnly(sizerItem->IsEditable());
 				// sizerItem es un tipo de objeto reservado, para que el uso sea
 				// más práctico se asignan unos valores por defecto en función
 				// del tipo de objeto creado

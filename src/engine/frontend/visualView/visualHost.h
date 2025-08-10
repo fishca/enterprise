@@ -9,13 +9,13 @@
 
 class CVisualHost : public IVisualHost {
 	CValueForm* m_valueForm;
-	CMetaDocument* m_document;
+	CVisualDocument* m_document;
 	bool m_dataViewSizeChanged;
 	wxSize m_dataViewSize;
 public:
 
 	// ctor
-	CVisualHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent);
+	CVisualHost(CVisualDocument* document, CValueForm* valueForm, wxWindow* parent);
 	virtual ~CVisualHost();
 
 	virtual bool IsShownHost() const { return m_valueForm->IsShown(); }
@@ -43,15 +43,5 @@ protected:
 	friend class CValueForm;
 };
 
-class CVisualDemoHost : public CVisualHost {
-public:
-
-	CVisualDemoHost(CMetaDocument* document, CValueForm* valueForm, wxWindow* parent) :
-		CVisualHost(document, valueForm, parent)
-	{
-	}
-
-	virtual bool IsDemonstration() const { return true; }
-};
 
 #endif

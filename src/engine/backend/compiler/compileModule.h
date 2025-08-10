@@ -14,26 +14,26 @@ public:
 	virtual bool Compile(); // compile current module from meta-object
 public:
 
-	CCompileModule(IMetaObjectModule* moduleObject, bool onlyFunction = false);
+	CCompileModule(const IMetaObjectModule* moduleObject, bool onlyFunction = false);
 	virtual ~CCompileModule() {}
 
 	virtual CCompileModule* GetParent() const { return dynamic_cast<CCompileModule*>(m_parent); }
-	virtual IMetaObjectModule* GetModuleObject() const { return m_moduleObject; }
+	virtual const IMetaObjectModule* GetModuleObject() const { return m_moduleObject; }
 
 protected:
-	IMetaObjectModule* m_moduleObject;
+	const IMetaObjectModule* m_moduleObject;
 };
 
 class BACKEND_API CCompileCommonModule : public CCompileModule {
 public:
-	CCompileCommonModule(IMetaObjectModule* moduleObject) :
+	CCompileCommonModule(const IMetaObjectModule* moduleObject) :
 		CCompileModule(moduleObject, true) {
 	}
 };
 
 class BACKEND_API CCompileGlobalModule : public CCompileCommonModule {
 public:
-	CCompileGlobalModule(IMetaObjectModule* moduleObject) :
+	CCompileGlobalModule(const IMetaObjectModule* moduleObject) :
 		CCompileCommonModule(moduleObject) {
 	}
 };

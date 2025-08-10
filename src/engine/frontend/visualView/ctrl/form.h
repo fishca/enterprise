@@ -32,57 +32,78 @@ const class_identifier_t g_controlFormCLSID = string_to_clsid("CT_FRME");
 
 #include "backend/valueInfo.h"
 
-class CVisualDocument : public CMetaDocument {
-	CVisualHost* m_visualHost;
+class FRONTEND_API CVisualCommandProcessor : public wxCommandProcessor {
+
+public:
+	virtual bool CanUndo() const { return false; }
+	virtual bool CanRedo() const { return false; }
+};
+
+class FRONTEND_API CVisualDocument : public CMetaDocument {
+	CValueForm* m_valueForm;
 public:
 
 	CVisualView* GetFirstView() const;
 
-	//is demomode
-	CVisualDocument() : CMetaDocument(), m_guidForm(CUniqueKey()) {
-		m_visualHost = nullptr;
-	}
+	CValueForm* GetValueForm() const;
+	const CUniqueKey& GetFormKey() const;
 
-	//other cases 
-	CVisualDocument(const CUniqueKey& guid) : CMetaDocument(), m_guidForm(guid) {
-		m_visualHost = nullptr;
-	}
+	bool CompareFormKey(const CUniqueKey& formKey) const;
 
+	CVisualDocument(CValueForm* valueForm);
 	virtual ~CVisualDocument();
+
+	virtual bool IsVisualDemonstrationDoc() const { return false; }
+
+	virtual bool OnCreate(const wxString& WXUNUSED(path), long flags) override;
 
 	virtual bool OnSaveModified() override;
 	virtual bool OnCloseDocument() override;
 
 	virtual bool IsCloseOnOwnerClose() const override;
 
-	virtual bool IsModified() const override;
+	virtual bool IsModified() const override { return m_documentModified; }
 	virtual void Modify(bool modify) override;
 	virtual bool Save() override;
-	virtual bool SaveAs() override;
+	virtual bool SaveAs() override { return true; }
 
-	void SetVisualView(CVisualHost* visualHost);
-
-	CVisualHost* GetVisualView() const { return m_visualHost; }
-	CUniqueKey GetGuid() const { return m_guidForm; }
+	virtual void SetDocParent(CMetaDocument* docParent) override;
 
 protected:
-
-	CUniqueKey m_guidForm;
+	virtual CMetaView* DoCreateView();
 };
 
-class CVisualView : public CMetaView {
-	CValueForm* m_valueForm;
+class FRONTEND_API CVisualDemoDocument : public CVisualDocument {
 public:
 
-	CVisualView(CValueForm* valueForm) : m_valueForm(valueForm) {}
+	CVisualDemoDocument(CValueForm* valueForm) :
+		CVisualDocument(valueForm)
+	{
+	}
+
+	virtual bool IsVisualDemonstrationDoc() const { return true; }
+
+	bool CVisualDemoDocument::OnCloseDocument() {
+		return CMetaDocument::OnCloseDocument();
+	}
+};
+
+class FRONTEND_API CVisualView : public CMetaView {
+	CVisualHost* m_visualHost;
+public:
+
+	CVisualView() : m_visualHost(nullptr) {}
+	virtual ~CVisualView();
 
 	virtual wxPrintout* OnCreatePrintout() override;
+
+	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	CValueForm* GetValueForm() const {
-		return m_valueForm;
-	}
+	virtual void OnClosingDocument() override;
+
+	CVisualHost* GetVisualHost() const { return m_visualHost; }
 };
 
 //********************************************************************************************
@@ -98,7 +119,7 @@ private:
 	};
 protected:
 	CPropertyCategory* m_categoryFrame = IPropertyObject::CreatePropertyCategory(wxT("frame"), _("frame"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryFrame, wxT("caption"), _("caption"), _("Frame"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryFrame, wxT("caption"), _("caption"), wxEmptyString);
 	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("fg"), wxColour(0, 120, 215));
 	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("bg"), wxColour(240, 240, 240));
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryFrame, wxT("enabled"), _("enabled"), true);
@@ -108,34 +129,28 @@ private:
 
 	bool m_formModified;
 
-	IMetaObjectForm* m_metaFormObject; // ref to metaData
+	const IMetaObjectForm* m_metaFormObject; // ref to metaData
 	ISourceDataObject* m_sourceObject;
 
 public:
+	
+	const CUniqueKey& GetFormKey() const { return m_formKey; }
 
-	void SetCaption(const wxString& caption) {
-		return m_propertyCaption->SetValue(caption);
+	bool CompareFormKey(const CUniqueKey& formKey) const {
+		return m_formKey == formKey;
 	}
 
-	wxString GetCaption() const {
-		return m_propertyCaption->GetValueAsString();
-	}
+public:
 
-	wxColour GetForegroundColour() const {
-		return m_propertyFG->GetValueAsColour();
-	}
+	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyCaption->GetValueAsString(); }
 
-	wxColour GetBackgroundColour() const {
-		return m_propertyBG->GetValueAsColour();
-	}
+	wxColour GetForegroundColour() const { return m_propertyFG->GetValueAsColour(); }
+	wxColour GetBackgroundColour() const { return m_propertyBG->GetValueAsColour(); }
 
-	bool IsFormEnabled() const {
-		return m_propertyEnabled->GetValueAsBoolean();
-	}
+	bool IsFormEnabled() const { return m_propertyEnabled->GetValueAsBoolean(); }
 
-	wxOrientation GetOrient() const {
-		return m_propertyOrient->GetValueAsEnum();
-	}
+	wxOrientation GetOrient() const { return m_propertyOrient->GetValueAsEnum(); }
 
 	IValueFrame* NewObject(const class_identifier_t& clsid, IValueFrame* parentControl = nullptr, const CValue& generateId = true);
 	IValueFrame* NewObject(const wxString& classControl, IValueFrame* controlParent, const CValue& generateId = true) {
@@ -179,12 +194,12 @@ public:
 	* Crea un objeto como copia de otro.
 	*/
 	static bool CopyObject(IValueFrame* srcControl, bool copyOnPaste = true);
-	static IValueFrame* PasteObject(CValueForm *dstForm, IValueFrame* dstParent);
+	static IValueFrame* PasteObject(CValueForm* dstForm, IValueFrame* dstParent);
 
 public:
 
-	CValueForm(IControlFrame* ownerControl = nullptr, IMetaObjectForm* metaForm = nullptr,
-		ISourceDataObject* ownerSrc = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey, bool readOnly = false);
+	CValueForm(const IMetaObjectForm* creator = nullptr, IControlFrame* ownerControl = nullptr,
+		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 
 	virtual ~CValueForm();
 
@@ -209,8 +224,9 @@ public:
 	//****************************************************************************
 
 	virtual void BuildForm(const form_identifier_t& formType);
-	virtual void InitializeForm(IControlFrame* ownerControl, IMetaObjectForm* metaForm,
-		ISourceDataObject* ownerSrc, const CUniqueKey& formGuid, bool readOnly = false);
+	virtual void InitializeForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
+		ISourceDataObject* srcObject, const CUniqueKey& formGuid);
+
 	virtual bool InitializeFormModule();
 
 	//get metaData
@@ -226,7 +242,7 @@ public:
 	}
 
 	virtual ISourceDataObject* GetSourceObject() const { return m_sourceObject; }
-	virtual IMetaObjectForm* GetFormMetaObject() const { return m_metaFormObject; }
+	virtual const IMetaObjectForm* GetFormMetaObject() const { return m_metaFormObject; }
 
 	IMetaObjectGenericData* GetMetaObject() const;
 
@@ -249,6 +265,8 @@ public:
 	* Can delete object
 	*/
 	virtual bool CanDeleteControl() const { return false; }
+
+	virtual bool IsEditable() const;
 
 public:
 
@@ -323,10 +341,6 @@ public:
 	CValueFormCollectionControl* m_formCollectionControl;
 	CValueFormCollectionData* m_formCollectionData;
 
-public:
-
-	CVisualDocument* m_valueFormDocument;
-
 protected:
 
 	friend class CVisualDocument;
@@ -334,7 +348,7 @@ protected:
 
 	friend class CValueFormCollectionControl;
 
-	bool CreateDocForm(CMetaDocument* docParent, bool demo = false);
+	bool CreateDocForm(CMetaDocument* docParent, bool createContext = true);
 	bool CloseDocForm();
 
 public:
@@ -352,6 +366,12 @@ public:
 	bool LoadChildForm(CMemoryReader& readerData, IValueFrame* controlParent);
 	virtual wxMemoryBuffer SaveForm();
 	bool SaveChildForm(CMemoryWriter& writterData, IValueFrame* controlParent);
+
+	static CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
+
+	static CValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
+		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
 
 	static CValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
 	static CValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
@@ -379,12 +399,12 @@ public:
 	virtual void HelpForm();
 
 	virtual bool GenerateForm(IRecordDataObjectRef* obj) const;
-	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool demo = false) override;
+	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
 
 	//set & get modify 
 	virtual void Modify(bool modify = true) {
-		if (m_valueFormDocument != nullptr) {
-			m_valueFormDocument->Modify(modify);
+		if (IsShown()) {
+			GetVisualDocument()->Modify(modify);
 		}
 		m_formModified = modify;
 	}
@@ -392,7 +412,7 @@ public:
 	virtual bool IsModified() const { return m_formModified; }
 
 	//shown form 
-	virtual bool IsShown() const { return m_valueFormDocument != nullptr; }
+	virtual bool IsShown() const { return GetVisualDocument() != nullptr; }
 
 	//support close form
 	virtual void CloseOnChoice(bool close = true) { m_closeOnChoice = close; }
@@ -406,7 +426,7 @@ public:
 	void DetachIdleHandler(const wxString& procedureName);
 
 	//get visual document
-	virtual CVisualDocument* GetVisualDocument() const { return m_valueFormDocument; }
+	virtual CVisualDocument* GetVisualDocument() const;
 
 	//special proc
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost);
@@ -449,7 +469,7 @@ protected:
 
 	IControlFrame* m_controlOwner;
 
-	std::map<wxString, wxTimer*> m_aIdleHandlers;
+	std::map<wxString, wxTimer*> m_idleHandlerArray;
 };
 
 #endif 

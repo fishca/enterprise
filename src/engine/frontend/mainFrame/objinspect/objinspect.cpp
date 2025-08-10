@@ -84,19 +84,19 @@ void CObjectInspector::Create(bool force)
 		// We create the categories with the properties of the object organized by "classes"
 		CreateCategory(sel_obj->GetClassName(), sel_obj, propMap, false);
 
-		IPropertyObject* parent = sel_obj->GetParent();
+		IPropertyObject* owner = sel_obj->GetOwner();
 
-		if (parent != nullptr) {
-			if (parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				CreateCategory(sel_obj->GetClassName(), parent, dummyPropMap, false);
+		if (owner != nullptr) {
+			if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+				CreateCategory(sel_obj->GetClassName(), owner, dummyPropMap, false);
 			}
 		}
 
 		CreateCategory(sel_obj->GetClassName(), sel_obj, eventMap, true);
 
-		if (parent != nullptr) {
-			if (parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				CreateCategory(sel_obj->GetClassName(), parent, dummyEventMap, true);
+		if (owner != nullptr) {
+			if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+				CreateCategory(sel_obj->GetClassName(), owner, dummyEventMap, true);
 			}
 		}
 

@@ -42,12 +42,14 @@ class FRONTEND_API CVisualDocument;
 class FRONTEND_API IControlFrame : public IBackendControlFrame {
 public:
 
+	//get value control and guid 
 	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
 	virtual Guid GetControlGuid() const { return Guid::newGuid(); }
 
+	//get owner form 
 	virtual CValueForm* GetOwnerForm() const { return nullptr; }
 
-	//Get ref class 
+	//get ref class 
 	virtual class_identifier_t GetClassType() const { return 0; }
 
 	//get visual document
@@ -58,7 +60,9 @@ public:
 };
 
 class FRONTEND_API IValueFrame : public CValue,
-	public IPropertyObject, public IControlFrame, public IActionDataObject {
+	public IPropertyObjectHelper<IValueFrame>,
+	public IControlFrame, 
+	public IActionDataObject {
 	wxDECLARE_ABSTRACT_CLASS(IValueFrame);
 protected:
 
@@ -86,31 +90,6 @@ public:
 	//system override 
 	virtual wxString GetClassName() const final;
 	virtual wxString GetObjectTypeName() const final;
-
-	// Gets the parent object
-	template <typename retType = IValueFrame >
-	inline retType* GetParent() const {
-		return wxDynamicCast(m_parent, retType);
-	}
-
-	/**
-	* Obtiene un hijo del objeto.
-	*/
-	IValueFrame* IValueFrame::GetChild(unsigned int idx) const {
-		return wxDynamicCast(IPropertyObject::GetChild(idx), IValueFrame);
-	}
-
-	IValueFrame* IValueFrame::GetChild(unsigned int idx, const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::GetChild(idx, type), IValueFrame);
-	}
-
-	IValueFrame* FindNearAncestor(const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::FindNearAncestor(type), IValueFrame);
-	}
-
-	IValueFrame* FindNearAncestorByBaseClass(const wxString& type) const {
-		return wxDynamicCast(IPropertyObject::FindNearAncestorByBaseClass(type), IValueFrame);
-	}
 
 	/**
 	* Support generate id
@@ -145,11 +124,11 @@ public:
 	virtual wxString GetControlName() const = 0;
 
 	void ResetGuid() {
-		wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
+	//	wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
 	}
 
 	void GenerateGuid() {
-		wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
+	//	wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
 	}
 
 	virtual Guid GetControlGuid() const { return m_controlGuid; }
@@ -373,6 +352,10 @@ public:
 	//runtime 
 	virtual CProcUnit* GetFormProcUnit() const = 0;
 
+	//counter
+	virtual void ControlIncrRef() { CValue::IncrRef(); }
+	virtual void ControlDecrRef() { CValue::DecrRef(); }
+
 	//methods 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -396,6 +379,8 @@ public:
 	virtual class_identifier_t GetClassType() const {
 		return CValue::GetClassType();
 	}
+
+	virtual bool IsEditable() const;
 
 public:
 

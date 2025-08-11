@@ -579,17 +579,14 @@ void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject*
 
 #include "frontend/win/ctrls/dynamicBorder.h"
 
-//#define _OLD_DC_CALC_
 
 bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 {
 	const CValueForm* valueForm = GetValueForm();
 	if (valueForm == nullptr) return false;
 
-#ifndef _OLD_DC_CALC_
 	static wxScreenDC screenDC;
 	static wxCoord x, y;
-#endif
 
 	class CCalculateSize {
 
@@ -610,12 +607,11 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 				wxStaticText* childStaticText = childCtrl->GetStaticText();
 				const wxString& strLabel = childStaticText->GetLabel();
 				if (!strLabel.IsEmpty()) {
-#ifdef _OLD_DC_CALC_
-					childStaticText->GetTextExtent(strLabel, &x, &y);
-#else
 					const wxFont& childFont = childStaticText->GetFont();
-					screenDC.GetTextExtent(strLabel, &x, &y, nullptr, nullptr, &childFont);
+#ifdef __WXMSW__
+					::SelectObject(screenDC.GetHDC(), childFont.GetHFONT());
 #endif
+					screenDC.GetTextExtent(strLabel, &x, &y, nullptr, nullptr, &childFont);
 					if (x > maxX) maxX = x;
 				}
 			}

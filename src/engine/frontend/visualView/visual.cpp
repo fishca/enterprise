@@ -588,16 +588,17 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 
 #ifndef _OLD_DC_CALC_
 	static wxScreenDC screenDC;
+	static wxCoord x, y;
 #endif
-	 
+
 	class CCalculateSize {
-		
+
 		static inline void Calculate(IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
-			
+
 			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 				child = child->GetChild(0);
 			}
-			
+
 			wxASSERT(child);
 
 			wxObject* wx_object = child->GetWxObject();
@@ -609,17 +610,13 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 				wxStaticText* childStaticText = childCtrl->GetStaticText();
 				const wxString& strLabel = childStaticText->GetLabel();
 				if (!strLabel.IsEmpty()) {
-
 #ifdef _OLD_DC_CALC_
-					const wxSize& childSize = childStaticText->GetTextExtent(strLabel);
+					childStaticText->GetTextExtent(strLabel, &x, &y);
 #else
-					screenDC.SetFont(childStaticText->GetFont());
-					const wxSize& childSize = screenDC.GetTextExtent(strLabel);
+					const wxFont& childFont = childStaticText->GetFont();
+					screenDC.GetTextExtent(strLabel, &x, &y, nullptr, nullptr, &childFont);
 #endif
-
-					if (childSize.GetX() > maxX) {
-						maxX = childSize.GetX();
-					}
+					if (x > maxX) maxX = x;
 				}
 			}
 
@@ -677,7 +674,7 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 	public:
 
 		static inline bool CalculateAndApply(const CValueForm* valueForm, IDynamicBorder* control = nullptr) {
-			
+
 			if (control != nullptr && control->AllowCalc()) {
 				control->BeforeCalc();
 			}

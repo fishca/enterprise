@@ -1041,9 +1041,6 @@
     <ClCompile Include="metaCollection\partial\contextManager.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
-    <ClCompile Include="metaCollection\partial\dataProcessor_res.cpp">
-      <Filter>metaCollection\partial</Filter>
-    </ClCompile>
     <ClCompile Include="metaCollection\partial\dataProcessorAction.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
@@ -1410,6 +1407,9 @@
     </ClCompile>
     <ClCompile Include="propertyManager\property\variant\actionVariant.cpp">
       <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\partial\dataProcessorMetadata_res.cpp">
+      <Filter>metaCollection\partial</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

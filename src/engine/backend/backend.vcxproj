@@ -390,8 +390,8 @@
     <ClCompile Include="metaCollection\partial\dataProcessorManager.cpp" />
     <ClCompile Include="metaCollection\partial\dataProcessorMetadata.cpp" />
     <ClCompile Include="metaCollection\partial\dataProcessorMetadataMenu.cpp" />
+    <ClCompile Include="metaCollection\partial\dataProcessorMetadata_res.cpp" />
     <ClCompile Include="metaCollection\partial\dataProcessorObject.cpp" />
-    <ClCompile Include="metaCollection\partial\dataProcessor_res.cpp" />
     <ClCompile Include="metaCollection\partial\dataReportAction.cpp" />
     <ClCompile Include="metaCollection\partial\dataReportManager.cpp" />
     <ClCompile Include="metaCollection\partial\dataReportMetadata.cpp" />

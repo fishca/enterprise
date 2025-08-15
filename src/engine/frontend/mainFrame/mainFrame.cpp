@@ -153,7 +153,9 @@ void CDocMDIFrame::RefreshFrame()
 void CDocMDIFrame::Raise()
 {
 #if __WXMSW__
-	::keybd_event(0, 0, 0, 0); // Simulate a key press
+	// Simulate a key press
+	::keybd_event((BYTE)0, 0, 0 /* key press */, 0);
+	::keybd_event((BYTE)0, 0, KEYEVENTF_KEYUP, 0);
 #endif
 	wxAuiMDIParentFrame::Raise();
 }

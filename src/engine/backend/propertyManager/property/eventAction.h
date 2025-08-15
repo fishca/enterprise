@@ -14,7 +14,7 @@ class BACKEND_API CEventAction : public IEvent {
 		wxPGChoices constants;
 		for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 			wxPGChoiceEntry item(
-				m_listPropValue.GetItemName(idx),
+				m_listPropValue.GetItemLabel(idx),
 				m_listPropValue.GetItemId(idx)
 			);
 			constants.Add(item);

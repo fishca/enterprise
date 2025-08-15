@@ -13,7 +13,12 @@ bool CValueToolBarItem::GetToolAction(CEventAction* evtList)
 		for (unsigned int i = 0; i < data.GetCount(); i++) {
 			const action_identifier_t& id = data.GetID(i);
 			if (id == wxNOT_FOUND) continue; 
-			evtList->AppendItem(data.GetNameByID(id), id, CValue::CreateObjectValue<CValueActionEvent>(data.GetNameByID(id), id));
+			evtList->AppendItem(
+				data.GetNameByID(id), 
+				data.GetCaptionByID(id), 
+				id, 
+				CValue::CreateObjectValue<CValueActionEvent>(data.GetNameByID(id), id)
+			);
 		}
 	}
 

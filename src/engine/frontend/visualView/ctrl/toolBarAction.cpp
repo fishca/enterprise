@@ -11,7 +11,7 @@ bool CValueToolbar::GetActionSource(CPropertyList* property)
 		static inline void FillActionSource(IValueFrame* element, CPropertyList* property)
 		{
 			if (element->GetClassName() == wxT("tablebox")) {
-				property->AppendItem(element->GetControlName(), element->GetControlID(), element);
+				property->AppendItem(element->GetControlName(), stringUtils::GenerateSynonym(element->GetControlName()), element->GetControlID(), element);
 			}
 
 			for (unsigned int i = 0; i < element->GetChildCount(); i++) {

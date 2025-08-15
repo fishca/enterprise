@@ -10,9 +10,9 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
 #include "backend/objCtor.h"
 
 bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
-{	
+{
 	property->AppendItem(wxT("default"), _("default"), wxNOT_FOUND);
-	
+
 	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
 		IMetaObjectRecordDataRef* metaObject = nullptr;
@@ -129,7 +129,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 		textEditor->SetTextEditMode(m_propertyTexteditMode->GetValueAsBoolean());
 
 		if (!appData->DesignerMode()) {
-			
+
 			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
 			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
 			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
@@ -141,7 +141,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 			textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
 			textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
 			textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
-		
+
 			textEditor->Bind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
 		}
 		else {
@@ -160,7 +160,7 @@ void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 
 	if (textEditor != nullptr) {
 		if (!appData->DesignerMode()) {
-			
+
 			textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTextCtrl::OnSelectButtonPressed, this);
 			textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTextCtrl::OnOpenButtonPressed, this);
 			textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTextCtrl::OnClearButtonPressed, this);
@@ -168,9 +168,9 @@ void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 			textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
 			textEditor->Unbind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
 			textEditor->Unbind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
-		
+
 			textEditor->Unbind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
-		
+
 		}
 	}
 }
@@ -194,7 +194,6 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 {
 	ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 	if (!m_propertySource->IsEmptyProperty() && sourceObject != nullptr) {
-		//IMetaObjectAttribute* metaObject = wxDynamicCast(GetMetaSource(), IMetaObjectAttribute);
 		IMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		sourceObject->SetValueByMetaID(m_propertySource->GetValueAsSource(), varControlVal);
@@ -208,8 +207,14 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 
 	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(GetWxObject());
 	if (textEditor != nullptr) {
+	
 		textEditor->SetValue(m_selValue.GetString());
-		textEditor->SetInsertionPointEnd();
+		
+		if (m_selValue.IsEmpty()) 
+			textEditor->SetInsertionPoint(wxNOT_FOUND);
+		else textEditor->SetInsertionPointEnd();
+		
+		textEditor->SetFocus();
 	}
 
 	return true;

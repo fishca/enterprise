@@ -78,7 +78,7 @@ class FRONTEND_API wxControlEditorCtrl :
 
 		wxControlTextEditorCtrl(wxControlEditorCtrl* editor, const wxString& value, long style = 0)
 			: wxTextCtrl(editor, wxID_ANY, value, wxDefaultPosition, wxDefaultSize,
-				(style & ~wxBORDER_MASK) | wxBORDER_SIMPLE | wxTE_PROCESS_ENTER)
+				(style & ~wxBORDER_MASK) | wxBORDER_SIMPLE | wxTE_PROCESS_ENTER | wxTE_NO_VSCROLL)
 		{
 			m_editor = editor;
 
@@ -181,7 +181,7 @@ class FRONTEND_API wxControlEditorCtrl :
 				m_editor->GetEventHandler()->ProcessEvent(event);
 			}
 
-			//e.Skip();
+			e.Skip();
 		}
 
 		void OnTextEnter(wxCommandEvent& e) {
@@ -279,6 +279,8 @@ class FRONTEND_API wxControlEditorCtrl :
 				}
 
 				GetEventHandler()->ProcessEvent(event);
+
+				e.Skip();
 			}
 
 		private:
@@ -642,11 +644,13 @@ public:
 	bool GetTextEditMode() const { return m_textEditMode; }
 
 	virtual void SetLabel(const wxString& label) {
-		m_label->SetLabel(label);
-		m_label->Wrap(m_label->GetClientSize().GetWidth());
+		if (m_label != nullptr) {
+			m_label->SetLabel(label);
+			m_label->Wrap(m_label->GetClientSize().GetWidth());
+		}
 	}
 
-	virtual wxString GetLabel() const { return m_label->GetLabel(); }
+	virtual wxString GetLabel() const { return m_label != nullptr ? m_label->GetLabel() : wxEmptyString; }
 
 	virtual void SetValue(const wxString& label) { m_text->SetValue(label); }
 	virtual wxString GetValue() const { return m_text->GetValue(); }

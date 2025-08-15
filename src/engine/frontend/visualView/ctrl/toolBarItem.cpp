@@ -64,7 +64,7 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
     }
 
     if (toolItem != nullptr) {
-        auiToolWnd->DeleteTool(GetControlID());
+        auiToolWnd->DestroyTool(GetControlID());
     }
 
     toolItem = auiToolWnd->InsertTool(idx, GetControlID(),
@@ -99,7 +99,7 @@ void CValueToolBarItem::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
     CAuiToolBar* auiToolWnd = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 
-    auiToolWnd->DeleteTool(GetControlID());
+    auiToolWnd->DestroyTool(GetControlID());
 
     auiToolWnd->Realize();
     auiToolWnd->Refresh();
@@ -153,7 +153,7 @@ void CValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, I
         if (m_controlId == child->GetControlID()) { idx = i; break; }
     }
 
-    if (m_toolItem) { auiToolWnd->DeleteTool(GetControlID()); }
+    if (m_toolItem) { auiToolWnd->DestroyTool(GetControlID()); }
     auiToolWnd->InsertSeparator(idx, GetControlID());
 
     auiToolWnd->Realize();
@@ -164,7 +164,7 @@ void CValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, I
 void CValueToolBarSeparator::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
     CAuiToolBar* auiToolWnd = dynamic_cast<CAuiToolBar*>(visualHost->GetWxObject(GetParent()));
-    if (auiToolWnd) auiToolWnd->DeleteTool(GetControlID());
+    if (auiToolWnd) auiToolWnd->DestroyTool(GetControlID());
 }
 
 bool CValueToolBarSeparator::CanDeleteControl() const

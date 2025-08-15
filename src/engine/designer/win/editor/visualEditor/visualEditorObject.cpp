@@ -359,6 +359,8 @@ void RemoveObjectCmd::RemoveObject()
 
 	m_parent->RemoveChild(m_object);
 	m_object->SetParent(nullptr);
+
+	ResetId();
 }
 
 void RemoveObjectCmd::DoExecute()
@@ -379,7 +381,6 @@ void RemoveObjectCmd::DoExecute()
 		m_object->SetParent(nullptr);
 	}
 
-	ResetId();
 	m_visualData->DetermineObjectToSelect(m_parent, m_oldPos);
 
 	wxEvtHandler::CallAfter(&RemoveObjectCmd::RemoveObject);

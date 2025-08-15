@@ -41,7 +41,7 @@ wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_CLEAR, wxCommandEven
 
 class FRONTEND_API wxControlEditorCtrl :
 
-	public wxCompositeWindow<wxWindow>,
+	public wxCompositeWindow<wxNavigationEnabled<wxWindow>>,
 	public wxTextCtrlIface,
 
 	public IDynamicBorder {
@@ -171,13 +171,13 @@ class FRONTEND_API wxControlEditorCtrl :
 
 			if (!IsEmpty()) {
 				wxCommandEvent event(wxEVT_CONTROL_TEXT_INPUT, m_editor->GetId());
-				event.SetEventObject(m_editor);
+				event.SetEventObject(this);
 				event.SetString(m_editor->GetValue());
 				m_editor->GetEventHandler()->ProcessEvent(event);
 			}
 			else {
 				wxCommandEvent event(wxEVT_CONTROL_TEXT_CLEAR, m_editor->GetId());
-				event.SetEventObject(m_editor);
+				event.SetEventObject(this);
 				m_editor->GetEventHandler()->ProcessEvent(event);
 			}
 
@@ -187,7 +187,7 @@ class FRONTEND_API wxControlEditorCtrl :
 		void OnTextEnter(wxCommandEvent& e) {
 
 			wxCommandEvent event(wxEVT_CONTROL_TEXT_ENTER, m_editor->GetId());
-			event.SetEventObject(m_editor);
+			event.SetEventObject(this);
 			event.SetString(m_editor->GetValue());
 			m_editor->ProcessWindowEvent(event);
 
@@ -259,8 +259,7 @@ class FRONTEND_API wxControlEditorCtrl :
 			// is really no reason for it to be able to get focus from keyboard.
 			virtual bool AcceptsFocusFromKeyboard() const override { return false; }
 
-			virtual wxWindow* GetMainWindowOfCompositeControl() override
-			{
+			virtual wxWindow* GetMainWindowOfCompositeControl() override {
 				return m_editor->GetMainWindowOfCompositeControl();
 			}
 
@@ -269,7 +268,7 @@ class FRONTEND_API wxControlEditorCtrl :
 			void OnLeftUp(wxMouseEvent& e)
 			{
 				wxCommandEvent event(m_eventType, m_editor->GetId());
-				event.SetEventObject(m_editor);
+				event.SetEventObject(m_editor->GetTextEditor());
 
 				if (m_eventType != wxEVT_CONTROL_BUTTON_CLEAR) {
 
@@ -278,8 +277,6 @@ class FRONTEND_API wxControlEditorCtrl :
 					// event handler code later, so provide it here
 					event.SetString(m_editor->GetValue());
 				}
-
-				m_editor->SetFocus();
 
 				GetEventHandler()->ProcessEvent(event);
 			}
@@ -329,12 +326,16 @@ class FRONTEND_API wxControlEditorCtrl :
 			return true;
 		}
 
-		virtual wxWindow* GetMainWindowOfCompositeControl() override
-		{
+		void SetDVCMode(bool dvc) { m_dvcMode = dvc; }
+
+		wxControlTextEditorCtrl* GetTextEditor() const { return m_editor->m_text; }
+
+		virtual wxWindow* GetMainWindowOfCompositeControl() override {
 			return m_editor->GetMainWindowOfCompositeControl();
 		}
 
-		void SetDVCMode(bool dvc) { m_dvcMode = dvc; }
+		// set focus to this window as the result of a keyboard action
+		virtual bool AcceptsFocusFromKeyboard() const override { return false; }
 
 		// text event:
 		virtual void SetLabel(const wxString& label) { m_editor->SetLabel(label); }

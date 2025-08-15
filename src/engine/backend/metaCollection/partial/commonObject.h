@@ -192,7 +192,8 @@ public:
 			metaForm != nullptr ? metaForm->GetName() : wxEmptyString,
 			metaForm != nullptr ? metaForm->GetTypeForm() : defaultFormType,
 			nullptr,
-			CreateSourceObject(metaForm)
+			CreateSourceObject(metaForm),
+			metaForm != nullptr ? metaForm->GetGuid() : wxNullGuid
 		);
 	}
 

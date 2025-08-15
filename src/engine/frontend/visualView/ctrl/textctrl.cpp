@@ -74,7 +74,7 @@ IMetaData* CValueTextCtrl::GetMetaData() const
 
 wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxTextContainerCtrl* textEditor = new wxTextContainerCtrl(wxparent, wxID_ANY,
+	wxControlEditorCtrl* textEditor = new wxControlEditorCtrl(wxparent, wxID_ANY,
 		wxEmptyString,
 		wxDefaultPosition,
 		wxDefaultSize);
@@ -100,7 +100,7 @@ void CValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxTextContainerCtrl* textEditor = dynamic_cast<wxTextContainerCtrl*>(wxobject);
+	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(wxobject);
 
 	if (textEditor != nullptr) {
 		wxString textCaption = wxEmptyString;
@@ -110,7 +110,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 			if (metaObject != nullptr) textCaption = metaObject->GetSynonym() + wxT(":");
 		}
 
-		textEditor->SetTextLabel(m_propertyCaption->IsEmptyProperty() ?
+		textEditor->SetLabel(m_propertyCaption->IsEmptyProperty() ?
 			textCaption : m_propertyCaption->GetValueAsString());
 
 		if (!m_propertySource->IsEmptyProperty()) {
@@ -121,7 +121,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 		}
 
 		if (!appData->DesignerMode()) {
-			textEditor->SetTextValue(m_selValue.GetString());
+			textEditor->SetValue(m_selValue.GetString());
 		}
 
 		textEditor->SetPasswordMode(m_propertyPasswordMode->GetValueAsBoolean());
@@ -129,22 +129,25 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 		textEditor->SetTextEditMode(m_propertyTexteditMode->GetValueAsBoolean());
 
 		if (!appData->DesignerMode()) {
-			textEditor->SetButtonSelect(m_propertySelectButton->GetValueAsBoolean());
-			textEditor->BindButtonSelect(&CValueTextCtrl::OnSelectButtonPressed, this);
-			textEditor->SetButtonOpen(m_propertyOpenButton->GetValueAsBoolean());
-			textEditor->BindButtonOpen(&CValueTextCtrl::OnOpenButtonPressed, this);
-			textEditor->SetButtonClear(m_propertyClearButton->GetValueAsBoolean());
-			textEditor->BindButtonClear(&CValueTextCtrl::OnClearButtonPressed, this);
+			
+			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
+			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
+			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
 
-			textEditor->BindTextEnter(&CValueTextCtrl::OnTextEnter, this);
-			textEditor->BindTextUpdated(&CValueTextCtrl::OnTextUpdated, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTextCtrl::OnSelectButtonPressed, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTextCtrl::OnOpenButtonPressed, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTextCtrl::OnClearButtonPressed, this);
 
-			textEditor->BindKillFocus(&CValueTextCtrl::OnKillFocus, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
+		
+			textEditor->Bind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
 		}
 		else {
-			textEditor->SetButtonSelect(m_propertySelectButton->GetValueAsBoolean());
-			textEditor->SetButtonOpen(m_propertyOpenButton->GetValueAsBoolean());
-			textEditor->SetButtonClear(m_propertyClearButton->GetValueAsBoolean());
+			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
+			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
+			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
 		}
 	}
 
@@ -153,18 +156,21 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxTextContainerCtrl* textEditor = dynamic_cast<wxTextContainerCtrl*>(wxobject);
+	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(wxobject);
 
 	if (textEditor != nullptr) {
 		if (!appData->DesignerMode()) {
-			textEditor->UnbindButtonSelect(&CValueTextCtrl::OnSelectButtonPressed, this);
-			textEditor->UnbindButtonOpen(&CValueTextCtrl::OnOpenButtonPressed, this);
-			textEditor->UnbindButtonClear(&CValueTextCtrl::OnClearButtonPressed, this);
+			
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTextCtrl::OnSelectButtonPressed, this);
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTextCtrl::OnOpenButtonPressed, this);
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTextCtrl::OnClearButtonPressed, this);
 
-			textEditor->UnbindTextEnter(&CValueTextCtrl::OnTextEnter, this);
-			textEditor->UnbindTextUpdated(&CValueTextCtrl::OnTextUpdated, this);
-
-			textEditor->UnbindKillFocus(&CValueTextCtrl::OnKillFocus, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
+		
+			textEditor->Unbind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
+		
 		}
 	}
 }
@@ -200,9 +206,9 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 
 	m_formOwner->RefreshForm();
 
-	wxTextContainerCtrl* textEditor = dynamic_cast<wxTextContainerCtrl*>(GetWxObject());
+	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(GetWxObject());
 	if (textEditor != nullptr) {
-		textEditor->SetTextValue(m_selValue.GetString());
+		textEditor->SetValue(m_selValue.GetString());
 		textEditor->SetInsertionPointEnd();
 	}
 

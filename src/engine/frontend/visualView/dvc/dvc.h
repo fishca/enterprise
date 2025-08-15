@@ -165,6 +165,8 @@ public:
 	{
 	}
 
+	virtual ~ÑDataViewColumnContainer() {}
+
 	CValueViewRenderer* GetRenderer() const {
 		return dynamic_cast<CValueViewRenderer*>(m_renderer);
 	}

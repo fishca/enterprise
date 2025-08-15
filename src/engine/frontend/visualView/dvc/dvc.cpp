@@ -9,63 +9,67 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	wxRect labelRect,
 	const wxVariant& value)
 {
-	wxTextContainerCtrl* textCtrl = new wxTextContainerCtrl;
-
-	textCtrl->SetDVCMode(true);
-
-	textCtrl->SetPasswordMode(m_colControl->GetPasswordMode());
-	textCtrl->SetMultilineMode(m_colControl->GetMultilineMode());
-	textCtrl->SetTextEditMode(m_colControl->GetTextEditMode());
-	textCtrl->SetButtonSelect(m_colControl->GetSelectButton());
-	textCtrl->SetButtonClear(m_colControl->GetClearButton());
-	textCtrl->SetButtonOpen(m_colControl->GetOpenButton());
-
-	bool result = textCtrl->Create(dv, wxID_ANY, value,
+	wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
+	textEditor->SetDVCMode(true);	
+	
+	bool result = textEditor->Create(dv, wxID_ANY, value,
 		labelRect.GetPosition(),
 		labelRect.GetSize());
 
 	if (!result)
 		return nullptr;
 
+	textEditor->ShowSelectButton(m_colControl->GetSelectButton());
+	textEditor->ShowClearButton(m_colControl->GetClearButton());
+	textEditor->ShowOpenButton(m_colControl->GetOpenButton());
+
 	wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
 	if (parentWnd != nullptr) {
-		textCtrl->SetBackgroundColour(parentWnd->GetBackgroundColour());
-		textCtrl->SetForegroundColour(parentWnd->GetForegroundColour());
-		textCtrl->SetFont(parentWnd->GetFont());
+		textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
+		textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
+		textEditor->SetFont(parentWnd->GetFont());
 	}
 	else {
-		textCtrl->SetBackgroundColour(dv->GetBackgroundColour());
-		textCtrl->SetForegroundColour(dv->GetForegroundColour());
-		textCtrl->SetFont(dv->GetFont());
+		textEditor->SetBackgroundColour(dv->GetBackgroundColour());
+		textEditor->SetForegroundColour(dv->GetForegroundColour());
+		textEditor->SetFont(dv->GetFont());
 	}
+
+	textEditor->SetPasswordMode(m_colControl->GetPasswordMode());
+	textEditor->SetMultilineMode(m_colControl->GetMultilineMode());
+	textEditor->SetTextEditMode(m_colControl->GetTextEditMode());
 
 	if (!appData->DesignerMode()) {
-		textCtrl->BindButtonSelect(&CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
-		textCtrl->BindButtonOpen(&CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
-		textCtrl->BindButtonClear(&CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
-		textCtrl->BindTextEnter(&CValueTableBoxColumn::OnTextEnter, m_colControl);
-		textCtrl->BindKillFocus(&CValueTableBoxColumn::OnKillFocus, m_colControl);
+		
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
+		
+		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_colControl);
 	}
 
-	textCtrl->SetInsertionPointEnd();
-	return textCtrl;
+	textEditor->LayoutControls();
+
+	textEditor->SetInsertionPointEnd();
+	return textEditor;
 }
 
 bool CValueViewRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
 {
-	wxTextContainerCtrl* textCtrl = wxDynamicCast(ctrl, wxTextContainerCtrl);
+	wxControlEditorCtrl* textEditor = wxDynamicCast(ctrl, wxControlEditorCtrl);
 
-	if (textCtrl == nullptr)
+	if (textEditor == nullptr)
 		return false;
 
 	if (!appData->DesignerMode()) {
-		textCtrl->UnbindButtonSelect(&CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
-		textCtrl->UnbindButtonOpen(&CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
-		textCtrl->UnbindButtonClear(&CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
-		textCtrl->UnbindTextEnter(&CValueTableBoxColumn::OnTextEnter, m_colControl);
-		textCtrl->UnbindKillFocus(&CValueTableBoxColumn::OnKillFocus, m_colControl);
+		
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
+
+		textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_colControl);
 	}
 
-	value = textCtrl->GetTextValue();
+	value = textEditor->GetValue();
 	return true;
 }

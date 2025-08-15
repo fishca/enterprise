@@ -72,56 +72,107 @@ IValueFrame* CValueForm::NewObject(const class_identifier_t& clsid, IValueFrame*
 
 void CValueForm::ResolveNameConflict(IValueFrame* control)
 {
-	// Save the original name for use later.
-	wxString originalName = control->GetControlName();
+	//// Save the original name for use later.
+	//wxString originalName = control->GetControlName();
 
-	if (originalName.IsEmpty()) {
-		const IValueFrame* parentControl = control->GetParent();
-		if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
-			originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
-		}
-		else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
-			originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
-		}
-		else {
-			originalName = control->GetClassName();
-		}
-	}
+	//if (originalName.IsEmpty()) {
+	//	const IValueFrame* parentControl = control->GetParent();
+	//	if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
+	//		originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+	//	}
+	//	else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
+	//		originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+	//	}
+	//	else {
+	//		originalName = control->GetClassName();
+	//	}
+	//}
 
 	// el nombre no puede estar repetido dentro del mismo form
 	IValueFrame* top = control->GetOwnerForm();
 	wxASSERT(top);
 
-	// construimos el conjunto de nombres
-	std::set<wxString> name_set;
+	//// construimos el conjunto de nombres
+	//std::set<wxString> name_set;
 
-	std::function<void(IValueFrame*, IValueFrame*, std::set< wxString >&)> buildNameSet = [&buildNameSet](IValueFrame* object, IValueFrame* top, std::set< wxString >& name_set)
-		{
-			wxASSERT(object);
-			if (object != top) {
-				name_set.emplace(top->GetControlName());
+	//std::function<void(IValueFrame*, IValueFrame*, std::set< wxString >&)> buildNameSet = [&buildNameSet](IValueFrame* object, IValueFrame* top, std::set< wxString >& name_set)
+	//	{
+	//		wxASSERT(object);
+	//		if (object != top) {
+	//			name_set.emplace(top->GetControlName());
+	//		}
+	//		for (unsigned int i = 0; i < top->GetChildCount(); i++) {
+	//			buildNameSet(object, top->GetChild(i), name_set);
+	//		}
+	//	};
+
+	//buildNameSet(control, top, name_set);
+
+
+	class CResolveNameConflict {
+
+		// Save the original name for use later.
+		static wxString GetOriginalName(const IValueFrame* control) {
+			wxString originalName = control->GetControlName();
+			if (originalName.IsEmpty()) {
+				const IValueFrame* parentControl = control->GetParent();
+				if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
+					originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+				}
+				else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
+					originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+				}
+				else {
+					originalName = control->GetClassName();
+				}
 			}
+			return originalName;
+		}
+
+		static void FindAndGenerateUniqueName(std::set<wxString>& nameSetArray, IValueFrame* object, IValueFrame* top) {
 			for (unsigned int i = 0; i < top->GetChildCount(); i++) {
-				buildNameSet(object, top->GetChild(i), name_set);
+				FindAndGenerateUniqueName(nameSetArray, object, top->GetChild(i));
 			}
+			nameSetArray.emplace(top->GetControlName());
+		}
+
+	public:
+
+		static void BuildNameSet(IValueFrame* object, IValueFrame* top) {
+			
+			std::set<wxString> nameSetArray;
+			unsigned int index = 0;
+			FindAndGenerateUniqueName(nameSetArray, object, top);
+			
+			wxString originalName = GetOriginalName(object); // Save the original name for use later.
+			wxString generateName = originalName; // The name that gets incremented.
+
+			for (auto& controlName : nameSetArray) {
+				if (stringUtils::CompareString(controlName, generateName)) {
+					generateName = wxString::Format(wxT("%s%i"), originalName, ++index);
+				}
+			}
+
+			object->SetControlName(generateName);
 		};
+	};
 
-	buildNameSet(control, top, name_set);
+	//// comprobamos si hay conflicto
+	//std::set<wxString>::iterator it = name_set.find(originalName);
 
-	// comprobamos si hay conflicto
-	std::set<wxString>::iterator it = name_set.find(originalName);
+	//int i = 0;
 
-	int i = 0;
+	//wxString name = originalName; // The name that gets incremented.
 
-	wxString name = originalName; // The name that gets incremented.
+	//while (it != name_set.end()) {
+	//	i++;
+	//	name = wxString::Format(wxT("%s%i"), originalName.c_str(), i);
+	//	it = name_set.find(name);
+	//}
 
-	while (it != name_set.end()) {
-		i++;
-		name = wxString::Format(wxT("%s%i"), originalName.c_str(), i);
-		it = name_set.find(name);
-	}
+	//control->SetControlName(name);
 
-	control->SetControlName(name);
+	CResolveNameConflict::BuildNameSet(control, top);
 }
 
 IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* controlParent)
@@ -261,10 +312,10 @@ bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 	if (wxTheClipboard->Open()) {
 
 		CMemoryWriter writterMemory;
-		
+
 		CMemoryWriter writterCopyMemory;
 		writterCopyMemory.w_u8(copyOnPaste);
-	
+
 		writterMemory.w_chunk(copyBlock, writterCopyMemory.pointer(), writterCopyMemory.size());
 
 		if (srcControl->CopyObject(writterMemory)) {

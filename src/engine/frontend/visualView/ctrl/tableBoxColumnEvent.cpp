@@ -51,9 +51,9 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 		if (columnObject != nullptr) {
 			CValueViewRenderer* renderer = columnObject->GetRenderer();
 			wxASSERT(renderer);
-			wxTextContainerCtrl* textEditor = dynamic_cast<wxTextContainerCtrl*>(renderer->GetEditorCtrl());
+			wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(renderer->GetEditorCtrl());
 			if (textEditor != nullptr) {
-				textEditor->SetTextValue(vSelected.GetString());
+				textEditor->SetValue(vSelected.GetString());
 				textEditor->SetInsertionPointEnd();
 				//textEditor->SetFocus();
 			}

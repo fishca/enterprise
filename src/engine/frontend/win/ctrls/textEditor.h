@@ -3,6 +3,8 @@
 
 #include <wx/app.h>
 #include <wx/button.h>
+#include <wx/compositewin.h>
+#include <wx/containr.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/listbox.h>
@@ -25,213 +27,475 @@ enum {
 #define buttonSize 20
 #define dvcMode 0x0004096
 
-class wxTextContainerCtrl : public wxWindow,
+#include "frontend/frontend.h"
+
+//text event 
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_TEXT_ENTER, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_TEXT_INPUT, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_TEXT_CLEAR, wxCommandEvent);
+
+//button event 
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_OPEN, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_SELECT, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CONTROL_BUTTON_CLEAR, wxCommandEvent);
+
+class FRONTEND_API wxControlEditorCtrl :
+
+	public wxCompositeWindow<wxWindow>,
+	public wxTextCtrlIface,
+
 	public IDynamicBorder {
 
-	wxDECLARE_DYNAMIC_CLASS(wxTextContainerCtrl);
-	wxDECLARE_NO_COPY_CLASS(wxTextContainerCtrl);
-
-	class wxTextRawCtrl : public wxTextCtrl {
+	class wxControlStaticTextCtrl : public wxStaticText {
 	public:
 
-		wxTextRawCtrl() {}
-		wxTextRawCtrl(wxWindow* parent, wxWindowID id,
-			const wxString& value = wxEmptyString,
-			const wxPoint& pos = wxDefaultPosition,
-			const wxSize& size = wxDefaultSize,
-			long style = 0,
-			const wxValidator& validator = wxDefaultValidator,
-			const wxString& name = wxASCII_STR(wxTextCtrlNameStr))
-			:
-			wxTextCtrl(parent, id, value, pos, size, style, validator, name)
+		wxControlStaticTextCtrl(wxWindow* parent,
+			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr))
+			: wxStaticText(parent, id, label, pos, size, style, name)
 		{
+			// Ensure that our best size is recomputed using our overridden
+			// DoGetBestSize().
+			InvalidateBestSize();
+		}
+
+		virtual void SetLabel(const wxString& label) {
+			wxStaticText::SetLabel(label);
+		}
+
+		virtual wxSize DoGetBestClientSize() const override {
+			if (m_labelOrig.IsEmpty())
+				return wxSize(0, 0);
+			return wxStaticText::DoGetBestClientSize();
+		}
+	};
+
+	// ----------------------------------------------------------------------------
+	// wxControlTextEditorCtrl: text control used by editor control
+	// ----------------------------------------------------------------------------
+
+	class wxControlTextEditorCtrl : public wxTextCtrl {
+	public:
+
+		wxControlTextEditorCtrl(wxControlEditorCtrl* editor, const wxString& value, long style = 0)
+			: wxTextCtrl(editor, wxID_ANY, value, wxDefaultPosition, wxDefaultSize,
+				(style & ~wxBORDER_MASK) | wxBORDER_SIMPLE | wxTE_PROCESS_ENTER)
+		{
+			m_editor = editor;
+
+			// Ensure that our best size is recomputed using our overridden
+			// DoGetBestSize().
+			InvalidateBestSize();
+		}
+
+		virtual void SetWindowStyleFlag(long style) override {
+
+#if defined(__WXMSW__)
+
+			const long specialMask = wxTE_MULTILINE | wxTE_PASSWORD | wxTE_READONLY;
+
+			if ((style & specialMask) != (GetWindowStyle() & specialMask)) {
+
+				const wxString value = GetValue();
+				const wxPoint pos = GetPosition();
+				const wxSize size = GetSize();
+
+				// delete the old window
+				HWND hwnd = GetHWND();
+				DissociateHandle();
+				::DestroyWindow(hwnd);
+
+				// create the new one with the updated flags
+				m_windowStyle = style;
+
+				MSWCreateText(value, pos, size);
+
+				// and make sure it has the same attributes as before
+				if (m_hasFont)
+				{
+					// calling SetFont(m_font) would do nothing as the code would
+					// notice that the font didn't change, so force it to believe
+					// that it did
+					wxFont font = m_font;
+					m_font = wxNullFont;
+					SetFont(font);
+				}
+
+				if (m_hasFgCol)
+				{
+					wxColour colFg = m_foregroundColour;
+					m_foregroundColour = wxNullColour;
+					SetForegroundColour(colFg);
+				}
+
+				if (m_hasBgCol)
+				{
+					wxColour colBg = m_backgroundColour;
+					m_backgroundColour = wxNullColour;
+					SetBackgroundColour(colBg);
+				}
+
+				return;
+			}
+#endif
+			wxTextCtrl::SetWindowStyleFlag(style);
 		}
 
 		virtual void SetValue(const wxString& value) override {
 			DoSetValue(value, SetValue_NoEvent);
 		}
 
-		virtual bool TryBefore(wxEvent& event) override {
-			return wxWindow::TryBefore(event);
+		virtual wxWindow* GetMainWindowOfCompositeControl() override {
+			return m_editor;
 		}
-	};
 
-	class wxTextButtonCtrl : public wxTextCtrl {
+		// provide access to the base class protected methods to wxControlTextEditorCtrl which
+		// needs to forward to them
+		void DoSetValue(const wxString& value, int flags) override
+		{
+			wxTextCtrl::DoSetValue(value, flags);
+		}
 
-		wxDECLARE_DYNAMIC_CLASS(wxTextButtonCtrl);
-		wxDECLARE_NO_COPY_CLASS(wxTextButtonCtrl);
+		bool DoLoadFile(const wxString& file, int fileType) override
+		{
+			return wxTextCtrl::DoLoadFile(file, fileType);
+		}
 
-		wxButton* m_buttonSelect = nullptr;
-		wxButton* m_buttonClear = nullptr;
-		wxButton* m_buttonOpen = nullptr;
+		bool DoSaveFile(const wxString& file, int fileType) override
+		{
+			return wxTextCtrl::DoSaveFile(file, fileType);
+		}
 
-		bool m_dvcMode = false;
+	protected:
 
-		bool m_selbutton = false;
-		bool m_clearbutton = false;
-		bool m_openbutton = false;
+		void OnText(wxCommandEvent& e) {
 
-		friend class wxTextContainerCtrl;
+			if (!IsEmpty()) {
+				wxCommandEvent event(wxEVT_CONTROL_TEXT_INPUT, m_editor->GetId());
+				event.SetEventObject(m_editor);
+				event.SetString(m_editor->GetValue());
+				m_editor->GetEventHandler()->ProcessEvent(event);
+			}
+			else {
+				wxCommandEvent event(wxEVT_CONTROL_TEXT_CLEAR, m_editor->GetId());
+				event.SetEventObject(m_editor);
+				m_editor->GetEventHandler()->ProcessEvent(event);
+			}
+
+			//e.Skip();
+		}
+
+		void OnTextEnter(wxCommandEvent& e) {
+
+			wxCommandEvent event(wxEVT_CONTROL_TEXT_ENTER, m_editor->GetId());
+			event.SetEventObject(m_editor);
+			event.SetString(m_editor->GetValue());
+			m_editor->ProcessWindowEvent(event);
+
+			e.Skip();
+		}
+
+		// We increase the text control height to be the same as for the controls
+		// with border as this is what we actually need here because even though
+		// this control itself is borderless, it's inside wxControlTextEditorCtrl which does
+		// have the border and so should have the same height as the normal text
+		// entries with border.
+		//
+		// This is a bit ugly and it would arguably be better to use whatever size
+		// the base class version returns and just centre the text vertically in
+		// the search control but I failed to modify the code in LayoutControls()
+		// to do this easily and as there is much in that code I don't understand
+		// (notably what is the logic for buttons sizing?) I prefer to not touch it
+		// at all.
+		virtual wxSize DoGetBestSize() const override
+		{
+			const long flags = GetWindowStyleFlag();
+			wxControlTextEditorCtrl* const self = const_cast<wxControlTextEditorCtrl*>(this);
+
+			self->SetWindowStyleFlag((flags & ~wxBORDER_MASK) | wxBORDER_SIMPLE);
+			wxSize size = DoGetSizeFromTextSize(FromDIP(m_defaultItemWidth));
+
+			// The calculation for no external borders in wxTextCtrl::DoGetSizeFromTextSize also
+			// removes any padding around the value, which is wrong for this situation. So we
+			// can't use wxBORDER_NONE to calculate a good height, in which case we just have to
+			// assume a border in the code above and then subtract the space that would be taken up
+			// by a themed border (the thin blue border and the white internal border).
+			// Don't use FromDIP(1), this seems not needed.
+			size.y -= 3;
+
+			self->SetWindowStyleFlag(flags);
+			return size;
+		}
 
 	private:
 
-		void OnButtonClicked(wxCommandEvent& event)
-		{
-			wxCommandEvent redirectedEvent(event);
-			redirectedEvent.SetEventObject(this);
+		static const unsigned int m_defaultItemWidth = 125;
 
-			if (!GetEventHandler()->ProcessEvent(redirectedEvent)) {
-				event.Skip();
+		wxControlEditorCtrl* m_editor;
+		wxDECLARE_EVENT_TABLE();
+	};
+
+	class wxControlCompositeEditorCtrl : public wxWindow {
+
+		// ----------------------------------------------------------------------------
+		// wxControlEditorButtonCtrl: editor button used by editor control
+		// ----------------------------------------------------------------------------
+
+		class wxControlEditorButtonCtrl : public wxButton
+		{
+		public:
+			wxControlEditorButtonCtrl(wxControlCompositeEditorCtrl* editor, int eventType, const wxString& val)
+				: wxButton(editor, wxID_ANY, val, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_EXACTFIT),
+				m_editor(editor),
+				m_eventType(eventType)
+			{
+				SetBackgroundStyle(wxBG_STYLE_PAINT);
 			}
+
+			// The buttons in wxControlEditorButtonCtrl shouldn't accept focus from keyboard because
+			// this would interfere with the usual TAB processing: the user expects
+			// that pressing TAB in the search control should switch focus to the next
+			// control and not give it to the button inside the same control. Besides,
+			// the search button can be already activated by pressing "Enter" so there
+			// is really no reason for it to be able to get focus from keyboard.
+			virtual bool AcceptsFocusFromKeyboard() const override { return false; }
+
+			virtual wxWindow* GetMainWindowOfCompositeControl() override
+			{
+				return m_editor->GetMainWindowOfCompositeControl();
+			}
+
+		protected:
+
+			void OnLeftUp(wxMouseEvent& e)
+			{
+				wxCommandEvent event(m_eventType, m_editor->GetId());
+				event.SetEventObject(m_editor);
+
+				if (m_eventType != wxEVT_CONTROL_BUTTON_CLEAR) {
+
+					// it's convenient to have the string to editor for directly in the
+					// event instead of having to retrieve it from the control in the
+					// event handler code later, so provide it here
+					event.SetString(m_editor->GetValue());
+				}
+
+				m_editor->SetFocus();
+
+				GetEventHandler()->ProcessEvent(event);
+			}
+
+		private:
+
+			wxControlCompositeEditorCtrl* m_editor;
+			wxEventType m_eventType;
+
+			wxDECLARE_EVENT_TABLE();
+		};
+
+		wxControlEditorCtrl* m_editor = nullptr;
+
+		wxControlEditorButtonCtrl* m_selectButton = nullptr;
+		wxControlEditorButtonCtrl* m_clearButton = nullptr;
+		wxControlEditorButtonCtrl* m_openButton = nullptr;
+
+		bool m_dvcMode = false;
+
+		friend class wxControlEditorCtrl;
+
+	public:
+
+		virtual ~wxControlCompositeEditorCtrl() {
+
+			if (m_editor != nullptr)
+				m_editor->m_text = nullptr;
+
+			delete m_selectButton;
+			delete m_openButton;
+			delete m_clearButton;
 		}
 
-		void OnSizeTextCtrl(wxSizeEvent& event)
+		bool Create(wxControlEditorCtrl* editor,
+			const wxPoint& pos = wxDefaultPosition,
+			const wxSize& size = wxDefaultSize)
 		{
-			CalculateButton();
-			event.Skip();
+			if (!wxWindow::Create(editor, wxID_ANY, pos, size, wxBORDER_SIMPLE))
+				return false;
+
+			m_editor = editor;
+
+			if (pos != wxDefaultPosition)
+				wxWindow::Move(pos);
+
+			return true;
 		}
 
-		int CalculateButton()
+		virtual wxWindow* GetMainWindowOfCompositeControl() override
 		{
+			return m_editor->GetMainWindowOfCompositeControl();
+		}
+
+		void SetDVCMode(bool dvc) { m_dvcMode = dvc; }
+
+		// text event:
+		virtual void SetLabel(const wxString& label) { m_editor->SetLabel(label); }
+		virtual wxString GetLabel() const { return m_editor->GetLabel(); }
+
+		virtual void SetValue(const wxString& label) { m_editor->SetValue(label); }
+		virtual wxString GetValue() const { return m_editor->GetValue(); }
+
+		//buttons:
+		void ShowSelectButton(bool select = true) {
+
+			if (select && m_selectButton == nullptr) {
+				m_selectButton = new wxControlEditorButtonCtrl(this,
+					wxEVT_CONTROL_BUTTON_SELECT, wxT("...")
+				);
+				m_selectButton->SetLabelMarkup("<b>" + m_selectButton->GetLabelText() + "</b>");
+				m_selectButton->SetFont(GetFont());
+				m_selectButton->SetForegroundColour(GetForegroundColour());
+				m_selectButton->SetBackgroundColour(GetBackgroundColour());
+				DoRefreshBackgroundColour();
+				m_selectButton->Show(select);
+			}
+			else if (!select && m_selectButton != nullptr) {
+				m_selectButton->DeletePendingEvents();
+				wxDELETE(m_selectButton);
+			}
+
+			InvalidateBestSize();
+		}
+
+		bool IsSelectButtonVisible() const { return m_selectButton != nullptr; }
+
+		void ShowOpenButton(bool select = true) {
+
+			if (select && m_openButton == nullptr) {
+				m_openButton = new wxControlEditorButtonCtrl(this,
+					wxEVT_CONTROL_BUTTON_OPEN, wxT("🔍")
+				);
+				m_openButton->SetLabelMarkup("<b>" + m_openButton->GetLabelText() + "</b>");
+				m_openButton->SetFont(GetFont());
+				m_openButton->SetForegroundColour(GetForegroundColour());
+				m_openButton->SetBackgroundColour(GetBackgroundColour());
+				DoRefreshBackgroundColour();
+				m_openButton->Show(select);
+			}
+			else if (!select && m_openButton != nullptr) {
+				m_openButton->DeletePendingEvents();
+				wxDELETE(m_openButton);
+			}
+
+			InvalidateBestSize();
+		}
+
+		bool IsOpenButtonVisible() const { return m_openButton != nullptr; }
+
+		void ShowClearButton(bool select = true) {
+
+			if (select && m_clearButton == nullptr) {
+				m_clearButton = new wxControlEditorButtonCtrl(this,
+					wxEVT_CONTROL_BUTTON_CLEAR, wxT("×")
+				);
+				m_clearButton->SetLabelMarkup("<b>" + m_clearButton->GetLabelText() + "</b>");
+				m_clearButton->SetFont(GetFont());
+				m_clearButton->SetForegroundColour(GetForegroundColour());
+				m_clearButton->SetBackgroundColour(GetBackgroundColour());
+				DoRefreshBackgroundColour();
+				m_clearButton->Show(select);
+			}
+			else if (!select && m_clearButton != nullptr) {
+				m_clearButton->DeletePendingEvents();
+				wxDELETE(m_clearButton);
+			}
+
+			InvalidateBestSize();
+		}
+
+		bool IsClearButtonVisible() const { return m_clearButton != nullptr; }
+
+		// overridden base class virtuals
+		virtual bool SetBackgroundColour(const wxColour& colour) override {
+			DoRefreshBackgroundColour(colour);
+			return wxWindow::SetBackgroundColour(colour);
+		}
+
+		virtual bool SetForegroundColour(const wxColour& colour) override {
+			if (m_selectButton != nullptr) m_selectButton->SetForegroundColour(colour);
+			if (m_openButton != nullptr) m_openButton->SetForegroundColour(colour);
+			if (m_clearButton != nullptr) m_clearButton->SetForegroundColour(colour);
+			return wxWindow::SetForegroundColour(colour);
+		}
+
+		virtual bool SetFont(const wxFont& font) {
+			if (m_selectButton != nullptr) m_selectButton->SetFont(font);
+			if (m_openButton != nullptr) m_openButton->SetFont(font);
+			if (m_clearButton != nullptr) m_clearButton->SetFont(font);
+			return wxWindow::SetFont(font);
+		}
+
+		virtual bool Enable(bool enable = true) {
+			if (m_selectButton != nullptr) m_selectButton->Enable(enable);
+			if (m_openButton != nullptr) m_openButton->Enable(enable);
+			if (m_clearButton != nullptr) m_clearButton->Enable(enable);
+			return wxWindow::Enable(enable);
+		}
+
+#if wxUSE_TOOLTIPS
+		virtual void DoSetToolTipText(const wxString& tip) override {
+			if (m_selectButton != nullptr) m_selectButton->SetToolTip(tip);
+			if (m_openButton != nullptr) m_openButton->SetToolTip(tip);
+			if (m_clearButton != nullptr) m_clearButton->SetToolTip(tip);
+		}
+
+		virtual void DoSetToolTip(wxToolTip* tip) override {
+			if (m_selectButton != nullptr) m_selectButton->SetToolTip(tip);
+			if (m_openButton != nullptr) m_openButton->SetToolTip(tip);
+			if (m_clearButton != nullptr) m_clearButton->SetToolTip(tip);
+		}
+#endif // wxUSE_TOOLTIPS
+
+		virtual wxSize DoGetBestSize() const override {
+
 			// Use one two units smaller to match size of the combo's dropbutton.
 			// (normally a bigger button is used because it looks better)
 			wxSize bt_sz(buttonSize - 7, m_dvcMode ? buttonSize : buttonSize - 2);
 
 			// Position of button.
-			wxPoint bt_pos(0, 1);
+			wxPoint bt_pos(0, 0);
 
 			int deltaX = 0, deltaY = 0;
 
-			if (m_buttonSelect->IsShown()) {
-				m_buttonSelect->SetSize(bt_sz);
-				m_buttonSelect->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
+			if (m_selectButton != nullptr && m_selectButton->IsShown()) {
+				m_selectButton->SetSize(bt_sz);
+				m_selectButton->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
 				deltaX += bt_sz.x; deltaY += bt_sz.y;
 			}
 
-			if (m_buttonClear->IsShown()) {
-				m_buttonClear->SetSize(bt_sz);
-				m_buttonClear->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
+			if (m_clearButton != nullptr && m_clearButton->IsShown()) {
+				m_clearButton->SetSize(bt_sz);
+				m_clearButton->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
 				deltaX += bt_sz.x; deltaY += bt_sz.y;
 			}
 
-			if (m_buttonOpen->IsShown()) {
-				m_buttonOpen->SetSize(bt_sz);
-				m_buttonOpen->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
+			if (m_openButton != nullptr && m_openButton->IsShown()) {
+				m_openButton->SetSize(bt_sz);
+				m_openButton->SetPosition(wxPoint(bt_pos.x + deltaX, bt_pos.y));
 				deltaX += bt_sz.x; deltaY += bt_sz.y;
 			}
 
-			wxSize controlSize = wxTextCtrl::GetSize();
-			wxTextCtrl::SetMaxSize(wxSize(deltaX > 0 ? deltaX + 1 : 0, controlSize.y));
-			return deltaX;
+			wxSize controlSize = wxWindow::GetSize();
+			return wxSize(deltaX > 0 ? deltaX + 1 : 0, controlSize.y);
 		}
 
-	public:
-
-		wxTextButtonCtrl() : wxTextCtrl() {}
-
-		virtual ~wxTextButtonCtrl() {
-
-			m_buttonSelect = nullptr;
-			m_buttonOpen = nullptr;
-			m_buttonClear = nullptr;
-
-			wxTextCtrl::Unbind(wxEVT_SIZE, &wxTextButtonCtrl::OnSizeTextCtrl, this);
-
-			if (m_parent->IsKindOf(CLASSINFO(wxTextContainerCtrl))) {
-				((wxTextContainerCtrl*)m_parent)->m_textCtrl = nullptr;
-			}
+		void DoRefreshBackgroundColour() {
+			DoRefreshBackgroundColour(GetBackgroundColour());
 		}
 
-		bool Create(wxWindow* parent, const wxPoint& pos = wxDefaultPosition,
-			const wxSize& size = wxDefaultSize, int style = wxBORDER_SIMPLE)
-		{
-			if (!wxTextCtrl::Create(parent, wxID_ANY, wxEmptyString, pos, size, style))
-				return false;
+		void DoRefreshBackgroundColour(const wxColour& colour) {
 
-			m_buttonSelect = new wxButton(this, textCtrl_buttonSelect, wxT("..."), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxTRANSPARENT_WINDOW);
-			m_buttonClear = new wxButton(this, textCtrl_buttonClear, wxT("×"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxTRANSPARENT_WINDOW);
-			m_buttonOpen = new wxButton(this, textCtrl_buttonOpen, wxT("🔍"), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxTRANSPARENT_WINDOW);
-
-			wxColour bgCol = GetBackgroundColour();
-
-			m_buttonSelect->SetBackgroundColour(bgCol.ChangeLightness(80));
-			m_buttonClear->SetBackgroundColour(bgCol.ChangeLightness(85));
-			m_buttonOpen->SetBackgroundColour(bgCol.ChangeLightness(80));
-
-			m_buttonSelect->SetLabelMarkup("<b>" + m_buttonSelect->GetLabelText() + "</b>");
-			m_buttonClear->SetLabelMarkup("<b>" + m_buttonClear->GetLabelText() + "</b>");
-			m_buttonOpen->SetLabelMarkup("<b>" + m_buttonOpen->GetLabelText() + "</b>");
-
-			m_buttonSelect->Show(m_selbutton);
-			m_buttonClear->Show(m_clearbutton);
-			m_buttonOpen->Show(m_openbutton);
-
-			CalculateButton();
-
-			wxTextCtrl::Bind(wxEVT_SIZE, &wxTextButtonCtrl::OnSizeTextCtrl, this);
-			return true;
-		}
-
-		void SetDVCMode(bool dvc)
-		{
-			m_dvcMode = dvc;
-		}
-
-		// Bind functors to an event:
-		template <typename Functor, typename EventHandler>
-		void BindButtonSelect(const Functor& functor, EventHandler handler) { m_buttonSelect->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
-		template <typename Functor, typename EventHandler>
-		void BindButtonClear(const Functor& functor, EventHandler handler) { m_buttonClear->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonClear); }
-		template <typename Functor, typename EventHandler>
-		void BindButtonOpen(const Functor& functor, EventHandler handler) { m_buttonOpen->Bind(wxEVT_BUTTON, functor, handler, textCtrl_buttonOpen); }
-
-		// Unbind functors to an event:
-		template <typename Functor, typename EventHandler>
-		void UnbindButtonSelect(const Functor& functor, EventHandler handler) { m_buttonSelect->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonSelect); }
-		template <typename Functor, typename EventHandler>
-		void UnbindButtonClear(const Functor& functor, EventHandler handler) { m_buttonClear->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonClear); }
-		template <typename Functor, typename EventHandler>
-		void UnbindButtonOpen(const Functor& functor, EventHandler handler) { m_buttonOpen->Unbind(wxEVT_BUTTON, functor, handler, textCtrl_buttonOpen); }
-
-		//buttons:
-		void SetButtonSelect(bool select = true) {
-			m_selbutton = select;
-			if (m_buttonSelect) {
-				m_buttonSelect->Show(select);
-			}
-		}
-
-		bool HasButtonSelect() const {
-			return m_selbutton;
-		}
-
-		void SetButtonOpen(bool select = true) {
-			m_openbutton = select;
-			if (m_buttonOpen) {
-				m_buttonOpen->Show(select);
-			}
-		}
-
-		bool HasButtonOpen() const {
-			return m_openbutton;
-		}
-
-		void SetButtonClear(bool select = true) {
-			m_clearbutton = select;
-			if (m_buttonClear) {
-				m_buttonClear->Show(select);
-			}
-		}
-
-		bool HasButtonClear() const {
-			return m_clearbutton;
-		}
-
-		// overridden base class virtuals
-		virtual bool SetBackgroundColour(const wxColour& colour) override {
 			int colLight = 80;
-			if (m_buttonSelect->IsShown()) {
-				m_buttonSelect->SetBackgroundColour(colour.ChangeLightness(colLight));
+			if (m_selectButton != nullptr && m_selectButton->IsShown()) {
+				m_selectButton->SetBackgroundColour(colour.ChangeLightness(colLight));
 				if (colLight == 80) {
 					colLight = 85;
 				}
@@ -239,8 +503,8 @@ class wxTextContainerCtrl : public wxWindow,
 					colLight = 80;
 				}
 			}
-			if (m_buttonClear->IsShown()) {
-				m_buttonClear->SetBackgroundColour(colour.ChangeLightness(colLight));
+			if (m_clearButton != nullptr && m_clearButton->IsShown()) {
+				m_clearButton->SetBackgroundColour(colour.ChangeLightness(colLight));
 				if (colLight == 80) {
 					colLight = 85;
 				}
@@ -248,8 +512,8 @@ class wxTextContainerCtrl : public wxWindow,
 					colLight = 80;
 				}
 			}
-			if (m_buttonOpen->IsShown()) {
-				m_buttonOpen->SetBackgroundColour(colour.ChangeLightness(colLight));
+			if (m_openButton != nullptr && m_openButton->IsShown()) {
+				m_openButton->SetBackgroundColour(colour.ChangeLightness(colLight));
 				if (colLight == 80) {
 					colLight = 85;
 				}
@@ -257,211 +521,46 @@ class wxTextContainerCtrl : public wxWindow,
 					colLight = 80;
 				}
 			}
-			return wxTextCtrl::SetBackgroundColour(colour);
 		}
-
-		virtual bool SetForegroundColour(const wxColour& colour) override {
-			m_buttonSelect->SetForegroundColour(colour);
-			m_buttonOpen->SetForegroundColour(colour);
-			m_buttonClear->SetForegroundColour(colour);
-			return wxTextCtrl::SetForegroundColour(colour);
-		}
-
-		virtual bool SetFont(const wxFont& font) {
-			if (m_buttonSelect) {
-				m_buttonSelect->SetFont(font);
-			}
-			if (m_buttonOpen) {
-				m_buttonOpen->SetFont(font);
-			}
-			if (m_buttonClear) {
-				m_buttonClear->SetFont(font);
-			}
-			return wxTextCtrl::SetFont(font);
-		}
-
-		virtual bool Enable(bool enable = true) {
-			m_buttonSelect->Enable(enable);
-			m_buttonOpen->Enable(enable);
-			m_buttonClear->Enable(enable);
-			return wxTextCtrl::Enable(enable);
-		}
-
-#if wxUSE_TOOLTIPS
-		virtual void DoSetToolTipText(const wxString& tip) override {
-			m_buttonSelect->SetToolTip(tip);
-			m_buttonOpen->SetToolTip(tip);
-			m_buttonClear->SetToolTip(tip);
-		}
-
-		virtual void DoSetToolTip(wxToolTip* tip) override {
-			m_buttonSelect->SetToolTip(tip);
-			m_buttonOpen->SetToolTip(tip);
-			m_buttonClear->SetToolTip(tip);
-		}
-#endif // wxUSE_TOOLTIPS
-
 	};
 
 private:
 
-	wxBoxSizer* m_boxSizer = nullptr;
-	wxStaticText* m_staticText = nullptr;
-	wxTextCtrl* m_textCtrl = nullptr;
+	wxControlStaticTextCtrl* m_label = nullptr;
+	wxControlTextEditorCtrl* m_text = nullptr;
 
-	wxTextButtonCtrl* m_winButton = nullptr;
+	wxControlCompositeEditorCtrl* m_winButton = nullptr;
 
 	bool m_dvcMode;
-
-	bool m_selbutton;
-	bool m_openbutton;
-	bool m_clearbutton;
 
 	bool m_passwordMode;
 	bool m_multilineMode;
 	bool m_textEditMode;
 
-private:
-
-	void CreateControl(const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-		const wxString& val = wxEmptyString)
-	{
-		m_boxSizer = new wxBoxSizer(wxHORIZONTAL);
-
-		if (!m_dvcMode) {
-			m_staticText = new wxStaticText(this, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxST_NO_AUTORESIZE);
-			m_staticText->Wrap(-1);
-			m_boxSizer->Add(m_staticText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-		}
-
-		m_textCtrl = new wxTextRawCtrl(this, wxID_ANY, val, pos, wxSize(-1, m_dvcMode ? buttonSize + 3 : buttonSize), wxTE_PROCESS_ENTER | wxTE_PROCESS_TAB | wxBORDER_SIMPLE);
-
-		m_boxSizer->Add(m_textCtrl, 1, wxEXPAND);
-		m_winButton = new wxTextButtonCtrl;
-		m_winButton->SetButtonSelect(m_selbutton);
-		m_winButton->SetButtonOpen(m_openbutton);
-		m_winButton->SetButtonClear(m_clearbutton);
-		m_winButton->SetDVCMode(m_dvcMode);
-		m_winButton->Create(this, pos, wxSize(-1, m_dvcMode ? buttonSize + 3 : buttonSize));
-		m_boxSizer->Add(m_winButton, 0, wxALIGN_NOT);
-
-		if (m_textCtrl != nullptr) {
-			const long style = m_textCtrl->GetWindowStyle();
-			if (m_multilineMode) {
-				m_textCtrl->SetWindowStyle(style | wxTE_MULTILINE);
-			}
-			else {
-				m_textCtrl->SetWindowStyle(style & (~wxTE_MULTILINE));
-			}
-
-			if (m_passwordMode) {
-				m_textCtrl->SetWindowStyle(style | wxTE_PASSWORD);
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETPASSWORDCHAR, 0x25cf, 0); // 0x25cf is ● character
-#endif
-			}
-			else {
-				m_textCtrl->SetWindowStyle(style & (~wxTE_PASSWORD));
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETPASSWORDCHAR, 0, 0); // 0x25cf is ● character
-#endif
-			}
-
-			if (m_textEditMode) {
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETREADONLY, 0, 0);
-#endif
-				m_textCtrl->SetWindowStyle(style & (~wxTE_READONLY));
-			}
-			else {
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETREADONLY, 1, 0);
-#endif
-				m_textCtrl->SetWindowStyle(style | wxTE_READONLY);
-			}
-
-			m_textCtrl->Update();
-		}
-	}
-
-	//events:
-	void OnFocusEvent(wxFocusEvent& event)
-	{
-		if (event.GetEventType() == wxEVT_SET_FOCUS) {
-
-			if (m_textCtrl != event.GetWindow()
-				&& m_winButton->m_buttonSelect != event.GetWindow()
-				&& m_winButton->m_buttonOpen != event.GetWindow()
-				&& m_winButton->m_buttonClear != event.GetWindow()) {
-
-				wxFocusEvent focusEvent(wxEVT_SET_FOCUS, event.GetId());
-				focusEvent.SetEventObject(m_textCtrl);
-				focusEvent.SetWindow(event.GetWindow());
-				wxTextContainerCtrl::ProcessEvent(focusEvent);
-			}
-		}
-		else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
-
-			if (m_textCtrl != event.GetWindow()
-				&& m_winButton->m_buttonSelect != event.GetWindow()
-				&& m_winButton->m_buttonOpen != event.GetWindow()
-				&& m_winButton->m_buttonClear != event.GetWindow()) {
-
-				wxFocusEvent focusEvent(wxEVT_KILL_FOCUS, event.GetId());
-				focusEvent.SetEventObject(m_textCtrl);
-				focusEvent.SetWindow(event.GetWindow());
-				wxTextContainerCtrl::ProcessEvent(focusEvent);
-			}
-		}
-
-		event.Skip();
-	}
-
-	void OnKeyEvent(wxKeyEvent& event)
-	{
-		event.Skip();
-	}
-
-	void OnCharEvent(wxKeyEvent& event)
-	{
-		event.Skip();
-	}
-
 public:
 
-	wxTextContainerCtrl() :
-		m_selbutton(true), m_openbutton(false), m_clearbutton(false),
+	wxControlEditorCtrl() :
 		m_passwordMode(false), m_multilineMode(false), m_textEditMode(true),
 		m_dvcMode(false)
 	{
 	}
 
-	wxTextContainerCtrl(wxWindow* parent,
+	wxControlEditorCtrl(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxString& val = wxEmptyString,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE) :
-		m_selbutton(true), m_openbutton(false), m_clearbutton(false),
 		m_passwordMode(false), m_multilineMode(false), m_textEditMode(true),
 		m_dvcMode(false)
 	{
 		Create(parent, id, val, pos, size, style);
 	}
 
-	virtual ~wxTextContainerCtrl() {
+	virtual ~wxControlEditorCtrl() {
 
-		if (m_textCtrl != nullptr) {
-
-			m_textCtrl->Unbind(wxEVT_KEY_DOWN, &wxTextContainerCtrl::OnKeyEvent, this);
-			m_textCtrl->Unbind(wxEVT_CHAR, &wxTextContainerCtrl::OnCharEvent, this);
-
-			m_textCtrl->Unbind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-			m_textCtrl->Unbind(wxEVT_KILL_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-		}
+		delete m_label;
+		delete m_text;
+		delete m_winButton;
 	}
 
 	bool Create(wxWindow* parent = nullptr,
@@ -470,290 +569,339 @@ public:
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = 0)
 	{
-		if (!wxWindow::Create(parent, id, pos, size, style))
+		if (!wxCompositeWindow::Create(parent, id, pos, size, style))
 			return false;
 
-		wxWindow::SetSizeHints(wxDefaultSize, wxDefaultSize);
+		if (!m_dvcMode) {
+			m_label = new wxControlStaticTextCtrl(this, wxID_ANY, wxEmptyString);
+		}
 
-		CreateControl(pos, size, val);
+		m_text = new wxControlTextEditorCtrl(this, val, style);
 
-		m_textCtrl->Bind(wxEVT_KEY_DOWN, &wxTextContainerCtrl::OnKeyEvent, this);
-		m_textCtrl->Bind(wxEVT_CHAR, &wxTextContainerCtrl::OnCharEvent, this);
-
-		m_textCtrl->Bind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-		m_textCtrl->Bind(wxEVT_KILL_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-
-		m_winButton->Bind(wxEVT_SET_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-		m_winButton->Bind(wxEVT_KILL_FOCUS, &wxTextContainerCtrl::OnFocusEvent, this);
-
-		wxWindow::SetSizer(m_boxSizer);
-		wxWindow::Layout();
-		wxWindow::Centre(wxBOTH);
-
-		if (pos != wxDefaultPosition)
-			wxWindow::Move(pos);
+		m_winButton = new wxControlCompositeEditorCtrl;
+		m_winButton->SetDVCMode(m_dvcMode);
+		m_winButton->Create(this, wxDefaultPosition, wxDefaultSize);
 
 		return true;
 	}
 
 	void SetDVCMode(bool dvc)
 	{
-		if (m_winButton) {
+		if (m_winButton != nullptr)
 			m_winButton->SetDVCMode(m_dvcMode);
-		}
 		m_dvcMode = dvc;
 	}
 
-	// Bind functors to an event:
-	template <typename Functor, typename EventHandler>
-	void BindButtonSelect(const Functor& functor, EventHandler handler) { m_winButton->BindButtonSelect(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void BindButtonOpen(const Functor& functor, EventHandler handler) { m_winButton->BindButtonOpen(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void BindButtonClear(const Functor& functor, EventHandler handler) { m_winButton->BindButtonClear(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void BindTextEnter(const Functor& functor, EventHandler handler) { m_textCtrl->Bind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void BindTextUpdated(const Functor& functor, EventHandler handler) { m_textCtrl->Bind(wxEVT_COMMAND_TEXT_UPDATED, functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void BindKillFocus(const Functor& functor, EventHandler handler) { wxTextContainerCtrl::Bind(wxEVT_KILL_FOCUS, functor, handler); }
-
-	// Unbind functors to an event:
-	template <typename Functor, typename EventHandler>
-	void UnbindButtonSelect(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonSelect(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void UnbindButtonOpen(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonOpen(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void UnbindButtonClear(const Functor& functor, EventHandler handler) { m_winButton->UnbindButtonClear(functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void UnbindTextEnter(const Functor& functor, EventHandler handler) { m_textCtrl->Unbind(wxEVT_COMMAND_TEXT_ENTER, functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void UnbindTextUpdated(const Functor& functor, EventHandler handler) { m_textCtrl->Unbind(wxEVT_COMMAND_TEXT_UPDATED, functor, handler); }
-	template <typename Functor, typename EventHandler>
-	void UnbindKillFocus(const Functor& functor, EventHandler handler) { wxTextContainerCtrl::Unbind(wxEVT_KILL_FOCUS, functor, handler); }
-
 	void SetMultilineMode(bool mode) {
-		if (m_textCtrl != nullptr) {
-			const long style = m_textCtrl->GetWindowStyle();
+		if (m_text != nullptr) {
+			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
-				m_textCtrl->SetWindowStyle(style | wxTE_MULTILINE);
+				m_text->SetWindowStyleFlag(style | wxTE_MULTILINE);
 			}
 			else {
-				m_textCtrl->SetWindowStyle(style & (~wxTE_MULTILINE));
+				m_text->SetWindowStyleFlag(style & (~wxTE_MULTILINE));
 			}
-			m_textCtrl->Update();
+			m_text->Update();
 		}
 		m_multilineMode = mode;
 	}
 
-	bool GetMultilineMode() const {
-		return m_multilineMode;
-	}
+	bool GetMultilineMode() const { return m_multilineMode; }
 
 	void SetPasswordMode(bool mode) {
-		if (m_textCtrl != nullptr) {
-			const long style = m_textCtrl->GetWindowStyle();
+		if (m_text != nullptr) {
+			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
-				m_textCtrl->SetWindowStyle(style | wxTE_PASSWORD);
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETPASSWORDCHAR, 0x25cf, 0); // 0x25cf is ● character
-#endif
+				m_text->SetWindowStyleFlag(style | wxTE_PASSWORD);
 			}
 			else {
-				m_textCtrl->SetWindowStyle(style & (~wxTE_PASSWORD));
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETPASSWORDCHAR, 0, 0); // 0x25cf is ● character
-#endif
+				m_text->SetWindowStyleFlag(style & (~wxTE_PASSWORD));
 			}
-			m_textCtrl->Update();
+			m_text->Update();
 		}
 		m_passwordMode = mode;
 	}
 
-	bool GetPasswordMode() const {
-		return m_passwordMode;
-	}
+	bool GetPasswordMode() const { return m_passwordMode; }
 
 	void SetTextEditMode(bool mode) {
-		if (m_textCtrl != nullptr) {
-			const long style = m_textCtrl->GetWindowStyle();
+		if (m_text != nullptr) {
+			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETREADONLY, 0, 0);
-#endif
-				m_textCtrl->SetWindowStyle(style & (~wxTE_READONLY));
+				m_text->SetWindowStyle(style & (~wxTE_READONLY));
 			}
 			else {
-#if defined(__WXMSW__)
-				WXHWND hWnd = (WXHWND)m_textCtrl->GetHandle();
-				SendMessage(hWnd, EM_SETREADONLY, 1, 0);
-#endif
-				m_textCtrl->SetWindowStyle(style | wxTE_READONLY);
+				m_text->SetWindowStyleFlag(style | wxTE_READONLY);
 			}
-			m_textCtrl->Update();
+			m_text->Update();
 		}
 		m_textEditMode = mode;
 	}
 
-	bool GetTextEditMode() const {
-		return m_textEditMode;
+	bool GetTextEditMode() const { return m_textEditMode; }
+
+	virtual void SetLabel(const wxString& label) {
+		m_label->SetLabel(label);
+		m_label->Wrap(m_label->GetClientSize().GetWidth());
 	}
 
-	void SetTextLabel(const wxString& label) {
-		m_staticText->SetLabel(label);
-	}
+	virtual wxString GetLabel() const { return m_label->GetLabel(); }
 
-	wxString GetTextLabel() const {
-		return m_staticText->GetLabel();
-	}
+	virtual void SetValue(const wxString& label) { m_text->SetValue(label); }
+	virtual wxString GetValue() const { return m_text->GetValue(); }
 
-	void SetTextValue(const wxString& label) {
-		m_textCtrl->SetValue(label);
-	}
+	void LayoutControls() {
 
-	wxString GetTextValue() const {
-		return m_textCtrl->GetValue();
-	}
+		if (!m_text)
+			return;
 
-	void CalculateButton() {
-		m_textCtrl->SetMinSize(wxSize(wxNOT_FOUND, m_textCtrl->GetMinSize().y));
-		m_winButton->Hide();
-		int x = wxWindow::GetBestSize().x + 20;// -5;
-		m_winButton->Show();
-		const int delta = m_winButton->CalculateButton();
-		x -= delta;
-		if (!m_dvcMode) {
-			const wxSize& minSize = m_staticText->GetMinSize();
-			if (minSize != wxDefaultSize) {
-				x -= minSize.x;
-			}
+		const wxSize sizeTotal = GetClientSize();
+		int width = sizeTotal.x,
+			height = sizeTotal.y;
+
+		wxSize sizeButton = m_winButton->GetBestSize();
+
+		if (m_dvcMode) {
+			m_text->SetSize(0, 0, width - sizeButton.x, height);
+			m_winButton->SetSize(width - sizeButton.x - 1, 0, sizeButton.x + 1, height);
 		}
-		m_textCtrl->SetMinSize(wxSize(x, m_textCtrl->GetMinSize().y));
+		else {
+			wxSize sizeLabel = m_label->GetBestSize();
+			m_label->SetSize(0, (height - sizeLabel.y) / 2, sizeLabel.x, height);
+			m_text->SetSize(sizeLabel.x + 1, 0, width - sizeButton.x - sizeLabel.x - 1, height);
+			m_winButton->SetSize(width - sizeButton.x - 1, 0, sizeButton.x, sizeButton.y);
+		}
 	}
 
 	//buttons:
-	void SetButtonSelect(bool select) {
-		if (m_winButton) {
-			m_winButton->SetButtonSelect(select);
+	void ShowSelectButton(bool select) {
+
+		if (m_winButton != nullptr) {
+			m_winButton->ShowSelectButton(select);
 		}
-		m_selbutton = select;
 	}
 
-	bool HasButtonSelect() const {
-		return m_selbutton;
-	}
+	bool IsSelectButtonVisible() const { return m_winButton->IsSelectButtonVisible(); }
 
-	void SetButtonOpen(bool select = true) {
-		if (m_winButton) {
-			m_winButton->SetButtonOpen(select);
+	void ShowOpenButton(bool select = true) {
+
+		if (m_winButton != nullptr) {
+			m_winButton->ShowOpenButton(select);
 		}
-		m_openbutton = select;
 	}
 
-	bool HasButtonOpen() const {
-		return m_openbutton;
-	}
+	bool IsOpenButtonVisible() const { return m_winButton->IsOpenButtonVisible(); }
 
-	void SetButtonClear(bool select = true) {
-		if (m_winButton) {
-			m_winButton->SetButtonClear(select);
+	void ShowClearButton(bool select = true) {
+
+		if (m_winButton != nullptr) {
+			m_winButton->ShowClearButton(select);
 		}
-		m_clearbutton = select;
 	}
 
-	bool HasButtonClear() const {
-		return m_clearbutton;
-	}
+	bool IsClearButtonVisible() const { return m_winButton->IsClearButtonVisible(); }
 
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
 		if (!m_dvcMode) {
-			if (m_textCtrl) {
-				m_staticText->SetBackgroundColour(colour);
+			if (m_text != nullptr) {
+				m_label->SetBackgroundColour(colour);
 			}
 		}
-		m_textCtrl->SetBackgroundColour(colour);
-		m_winButton->SetBackgroundColour(colour);
+		if (m_text != nullptr) m_text->SetBackgroundColour(colour);
+		if (m_winButton != nullptr) m_winButton->SetBackgroundColour(colour);
 		return wxWindow::SetBackgroundColour(colour);
 	}
 
 	virtual bool SetForegroundColour(const wxColour& colour) {
 		if (!m_dvcMode) {
-			if (m_textCtrl) {
-				m_staticText->SetForegroundColour(colour);
+			if (m_text != nullptr) {
+				m_label->SetForegroundColour(colour);
 			}
 		}
-		m_textCtrl->SetForegroundColour(colour);
-		m_winButton->SetForegroundColour(colour);
+		if (m_text != nullptr) m_text->SetForegroundColour(colour);
+		if (m_winButton != nullptr) m_winButton->SetForegroundColour(colour);
 		return wxWindow::SetForegroundColour(colour);
 	}
 
 	virtual bool SetFont(const wxFont& font) {
 		if (!m_dvcMode) {
-			if (m_textCtrl) {
-				m_staticText->SetFont(font);
+			if (m_text != nullptr) {
+				m_label->SetFont(font);
 			}
 		}
-		if (m_textCtrl) {
-			m_textCtrl->SetFont(font);
-		}
-		if (m_winButton) {
-			m_winButton->SetFont(font);
-		}
+		if (m_text != nullptr) m_text->SetFont(font);
+		if (m_winButton != nullptr) m_winButton->SetFont(font);
 		return wxWindow::SetFont(font);
 	}
 
 	virtual bool Enable(bool enable = true) {
-		bool result = m_textCtrl->Enable(enable);
+		bool result = m_text->Enable(enable);
 		m_winButton->Enable(enable);
 		return result;
 	}
 
+	// accessors
+	// ---------
+
+	virtual wxString GetRange(long from, long to) const override;
+
+	virtual int GetLineLength(long lineNo) const override;
+	virtual wxString GetLineText(long lineNo) const override;
+	virtual int GetNumberOfLines() const override;
+
+	virtual bool IsModified() const override;
+	virtual bool IsEditable() const override;
+
+	// more readable flag testing methods
+	virtual bool IsSingleLine() const;
+	virtual bool IsMultiLine() const;
+
+	// If the return values from and to are the same, there is no selection.
+	virtual void GetSelection(long* from, long* to) const override;
+
+	virtual wxString GetStringSelection() const override;
+
+	// operations
+	// ----------
+
+	virtual void ChangeValue(const wxString& value) override;
+
+	// editing
+	virtual void Clear() override;
+	virtual void Replace(long from, long to, const wxString& value) override;
+	virtual void Remove(long from, long to) override;
+
+	// load/save the controls contents from/to the file
+	virtual bool LoadFile(const wxString& file);
+	virtual bool SaveFile(const wxString& file = wxEmptyString);
+
+	// sets/clears the dirty flag
+	virtual void MarkDirty() override;
+	virtual void DiscardEdits() override;
+
+	// set the max number of characters which may be entered in a single line
+	// text control
+	virtual void SetMaxLength(unsigned long WXUNUSED(len)) override;
+
+	// writing text inserts it at the current position, appending always
+	// inserts it at the end
+	virtual void WriteText(const wxString& text) override;
+	virtual void AppendText(const wxString& text) override;
+
+	// insert the character which would have resulted from this key event,
+	// return true if anything has been inserted
+	virtual bool EmulateKeyPress(const wxKeyEvent& event);
+
+	// text control under some platforms supports the text styles: these
+	// methods allow to apply the given text style to the given selection or to
+	// set/get the style which will be used for all appended text
+	virtual bool SetStyle(long start, long end, const wxTextAttr& style) override;
+	virtual bool GetStyle(long position, wxTextAttr& style) override;
+	virtual bool SetDefaultStyle(const wxTextAttr& style) override;
+	virtual const wxTextAttr& GetDefaultStyle() const override;
+
+	// translate between the position (which is just an index in the text ctrl
+	// considering all its contents as a single strings) and (x, y) coordinates
+	// which represent column and line.
+	virtual long XYToPosition(long x, long y) const override;
+	virtual bool PositionToXY(long pos, long* x, long* y) const override;
+
+	virtual void ShowPosition(long pos) override;
+
+	// find the character at position given in pixels
+	//
+	// NB: pt is in device coords (not adjusted for the client area origin nor
+	//     scrolling)
+	virtual wxTextCtrlHitTestResult HitTest(const wxPoint& pt, long* pos) const override;
+	virtual wxTextCtrlHitTestResult HitTest(const wxPoint& pt,
+		wxTextCoord* col,
+		wxTextCoord* row) const override;
+
+	// Clipboard operations
+	virtual void Copy() override;
+	virtual void Cut() override;
+	virtual void Paste() override;
+
+	virtual bool CanCopy() const override;
+	virtual bool CanCut() const override;
+	virtual bool CanPaste() const override;
+
+	// Undo/redo
+	virtual void Undo() override;
+	virtual void Redo() override;
+
+	virtual bool CanUndo() const override;
+	virtual bool CanRedo() const override;
+
+	// Insertion point
+	virtual void SetInsertionPoint(long pos) override;
+	virtual void SetInsertionPointEnd() override;
+	virtual long GetInsertionPoint() const override;
+	virtual wxTextPos GetLastPosition() const override;
+
+	virtual void SetSelection(long from, long to) override;
+	virtual void SelectAll() override;
+	virtual void SetEditable(bool editable) override;
+
+	// Autocomplete
+	virtual bool DoAutoCompleteStrings(const wxArrayString& choices) override;
+	virtual bool DoAutoCompleteFileNames(int flags) override;
+	virtual bool DoAutoCompleteCustom(wxTextCompleter* completer) override;
+
+	virtual bool ShouldInheritColours() const override;
+
+	virtual wxSize GetControlSize() const {
+		return m_text->GetSize() +
+			m_winButton->GetSize();
+	}
+
+	virtual wxStaticText* GetStaticText() const { return m_label; }
+	virtual wxWindow* GetControl() const { return m_text; }
+
+protected:
+
+	virtual void DoSetValue(const wxString& value, int flags) override;
+	virtual wxString DoGetValue() const override;
+
+	virtual bool DoLoadFile(const wxString& file, int fileType) override;
+	virtual bool DoSaveFile(const wxString& file, int fileType) override;
+
+	// override the base class virtuals involved into geometry calculations
+	virtual wxSize DoGetBestClientSize() const override;
+
 #if wxUSE_TOOLTIPS
 	virtual void DoSetToolTipText(const wxString& tip) override {
 		if (!m_dvcMode) {
-			m_staticText->SetToolTip(tip);
+			m_label->SetToolTip(tip);
 		}
-		m_textCtrl->SetToolTip(tip);
+		m_text->SetToolTip(tip);
 		m_winButton->SetToolTip(tip);
 	}
 
 	virtual void DoSetToolTip(wxToolTip* tip) override {
 		if (!m_dvcMode) {
-			m_staticText->SetToolTip(tip);
+			m_label->SetToolTip(tip);
 		}
-		m_textCtrl->SetToolTip(tip);
+		m_text->SetToolTip(tip);
 		m_winButton->SetToolTip(tip);
 	}
 #endif // wxUSE_TOOLTIPS
 
-	virtual void SetInsertionPointEnd() {
-		m_textCtrl->SetInsertionPointEnd();
-	}
+	void OnSize(wxSizeEvent& event) { LayoutControls(); event.Skip(); }
+	void OnDPIChanged(wxDPIChangedEvent& event) { LayoutControls(); event.Skip(); }
 
-	virtual void SetFocus() override {
-		m_textCtrl->SetFocus();
-	}
+private:
 
-	virtual wxSize GetControlSize() const {
-		return m_textCtrl->GetSize() +
-			m_winButton->GetSize();
-	}
+	// implement wxTextEntry pure virtual method
+	virtual wxWindow* GetEditableWindow() override { return this; }
 
-	virtual wxStaticText* GetStaticText() const {
-		return m_staticText;
-	}
+	// Implement pure virtual function inherited from wxCompositeWindow.
+	virtual wxWindowList GetCompositeWindowParts() const override;
 
-	virtual wxWindow* GetControl() const {
-		return m_textCtrl;
-	}
-
-	virtual void AfterCalc() {
-		CalculateButton();
-	}
+	wxDECLARE_DYNAMIC_CLASS(wxControlEditorCtrl);
+	wxDECLARE_NO_COPY_CLASS(wxControlEditorCtrl);
+	wxDECLARE_EVENT_TABLE();
 };
 
 #endif

@@ -221,17 +221,18 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			virtual wxWindow* CreateEditorCtrl(wxWindow* dv,
 				wxRect labelRect,
 				const wxVariant& value) override {
-				wxTextContainerCtrl* textCtrl = new wxTextContainerCtrl;
-				textCtrl->SetDVCMode(true);
+				wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
+				textEditor->SetDVCMode(true);
 
-				textCtrl->SetPasswordMode(false);
-				textCtrl->SetMultilineMode(false);
-				textCtrl->SetTextEditMode(true);
-				textCtrl->SetButtonSelect(true);
-				textCtrl->SetButtonClear(true);
-				textCtrl->SetButtonOpen(false);
+				textEditor->SetPasswordMode(false);
+				textEditor->SetMultilineMode(false);
+				textEditor->SetTextEditMode(true);
+			
+				textEditor->ShowSelectButton(true);
+				textEditor->ShowClearButton(true);
+				textEditor->ShowOpenButton(false);
 
-				bool result = textCtrl->Create(dv, wxID_ANY, value,
+				bool result = textEditor->Create(dv, wxID_ANY, value,
 					labelRect.GetPosition(),
 					labelRect.GetSize());
 
@@ -240,28 +241,28 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 				wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
 				if (parentWnd != nullptr) {
-					textCtrl->SetBackgroundColour(parentWnd->GetBackgroundColour());
-					textCtrl->SetForegroundColour(parentWnd->GetForegroundColour());
-					textCtrl->SetFont(parentWnd->GetFont());
+					textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
+					textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
+					textEditor->SetFont(parentWnd->GetFont());
 				}
 				else {
-					textCtrl->SetBackgroundColour(dv->GetBackgroundColour());
-					textCtrl->SetForegroundColour(dv->GetForegroundColour());
-					textCtrl->SetFont(dv->GetFont());
+					textEditor->SetBackgroundColour(dv->GetBackgroundColour());
+					textEditor->SetForegroundColour(dv->GetForegroundColour());
+					textEditor->SetFont(dv->GetFont());
 				}
 
-				textCtrl->BindButtonSelect(&wxValueViewRenderer::OnSelectButtonPressed, this);
-				textCtrl->BindButtonClear(&wxValueViewRenderer::OnClearButtonPressed, this);
+				textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &wxValueViewRenderer::OnSelectButtonPressed, this);
+				textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &wxValueViewRenderer::OnClearButtonPressed, this);
 
-				textCtrl->SetInsertionPointEnd();
-				return textCtrl;
+				textEditor->SetInsertionPointEnd();
+				return textEditor;
 			}
 
 			virtual bool GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value) override {
-				wxTextContainerCtrl* textCtrl = wxDynamicCast(ctrl, wxTextContainerCtrl);
-				if (textCtrl == nullptr)
+				wxControlEditorCtrl* textEditor = wxDynamicCast(ctrl, wxControlEditorCtrl);
+				if (textEditor == nullptr)
 					return false;
-				value = textCtrl->GetTextValue();
+				value = textEditor->GetValue();
 				return true;
 			}
 

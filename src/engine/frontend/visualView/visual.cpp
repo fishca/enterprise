@@ -205,10 +205,9 @@ void IVisualHost::DeleteRecursive(IValueFrame* control, bool force)
 		if (controlWnd != nullptr) {
 			wxWindow* controlParent = controlWnd->GetParent();
 			Cleanup(control, controlWnd);
-			m_baseObjects.erase(control);
-			m_wxObjects.erase(controlWnd);
+			RemoveControl(controlWnd, control);
 			controlWnd->DeletePendingEvents(); /*!!!*/
-			controlWnd->DestroyChildren();
+			//controlWnd->DestroyChildren();
 			controlWnd->Destroy();
 			if (!force && controlParent != nullptr) {
 				controlParent->Layout();
@@ -222,8 +221,7 @@ void IVisualHost::DeleteRecursive(IValueFrame* control, bool force)
 		if (controlSizer != nullptr) {
 			IValueFrame* controlParent = control->GetParent();
 			Cleanup(control, controlSizer);
-			m_baseObjects.erase(control);
-			m_wxObjects.erase(controlSizer);
+			RemoveControl(controlSizer, control);
 			if (controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 				controlParent = controlParent->GetParent();
 			}
@@ -249,9 +247,8 @@ void IVisualHost::DeleteRecursive(IValueFrame* control, bool force)
 		wxObject* controlObj = GetWxObject(control);
 		if (controlObj != nullptr) {
 			Cleanup(control, controlObj);
-			m_baseObjects.erase(control);
-			m_wxObjects.erase(controlObj);
-			delete controlObj;
+			RemoveControl(controlObj, control);
+			wxDELETE(controlObj);
 		}
 	}
 }
@@ -607,11 +604,8 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 				wxStaticText* childStaticText = childCtrl->GetStaticText();
 				const wxString& strLabel = childStaticText->GetLabel();
 				if (!strLabel.IsEmpty()) {
-					const wxFont& childFont = childStaticText->GetFont();
-#ifdef __WXMSW__
-					::SelectObject(screenDC.GetHDC(), childFont.GetHFONT());
-#endif
-					screenDC.GetTextExtent(strLabel, &x, &y, nullptr, nullptr, &childFont);
+					screenDC.SetFont(childStaticText->GetFont());
+					screenDC.GetMultiLineTextExtent(strLabel, &x, &y);
 					if (x > maxX) maxX = x;
 				}
 			}
@@ -653,16 +647,20 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 			}
 
 			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
+
 				wxStaticText* childStaticText = childCtrl->GetStaticText();
+
 				if (maxX != wxNOT_FOUND) {
 					childStaticText->SetMinSize(wxSize(maxX, wxNOT_FOUND));
 				}
 				else {
 					childStaticText->SetMinSize(wxDefaultSize);
 				}
+
 				if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
 					maxX = wxNOT_FOUND;
 				}
+
 				childCtrl->AfterCalc();
 			}
 		};
@@ -714,14 +712,10 @@ std::set<IVisualEditorNotebook*> IVisualEditorNotebook::ms_visualEditorArray = {
 
 IVisualEditorNotebook* IVisualEditorNotebook::FindEditorByForm(const IValueFrame* valueForm)
 {
-	auto& it = std::find_if(ms_visualEditorArray.begin(), ms_visualEditorArray.end(),
-		[valueForm](const IVisualEditorNotebook* visualNotebook) {
-			return valueForm == visualNotebook->GetValueForm();
-		}
-	);
-
-	if (it != ms_visualEditorArray.end())
-		return *it;
+	for (auto& visualEditor : ms_visualEditorArray) {
+		if (valueForm == visualEditor->GetValueForm())
+			return visualEditor;
+	}
 
 	return nullptr;
 }

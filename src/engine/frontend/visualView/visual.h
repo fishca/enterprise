@@ -146,9 +146,14 @@ protected:
 
 private:
 
-	void AppendControl(wxObject* wx_object, IValueFrame* control) {
+	inline void AppendControl(wxObject* wx_object, IValueFrame* control) {
 		m_wxObjects.insert_or_assign(wx_object, control);
 		m_baseObjects.insert_or_assign(control, wx_object);
+	}
+
+	inline void RemoveControl(wxObject* wx_object, IValueFrame* control) {
+		m_wxObjects.erase(wx_object);
+		m_baseObjects.erase(control);
 	}
 
 protected:

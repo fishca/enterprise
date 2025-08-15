@@ -142,7 +142,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	columnObject->SetControl(this);
 
 	wxString textCaption = m_propertyName->GetValueAsString();
-	//if (m_dataSource.isValid()) {
+
 	if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		if (metaObject != nullptr) textCaption = metaObject->GetSynonym();
@@ -226,9 +226,9 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 	if (columnObject != nullptr) {
 		CValueViewRenderer* renderer = columnObject->GetRenderer();
 		wxASSERT(renderer);
-		wxTextContainerCtrl* textEditor = dynamic_cast<wxTextContainerCtrl*>(renderer->GetEditorCtrl());
+		wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(renderer->GetEditorCtrl());
 		if (textEditor != nullptr) {
-			textEditor->SetTextValue(varControlVal.GetString());
+			textEditor->SetValue(varControlVal.GetString());
 			textEditor->SetInsertionPointEnd();
 			textEditor->SetFocus();
 		}

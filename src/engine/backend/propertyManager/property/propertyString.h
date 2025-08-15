@@ -7,8 +7,17 @@
 class BACKEND_API IPropertyString : public IProperty {
 public:
 
-	wxString GetValueAsString() const { return m_propValue; }
-	void SetValue(const wxString& val) { m_propValue = val; }
+	wxString GetValueAsString() const { 	
+		wxString strValue; 
+		wxPropertyGrid::ExpandEscapeSequences(strValue, m_propValue);
+		return strValue; 
+	}
+	
+	void SetValue(const wxString& val) { 	
+		wxString strValue;
+		wxPropertyGrid::CreateEscapeSequences(strValue, val);
+		m_propValue = strValue; 
+	}
 
 	IPropertyString(CPropertyCategory* cat, const wxString& name,
 		const wxString& value) : IProperty(cat, name, value)
@@ -132,6 +141,7 @@ public:
 	CPropertyText(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
 		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
+		//wxPropertyGrid::ExpandEscapeSequences(strVal, value.GetString());
 	}
 
 	//get property for grid 

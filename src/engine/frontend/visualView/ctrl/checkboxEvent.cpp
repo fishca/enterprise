@@ -14,12 +14,6 @@ void CValueCheckbox::OnClickedCheckbox(wxCommandEvent& event)
 
 	m_selValue = checkbox->GetValue();
 
-	//if (m_dataSource.isValid() && m_formOwner->GetSourceObject()) {
-	//	ISourceDataObject* srcData = m_formOwner->GetSourceObject();
-	//	wxASSERT(srcData);
-	//	srcData->SetValueByMetaID(GetIdByGuid(m_dataSource), m_selValue);
-	//}
-
 	if (!m_propertySource->IsEmptyProperty()) {
 		ISourceDataObject* srcData = m_formOwner->GetSourceObject();
 		wxASSERT(srcData);

@@ -257,6 +257,7 @@
     <ClCompile Include="win\ctrls\charts\wxtimeserieschart.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartctrl.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartoptions.cpp" />
+    <ClCompile Include="win\ctrls\checkboxEditor.cpp" />
     <ClCompile Include="win\ctrls\checktree.cpp" />
     <ClCompile Include="win\ctrls\dataView.cpp" />
     <ClCompile Include="win\ctrls\textEditor.cpp" />
@@ -449,7 +450,7 @@
     <ClInclude Include="win\ctrls\charts\wxtimeserieschart.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartctrl.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartoptions.h" />
-    <ClInclude Include="win\ctrls\checkBoxEditor.h" />
+    <ClInclude Include="win\ctrls\checkboxEditor.h" />
     <ClInclude Include="win\ctrls\checktree.h" />
     <ClInclude Include="win\ctrls\dataView.h" />
     <ClInclude Include="win\ctrls\dynamicBorder.h" />

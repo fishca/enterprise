@@ -773,6 +773,9 @@
     <ClCompile Include="win\dlgs\applyChange.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\checkboxEditor.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -841,7 +844,7 @@
     <ClInclude Include="docView\templates\text.h">
       <Filter>docView\templates</Filter>
     </ClInclude>
-    <ClInclude Include="win\ctrls\checkBoxEditor.h">
+    <ClInclude Include="win\ctrls\checkboxEditor.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="win\ctrls\checktree.h">

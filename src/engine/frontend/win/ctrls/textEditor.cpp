@@ -25,7 +25,7 @@ wxBEGIN_EVENT_TABLE(wxControlEditorCtrl::wxControlCompositeEditorCtrl::wxControl
 EVT_LEFT_UP(wxControlEditorCtrl::wxControlCompositeEditorCtrl::wxControlEditorButtonCtrl::OnLeftUp)
 wxEND_EVENT_TABLE()
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxControlEditorCtrl, wxControl);
+wxIMPLEMENT_DYNAMIC_CLASS(wxControlEditorCtrl, wxWindow);
 
 // accessors
 // ---------

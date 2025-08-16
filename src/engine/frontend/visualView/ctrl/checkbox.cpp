@@ -30,13 +30,8 @@ IMetaData* CValueCheckbox::GetMetaData() const
 
 wxObject* CValueCheckbox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	CCheckBox* checkbox = new CCheckBox(wxparent, wxID_ANY,
-		m_propertyCaption->GetValueAsString(),
-		wxDefaultPosition,
-		wxDefaultSize);
-
-	checkbox->BindCheckBoxCtrl(&CValueCheckbox::OnClickedCheckbox, this);
-
+	wxControlCheckboxCtrl* checkbox = new wxControlCheckboxCtrl(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	checkbox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &CValueCheckbox::OnClickedCheckbox, this);
 	return checkbox;
 }
 
@@ -46,7 +41,7 @@ void CValueCheckbox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	CCheckBox* checkbox = dynamic_cast<CCheckBox*>(wxobject);
+	wxControlCheckboxCtrl* checkbox = dynamic_cast<wxControlCheckboxCtrl*>(wxobject);
 
 	if (checkbox != nullptr) {
 		wxString textCaption = wxEmptyString;
@@ -55,20 +50,18 @@ void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 			const ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
 			if (srcObject != nullptr) {
 				const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
-				if (metaObject != nullptr)  textCaption = metaObject->GetSynonym() + wxT(":");	
+				if (metaObject != nullptr)  textCaption = metaObject->GetSynonym() + wxT(":");
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 			}
 		}
 
-		checkbox->SetCheckBoxLabel(m_propertyCaption->IsEmptyProperty() ?
+		checkbox->SetLabel(m_propertyCaption->IsEmptyProperty() ?
 			textCaption : m_propertyCaption->GetValueAsString());
-		checkbox->SetCheckBoxValue(m_selValue.GetBoolean());
+		checkbox->SetValue(m_selValue.GetBoolean());
 		checkbox->SetWindowStyle(
 			m_propertyTitle->GetValueAsInteger() == 1 ? wxALIGN_LEFT :
 			wxALIGN_RIGHT
 		);
-
-		checkbox->BindCheckBoxCtrl(&CValueCheckbox::OnClickedCheckbox, this);
 	}
 
 	UpdateWindow(checkbox);
@@ -76,9 +69,9 @@ void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 void CValueCheckbox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	CCheckBox* checkbox = dynamic_cast<CCheckBox*>(obj);
+	wxControlCheckboxCtrl* checkbox = dynamic_cast<wxControlCheckboxCtrl*>(obj);
 	if (checkbox != nullptr) {
-		checkbox->UnbindCheckBoxCtrl(&CValueCheckbox::OnClickedCheckbox, this);
+		checkbox->Unbind(wxEVT_COMMAND_CHECKBOX_CLICKED, &CValueCheckbox::OnClickedCheckbox, this);
 	}
 }
 
@@ -110,9 +103,9 @@ bool CValueCheckbox::SetControlValue(const CValue& varControlVal)
 
 	m_selValue = varControlVal.GetBoolean();
 
-	CCheckBox* checkboxCtrl = dynamic_cast<CCheckBox*>(GetWxObject());
+	wxControlCheckboxCtrl* checkboxCtrl = dynamic_cast<wxControlCheckboxCtrl*>(GetWxObject());
 	if (checkboxCtrl != nullptr) {
-		checkboxCtrl->SetCheckBoxValue(varControlVal.GetBoolean());
+		checkboxCtrl->SetValue(varControlVal.GetBoolean());
 	}
 
 	return true;
@@ -129,9 +122,9 @@ bool CValueCheckbox::LoadData(CMemoryReader& reader)
 	m_propertyTitle->SetValue(reader.r_s32());
 	if (!m_propertySource->LoadData(reader))
 		return false;
-	
+
 	//events
-	m_onCheckboxClicked->LoadData(reader);	
+	m_onCheckboxClicked->LoadData(reader);
 	return IValueWindow::LoadData(reader);
 }
 

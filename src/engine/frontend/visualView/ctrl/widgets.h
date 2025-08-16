@@ -265,7 +265,7 @@ class CValueCheckbox : public IValueWindow,
 
     CPropertyCategory* m_categoryCheckBox = IPropertyObject::CreatePropertyCategory(wxT("checkbox"), _("checkbox"));
     CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryCheckBox, wxT("caption"), _("caption"), wxEmptyString);
-    CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), wxT("title location"), enTitleLocation::eRight);
+    CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), wxT("title location"), enTitleLocation::eLeft);
 
     CPropertyCategory* m_categorySource = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
     CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryCheckBox, wxT("source"), _("source"), eValueTypes::TYPE_BOOLEAN);

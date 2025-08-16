@@ -1,28 +1,13 @@
 ﻿#ifndef __TEXT_CTRL_H__
 #define __TEXT_CTRL_H__
 
-#include <wx/app.h>
 #include <wx/button.h>
 #include <wx/compositewin.h>
 #include <wx/containr.h>
-#include <wx/sizer.h>
 #include <wx/stattext.h>
-#include <wx/listbox.h>
-#include <wx/popupwin.h>
-#include <wx/panel.h>
 #include <wx/textctrl.h>
 
-#if defined(__WXMSW__)
-#include <windows.h>
-#endif
-
 #include "dynamicBorder.h"
-
-enum {
-	textCtrl_buttonSelect = wxID_LOWEST + 1,
-	textCtrl_buttonOpen,
-	textCtrl_buttonClear
-};
 
 #define buttonSize 20
 #define dvcMode 0x0004096

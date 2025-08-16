@@ -8,8 +8,7 @@
 #include "frontend/frontend.h"
 
 class FRONTEND_API CAuiMDIChildFrame :
-	public wxAuiMDIChildFrame
-{
+	public wxAuiMDIChildFrame {
 public:
 
 	CAuiMDIChildFrame() : wxAuiMDIChildFrame() {}
@@ -32,8 +31,8 @@ public:
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxDEFAULT_FRAME_STYLE,
-		const wxString& name = wxASCII_STR(wxFrameNameStr))
-	{
+		const wxString& name = wxASCII_STR(wxFrameNameStr)) {
+
 		wxAuiMDIClientWindow* pClientWindow = parent->GetClientWindow();
 		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
 
@@ -56,8 +55,8 @@ public:
 		return true;
 	}
 
-	virtual bool Show(bool show = true) override
-	{
+	virtual bool Show(bool show = true) override {
+
 		wxAuiMDIClientWindow* pClientWindow = m_pMDIParentFrame->GetClientWindow();
 		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
 
@@ -75,9 +74,7 @@ public:
 				wxBitmap mdiChildIcon;
 				mdiChildIcon.CopyFromIcon(m_icons.GetIcon(sizeIcon));
 
-				//pClientWindow->SetEvtHandlerEnabled(false);
 				pClientWindow->AddPage(this, m_title, m_activateOnCreate, mdiChildIcon);
-				//pClientWindow->SetEvtHandlerEnabled(true);
 
 			}
 			else if (!show && idx != wxNOT_FOUND) {
@@ -95,17 +92,28 @@ public:
 				wxS("Logic error: child [not] activated when it should [not] have been.")
 			);
 		}
-
+		
 		pClientWindow->Thaw();
-		pClientWindow->Refresh();
-
+		pClientWindow->Update();
 		return true;
 	}
 
-	virtual void SetIcons(const wxIconBundle& icons) override
-	{
-		m_icons = icons;
+	virtual bool Destroy() override {
 
+		wxAuiMDIClientWindow* pClientWindow = m_pMDIParentFrame->GetClientWindow();
+		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
+
+		pClientWindow->Freeze();
+		bool result = wxAuiMDIChildFrame::Destroy();
+		pClientWindow->Thaw();		
+
+		pClientWindow->Update();
+		return result;
+	}
+
+	virtual void SetIcons(const wxIconBundle& icons) override {
+
+		m_icons = icons;
 		wxAuiMDIChildFrame::SetIcons(icons);
 	}
 };

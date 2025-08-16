@@ -133,12 +133,17 @@ void CDocMDIFrame::OnActivateView(bool activate, wxView* activeView, wxView* dea
 
 	if (m_docToolbar != nullptr) {
 
+		m_docToolbar->Freeze();
+
 		if (deactiveView != nullptr) {
+			
 			CMetaView* deactView = dynamic_cast<CMetaView*>(deactiveView);
+			
 			if (deactView != nullptr) {
 				deactView->OnRemoveToolbar(m_docToolbar);
 			}
-			m_docToolbar->ClearTools();
+			
+			m_docToolbar->Clear();
 		}
 
 		wxAuiPaneInfo& infoToolBar = m_mgr.GetPane(m_docToolbar);
@@ -150,18 +155,17 @@ void CDocMDIFrame::OnActivateView(bool activate, wxView* activeView, wxView* dea
 			}
 		}
 
-		m_docToolbar->Freeze();
 		m_docToolbar->Realize();
-		m_docToolbar->Thaw();
 
 		infoToolBar.Show(m_docToolbar->GetToolCount() > 0);
 
 		infoToolBar.BestSize(m_docToolbar->GetSize());
 		infoToolBar.FloatingSize(
-			m_docToolbar->GetSize().x,
+			m_docToolbar->GetSize().x, 
 			m_docToolbar->GetSize().y + 25
 		);
 
+		m_docToolbar->Thaw();
 		m_mgr.Update();
 	}
 }

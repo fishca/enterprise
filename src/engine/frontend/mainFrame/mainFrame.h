@@ -87,9 +87,7 @@ public:
 		return nullptr;
 	}
 
-	static CDocMDIFrame* GetFrame() {
-		return s_instance;
-	}
+	static CDocMDIFrame* GetFrame() { return s_instance; }
 
 	// Force the static appData instance to Init()
 	static void InitFrame(CDocMDIFrame* mf);

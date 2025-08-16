@@ -105,7 +105,9 @@ public:
 	void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	void ClearMessage() { m_outputWindow->ClearAll(); }
 
-	void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const { m_outputWindow->SharedOutput(strErrorMessage, eStatusMessage::eStatusMessage_Error, strFileName, strDocPath, line); }
+	void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const { 
+		m_outputWindow->SharedOutput(strErrorMessage, eStatusMessage::eStatusMessage_Error, strFileName, strDocPath, line);
+	}
 
 	virtual void CreateGUI() override;
 	virtual void Modify(bool modify) override;

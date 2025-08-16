@@ -118,24 +118,14 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 
 		CDialogDocChildFrame* subframe = new CDialogDocChildFrame(document, view, parent, wxID_ANY, document->GetTitle(), pos, size, style & ~wxCREATE_SDI_FRAME);
 		subframe->SetIcon(document->GetIcon());
-
-		//subframe->Iconize(false); // restore the window if minimized
-		//subframe->SetFocus();     // focus on my window
-		//subframe->Raise();        // bring window to front
 		subframe->Center();
-
+		subframe->Center();
 		subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 		return subframe;
 	}
 
 	CAuiDocChildFrame* subframe = new CAuiDocChildFrame(document, view, s_instance, wxID_ANY, document->GetTitle(), pos, size, style);
 	subframe->SetIcon(document->GetIcon());
-
-	//subframe->Iconize(false); // restore the window if minimized
-	//subframe->SetFocus();     // focus on my window
-	//subframe->Raise();        // bring window to front
-	//subframe->Maximize();
-
 	subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 	return subframe;
 }
@@ -143,7 +133,8 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 void CDocMDIFrame::RefreshFrame()
 {
 	if (m_docManager != nullptr) {
-		for (auto& doc : m_docManager->GetDocumentsVector()) doc->UpdateAllViews();
+		for (auto& doc : m_docManager->GetDocumentsVector())
+			doc->UpdateAllViews();
 	}
 
 	Refresh();
@@ -162,15 +153,25 @@ void CDocMDIFrame::Raise()
 
 bool CDocMDIFrame::Destroy()
 {
-	if (m_docManager != nullptr) {
-		if (!m_docManager->CloseDocuments()) return false;
+	wxAuiMDIClientWindow* client_window = GetClientWindow();
+	wxCHECK_MSG(client_window, false, wxS("Missing MDI Client Window"));
+
+	client_window->Freeze();
+
+	bool success = m_docManager != nullptr ?
+		m_docManager->CloseDocuments() : true;
+
+	if (success && m_docManager != nullptr) {
 #if wxUSE_CONFIG
 		m_docManager->FileHistorySave(*wxConfig::Get());
 #endif // wxUSE_CONFIG
 		wxDELETE(m_docManager);
 	}
 
-	return wxAuiMDIParentFrame::Destroy();
+	client_window->Thaw();
+
+	return success &&
+		wxAuiMDIParentFrame::Destroy();
 }
 
 CDocMDIFrame::~CDocMDIFrame()

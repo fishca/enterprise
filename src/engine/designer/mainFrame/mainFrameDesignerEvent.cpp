@@ -128,18 +128,19 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 
 	wxAuiMDIClientWindow* client_window = GetClientWindow();
 	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
+	
+	client_window->Freeze();
 
-	if (m_docManager->CloseDocuments()) {
+	bool success = m_docManager->CloseDocuments();
+	success = success && commonMetaData->RoolbackDatabase()
+		&& m_metadataTree->Load();
 
-		if (commonMetaData->RoolbackDatabase()) {
-
-			if (m_metadataTree->Load()) {
-				objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
-			}
-
-			wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
-		}
+	if (success) {
+		objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
 	}
+
+	client_window->Thaw();
 }
 
 #include "backend/appData.h"
@@ -155,15 +156,18 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 		}
 		debugClient->Stop(true);
 	}
+
 	for (auto& doc : m_docManager->GetDocumentsVector()) {
+
 		if (!canSave)
 			break;
+
 		canSave = doc->OnSaveModified();
 	}
 
 	// stage one - save database  
 	if (canSave && !commonMetaData->SaveDatabase()) {
-		
+
 		for (unsigned int idx = 0; idx < s_restructureInfo.GetCount(); idx++) {
 			if (s_restructureInfo.GetType(idx) == ERestructure::restructure_error)
 				outputWindow->OutputError(s_restructureInfo.GetDescription(idx));
@@ -172,25 +176,25 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 		wxMessageBox(_("Failed to save database!"),
 			wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR, this
 		);
-		
+
 		return;
 	}
 
 	// stage one - update database  
 	if (canSave && commonMetaData->OnBeforeSaveDatabase(saveConfigFlag)) {
-		
-		bool roolback = false, succes = true;
-		
+
+		bool roolback = false, success = true;
+
 		if (commonMetaData->OnSaveDatabase(saveConfigFlag)) {
 			roolback = !CDialogApplyChange::ShowApplyChange(s_restructureInfo, this);
 		}
 		else {
-			succes = false;
+			success = false;
 		}
 
-		succes = commonMetaData->OnAfterSaveDatabase(roolback || !succes, saveConfigFlag);
+		success = commonMetaData->OnAfterSaveDatabase(roolback || !success, saveConfigFlag);
 
-		if (!succes) {
+		if (!success) {
 			wxMessageBox(_("Failed to update database!"),
 				wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR, this
 			);

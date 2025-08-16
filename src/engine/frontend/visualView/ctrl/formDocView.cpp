@@ -362,7 +362,7 @@ bool CValueForm::UpdateFormUniqueKey(const CUniquePairKey& formKey)
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),
 			[formKey](const CVisualDocument* visualDoc) {
 				return visualDoc != nullptr &&
-					visualDoc->CompareFormKey(formKey);
+					visualDoc->GetFormKey().GetGuid() == formKey.GetGuid();
 			}
 		);
 

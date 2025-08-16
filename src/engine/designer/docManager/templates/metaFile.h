@@ -51,6 +51,8 @@ public:
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnCloseDocument() override;
 
+	virtual void Modify(bool mod) override {}
+
 	virtual CMetadataTree* GetMetaTree() const;
 
 protected:

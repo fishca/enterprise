@@ -38,8 +38,11 @@ bool CUniqueKey::operator==(const CUniqueKey& other) const
 	}
 	else if (m_uniqueData == enUniqueData::enUniqueKey) {
 		if (other.m_uniqueData == enUniqueData::enUniqueKey) {
-			return m_metaObject == other.m_metaObject
-				&& m_keyValues == other.m_keyValues;
+			if ((m_metaObject == nullptr && other.m_metaObject == nullptr) &&
+				(m_keyValues.size() == 0 && other.m_keyValues.size() == 0))
+				return m_objGuid == other.m_objGuid; // new object 
+			return m_metaObject == other.m_metaObject &&
+				m_keyValues == other.m_keyValues;
 		}
 		else if (m_uniqueData == enUniqueData::enUniqueGuid) {
 			return m_objGuid == other.m_objGuid;
@@ -50,19 +53,7 @@ bool CUniqueKey::operator==(const CUniqueKey& other) const
 
 bool CUniqueKey::operator!=(const CUniqueKey& other) const
 {
-	if (m_uniqueData == enUniqueData::enUniqueGuid) {
-		return m_objGuid != other.m_objGuid;
-	}
-	else if (m_uniqueData == enUniqueData::enUniqueKey) {
-		if (other.m_uniqueData == enUniqueData::enUniqueKey) {
-			return m_metaObject != other.m_metaObject
-				|| m_keyValues != other.m_keyValues;
-		}
-		else if (m_uniqueData == enUniqueData::enUniqueGuid) {
-			return m_objGuid != other.m_objGuid;
-		}
-	}
-	return false;
+	return !((*this) == other);
 }
 
 bool CUniqueKey::operator==(const Guid& other) const

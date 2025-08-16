@@ -110,8 +110,7 @@ class FRONTEND_API wxControlEditorCtrl :
 				MSWCreateText(value, pos, size);
 
 				// and make sure it has the same attributes as before
-				if (m_hasFont)
-				{
+				if (m_hasFont) {
 					// calling SetFont(m_font) would do nothing as the code would
 					// notice that the font didn't change, so force it to believe
 					// that it did
@@ -120,20 +119,19 @@ class FRONTEND_API wxControlEditorCtrl :
 					SetFont(font);
 				}
 
-				if (m_hasFgCol)
-				{
+				if (m_hasFgCol) {
 					wxColour colFg = m_foregroundColour;
 					m_foregroundColour = wxNullColour;
 					SetForegroundColour(colFg);
 				}
 
-				if (m_hasBgCol)
-				{
+				if (m_hasBgCol) {
 					wxColour colBg = m_backgroundColour;
 					m_backgroundColour = wxNullColour;
 					SetBackgroundColour(colBg);
 				}
 
+				SetMinSize(wxDefaultSize);
 				return;
 			}
 #endif
@@ -144,9 +142,7 @@ class FRONTEND_API wxControlEditorCtrl :
 			DoSetValue(value, SetValue_NoEvent);
 		}
 
-		virtual wxWindow* GetMainWindowOfCompositeControl() override {
-			return m_editor;
-		}
+		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_editor; }
 
 		// provide access to the base class protected methods to wxControlTextEditorCtrl which
 		// needs to forward to them
@@ -206,12 +202,8 @@ class FRONTEND_API wxControlEditorCtrl :
 		// to do this easily and as there is much in that code I don't understand
 		// (notably what is the logic for buttons sizing?) I prefer to not touch it
 		// at all.
-		virtual wxSize DoGetBestSize() const override
-		{
-			const long flags = GetWindowStyleFlag();
-			wxControlTextEditorCtrl* const self = const_cast<wxControlTextEditorCtrl*>(this);
+		virtual wxSize DoGetBestSize() const override {
 
-			self->SetWindowStyleFlag((flags & ~wxBORDER_MASK) | wxBORDER_SIMPLE);
 			wxSize size = DoGetSizeFromTextSize(FromDIP(m_defaultItemWidth));
 
 			// The calculation for no external borders in wxTextCtrl::DoGetSizeFromTextSize also
@@ -222,7 +214,6 @@ class FRONTEND_API wxControlEditorCtrl :
 			// Don't use FromDIP(1), this seems not needed.
 			size.y -= 3;
 
-			self->SetWindowStyleFlag(flags);
 			return size;
 		}
 
@@ -259,9 +250,7 @@ class FRONTEND_API wxControlEditorCtrl :
 			// is really no reason for it to be able to get focus from keyboard.
 			virtual bool AcceptsFocusFromKeyboard() const override { return false; }
 
-			virtual wxWindow* GetMainWindowOfCompositeControl() override {
-				return m_editor->GetMainWindowOfCompositeControl();
-			}
+			virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_editor->GetMainWindowOfCompositeControl(); }
 
 		protected:
 
@@ -332,9 +321,7 @@ class FRONTEND_API wxControlEditorCtrl :
 
 		wxControlTextEditorCtrl* GetTextEditor() const { return m_editor->m_text; }
 
-		virtual wxWindow* GetMainWindowOfCompositeControl() override {
-			return m_editor->GetMainWindowOfCompositeControl();
-		}
+		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_editor->GetMainWindowOfCompositeControl(); }
 
 		// set focus to this window as the result of a keyboard action
 		virtual bool AcceptsFocusFromKeyboard() const override { return false; }
@@ -596,7 +583,7 @@ public:
 	}
 
 	void SetMultilineMode(bool mode) {
-		if (m_text != nullptr) {
+		if (m_text != nullptr && m_multilineMode != mode) {
 			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
 				m_text->SetWindowStyleFlag(style | wxTE_MULTILINE);
@@ -612,7 +599,7 @@ public:
 	bool GetMultilineMode() const { return m_multilineMode; }
 
 	void SetPasswordMode(bool mode) {
-		if (m_text != nullptr) {
+		if (m_text != nullptr && m_passwordMode != mode) {
 			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
 				m_text->SetWindowStyleFlag(style | wxTE_PASSWORD);
@@ -628,7 +615,7 @@ public:
 	bool GetPasswordMode() const { return m_passwordMode; }
 
 	void SetTextEditMode(bool mode) {
-		if (m_text != nullptr) {
+		if (m_text != nullptr && m_textEditMode != mode) {
 			const long style = m_text->GetWindowStyleFlag();
 			if (mode) {
 				m_text->SetWindowStyle(style & (~wxTE_READONLY));

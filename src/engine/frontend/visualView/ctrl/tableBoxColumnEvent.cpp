@@ -55,7 +55,6 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 			if (textEditor != nullptr) {
 				textEditor->SetValue(vSelected.GetString());
 				textEditor->SetInsertionPointEnd();
-				//textEditor->SetFocus();
 			}
 			else {
 				renderer->FinishSelecting();

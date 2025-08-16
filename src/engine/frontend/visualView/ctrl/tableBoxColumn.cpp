@@ -230,7 +230,6 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 		if (textEditor != nullptr) {
 			textEditor->SetValue(varControlVal.GetString());
 			textEditor->SetInsertionPointEnd();
-			textEditor->SetFocus();
 		}
 		else {
 			renderer->FinishSelecting();

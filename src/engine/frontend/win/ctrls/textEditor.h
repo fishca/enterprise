@@ -267,6 +267,8 @@ class FRONTEND_API wxControlEditorCtrl :
 					event.SetString(m_editor->GetValue());
 				}
 
+				m_editor->GetTextEditor()->SetFocus();
+
 				GetEventHandler()->ProcessEvent(event);
 
 				e.Skip();

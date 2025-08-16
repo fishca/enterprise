@@ -213,8 +213,6 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 		if (m_selValue.IsEmpty()) 
 			textEditor->SetInsertionPoint(wxNOT_FOUND);
 		else textEditor->SetInsertionPointEnd();
-		
-		textEditor->SetFocus();
 	}
 
 	return true;

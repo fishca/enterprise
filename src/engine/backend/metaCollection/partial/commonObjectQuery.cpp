@@ -805,44 +805,52 @@ bool IRecordManagerObject::ExistData()
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
-	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
+	bool success = false;
 
-	if (m_recordLine == nullptr)
-		return false;
+	if (m_recordLine != nullptr) {
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (firstWhere) {
-			queryText = queryText + " WHERE ";
+		db_query->BeginTransaction();
+
+		wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
+		wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
+
+		for (auto& obj : m_metaObject->GetGenericDimensions()) {
+			if (firstWhere) {
+				queryText = queryText + " WHERE ";
+			}
+			queryText = queryText +
+				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			if (firstWhere) {
+				firstWhere = false;
+			}
 		}
-		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
-		if (firstWhere) {
-			firstWhere = false;
+
+		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		
+		if (statement != nullptr) {
+			for (auto& obj : m_metaObject->GetGenericDimensions()) {
+				CValue retValue; m_recordLine->GetValueByMetaID(obj->GetMetaID(), retValue);
+				IMetaObjectAttribute::SetValueAttribute(
+					obj,
+					retValue,
+					statement,
+					position
+				);
+			}
+			
+			IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+			if (resultSet != nullptr) {	
+				success = resultSet->Next();		
+				db_query->CloseResultSet(resultSet);
+			}
+		
+			db_query->CloseStatement(statement);
 		}
+
+		db_query->Commit();
 	}
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
-	if (statement == nullptr)
-		return false;
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		CValue retValue; m_recordLine->GetValueByMetaID(obj->GetMetaID(), retValue);
-		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			retValue,
-			statement,
-			position
-		);
-	}
-	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
-	if (resultSet == nullptr)
-		return false;
-	bool founded = false;
-	if (resultSet->Next())
-		founded = true;
-	db_query->CloseResultSet(resultSet);
-	db_query->CloseStatement(statement);
-	return founded;
+	return success;
 }
 
 bool IRecordManagerObject::ReadData()

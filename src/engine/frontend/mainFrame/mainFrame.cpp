@@ -118,9 +118,8 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 
 		CDialogDocChildFrame* subframe = new CDialogDocChildFrame(document, view, parent, wxID_ANY, document->GetTitle(), pos, size, style & ~wxCREATE_SDI_FRAME);
 		subframe->SetIcon(document->GetIcon());
-		subframe->Center();
-		subframe->Center();
 		subframe->SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
+		subframe->Center();
 		return subframe;
 	}
 

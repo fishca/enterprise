@@ -57,7 +57,7 @@ wxString IValueFrame::GetObjectTypeName() const
 bool IValueFrame::IsEditable() const
 {
 	const CValueForm* handler = GetOwnerForm();
-	if (handler != nullptr) 
+	if (handler != nullptr)
 		return handler->IsEditable();
 	return false;
 }
@@ -325,27 +325,32 @@ IVisualEditorNotebook* IValueFrame::FindVisualEditor() const
 wxObject* IValueFrame::GetWxObject() const
 {
 	CValueForm* const valueForm = GetOwnerForm();
-	if (valueForm == nullptr)
-		return nullptr;
+	if (valueForm != nullptr) {
 
-	//if run designer form search in own visualHost 
-	if (g_visualHostContext != nullptr) {
-		IVisualHost* visualEditor =
-			g_visualHostContext->GetVisualHost();
-		return visualEditor->GetWxObject((IValueFrame*)this);
+		CVisualDocument* const visualDoc = valueForm->GetVisualDocument();
+		if (visualDoc != nullptr) {
+
+			const CVisualView* visualView = visualDoc->GetFirstView();
+			const IVisualHost* visualHost = visualView ?
+				visualView->GetVisualHost() : nullptr;
+
+			if (visualHost == nullptr)
+				return nullptr;
+
+			return visualHost->GetWxObject((IValueFrame*)this);
+
+		}
+		else if (g_visualHostContext != nullptr) {  		
+
+			//if run designer form search in own visualHost 
+			const IVisualHost* visualHost =
+				g_visualHostContext->GetVisualHost();
+
+			return visualHost->GetWxObject((IValueFrame*)this);
+		}
 	}
 
-	CVisualDocument* const visualDoc = valueForm->GetVisualDocument();
-	if (visualDoc == nullptr)
-		return nullptr;
-
-	CVisualHost* const visualView = visualDoc->GetFirstView() ?
-		visualDoc->GetFirstView()->GetVisualHost() : nullptr;
-
-	if (visualView == nullptr)
-		return nullptr;
-
-	return visualView->GetWxObject((IValueFrame*)this);
+	return nullptr;
 }
 
 #include "backend/metaCollection/partial/commonObject.h"

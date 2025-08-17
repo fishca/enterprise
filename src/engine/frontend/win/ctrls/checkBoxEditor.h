@@ -30,6 +30,12 @@ class FRONTEND_API wxControlCheckboxCtrl :
 			wxStaticText::SetLabel(label);
 		}
 
+		virtual bool IsThisEnabled() const {
+			return m_isEnabled && !m_labelOrig.IsEmpty();
+		}
+
+	protected:
+
 		virtual wxSize DoGetBestClientSize() const override {
 			if (m_labelOrig.IsEmpty())
 				return wxSize(0, 0);

@@ -374,7 +374,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                         {
                             int icon = imageList->Add(registerData->GetIcon());
                             wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
-                            wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                            wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                                 icon, icon,
                                 itemData);
 
@@ -401,7 +401,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                         {
                             int icon = imageList->Add(registerData->GetIcon());
                             wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
-                            wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                            wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                                 icon, icon,
                                 itemData);
 
@@ -429,7 +429,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                             {
                                 int icon = imageList->Add(registerData->GetIcon());
                                 wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
-                                wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                                wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                                     icon, icon,
                                     itemData);
 
@@ -456,7 +456,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
                             {
                                 int icon = imageList->Add(registerData->GetIcon());
                                 wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
-                                wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                                wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                                     icon, icon,
                                     itemData);
 

@@ -18,25 +18,8 @@ void CVisualEditorNotebook::CreateVisualEditor(CMetaDocument* document, wxWindow
 
 void CVisualEditorNotebook::DestroyVisualEditor()
 {
-	//m_visualEditor->Destroy();
-	//m_codeEditor->Destroy();
-
 	wxAuiNotebook::Unbind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CVisualEditorNotebook::OnPageChanged, this);
 }
-
-//CVisualEditorNotebook* CVisualEditorNotebook::FindEditorByForm(CValueForm* valueForm)
-//{
-//	auto& it = std::find_if(ms_visualEditorArray.begin(), ms_visualEditorArray.end(),
-//		[valueForm](CVisualEditorNotebook* visualNotebook) {
-//			return valueForm == visualNotebook->GetValueForm();
-//		}
-//	);
-//
-//	if (it != ms_visualEditorArray.end())
-//		return *it;
-//
-//	return nullptr;
-//}
 
 bool CVisualEditorNotebook::Undo()
 {

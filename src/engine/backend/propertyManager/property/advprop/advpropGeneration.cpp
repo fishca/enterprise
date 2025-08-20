@@ -17,7 +17,7 @@ void wxPGGenerationProperty::FillByClsid(const class_identifier_t& clsid)
         IMetaData* metaData = metaGenericData->GetMetaData();
         wxASSERT(metaData);
         for (auto metaOwner : metaData->GetMetaObject(clsid)) {
-            m_choices.Add(metaOwner->GetSynonym(), metaOwner->GetIcon(), metaOwner->GetMetaID());
+            m_choices.Add(metaOwner->GetName(), metaOwner->GetIcon(), metaOwner->GetMetaID());
         }
     }
 }
@@ -87,7 +87,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
                     {
                         const int icon = imageList->Add(registerData->GetIcon());
                         wxTreeItemOptionData* itemData = new wxTreeItemOptionData(metaObject);
-                        wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                        wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                             icon, icon,
                             itemData);
 

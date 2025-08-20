@@ -160,12 +160,8 @@ CVisualDocument::CVisualDocument(CValueForm* valueForm)
 
 CVisualDocument::~CVisualDocument()
 {
-	if (m_valueForm != nullptr && m_valueForm->GetRefCount() > 1) {
+	if (m_valueForm != nullptr) 
 		m_valueForm->DecrRef();
-	}
-	else {
-		wxTheApp->ScheduleForDestruction(m_valueForm);
-	}
 
 	s_createdDocFormArray.erase(this);
 }

@@ -776,6 +776,9 @@
     <ClCompile Include="win\ctrls\checkboxEditor.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\dynamicBorder.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">

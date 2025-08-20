@@ -14,11 +14,17 @@
 
 wxIMPLEMENT_ABSTRACT_CLASS(IVisualHost, wxScrolledWindow)
 
+#if !defined(__WXGTK__ )
+#define __FREEZE_CONTROL__
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool IVisualHost::CreateVisualHost()
 {
 	const CValueForm* valueForm = GetValueForm();
 
-#if !defined(__WXGTK__ )
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
 	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
 #endif
@@ -62,7 +68,7 @@ bool IVisualHost::CreateVisualHost()
 		GetParentBackgroundWindow()->Show(false);
 	}
 
-#if !defined(__WXGTK__)
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Thaw();
 #endif
 
@@ -73,7 +79,7 @@ bool IVisualHost::UpdateVisualHost()
 {
 	const CValueForm* valueForm = GetValueForm();
 
-#if !defined(__WXGTK__ )
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
 	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
 #endif
@@ -103,7 +109,7 @@ bool IVisualHost::UpdateVisualHost()
 			try {
 				// we have to put the content valueForm panel as parentObject in order
 				// to SetSizeHints be called.
-				RefreshControl(child, GetBackgroundWindow(), GetFrameSizer(), true);
+				RefreshControl(child, GetBackgroundWindow(), GetFrameSizer());
 			}
 			catch (std::exception& ex) {
 				wxLogError(ex.what());
@@ -124,7 +130,7 @@ bool IVisualHost::UpdateVisualHost()
 
 	UpdateVirtualSize();
 
-#if !defined(__WXGTK__)
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Thaw();
 #endif
 
@@ -133,47 +139,43 @@ bool IVisualHost::UpdateVisualHost()
 
 bool IVisualHost::ClearVisualHost()
 {
-#if !defined(__WXGTK__ )
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
 	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
 #endif
 
-	const CValueForm* valueForm = GetValueForm();
-	wxASSERT(valueForm);
-
-	for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
-		IValueFrame* objChild = valueForm->GetChild(i);
-		DeleteRecursive(objChild, true);
-	}
+	CValueForm* valueForm = GetValueForm();
+	if (valueForm != nullptr) ClearControl(valueForm, true);
 
 	GetParentBackgroundWindow()->DestroyChildren();
 	GetParentBackgroundWindow()->SetSizer(nullptr); // *!*
 
-#if !defined(__WXGTK__)
+#if defined(__FREEZE_CONTROL__)
 	GetParentBackgroundWindow()->Thaw();
 #endif
 
 	return true;
 }
 
-IValueFrame* IVisualHost::GetObjectBase(wxObject* wxobject) const
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+IValueFrame* IVisualHost::GetObjectBase(const wxObject* wxobject) const
 {
 	if (nullptr == wxobject) {
 		wxLogError(_("wxObject was nullptr!"));
 		return nullptr;
 	}
 
-	auto obj = m_wxObjects.find(wxobject);
-	if (obj != m_wxObjects.end()) {
-		return obj->second;
+	for (auto& pair : m_baseObjects) {
+		if (pair.second == wxobject)
+			return pair.first;
 	}
-	else {
-		wxLogError(_("No corresponding IValueFrame for wxObject. Name: %s"), wxobject->GetClassInfo()->GetClassName());
-		return nullptr;
-	}
+
+	wxLogError(_("No corresponding IValueFrame for wxObject. Name: %s"), wxobject->GetClassInfo()->GetClassName());
+	return nullptr;
 }
 
-wxObject* IVisualHost::GetWxObject(IValueFrame* baseobject) const
+wxObject* IVisualHost::GetWxObject(const IValueFrame* baseobject) const
 {
 	if (baseobject == nullptr) {
 		wxLogError(_("baseobject was nullptr!"));
@@ -183,227 +185,16 @@ wxObject* IVisualHost::GetWxObject(IValueFrame* baseobject) const
 	if (baseobject->GetComponentType() == COMPONENT_TYPE_FRAME)
 		return GetFrameSizer();
 
-	auto obj = m_baseObjects.find(baseobject);
-	if (obj != m_baseObjects.end()) {
-		return obj->second;
+	for (auto& pair : m_baseObjects) {
+		if (pair.first == baseobject)
+			return pair.second;
 	}
-	else {
-		wxLogError(_("No corresponding wxObject for IValueFrame. Name: %s"), baseobject->GetClassName().c_str());
-		return nullptr;
-	}
+
+	wxLogError(_("No corresponding wxObject for IValueFrame. Name: %s"), baseobject->GetClassName().c_str());
+	return nullptr;
 }
 
-void IVisualHost::DeleteRecursive(IValueFrame* control, bool force)
-{
-	for (unsigned int i = 0; i < control->GetChildCount(); i++) {
-		DeleteRecursive(control->GetChild(i), force);
-	}
-
-	if (control->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-		wxWindow* controlWnd =
-			dynamic_cast<wxWindow*>(GetWxObject(control));
-		if (controlWnd != nullptr) {
-			wxWindow* controlParent = controlWnd->GetParent();
-			Cleanup(control, controlWnd);
-			RemoveControl(controlWnd, control);
-			controlWnd->DeletePendingEvents(); /*!!!*/
-			//controlWnd->DestroyChildren();
-			controlWnd->Destroy();
-			if (!force && controlParent != nullptr) {
-				controlParent->Layout();
-			}
-		}
-	}
-	else if (control->GetComponentType() == COMPONENT_TYPE_SIZER) {
-		wxSizer* controlSizer =
-			dynamic_cast<wxSizer*>(GetWxObject(control));
-
-		if (controlSizer != nullptr) {
-			IValueFrame* controlParent = control->GetParent();
-			Cleanup(control, controlSizer);
-			RemoveControl(controlSizer, control);
-			if (controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				controlParent = controlParent->GetParent();
-			}
-			wxSizer* controlParentSizer = nullptr;
-			if (controlParent->GetClassName() == wxT("notebookPage")) {
-				CPanelPage* pageWnd = dynamic_cast<CPanelPage*>(GetWxObject(controlParent));
-				wxASSERT(pageWnd); controlParentSizer = pageWnd->GetSizer();
-			}
-			else {
-				controlParentSizer =
-					dynamic_cast<wxSizer*>(GetWxObject(controlParent));
-			}
-			if (controlParentSizer != nullptr) {
-				controlParentSizer->Detach(controlSizer);
-			}
-			delete controlSizer;
-			if (!force && controlParentSizer != nullptr) {
-				controlParentSizer->Layout();
-			}
-		}
-	}
-	else {
-		wxObject* controlObj = GetWxObject(control);
-		if (controlObj != nullptr) {
-			Cleanup(control, controlObj);
-			RemoveControl(controlObj, control);
-			wxDELETE(controlObj);
-		}
-	}
-}
-
-void IVisualHost::CreateControl(IValueFrame* obj, IValueFrame* parent, bool firstCreated)
-{
-	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
-
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
-	}
-	else {
-		parentObj = GetWxObject(objParent);
-	}
-
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
-	}
-	else {
-		windowObj = dynamic_cast<wxWindow*>(parentObj);
-	}
-
-	IValueFrame* nextParent = objParent;
-	while (!windowObj && nextParent) {
-		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-			windowObj =
-				dynamic_cast<wxWindow*>(GetWxObject(nextParent));
-			break;
-		}
-		nextParent = nextParent->GetParent();
-	}
-
-	if (windowObj == nullptr)
-		windowObj = hostWnd;
-
-#if !defined(__WXGTK__ )
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
-
-	//first create elements 
-	GenerateControl(objControl, windowObj, parentObj, firstCreated);
-
-	//and update it 
-	RefreshControl(objControl, windowObj, parentObj);
-
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
-
-	UpdateHostSize();
-	UpdateVirtualSize();
-
-#if !defined(__WXGTK__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
-}
-
-void IVisualHost::UpdateControl(IValueFrame* obj, IValueFrame* parent)
-{
-	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
-
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
-	{
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
-	}
-	else
-	{
-		parentObj = GetWxObject(objParent);
-	}
-
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
-	}
-	else
-	{
-		windowObj = dynamic_cast<wxWindow*>(parentObj);
-	}
-
-	IValueFrame* nextParent = objParent;
-	while (!windowObj && nextParent)
-	{
-		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-			windowObj = dynamic_cast<wxWindow*>(GetWxObject(nextParent));
-			break;
-		}
-		nextParent = nextParent->GetParent();
-	}
-
-	if (!windowObj) windowObj = hostWnd;
-
-#if !defined(__WXGTK__ )
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
-
-	RefreshControl(objControl, windowObj, parentObj);
-
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
-
-	UpdateHostSize();
-	UpdateVirtualSize();
-
-#if !defined(__WXGTK__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
-}
-
-void IVisualHost::RemoveControl(IValueFrame* obj, IValueFrame* parent)
-{
-	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
-	wxObject* parentObj = nullptr;
-
-	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
-	{
-		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
-		objParent = objParent->GetParent();
-	}
-	else
-	{
-		parentObj = GetWxObject(objParent);
-	}
-
-#if !defined(__WXGTK__ )
-	GetParentBackgroundWindow()->Freeze();   // Prevent flickering on wx 2.8,
-	// Causes problems on wx 2.9 in wxGTK (e.g. wxNoteBook objects)
-#endif
-
-	DeleteRecursive(objControl);
-
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
-	{
-		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
-		staticBoxSizer->Layout();
-	}
-
-	UpdateHostSize();
-	UpdateVirtualSize();
-
-#if !defined(__WXGTK__)
-	GetParentBackgroundWindow()->Thaw();
-#endif
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated)
 {
@@ -457,7 +248,7 @@ void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject
 			}
 
 			// Associate the wxObject* with the IValueFrame*
-			visualHost->AppendControl(createdObject, obj);
+			visualHost->AppendInnerControl(obj, createdObject);
 
 			// Access to collapsible pane
 			wxCollapsiblePane* collpane = wxDynamicCast(createdObject, wxCollapsiblePane);
@@ -482,7 +273,7 @@ void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject
 	CControlCreator::CreateControl(this, obj, wxparent, parentObject, firstCreated);
 }
 
-void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool refreshForm)
+void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject)
 {
 	class CControlUpdater
 	{
@@ -570,24 +361,253 @@ void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject*
 	};
 
 	CControlUpdater::UpdateControl(this, obj, wxparent, parentObject);
+}
 
-	if (!refreshForm) CalculateLabelSize(obj);
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void IVisualHost::CreateControl(IValueFrame* obj, IValueFrame* parent, bool firstCreated)
+{
+	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
+	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
+
+	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
+		objParent = objParent->GetParent();
+	}
+	else {
+		parentObj = GetWxObject(objParent);
+	}
+
+	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
+		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
+		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
+	}
+	else {
+		windowObj = dynamic_cast<wxWindow*>(parentObj);
+	}
+
+	IValueFrame* nextParent = objParent;
+	while (!windowObj && nextParent) {
+		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+			windowObj =
+				dynamic_cast<wxWindow*>(GetWxObject(nextParent));
+			break;
+		}
+		nextParent = nextParent->GetParent();
+	}
+
+	if (windowObj == nullptr)
+		windowObj = hostWnd;
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Freeze();
+#endif
+
+	//first create elements 
+	GenerateControl(objControl, windowObj, parentObj, firstCreated);
+
+	//and update it 
+	RefreshControl(objControl, windowObj, parentObj);
+
+	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
+		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
+		staticBoxSizer->Layout();
+	}
+
+	CalculateLabelSize(obj);
+	UpdateHostSize();
+	UpdateVirtualSize();
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Thaw();
+#endif
+}
+
+void IVisualHost::UpdateControl(IValueFrame* obj, IValueFrame* parent)
+{
+	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
+	wxWindow* windowObj = nullptr; wxObject* parentObj = nullptr; wxWindow* hostWnd = GetBackgroundWindow();
+
+	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+	{
+		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
+		objParent = objParent->GetParent();
+	}
+	else
+	{
+		parentObj = GetWxObject(objParent);
+	}
+
+	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	{
+		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
+		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
+	}
+	else
+	{
+		windowObj = dynamic_cast<wxWindow*>(parentObj);
+	}
+
+	IValueFrame* nextParent = objParent;
+	while (!windowObj && nextParent)
+	{
+		if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+			windowObj = dynamic_cast<wxWindow*>(GetWxObject(nextParent));
+			break;
+		}
+		nextParent = nextParent->GetParent();
+	}
+
+	if (!windowObj) windowObj = hostWnd;
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Freeze();
+#endif
+
+	RefreshControl(objControl, windowObj, parentObj);
+
+	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	{
+		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
+		staticBoxSizer->Layout();
+	}
+
+	CalculateLabelSize(obj);
+	UpdateHostSize();
+	UpdateVirtualSize();
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Thaw();
+#endif
+}
+
+void IVisualHost::RemoveControl(IValueFrame* obj, IValueFrame* parent)
+{
+	IValueFrame* objControl = obj; IValueFrame* objParent = parent ? parent : obj->GetParent();
+	wxObject* parentObj = nullptr;
+
+	if (objParent && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
+	{
+		objControl = objParent; parentObj = GetWxObject(objParent->GetParent());
+		objParent = objParent->GetParent();
+	}
+	else
+	{
+		parentObj = GetWxObject(objParent);
+	}
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Freeze();
+#endif
+
+	ClearControl(objControl);
+
+	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	{
+		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
+		staticBoxSizer->Layout();
+	}
+
+	CalculateLabelSize(obj);
+	UpdateHostSize();
+	UpdateVirtualSize();
+
+#if defined(__FREEZE_CONTROL__)
+	GetParentBackgroundWindow()->Thaw();
+#endif
 }
 
 #include "frontend/win/ctrls/dynamicBorder.h"
 
+void IVisualHost::ClearControl(IValueFrame* control, bool force)
+{
+	class CControlCleaner {
+
+		static inline void DeleteObject(IVisualHost* visualHost, IValueFrame* control, bool force) {
+
+			if (control->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+
+				wxWindow* controlWnd =
+					dynamic_cast<wxWindow*>(visualHost->GetWxObject(control));
+
+				if (controlWnd != nullptr) {
+					wxWindow* controlParent = controlWnd->GetParent();
+					visualHost->Cleanup(control, controlWnd);
+					visualHost->RemoveInnerControl(control);
+					controlWnd->DeletePendingEvents(); /*!!!*/
+					//controlWnd->DestroyChildren();
+					controlWnd->Destroy();
+					if (!force && controlParent != nullptr) {
+						controlParent->Layout();
+					}
+				}
+			}
+			else if (control->GetComponentType() == COMPONENT_TYPE_SIZER) {
+
+				wxSizer* controlSizer =
+					dynamic_cast<wxSizer*>(visualHost->GetWxObject(control));
+
+				if (controlSizer != nullptr) {
+					IValueFrame* controlParent = control->GetParent();
+					visualHost->Cleanup(control, controlSizer);
+					visualHost->RemoveInnerControl(control);
+					if (controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+						controlParent = controlParent->GetParent();
+					}
+					wxSizer* controlParentSizer = nullptr;
+					if (controlParent->GetClassName() == wxT("notebookPage")) {
+						CPanelPage* pageWnd = dynamic_cast<CPanelPage*>(visualHost->GetWxObject(controlParent));
+						wxASSERT(pageWnd); controlParentSizer = pageWnd->GetSizer();
+					}
+					else {
+						controlParentSizer =
+							dynamic_cast<wxSizer*>(visualHost->GetWxObject(controlParent));
+					}
+					if (controlParentSizer != nullptr) {
+						controlParentSizer->Detach(controlSizer);
+					}
+					wxDELETE(controlSizer);
+					if (!force && controlParentSizer != nullptr) {
+						controlParentSizer->Layout();
+					}
+				}
+			}
+			else if (control->GetComponentType() != COMPONENT_TYPE_FRAME) {
+				wxObject* controlObj = visualHost->GetWxObject(control);
+				if (controlObj != nullptr) {
+					visualHost->Cleanup(control, controlObj);
+					visualHost->RemoveInnerControl(control);
+					wxDELETE(controlObj);
+				}
+			}
+		}
+
+	public:
+
+		static inline void ClearControl(IVisualHost* visualHost, IValueFrame* control, bool force) {
+
+			for (unsigned int i = 0; i < control->GetChildCount(); i++) {
+				ClearControl(visualHost,
+					control->GetChild(i), force
+				);
+			}
+
+			DeleteObject(visualHost, control, force);
+		}
+	};
+
+	CControlCleaner::ClearControl(this, control, force);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 {
-	const CValueForm* valueForm = GetValueForm();
-	if (valueForm == nullptr) return false;
-
-	static wxScreenDC screenDC;
 	static wxCoord widthTextMax, heightTextTotal;
 
-	class CCalculateSize {
+	class CControlCalculateSize {
 
-		static inline void Calculate(IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
+		static inline void Calculate(const IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
 
 			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 				child = child->GetChild(0);
@@ -598,44 +618,11 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 			wxObject* wx_object = child->GetWxObject();
 
 			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			IDynamicBorder* childCtrl = dynamic_cast<IDynamicBorder*>(wx_object);
+			wxControlDynamicBorder* childCtrl = dynamic_cast<wxControlDynamicBorder*>(wx_object);
 
 			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-				
-				wxStaticText* childStaticText = childCtrl->GetStaticText();
-				
-				if (childStaticText->IsThisEnabled()) {
-
-					screenDC.SetFont(childStaticText->GetFont());
-					screenDC.GetMultiLineTextExtent(childStaticText->GetLabel(), &widthTextMax, &heightTextTotal);
-
-					// This extra pixel is a hack we use to ensure that a wxStaticText
-					// vertically centered around the same position as a wxTextCtrl shows its
-					// text on exactly the same baseline. It is not clear why is this needed
-					// nor even whether this works in all cases, but it does work, at least
-					// with the default fonts, under Windows XP, 7 and 8, so just use it for
-					// now.
-					//
-					// In the future we really ought to provide a way for each of the controls
-					// to provide information about the position of the baseline for the text
-					// it shows and use this information in the sizer code when centering the
-					// controls vertically, otherwise we simply can't ensure that the text is
-					// always on the same line, e.g. even with this hack wxComboBox text is
-					// still not aligned to the same position.
-					heightTextTotal += 1;
-
-					// And this extra pixel is an even worse hack which is somehow needed to
-					// avoid the problem with the native control now showing any text at all
-					// for some particular width values: e.g. without this, using " AJ" as a
-					// label doesn't show anything at all on the screen, even though the
-					// control text is properly set and it has rougly the correct (definitely
-					// not empty) size. This looks like a bug in the native control because it
-					// really should show at least the first characters, but it's not clear
-					// what else can we do about it than just add this extra pixel.
-					widthTextMax++;
-
-					if (widthTextMax > maxX) maxX = widthTextMax;
-				}
+				childCtrl->CalculateLabelSize(&widthTextMax, &heightTextTotal);
+				if (widthTextMax > maxX) maxX = widthTextMax;
 			}
 
 			if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
@@ -648,27 +635,24 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 		};
 
 		static inline void Apply(IValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
-			IValueFrame* childParent = child->GetParent();
+
 			if (child->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 				child = child->GetChild(0);
 			}
+
 			wxASSERT(child);
 
 			wxObject* wx_object = child->GetWxObject();
 
 			wxBoxSizer* sizer = dynamic_cast<wxBoxSizer*>(wx_object);
-			IDynamicBorder* childCtrl = dynamic_cast<IDynamicBorder*>(wx_object);
+			wxControlDynamicBorder* childCtrl = dynamic_cast<wxControlDynamicBorder*>(wx_object);
 
 			int currMax = maxX;
 
-			if (maxX != wxNOT_FOUND ||
-				parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
-				Calculate(childParent, sizer ? sizer : parentSizer, maxX);
-			}
-
-			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
-				childCtrl->BeforeCalc();
-			}
+			//if (maxX != wxNOT_FOUND ||
+			//	parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
+			//	Calculate(child, sizer ? sizer : parentSizer, maxX);
+			//}
 
 			for (unsigned int idx = 0; idx < child->GetChildCount(); idx++) {
 				Apply(child->GetChild(idx), sizer ? sizer : parentSizer, currMax);
@@ -676,47 +660,40 @@ bool IVisualHost::CalculateLabelSize(IValueFrame* control)
 
 			if (childCtrl != nullptr && childCtrl->AllowCalc()) {
 
-				wxStaticText* childStaticText = childCtrl->GetStaticText();
-
 				if (maxX != wxNOT_FOUND) {
-					childStaticText->SetMinSize(wxSize(maxX, wxNOT_FOUND));
+					childCtrl->ApplyLabelSize(wxSize(maxX, wxNOT_FOUND));
 				}
 				else {
-					childStaticText->SetMinSize(wxDefaultSize);
+					childCtrl->ApplyLabelSize(wxDefaultSize);
 				}
 
 				if (parentSizer->GetOrientation() == wxOrientation::wxHORIZONTAL) {
 					maxX = wxNOT_FOUND;
 				}
-
-				childCtrl->AfterCalc();
 			}
 		};
 
 	public:
 
-		static inline bool CalculateAndApply(const CValueForm* valueForm, IDynamicBorder* control = nullptr) {
+		static inline bool CalculateAndApply(const CValueForm* control) {
 
-			if (control != nullptr && control->AllowCalc()) {
-				control->BeforeCalc();
-			}
-
-			wxBoxSizer* parentSizer = dynamic_cast<wxBoxSizer*>(valueForm->GetWxObject());
 			int currMaxX = 0;
-			for (unsigned int idx = 0; idx < valueForm->GetChildCount(); idx++) {
-				Apply(valueForm->GetChild(idx), parentSizer, currMaxX);
+
+			wxBoxSizer* parentSizer = dynamic_cast<wxBoxSizer*>(control->GetWxObject());
+
+			if (parentSizer->GetOrientation() == wxOrientation::wxVERTICAL) {
+				Calculate(control, parentSizer, currMaxX);
 			}
 
-			if (control != nullptr && control->AllowCalc()) {
-				control->AfterCalc();
+			for (unsigned int idx = 0; idx < control->GetChildCount(); idx++) {
+				Apply(control->GetChild(idx), parentSizer, currMaxX);
 			}
 
 			return true;
 		}
 	};
 
-	return CCalculateSize::CalculateAndApply(valueForm,
-		dynamic_cast<IDynamicBorder*>(control));
+	return CControlCalculateSize::CalculateAndApply(GetValueForm());
 }
 
 void IVisualHost::UpdateVirtualSize()
@@ -738,6 +715,16 @@ std::set<IVisualEditorNotebook*> IVisualEditorNotebook::ms_visualEditorArray = {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+IVisualEditorNotebook::IVisualEditorNotebook()
+{
+	ms_visualEditorArray.insert(this);
+}
+
+IVisualEditorNotebook::~IVisualEditorNotebook()
+{
+	ms_visualEditorArray.erase(this);
+}
+
 IVisualEditorNotebook* IVisualEditorNotebook::FindEditorByForm(const IValueFrame* valueForm)
 {
 	for (auto& visualEditor : ms_visualEditorArray) {
@@ -746,14 +733,4 @@ IVisualEditorNotebook* IVisualEditorNotebook::FindEditorByForm(const IValueFrame
 	}
 
 	return nullptr;
-}
-
-void IVisualEditorNotebook::CreateVisualEditor()
-{
-	ms_visualEditorArray.insert(this);
-}
-
-void IVisualEditorNotebook::DestroyVisualEditor()
-{
-	ms_visualEditorArray.erase(this);
 }

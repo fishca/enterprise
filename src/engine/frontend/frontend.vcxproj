@@ -260,6 +260,7 @@
     <ClCompile Include="win\ctrls\checkboxEditor.cpp" />
     <ClCompile Include="win\ctrls\checktree.cpp" />
     <ClCompile Include="win\ctrls\dataView.cpp" />
+    <ClCompile Include="win\ctrls\dynamicBorder.cpp" />
     <ClCompile Include="win\ctrls\textEditor.cpp" />
     <ClCompile Include="win\ctrls\treelistctrl.cpp" />
     <ClCompile Include="win\dlgs\about.cpp" />

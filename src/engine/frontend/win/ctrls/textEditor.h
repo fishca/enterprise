@@ -29,34 +29,18 @@ class FRONTEND_API wxControlEditorCtrl :
 	public wxCompositeWindow<wxNavigationEnabled<wxWindow>>,
 	public wxTextCtrlIface,
 
-	public IDynamicBorder {
+	public wxControlDynamicBorder {
 
-	class wxControlStaticTextCtrl : public wxStaticText {
+	class wxControlStaticTextCtrl : public wxDynamicStaticText {
 	public:
 
 		wxControlStaticTextCtrl(wxWindow* parent,
-			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr))
-			: wxStaticText(parent, id, label, pos, size, style, name)
+			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
+			wxDynamicStaticText(parent, id, label, pos, size, style, name)
 		{
 			// Ensure that our best size is recomputed using our overridden
 			// DoGetBestSize().
 			InvalidateBestSize();
-		}
-
-		virtual void SetLabel(const wxString& label) {
-			wxStaticText::SetLabel(label);
-		}
-
-		virtual bool IsThisEnabled() const {
-			return m_isEnabled && !m_labelOrig.IsEmpty();
-		}
-
-	protected:
-
-		virtual wxSize DoGetBestClientSize() const override {
-			if (m_labelOrig.IsEmpty())
-				return wxSize(0, 0);
-			return wxStaticText::DoGetBestClientSize();
 		}
 	};
 
@@ -68,10 +52,10 @@ class FRONTEND_API wxControlEditorCtrl :
 	public:
 
 		wxControlTextEditorCtrl(wxControlEditorCtrl* editor, const wxString& value, long style = 0)
-			: wxTextCtrl(editor, wxID_ANY, value, wxDefaultPosition, wxDefaultSize,
-				(style & ~wxBORDER_MASK) | wxBORDER_SIMPLE | wxTE_PROCESS_ENTER | wxTE_NO_VSCROLL)
-		{
-			m_editor = editor;
+			: m_editor(editor) {
+
+			Create(editor, wxID_ANY, value, wxDefaultPosition, wxDefaultSize,
+				(style & ~wxBORDER_MASK) | wxBORDER_SIMPLE | wxTE_PROCESS_ENTER | wxTE_NO_VSCROLL);
 
 			// Ensure that our best size is recomputed using our overridden
 			// DoGetBestSize().
@@ -225,11 +209,10 @@ class FRONTEND_API wxControlEditorCtrl :
 		class wxControlEditorButtonCtrl : public wxButton
 		{
 		public:
-			wxControlEditorButtonCtrl(wxControlCompositeEditorCtrl* editor, int eventType, const wxString& val)
-				: wxButton(editor, wxID_ANY, val, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_EXACTFIT),
-				m_editor(editor),
-				m_eventType(eventType)
+			wxControlEditorButtonCtrl(wxControlCompositeEditorCtrl* editor, int eventType, const wxString& val) :
+				m_editor(editor), m_eventType(eventType)
 			{
+				Create(editor, wxID_ANY, val, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_EXACTFIT);
 				SetBackgroundStyle(wxBG_STYLE_PAINT);
 			}
 
@@ -624,10 +607,7 @@ public:
 	bool GetTextEditMode() const { return m_textEditMode; }
 
 	virtual void SetLabel(const wxString& label) {
-		if (m_label != nullptr) {
-			m_label->SetLabel(label);
-			m_label->Wrap(m_label->GetClientSize().GetWidth());
-		}
+		if (m_label != nullptr) m_label->SetLabel(label);
 	}
 
 	virtual wxString GetLabel() const { return m_label != nullptr ? m_label->GetLabel() : wxEmptyString; }
@@ -836,13 +816,16 @@ public:
 
 	virtual bool ShouldInheritColours() const override;
 
+	//dynamic border 
+	virtual wxDynamicStaticText* GetStaticText() const { return m_label; }
+	virtual wxWindow* GetControl() const { return m_text; }
 	virtual wxSize GetControlSize() const {
 		return m_text->GetSize() +
 			m_winButton->GetSize();
 	}
 
-	virtual wxStaticText* GetStaticText() const { return m_label; }
-	virtual wxWindow* GetControl() const { return m_text; }
+	virtual void CalculateLabelSize(wxCoord* w, wxCoord* h) const;
+	virtual void ApplyLabelSize(const wxSize& s);
 
 protected:
 

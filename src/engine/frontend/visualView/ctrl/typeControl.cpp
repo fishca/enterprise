@@ -169,7 +169,7 @@ bool ITypeControlFactory::QuickChoice(IControlFrame* ownerValue, const class_ide
 
 			m_selListBox = new wxQuickListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-			IDynamicBorder* dynamicBorder = dynamic_cast<IDynamicBorder*>(parent);
+			wxControlDynamicBorder* dynamicBorder = dynamic_cast<wxControlDynamicBorder*>(parent);
 			if (dynamicBorder != nullptr) {
 				wxWindow* innerControl = dynamicBorder->GetControl();
 				wxASSERT(innerControl);
@@ -214,7 +214,7 @@ bool ITypeControlFactory::QuickChoice(IControlFrame* ownerValue, const class_ide
 		}
 
 		virtual void Popup(wxWindow* focus = nullptr) override {
-			IDynamicBorder* innerBorder = dynamic_cast<IDynamicBorder*>(m_parent);
+			wxControlDynamicBorder* innerBorder = dynamic_cast<wxControlDynamicBorder*>(m_parent);
 			const wxSize& controlSize = (innerBorder != nullptr) ?
 				innerBorder->GetControlSize() : m_parent->GetSize();
 			if (m_selListBox->GetCount() > 5)
@@ -318,7 +318,7 @@ void ITypeControlFactory::QuickChoice(IControlFrame* controlValue, CValue& newVa
 
 			m_selListBox = new wxQuickListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-			IDynamicBorder* dynamicBorder = dynamic_cast<IDynamicBorder*>(parent);
+			wxControlDynamicBorder* dynamicBorder = dynamic_cast<wxControlDynamicBorder*>(parent);
 			if (dynamicBorder != nullptr) {
 				wxWindow* innerControl = dynamicBorder->GetControl();
 				wxASSERT(innerControl);
@@ -382,7 +382,7 @@ void ITypeControlFactory::QuickChoice(IControlFrame* controlValue, CValue& newVa
 		}
 
 		virtual void Popup(wxWindow* focus = nullptr) override {
-			IDynamicBorder* innerBorder = dynamic_cast<IDynamicBorder*>(m_parent);
+			wxControlDynamicBorder* innerBorder = dynamic_cast<wxControlDynamicBorder*>(m_parent);
 			const wxSize& controlSize = (innerBorder != nullptr) ?
 				innerBorder->GetControlSize() : m_parent->GetSize();
 			if (m_selListBox->GetCount() > 5)

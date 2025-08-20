@@ -49,20 +49,13 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetValueForm(CValu
 CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::~CVisualEditorHost()
 {
 	CValueForm* valueForm = m_formHandler->GetValueForm();
-
-	if (valueForm != nullptr) {
-		for (unsigned int i = 0; i < valueForm->GetChildCount(); i++) {
-			IValueFrame* objChild = valueForm->GetChild(i);
-			wxASSERT(objChild);
-			DeleteRecursive(objChild, true);
-		}
-	}
+	if (valueForm != nullptr)
+		ClearControl(valueForm, true);
 
 	m_back->GetFrameContentPanel()->DestroyChildren();
 	m_back->GetFrameContentPanel()->SetSizer(nullptr); // *!*
 
 	DestroyChildren();
-
 	m_formHandler->RemoveHandler(GetEventHandler());
 }
 
@@ -112,16 +105,16 @@ bool CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnLeftClickFromApp
 {
 	wxWindow* wnd = currentWindow;
 	while (wnd != nullptr) {
-		std::map<wxObject*, IValueFrame*>::iterator founded = m_wxObjects.find(wnd);
-		if (founded != m_wxObjects.end()) {
+		IValueFrame* founded = GetObjectBase(wnd);
+		if (founded != nullptr) {
 			IValueFrame* oldObj = m_formHandler->GetSelectedObject();
 			wxASSERT(oldObj);
-			IValueFrame* m_selObj = founded->second;
-			wxASSERT(m_selObj);
+			IValueFrame* selObj = founded;
+			wxASSERT(selObj);
 			wxObject* oldWxObj = oldObj->GetWxObject();
-			wxObject* selWxObj = m_selObj->GetWxObject();
-			if (founded->second != oldObj->GetParent())
-				m_formHandler->SelectObject(founded->second);
+			wxObject* selWxObj = selObj->GetWxObject();
+			if (founded != oldObj->GetParent())
+				m_formHandler->SelectObject(founded);
 			break;
 		}
 		wnd = wnd->GetParent();
@@ -134,12 +127,12 @@ bool CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnRightClickFromAp
 {
 	wxWindow* wnd = currentWindow;
 	while (wnd != nullptr) {
-		std::map<wxObject*, IValueFrame*>::iterator founded = m_wxObjects.find(wnd);
-		if (founded != m_wxObjects.end()) {
-			if (founded->second != m_formHandler->GetSelectedObject()) {
-				m_formHandler->SelectObject(founded->second);
+		IValueFrame* founded = GetObjectBase(wnd);
+		if (founded != nullptr) {
+			if (founded != m_formHandler->GetSelectedObject()) {
+				m_formHandler->SelectObject(founded);
 			}
-			CVisualEditorItemPopupMenu* menu = new CVisualEditorItemPopupMenu(m_formHandler, currentWindow, founded->second);
+			CVisualEditorItemPopupMenu* menu = new CVisualEditorItemPopupMenu(m_formHandler, currentWindow, founded);
 			menu->UpdateUI(menu);
 			currentWindow->PopupMenu(menu, event.GetPosition());
 			break;
@@ -396,7 +389,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const w
 {
 	const CValueForm* handler = m_formHandler->GetValueForm();
 	if (strCaption.IsEmpty()) {
-		const ISourceDataObject *srcObject = handler->GetSourceObject(); 
+		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr) {
 			const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
 			const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();

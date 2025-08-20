@@ -19,7 +19,7 @@ void wxPGRecordProperty::FillByClsid(const class_identifier_t& clsid)
         for (auto metaRecorder : metaData->GetMetaObject(clsid)) {
             IMetaObjectRegisterData* registerData = dynamic_cast<IMetaObjectRegisterData*>(metaRecorder);
             if (registerData == nullptr || !registerData->HasRecorder()) continue;
-            m_choices.Add(registerData->GetSynonym(), registerData->GetIcon(), registerData->GetMetaID());
+            m_choices.Add(registerData->GetName(), registerData->GetIcon(), registerData->GetMetaID());
         }
     }
 }
@@ -88,7 +88,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
                 if (registerData != nullptr && registerData->HasRecorder()) {
                     const int icon = imageList->Add(registerData->GetIcon());
                     wxTreeItemOptionData* itemData = new wxTreeItemOptionData(metaObject);
-                    wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetSynonym(),
+                    wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                         icon, icon,
                         itemData);
                     if (data != nullptr) {

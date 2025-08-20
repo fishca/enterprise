@@ -342,3 +342,18 @@ bool wxControlEditorCtrl::ShouldInheritColours() const
 {
 	return true;
 }
+
+// ----------------------------------------------------------------------------
+// label
+// ----------------------------------------------------------------------------
+
+void wxControlEditorCtrl::CalculateLabelSize(wxCoord* w, wxCoord* h) const
+{
+	m_label->SetMinSize(wxDefaultSize);
+	m_label->GetBestSize(w, h);
+}
+
+void wxControlEditorCtrl::ApplyLabelSize(const wxSize& s)
+{
+	m_label->SetMinSize(s);
+}

@@ -138,5 +138,6 @@ CVisualEditorNotebook::CVisualEditor::~CVisualEditor()
 
 	if (m_valueForm != nullptr) 
 		m_valueForm->DecrRef();
+	
 	wxDELETE(m_cmdProc);
 }

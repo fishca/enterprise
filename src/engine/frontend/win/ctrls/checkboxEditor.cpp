@@ -30,3 +30,18 @@ wxWindowList wxControlCheckboxCtrl::GetCompositeWindowParts() const
 	parts.push_back(m_checkBox);
 	return parts;
 }
+
+// ----------------------------------------------------------------------------
+// label
+// ----------------------------------------------------------------------------
+
+void wxControlCheckboxCtrl::CalculateLabelSize(wxCoord* w, wxCoord* h) const
+{
+	m_label->SetMinSize(wxDefaultSize);
+	m_label->GetBestSize(w, h);
+}
+
+void wxControlCheckboxCtrl::ApplyLabelSize(const wxSize& s)
+{
+	m_label->SetMinSize(s);
+}

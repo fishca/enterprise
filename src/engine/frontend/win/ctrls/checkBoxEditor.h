@@ -12,38 +12,22 @@
 class FRONTEND_API wxControlCheckboxCtrl :
 
 	public wxCompositeWindow<wxNavigationEnabled<wxWindow>>,
-	public IDynamicBorder {
+	public wxControlDynamicBorder {
 
-	class wxControlStaticTextCtrl : public wxStaticText {
+	class wxControlStaticTextCtrl : public wxDynamicStaticText {
 	public:
 
 		wxControlStaticTextCtrl(wxWindow* parent,
-			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr))
-			: wxStaticText(parent, id, label, pos, size, style, name)
+			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
+			wxDynamicStaticText(parent, id, label, pos, size, style, name)
 		{
 			// Ensure that our best size is recomputed using our overridden
 			// DoGetBestSize().
 			InvalidateBestSize();
 		}
-
-		virtual void SetLabel(const wxString& label) {
-			wxStaticText::SetLabel(label);
-		}
-
-		virtual bool IsThisEnabled() const {
-			return m_isEnabled && !m_labelOrig.IsEmpty();
-		}
-
-	protected:
-
-		virtual wxSize DoGetBestClientSize() const override {
-			if (m_labelOrig.IsEmpty())
-				return wxSize(0, 0);
-			return wxStaticText::DoGetBestClientSize();
-		}
 	};
 
-	wxStaticText* m_label;
+	wxDynamicStaticText* m_label;
 	wxCheckBox* m_checkBox;
 	wxAlignment m_align;
 
@@ -110,7 +94,7 @@ public:
 		if (!m_checkBox)
 			return;
 
-		const wxSize sizeTotal = GetClientSize();
+		const wxSize sizeTotal = GetBestSize();
 		int width = sizeTotal.x,
 			height = sizeTotal.y;
 
@@ -154,9 +138,13 @@ public:
 		return m_align == wxAlignment::wxALIGN_LEFT;
 	};
 
-	virtual wxSize GetControlSize() const { return m_checkBox->GetSize(); }
-	virtual wxStaticText* GetStaticText() const { return m_label; }
+	//dynamic border 
+	virtual wxDynamicStaticText* GetStaticText() const { return m_label; }
 	virtual wxWindow* GetControl() const { return m_checkBox; }
+	virtual wxSize GetControlSize() const { return m_checkBox->GetSize(); }
+
+	virtual void CalculateLabelSize(wxCoord* w, wxCoord* h) const;
+	virtual void ApplyLabelSize(const wxSize& s);
 
 protected:
 

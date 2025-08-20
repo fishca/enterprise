@@ -33,11 +33,10 @@ public:
 		wxScrolledWindow::SetScrollRate(5, 5);
 	}
 
-	virtual ~IVisualHost() { /*ClearVisualHost();*/ }
+	virtual ~IVisualHost() {/* ClearVisualHost(); */ }
 
-	IValueFrame* GetObjectBase(wxObject* wxobject) const;
-	wxObject* GetWxObject(IValueFrame* baseobject) const;
-
+	IValueFrame* GetObjectBase(const wxObject* wxobject) const;
+	wxObject* GetWxObject(const IValueFrame* baseobject) const;
 	wxSizer* GetFrameSizer() const { return GetBackgroundWindow()->GetSizer(); }
 
 	bool CreateAndUpdateVisualHost() {
@@ -66,6 +65,14 @@ protected:
 
 	virtual void UpdateHostSize() {}
 
+private:
+
+	//Generate component 
+	void GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
+
+	//Update component
+	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject);
+
 protected:
 
 	friend class CValueTableBox;
@@ -84,14 +91,8 @@ protected:
 	//Remove control
 	void RemoveControl(IValueFrame* obj, IValueFrame* parent = nullptr);
 
-	//Generate component 
-	void GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated = false);
-
-	//Update component
-	void RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool refreshForm = false);
-
 	// Give components an opportunity to cleanup
-	void DeleteRecursive(IValueFrame* control, bool force = false);
+	void ClearControl(IValueFrame* control, bool force = false);
 
 	// Calculate label size for static text
 	bool CalculateLabelSize(IValueFrame* control = nullptr);
@@ -146,21 +147,18 @@ protected:
 
 private:
 
-	inline void AppendControl(wxObject* wx_object, IValueFrame* control) {
-		m_wxObjects.insert_or_assign(wx_object, control);
+	inline void AppendInnerControl(IValueFrame* control, wxObject* wx_object) {
 		m_baseObjects.insert_or_assign(control, wx_object);
 	}
 
-	inline void RemoveControl(wxObject* wx_object, IValueFrame* control) {
-		m_wxObjects.erase(wx_object);
+	inline void RemoveInnerControl(IValueFrame* control) {
 		m_baseObjects.erase(control);
 	}
 
 protected:
 
 	//controls
-	std::map<wxObject*, IValueFrame*> m_wxObjects;
-	std::map<IValueFrame*, wxObject* > m_baseObjects;
+	std::unordered_map<IValueFrame*, wxObject* > m_baseObjects;
 };
 
 class FRONTEND_API IVisualEditorNotebook {
@@ -169,8 +167,8 @@ public:
 
 	static IVisualEditorNotebook* FindEditorByForm(const IValueFrame* valueForm);
 
-	IVisualEditorNotebook() { CreateVisualEditor(); }
-	virtual ~IVisualEditorNotebook() { DestroyVisualEditor(); }
+	IVisualEditorNotebook();
+	virtual ~IVisualEditorNotebook();
 
 	virtual IVisualHost* GetVisualHost() const = 0;
 
@@ -192,10 +190,6 @@ public:
 	virtual void RefreshTree() = 0;
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const = 0;
-
-private:
-	void CreateVisualEditor();
-	void DestroyVisualEditor();
 };
 
 #define g_visualHostContext FindVisualEditor()

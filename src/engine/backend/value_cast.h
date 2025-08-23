@@ -7,46 +7,60 @@
 //*                                                           value casting                                                           *
 //*************************************************************************************************************************************
 
-template <typename retType,
-	typename retRef = retType* >
-class value_cast {
-	CValue* m_castValue;
-public:
-
-	operator retRef() const {
-		return cast_value();
-	}
-
-	explicit value_cast(const CValue& cValue) :
-		m_castValue(cValue.GetRef()) {
-	}
-
-	explicit value_cast(const CValue* refValue) :
-		m_castValue(refValue ? refValue->GetRef() : nullptr) {
-	}
-
-protected:
-
-	inline retRef cast_value() const {
-		retRef retValue = nullptr;
-		if (m_castValue != nullptr) {
-			retValue = dynamic_cast<retRef>(m_castValue);
-			if (retValue != nullptr) {
-				return retValue;
-			}
-		}
-#if defined(_USE_CONTROL_VALUECAST)
-		ThrowErrorTypeOperation(
-			m_castValue ? m_castValue->GetClassName() : wxEmptyString,
-			CLASSINFO(retType)
-		);
-#endif
-		return nullptr;
-	}
-};
-
 #if defined(_USE_CONTROL_VALUECAST)
 extern BACKEND_API void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsInfo);
 #endif
+
+template <typename T, typename U>
+static inline T* CastValue(U* ptr) {
+	if (ptr != nullptr) {
+		if (ptr->m_typeClass == eValueTypes::TYPE_REFFER) {
+			T* cast_value = dynamic_cast<T*>(ptr->GetRef());
+			if (cast_value != nullptr) return cast_value;
+		}
+		else if (ptr->m_typeClass != eValueTypes::TYPE_EMPTY) {
+			T* cast_value = dynamic_cast<T*>(ptr);
+			if (cast_value != nullptr) return cast_value;
+		}
+	}
+#if defined(_USE_CONTROL_VALUECAST)
+	ThrowErrorTypeOperation(
+		ptr ? ptr->GetClassName() : wxEmptyString,
+		CLASSINFO(T)
+	);
+#endif
+	return nullptr;
+};
+
+template <typename T, typename U>
+static inline T* CastValue(const U* ptr) {
+	if (ptr != nullptr) {
+		if (ptr->m_typeClass == eValueTypes::TYPE_REFFER) {
+			T* cast_value = dynamic_cast<T*>(ptr->GetRef());
+			if (cast_value != nullptr) return cast_value;
+		}
+		else if (ptr->m_typeClass != eValueTypes::TYPE_EMPTY) {
+			T* cast_value = dynamic_cast<T*>(const_cast<U*>(ptr));
+			if (cast_value != nullptr) return cast_value;
+		}
+	}
+#if defined(_USE_CONTROL_VALUECAST)
+	ThrowErrorTypeOperation(
+		ptr ? ptr->GetClassName() : wxEmptyString,
+		CLASSINFO(T)
+	);
+#endif
+	return nullptr;
+};
+
+template <typename T, typename U>
+static inline T* CastValue(U& ptr) {
+	return CastValue<T>(ptr.GetRef());
+};
+
+template <typename T, typename U>
+static inline T* CastValue(const U& ptr) {
+	return CastValue<T>(ptr.GetRef());
+};
 
 #endif

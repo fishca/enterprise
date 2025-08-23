@@ -39,7 +39,7 @@ public:
 	retType* CreateAndConvertValueRef() {
 		CValue* retVal = CreateValueRef();
 		if (retVal != nullptr)
-			return value_cast<retType>(retVal);
+			return CastValue<retType>(retVal);
 		return (retType*)nullptr;
 	}
 

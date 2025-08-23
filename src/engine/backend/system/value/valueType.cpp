@@ -211,7 +211,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 			m_typeDesc.m_typeData.m_string = *qString;
 		for (unsigned int i = 0; i < valArray->Count(); i++) {
 			CValue retValue; valArray->GetAt(i, retValue);
-			CValueType* valType = value_cast<CValueType>(retValue);
+			CValueType* valType = CastValue<CValueType>(retValue);
 			wxASSERT(valType);
 			m_typeDesc.m_listTypeClass.insert(
 				valType->GetOwnerTypeClass()
@@ -245,7 +245,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 
 bool CValueTypeDescription::ContainType(const CValue& cType) const
 {
-	CValueType* valueType = value_cast<CValueType>(cType);
+	CValueType* valueType = CastValue<CValueType>(cType);
 	wxASSERT(valueType);
 	auto it = std::find(m_typeDesc.m_listTypeClass.begin(), m_typeDesc.m_listTypeClass.begin(), valueType->GetOwnerTypeClass());
 	return it != m_typeDesc.m_listTypeClass.end();

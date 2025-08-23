@@ -82,7 +82,7 @@ public:
 			pvarPropVal = m_enumCreator->GetEnumVariantValue();
 			return true;
 		}
-		pvarPropVal = m_enumCreator.pointer();
+		pvarPropVal = m_enumCreator;
 		return true;
 	};
 
@@ -95,7 +95,7 @@ protected:
 		return list;
 	}
 private:
-	value_ptr<valEnumProp> m_enumCreator = CValue::CreateAndConvertObjectRef<valEnumProp>();
+	CValuePtr<valEnumProp> m_enumCreator = CValuePtr<valEnumProp>(CValue::CreateAndConvertObjectRef<valEnumProp>());
 };
 
 #endif

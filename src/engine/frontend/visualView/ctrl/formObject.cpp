@@ -365,7 +365,7 @@ CValue CValueForm::CreateControl(const CValueType* clsControl, const CValue& vCo
 	IValueFrame* parentControl = nullptr;
 
 	if (!vControl.IsEmpty())
-		parentControl = value_cast<IValueFrame>(vControl);
+		parentControl = CastValue<IValueFrame>(vControl);
 	else
 		parentControl = this;
 
@@ -390,7 +390,7 @@ void CValueForm::RemoveControl(const CValue& vControl)
 
 	//get parent obj
 	IValueControl* currentControl =
-		value_cast<IValueControl>(vControl);
+		CastValue<IValueControl>(vControl);
 
 	wxASSERT(currentControl);
 	RemoveControl(currentControl);

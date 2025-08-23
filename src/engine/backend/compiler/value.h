@@ -560,42 +560,47 @@ public:
 
 	//special converting
 	template <typename valueType> inline valueType* ConvertToType() const {
-		return value_cast<valueType>(this);
+		return CastValue<valueType>(this);
 	}
 
-	template <typename enumType > inline enumType ConvertToEnumType() const {
+	template <typename enumType> inline enumType ConvertToEnumType() const {
 		class IEnumerationValue<enumType>* enumValue =
-			value_cast<class IEnumerationValue<enumType>>(this);
+			CastValue<class IEnumerationValue<enumType>>(this);
 		return enumValue->GetEnumValue();
-	};
+	}
+
+	template <typename enumType> inline enumType ConvertToEnumValue() {
+		class IEnumerationVariant<enumType>* enumValue =
+			CastValue<class IEnumerationVariant<enumType>>(this);
+		return enumValue->GetEnumValue();
+	}
 
 	template <typename enumType > inline enumType ConvertToEnumValue() const {
-		class IEnumerationVariant<enumType>* enumValue =
-			value_cast<class IEnumerationVariant<enumType>>(this);
+		const class IEnumerationVariant<enumType>* enumValue =
+			CastValue<class IEnumerationVariant<enumType>>(this);
 		return enumValue->GetEnumValue();
-	};
+	}
 
 	//convert to value
-	template <typename retType> inline bool ConvertToValue(retType& refValue) const {
+	template <typename T> inline bool ConvertToValue(T*& ptr) const {
 		if (m_typeClass == eValueTypes::TYPE_REFFER) {
-			refValue = dynamic_cast<retType> (GetRef());
-			return refValue != nullptr;
+			CValue* non_const_value = GetRef();
+			ptr = static_cast<T*>(non_const_value);
+			return ptr != nullptr;
 		}
 		else if (m_typeClass != eValueTypes::TYPE_EMPTY) {
-			CValue* refData = const_cast<CValue*>(this);
-			wxASSERT(refData);
-			refValue = dynamic_cast<retType> (refData);
-			return refValue != nullptr;
+			ptr = static_cast<T*>(const_cast<CValue*>(this));
+			return ptr != nullptr;
 		}
 		return false;
-	};
+	}
 
 public:
 
 	//runtime support:
-	template<typename createType>
+	template<typename T>
 	static CValue CreateObject(CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return CreateObjectRef<createType>(paParams, lSizeArray);
+		return CreateObjectRef<T>(paParams, lSizeArray);
 	}
 	static CValue CreateObject(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef(clsid, paParams, lSizeArray);
@@ -611,9 +616,9 @@ public:
 		return CreateObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
-	template<typename createType>
+	template<typename T>
 	static CValue* CreateObjectRef(CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return CreateObjectRef(CLASSINFO(createType), paParams, lSizeArray);
+		return CreateObjectRef(CLASSINFO(T), paParams, lSizeArray);
 	}
 	static CValue* CreateObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0);
 	static CValue* CreateObjectRef(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
@@ -629,21 +634,21 @@ public:
 		return CreateAndConvertObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
-	template<typename createType>
-	static createType* CreateAndConvertObjectRef(CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return value_cast<createType>(CreateObjectRef(CLASSINFO(createType), paParams, lSizeArray));
+	template<typename T>
+	static T* CreateAndConvertObjectRef(CValue** paParams = nullptr, const long lSizeArray = 0) {
+		return CastValue<T>(CreateObjectRef(CLASSINFO(T), paParams, lSizeArray));
 	}
-	template<class retType = CValue>
-	static retType* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return value_cast<retType>(CreateObjectRef(clsid, paParams, lSizeArray));
+	template<class T = CValue>
+	static T* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) {
+		return CastValue<T>(CreateObjectRef(clsid, paParams, lSizeArray));
 	}
-	template<class retType = CValue>
-	static retType* CreateAndConvertObjectRef(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return value_cast<retType>(CreateObjectRef(classInfo, paParams, lSizeArray));
+	template<class T = CValue>
+	static T* CreateAndConvertObjectRef(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
+		return CastValue<T>(CreateObjectRef(classInfo, paParams, lSizeArray));
 	}
-	template<class retType = CValue>
-	static retType* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) {
-		return value_cast<retType>(CreateObjectRef(className, paParams, lSizeArray));
+	template<class T = CValue>
+	static T* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) {
+		return CastValue<T>(CreateObjectRef(className, paParams, lSizeArray));
 	}
 	template<typename T, typename... Args>
 	static T* CreateAndConvertObjectValueRef(Args&&... args) {
@@ -672,8 +677,8 @@ public:
 
 	template<typename T, typename valT>
 	static CValue* CreateAndConvertEnumObjectRef(const valT& v) {
-		value_ptr<IEnumeration<valT>> createdEnum = CValue::CreateAndConvertObjectRef<T>();
-		wxASSERT(createdEnum.pointer());
+		CValuePtr<IEnumeration<valT>> createdEnum(CValue::CreateAndConvertObjectRef<T>());
+		wxASSERT(createdEnum != nullptr);
 		return createdEnum->CreateEnumVariantValue(v);
 	}
 

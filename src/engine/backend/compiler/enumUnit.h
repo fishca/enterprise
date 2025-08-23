@@ -91,7 +91,7 @@ protected:
 		virtual void SetEnumValue(const valT& v) override { m_value = v; }
 
 		virtual bool FindValue(const wxString& findData, std::vector<CValue>& listValue) const {
-			value_ptr<IEnumeration<valType>> enumOwner = CValue::CreateAndConvertObjectRef<IEnumeration<valType>>(m_clsid);
+			CValuePtr<IEnumeration<valType>> enumOwner(CValue::CreateAndConvertObjectRef<IEnumeration<valType>>(m_clsid));
 			for (auto& e : enumOwner->m_listEnumData) {
 				if (e.second.Contains(findData)) {
 					CEnumerationVariant<valType>* enumValue = new CEnumerationVariant<valType>(e.first, m_clsid);
@@ -170,15 +170,9 @@ public:
 	}
 
 	IEnumeration() : IEnumerationValue(true), m_value(nullptr) { InitializeEnumeration(); }
-	//IEnumeration(const valT& v) : IEnumerationValue(), m_value(nullptr) { InitializeEnumeration(v); }
-
-	virtual ~IEnumeration() {
-		if (m_value != nullptr)
-			m_value->DecrRef();
-	}
+	virtual ~IEnumeration() {}
 
 	virtual bool Init() { return true; }
-
 	virtual bool Init(CValue** paParams, const long lSizeArray) {
 		if (lSizeArray < 1)
 			return false;
@@ -221,16 +215,11 @@ public:
 
 	//initialize enumeration 
 	void InitializeEnumeration() {
-		//CreateEnumeration();
 		PrepareNames();
 	}
 
 	void InitializeEnumeration(const valT& v) {
-		//CreateEnumeration();
-		if (m_value != nullptr)
-			m_value->DecrRef();
 		m_value = CreateEnumVariantValue(v);
-		m_value->IncrRef();
 		CreateEnumeration(v);
 	}
 
@@ -338,7 +327,7 @@ public:
 
 protected:
 
-	CEnumerationVariant<valT>* m_value; //current enum value
+	CValuePtr<CEnumerationVariant<valT>> m_value; //current enum value
 };
 
 #endif

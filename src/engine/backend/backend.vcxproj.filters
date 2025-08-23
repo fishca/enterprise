@@ -271,7 +271,7 @@
     <ClInclude Include="fileSystem\quicklz\quicklz.h">
       <Filter>fileSystem\quicklz</Filter>
     </ClInclude>
-    <ClInclude Include="value_cast.h" />
+    <ClInclude Include="CastValue.h" />
     <ClInclude Include="metadataConfiguration.h" />
     <ClInclude Include="role.h" />
     <ClInclude Include="databaseLayer\postgres\engine\libpq-fe.h">
@@ -397,7 +397,7 @@
     <ClInclude Include="metaCollection\partial\tabularSection\tabularSection.h">
       <Filter>metaCollection\partial\tabularSection</Filter>
     </ClInclude>
-    <ClInclude Include="value_ptr.h" />
+    <ClInclude Include="CValuePtr.h" />
     <ClInclude Include="metaCollection\metaSource.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
@@ -856,7 +856,7 @@
     <ClCompile Include="fileSystem\fs.cpp">
       <Filter>fileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="value_cast.cpp" />
+    <ClCompile Include="CastValue.cpp" />
     <ClCompile Include="metadataConfiguration.cpp" />
     <ClCompile Include="role.cpp" />
     <ClCompile Include="appDataQuery.cpp" />

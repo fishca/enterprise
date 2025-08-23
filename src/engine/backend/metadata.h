@@ -68,13 +68,13 @@ public:
 		return CreateAndConvertObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
-	template<class retType = CValue>
-	inline retType* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const {
-		return value_cast<retType>(CreateObjectRef(clsid, paParams, lSizeArray));
+	template<class T = CValue>
+	inline T* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const {
+		return CastValue<T>(CreateObjectRef(clsid, paParams, lSizeArray));
 	}
-	template<class retType = CValue>
-	inline retType* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
-		return value_cast<retType>(CreateObjectRef(className, paParams, lSizeArray));
+	template<class T = CValue>
+	inline T* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) const {
+		return CastValue<T>(CreateObjectRef(className, paParams, lSizeArray));
 	}
 	template<typename T, typename... Args>
 	inline T* CreateAndConvertObjectValueRef(Args&&... args) const {
@@ -136,15 +136,15 @@ public:
 	virtual IMetaObject* FindByName(const wxString& fullName) const;
 
 	//get metaObject 
-	template <typename retType>
-	inline bool GetMetaObject(retType*& foundedVal, const meta_identifier_t& id, IMetaObject* top = nullptr) const {
-		foundedVal = dynamic_cast<retType*>(GetMetaObject(id, top));
+	template <typename T>
+	inline bool GetMetaObject(T*& foundedVal, const meta_identifier_t& id, IMetaObject* top = nullptr) const {
+		foundedVal = dynamic_cast<T*>(GetMetaObject(id, top));
 		return foundedVal != nullptr;
 	}
 
-	template <typename retType>
-	inline bool GetMetaObject(retType*& foundedVal, const Guid& guid, IMetaObject* top = nullptr) const {
-		foundedVal = dynamic_cast<retType*>(GetMetaObject(guid, top));
+	template <typename T>
+	inline bool GetMetaObject(T*& foundedVal, const Guid& guid, IMetaObject* top = nullptr) const {
+		foundedVal = dynamic_cast<T*>(GetMetaObject(guid, top));
 		return foundedVal != nullptr;
 	}
 

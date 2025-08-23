@@ -20,14 +20,14 @@ public:
 	virtual inline bool IsEmpty() const { return false; }
 
 	virtual bool CompareValueEQ(const CValue& cParam) const {
-		const CValueType* rValue = value_cast<CValueType>(cParam);
+		const CValueType* rValue = CastValue<CValueType>(cParam);
 		wxASSERT(rValue);
 		return m_clsid == rValue->m_clsid;
 	}
 
 	//operator '!='
 	virtual bool CompareValueNE(const CValue& cParam) const {
-		const CValueType* rValue = value_cast<CValueType>(cParam);
+		const CValueType* rValue = CastValue<CValueType>(cParam);
 		wxASSERT(rValue);
 		return m_clsid != rValue->m_clsid;
 	}

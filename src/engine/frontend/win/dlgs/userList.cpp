@@ -34,7 +34,7 @@ public:
 		m_aUsersData.erase(m_aUsersData.begin() + row);
 	}
 
-	Guid GetGuidByRow(const wxDataViewItem &item) const {
+	CGuid GetGuidByRow(const wxDataViewItem &item) const {
 		return m_aUsersData.at(GetRow(item));
 	}
 
@@ -61,7 +61,7 @@ public:
 	}
 
 private:
-	std::vector<Guid> m_aUsersData;
+	std::vector<CGuid> m_aUsersData;
 };
 
 enum {

@@ -465,7 +465,7 @@ bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CM
 
 bool CMetaDataConfiguration::OnInitialize(const int flags)
 {
-	m_metaGuid = Guid::newGuid();
+	m_metaGuid = CGuid::newGuid();
 
 	if (!CMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
@@ -496,7 +496,7 @@ CMetaDataConfiguration::CMetaDataConfiguration() :
 
 bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 {
-	m_metaGuid = Guid::newGuid();
+	m_metaGuid = CGuid::newGuid();
 
 	if (!CMetaDataConfigurationStorage::TableAlreadyCreated()) {
 		CMetaDataConfigurationStorage::CreateConfigTable();

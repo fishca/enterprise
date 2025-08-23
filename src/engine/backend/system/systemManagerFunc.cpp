@@ -924,7 +924,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 				CMetaObjectCommonForm* creator = obj->ConvertToType<CMetaObjectCommonForm>();
 				wxASSERT(creator);
 				
-				//IBackendValueForm* valueForm = commonForm->GenerateForm(ownerControl, nullptr, unique ? ((Guid)*unique) : Guid());
+				//IBackendValueForm* valueForm = commonForm->GenerateForm(ownerControl, nullptr, unique ? ((CGuid)*unique) : CGuid());
 				//if (valueForm != nullptr) {
 				//	const CValue cValue = valueForm->GetImplValueRef();
 				//	valueForm->InitializeFormModule();
@@ -934,7 +934,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 				return CMetaObjectCommonForm::CreateAndBuildForm(
 					creator,
 					ownerControl, 
-					nullptr, unique ? ((Guid)*unique) : Guid()
+					nullptr, unique ? ((CGuid)*unique) : CGuid()
 				);
 			}
 		}

@@ -31,7 +31,7 @@ public:
 	virtual wxString GetConfigMD5() const = 0;
 	virtual wxString GetConfigName() const = 0;
 
-	virtual Guid GetConfigGuid() const = 0;
+	virtual CGuid GetConfigGuid() const = 0;
 
 	// if storage save in db 
 	virtual bool IsConfigOpen() const { return false; }
@@ -83,7 +83,7 @@ public:
 	virtual wxString GetConfigMD5() const { return m_md5Hash; }
 	virtual wxString GetConfigName() const { return m_commonObject->GetName(); }
 
-	virtual Guid GetConfigGuid() const { return m_commonObject->GetDocPath(); }
+	virtual CGuid GetConfigGuid() const { return m_commonObject->GetDocPath(); }
 
 	virtual void SetVersion(const version_identifier_t& version) { m_commonObject->SetVersion(version); }
 	virtual version_identifier_t GetVersion() const { return m_commonObject->GetVersion(); }
@@ -150,7 +150,7 @@ public:
 	}
 
 	virtual wxString GetConfigName() const { return m_commonObject->GetName(); }
-	virtual Guid GetConfigGuid() const { return m_metaGuid; }
+	virtual CGuid GetConfigGuid() const { return m_metaGuid; }
 
 	//metaData 
 	virtual bool LoadDatabase(int flags = defaultFlag);
@@ -165,7 +165,7 @@ protected:
 
 protected:
 
-	Guid m_metaGuid;
+	CGuid m_metaGuid;
 	bool m_configNew;
 };
 

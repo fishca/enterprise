@@ -27,7 +27,7 @@ private:
 	};
 private:
 	CReferenceDataObject() : CValue(eValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
-	CReferenceDataObject(IMetaObjectRecordDataRef* metaObject, const Guid& objGuid = wxNullGuid);
+	CReferenceDataObject(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 public:
 
 	reference_t* GetReferenceData() const {
@@ -38,12 +38,12 @@ public:
 
 	virtual ~CReferenceDataObject();
 
-	static CReferenceDataObject* Create(IMetaData* metaData, const meta_identifier_t& id, const Guid& objGuid = wxNullGuid);
-	static CReferenceDataObject* Create(IMetaObjectRecordDataRef* metaObject, const Guid& objGuid = wxNullGuid);
+	static CReferenceDataObject* Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid = wxNullGuid);
+	static CReferenceDataObject* Create(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 
 	static CReferenceDataObject* Create(IMetaData* metaData, void* ptr);
 	static CReferenceDataObject* CreateFromPtr(IMetaData* metaData, void* ptr);
-	static CReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IMetaObjectRecordDataRef* metaObject, const Guid& refGuid);
+	static CReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IMetaObjectRecordDataRef* metaObject, const CGuid& refGuid);
 
 	//operator '>'
 	virtual inline bool CompareValueGT(const CValue& cParam) const {

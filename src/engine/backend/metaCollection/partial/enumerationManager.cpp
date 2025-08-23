@@ -114,7 +114,7 @@ bool CEnumerationManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			guidVal ? ((Guid)*guidVal) : Guid());
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true; 
 	}
 	case eGetListForm:
@@ -122,7 +122,7 @@ bool CEnumerationManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetListForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			guidVal ? ((Guid)*guidVal) : Guid());
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	case eGetSelectForm:
@@ -130,7 +130,7 @@ bool CEnumerationManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetSelectForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			guidVal ? ((Guid)*guidVal) : Guid());
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	}

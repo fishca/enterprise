@@ -18,7 +18,7 @@ public:
 class IValueDataObject {
 public:
 
-	IValueDataObject(const Guid& objGuid = wxNullGuid, bool newObject = true) : m_objGuid(objGuid), m_newObject(newObject) {}
+	IValueDataObject(const CGuid& objGuid = wxNullGuid, bool newObject = true) : m_objGuid(objGuid), m_newObject(newObject) {}
 
 	//support source set/get data 
 	virtual bool SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
@@ -39,7 +39,7 @@ public:
 protected:
 	bool m_newObject;
 	valueArray_t m_listObjectValue;
-	Guid m_objGuid;
+	CGuid m_objGuid;
 };
 
 #endif

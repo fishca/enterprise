@@ -86,7 +86,7 @@ ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaO
 
 #include "backend/appData.h"
 
-IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const Guid& guid)
+IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const CGuid& guid)
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);

@@ -71,7 +71,7 @@ wxString wxVariantDataSource::MakeString() const
 
 ////////////////////////////////////////////////////////////////////////////
 
-meta_identifier_t wxVariantDataSource::GetIdByGuid(const Guid& guid) const
+meta_identifier_t wxVariantDataSource::GetIdByGuid(const CGuid& guid) const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (guid.isValid() && sourceObject != nullptr) {
@@ -84,7 +84,7 @@ meta_identifier_t wxVariantDataSource::GetIdByGuid(const Guid& guid) const
 	return wxNOT_FOUND;
 }
 
-Guid wxVariantDataSource::GetGuidByID(const meta_identifier_t& id) const
+CGuid wxVariantDataSource::GetGuidByID(const meta_identifier_t& id) const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (id != wxNOT_FOUND && sourceObject != nullptr) {
@@ -140,14 +140,14 @@ meta_identifier_t wxVariantDataSource::GetSource() const
 
 ////////////////////////////////////////////////////////////////////////////
 
-void wxVariantDataSource::SetSourceGuid(const Guid& guid, bool fillTypeDesc)
+void wxVariantDataSource::SetSourceGuid(const CGuid& guid, bool fillTypeDesc)
 {
 	const meta_identifier_t& id = GetIdByGuid(guid);
 	m_dataSource = guid;
 	if (fillTypeDesc) m_attributeSource->SetFromMetaDesc(id);
 }
 
-Guid wxVariantDataSource::GetSourceGuid() const
+CGuid wxVariantDataSource::GetSourceGuid() const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (m_dataSource.isValid() && sourceObject != nullptr) {

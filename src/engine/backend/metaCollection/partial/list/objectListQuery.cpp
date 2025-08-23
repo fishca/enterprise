@@ -93,7 +93,7 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	/////////////////////////////////////////////////////////
 	while (resultSet->Next()) {
-		const Guid& enumRow = resultSet->GetResultString(guidName);
+		const CGuid& enumRow = resultSet->GetResultString(guidName);
 		wxValueTableEnumRow* rowData = new wxValueTableEnumRow(enumRow);
 		rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 		rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumByGuid(enumRow.str())->GetParentPosition());

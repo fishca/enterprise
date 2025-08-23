@@ -330,7 +330,7 @@ bool IMetaObjectRecordDataRef::ProcessChoice(IBackendControlFrame* ownerValue, c
 	return true;
 }
 
-CReferenceDataObject* IMetaObjectRecordDataRef::FindObjectValue(const Guid& objGuid)
+CReferenceDataObject* IMetaObjectRecordDataRef::FindObjectValue(const CGuid& objGuid)
 {
 	if (!objGuid.isValid())
 		return nullptr;
@@ -599,7 +599,7 @@ IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CreateObjectValue()
 	return createdValue;
 }
 
-IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CreateObjectValue(const Guid& guid)
+IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CreateObjectValue(const CGuid& guid)
 {
 	IRecordDataObjectRef* createdValue = CreateObjectRefValue(guid);
 	if (createdValue && !createdValue->InitializeObject()) {
@@ -621,7 +621,7 @@ IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CreateObjectValue(IRecord
 	return createdValue;
 }
 
-IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CopyObjectValue(const Guid& srcGuid)
+IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CopyObjectValue(const CGuid& srcGuid)
 {
 	IRecordDataObjectRef* createdValue = CreateObjectRefValue();
 	if (createdValue && !createdValue->InitializeObject(srcGuid)) {
@@ -665,7 +665,7 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectV
 	return createdValue;
 }
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectValue(eObjectMode mode, const Guid& guid)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectValue(eObjectMode mode, const CGuid& guid)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode, guid);
 	if (createdValue && !createdValue->InitializeObject()) {
@@ -685,7 +685,7 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectV
 	return createdValue;
 }
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CopyObjectValue(eObjectMode mode, const Guid& srcGuid)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CopyObjectValue(eObjectMode mode, const CGuid& srcGuid)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject(srcGuid)) {
@@ -884,7 +884,7 @@ bool IMetaObjectRecordDataFolderMutableRef::ProcessChoice(IBackendControlFrame* 
 
 //////////////////////////////////////////////////////////////////////
 
-IRecordDataObjectRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectRefValue(const Guid& objGuid)
+IRecordDataObjectRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectRefValue(const CGuid& objGuid)
 {
 	return CreateObjectRefValue(eObjectMode::OBJECT_ITEM, objGuid);
 }
@@ -1220,7 +1220,7 @@ IRecordManagerObject* IMetaObjectRegisterData::CopyRecordManagerObjectValue(cons
 
 wxIMPLEMENT_ABSTRACT_CLASS(IRecordDataObject, CValue);
 
-IRecordDataObject::IRecordDataObject(const Guid& objGuid, bool newObject) :
+IRecordDataObject::IRecordDataObject(const CGuid& objGuid, bool newObject) :
 	CValue(eValueTypes::TYPE_VALUE), IValueDataObject(objGuid, newObject),
 	m_methodHelper(new CMethodHelper())
 {
@@ -1645,8 +1645,8 @@ IRecordDataObjectExt* IRecordDataObjectExt::CopyObjectValue()
 
 wxIMPLEMENT_ABSTRACT_CLASS(IRecordDataObjectRef, IRecordDataObject);
 
-IRecordDataObjectRef::IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const Guid& objGuid) :
-	IRecordDataObject(objGuid.isValid() ? objGuid : Guid::newGuid(GUID_TIME_BASED), !objGuid.isValid()),
+IRecordDataObjectRef::IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid) :
+	IRecordDataObject(objGuid.isValid() ? objGuid : CGuid::newGuid(GUID_TIME_BASED), !objGuid.isValid()),
 	m_metaObject(metaObject),
 	m_reference_impl(nullptr), m_codeGenerator(nullptr),
 	m_objModified(false)
@@ -1685,7 +1685,7 @@ IRecordDataObjectRef::~IRecordDataObjectRef()
 	wxDELETE(m_reference_impl);
 }
 
-bool IRecordDataObjectRef::InitializeObject(const Guid& copyGuid)
+bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -1970,7 +1970,7 @@ CReferenceDataObject* IRecordDataObjectRef::GetReference() const
 
 wxIMPLEMENT_ABSTRACT_CLASS(IRecordDataObjectFolderRef, IRecordDataObjectRef);
 
-IRecordDataObjectFolderRef::IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const Guid& objGuid, eObjectMode objMode)
+IRecordDataObjectFolderRef::IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode)
 	: IRecordDataObjectRef(metaObject, objGuid), m_objMode(objMode)
 {
 }

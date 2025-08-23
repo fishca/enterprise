@@ -7,12 +7,12 @@ class BACKEND_API CValueGuid : public CValue {
 	wxDECLARE_DYNAMIC_CLASS(CValueGuid);
 public:
 
-	operator Guid() const {
+	operator CGuid() const {
 		return m_guid;
 	}
 
 	CValueGuid();
-	CValueGuid(const Guid &guid);
+	CValueGuid(const CGuid &guid);
 
 	virtual bool Init();
 	virtual bool Init(CValue **paParams, const long lSizeArray);
@@ -37,7 +37,7 @@ public:
 	}
 
 private:
-	Guid m_guid;
+	CGuid m_guid;
 };
 
 #endif // !_VALUEUUID_H__

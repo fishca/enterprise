@@ -17,7 +17,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(ITreeDataObject, IValueTree);
 wxIMPLEMENT_DYNAMIC_CLASS(CTreeDataObjectFolderRef, ITreeDataObject);
 
 IListDataObject::IListDataObject(IMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	ISourceDataObject(), m_objGuid(choiceMode ? Guid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
+	ISourceDataObject(), m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
 	m_dataColumnCollection = new CDataObjectListColumnCollection(this, metaObject);
 	m_dataColumnCollection->IncrRef();
@@ -46,7 +46,7 @@ IListDataObject::~IListDataObject()
 ///////////////////////////////////////////////////////////////////////////////
 
 ITreeDataObject::ITreeDataObject(IMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	ISourceDataObject(), m_objGuid(choiceMode ? Guid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
+	ISourceDataObject(), m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
 	m_dataColumnCollection = new CDataObjectTreeColumnCollection(this, metaObject);
 	m_dataColumnCollection->IncrRef();
@@ -556,7 +556,7 @@ wxDataViewItem CTreeDataObjectFolderRef::FindRowValue(const CValue& varValue, co
 {
 	CReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
-		std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const Guid&)> findGuid = [&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const Guid& guid)
+		std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const CGuid&)> findGuid = [&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const CGuid& guid)
 			{
 				if (guid == parent->GetGuid()) {
 					foundedNode = parent; return;
@@ -589,8 +589,8 @@ wxDataViewItem CTreeDataObjectFolderRef::FindRowValue(const CValue& varValue, co
 wxDataViewItem CTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(retLine->GetLineItem());
-	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const Guid&)> findGuid =
-		[&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const Guid& guid)
+	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const CGuid&)> findGuid =
+		[&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const CGuid& guid)
 		{
 			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
 			else if (foundedNode != nullptr) { return; }

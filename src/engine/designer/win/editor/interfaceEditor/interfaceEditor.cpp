@@ -254,7 +254,7 @@ bool CInterfaceEditor::TestInterface()
 			CMetaDocument::SetIcon(metaObject->GetIcon());
 			CMetaDocument::SetMetaObject(metaObject);
 			CMetaDocument::SetTitle(_("interface demonstration"));
-			CMetaDocument::SetFilename((wxString)Guid::newGuid());
+			CMetaDocument::SetFilename((wxString)CGuid::newGuid());
 		}
 	};
 

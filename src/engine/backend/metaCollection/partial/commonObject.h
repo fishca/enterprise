@@ -445,7 +445,7 @@ public:
 	//get default form 
 	virtual IBackendValueForm* GetDefaultCommandForm() { return GetListForm(); }
 
-	virtual class CReferenceDataObject* FindObjectValue(const Guid& guid); //find by guid and ret reference 
+	virtual class CReferenceDataObject* FindObjectValue(const CGuid& guid); //find by guid and ret reference 
 
 #pragma region _form_builder_h_
 	//support form 
@@ -557,11 +557,11 @@ public:
 
 	//create associate value 
 	IRecordDataObjectRef* CreateObjectValue();
-	IRecordDataObjectRef* CreateObjectValue(const Guid& guid);
+	IRecordDataObjectRef* CreateObjectValue(const CGuid& guid);
 	IRecordDataObjectRef* CreateObjectValue(IRecordDataObjectRef* objSrc, bool generate = false);
 
 	//copy associate value 	
-	IRecordDataObjectRef* CopyObjectValue(const Guid& guid);
+	IRecordDataObjectRef* CopyObjectValue(const CGuid& guid);
 
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject();
@@ -581,7 +581,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//create empty object
-	virtual IRecordDataObjectRef* CreateObjectRefValue(const Guid& objGuid = wxNullGuid) = 0; //create object and read by guid 
+	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
 };
 
 //metaObject with reference and deletion mark and group/object type
@@ -640,11 +640,11 @@ public:
 
 	//create associate value 	
 	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode);
-	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, const Guid& guid);
+	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, const CGuid& guid);
 	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, IRecordDataObjectRef* objSrc, bool generate = false);
 
 	//copy associate value 	
-	IRecordDataObjectFolderRef* CopyObjectValue(eObjectMode mode, const Guid& guid);
+	IRecordDataObjectFolderRef* CopyObjectValue(eObjectMode mode, const CGuid& guid);
 
 #pragma region _form_builder_h_
 	//support form 
@@ -664,8 +664,8 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//create empty object
-	virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const Guid& objGuid = wxNullGuid) = 0; //create object and read by guid 
-	virtual IRecordDataObjectRef* CreateObjectRefValue(const Guid& objGuid = wxNullGuid) final;
+	virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
+	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) final;
 };
 
 //metaObject with key   
@@ -904,7 +904,7 @@ protected:
 	};
 protected:
 	//override copy constructor
-	IRecordDataObject(const Guid& objGuid, bool newObject);
+	IRecordDataObject(const CGuid& objGuid, bool newObject);
 	IRecordDataObject(const IRecordDataObject& source);
 
 	//standart override 
@@ -1068,13 +1068,13 @@ protected:
 	CCodeGenerator* m_codeGenerator;
 
 protected:
-	IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const Guid& objGuid);
+	IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid);
 	IRecordDataObjectRef(const IRecordDataObjectRef& src);
 public:
 
 	virtual ~IRecordDataObjectRef();
 
-	virtual bool InitializeObject(const Guid& copyGuid = wxNullGuid);
+	virtual bool InitializeObject(const CGuid& copyGuid = wxNullGuid);
 	virtual bool InitializeObject(IRecordDataObjectRef* source, bool generate = false);
 
 	virtual bool WriteObject() = 0;
@@ -1144,7 +1144,7 @@ public:
 	virtual void SetDeletionMark(bool deletionMark = true);
 protected:
 	virtual bool ReadData();
-	virtual bool ReadData(const Guid& srcGuid);
+	virtual bool ReadData(const CGuid& srcGuid);
 	virtual bool SaveData();
 	virtual bool DeleteData();
 protected:
@@ -1163,7 +1163,7 @@ protected:
 class BACKEND_API IRecordDataObjectFolderRef : public IRecordDataObjectRef {
 	wxDECLARE_ABSTRACT_CLASS(IRecordDataObjectFolderRef);
 protected:
-	IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const Guid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+	IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
 	IRecordDataObjectFolderRef(const IRecordDataObjectFolderRef& src);
 public:
 	virtual ~IRecordDataObjectFolderRef();
@@ -1198,7 +1198,7 @@ public:
 
 protected:
 	virtual bool ReadData();
-	virtual bool ReadData(const Guid& srcGuid);
+	virtual bool ReadData(const CGuid& srcGuid);
 protected:
 	virtual void PrepareEmptyObject();
 	virtual void PrepareEmptyObject(const IRecordDataObjectRef* source);

@@ -52,7 +52,7 @@ void CReferenceDataObject::PrepareRef(bool createData)
 	PrepareNames();
 }
 
-CReferenceDataObject::CReferenceDataObject(IMetaObjectRecordDataRef* metaObject, const Guid& objGuid) : CValue(eValueTypes::TYPE_VALUE, true), IValueDataObject(objGuid, !objGuid.isValid()),
+CReferenceDataObject::CReferenceDataObject(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid) : CValue(eValueTypes::TYPE_VALUE, true), IValueDataObject(objGuid, !objGuid.isValid()),
 m_metaObject(metaObject), m_methodHelper(new CMethodHelper()), m_initializedRef(false), m_reference_impl(nullptr), m_foundedRef(false)
 {
 	m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
@@ -69,7 +69,7 @@ CReferenceDataObject::~CReferenceDataObject()
 	wxDELETE(m_methodHelper);
 }
 
-CReferenceDataObject* CReferenceDataObject::Create(IMetaData* metaData, const meta_identifier_t& id, const Guid& objGuid)
+CReferenceDataObject* CReferenceDataObject::Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid)
 {
 	IMetaObjectRecordDataRef* metaObject = nullptr;
 	if (metaData->GetMetaObject(metaObject, id)) {
@@ -86,7 +86,7 @@ CReferenceDataObject* CReferenceDataObject::Create(IMetaData* metaData, const me
 	return nullptr;
 }
 
-CReferenceDataObject* CReferenceDataObject::Create(IMetaObjectRecordDataRef* metaObject, const Guid& objGuid)
+CReferenceDataObject* CReferenceDataObject::Create(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid)
 {
 	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](CReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && objGuid == ref->GetGuid(); }
@@ -136,7 +136,7 @@ CReferenceDataObject* CReferenceDataObject::CreateFromPtr(IMetaData* metaData, v
 	return nullptr;
 }
 
-CReferenceDataObject* CReferenceDataObject::CreateFromResultSet(IDatabaseResultSet* rs, IMetaObjectRecordDataRef* metaObject, const Guid& refGuid)
+CReferenceDataObject* CReferenceDataObject::CreateFromResultSet(IDatabaseResultSet* rs, IMetaObjectRecordDataRef* metaObject, const CGuid& refGuid)
 {
 	//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, refGuid](CReferenceDataObject* ref) {
 	//	return metaObject == ref->GetMetaObject() && refGuid == ref->GetGuid(); }

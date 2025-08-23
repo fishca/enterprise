@@ -36,7 +36,7 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 				IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 				wxASSERT(databaseResultSet);
 				if (databaseResultSet->Next()) {
-					const Guid &foundedGuid = databaseResultSet->GetResultString(guidName);
+					const CGuid &foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);		
 				}
 				db_query->CloseResultSet(databaseResultSet);
@@ -74,7 +74,7 @@ CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) c
 				IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 				wxASSERT(databaseResultSet);
 				if (databaseResultSet->Next()) {
-					const Guid &foundedGuid = databaseResultSet->GetResultString(guidName);
+					const CGuid &foundedGuid = databaseResultSet->GetResultString(guidName);
 					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);			
 				}
 				db_query->CloseResultSet(databaseResultSet);

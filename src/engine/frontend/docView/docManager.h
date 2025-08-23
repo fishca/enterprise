@@ -52,7 +52,7 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 		class_identifier_t m_clsid;
 		wxString m_className;
 		wxString m_classDescr;
-		Guid m_guidTemplate;
+		CGuid m_guidTemplate;
 		CMetaDocTemplate* m_docTemplate;
 	public:
 
@@ -125,7 +125,7 @@ public:
 	CMetaDocManager();
 	virtual ~CMetaDocManager();
 
-	Guid AddDocTemplate(const wxString& descr,
+	CGuid AddDocTemplate(const wxString& descr,
 		const wxString& filter,
 		const wxString& dir,
 		const wxString& ext,
@@ -135,7 +135,7 @@ public:
 		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	Guid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
+	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
 
 	CMetaDocument* GetCurrentDocument() const;
 

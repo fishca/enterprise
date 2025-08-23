@@ -706,7 +706,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 	return theTemplate;
 }
 
-Guid CMetaDocManager::AddDocTemplate(
+CGuid CMetaDocManager::AddDocTemplate(
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& dir,
@@ -738,7 +738,7 @@ Guid CMetaDocManager::AddDocTemplate(
 	return data.m_guidTemplate;
 }
 
-Guid CMetaDocManager::AddDocTemplate(
+CGuid CMetaDocManager::AddDocTemplate(
 	const class_identifier_t& clsid,
 	wxClassInfo* docClassInfo,
 	wxClassInfo* viewClassInfo)

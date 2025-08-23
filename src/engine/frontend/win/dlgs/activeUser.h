@@ -19,7 +19,7 @@
 class FRONTEND_API CDialogActiveUser : public wxDialog {
 	wxListCtrl* m_activeTable;
 	std::shared_ptr<wxTimer> m_activeTableScanner;
-	Guid m_sessionArrayHash; 
+	CGuid m_sessionArrayHash; 
 public:
 
 	void RefreshActiveUserTable();

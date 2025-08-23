@@ -12,7 +12,7 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-bool CTabularSectionDataObjectRef::LoadData(const Guid& srcGuid, bool createData)
+bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createData)
 {
 	if (m_objectValue->IsNewObject() && !srcGuid.isValid()) {
 		m_readAfter = true;

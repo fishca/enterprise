@@ -14,7 +14,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
 //*************************************************************************
 
 IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
-m_methodHelper(new CMethodHelper()), m_valEventContainer(nullptr), m_controlId(0), m_controlGuid(Guid::newGuid())
+m_methodHelper(new CMethodHelper()), m_valEventContainer(nullptr), m_controlId(0), m_controlGuid(CGuid::newGuid())
 {
 	m_valEventContainer = CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this);
 	m_valEventContainer->IncrRef();
@@ -68,7 +68,7 @@ bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& da
 	const version_identifier_t& version = dataReader.r_u32(); //reserved 
 
 	//Load unique guid 
-	const Guid& class_guid = dataReader.r_stringZ();
+	const CGuid& class_guid = dataReader.r_stringZ();
 
 	//Load meta id
 	m_controlId = dataReader.r_u32();

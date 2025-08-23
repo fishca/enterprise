@@ -44,7 +44,7 @@ public:
 
 	//get value control and guid 
 	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
-	virtual Guid GetControlGuid() const { return Guid::newGuid(); }
+	virtual CGuid GetControlGuid() const { return CGuid::newGuid(); }
 
 	//get owner form 
 	virtual CValueForm* GetOwnerForm() const { return nullptr; }
@@ -131,7 +131,7 @@ public:
 	//	wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
 	}
 
-	virtual Guid GetControlGuid() const { return m_controlGuid; }
+	virtual CGuid GetControlGuid() const { return m_controlGuid; }
 
 	/**
 	* Find by control id
@@ -405,7 +405,7 @@ protected:
 	CValueEventContainer* m_valEventContainer;
 
 	form_identifier_t	 m_controlId;
-	Guid				 m_controlGuid;
+	CGuid				 m_controlGuid;
 
 	bool m_expanded = true; // is expanded in the object tree, allows for saving to file
 };

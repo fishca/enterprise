@@ -12,7 +12,7 @@ IMetaValueTypeCtor* IMetaObjectSourceData::GetTypeCtor(const eCtorMetaType &refT
 	return m_metaData->GetTypeCtor(this, refType);
 }
 
-meta_identifier_t IMetaObjectSourceData::GetIdByGuid(const Guid& guid) const
+meta_identifier_t IMetaObjectSourceData::GetIdByGuid(const CGuid& guid) const
 {
 	IMetaObject* metaObject = FindMetaObjectByID(guid);
 	if (metaObject != nullptr)
@@ -20,7 +20,7 @@ meta_identifier_t IMetaObjectSourceData::GetIdByGuid(const Guid& guid) const
 	return wxNOT_FOUND;
 }
 
-Guid IMetaObjectSourceData::GetGuidByID(const meta_identifier_t& id) const
+CGuid IMetaObjectSourceData::GetGuidByID(const meta_identifier_t& id) const
 {
 	IMetaObject* metaObject = FindMetaObjectByID(id);
 	if (metaObject != nullptr)
@@ -36,7 +36,7 @@ IMetaObject* IMetaObjectSourceData::FindMetaObjectByID(const meta_identifier_t& 
 		const_cast<IMetaObjectSourceData*>(this));
 }
 
-IMetaObject* IMetaObjectSourceData::FindMetaObjectByID(const Guid& guid) const
+IMetaObject* IMetaObjectSourceData::FindMetaObjectByID(const CGuid& guid) const
 {
 	return m_metaData->GetMetaObject(guid,
 		const_cast<IMetaObjectSourceData*>(this));

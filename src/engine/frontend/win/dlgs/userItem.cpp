@@ -61,7 +61,7 @@ void CUserWnd::OnCancelButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
-bool CUserWnd::ReadUserData(const Guid& guid, bool copy)
+bool CUserWnd::ReadUserData(const CGuid& guid, bool copy)
 {
 	if (m_userGuid.isValid()) return false;
 	

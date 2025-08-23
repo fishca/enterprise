@@ -14,16 +14,16 @@ class BACKEND_API CPropertySource : public IProperty {
 	wxVariantData* CreateVariantData(const IPropertyObject* property, const class_identifier_t& id) const;
 	wxVariantData* CreateVariantData(const IPropertyObject* property, const CTypeDescription& typeDesc) const;
 	wxVariantData* CreateVariantData(const IPropertyObject* property, const meta_identifier_t& id) const;
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const Guid& id, bool fillTypeDesc = true) const;
+	wxVariantData* CreateVariantData(const IPropertyObject* property, const CGuid& id, bool fillTypeDesc = true) const;
 public:
 
 #pragma region _value_
 	meta_identifier_t GetValueAsSource() const;
-	Guid GetValueAsSourceGuid() const;
+	CGuid GetValueAsSourceGuid() const;
 	CTypeDescription& GetValueAsTypeDesc(bool fillTypeDesc = true) const;
 
 	void SetValue(const meta_identifier_t& val);
-	void SetValue(const Guid& val, bool fillTypeDesc = true);
+	void SetValue(const CGuid& val, bool fillTypeDesc = true);
 	void SetValue(const CTypeDescription& val);
 #pragma endregion 
 

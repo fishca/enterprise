@@ -36,7 +36,7 @@ struct CFilterRow {
 
 	struct CFilterData {
 		unsigned int m_filterModel;
-		Guid m_filterGuid;
+		CGuid m_filterGuid;
 		wxString m_filterName;
 		wxString m_filterPresentation;
 		eComparisonType m_filterComparison;
@@ -48,7 +48,7 @@ struct CFilterRow {
 			eComparisonType comparisonType, const CTypeDescription& filterTypeDescription, const CValue& filterValue,
 			bool filterUse = false) :
 			m_filterModel(filterModel),
-			m_filterGuid(Guid::newGuid()),
+			m_filterGuid(CGuid::newGuid()),
 			m_filterName(filterName),
 			m_filterPresentation(filterPresentation),
 			m_filterComparison(comparisonType),

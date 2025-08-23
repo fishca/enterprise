@@ -214,7 +214,7 @@ public:
 	//append new row
 	virtual long AppendRow(unsigned int before = 0);
 
-	virtual bool LoadData(const Guid& srcGuid, bool createData = true) { return true; }
+	virtual bool LoadData(const CGuid& srcGuid, bool createData = true) { return true; }
 	virtual bool SaveData() { return true; }
 	virtual bool DeleteData() { return true; }
 
@@ -292,7 +292,7 @@ public:
 	virtual long AppendRow(unsigned int before = 0);
 
 	//load/save/delete data
-	virtual bool LoadData(const Guid& srcGuid, bool createData = true);
+	virtual bool LoadData(const CGuid& srcGuid, bool createData = true);
 	virtual bool SaveData();
 	virtual bool DeleteData();
 

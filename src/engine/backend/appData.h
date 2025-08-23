@@ -29,7 +29,7 @@ class BACKEND_API IDatabaseLayer;
 #pragma region session  
 class BACKEND_API CApplicationDataSessionArray {
 
-	Guid m_sessionArrayHash;
+	CGuid m_sessionArrayHash;
 
 	struct CApplicationDataSessionUnit {
 
@@ -38,7 +38,7 @@ class BACKEND_API CApplicationDataSessionArray {
 		wxString m_strUserName, m_strComputerName, m_strSession;
 
 		CApplicationDataSessionUnit(eRunMode runMode, const wxDateTime& startedDateTime,
-			const wxString strUserName, const wxString strComputerName, const Guid& strSession) :
+			const wxString strUserName, const wxString strComputerName, const CGuid& strSession) :
 			m_runMode(runMode),
 			m_startedDate(startedDateTime),
 			m_strUserName(strUserName),
@@ -74,7 +74,7 @@ public:
 	CApplicationDataSessionArray(const CApplicationDataSessionArray& src) : m_sessionArrayHash(src.m_sessionArrayHash), m_listSession(src.m_listSession) {}
 
 	void AppendSession(eRunMode runMode, const wxDateTime& startedTime,
-		const wxString strUserName, const wxString strComputerName, const Guid& strSession) {
+		const wxString strUserName, const wxString strComputerName, const CGuid& strSession) {
 		m_listSession.emplace_back(
 			runMode,
 			startedTime,
@@ -110,7 +110,7 @@ class BACKEND_API CApplicationData {
 		bool m_sessionCreated, m_sessionStarted;
 		CApplicationDataSessionArray m_sessionArray;
 		std::shared_ptr<IDatabaseLayer> m_session_db;
-		const Guid m_session;
+		const CGuid m_session;
 		wxDateTime m_currentDateTime;
 		static wxCriticalSection sm_sessionLocker;
 	private:
@@ -121,7 +121,7 @@ class BACKEND_API CApplicationData {
 		void ClearLostSessionUpdater();
 		bool VerifySessionUpdater() const;
 	public:
-		CApplicationDataSessionUpdater(CApplicationData* application, const Guid& session);
+		CApplicationDataSessionUpdater(CApplicationData* application, const CGuid& session);
 		virtual ~CApplicationDataSessionUpdater();
 		bool InitSessionUpdater();
 		void StartSessionUpdater();
@@ -218,7 +218,7 @@ private:
 	wxString m_strComputer;
 	wxDateTime m_startedDate;
 	wxDateTime m_lastActivity;
-	Guid m_sessionGuid;
+	CGuid m_sessionGuid;
 
 	std::shared_ptr<IDatabaseLayer> m_db;
 	std::shared_ptr<CApplicationDataSessionUpdater> m_sessionUpdater;

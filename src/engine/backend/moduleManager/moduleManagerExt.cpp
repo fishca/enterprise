@@ -180,7 +180,7 @@ bool CModuleManagerExternalDataProcessor::StartMainModule(bool force)
 		}
 	}
 	//else {
-	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, Guid::newGuid());
+	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, CGuid::newGuid());
 	//	valueForm->BuildForm(CMetaObjectDataProcessor::eFormDataProcessor);
 	//	try {
 	//		valueForm->ShowForm();
@@ -385,7 +385,7 @@ bool CModuleManagerExternalReport::StartMainModule(bool force)
 		}
 	}
 	//else {
-	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, Guid::newGuid());
+	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, CGuid::newGuid());
 	//	valueForm->BuildForm(CMetaObjectReport::eFormReport);
 	//	try {
 	//		valueForm->ShowForm();

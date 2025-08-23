@@ -196,7 +196,7 @@ IMetaObject* IMetaData::GetMetaObject(const meta_identifier_t& id, IMetaObject* 
 	return DoGetMetaObject(id, top != nullptr ? top : GetCommonMetaObject());
 }
 
-IMetaObject* IMetaData::GetMetaObject(const Guid& guid, IMetaObject* top) const
+IMetaObject* IMetaData::GetMetaObject(const CGuid& guid, IMetaObject* top) const
 {
 	if (!guid.isValid()) return nullptr;
 	return DoGetMetaObject(guid, top != nullptr ? top : GetCommonMetaObject());
@@ -214,7 +214,7 @@ IMetaObject* IMetaData::DoGetMetaObject(const meta_identifier_t& id, IMetaObject
 	return nullptr;
 }
 
-IMetaObject* IMetaData::DoGetMetaObject(const Guid& guid, IMetaObject* top) const
+IMetaObject* IMetaData::DoGetMetaObject(const CGuid& guid, IMetaObject* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
 		IMetaObject* child = top->GetChild(idx);

@@ -25,7 +25,7 @@ public:
 	virtual ~IBackendControlFrame() {}
 
 	virtual bool GetControlValue(CValue& pvarControlVal) const = 0;
-	virtual Guid GetControlGuid() const = 0;
+	virtual CGuid GetControlGuid() const = 0;
 
 	virtual IBackendValueForm* GetBackendForm() const { return nullptr; }
 

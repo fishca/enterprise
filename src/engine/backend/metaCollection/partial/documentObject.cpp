@@ -110,7 +110,7 @@ CRecordDataObjectDocument::CRecorderRegisterDocument::~CRecorderRegisterDocument
 //*                                  CRecordDataObjectDocument	                                      *
 //*********************************************************************************************
 
-CRecordDataObjectDocument::CRecordDataObjectDocument(CMetaObjectDocument* metaObject, const Guid& objGuid) :
+CRecordDataObjectDocument::CRecordDataObjectDocument(CMetaObjectDocument* metaObject, const CGuid& objGuid) :
 	IRecordDataObjectRef(metaObject, objGuid), m_registerRecords(nullptr)
 {
 	m_registerRecords = new CRecorderRegisterDocument(this);

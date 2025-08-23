@@ -51,7 +51,7 @@ class CUserWnd : public wxDialog
 	wxChoice* m_choiceRole;
 	wxChoice* m_choiceInterface;
 
-	Guid m_userGuid; 
+	CGuid m_userGuid; 
 
 private:
 
@@ -62,7 +62,7 @@ private:
 
 public:
 
-	bool ReadUserData(const Guid &guid, bool copy = false);
+	bool ReadUserData(const CGuid &guid, bool copy = false);
 
 	CUserWnd(wxWindow* parent, wxWindowID id = wxID_ANY, 
 		const wxString& title = wxT("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);

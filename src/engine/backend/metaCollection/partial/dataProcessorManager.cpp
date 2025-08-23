@@ -103,7 +103,7 @@ bool CDataProcessorManager::CallAsFunc(const long lMethodNum, CValue& pvarRetVal
 		CValueGuid* guidVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr;
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			guidVal ? ((Guid)*guidVal) : Guid());
+			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
 	}

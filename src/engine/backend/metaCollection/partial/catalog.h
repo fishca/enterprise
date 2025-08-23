@@ -140,7 +140,7 @@ protected:
     virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 
     //create empty object
-    virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const Guid& guid = wxNullGuid);
+    virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
 
     //load & save metaData from DB 
     virtual bool LoadData(CMemoryReader& reader);
@@ -161,7 +161,7 @@ protected:
 //********************************************************************************************
 
 class CRecordDataObjectCatalog : public IRecordDataObjectFolderRef {
-    CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const Guid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+    CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const CGuid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
     CRecordDataObjectCatalog(const CRecordDataObjectCatalog& source);
 public:
 

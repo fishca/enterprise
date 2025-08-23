@@ -140,7 +140,7 @@ protected:
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 
 	//create empty object
-	virtual IRecordDataObjectRef* CreateObjectRefValue(const Guid& objGuid = wxNullGuid);
+	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -194,7 +194,7 @@ public:
 private:
 	CRecorderRegisterDocument* m_registerRecords;
 protected:
-	CRecordDataObjectDocument(CMetaObjectDocument* metaObject = nullptr, const Guid& guid = wxNullGuid);
+	CRecordDataObjectDocument(CMetaObjectDocument* metaObject = nullptr, const CGuid& guid = wxNullGuid);
 	CRecordDataObjectDocument(const CRecordDataObjectDocument& source);
 public:
 	virtual ~CRecordDataObjectDocument();

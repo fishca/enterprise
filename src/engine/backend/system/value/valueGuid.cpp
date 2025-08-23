@@ -9,7 +9,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueGuid, CValue);
 
 CValueGuid::CValueGuid() : CValue(eValueTypes::TYPE_VALUE, true), m_guid() {}
 
-CValueGuid::CValueGuid(const Guid& guid) : CValue(eValueTypes::TYPE_VALUE, true), m_guid(guid) {}
+CValueGuid::CValueGuid(const CGuid& guid) : CValue(eValueTypes::TYPE_VALUE, true), m_guid(guid) {}
 
 bool CValueGuid::Init()
 {
@@ -23,7 +23,7 @@ bool CValueGuid::Init(CValue** paParams, const long lSizeArray)
 		return false;
 
 	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
-		const Guid& newGuid = paParams[0]->GetString();
+		const CGuid& newGuid = paParams[0]->GetString();
 		if (newGuid.isValid())
 			m_guid = newGuid;
 		return newGuid.isValid();

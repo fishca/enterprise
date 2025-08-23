@@ -56,12 +56,12 @@ bool CUniqueKey::operator!=(const CUniqueKey& other) const
 	return !((*this) == other);
 }
 
-bool CUniqueKey::operator==(const Guid& other) const
+bool CUniqueKey::operator==(const CGuid& other) const
 {
 	return m_objGuid == other;
 }
 
-bool CUniqueKey::operator!=(const Guid& other) const
+bool CUniqueKey::operator!=(const CGuid& other) const
 {
 	return m_objGuid != other;
 }
@@ -73,7 +73,7 @@ CUniqueKey::CUniqueKey() : CUniqueKey(enUniqueData::enUniqueGuid)
 	m_keyValues = {};
 }
 
-CUniqueKey::CUniqueKey(const Guid& guid) : CUniqueKey(enUniqueData::enUniqueGuid)
+CUniqueKey::CUniqueKey(const CGuid& guid) : CUniqueKey(enUniqueData::enUniqueGuid)
 {
 	m_objGuid = guid;
 	m_metaObject = nullptr;

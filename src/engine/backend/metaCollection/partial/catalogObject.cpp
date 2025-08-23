@@ -16,7 +16,7 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-CRecordDataObjectCatalog::CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const Guid& objGuid, eObjectMode objMode) :
+CRecordDataObjectCatalog::CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const CGuid& objGuid, eObjectMode objMode) :
 	IRecordDataObjectFolderRef(metaObject, objGuid, objMode)
 {
 }

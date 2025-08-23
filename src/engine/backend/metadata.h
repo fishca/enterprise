@@ -21,7 +21,7 @@ private:
 	IMetaObject* DoFindByName(const wxString& fullName, IMetaObject* top) const;
 	//get metaObject 
 	IMetaObject* DoGetMetaObject(const meta_identifier_t& id, IMetaObject* top) const;
-	IMetaObject* DoGetMetaObject(const Guid& guid, IMetaObject* top) const;
+	IMetaObject* DoGetMetaObject(const CGuid& guid, IMetaObject* top) const;
 public:
 	IMetaData() :
 		m_metaTree(nullptr),
@@ -143,14 +143,14 @@ public:
 	}
 
 	template <typename T>
-	inline bool GetMetaObject(T*& foundedVal, const Guid& guid, IMetaObject* top = nullptr) const {
+	inline bool GetMetaObject(T*& foundedVal, const CGuid& guid, IMetaObject* top = nullptr) const {
 		foundedVal = dynamic_cast<T*>(GetMetaObject(guid, top));
 		return foundedVal != nullptr;
 	}
 
 	//get metaObject 
 	virtual IMetaObject* GetMetaObject(const meta_identifier_t& id, IMetaObject* top = nullptr) const;
-	virtual IMetaObject* GetMetaObject(const Guid& guid, IMetaObject* top = nullptr) const;
+	virtual IMetaObject* GetMetaObject(const CGuid& guid, IMetaObject* top = nullptr) const;
 
 	//Associate this metaData with 
 	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }

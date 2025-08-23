@@ -22,12 +22,12 @@ public:
 	bool isValid() const;
 	void reset();
 
-	Guid GetGuid() const {
+	CGuid GetGuid() const {
 		return m_objGuid;
 	}
 
 	CUniqueKey();
-	CUniqueKey(const Guid& guid);
+	CUniqueKey(const CGuid& guid);
 
 	virtual bool IsOk() const {
 		return m_metaObject != nullptr;
@@ -42,14 +42,14 @@ public:
 	virtual bool operator==(const CUniqueKey& other) const;
 	virtual bool operator!=(const CUniqueKey& other) const;
 
-	virtual bool operator==(const Guid& other) const;
-	virtual bool operator!=(const Guid& other) const;
+	virtual bool operator==(const CGuid& other) const;
+	virtual bool operator!=(const CGuid& other) const;
 
 	operator wxString() const {
 		return GetGuid().str();
 	}
 
-	operator Guid() const {
+	operator CGuid() const {
 		return GetGuid();
 	}
 
@@ -63,7 +63,7 @@ protected:
 
 protected:
 
-	Guid m_objGuid;
+	CGuid m_objGuid;
 	IMetaObjectRegisterData* m_metaObject;
 	valueArray_t m_keyValues;
 };

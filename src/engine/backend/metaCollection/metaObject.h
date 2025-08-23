@@ -207,7 +207,7 @@ public:
 	}
 
 	inline bool CompareId(const meta_identifier_t& id) const { return m_metaId == id; }
-	inline bool CompareGuid(const Guid& guid) const { return m_metaGuid == guid;}
+	inline bool CompareGuid(const CGuid& guid) const { return m_metaGuid == guid;}
 
 	operator meta_identifier_t() const { return m_metaId; }
 
@@ -323,7 +323,7 @@ public:
 	virtual wxString GetClassName() const final { return CValue::GetClassName(); }
 	virtual wxString GetObjectTypeName() const final { return CValue::GetClassName(); }
 
-	Guid GetGuid() const { return m_metaGuid; }
+	CGuid GetGuid() const { return m_metaGuid; }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -335,11 +335,11 @@ public:
 		return m_metaPasteGuid.isValid();
 	}
 
-	void SetCommonGuid(const Guid& guid) {
+	void SetCommonGuid(const CGuid& guid) {
 		m_metaCopyGuid.reset(); m_metaPasteGuid.reset(); m_metaGuid = guid;
 	}
 
-	Guid GetCommonGuid() const {
+	CGuid GetCommonGuid() const {
 
 		if (m_metaPasteGuid.isValid())
 			return m_metaPasteGuid;
@@ -352,7 +352,7 @@ public:
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetCopyGuid(const Guid& guid) const { m_metaCopyGuid = guid; }
+	void SetCopyGuid(const CGuid& guid) const { m_metaCopyGuid = guid; }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -575,11 +575,11 @@ protected:
 
 protected:
 
-	mutable Guid m_metaCopyGuid, m_metaPasteGuid;
+	mutable CGuid m_metaCopyGuid, m_metaPasteGuid;
 
 	int m_metaFlags;
 	meta_identifier_t m_metaId;			//type id (default is undefined)
-	Guid m_metaGuid;
+	CGuid m_metaGuid;
 
 	IMetaData* m_metaData;
 

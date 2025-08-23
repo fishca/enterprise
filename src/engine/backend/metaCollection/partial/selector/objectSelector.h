@@ -42,7 +42,7 @@ public:
 	CSelectorDataObject(IMetaObjectRecordDataMutableRef* metaObject);
 
 	virtual bool Next();
-	virtual IRecordDataObjectRef* GetObject(const Guid& guid) const;
+	virtual IRecordDataObjectRef* GetObject(const CGuid& guid) const;
 
 	//get metaData from object 
 	virtual IMetaObjectRecordData* GetMetaObject() const {
@@ -68,7 +68,7 @@ protected:
 protected:
 
 	IMetaObjectRecordDataMutableRef* m_metaObject;
-	std::vector<Guid> m_currentValues;
+	std::vector<CGuid> m_currentValues;
 };
 
 /////////////////////////////////////////////////////////////////////////////

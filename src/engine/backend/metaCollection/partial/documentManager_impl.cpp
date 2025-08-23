@@ -52,7 +52,7 @@ CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, cons
 			IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 			wxASSERT(databaseResultSet);
 			if (databaseResultSet->Next()) {
-				const Guid& foundedGuid = databaseResultSet->GetResultString(guidName);
+				const CGuid& foundedGuid = databaseResultSet->GetResultString(guidName);
 				if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);
 			}
 			db_query->CloseResultSet(databaseResultSet);

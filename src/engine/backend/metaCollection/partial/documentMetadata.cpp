@@ -97,7 +97,7 @@ ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* meta
 
 #include "backend/appData.h"
 
-IRecordDataObjectRef* CMetaObjectDocument::CreateObjectRefValue(const Guid& objGuid)
+IRecordDataObjectRef* CMetaObjectDocument::CreateObjectRefValue(const CGuid& objGuid)
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);

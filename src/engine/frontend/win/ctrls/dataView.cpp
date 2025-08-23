@@ -283,7 +283,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				return true;
 			}
 
-			virtual Guid GetControlGuid() const { 
+			virtual CGuid GetControlGuid() const { 
 				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return wxNullGuid;

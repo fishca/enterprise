@@ -7,7 +7,7 @@ class BACKEND_API CMetaObjectEnum : public IMetaObject {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectEnum);
 public:
 
-	Guid GetGuid() const {
+	CGuid GetGuid() const {
 		return m_metaGuid;
 	}
 

@@ -75,8 +75,8 @@ public:
 
 	//////////////////////////////////////////////////
 
-	void SetSourceGuid(const Guid& guid, bool fillTypeDesc = true);
-	Guid GetSourceGuid() const;
+	void SetSourceGuid(const CGuid& guid, bool fillTypeDesc = true);
+	CGuid GetSourceGuid() const;
 
 	//////////////////////////////////////////////////
 
@@ -89,8 +89,8 @@ public:
 
 	//////////////////////////////////////////////////
 
-	meta_identifier_t GetIdByGuid(const Guid& guid) const;
-	Guid GetGuidByID(const meta_identifier_t& id) const;
+	meta_identifier_t GetIdByGuid(const CGuid& guid) const;
+	CGuid GetGuidByID(const meta_identifier_t& id) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +107,7 @@ public:
 		m_dataSource = GetGuidByID(id);
 	}
 
-	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const Guid& id, bool fillTypeDesc = true) : wxVariantData(),
+	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const CGuid& id, bool fillTypeDesc = true) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(id) {
 
 		m_attributeSource = new wxVariantDataAttributeSource(prop, fillTypeDesc ? GetIdByGuid(id) : wxNOT_FOUND);
@@ -167,7 +167,7 @@ public:
 
 protected:
 
-	Guid m_dataSource;
+	CGuid m_dataSource;
 	const IBackendTypeSourceFactory* m_ownerProperty = nullptr;
 	wxVariantDataAttributeSource* m_attributeSource = nullptr;
 };

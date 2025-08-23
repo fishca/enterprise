@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include <string_view>
 
 // overload << so that it's easy to convert to a string
-std::ostream& operator<<(std::ostream& s, const Guid& guid)
+std::ostream& operator<<(std::ostream& s, const CGuid& guid)
 {
 	std::ios_base::fmtflags f(s.flags()); // politely don't leave the ostream in hex mode
 	s << std::hex << std::setfill('0')
@@ -65,14 +65,14 @@ std::ostream& operator<<(std::ostream& s, const Guid& guid)
 	return s;
 }
 
-bool operator<(const Guid& lhs, const Guid& rhs)
+bool operator<(const CGuid& lhs, const CGuid& rhs)
 {
 	return lhs.bytes() < rhs.bytes();
 }
 
-bool Guid::isValid() const
+bool CGuid::isValid() const
 {
-	Guid empty;
+	CGuid empty;
 	return *this != empty;
 }
 
@@ -84,7 +84,7 @@ inline void hex_to_string(std::string& out, I& w, size_t hex_len = sizeof(I) << 
 }
 
 // convert to string using std::snprintf() and std::string
-std::string Guid::str() const
+std::string CGuid::str() const
 {
 	std::string out; out.reserve(36);
 	hex_to_string(out, _bytes[0]);
@@ -111,7 +111,7 @@ std::string Guid::str() const
 }
 
 // conversion operator for guid_t
-Guid::operator guid_t() const
+CGuid::operator guid_t() const
 {
 	guid_t guid;
 	guid.m_data1 = _bytes[0] << 24 ^ _bytes[1] << 16 ^ _bytes[2] << 8 ^ _bytes[3];
@@ -129,18 +129,18 @@ Guid::operator guid_t() const
 }
 
 // Access underlying bytes
-const std::array<unsigned char, 16>& Guid::bytes() const
+const std::array<unsigned char, 16>& CGuid::bytes() const
 {
 	return _bytes;
 }
 
 // create a guid from vector of bytes
-Guid::Guid(const std::array<unsigned char, 16>& bytes) : _bytes(bytes)
+CGuid::CGuid(const std::array<unsigned char, 16>& bytes) : _bytes(bytes)
 {
 }
 
 // create a guid from vector of bytes
-Guid::Guid(const std::array<unsigned char, 16>&& bytes) : _bytes(std::move(bytes))
+CGuid::CGuid(const std::array<unsigned char, 16>&& bytes) : _bytes(std::move(bytes))
 {
 }
 
@@ -186,7 +186,7 @@ inline unsigned char hexPairToChar(char a, char b)
 }
 
 // create a guid from string
-Guid::Guid(const std::string_view& fromString)
+CGuid::CGuid(const std::string_view& fromString)
 {
 	char charOne = '\0';
 	char charTwo = '\0';
@@ -229,7 +229,7 @@ Guid::Guid(const std::string_view& fromString)
 
 #if __WXWINDOWS__
 // create a guid from string
-Guid::Guid(const wxString& fromString)
+CGuid::CGuid(const wxString& fromString)
 {
 	char charOne = '\0';
 	char charTwo = '\0';
@@ -271,7 +271,7 @@ Guid::Guid(const wxString& fromString)
 }
 #endif
 
-Guid::Guid(const guid_t& guid)
+CGuid::CGuid(const guid_t& guid)
 {
 	_bytes = {
 		(unsigned char)((guid.m_data1 >> 24) & 0xFF),
@@ -297,38 +297,38 @@ Guid::Guid(const guid_t& guid)
 }
 
 // create empty guid
-Guid::Guid() : _bytes{ {0} }
+CGuid::CGuid() : _bytes{ {0} }
 {
 }
 
 // set all bytes to zero
-void Guid::zeroify()
+void CGuid::zeroify()
 {
 	std::fill(_bytes.begin(), _bytes.end(), static_cast<unsigned char>(0));
 }
 
-bool Guid::operator > (const Guid& other) const
+bool CGuid::operator > (const CGuid& other) const
 {
 	return _bytes > other._bytes;
 }
 
-bool Guid::operator >= (const Guid& other) const
+bool CGuid::operator >= (const CGuid& other) const
 {
 	return _bytes >= other._bytes;
 }
 
-bool Guid::operator < (const Guid& other) const
+bool CGuid::operator < (const CGuid& other) const
 {
 	return _bytes < other._bytes;
 }
 
-bool Guid::operator <= (const Guid& other) const
+bool CGuid::operator <= (const CGuid& other) const
 {
 	return _bytes <= other._bytes;
 }
 
 // overload equality operator
-bool Guid::operator==(const Guid& other) const
+bool CGuid::operator==(const CGuid& other) const
 {
 	for (unsigned int idx = 0; idx < 16; idx++)
 		if (_bytes[idx] != other._bytes[idx]) return false; 
@@ -337,13 +337,13 @@ bool Guid::operator==(const Guid& other) const
 }
 
 // overload inequality operator
-bool Guid::operator!=(const Guid& other) const
+bool CGuid::operator!=(const CGuid& other) const
 {
 	return !((*this) == other);
 }
 
 // member swap function
-void Guid::swap(Guid& other)
+void CGuid::swap(CGuid& other)
 {
 	_bytes.swap(other._bytes);
 }
@@ -351,18 +351,18 @@ void Guid::swap(Guid& other)
 // This is the linux friendly implementation, but it could work on other
 // systems that have libuuid available
 #ifdef GUID_LIBUUID
-Guid Guid::newGuid(short version)
+CGuid CGuid::newGuid(short version)
 {
 	std::array<unsigned char, 16> data;
 	static_assert(std::is_same<unsigned char[16], uuid_t>::value, "Wrong type!");
 	uuid_generate(data.data());
-	return Guid{ std::move(data) };
+	return CGuid{ std::move(data) };
 }
 #endif
 
 // this is the mac and ios version
 #ifdef GUID_CFUUID
-Guid Guid::newGuid(short version)
+CGuid CGuid::newGuid(short version)
 {
 	auto newId = CFUUIDCreate(nullptr);
 	auto bytes = CFUUIDGetUUIDBytes(newId);
@@ -387,7 +387,7 @@ Guid Guid::newGuid(short version)
 		bytes.byte14,
 		bytes.byte15
 	} };
-	return Guid{ std::move(byteArray) };
+	return CGuid{ std::move(byteArray) };
 }
 #endif
 
@@ -395,7 +395,7 @@ Guid Guid::newGuid(short version)
 #ifdef GUID_WINDOWS
 #pragma comment( lib, "rpcrt4.lib" )
 
-Guid Guid::newGuid(short version)
+CGuid CGuid::newGuid(short version)
 {
 	GUID newId = { 0 };
 	if (version == GUID_TIME_BASED)
@@ -426,6 +426,6 @@ Guid Guid::newGuid(short version)
 		(unsigned char)newId.Data4[7]
 	};
 
-	return Guid{ std::move(bytes) };
+	return CGuid{ std::move(bytes) };
 }
 #endif

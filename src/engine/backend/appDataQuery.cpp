@@ -175,7 +175,7 @@ void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-CApplicationData::CApplicationDataSessionUpdater::CApplicationDataSessionUpdater(CApplicationData* application, const Guid& session) :
+CApplicationData::CApplicationDataSessionUpdater::CApplicationDataSessionUpdater(CApplicationData* application, const CGuid& session) :
 	wxThread(wxTHREAD_JOINABLE),
 	m_session_db(application->m_db != nullptr ? application->m_db->Clone() : nullptr),
 	m_session(session),

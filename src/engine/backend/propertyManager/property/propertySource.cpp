@@ -27,7 +27,7 @@ wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* propert
     return new wxVariantDataSource(propFactory, id);
 }
 
-wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const Guid& id, bool fillTypeDesc) const
+wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const CGuid& id, bool fillTypeDesc) const
 {
     const IBackendTypeSourceFactory* propFactory = dynamic_cast<const IBackendTypeSourceFactory*>(property);
     if (propFactory == nullptr)
@@ -37,10 +37,10 @@ wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* propert
 
 ////////////////////////////////////////////////////////////////////////
 meta_identifier_t CPropertySource::GetValueAsSource() const { return get_cell_variant<wxVariantDataSource>()->GetSource(); }
-Guid CPropertySource::GetValueAsSourceGuid() const { return get_cell_variant<wxVariantDataSource>()->GetSourceGuid(); }
+CGuid CPropertySource::GetValueAsSourceGuid() const { return get_cell_variant<wxVariantDataSource>()->GetSourceGuid(); }
 CTypeDescription& CPropertySource::GetValueAsTypeDesc(bool fillTypeDesc) const { return get_cell_variant<wxVariantDataSource>()->GetSourceTypeDesc(fillTypeDesc); }
 void CPropertySource::SetValue(const meta_identifier_t& val) { m_propValue = CreateVariantData(m_owner, val); }
-void CPropertySource::SetValue(const Guid& val, bool fillTypeDesc) { m_propValue = CreateVariantData(m_owner, val, fillTypeDesc); }
+void CPropertySource::SetValue(const CGuid& val, bool fillTypeDesc) { m_propValue = CreateVariantData(m_owner, val, fillTypeDesc); }
 void CPropertySource::SetValue(const CTypeDescription& val) { m_propValue = CreateVariantData(m_owner, val); }
 ////////////////////////////////////////////////////////////////////////
 

@@ -43,7 +43,7 @@ wxString ISelectorObject::GetString() const
 
 CSelectorDataObject::CSelectorDataObject(IMetaObjectRecordDataMutableRef* metaObject) :
 	ISelectorObject(),
-	IValueDataObject(Guid(), false),
+	IValueDataObject(CGuid(), false),
 	m_metaObject(metaObject)
 {
 	Reset();
@@ -77,7 +77,7 @@ bool CSelectorDataObject::Next()
 	return false;
 }
 
-IRecordDataObjectRef* CSelectorDataObject::GetObject(const Guid& guid) const
+IRecordDataObjectRef* CSelectorDataObject::GetObject(const CGuid& guid) const
 {
 	if (appData->DesignerMode()) {
 		return m_metaObject->CreateObjectValue();

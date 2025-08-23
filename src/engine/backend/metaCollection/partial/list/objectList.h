@@ -215,7 +215,7 @@ public:
 	virtual operator CValue() const { return this; };
 
 protected:
-	Guid m_objGuid;
+	CGuid m_objGuid;
 	CDataObjectListColumnCollection* m_dataColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
@@ -225,14 +225,14 @@ class BACKEND_API CListDataObjectEnumRef : public IListDataObject {
 	wxDECLARE_DYNAMIC_CLASS(CListDataObjectRef);
 public:
 	struct wxValueTableEnumRow : public wxValueTableRow {
-		wxValueTableEnumRow(const Guid& guid) :
+		wxValueTableEnumRow(const CGuid& guid) :
 			wxValueTableRow(), m_objGuid(guid) {
 		}
-		Guid GetGuid() const {
+		CGuid GetGuid() const {
 			return m_objGuid;
 		}
 	private:
-		Guid m_objGuid;
+		CGuid m_objGuid;
 	};
 public:
 
@@ -321,14 +321,14 @@ class BACKEND_API CListDataObjectRef : public IListDataObject {
 	wxDECLARE_DYNAMIC_CLASS(CListDataObjectRef);
 public:
 	struct wxValueTableListRow : public wxValueTableRow {
-		wxValueTableListRow(const Guid& guid) :
+		wxValueTableListRow(const CGuid& guid) :
 			wxValueTableRow(), m_objGuid(guid) {
 		}
-		Guid GetGuid() const {
+		CGuid GetGuid() const {
 			return m_objGuid;
 		}
 	private:
-		Guid m_objGuid;
+		CGuid m_objGuid;
 	};
 public:
 
@@ -711,7 +711,7 @@ public:
 
 protected:
 
-	Guid m_objGuid;
+	CGuid m_objGuid;
 	CDataObjectTreeColumnCollection* m_dataColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
@@ -728,11 +728,11 @@ public:
 	};
 
 	struct wxValueTreeListNode : public wxValueTreeNode {
-		wxValueTreeListNode(wxValueTreeNode* parent, const Guid& guid, ITreeDataObject* treeValue = nullptr, bool container = false) :
+		wxValueTreeListNode(wxValueTreeNode* parent, const CGuid& guid, ITreeDataObject* treeValue = nullptr, bool container = false) :
 			wxValueTreeNode(parent), m_objGuid(guid), m_container(container) {
 			m_valueTree = treeValue;
 		}
-		Guid GetGuid() const {
+		CGuid GetGuid() const {
 			return m_objGuid;
 		}
 		virtual bool IsContainer() const {
@@ -740,7 +740,7 @@ public:
 		};
 	private:
 		bool m_container;
-		Guid m_objGuid;
+		CGuid m_objGuid;
 	};
 
 public:

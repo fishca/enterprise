@@ -80,15 +80,15 @@ public:
 	virtual ~IMetaObjectSourceData() {}
 
 	//guid to id 
-	meta_identifier_t GetIdByGuid(const Guid& guid) const;
-	Guid GetGuidByID(const meta_identifier_t& id) const;
+	meta_identifier_t GetIdByGuid(const CGuid& guid) const;
+	CGuid GetGuidByID(const meta_identifier_t& id) const;
 
 	//runtime support:
 	IMetaValueTypeCtor* GetTypeCtor(const enum eCtorMetaType& refType) const;
 
 	//find in current metaObject
 	IMetaObject* FindMetaObjectByID(const meta_identifier_t& id) const;
-	IMetaObject* FindMetaObjectByID(const Guid& guid) const;
+	IMetaObject* FindMetaObjectByID(const CGuid& guid) const;
 
 	//override base objects 
 	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributes() const = 0;

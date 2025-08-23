@@ -581,7 +581,7 @@ bool IRecordDataObjectRef::ReadData()
 	return ReadData(m_objGuid);
 }
 
-bool IRecordDataObjectRef::ReadData(const Guid& srcGuid)
+bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendException::Error(_("database is not open!"));
@@ -765,7 +765,7 @@ bool IRecordDataObjectFolderRef::ReadData()
 	return false;
 }
 
-bool IRecordDataObjectFolderRef::ReadData(const Guid& srcGuid)
+bool IRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
 {
 	if (IRecordDataObjectRef::ReadData(srcGuid)) {
 		IMetaObjectRecordDataFolderMutableRef* metaFolder = GetMetaObject();

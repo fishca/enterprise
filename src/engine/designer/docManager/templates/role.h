@@ -31,7 +31,7 @@ private:
 class CRoleDocument : public CMetaDocument
 {
 public:
-	CRoleDocument() : CMetaDocument() { m_childDoc = false; }
+	CRoleDocument() : CMetaDocument() { /*m_childDoc = false;*/ }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 

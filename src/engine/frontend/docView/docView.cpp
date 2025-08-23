@@ -31,7 +31,7 @@ CMetaView* CMetaDocument::DoCreateView()
 
 wxString CMetaDocument::GetModuleName() const
 {
-	return m_metaObject ? 
+	return m_metaObject ?
 		m_metaObject->GetFullName() : wxEmptyString;
 }
 
@@ -69,14 +69,14 @@ bool CMetaDocument::OnCreate(const wxString& path, long flags)
 
 	long style = wxDEFAULT_FRAME_STYLE;
 	if (createModal) style = style | wxCREATE_SDI_FRAME;
-	
+
 	view->SetDocument(this);
 
 	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
-		
-	if (!view->OnCreate(this, flags)) 
+
+	if (!view->OnCreate(this, flags))
 		return false;
-	
+
 	view->ShowFrame();
 	return view.release() != nullptr;
 }
@@ -120,7 +120,7 @@ bool CMetaDocument::OnCloseDocument()
 
 bool CMetaDocument::IsModified() const
 {
-	if (m_metaObject != nullptr) 
+	if (m_metaObject != nullptr)
 		return false;
 	return wxDocument::IsModified();
 }
@@ -153,11 +153,8 @@ bool CMetaDocument::Save()
 		return false;
 	}
 
-	if (m_docParent == nullptr && IsChildDocument() &&
-		m_metaObject != nullptr) {
-		if (commonMetaData->SaveDatabase()) {
-			return false;
-		}
+	if ((m_docParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
+		if (commonMetaData->SaveDatabase()) return false;
 	}
 
 	if (m_documentFile.IsEmpty() ||
@@ -170,7 +167,7 @@ bool CMetaDocument::Save()
 
 bool CMetaDocument::SaveAs()
 {
-	if (m_metaObject != nullptr) 
+	if (m_metaObject != nullptr)
 		return true;
 	return wxDocument::SaveAs();
 }

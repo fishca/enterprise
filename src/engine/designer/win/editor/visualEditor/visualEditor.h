@@ -271,6 +271,7 @@ public:
 
 		//set and create window
 		void SetObjectSelect(IValueFrame* obj);
+		void ScrollToObject(IValueFrame* obj);
 
 	protected:
 		virtual void SetCaption(const wxString& strCaption);
@@ -324,7 +325,7 @@ public:
 		void OnKeyDown(wxTreeEvent& event);
 
 	private:
-		
+
 		CVisualEditor* m_formHandler = nullptr;
 
 		wxImageList* m_iconList = nullptr;
@@ -452,8 +453,6 @@ protected:
 	/**
 	* Search a size in the hierarchy of an object
 	*/
-	IValueFrame* SearchSizerInto(IValueFrame* obj);
-
 	void PropagateExpansion(IValueFrame* obj, bool expand, bool up);
 
 	/**
@@ -490,10 +489,10 @@ public:
 	void MovePosition(IValueFrame* obj, unsigned int toPos);
 	void MovePosition(IValueFrame* obj, bool right, unsigned int num = 1);
 
+	void ScrollToObject(IValueFrame* obj);
+
 	// Servicios para los observadores
-	IValueFrame* GetSelectedObject() const {
-		return m_selObj;
-	}
+	IValueFrame* GetSelectedObject() const { return m_selObj; }
 
 	void RefreshEditor() {
 		if (m_visualEditor != nullptr) {
@@ -535,9 +534,6 @@ public:
 	* @return posición de insercción (-1 si no se puede insertar).
 	*/
 	int CalcPositionOfInsertion(IValueFrame* selected, IValueFrame* parent);
-
-	void ToggleBorderFlag(IValueFrame* obj, int border);
-	void CreateBoxSizerWithObject(IValueFrame* obj);
 
 	bool LoadForm();
 	bool SaveForm();
@@ -693,7 +689,9 @@ public:
 			m_codeEditor->SaveModule();
 	}
 
-	void TestForm() { m_visualEditor->TestForm(); }
+	void TestForm() { 
+		m_visualEditor->TestForm();
+	}
 
 	void RefreshEditor() {
 
@@ -734,21 +732,11 @@ public:
 		m_visualNotebook(visualNotebook) {
 	}
 
-	virtual bool Undo() override {
-		return m_visualNotebook->Undo();
-	}
+	virtual bool Undo() override { return m_visualNotebook->Undo(); }
+	virtual bool Redo() override { return m_visualNotebook->Redo(); }
 
-	virtual bool Redo() override {
-		return m_visualNotebook->Redo();
-	}
-
-	virtual bool CanUndo() const override {
-		return m_visualNotebook->CanUndo();
-	}
-
-	virtual bool CanRedo() const override {
-		return m_visualNotebook->CanRedo();
-	}
+	virtual bool CanUndo() const override { return m_visualNotebook->CanUndo(); }
+	virtual bool CanRedo() const override { return m_visualNotebook->CanRedo(); }
 };
 
 #endif

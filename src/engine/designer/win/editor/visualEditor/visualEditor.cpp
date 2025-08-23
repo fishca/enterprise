@@ -7,10 +7,6 @@
 
 #include "backend/propertyManager/propertyManager.h"
 
-
-#include <wx/collpane.h>
-#include <wx/dcbuffer.h>
-
 static const int ID_TIMER_SCAN = wxScrolledWindow::NewControlId();
 
 wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorHost, wxScrolledWindow)
@@ -107,10 +103,6 @@ bool CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnLeftClickFromApp
 		if (founded != nullptr) {
 			IValueFrame* oldObj = m_formHandler->GetSelectedObject();
 			wxASSERT(oldObj);
-			IValueFrame* selObj = founded;
-			wxASSERT(selObj);
-			wxObject* oldWxObj = oldObj->GetWxObject();
-			wxObject* selWxObj = selObj->GetWxObject();
 			if (founded != oldObj->GetParent())
 				m_formHandler->SelectObject(founded);
 			break;
@@ -273,101 +265,110 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 	m_back->SetSelectedObject(obj);
 	m_back->SetSelectedPanel(selPanel);
 
-#ifdef _select_control_
-	if (componentType == COMPONENT_TYPE_WINDOW) {
-
-		const wxRect viewRect(m_targetWindow->GetClientRect());
-
-		// For composite controls such as wxComboCtrl we should try to fit the
-		// entire control inside the visible area of the target window, not just
-		// the focused child of the control. Otherwise we'd make only the textctrl
-		// part of a wxComboCtrl visible and the button would still be outside the
-		// scrolled area.  But do so only if the parent fits *entirely* inside the
-		// scrolled window. In other situations, such as nested wxPanel or
-		// wxScrolledWindows, the parent might be way too big to fit inside the
-		// scrolled window. If that is the case, then make only the focused window
-		// visible
-
-		const wxWindow* win = dynamic_cast<wxWindow*>(item);
-		wxASSERT(win);
-
-		if (win->GetParent() != m_targetWindow)
-		{
-			wxWindow* parent = win->GetParent();
-			wxSize parent_size = parent->GetSize();
-			if (parent_size.GetWidth() <= viewRect.GetWidth() &&
-				parent_size.GetHeight() <= viewRect.GetHeight())
-				// make the immediate parent visible instead of the focused control
-				win = parent;
-		}
-
-		// make win position relative to the m_targetWindow viewing area instead of
-		// its parent
-		const wxRect
-			winRect(m_targetWindow->ScreenToClient(win->GetScreenPosition()),
-				win->GetSize());
-
-		// check if it's fully visible
-		if (viewRect.Contains(winRect))
-		{
-			// it is, nothing to do
-			return;
-		}
-
-		// do make the window fit inside the view area by scrolling to it
-		int stepx, stepy;
-		GetScrollPixelsPerUnit(&stepx, &stepy);
-
-		int startx, starty;
-		GetViewStart(&startx, &starty);
-
-		// first in vertical direction:
-		if (stepy > 0)
-		{
-			int diff = 0;
-
-			if (winRect.GetTop() < 0)
-			{
-				diff = winRect.GetTop();
-			}
-			else if (winRect.GetBottom() > viewRect.GetHeight())
-			{
-				diff = winRect.GetBottom() - viewRect.GetHeight() + 1;
-				// round up to next scroll step if we can't get exact position,
-				// so that the window is fully visible:
-				diff += stepy - 1;
-			}
-
-			starty = (starty * stepy + diff) / stepy;
-		}
-
-		// then horizontal:
-		if (stepx > 0)
-		{
-			int diff = 0;
-
-			if (winRect.GetLeft() < 0)
-			{
-				diff = winRect.GetLeft();
-			}
-			else if (winRect.GetRight() > viewRect.GetWidth())
-			{
-				diff = winRect.GetRight() - viewRect.GetWidth() + 1;
-				// round up to next scroll step if we can't get exact position,
-				// so that the window is fully visible:
-				diff += stepx - 1;
-			}
-
-			startx = (startx * stepx + diff) / stepx;
-		}
-
-		wxScrolledWindow::Freeze();
-		wxScrolledWindow::Scroll(startx, starty);
-		wxScrolledWindow::Thaw();
-	}
-#endif // _select_control_
-
 	m_back->Refresh();
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::ScrollToObject(IValueFrame* obj)
+{
+	// Make sure this is a visible object
+	auto it = m_baseObjects.find(obj);
+	if (it != m_baseObjects.end()) {
+
+		// Save wxobject
+		wxObject* item = it->second;
+
+		if (obj->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+
+			const wxRect viewRect(m_targetWindow->GetClientRect());
+
+			// For composite controls such as wxComboCtrl we should try to fit the
+			// entire control inside the visible area of the target window, not just
+			// the focused child of the control. Otherwise we'd make only the textctrl
+			// part of a wxComboCtrl visible and the button would still be outside the
+			// scrolled area.  But do so only if the parent fits *entirely* inside the
+			// scrolled window. In other situations, such as nested wxPanel or
+			// wxScrolledWindows, the parent might be way too big to fit inside the
+			// scrolled window. If that is the case, then make only the focused window
+			// visible
+
+			const wxWindow* win = dynamic_cast<wxWindow*>(item);
+			wxASSERT(win);
+
+			if (win->GetParent() != m_targetWindow)
+			{
+				wxWindow* parent = win->GetParent();
+				wxSize parent_size = parent->GetSize();
+				if (parent_size.GetWidth() <= viewRect.GetWidth() &&
+					parent_size.GetHeight() <= viewRect.GetHeight())
+					// make the immediate parent visible instead of the focused control
+					win = parent;
+			}
+
+			// make win position relative to the m_targetWindow viewing area instead of
+			// its parent
+			const wxRect
+				winRect(m_targetWindow->ScreenToClient(win->GetScreenPosition()),
+					win->GetSize());
+
+			// check if it's fully visible
+			if (viewRect.Contains(winRect))
+			{
+				// it is, nothing to do
+				return;
+			}
+
+			// do make the window fit inside the view area by scrolling to it
+			int stepx, stepy;
+			GetScrollPixelsPerUnit(&stepx, &stepy);
+
+			int startx, starty;
+			GetViewStart(&startx, &starty);
+
+			// first in vertical direction:
+			if (stepy > 0)
+			{
+				int diff = 0;
+
+				if (winRect.GetTop() < 0)
+				{
+					diff = winRect.GetTop();
+				}
+				else if (winRect.GetBottom() > viewRect.GetHeight())
+				{
+					diff = winRect.GetBottom() - viewRect.GetHeight() + 1;
+					// round up to next scroll step if we can't get exact position,
+					// so that the window is fully visible:
+					diff += stepy - 1;
+				}
+
+				starty = (starty * stepy + diff) / stepy;
+			}
+
+			// then horizontal:
+			if (stepx > 0)
+			{
+				int diff = 0;
+
+				if (winRect.GetLeft() < 0)
+				{
+					diff = winRect.GetLeft();
+				}
+				else if (winRect.GetRight() > viewRect.GetWidth())
+				{
+					diff = winRect.GetRight() - viewRect.GetWidth() + 1;
+					// round up to next scroll step if we can't get exact position,
+					// so that the window is fully visible:
+					diff += stepx - 1;
+				}
+
+				startx = (startx * stepx + diff) / stepx;
+			}
+
+			wxScrolledWindow::Freeze();
+			wxScrolledWindow::Scroll(startx, starty);
+			wxScrolledWindow::Thaw();
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////

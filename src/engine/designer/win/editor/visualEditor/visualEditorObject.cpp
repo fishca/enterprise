@@ -859,24 +859,6 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 	return true;
 }
 
-IValueFrame* CVisualEditorNotebook::CVisualEditor::SearchSizerInto(IValueFrame* obj)
-{
-	IValueFrame* theSizer = nullptr;
-
-	if (obj->IsSubclassOf(wxT("boxsizer")) || obj->IsSubclassOf(wxT("wrapsizer")) ||
-		obj->IsSubclassOf(wxT("staticboxsizer")) || obj->IsSubclassOf(wxT("gridsizer"))) {
-		theSizer = obj;
-	}
-	else
-	{
-		for (unsigned int i = 0; !theSizer && i < obj->GetChildCount(); i++)
-			theSizer = SearchSizerInto(obj->GetChild(i));
-	}
-
-	return theSizer;
-
-}
-
 void CVisualEditorNotebook::CVisualEditor::ExpandObject(IValueFrame* obj, bool expand)
 {
 	Execute(new ExpandObjectCmd(this, obj, expand));
@@ -954,6 +936,11 @@ void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, bool r
 			SelectObject(noItemObj, true);
 		}
 	}
+}
+
+void CVisualEditorNotebook::CVisualEditor::ScrollToObject(IValueFrame* obj)
+{
+	m_visualEditor->ScrollToObject(obj);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1116,82 +1103,4 @@ int CVisualEditorNotebook::CVisualEditor::CalcPositionOfInsertion(IValueFrame* s
 		}
 	}
 	return pos;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-
-void CVisualEditorNotebook::CVisualEditor::ToggleBorderFlag(IValueFrame* obj, int border)
-{
-	if (!obj)
-		return;
-	IValueFrame* parent = obj->GetParent();
-	if (!parent)
-		return;
-	if (!parent->IsSubclassOf(wxT("sizerItem")))
-		return;
-	IProperty* propFlag = parent->GetProperty(wxT("flag"));
-
-	if (!propFlag)
-		return;
-
-	//wxString value = propFlag->GetValueAsString();
-
-	//value = typeConv::ClearFlag(wxT("wxALL"), value);
-	//value = typeConv::ClearFlag(wxT("wxTOP"), value);
-	//value = typeConv::ClearFlag(wxT("wxBOTTOM"), value);
-	//value = typeConv::ClearFlag(wxT("wxRIGHT"), value);
-	//value = typeConv::ClearFlag(wxT("wxLEFT"), value);
-
-	//int intVal = propFlag->GetValueAsInteger();
-	//intVal ^= border;
-
-	//if ((intVal & wxALL) == wxALL) {
-	//	value = typeConv::SetFlag(wxT("wxALL"), value);
-	//}
-	//else {
-	//	if ((intVal & wxTOP) != 0) value = typeConv::SetFlag(wxT("wxTOP"), value);
-	//	if ((intVal & wxBOTTOM) != 0) value = typeConv::SetFlag(wxT("wxBOTTOM"), value);
-	//	if ((intVal & wxRIGHT) != 0) value = typeConv::SetFlag(wxT("wxRIGHT"), value);
-	//	if ((intVal & wxLEFT) != 0) value = typeConv::SetFlag(wxT("wxLEFT"), value);
-	//}
-
-	//ModifyProperty(propFlag, propFlag->GetValueAsString(), value);
-}
-
-void CVisualEditorNotebook::CVisualEditor::CreateBoxSizerWithObject(IValueFrame* obj)
-{
-	IValueFrame* parent = obj->GetParent();
-	if (!parent)
-		return;
-	IValueFrame* grandParent = parent->GetParent();
-	if (!grandParent)
-		return;
-	int childPos = -1;
-	if (parent->IsSubclassOf(wxT("sizerItem"))) {
-		childPos = (int)grandParent->GetChildPosition(parent);
-		parent = grandParent;
-	}
-
-	wxASSERT(m_valueForm);
-
-	// Must first cut the old object in case it is the only allowable object
-	//IValueFrame* clipboard = m_clipboard;
-
-	CutObject(obj);
-
-	// Create the wxBoxSizer
-	IValueFrame* newSizer = m_valueForm->CreateObject(wxT("boxSizer"), parent);
-
-	if (newSizer) {
-		Execute(new InsertObjectCmd(this, newSizer, parent, childPos));
-		if (newSizer->GetObjectTypeName() == wxT("sizerItem"))
-			newSizer = newSizer->GetChild(0);
-		PasteObject(newSizer);
-		//m_clipboard = clipboard;
-		NotifyEditorRefresh();
-	}
-	else {
-		Undo();
-		//m_clipboard = clipboard;
-	}
 }

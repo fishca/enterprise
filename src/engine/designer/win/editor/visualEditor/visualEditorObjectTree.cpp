@@ -133,6 +133,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged
 		IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
 		assert(obj);
 		m_formHandler->SelectObject(obj);
+		m_formHandler->ScrollToObject(obj);
 	}
 }
 

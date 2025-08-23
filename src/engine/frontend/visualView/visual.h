@@ -185,9 +185,7 @@ public:
 	virtual void ModifyProperty(class IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 
 	virtual IValueFrame* GetValueForm() const = 0;
-
 	virtual void RefreshEditor() = 0;
-	virtual void RefreshTree() = 0;
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const = 0;
 };

@@ -4,124 +4,62 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "visualEditor.h"
-#include "frontend/docView/docView.h"
-#include "frontend/mainFrame/mainFrame.h"
-#include "frontend/mainFrame/objinspect/objinspect.h"
-
-//////////////////////////////////////////////////////////////////////////////
-
-void CVisualEditorNotebook::CVisualEditor::AddHandler(wxEvtHandler* handler)
-{
-	m_handlers.push_back(handler);
-}
-
-void CVisualEditorNotebook::CVisualEditor::RemoveHandler(wxEvtHandler* handler)
-{
-	for (auto it = m_handlers.begin(); it != m_handlers.end(); ++it) {
-		if (*it == handler) {
-			m_handlers.erase(it);
-			break;
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-void CVisualEditorNotebook::CVisualEditor::NotifyEvent(wxFrameEvent& event, bool forcedelayed)
-{
-	std::vector< wxEvtHandler* >::iterator handler;
-	if (!forcedelayed) {
-		for (handler = m_handlers.begin(); handler != m_handlers.end(); handler++)
-			(*handler)->ProcessEvent(event);
-		wxView* docView = m_document->GetFirstView();
-		if (docView != nullptr)
-			docView->ProcessEvent(event);
-	}
-	else {
-		for (handler = m_handlers.begin(); handler != m_handlers.end(); handler++)
-			(*handler)->AddPendingEvent(event);
-		wxView* docView = m_document->GetFirstView();
-		if (docView != nullptr)
-			docView->AddPendingEvent(event);
-	}
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyProjectLoaded()
-{
-	wxFrameEvent event(wxEVT_PROJECT_LOADED);
-	NotifyEvent(event);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyProjectSaved()
-{
-	wxFrameEvent event(wxEVT_PROJECT_SAVED);
-	NotifyEvent(event);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectExpanded(IValueFrame* obj)
-{
-	wxFrameObjectEvent event(wxEVT_OBJECT_EXPANDED, obj);
-	NotifyEvent(event);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectSelected(IValueFrame* obj, bool force)
-{
-	wxFrameObjectEvent event(wxEVT_OBJECT_SELECTED, obj);
-	if (force) event.SetString(wxT("force"));
-
-	NotifyEvent(event, false);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectCreated(IValueFrame* obj)
-{
-	wxFrameObjectEvent event(wxEVT_OBJECT_CREATED, obj);
-	NotifyEvent(event, false);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectRemoved(IValueFrame* obj)
-{
-	wxFrameObjectEvent event(wxEVT_OBJECT_REMOVED, obj);
-	NotifyEvent(event, false);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyPropertyModified(IProperty* prop)
-{
-	wxFramePropertyEvent event(wxEVT_PROPERTY_MODIFIED, prop, wxNullVariant);
-	NotifyEvent(event, false);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyEventModified(IEvent* event)
-{
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyCodeGeneration(bool panelOnly, bool forcedelayed)
-{
-	wxFrameEvent event(wxEVT_CODE_GENERATION);
-	// Using the previously unused Id field in the event to carry a boolean
-	event.SetId((panelOnly ? 1 : 0));
-	NotifyEvent(event, forcedelayed);
-}
-
-void CVisualEditorNotebook::CVisualEditor::NotifyProjectRefresh()
-{
-	wxFrameEvent event(wxEVT_PROJECT_REFRESH);
-	NotifyEvent(event, true);
-}
 
 #include "backend/metaCollection/metaFormObject.h"
 
 void CVisualEditorNotebook::CVisualEditor::Execute(CCommand* cmd)
 {
-	if (m_cmdProc != nullptr) {
-		m_cmdProc->Execute(cmd);
-	}
+	if (m_cmdProc != nullptr) m_cmdProc->Execute(cmd);
+	NotifyEditorSaved();
+}
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+void CVisualEditorNotebook::CVisualEditor::NotifyEditorLoaded()
+{
+	m_objectTree->OnEditorLoaded();
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyEditorSaved()
+{
 	IMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IMetaObjectForm>();
 	wxASSERT(creator);
 	// Create a std::string and copy your document data in to the string    
-	if (creator != nullptr) {
-		creator->SaveFormData(m_valueForm);
-	}
+	if (creator != nullptr) creator->SaveFormData(m_valueForm);	
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyEditorRefresh()
+{
+	m_objectTree->OnEditorRefresh();
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyObjectCreated(IValueFrame* obj)
+{
+	m_objectTree->OnObjectCreated(obj);
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyObjectSelected(IValueFrame* obj, bool force)
+{
+	m_objectTree->OnObjectSelected(obj);
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyObjectExpanded(IValueFrame* obj)
+{
+	m_objectTree->OnObjectExpanded(obj);
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyObjectRemoved(IValueFrame* obj)
+{
+	m_objectTree->OnObjectRemoved(obj);
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyPropertyModified(IProperty* prop)
+{
+	m_objectTree->OnPropertyModified(prop);
+}
+
+void CVisualEditorNotebook::CVisualEditor::NotifyEventModified(IEvent* event)
+{
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

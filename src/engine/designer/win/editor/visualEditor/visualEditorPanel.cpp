@@ -47,7 +47,6 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 	wxBoxSizer* treesizer = new wxBoxSizer(wxVERTICAL);
 
 	m_objectTree = new CVisualEditorObjectTree(this, panelTree);
-	m_objectTree->Create();
 
 	treesizer->Add(CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 1, wxEXPAND, 0);
 	panelTree->SetSizer(treesizer);
@@ -97,14 +96,14 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	m_valueForm->IncrRef();
 	m_visualEditor->Freeze();
 	
-	NotifyProjectLoaded();
+	NotifyEditorLoaded();
 	SelectObject(m_valueForm, true);
 
 	// first create control 
 	m_visualEditor->CreateVisualHost();
 		
 	//refresh project
-	NotifyProjectRefresh();
+	NotifyEditorRefresh();
 
 	m_visualEditor->Thaw();
 	return true;
@@ -119,7 +118,7 @@ bool CVisualEditorNotebook::CVisualEditor::SaveForm()
 		creator->SaveFormData(m_valueForm);
 	}
 
-	NotifyProjectSaved();
+	NotifyEditorSaved();
 	return true;
 }
 

@@ -55,7 +55,7 @@ void CValueNotebook::OnEndDrag(wxAuiNotebookEvent& event)
 	if (g_visualHostContext != nullptr) {
 		if (ChangeChildPosition(m_activePage, event.GetSelection())) {
 			if (g_visualHostContext != nullptr) {
-				g_visualHostContext->RefreshTree();
+				g_visualHostContext->RefreshEditor();
 			}
 		}
 	}

@@ -51,7 +51,7 @@ void CValueTableBox::OnColumnReordered(wxDataViewEvent& event)
         wxASSERT(columnControl);
         if (ChangeChildPosition(columnControl, event.GetColumn())) {
             if (g_visualHostContext != nullptr) {
-                g_visualHostContext->RefreshTree();
+                g_visualHostContext->RefreshEditor();
             }
         }
     }

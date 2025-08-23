@@ -132,9 +132,6 @@
     <ClCompile Include="win\editor\visualEditor\visualEditorPanel.cpp">
       <Filter>win\editor\visualEditor</Filter>
     </ClCompile>
-    <ClCompile Include="win\editor\visualEditor\visualEvent.cpp">
-      <Filter>win\editor\visualEditor</Filter>
-    </ClCompile>
     <ClCompile Include="win\editor\codeEditor\components\autoComplete.cpp">
       <Filter>win\editor\codeEditor\components</Filter>
     </ClCompile>
@@ -253,9 +250,6 @@
       <Filter>win\editor\visualEditor</Filter>
     </ClInclude>
     <ClInclude Include="win\editor\visualEditor\visualEditor.h">
-      <Filter>win\editor\visualEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="win\editor\visualEditor\visualEvent.h">
       <Filter>win\editor\visualEditor</Filter>
     </ClInclude>
     <ClInclude Include="win\editor\visualEditor\printout\formPrintOut.h">

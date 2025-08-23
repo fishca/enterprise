@@ -24,7 +24,6 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::CVisualEditorHost(CVisu
 	m_stopModifiedEvent(false)
 {
 	IVisualHost::SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
-	m_formHandler->AddHandler(this->GetEventHandler());
 
 #ifdef __WXMSW__
 	SetOwnBackgroundColour(wxColour(150, 150, 150));
@@ -56,7 +55,6 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::~CVisualEditorHost()
 	m_back->GetFrameContentPanel()->SetSizer(nullptr); // *!*
 
 	DestroyChildren();
-	m_formHandler->RemoveHandler(GetEventHandler());
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnClickBackPanel(wxMouseEvent& event)

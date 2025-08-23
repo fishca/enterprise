@@ -923,7 +923,7 @@ bool CVisualEditorNotebook::CVisualEditor::SelectObject(IValueFrame* obj, bool f
 void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, unsigned int toPos)
 {
 	Execute(new ShiftChildCmd(this, obj, toPos));
-	NotifyProjectRefresh();
+	NotifyEditorRefresh();
 	SelectObject(obj, true);
 }
 
@@ -950,7 +950,7 @@ void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, bool r
 			(!right && (num <= pos))) {
 			pos = (right ? pos + num : pos - num);
 			Execute(new ShiftChildCmd(this, obj, pos));
-			NotifyProjectRefresh();
+			NotifyEditorRefresh();
 			SelectObject(noItemObj, true);
 		}
 	}
@@ -1064,7 +1064,7 @@ void CVisualEditorNotebook::CVisualEditor::Undo()
 {
 	m_cmdProc->Undo();
 	m_document->Modify(!m_cmdProc->IsAtSavePoint());
-	NotifyProjectRefresh();
+	NotifyEditorRefresh();
 	NotifyObjectSelected(GetSelectedObject());
 }
 
@@ -1072,7 +1072,7 @@ void CVisualEditorNotebook::CVisualEditor::Redo()
 {
 	m_cmdProc->Redo();
 	m_document->Modify(!m_cmdProc->IsAtSavePoint());
-	NotifyProjectRefresh();
+	NotifyEditorRefresh();
 	NotifyObjectSelected(GetSelectedObject());
 }
 
@@ -1188,7 +1188,7 @@ void CVisualEditorNotebook::CVisualEditor::CreateBoxSizerWithObject(IValueFrame*
 			newSizer = newSizer->GetChild(0);
 		PasteObject(newSizer);
 		//m_clipboard = clipboard;
-		NotifyProjectRefresh();
+		NotifyEditorRefresh();
 	}
 	else {
 		Undo();

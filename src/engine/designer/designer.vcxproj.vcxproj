@@ -243,7 +243,6 @@
     <ClCompile Include="win\editor\visualEditor\visualEditorObject.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorObjectTree.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorPanel.cpp" />
-    <ClCompile Include="win\editor\visualEditor\visualEvent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="docManager\docManager.h" />
@@ -289,7 +288,6 @@
     <ClInclude Include="win\editor\visualEditor\res\visualResource.h" />
     <ClInclude Include="win\editor\visualEditor\titleFrame.h" />
     <ClInclude Include="win\editor\visualEditor\visualEditor.h" />
-    <ClInclude Include="win\editor\visualEditor\visualEvent.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\splashLogo.xpm" />

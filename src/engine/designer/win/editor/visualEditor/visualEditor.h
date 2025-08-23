@@ -115,12 +115,9 @@ public:
 	}
 };
 
-#include "visualEvent.h"
 #include "frontend/visualView/visual.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-
-#include "frontend/frontend.h"
 
 #define wxNOTEBOOK_PAGE_DESIGNER 0
 #define wxNOTEBOOK_PAGE_CODE_EDITOR 1
@@ -286,22 +283,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	class CVisualEditorObjectTree : public wxPanel {
-		CVisualEditor* m_formHandler = nullptr;
-	private:
-
-		wxImageList* m_iconList = nullptr;
-
-		std::map< IValueFrame*, wxTreeItemId> m_listItem;
-		std::map<wxString, int> m_iconIdx;
-
-		wxTreeCtrl* m_tcObjects = nullptr;
-		wxTreeItemId m_draggedItem;
-
-		bool m_altKeyIsDown, m_notifySelecting;
 
 		/**
 		 * Crea el arbol completamente.
 		 */
+		void CreateTree();
 		void RebuildTree();
 		void AddChildren(IValueFrame* child, const wxTreeItemId& parent, bool is_root = false);
 		int GetImageIndex(const wxString& type);
@@ -313,34 +299,45 @@ public:
 
 		IValueFrame* GetObjectFromTreeItem(const wxTreeItemId& item);
 
-		wxDECLARE_EVENT_TABLE();
-
 	public:
 
-		void RefreshTree() {
-			RebuildTree();
-		}
+		void OnEditorLoaded();
+		void OnEditorRefresh();
+
+		void OnObjectCreated(IValueFrame* obj);
+		void OnObjectSelected(IValueFrame* obj);
+		void OnObjectExpanded(IValueFrame* obj);
+		void OnObjectRemoved(IValueFrame* obj);
+
+		void OnPropertyModified(IProperty* prop);
 
 		CVisualEditorObjectTree(CVisualEditor* owner, wxWindow* parent, int id = wxID_ANY);
 		virtual ~CVisualEditorObjectTree() override;
 
-		void Create();
+	protected:
 
 		void OnSelChanged(wxTreeEvent& event);
 		void OnRightClick(wxTreeEvent& event);
 		void OnBeginDrag(wxTreeEvent& event);
 		void OnEndDrag(wxTreeEvent& event);
 		void OnExpansionChange(wxTreeEvent& event);
-
-		void OnProjectLoaded(wxFrameEvent& event);
-		void OnProjectSaved(wxFrameEvent& event);
-		void OnObjectExpanded(wxFrameObjectEvent& event);
-		void OnObjectSelected(wxFrameObjectEvent& event);
-		void OnObjectCreated(wxFrameObjectEvent& event);
-		void OnObjectRemoved(wxFrameObjectEvent& event);
-		void OnPropertyModified(wxFramePropertyEvent& event);
-		void OnProjectRefresh(wxFrameEvent& event);
 		void OnKeyDown(wxTreeEvent& event);
+
+	private:
+		
+		CVisualEditor* m_formHandler = nullptr;
+
+		wxImageList* m_iconList = nullptr;
+
+		std::map<IValueFrame*, wxTreeItemId> m_listItem;
+		std::map<wxString, int> m_iconIdx;
+
+		wxTreeCtrl* m_tcObjects = nullptr;
+		wxTreeItemId m_draggedItem;
+
+		bool m_altKeyIsDown, m_notifySelecting;
+
+		wxDECLARE_EVENT_TABLE();
 	};
 
 	/**
@@ -384,8 +381,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	IValueFrame* m_selObj = nullptr;     // Objeto seleccionado
-
-	std::vector< wxEvtHandler* > m_handlers;
 
 	// Procesador de comandos Undo/Redo
 	CCommandProcessor* m_cmdProc;
@@ -437,20 +432,19 @@ public:
 
 protected:
 
-	//Notify event 
-	void NotifyEvent(wxFrameEvent& event, bool forcedelayed = false);
-
 	// Notifican a cada observador el evento correspondiente
-	void NotifyProjectLoaded();
-	void NotifyProjectSaved();
-	void NotifyObjectExpanded(IValueFrame* obj);
-	void NotifyObjectSelected(IValueFrame* obj, bool force = false);
+	void NotifyEditorLoaded();
+	void NotifyEditorSaved();
+
+	void NotifyEditorRefresh();
+
 	void NotifyObjectCreated(IValueFrame* obj);
+	void NotifyObjectSelected(IValueFrame* obj, bool force = false);
+	void NotifyObjectExpanded(IValueFrame* obj);
 	void NotifyObjectRemoved(IValueFrame* obj);
+
 	void NotifyPropertyModified(IProperty* prop);
 	void NotifyEventModified(IEvent* event);
-	void NotifyProjectRefresh();
-	void NotifyCodeGeneration(bool panelOnly = false, bool force = false);
 
 	//Execute command 
 	void Execute(CCommand* cmd);
@@ -472,10 +466,6 @@ public:
 	CVisualEditor();
 	CVisualEditor(CMetaDocument* document, wxWindow* parent, int id = wxID_ANY);
 	virtual ~CVisualEditor();
-
-	// Procedures for register/unregister wxEvtHandlers to be notified of wxOESEvents
-	void AddHandler(wxEvtHandler* handler);
-	void RemoveHandler(wxEvtHandler* handler);
 
 	//Objects 
 	IValueFrame* CreateObject(const wxString& name);
@@ -510,12 +500,7 @@ public:
 			// then update control 
 			m_visualEditor->UpdateVisualHost();
 		}
-		NotifyProjectRefresh();
-	}
-
-	void RefreshTree() {
-		if (m_objectTree != nullptr)
-			m_objectTree->RefreshTree();
+		NotifyEditorRefresh();
 	}
 
 	void Undo();
@@ -717,13 +702,6 @@ public:
 
 		if (m_codeEditor != nullptr)
 			m_codeEditor->RefreshEditor();
-	}
-
-	void RefreshTree() {
-
-		if (m_visualEditor != nullptr)
-			m_visualEditor->RefreshTree();
-
 	}
 
 	bool IsEditable() const {

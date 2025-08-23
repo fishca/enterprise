@@ -271,9 +271,8 @@
     <ClInclude Include="fileSystem\quicklz\quicklz.h">
       <Filter>fileSystem\quicklz</Filter>
     </ClInclude>
-    <ClInclude Include="CastValue.h" />
     <ClInclude Include="metadataConfiguration.h" />
-    <ClInclude Include="role.h" />
+    <ClInclude Include="roleHelper.h" />
     <ClInclude Include="databaseLayer\postgres\engine\libpq-fe.h">
       <Filter>databaseLayer\postgres\engine</Filter>
     </ClInclude>
@@ -397,7 +396,6 @@
     <ClInclude Include="metaCollection\partial\tabularSection\tabularSection.h">
       <Filter>metaCollection\partial\tabularSection</Filter>
     </ClInclude>
-    <ClInclude Include="CValuePtr.h" />
     <ClInclude Include="metaCollection\metaSource.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
@@ -639,6 +637,8 @@
     <ClInclude Include="propertyManager\property\variant\actionVariant.h">
       <Filter>propertyManager\property\variant</Filter>
     </ClInclude>
+    <ClInclude Include="value_cast.h" />
+    <ClInclude Include="value_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -856,9 +856,8 @@
     <ClCompile Include="fileSystem\fs.cpp">
       <Filter>fileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="CastValue.cpp" />
     <ClCompile Include="metadataConfiguration.cpp" />
-    <ClCompile Include="role.cpp" />
+    <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="appDataQuery.cpp" />
     <ClCompile Include="metadataConfigurationQuery.cpp" />
     <ClCompile Include="metaCollection\metaObjectMetadataQuery.cpp">
@@ -1411,6 +1410,7 @@
     <ClCompile Include="metaCollection\partial\dataProcessorMetadata_res.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
+    <ClCompile Include="value_cast.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

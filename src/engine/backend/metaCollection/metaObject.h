@@ -4,7 +4,7 @@
 #include "backend/propertyManager/propertyManager.h"
 #include "backend/metaCtor.h"
 #include "backend/backend_metatree.h"
-#include "backend/role.h"
+#include "backend/roleHelper.h"
 
 //*******************************************************************************
 class BACKEND_API IMetaData;
@@ -144,14 +144,9 @@ enum metaObjectFlags {
 #define repairMetaTable  0x0008000
 
 class BACKEND_API IMetaObject :
-	public IPropertyObjectHelper<IMetaObject>, public CValue {
+	public IPropertyObjectHelper<IMetaObject>,
+	public IRightObject, public CValue {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
-protected:
-
-	template <typename... Args>
-	inline CRole* CreateRole(Args&&... args) {
-		return new CRole(this, std::forward<Args>(args)...);
-	}
 
 protected:
 
@@ -161,19 +156,6 @@ protected:
 	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("comment"), wxEmptyString);
 
 	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("secondary"));
-
-protected:
-
-	friend class CRole;
-
-	/**
-	* Añade una propiedad al objeto.
-	*
-	* Este método será usado por el registro de descriptores para crear la
-	* instancia del objeto.
-	* Los objetos siempre se crearán a través del registro de descriptores.
-	*/
-	void AddRole(CRole* value);
 
 public:
 
@@ -207,7 +189,7 @@ public:
 	}
 
 	inline bool CompareId(const meta_identifier_t& id) const { return m_metaId == id; }
-	inline bool CompareGuid(const CGuid& guid) const { return m_metaGuid == guid;}
+	inline bool CompareGuid(const CGuid& guid) const { return m_metaGuid == guid; }
 
 	operator meta_identifier_t() const { return m_metaId; }
 
@@ -247,67 +229,6 @@ public:
 public:
 
 	bool BuildNewName();
-
-#pragma region role 
-
-	bool AccessRight(const CRole* role) const {
-		return AccessRight(role->GetName());
-	}
-	bool AccessRight(const wxString& roleName) const {
-		return true;
-	}
-	bool AccessRight(const CRole* role, const wxString& userName) const {
-		return AccessRight(role->GetName(), userName);
-	}
-	bool AccessRight(const wxString& roleName, const wxString& userName) const {
-		return AccessRight(roleName);
-	}
-	bool AccessRight(const CRole* role, const meta_identifier_t& id) const;
-	bool AccessRight(const wxString& roleName, const meta_identifier_t& id) const {
-		if (roleName.IsEmpty())
-			return false;
-		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, CRole*>& pair)
-			{
-				return roleName == pair.first;
-			}
-		);
-		if (it == m_roles.end())
-			return false;
-		return AccessRight(it->second, id);
-	}
-
-	bool SetRight(const CRole* role, const meta_identifier_t& id, const bool& val);
-	bool SetRight(const wxString& roleName, const meta_identifier_t& id, const bool& val) {
-		if (roleName.IsEmpty())
-			return false;
-		auto& it = std::find_if(m_roles.begin(), m_roles.end(), [roleName](const std::pair<wxString, CRole*>& pair)
-			{
-				return roleName == pair.first;
-			}
-		);
-		if (it == m_roles.end())
-			return false;
-		return SetRight(it->second, id, val);
-	}
-
-	/**
-	* Obtiene la propiedad identificada por el nombre.
-	*
-	* @note Notar que no existe el método SetProperty, ya que la modificación
-	*       se hace a través de la referencia.
-	*/
-	CRole* GetRole(const wxString& nameParam) const;
-
-	/**
-	* Obtiene el número de propiedades del objeto.
-	*/
-	unsigned int GetRoleCount() const {
-		return (unsigned int)m_roles.size();
-	}
-
-	CRole* GetRole(unsigned int idx) const; // throws ...;
-
-#pragma endregion
 
 	IMetaObject(
 		const wxString& strName = wxEmptyString,
@@ -573,6 +494,10 @@ protected:
 		return createdObject;
 	}
 
+#pragma region role 
+	virtual void DoSetRight(const CRole* role);
+#pragma endregion
+
 protected:
 
 	mutable CGuid m_metaCopyGuid, m_metaPasteGuid;
@@ -582,12 +507,6 @@ protected:
 	CGuid m_metaGuid;
 
 	IMetaData* m_metaData;
-
-	std::vector<std::pair<wxString, CRole*>> m_roles;
-	std::map<meta_identifier_t,
-		std::map<wxString, bool>
-	> m_valRoles;
-
 	std::vector<IMetaObject*> m_listMetaObject;
 	CMethodHelper* m_methodHelper;
 };

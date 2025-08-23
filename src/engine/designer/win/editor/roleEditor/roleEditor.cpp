@@ -46,7 +46,7 @@ void CRoleEditor::OnCheckItem(wxTreeEvent& event)
 	if (data != nullptr) {
 		CRole* role = data->GetRole();
 		wxASSERT(role);
-		IMetaObject* metaObject = data->GetMetaObject();
+		IRightObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
 		metaObject->SetRight(role, m_metaRole->GetMetaID(), event.GetExtraLong());
 	}
@@ -61,7 +61,7 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 	m_checkCtrl->Freeze();
 	m_checkCtrl->DeleteAllItems();
 	if (data != nullptr) {
-		IMetaObject* metaObject = data->GetMetaObject();
+		IRightObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
 		wxTreeItemId root = m_checkCtrl->AddRoot(wxEmptyString);
 		for (unsigned int idx = 0; idx < metaObject->GetRoleCount(); idx++) {

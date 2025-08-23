@@ -16,68 +16,6 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue)
 //*                                  MetaObject                                           *
 //*****************************************************************************************
 
-void IMetaObject::AddRole(CRole* role)
-{
-	m_roles.emplace_back(role->GetName(), role);
-}
-
-bool IMetaObject::AccessRight(const CRole* role, const meta_identifier_t& id) const
-{
-	auto roleData = m_valRoles.find(id);
-	if (roleData != m_valRoles.end()) {
-		auto foundedData = std::find_if(roleData->second.begin(), roleData->second.end(), [role](const std::pair<wxString, bool >& pair)
-			{
-				return stringUtils::CompareString(role->GetName(), pair.first);
-			}
-		);
-		if (foundedData != roleData->second.end())
-			return foundedData->second;
-	}
-
-	return role->GetDefValue();
-}
-
-bool IMetaObject::SetRight(const CRole* role, const meta_identifier_t& id, const bool& val)
-{
-	if (role == nullptr)
-		return false;
-	m_valRoles[id].insert_or_assign(role->GetName(), val);
-	m_metaData->Modify(true);
-	return true;
-}
-CRole* IMetaObject::GetRole(const wxString& nameParam) const
-{
-	auto it = std::find_if(m_roles.begin(), m_roles.end(),
-		[nameParam](const std::pair<wxString, CRole*>& pair)
-		{
-			return stringUtils::CompareString(nameParam, pair.first);
-		}
-	);
-
-	if (it != m_roles.end())
-		return it->second;
-
-	return nullptr;
-}
-
-CRole* IMetaObject::GetRole(unsigned int idx) const
-{
-	assert(idx < m_roles.size());
-
-	auto it = m_roles.begin();
-	unsigned int i = 0;
-	while (i < idx && it != m_roles.end()) {
-		i++;
-		it++;
-	}
-
-	if (it != m_roles.end())
-		return it->second;
-	return nullptr;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
 void IMetaObject::ResetGuid()
 {
 	m_metaGuid = wxNewUniqueGuid;
@@ -140,10 +78,6 @@ m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaul
 IMetaObject::~IMetaObject()
 {
 	//if (GetParent()) GetParent()->RemoveChild(this);
-
-	for (auto& role : m_roles) { wxDELETE(role.second); }
-	m_roles.clear();
-
 	wxDELETE(m_methodHelper);
 }
 
@@ -390,6 +324,13 @@ bool IMetaObject::OnAfterCloseMetaObject()
 		metaTree->CloseMetaObject(this);
 	return true;
 }
+
+#pragma region role 
+void IMetaObject::DoSetRight(const CRole* role)
+{
+	m_metaData->Modify(true);
+}
+#pragma endregion
 
 #define	headerBlock 0x002330
 #define	dataBlock 0x002350

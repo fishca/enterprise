@@ -224,7 +224,7 @@
     <ClInclude Include="propertyManager\property\variant\recordVariant.h" />
     <ClInclude Include="propertyManager\property\variant\sourceVariant.h" />
     <ClInclude Include="propertyManager\property\variant\typeVariant.h" />
-    <ClInclude Include="role.h" />
+    <ClInclude Include="roleHelper.h" />
     <ClInclude Include="srcExplorer.h" />
     <ClInclude Include="srcObject.h" />
     <ClInclude Include="stringUtils.h" />
@@ -500,7 +500,7 @@
     <ClCompile Include="propertyManager\property\variant\recordVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\sourceVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\typeVariant.cpp" />
-    <ClCompile Include="role.cpp" />
+    <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="system\systemManager.cpp" />
     <ClCompile Include="system\systemManagerEnum.cpp" />
     <ClCompile Include="system\systemManagerFunc.cpp" />

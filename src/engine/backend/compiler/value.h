@@ -11,14 +11,14 @@ public:
 	virtual CValue* GetImplValueRef() const = 0;
 };
 
-const class_identifier_t g_valueUndefinedCLSID	= string_to_clsid("VL_UNDF");
+const class_identifier_t g_valueUndefinedCLSID = string_to_clsid("VL_UNDF");
 
-const class_identifier_t g_valueBooleanCLSID	= string_to_clsid("VL_BOOL");
-const class_identifier_t g_valueNumberCLSID		= string_to_clsid("VL_NUMB");
-const class_identifier_t g_valueDateCLSID		= string_to_clsid("VL_DATE");
-const class_identifier_t g_valueStringCLSID		= string_to_clsid("VL_STRI");
+const class_identifier_t g_valueBooleanCLSID = string_to_clsid("VL_BOOL");
+const class_identifier_t g_valueNumberCLSID = string_to_clsid("VL_NUMB");
+const class_identifier_t g_valueDateCLSID = string_to_clsid("VL_DATE");
+const class_identifier_t g_valueStringCLSID = string_to_clsid("VL_STRI");
 
-const class_identifier_t g_valueNullCLSID		= string_to_clsid("VL_NULL");
+const class_identifier_t g_valueNullCLSID = string_to_clsid("VL_NULL");
 
 //simple type date
 class BACKEND_API CValue : public wxObject {
@@ -37,43 +37,48 @@ public:
 public:
 
 	class BACKEND_API CMethodHelper {
+
 		//List of keywords that cannot be variable and function names
-		struct field_t {
-			enum eFieldType {
+		struct CField {
+
+			enum EFieldType {
 				eConstructor,
 				eProperty,
 				eMethod
 			};
+
 		public:
-			eFieldType m_fieldType;
-			struct field_data_t {
-				struct constructor_data_t {
-					wxString m_helperStr;
+
+			EFieldType m_fieldType;
+
+			struct CFiledData {
+				struct CConstructorData {
+					wxString m_strHelper;
 					long m_paramCount = 0;
 				} m_ctorData;
-				struct prop_data_t {
+				struct CPropData {
 					wxString m_fieldName;
 					bool m_readable = true;
 					bool m_writable = true;
 				} m_propData;
-				struct method_data_t {
+				struct CMethodData {
 					wxString m_fieldName;
-					wxString m_helperStr;
+					wxString m_strHelper;
 					long m_paramCount = 0;
 					bool m_hasRet = true;
 				} m_methodData;
 
 			public:
 
-				field_data_t(const field_data_t& field) : m_ctorData(field.m_ctorData), m_propData(field.m_propData), m_methodData(field.m_methodData) {}
+				CFiledData(const CFiledData& field) : m_ctorData(field.m_ctorData), m_propData(field.m_propData), m_methodData(field.m_methodData) {}
 
-				field_data_t(const wxString& helperStr, const long paramCount) : m_ctorData({helperStr}), m_propData(), m_methodData() {}
-				field_data_t(const wxString& strPropName, bool readable, bool writable) : m_ctorData(), m_propData({strPropName, readable, writable}), m_methodData() {}
-				field_data_t(const wxString& strMethodName, const wxString& helperStr, const long paramCount, bool hasRet) : m_ctorData(), m_propData(), m_methodData({strMethodName, helperStr, paramCount, hasRet}) {}
+				CFiledData(const wxString& strHelper, const long paramCount) : m_ctorData({ strHelper }), m_propData(), m_methodData() {}
+				CFiledData(const wxString& strPropName, bool readable, bool writable) : m_ctorData(), m_propData({ strPropName, readable, writable }), m_methodData() {}
+				CFiledData(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet) : m_ctorData(), m_propData(), m_methodData({ strMethodName, strHelper, paramCount, hasRet }) {}
 
-				~field_data_t() {}
+				~CFiledData() {}
 
-				void field_data_t::operator =(const field_data_t& field) {
+				void CFiledData::operator =(const CFiledData& field) {
 					m_ctorData = field.m_ctorData;
 					m_propData = field.m_propData;
 					m_methodData = field.m_methodData;
@@ -83,20 +88,20 @@ public:
 			long m_lAlias, m_lData;
 		public:
 
-			field_t(const field_t& field)
+			CField(const CField& field)
 				: m_fieldType(field.m_fieldType), m_field_data(field.m_field_data), m_lAlias(field.m_lAlias), m_lData(field.m_lData) {
 			}
-			field_t(const wxString& helperStr, const long paramCount, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldType(eFieldType::eConstructor), m_field_data(helperStr, paramCount), m_lAlias(lPropAlias), m_lData(lData) {
+			CField(const wxString& strHelper, const long paramCount, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldType(EFieldType::eConstructor), m_field_data(strHelper, paramCount), m_lAlias(lPropAlias), m_lData(lData) {
 			}
-			field_t(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldType(eFieldType::eProperty), m_field_data(strPropName, readable, writable), m_lAlias(lPropAlias), m_lData(lData) {
+			CField(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldType(EFieldType::eProperty), m_field_data(strPropName, readable, writable), m_lAlias(lPropAlias), m_lData(lData) {
 			}
-			field_t(const wxString& strMethodName, const wxString& helperStr, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
-				: m_fieldType(eFieldType::eMethod), m_field_data(strMethodName, helperStr, paramCount, hasRet), m_lAlias(lPropAlias), m_lData(lData) {
+			CField(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+				: m_fieldType(EFieldType::eMethod), m_field_data(strMethodName, strHelper, paramCount, hasRet), m_lAlias(lPropAlias), m_lData(lData) {
 			}
 
-			void operator =(const field_t& field) {
+			void operator =(const CField& field) {
 				m_fieldType = field.m_fieldType;
 				m_field_data = field.m_field_data;
 				m_lAlias = field.m_lAlias;
@@ -104,9 +109,9 @@ public:
 			}
 		};
 		// constructors & props & methods
-		std::vector<field_t> m_constructorHelper; // tree of constructor names
-		std::vector<field_t> m_methodHelper; // tree of method names
-		std::vector<field_t> m_propHelper; // tree of attribute names
+		std::vector<CField> m_constructorHelper; // tree of constructor names
+		std::vector<CField> m_methodHelper; // tree of method names
+		std::vector<CField> m_propHelper; // tree of attribute names
 	public:
 
 		CMethodHelper() {}
@@ -117,34 +122,34 @@ public:
 			m_methodHelper.clear();
 		}
 
-		inline long AppendConstructor(const wxString& helperStr) {
-			return AppendConstructor(0, helperStr, wxNOT_FOUND, wxNOT_FOUND);
+		inline long AppendConstructor(const wxString& strHelper) {
+			return AppendConstructor(0, strHelper, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
-		inline long AppendConstructor(const wxString& helperStr, const long lCtorNum) {
-			return AppendConstructor(0, helperStr, wxNOT_FOUND, lCtorNum);
+		inline long AppendConstructor(const wxString& strHelper, const long lCtorNum) {
+			return AppendConstructor(0, strHelper, wxNOT_FOUND, lCtorNum);
 		}
 
-		inline long AppendConstructor(const long paramCount, const wxString& helperStr, const long lCtorNum) {
-			return AppendConstructor(paramCount, helperStr, wxNOT_FOUND, lCtorNum);
+		inline long AppendConstructor(const long paramCount, const wxString& strHelper, const long lCtorNum) {
+			return AppendConstructor(paramCount, strHelper, wxNOT_FOUND, lCtorNum);
 		}
 
-		inline long AppendConstructor(const long paramCount, const wxString& helperStr) {
-			return AppendConstructor(paramCount, helperStr, wxNOT_FOUND, wxNOT_FOUND);
+		inline long AppendConstructor(const long paramCount, const wxString& strHelper) {
+			return AppendConstructor(paramCount, strHelper, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
-		inline long AppendConstructor(const long paramCount, const wxString& helperStr, const long lCtorNum, const long lCtorAlias) {
-			auto it = std::find_if(m_constructorHelper.begin(), m_constructorHelper.end(),
-				[paramCount, helperStr](field_t& field)
-			{
-				return stringUtils::CompareString(helperStr, field.m_field_data.m_ctorData.m_helperStr);
+		inline long AppendConstructor(const long paramCount, const wxString& strHelper, const long lCtorNum, const long lCtorAlias) {
+
+			long position = 0;
+			for (auto& field : m_constructorHelper) {
+				position++;
+				if (stringUtils::CompareString(
+					field.m_field_data.m_ctorData.m_strHelper, strHelper))
+					return position;
 			}
-			);
-			if (it != m_constructorHelper.end()) {
-				return std::distance(m_constructorHelper.begin(), it);
-			}
+
 			m_constructorHelper.emplace_back(
-				helperStr,
+				strHelper,
 				paramCount,
 				lCtorAlias,
 				lCtorNum
@@ -163,7 +168,7 @@ public:
 		wxString GetConstructorHelper(const long lCtorNum) const {
 			if (lCtorNum > GetNConstructors())
 				return wxEmptyString;
-			return m_constructorHelper[lCtorNum].m_field_data.m_ctorData.m_helperStr;
+			return m_constructorHelper[lCtorNum].m_field_data.m_ctorData.m_strHelper;
 		}
 
 		long GetConstructorAlias(const long lCtorNum) const {
@@ -211,15 +216,16 @@ public:
 		inline long AppendProp(const wxString& strPropName,
 			bool readable, bool writable, const long lPropNum, const long lPropAlias) {
 
-			auto it = std::find_if(m_propHelper.begin(), m_propHelper.end(),
-				[strPropName](field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_propData.m_fieldName, strPropName);
+			long position = 0;
+			for (auto& field : m_propHelper) {		
+				
+				position++;
+				
+				if (stringUtils::CompareString(
+					field.m_field_data.m_methodData.m_fieldName, strPropName))
+					return position;
 			}
-			);
-			if (it != m_propHelper.end()) {
-				return std::distance(m_propHelper.begin(), it);
-			}
+
 			m_propHelper.emplace_back(
 				strPropName,
 				readable,
@@ -227,6 +233,7 @@ public:
 				lPropAlias,
 				lPropNum
 			);
+
 			return m_propHelper.size();
 		}
 
@@ -240,10 +247,10 @@ public:
 
 		void RemoveProp(const wxString& strPropName) {
 			auto it = std::find_if(m_propHelper.begin(), m_propHelper.end(),
-				[strPropName](field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_propData.m_fieldName, strPropName);
-			}
+				[strPropName](CField& field)
+				{
+					return stringUtils::CompareString(field.m_field_data.m_propData.m_fieldName, strPropName);
+				}
 			);
 			if (it != m_propHelper.end()) {
 				m_propHelper.erase(it);
@@ -252,11 +259,11 @@ public:
 
 		long FindProp(const wxString& strPropName) const {
 			auto it = std::find_if(m_propHelper.begin(), m_propHelper.end(),
-				[strPropName](const field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_propData.m_fieldName, strPropName);
+				[strPropName](const CField& field)
+				{
+					return stringUtils::CompareString(field.m_field_data.m_propData.m_fieldName, strPropName);
 
-			}
+				}
 			);
 			if (it != m_propHelper.end())
 				return std::distance(m_propHelper.begin(), it);
@@ -304,33 +311,33 @@ public:
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const wxString& helperStr) {
-			return AppendMethod(strMethodName, helperStr, 0, false, wxNOT_FOUND, wxNOT_FOUND);
+			const wxString& strHelper) {
+			return AppendMethod(strMethodName, strHelper, 0, false, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const wxString& helperStr, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, 0, false, lMethodNum, lMethodAlias);
+			const wxString& strHelper, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, 0, false, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const wxString& helperStr, const long paramCount, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, paramCount, false, lMethodNum, lMethodAlias);
+			const wxString& strHelper, const long paramCount, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, paramCount, false, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr) {
-			return AppendMethod(strMethodName, helperStr, paramCount, false, wxNOT_FOUND, wxNOT_FOUND);
+			const long paramCount, const wxString& strHelper) {
+			return AppendMethod(strMethodName, strHelper, paramCount, false, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr, const long lMethodNum) {
-			return AppendMethod(strMethodName, helperStr, paramCount, false, lMethodNum, wxNOT_FOUND);
+			const long paramCount, const wxString& strHelper, const long lMethodNum) {
+			return AppendMethod(strMethodName, strHelper, paramCount, false, lMethodNum, wxNOT_FOUND);
 		}
 
 		inline long AppendProc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, paramCount, false, lMethodNum, lMethodAlias);
+			const long paramCount, const wxString& strHelper, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, paramCount, false, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName) {
@@ -338,33 +345,33 @@ public:
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const wxString& helperStr) {
-			return AppendMethod(strMethodName, helperStr, 0, true, wxNOT_FOUND, wxNOT_FOUND);
+			const wxString& strHelper) {
+			return AppendMethod(strMethodName, strHelper, 0, true, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr) {
-			return AppendMethod(strMethodName, helperStr, paramCount, true, wxNOT_FOUND, wxNOT_FOUND);
+			const long paramCount, const wxString& strHelper) {
+			return AppendMethod(strMethodName, strHelper, paramCount, true, wxNOT_FOUND, wxNOT_FOUND);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const wxString& helperStr, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, 0, true, lMethodNum, lMethodAlias);
+			const wxString& strHelper, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, 0, true, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const wxString& helperStr, const long paramCount, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, paramCount, true, lMethodNum, lMethodAlias);
+			const wxString& strHelper, const long paramCount, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, paramCount, true, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, paramCount, true, wxNOT_FOUND, lMethodAlias);
+			const long paramCount, const wxString& strHelper, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, paramCount, true, wxNOT_FOUND, lMethodAlias);
 		}
 
 		inline long AppendFunc(const wxString& strMethodName,
-			const long paramCount, const wxString& helperStr, const long lMethodNum, const long lMethodAlias) {
-			return AppendMethod(strMethodName, helperStr, paramCount, true, lMethodNum, lMethodAlias);
+			const long paramCount, const wxString& strHelper, const long lMethodNum, const long lMethodAlias) {
+			return AppendMethod(strMethodName, strHelper, paramCount, true, lMethodNum, lMethodAlias);
 		}
 
 		inline long AppendMethod(const wxString& strMethodName,
@@ -372,23 +379,25 @@ public:
 			return AppendMethod(strMethodName, wxEmptyString, paramCount, hasRet, lMethodNum, lMethodAlias);
 		}
 
-		inline long AppendMethod(const wxString& strMethodName, const wxString& helperStr, const long paramCount, bool hasRet, const long lMethodNum, const long lMethodAlias) {
-			auto it = std::find_if(m_methodHelper.begin(), m_methodHelper.end(),
-				[strMethodName](const field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_methodData.m_fieldName, strMethodName);
+		inline long AppendMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lMethodNum, const long lMethodAlias) {
+
+			long position = 0;
+			for (auto& field : m_methodHelper) {
+				position++;
+				if (stringUtils::CompareString(
+					field.m_field_data.m_methodData.m_fieldName, strMethodName))
+					return position;
 			}
-			);
-			if (it != m_methodHelper.end())
-				return std::distance(m_methodHelper.begin(), it);
+
 			m_methodHelper.emplace_back(
 				strMethodName,
-				helperStr,
+				strHelper,
 				paramCount,
 				hasRet,
 				lMethodAlias,
 				lMethodNum
 			);
+			
 			return m_methodHelper.size();
 		}
 
@@ -402,10 +411,10 @@ public:
 
 		void RemoveMethod(const wxString& strMethodName) {
 			auto it = std::find_if(m_methodHelper.begin(), m_methodHelper.end(),
-				[strMethodName](field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_methodData.m_fieldName, strMethodName);
-			}
+				[strMethodName](CField& field)
+				{
+					return stringUtils::CompareString(field.m_field_data.m_methodData.m_fieldName, strMethodName);
+				}
 			);
 			if (it != m_methodHelper.end()) {
 				m_methodHelper.erase(it);
@@ -414,10 +423,10 @@ public:
 
 		long FindMethod(const wxString& strMethodName) const {
 			auto it = std::find_if(m_methodHelper.begin(), m_methodHelper.end(),
-				[strMethodName](const field_t& field)
-			{
-				return stringUtils::CompareString(field.m_field_data.m_methodData.m_fieldName, strMethodName);
-			}
+				[strMethodName](const CField& field)
+				{
+					return stringUtils::CompareString(field.m_field_data.m_methodData.m_fieldName, strMethodName);
+				}
 			);
 			if (it != m_methodHelper.end())
 				return std::distance(m_methodHelper.begin(), it);
@@ -433,7 +442,7 @@ public:
 		wxString GetMethodHelper(const long lMethodNum) const {
 			if (lMethodNum > GetNMethods())
 				return wxEmptyString;
-			return m_methodHelper[lMethodNum].m_field_data.m_methodData.m_helperStr;
+			return m_methodHelper[lMethodNum].m_field_data.m_methodData.m_strHelper;
 		}
 
 		long GetMethodAlias(const long lMethodNum) const {

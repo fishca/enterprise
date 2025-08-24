@@ -64,10 +64,10 @@ bool CMetaDataReport::IsRegisterCtor(const class_identifier_t& clsid) const
 	return true;
 }
 
-class_identifier_t CMetaDataReport::GetIDObjectFromString(const wxString& clsName) const
+class_identifier_t CMetaDataReport::GetIDObjectFromString(const wxString& className) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsName](IAbstractTypeCtor* typeCtor) {
-		return stringUtils::CompareString(clsName, typeCtor->GetClassName());
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](IAbstractTypeCtor* typeCtor) {
+		return stringUtils::CompareString(className, typeCtor->GetClassName());
 		});
 
 	if (it != m_factoryCtors.end()) {
@@ -76,7 +76,7 @@ class_identifier_t CMetaDataReport::GetIDObjectFromString(const wxString& clsNam
 		return typeCtor->GetClassType();
 	}
 
-	return commonMetaData->GetIDObjectFromString(clsName);
+	return commonMetaData->GetIDObjectFromString(className);
 }
 
 wxString CMetaDataReport::GetNameObjectFromID(const class_identifier_t& clsid, bool upper) const
@@ -114,15 +114,6 @@ IMetaValueTypeCtor* CMetaDataReport::GetTypeCtor(const IMetaObject* metaValue, e
 	return commonMetaData->GetTypeCtor(metaValue, refType);
 }
 
-IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const class_identifier_t& clsid) const
-{
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IMetaValueTypeCtor* typeCtor) {
-		return clsid == typeCtor->GetClassType(); }
-	);
-	if (it != m_factoryCtors.end())  return *it;
-	return commonMetaData->GetAvailableCtor(clsid);
-}
-
 IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const wxString& className) const
 {
 	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](IAbstractTypeCtor* typeCtor) {
@@ -131,6 +122,15 @@ IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const wxString& className) 
 	);
 	if (it != m_factoryCtors.end())  return *it;
 	return commonMetaData->GetAvailableCtor(className);
+}
+
+IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const class_identifier_t& clsid) const
+{
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IMetaValueTypeCtor* typeCtor) {
+		return clsid == typeCtor->GetClassType(); }
+	);
+	if (it != m_factoryCtors.end())  return *it;
+	return commonMetaData->GetAvailableCtor(clsid);
 }
 
 std::vector<IMetaValueTypeCtor*> CMetaDataReport::GetListCtorsByType() const
@@ -151,10 +151,6 @@ std::vector<IMetaValueTypeCtor*> CMetaDataReport::GetListCtorsByType(eCtorMetaTy
 IMetaObject* CMetaDataReport::GetMetaObject(const meta_identifier_t& id)
 {
 	IMetaObject* metaObject = IMetaData::GetMetaObject(id);
-
-	if (metaObject) {
-		return metaObject;
-	}
-
+	if (metaObject != nullptr) return metaObject;
 	return commonMetaData->GetMetaObject(id);
 }

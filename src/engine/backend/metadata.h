@@ -102,17 +102,18 @@ public:
 
 	virtual bool IsRegisterCtor(const class_identifier_t& clsid) const;
 
-	virtual class_identifier_t GetIDObjectFromString(const wxString& clsName) const;
+	virtual class_identifier_t GetIDObjectFromString(const wxString& className) const;
 	virtual wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false) const;
 
 	inline meta_identifier_t GetVTByID(const class_identifier_t& clsid) const;
 	inline class_identifier_t GetIDByVT(const meta_identifier_t& valueType, enum eCtorMetaType refType) const;
 
+	virtual IMetaValueTypeCtor* GetTypeCtor(const wxString& className) const;
 	virtual IMetaValueTypeCtor* GetTypeCtor(const class_identifier_t& clsid) const;
 	virtual IMetaValueTypeCtor* GetTypeCtor(const IMetaObject* metaValue, enum eCtorMetaType refType) const;
 
-	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
 	virtual IAbstractTypeCtor* GetAvailableCtor(const wxString& className) const;
+	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
 
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType() const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
@@ -174,7 +175,7 @@ protected:
 	};
 
 	//custom types
-	std::vector<IMetaValueTypeCtor*> m_factoryCtors;
+	std::set<IMetaValueTypeCtor*> m_factoryCtors;
 };
 
 #endif 

@@ -134,12 +134,12 @@ IEvent* IPropertyObject::GetEvent(unsigned int idx) const
 
 void IPropertyObject::AddProperty(IProperty* prop)
 {
-	m_properties.insert(std::map<wxString, IProperty*>::value_type(prop->GetName(), prop));
+	m_properties.emplace(std::map<wxString, IProperty*>::value_type(prop->GetName(), prop));
 }
 
 void IPropertyObject::AddEvent(IEvent* event)
 {
-	m_events.insert(std::map<wxString, IEvent*>::value_type(event->GetName(), event));
+	m_events.emplace(std::map<wxString, IEvent*>::value_type(event->GetName(), event));
 }
 
 unsigned int IPropertyObject::GetPropertyIndex(const wxString& nameParam) const {
@@ -156,17 +156,17 @@ unsigned int IPropertyObject::GetPropertyIndex(const wxString& nameParam) const 
 
 void CPropertyCategory::AddProperty(IProperty* property)
 {
-	m_properties.push_back(property->GetName());
+	m_properties.emplace_back(property->GetName());
 }
 
 void CPropertyCategory::AddEvent(IEvent* event)
 {
-	m_events.push_back(event->GetName());
+	m_events.emplace_back(event->GetName());
 }
 
 void CPropertyCategory::AddCategory(CPropertyCategory* cat)
 {
-	m_categories.push_back(cat);
+	m_categories.emplace_back(cat);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

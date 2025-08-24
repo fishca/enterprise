@@ -385,7 +385,7 @@ private:
 
 template <typename T>
 class IPropertyObjectHelper : public IPropertyObject {
-	void RemovePropertyObject(IPropertyObject* obj) {
+	void RemovePropertyObject(const IPropertyObject* obj) {
 		std::vector< T* >::iterator it = m_children.begin();
 		while (it != m_children.end() && *it != obj) it++;
 		if (it != m_children.end()) m_children.erase(it);
@@ -461,12 +461,12 @@ public:
 	* @return true si se añadió el hijo con éxito y false en caso contrario.
 	*/
 	bool AddChild(T* obj) {
-		m_children.push_back(obj);
+		m_children.emplace_back(obj);
 		return true;
 	}
 
 	bool AddChild(unsigned int idx, T* obj) {
-		m_children.insert(m_children.begin() + idx, obj);
+		m_children.emplace(m_children.begin() + idx, obj);
 		return true;
 	}
 
@@ -500,11 +500,9 @@ public:
 	* Elimina un hijo del objeto.
 	*/
 	void RemoveChild(T* obj) { RemovePropertyObject(obj); }
-
 	void RemoveChild(unsigned int idx) {
 		assert(idx < m_children.size());
-		std::vector< T* >::iterator it = m_children.begin() + idx;
-		m_children.erase(it);
+		m_children.erase(m_children.begin() + idx);
 	}
 
 	void RemoveAllChildren() { m_children.clear(); }
@@ -517,15 +515,6 @@ public:
 		return m_children[idx];
 	}
 
-	T* GetChild(unsigned int idx, const wxString& type) const {
-		unsigned int cnt = 0;
-		for (std::vector< T* >::const_iterator it = m_children.begin(); it != m_children.end(); ++it) {
-			if (stringUtils::CompareString((*it)->GetObjectTypeName(), type) && ++cnt == idx)
-				return *it;
-		}
-		return nullptr;
-	}
-
 	/**
 	* Obtiene el número de hijos del objeto.
 	*/
@@ -535,15 +524,15 @@ public:
 	* Comprueba si el tipo es derivado del que se pasa como parámetro.
 	*/
 
-	bool IsSubclassOf(const wxString& clsName) const {
+	bool IsSubclassOf(const wxString& className) const {
 		bool found = false;
-		if (stringUtils::CompareString(clsName, GetClassName())) {
+		if (stringUtils::CompareString(className, GetClassName())) {
 			found = true;
 		}
 		else {
 			T* parent = GetParent();
 			while (parent != nullptr) {
-				found = parent->IsSubclassOf(clsName);
+				found = parent->IsSubclassOf(className);
 				if (found)
 					break;
 				else

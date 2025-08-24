@@ -31,22 +31,20 @@ wxString IValueFrame::GetClassName() const
 	const class_identifier_t& clsid = GetClassType();
 	if (clsid == 0)
 		return _("Not founded in wxClassInfo!");
+	
 	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
-	if (typeCtor != nullptr) {
-		return typeCtor->GetClassName();
-	}
+	if (typeCtor != nullptr) 
+		return typeCtor->GetClassName();	
 	return _("Not founded in wxClassInfo!");
 }
 
 wxString IValueFrame::GetObjectTypeName() const
 {
-	const class_identifier_t& clsid = GetClassType();
-	if (clsid == 0)
-		return _("Not founded in wxClassInfo!");
-	IControlTypeCtor* typeCtor = dynamic_cast<IControlTypeCtor*>(CValue::GetAvailableCtor(clsid));
-	if (typeCtor != nullptr) {
+	IControlTypeCtor* typeCtor = 
+		static_cast<IControlTypeCtor *>(CValue::GetAvailableCtor(GetClassInfo()));
+	
+	if (typeCtor != nullptr) 
 		return typeCtor->GetTypeControlName();
-	}
 	return _("Not founded in wxClassInfo!");
 }
 

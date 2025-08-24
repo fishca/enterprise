@@ -10,7 +10,11 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	const wxVariant& value)
 {
 	wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
-	textEditor->SetDVCMode(true);	
+
+	textEditor->SetDVCMode(true);
+	
+	// create the window hidden to prevent flicker
+	textEditor->Show(false);
 	
 	bool result = textEditor->Create(dv, wxID_ANY, value,
 		labelRect.GetPosition(),
@@ -49,6 +53,7 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	}
 
 	textEditor->LayoutControls();
+	textEditor->Show(true);
 
 	textEditor->SetInsertionPointEnd();
 	return textEditor;

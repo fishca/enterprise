@@ -221,16 +221,12 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			virtual wxWindow* CreateEditorCtrl(wxWindow* dv,
 				wxRect labelRect,
 				const wxVariant& value) override {
+
 				wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
 				textEditor->SetDVCMode(true);
 
-				textEditor->SetPasswordMode(false);
-				textEditor->SetMultilineMode(false);
-				textEditor->SetTextEditMode(true);
-			
-				textEditor->ShowSelectButton(true);
-				textEditor->ShowClearButton(true);
-				textEditor->ShowOpenButton(false);
+				// create the window hidden to prevent flicker
+				textEditor->Show(false);
 
 				bool result = textEditor->Create(dv, wxID_ANY, value,
 					labelRect.GetPosition(),
@@ -238,6 +234,10 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 				if (!result)
 					return nullptr;
+
+				textEditor->ShowSelectButton(true);
+				textEditor->ShowClearButton(true);
+				textEditor->ShowOpenButton(false);
 
 				wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
 				if (parentWnd != nullptr) {
@@ -251,8 +251,15 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 					textEditor->SetFont(dv->GetFont());
 				}
 
+				textEditor->SetPasswordMode(false);
+				textEditor->SetMultilineMode(false);
+				textEditor->SetTextEditMode(true);
+
 				textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &wxValueViewRenderer::OnSelectButtonPressed, this);
 				textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &wxValueViewRenderer::OnClearButtonPressed, this);
+
+				textEditor->LayoutControls();
+				textEditor->Show(true);
 
 				textEditor->SetInsertionPointEnd();
 				return textEditor;
@@ -283,14 +290,14 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				return true;
 			}
 
-			virtual CGuid GetControlGuid() const { 
+			virtual CGuid GetControlGuid() const {
 				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return wxNullGuid;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
 				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
 				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
-				return filterData.m_filterGuid; 
+				return filterData.m_filterGuid;
 			}
 
 			virtual bool SetControlValue(const CValue& varValue) const {

@@ -27,7 +27,7 @@ namespace stringUtils
 
 	inline int StrToInt(const wxString& str) {
 		int result = 0;
-		str.ToInt(&result); 
+		str.ToInt(&result);
 		return result;
 	}
 
@@ -97,8 +97,26 @@ namespace stringUtils
 		return strRet;
 	}
 
-	inline bool CompareString(const wxString& lhs, const wxString& rhs) {
-		return lhs.CmpNoCase(rhs) == 0;
+	inline bool CompareString(const wxString& lhs, const wxString& rhs,
+		bool case_sensitive = false) {
+
+		if (lhs.size() != rhs.size())
+			return false;
+
+		for (unsigned int idx = 0; idx < lhs.size(); idx++) {
+			if (case_sensitive) {
+				const wxUniChar& c1 = *(lhs.begin() + idx);
+				const wxUniChar& c2 = *(rhs.begin() + idx);
+				if (c1 != c2) return false;
+			}
+			else {
+				const wxUniChar& c1 = wxTolower(*(lhs.begin() + idx));
+				const wxUniChar& c2 = wxTolower(*(rhs.begin() + idx));
+				if (c1 != c2) return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -139,8 +157,8 @@ namespace stringUtils
 	}
 
 	inline wxString GenerateSynonym(const wxString& strSystemName) {
-		wxString strSynonym; 
-		for (auto &c : strSystemName) {
+		wxString strSynonym;
+		for (auto& c : strSystemName) {
 			if (strSynonym.IsEmpty()) {
 				strSynonym += wxToupper(c);
 			}

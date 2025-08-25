@@ -31,22 +31,18 @@ public:
 	}
 
 	inline T* operator->() const { return Ptr(); }
+
 	inline operator T* () const { return Ptr(); }
-	inline operator bool() const noexcept { return m_pRef != nullptr; }
+	inline explicit operator bool() const noexcept { return m_pRef != nullptr; }
 
-	void operator = (const CValuePtr& other) {
-		CValue::operator=(other);
-	}
-
-	void operator = (T* ptr) {
-		CValue::operator=(ptr);
-	}
+	template <typename U>
+	void operator = (const CValuePtr<U>& other) { CValue::operator=(other); }
+	void operator = (const CValuePtr& other) { CValue::operator=(other); }
+	void operator = (T* ptr) { CValue::operator=(ptr); }
 
 private:
 
-	inline T* Ptr() const {
-		return static_cast<T*>(m_pRef);
-	}
+	inline T* Ptr() const { return static_cast<T*>(m_pRef); }
 };
 
 template <class _Ty1, class _Ty2>
@@ -61,22 +57,22 @@ inline bool operator!=(const CValuePtr<_Ty1>& _Left, const CValuePtr<_Ty2>& _Rig
 
 template <class _Ty>
 inline bool operator==(nullptr_t, const CValuePtr<_Ty>& _Right) noexcept {
-	return nullptr == _Right.GetRef();
+	return _Right.IsEmpty();
 }
 
 template <class _Ty>
 inline bool operator!=(nullptr_t, const CValuePtr<_Ty>& _Right) noexcept {
-	return nullptr != _Right.GetRef();
+	return !_Right.IsEmpty();
 }
 
 template <class _Ty>
 inline bool operator==(const CValuePtr<_Ty>& _Left, nullptr_t) noexcept {
-	return _Left.GetRef() != nullptr;
+	return _Left.IsEmpty();
 }
 
 template <class _Ty>
 inline bool operator!=(const CValuePtr<_Ty>& _Left, nullptr_t) noexcept {
-	return _Left.GetRef() != nullptr;
+	return !_Left.IsEmpty();
 }
 
 template <class _Ty1, class _Ty2>

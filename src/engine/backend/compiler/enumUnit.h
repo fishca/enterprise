@@ -317,7 +317,7 @@ public:
 	//type conversion
 	virtual wxString GetString() const final {
 		return m_value ? m_value->GetString() :
-			GetClassName();
+			wxEmptyString;
 	}
 
 	virtual number_t GetNumber() const final {

@@ -30,10 +30,10 @@ class CRoleEditor : public wxSplitterWindow {
 	IMetaObject* m_metaRole;
 
 	class wxTreeItemMetaData : public wxTreeItemData {
-		IRightObject* m_metaObject; //тип элемента
+		IAccessObject* m_metaObject; //тип элемента
 	public:
-		wxTreeItemMetaData(IRightObject* metaObject) : m_metaObject(metaObject) {}
-		IRightObject* GetMetaObject() const { return m_metaObject; }
+		wxTreeItemMetaData(IAccessObject* metaObject) : m_metaObject(metaObject) {}
+		IAccessObject* GetMetaObject() const { return m_metaObject; }
 	};
 
 	class wxTreeItemRoleData : public wxTreeItemMetaData {

@@ -145,7 +145,7 @@ enum metaObjectFlags {
 
 class BACKEND_API IMetaObject :
 	public IPropertyObjectHelper<IMetaObject>,
-	public IRightObject, public CValue {
+	public IAccessObject, public CValue {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
 
 protected:

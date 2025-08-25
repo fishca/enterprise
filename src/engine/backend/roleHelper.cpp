@@ -1,6 +1,6 @@
 #include "roleHelper.h"
 
-void CRole::InitRole(IRightObject* obj, const bool& value)
+void CRole::InitRole(IAccessObject* obj, const bool& value)
 {
 	m_owner->AddRole(this);
 	m_defValue = value;
@@ -8,18 +8,18 @@ void CRole::InitRole(IRightObject* obj, const bool& value)
 
 #pragma region role 
 
-IRightObject::~IRightObject()
+IAccessObject::~IAccessObject()
 {
 	for (auto& role : m_roles) { wxDELETE(role.second); }
 	m_roles.clear();
 }
 
-void IRightObject::AddRole(CRole* role)
+void IAccessObject::AddRole(CRole* role)
 {
 	m_roles.emplace_back(role->GetName(), role);
 }
 
-bool IRightObject::AccessRight(const CRole* role, const meta_identifier_t& id) const
+bool IAccessObject::AccessRight(const CRole* role, const meta_identifier_t& id) const
 {
 	auto roleData = m_valRoles.find(id);
 	if (roleData != m_valRoles.end()) {
@@ -36,7 +36,7 @@ bool IRightObject::AccessRight(const CRole* role, const meta_identifier_t& id) c
 	return role->GetDefValue();
 }
 
-bool IRightObject::SetRight(const CRole* role, const meta_identifier_t& id, const bool& val)
+bool IAccessObject::SetRight(const CRole* role, const meta_identifier_t& id, const bool& val)
 {
 	if (role == nullptr)
 		return false;
@@ -45,7 +45,7 @@ bool IRightObject::SetRight(const CRole* role, const meta_identifier_t& id, cons
 	return true;
 }
 
-CRole* IRightObject::GetRole(const wxString& nameParam) const
+CRole* IAccessObject::GetRole(const wxString& nameParam) const
 {
 	auto it = std::find_if(m_roles.begin(), m_roles.end(),
 		[nameParam](const std::pair<wxString, CRole*>& pair)
@@ -60,7 +60,7 @@ CRole* IRightObject::GetRole(const wxString& nameParam) const
 	return nullptr;
 }
 
-CRole* IRightObject::GetRole(unsigned int idx) const
+CRole* IAccessObject::GetRole(unsigned int idx) const
 {
 	assert(idx < m_roles.size());
 

@@ -3,17 +3,17 @@
 
 #include "backend_core.h"
 
-class IRightObject;
+class IAccessObject;
 
 class BACKEND_API CRole {
 	wxString m_roleName;
 	wxString m_roleLabel;
-	IRightObject* m_owner; // pointer to the owner object
+	IAccessObject* m_owner; // pointer to the owner object
 	bool m_defValue;  // handler function name
 private:
-	void InitRole(IRightObject* obj, const bool& value = true);
+	void InitRole(IAccessObject* obj, const bool& value = true);
 protected:
-	CRole(IRightObject* metaObject, const wxString& roleName, const wxString& roleLabel,
+	CRole(IAccessObject* metaObject, const wxString& roleName, const wxString& roleLabel,
 		const bool& value = true) :
 		m_roleName(roleName),
 		m_roleLabel(roleLabel),
@@ -27,16 +27,16 @@ public:
 	bool GetDefValue() const { return m_defValue; }
 
 	wxString GetName() const { return m_roleName; }
-	IRightObject* GetRoleObject() const { return m_owner; }
+	IAccessObject* GetRoleObject() const { return m_owner; }
 	wxString GetLabel() const { return m_roleLabel.IsEmpty() ? m_roleName : m_roleLabel; }
 
-	friend class IRightObject;
+	friend class IAccessObject;
 };
 
-class BACKEND_API IRightObject {
+class BACKEND_API IAccessObject {
 public:
 
-	virtual ~IRightObject();
+	virtual ~IAccessObject();
 
 	bool AccessRight(const wxString& roleName) const { return true; }
 	bool AccessRight(const wxString& roleName, const wxString& userName) const { return AccessRight(roleName); }

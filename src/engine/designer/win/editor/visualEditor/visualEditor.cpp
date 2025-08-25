@@ -368,6 +368,9 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::ScrollToObject(IVa
 			wxScrolledWindow::Scroll(startx, starty);
 			wxScrolledWindow::Thaw();
 		}
+		else if (obj != nullptr) {
+			ScrollToObject(obj->GetParent()); 
+		}
 	}
 }
 

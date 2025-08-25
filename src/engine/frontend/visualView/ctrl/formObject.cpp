@@ -551,7 +551,6 @@ IValueFrame* CValueForm::CreateControl(const wxString& clsControl, IValueFrame* 
 	}
 
 	m_formCollectionControl->PrepareNames();
-	m_formCollectionData->PrepareNames();
 
 	//return value 
 	if (newControl->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
@@ -598,7 +597,6 @@ void CValueForm::RemoveControl(IValueFrame* control)
 	}
 
 	m_formCollectionControl->PrepareNames();
-	m_formCollectionData->PrepareNames();
 }
 
 void CValueForm::OnIdleHandler(wxTimerEvent& event)

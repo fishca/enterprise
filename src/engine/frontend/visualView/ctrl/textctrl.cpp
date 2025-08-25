@@ -61,6 +61,10 @@ ISourceObject* CValueTextCtrl::GetSourceObject() const
 //*                              TextCtrl                                    *
 //****************************************************************************
 
+enum prop {
+	eControlValue,
+};
+
 CValueTextCtrl::CValueTextCtrl() :
 	IValueWindow(), ITypeControlFactory(), m_textModified(false)
 {
@@ -70,6 +74,38 @@ IMetaData* CValueTextCtrl::GetMetaData() const
 {
 	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
+}
+
+void CValueTextCtrl::PrepareNames() const
+{
+	IValueFrame::PrepareNames();
+
+	m_methodHelper->AppendProp(wxT("value"), eControlValue, eControl);
+}
+
+bool CValueTextCtrl::SetPropVal(const long lPropNum, const CValue& varPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum); bool refreshColumn = false;
+	if (lPropAlias == eControl) {
+		const long lPropData = m_methodHelper->GetPropData(lPropNum);
+		if (lPropData == eControlValue) {
+			SetControlValue(varPropVal);
+		}
+	}
+
+	return IValueFrame::SetPropVal(lPropNum, varPropVal);
+}
+
+bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
+	if (lPropAlias == eControl) {
+		const long lPropData = m_methodHelper->GetPropData(lPropNum);
+		if (lPropData == eControlValue) {
+			return GetControlValue(pvarPropVal);
+		}
+	}
+	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
 wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
@@ -186,7 +222,7 @@ bool CValueTextCtrl::GetControlValue(CValue& pvarControlVal) const
 		return sourceObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), pvarControlVal);
 	}
 
-	pvarControlVal = m_selValue;
+	pvarControlVal = ITypeControlFactory::AdjustValue(m_selValue);
 	return true;
 }
 

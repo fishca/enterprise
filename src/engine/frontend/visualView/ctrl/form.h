@@ -115,7 +115,8 @@ class FRONTEND_API CValueForm : public IBackendValueForm, public IValueFrame, pu
 private:
 	enum {
 		eSystem = eSizerItem + 1,
-		eProcUnit
+		eProcUnit,
+		eAttribute
 	};
 protected:
 	CPropertyCategory* m_categoryFrame = IPropertyObject::CreatePropertyCategory(wxT("frame"), _("frame"));
@@ -270,7 +271,7 @@ public:
 
 public:
 
-	std::vector<IValueControl*> m_listControl;
+	std::set<IValueControl*> m_listControl;
 
 	class CValueFormCollectionControl : public CValue {
 		wxDECLARE_DYNAMIC_CLASS(CValueFormCollectionControl);
@@ -305,41 +306,7 @@ public:
 		CMethodHelper* m_methodHelper;
 	};
 
-	class CValueFormCollectionData : public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CValueFormCollectionData);
-	public:
-		CValueFormCollectionData();
-		CValueFormCollectionData(CValueForm* ownerFrame);
-		virtual ~CValueFormCollectionData();
-
-		virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
-			//PrepareNames(); 
-			return m_methodHelper;
-		}
-		virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
-
-		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
-		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
-		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
-
-		//Расширенные методы:
-		bool Property(const CValue& varKeyValue, CValue& cValueFound);
-		unsigned int Count() const;
-
-		//Работа с итераторами:
-		virtual bool HasIterator() const { return true; }
-		virtual CValue GetIteratorEmpty();
-		virtual CValue GetIteratorAt(unsigned int idx);
-		virtual unsigned int GetIteratorCount() const { return Count(); }
-	private:
-		CValueForm* m_formOwner;
-		CMethodHelper* m_methodHelper;
-	};
-
 	CValueFormCollectionControl* m_formCollectionControl;
-	CValueFormCollectionData* m_formCollectionData;
 
 protected:
 

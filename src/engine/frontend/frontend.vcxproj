@@ -65,7 +65,6 @@
     <ClCompile Include="visualView\ctrl\form.cpp" />
     <ClCompile Include="visualView\ctrl\formAction.cpp" />
     <ClCompile Include="visualView\ctrl\formControl.cpp" />
-    <ClCompile Include="visualView\ctrl\formData.cpp" />
     <ClCompile Include="visualView\ctrl\formDocView.cpp" />
     <ClCompile Include="visualView\ctrl\formFactory.cpp" />
     <ClCompile Include="visualView\ctrl\formMem.cpp" />

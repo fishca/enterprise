@@ -26,10 +26,6 @@ CValueForm::CValueForm(const IMetaObjectForm* creator, IControlFrame* ownerContr
 	//init frame controls
 	m_formCollectionControl = CValue::CreateAndConvertObjectValueRef<CValueFormCollectionControl>(this);
 	m_formCollectionControl->IncrRef();
-
-	//init attributes controls
-	m_formCollectionData = CValue::CreateAndConvertObjectValueRef<CValueFormCollectionData>(this);
-	m_formCollectionData->IncrRef();
 }
 
 CValueForm::~CValueForm()
@@ -44,7 +40,6 @@ CValueForm::~CValueForm()
 	}
 
 	m_formCollectionControl->DecrRef();
-	m_formCollectionData->DecrRef();
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
 		IValueFrame* controlChild =
@@ -134,8 +129,8 @@ bool CValueForm::IsEditable() const
 {
 	if (m_sourceObject != nullptr) {
 		const IMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
-		if (metaObject != nullptr) 
-			return metaObject->IsEditable();		
+		if (metaObject != nullptr)
+			return metaObject->IsEditable();
 	}
 
 	return m_metaFormObject != nullptr ?
@@ -150,7 +145,7 @@ bool CValueForm::IsEditable() const
 enum Prop {
 	eThisForm = 0,
 	eControls,
-	eDataSources,
+	eDataSource,
 	eModified,
 	eFormOwner,
 	eUniqueKey,
@@ -178,7 +173,7 @@ void CValueForm::PrepareNames() const
 
 	m_methodHelper->AppendProp(thisForm, true, false, eThisForm, eSystem);
 	m_methodHelper->AppendProp(wxT("controls"), true, false, eControls, eSystem);
-	m_methodHelper->AppendProp(wxT("dataSources"), true, false, eDataSources, eSystem);
+	m_methodHelper->AppendProp(wxT("dataSource"), true, false, eDataSource, eSystem);
 	m_methodHelper->AppendProp(wxT("modified"), eModified, eSystem);
 	m_methodHelper->AppendProp(wxT("formOwner"), eFormOwner, eSystem);
 	m_methodHelper->AppendProp(wxT("uniqueKey"), eUniqueKey, eSystem);
@@ -223,8 +218,18 @@ void CValueForm::PrepareNames() const
 		}
 	}
 
+	for (auto& control : m_listControl) {
+		if (!control->HasValueInControl())
+			continue;
+
+		m_methodHelper->AppendProp(
+			control->GetControlName(),
+			control->GetControlID(),
+			eAttribute
+		);	
+	}
+
 	m_formCollectionControl->PrepareNames();
-	m_formCollectionData->PrepareNames();
 }
 
 bool CValueForm::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -251,6 +256,16 @@ bool CValueForm::SetPropVal(const long lPropNum, const CValue& varPropVal)
 			return true;
 		}
 	}
+	else if (lPropAlias == eAttribute) {
+		unsigned int id = m_methodHelper->GetPropData(lPropNum);
+		auto& it = std::find_if(m_listControl.begin(), m_listControl.end(),
+			[id](const IValueFrame* control) {
+				return id == control->GetControlID();
+			}
+		);
+		if (it != m_listControl.end()) 
+			return (*it)->SetControlValue(varPropVal);	
+	}
 	return false;
 }
 
@@ -276,14 +291,14 @@ bool CValueForm::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 		case eControls:
 			pvarPropVal = m_formCollectionControl;
 			return true;
-		case eDataSources:
-			pvarPropVal = m_formCollectionData;
+		case eDataSource:
+			pvarPropVal = dynamic_cast<CValue*>(m_sourceObject);
 			return true;
 		case eModified:
 			pvarPropVal = IsModified();
 			return true;
 		case eFormOwner:
-			pvarPropVal = m_controlOwner != nullptr ? m_controlOwner : CValue();
+			pvarPropVal = dynamic_cast<CValue*>(m_controlOwner);
 			return true;
 		case eUniqueKey:
 			pvarPropVal = CValue::CreateAndConvertObjectValueRef<CValueGuid>(m_formKey);
@@ -295,6 +310,16 @@ bool CValueForm::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 			pvarPropVal = m_closeOnOwnerClose;
 			return true;
 		}
+	}
+	else if (lPropAlias == eAttribute) {
+		unsigned int id = m_methodHelper->GetPropData(lPropNum);
+		auto& it = std::find_if(m_listControl.begin(), m_listControl.end(),
+			[id](const IValueFrame* control) {
+				return id == control->GetControlID();
+			}
+		);
+		if (it != m_listControl.end())
+			return (*it)->GetControlValue(pvarPropVal);
 	}
 
 	return false;

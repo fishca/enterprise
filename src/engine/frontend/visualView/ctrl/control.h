@@ -36,9 +36,7 @@ public:
 	virtual void SetOwnerForm(CValueForm* ownerForm);
 
 	// allow getting value in control
-	virtual bool HasValueInControl() const { 
-		return false; 
-	}
+	virtual bool HasValueInControl() const { return false; }
 	
 	/*
 	* Get/set value in control

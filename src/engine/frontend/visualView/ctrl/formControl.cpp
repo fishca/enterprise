@@ -51,8 +51,11 @@ bool CValueForm::CValueFormCollectionControl::GetAt(const CValue& varKeyValue, C
 	const number_t& number = varKeyValue.GetNumber();
 	if (m_formOwner->m_listControl.size() < number.ToUInt())
 		return false;
-	auto structurePos = m_formOwner->m_listControl.begin();
-	pvarValue = structurePos[number.ToUInt()];
+	
+	auto it = m_formOwner->m_listControl.begin();
+	std::advance(it, number.ToUInt());
+	pvarValue = *it;
+
 	return true;
 }
 
@@ -64,10 +67,12 @@ bool CValueForm::CValueFormCollectionControl::Property(const CValue& varKeyValue
 			return stringUtils::CompareString(key, control->GetControlName());
 		}
 	);
+	
 	if (it != m_formOwner->m_listControl.end()) {
 		cValueFound = *it;
 		return true;
 	}
+	
 	return false;
 }
 

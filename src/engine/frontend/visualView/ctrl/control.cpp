@@ -28,7 +28,7 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 {
 	if (ownerForm && m_formOwner == nullptr) {
 		if (GetComponentType() != COMPONENT_TYPE_SIZERITEM)
-			ownerForm->m_listControl.push_back(this);
+			ownerForm->m_listControl.emplace(this);
 	}
 	else if (!ownerForm && m_formOwner != nullptr) {
 		auto& it = std::find(

@@ -18,6 +18,10 @@ ISourceObject* CValueCheckbox::GetSourceObject() const
 //*                              Checkbox                                    *
 //****************************************************************************
 
+enum prop {
+	eControlValue,
+};
+
 CValueCheckbox::CValueCheckbox() : IValueWindow(), ITypeControlFactory()//(eValueTypes::TYPE_BOOLEAN)
 {
 }
@@ -26,6 +30,38 @@ IMetaData* CValueCheckbox::GetMetaData() const
 {
 	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
+}
+
+void CValueCheckbox::PrepareNames() const
+{
+	IValueFrame::PrepareNames();
+
+	m_methodHelper->AppendProp(wxT("value"), eControlValue, eControl);
+}
+
+bool CValueCheckbox::SetPropVal(const long lPropNum, const CValue& varPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum); bool refreshColumn = false;
+	if (lPropAlias == eControl) {
+		const long lPropData = m_methodHelper->GetPropData(lPropNum);
+		if (lPropData == eControlValue) {
+			SetControlValue(varPropVal);
+		}
+	}
+
+	return IValueFrame::SetPropVal(lPropNum, varPropVal);
+}
+
+bool CValueCheckbox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
+	if (lPropAlias == eControl) {
+		const long lPropData = m_methodHelper->GetPropData(lPropNum);
+		if (lPropData == eControlValue) {
+			return GetControlValue(pvarPropVal);
+		}
+	}
+	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
 wxObject* CValueCheckbox::Create(wxWindow* wxparent, IVisualHost* visualHost)
@@ -87,7 +123,7 @@ bool CValueCheckbox::GetControlValue(CValue& pvarControlVal) const
 			return srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), pvarControlVal);
 	}
 
-	pvarControlVal = m_selValue;
+	pvarControlVal = ITypeControlFactory::AdjustValue(m_selValue);
 	return true;
 }
 

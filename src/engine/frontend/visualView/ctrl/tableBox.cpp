@@ -485,8 +485,8 @@ void CValueTableBox::PrepareNames() const
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendProp("tableValue", eTableValue, eControl);
-	m_methodHelper->AppendProp("currentRow", eCurrentRow, eControl);
+	m_methodHelper->AppendProp(wxT("value"), eTableValue, eControl);
+	m_methodHelper->AppendProp(wxT("currentRow"), eCurrentRow, eControl);
 }
 
 bool CValueTableBox::SetPropVal(const long lPropNum, const CValue& varPropVal)

@@ -581,9 +581,6 @@
     <ClCompile Include="visualView\ctrl\formControl.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\ctrl\formData.cpp">
-      <Filter>visualView\ctrl</Filter>
-    </ClCompile>
     <ClCompile Include="visualView\ctrl\formDocView.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>

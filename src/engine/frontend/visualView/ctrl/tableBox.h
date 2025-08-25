@@ -143,7 +143,7 @@ public:
 
     //contol value
     virtual bool HasValueInControl() const {
-        return true;
+        return m_propertySource->IsEmptyProperty();
     }
 
     virtual bool GetControlValue(CValue& pvarControlVal) const;

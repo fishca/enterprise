@@ -477,7 +477,7 @@ enum prop {
 
 IMetaData* CValueTableBox::GetMetaData() const
 {
-	return m_formOwner ?
+	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
 }
 

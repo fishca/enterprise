@@ -9,7 +9,7 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	wxRect labelRect,
 	const wxVariant& value)
 {
-	wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
+	wxControlTextEditor* textEditor = new wxControlTextEditor;
 
 	textEditor->SetDVCMode(true);
 	
@@ -61,7 +61,7 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 
 bool CValueViewRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
 {
-	wxControlEditorCtrl* textEditor = wxDynamicCast(ctrl, wxControlEditorCtrl);
+	wxControlTextEditor* textEditor = wxDynamicCast(ctrl, wxControlTextEditor);
 
 	if (textEditor == nullptr)
 		return false;

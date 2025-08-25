@@ -222,7 +222,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				wxRect labelRect,
 				const wxVariant& value) override {
 
-				wxControlEditorCtrl* textEditor = new wxControlEditorCtrl;
+				wxControlTextEditor* textEditor = new wxControlTextEditor;
 				textEditor->SetDVCMode(true);
 
 				// create the window hidden to prevent flicker
@@ -266,7 +266,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual bool GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value) override {
-				wxControlEditorCtrl* textEditor = wxDynamicCast(ctrl, wxControlEditorCtrl);
+				wxControlTextEditor* textEditor = wxDynamicCast(ctrl, wxControlTextEditor);
 				if (textEditor == nullptr)
 					return false;
 				value = textEditor->GetValue();

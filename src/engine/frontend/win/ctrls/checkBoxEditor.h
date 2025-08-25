@@ -9,15 +9,15 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API wxControlCheckboxCtrl :
+class FRONTEND_API wxControlCheckbox :
 
-	public wxCompositeWindow<wxNavigationEnabled<wxWindow>>,
+	public wxCompositeWindow<wxWindow>,
 	public wxControlDynamicBorder {
 
-	class wxControlStaticTextCtrl : public wxDynamicStaticText {
+	class wxControlStaticText : public wxDynamicStaticText {
 	public:
 
-		wxControlStaticTextCtrl(wxWindow* parent,
+		wxControlStaticText(wxWindow* parent,
 			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
 			wxDynamicStaticText(parent, id, label, pos, size, style, name)
 		{
@@ -27,18 +27,18 @@ class FRONTEND_API wxControlCheckboxCtrl :
 		}
 	};
 
-	wxDynamicStaticText* m_label;
+	wxControlStaticText* m_label;
 	wxCheckBox* m_checkBox;
 	wxAlignment m_align;
 
 public:
 
-	wxControlCheckboxCtrl() :
+	wxControlCheckbox() :
 		m_label(nullptr), m_checkBox(nullptr), m_align(wxAlignment::wxALIGN_LEFT)
 	{
 	}
 
-	wxControlCheckboxCtrl(wxWindow* parent,
+	wxControlCheckbox(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE) :
@@ -47,7 +47,7 @@ public:
 		Create(parent, id, pos, size, style);
 	}
 
-	virtual ~wxControlCheckboxCtrl() {
+	virtual ~wxControlCheckbox() {
 		delete m_label;
 		delete m_checkBox;
 	}
@@ -60,7 +60,7 @@ public:
 		if (!wxCompositeWindow::Create(parent, id, pos, size, style))
 			return false;
 
-		m_label = new wxControlStaticTextCtrl(this, wxID_ANY, wxEmptyString);
+		m_label = new wxControlStaticText(this, wxID_ANY, wxEmptyString);
 		m_checkBox = new wxCheckBox(this,
 			wxID_ANY,
 			wxEmptyString,
@@ -171,9 +171,23 @@ private:
 	// Implement pure virtual function inherited from wxCompositeWindow.
 	virtual wxWindowList GetCompositeWindowParts() const override;
 
-	wxDECLARE_DYNAMIC_CLASS(wxControlCheckboxCtrl);
-	wxDECLARE_NO_COPY_CLASS(wxControlCheckboxCtrl);
+	wxDECLARE_DYNAMIC_CLASS(wxControlCheckbox);
+	wxDECLARE_NO_COPY_CLASS(wxControlCheckbox);
 	wxDECLARE_EVENT_TABLE();
+};
+
+class FRONTEND_API wxControlNavigationCheckbox :
+	public wxNavigationEnabled<wxControlCheckbox> {
+public:
+
+	wxControlNavigationCheckbox() {}
+	wxControlNavigationCheckbox(wxWindow* parent,
+		wxWindowID id = wxID_ANY,
+		const wxPoint& pos = wxDefaultPosition,
+		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE)
+	{
+		Create(parent, id, pos, size, style);
+	}
 };
 
 #endif 

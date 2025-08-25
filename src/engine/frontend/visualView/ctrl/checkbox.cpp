@@ -10,8 +10,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueCheckbox, IValueWindow)
 
 ISourceObject* CValueCheckbox::GetSourceObject() const
 {
-	return m_formOwner ? m_formOwner->GetSourceObject()
-		: nullptr;
+	return m_formOwner != nullptr ?
+		m_formOwner->GetSourceObject() : nullptr;
 }
 
 //****************************************************************************
@@ -24,13 +24,13 @@ CValueCheckbox::CValueCheckbox() : IValueWindow(), ITypeControlFactory()//(eValu
 
 IMetaData* CValueCheckbox::GetMetaData() const
 {
-	return m_formOwner ?
+	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
 }
 
 wxObject* CValueCheckbox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxControlCheckboxCtrl* checkbox = new wxControlCheckboxCtrl(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	wxControlCheckbox* checkbox = new wxControlNavigationCheckbox(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	checkbox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &CValueCheckbox::OnClickedCheckbox, this);
 	return checkbox;
 }
@@ -41,7 +41,7 @@ void CValueCheckbox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxControlCheckboxCtrl* checkbox = dynamic_cast<wxControlCheckboxCtrl*>(wxobject);
+	wxControlCheckbox* checkbox = dynamic_cast<wxControlCheckbox*>(wxobject);
 
 	if (checkbox != nullptr) {
 		wxString textCaption = wxEmptyString;
@@ -69,7 +69,7 @@ void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 void CValueCheckbox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	wxControlCheckboxCtrl* checkbox = dynamic_cast<wxControlCheckboxCtrl*>(obj);
+	wxControlCheckbox* checkbox = dynamic_cast<wxControlCheckbox*>(obj);
 	if (checkbox != nullptr) {
 		checkbox->Unbind(wxEVT_COMMAND_CHECKBOX_CLICKED, &CValueCheckbox::OnClickedCheckbox, this);
 	}
@@ -103,7 +103,7 @@ bool CValueCheckbox::SetControlValue(const CValue& varControlVal)
 
 	m_selValue = varControlVal.GetBoolean();
 
-	wxControlCheckboxCtrl* checkboxCtrl = dynamic_cast<wxControlCheckboxCtrl*>(GetWxObject());
+	wxControlCheckbox* checkboxCtrl = dynamic_cast<wxControlCheckbox*>(GetWxObject());
 	if (checkboxCtrl != nullptr) {
 		checkboxCtrl->SetValue(varControlVal.GetBoolean());
 	}

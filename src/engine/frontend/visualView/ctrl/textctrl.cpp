@@ -68,13 +68,13 @@ CValueTextCtrl::CValueTextCtrl() :
 
 IMetaData* CValueTextCtrl::GetMetaData() const
 {
-	return m_formOwner ?
+	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
 }
 
 wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxControlEditorCtrl* textEditor = new wxControlEditorCtrl(wxparent, wxID_ANY,
+	wxControlTextEditor* textEditor = new wxControlNavigationTextEditor(wxparent, wxID_ANY,
 		wxEmptyString,
 		wxDefaultPosition,
 		wxDefaultSize);
@@ -100,7 +100,7 @@ void CValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(wxobject);
+	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
 		wxString textCaption = wxEmptyString;
@@ -156,7 +156,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(wxobject);
+	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
 		if (!appData->DesignerMode()) {
@@ -205,7 +205,7 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 
 	m_formOwner->RefreshForm();
 
-	wxControlEditorCtrl* textEditor = dynamic_cast<wxControlEditorCtrl*>(GetWxObject());
+	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(GetWxObject());
 	if (textEditor != nullptr) {
 	
 		textEditor->SetValue(m_selValue.GetString());

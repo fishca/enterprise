@@ -45,8 +45,7 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 IMetaData* IValueControl::GetMetaData() const
 {
 	const IMetaObjectForm* metaFormObject = m_formOwner ?
-		m_formOwner->GetFormMetaObject() :
-		nullptr;
+		m_formOwner->GetFormMetaObject() : nullptr;
 
 	//for form buider
 	if (metaFormObject == nullptr) {

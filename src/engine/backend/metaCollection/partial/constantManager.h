@@ -5,18 +5,16 @@
 
 class CConstantManager : public CValue {
 	wxDECLARE_DYNAMIC_CLASS(CConstantManager);
-protected:
-	CMetaObjectConstant *m_metaConst;
 public:
 
-	CConstantManager(CMetaObjectConstant *metaConst = nullptr);
+	CConstantManager(CMetaObjectConstant* metaConst = nullptr);
 	virtual ~CConstantManager();
 
 	virtual CMethodHelper* GetPMethods() const {
 		//PrepareNames();  
-		return &m_methodHelper; 
-	} 
-	virtual void PrepareNames() const;                        
+		return &m_methodHelper;
+	}
+	virtual void PrepareNames() const;
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	//Get ref class 
@@ -27,6 +25,7 @@ public:
 	virtual wxString GetString() const;
 
 protected:
+	CMetaObjectConstant* m_metaConst;
 
 	//methods 
 	static CMethodHelper m_methodHelper;

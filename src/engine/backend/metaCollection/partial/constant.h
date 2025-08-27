@@ -51,7 +51,7 @@ public:
 	virtual CRecordDataObjectConstant* CreateObjectValue();
 
 	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); };
+	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); }
 
 	//support form 
 	virtual IBackendValueForm* GetObjectForm();
@@ -179,17 +179,14 @@ public:
 	virtual wxString GetString() const;
 
 	//operator 
-	virtual operator CValue() const {
-		return this;
-	}
+	virtual operator CValue() const { return this; }
 
 protected:
 	CMethodHelper* m_methodHelper;
 	CMetaObjectConstant* m_metaObject;
 	CValue m_constValue;
-protected:
+
 	friend class IMetaData;
-	friend class CMetaObjectConstant;
 };
 
 #endif

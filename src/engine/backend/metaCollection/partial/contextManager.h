@@ -21,10 +21,10 @@ public:
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                  
 
 protected:
+	//metaData 
+	IMetaData* m_metaData;
 	//methods 
 	CMethodHelper *m_methodHelper;
-	//metaData 
-	IMetaData *m_metaData;
 };
 
 #endif 

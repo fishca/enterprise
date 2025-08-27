@@ -36,11 +36,8 @@ void CRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet()
 		CMetaObjectAttributeDefault* registerRecord = metaObject->GetRegisterRecorder();
 		wxASSERT(registerRecord);
 
-		IRecordSetObject* recordSet = metaObject->CreateRecordSetObjectValue();
-		wxASSERT(recordSet);
+		CValuePtr<IRecordSetObject> recordSet(metaObject->CreateRecordSetObjectValue());
 		recordSet->SetKeyValue(registerRecord->GetMetaID(), m_document->GetReference());
-		recordSet->IncrRef();
-
 		m_records.insert_or_assign(metaObject->GetMetaID(), recordSet);
 	}
 
@@ -85,12 +82,6 @@ bool CRecordDataObjectDocument::CRecorderRegisterDocument::DeleteRecordSet()
 
 void CRecordDataObjectDocument::CRecorderRegisterDocument::ClearRecordSet()
 {
-	for (auto& pair : m_records) {
-		IRecordSetObject* record = pair.second;
-		wxASSERT(record);
-		record->DecrRef();
-	}
-
 	m_records.clear();
 }
 
@@ -111,22 +102,19 @@ CRecordDataObjectDocument::CRecorderRegisterDocument::~CRecorderRegisterDocument
 //*********************************************************************************************
 
 CRecordDataObjectDocument::CRecordDataObjectDocument(CMetaObjectDocument* metaObject, const CGuid& objGuid) :
-	IRecordDataObjectRef(metaObject, objGuid), m_registerRecords(nullptr)
+	IRecordDataObjectRef(metaObject, objGuid),
+	m_registerRecords(new CRecorderRegisterDocument(this))
 {
-	m_registerRecords = new CRecorderRegisterDocument(this);
-	m_registerRecords->IncrRef();
 }
 
 CRecordDataObjectDocument::CRecordDataObjectDocument(const CRecordDataObjectDocument& source) :
-	IRecordDataObjectRef(source), m_registerRecords(nullptr)
+	IRecordDataObjectRef(source),
+	m_registerRecords(new CRecorderRegisterDocument(this))
 {
-	m_registerRecords = new CRecorderRegisterDocument(this);
-	m_registerRecords->IncrRef();
 }
 
 CRecordDataObjectDocument::~CRecordDataObjectDocument()
 {
-	m_registerRecords->DecrRef();
 }
 
 bool CRecordDataObjectDocument::IsPosted() const

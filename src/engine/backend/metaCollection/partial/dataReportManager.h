@@ -18,6 +18,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper; 
 	} 
+
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 
@@ -29,8 +30,8 @@ public:
 	virtual wxString GetString() const;
 
 protected:
-	CMethodHelper* m_methodHelper;
 	CMetaObjectReport* m_metaObject;
+	CMethodHelper* m_methodHelper;
 };
 
 class CManagerExternalReport : public CValue {
@@ -43,6 +44,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+	
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 

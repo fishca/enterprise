@@ -215,14 +215,16 @@ bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_i
 
 bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 {
-	IValueTable::IValueModelReturnLine* retLine = GetReturnLine();
-	if (retLine != nullptr) {
-		retLine->SetValueByMetaID(
+	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
+	if (currentLine != nullptr) {
+		currentLine->SetValueByMetaID(
 			GetSourceColumn(), varControlVal
 		);
 	}
+	
 	ÑDataViewColumnContainer* columnObject =
 		dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
+	
 	if (columnObject != nullptr) {
 		CValueViewRenderer* renderer = columnObject->GetRenderer();
 		wxASSERT(renderer);
@@ -242,12 +244,13 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 
 bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
 {
-	IValueTable::IValueModelReturnLine* retLine = GetReturnLine();
-	if (retLine != nullptr) {
-		return retLine->GetValueByMetaID(
+	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
+	if (currentLine != nullptr) {
+		return currentLine->GetValueByMetaID(
 			GetSourceColumn(), pvarControlVal
 		);
 	}
+
 	return false;
 }
 

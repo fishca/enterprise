@@ -39,8 +39,8 @@ public:
 
 protected:
 	//methods 
-	CMethodHelper* m_methodHelper;
 	CMetaObjectInformationRegister* m_metaObject;
+	CMethodHelper* m_methodHelper;
 };
 
 #endif 

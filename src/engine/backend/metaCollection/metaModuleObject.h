@@ -14,7 +14,6 @@ enum eContentHelper {
 //base property for "inner module"
 template <typename T>
 class CPropertyInnerModule : public IProperty {
-	T* m_metaObject;
 public:
 
 	T* GetMetaObject() const { return m_metaObject; }
@@ -22,12 +21,9 @@ public:
 	CPropertyInnerModule(CPropertyCategory* cat, T* metaObject)
 		: IProperty(cat, metaObject->GetName(), metaObject->GetSynonym(), wxNullVariant), m_metaObject(metaObject)
 	{
-		m_metaObject->IncrRef();
 	}
 
-	virtual ~CPropertyInnerModule() {
-		m_metaObject->DecrRef();
-	}
+	virtual ~CPropertyInnerModule() {}
 
 	// get meta object 
 	T* operator->() { return GetMetaObject(); }
@@ -47,6 +43,9 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader) { return m_metaObject->GetModuleProperty()->LoadData(reader); }
 	virtual bool SaveData(CMemoryWriter& writer) { return m_metaObject->GetModuleProperty()->SaveData(writer); }
+
+private:
+	CValuePtr<T> m_metaObject;
 };
 
 #pragma endregion
@@ -56,7 +55,8 @@ class BACKEND_API IMetaObjectModule : public IMetaObject {
 public:
 
 	IMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
-		: IMetaObject(name, synonym, comment) {}
+		: IMetaObject(name, synonym, comment) {
+	}
 
 	//support icons
 	virtual wxIcon GetIcon() const;

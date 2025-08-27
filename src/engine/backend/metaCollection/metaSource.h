@@ -8,7 +8,6 @@
 //base property for "inner attribute"
 template <typename T = class CMetaObjectAttributeDefault>
 class CPropertyInnerAttribute : public IProperty {
-	T* m_metaObject;
 public:
 
 	T* GetMetaObject() const { return m_metaObject; }
@@ -16,12 +15,9 @@ public:
 	CPropertyInnerAttribute(CPropertyCategory* cat, T* metaObject)
 		: IProperty(cat, metaObject->GetName(), metaObject->GetSynonym(), wxNullVariant), m_metaObject(metaObject)
 	{
-		m_metaObject->IncrRef();
 	}
 
-	virtual ~CPropertyInnerAttribute() {
-		m_metaObject->DecrRef();
-	}
+	virtual ~CPropertyInnerAttribute() {}
 
 	// get meta object 
 	T* operator->() { return GetMetaObject(); }
@@ -50,6 +46,10 @@ public:
 		writer.w_stringZ(m_metaObject->GetCommonGuid());
 		return true;
 	}
+
+private:
+
+	CValuePtr<T> m_metaObject;
 };
 
 #pragma endregion

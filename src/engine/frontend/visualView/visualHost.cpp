@@ -11,8 +11,6 @@ m_document(document), m_valueForm(valueForm), m_dataViewSize(wxDefaultSize), m_d
 
 	CVisualHost::Bind(wxEVT_SIZE, &CVisualHost::OnSize, this);
 	CVisualHost::Bind(wxEVT_IDLE, &CVisualHost::OnIdle, this);
-
-	m_valueForm->IncrRef();
 }
 
 CVisualHost::~CVisualHost()
@@ -21,7 +19,6 @@ CVisualHost::~CVisualHost()
 	CVisualHost::Unbind(wxEVT_IDLE, &CVisualHost::OnIdle, this);
 
 	ClearControl(m_valueForm, true);
-	m_valueForm->DecrRef();
 }
 
 /////////////////////////////////////////////////////////////////////////////////

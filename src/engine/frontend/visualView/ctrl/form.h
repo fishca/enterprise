@@ -40,7 +40,6 @@ public:
 };
 
 class FRONTEND_API CVisualDocument : public CMetaDocument {
-	CValueForm* m_valueForm;
 public:
 
 	CVisualView* GetFirstView() const;
@@ -71,6 +70,8 @@ public:
 
 protected:
 	virtual CMetaView* DoCreateView();
+private:
+	CValuePtr<CValueForm> m_valueForm;
 };
 
 class FRONTEND_API CVisualDemoDocument : public CVisualDocument {
@@ -89,7 +90,6 @@ public:
 };
 
 class FRONTEND_API CVisualView : public CMetaView {
-	CVisualHost* m_visualHost;
 public:
 
 	CVisualView() : m_visualHost(nullptr) {}
@@ -104,6 +104,9 @@ public:
 	virtual void OnClosingDocument() override;
 
 	CVisualHost* GetVisualHost() const { return m_visualHost; }
+
+private:
+	CVisualHost* m_visualHost;
 };
 
 //********************************************************************************************
@@ -126,15 +129,8 @@ protected:
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryFrame, wxT("enabled"), _("enabled"), true);
 	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("sizer"), _("sizer"));
 	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("orient"), wxVERTICAL);
-private:
-
-	bool m_formModified;
-
-	const IMetaObjectForm* m_metaFormObject; // ref to metaData
-	ISourceDataObject* m_sourceObject;
-
 public:
-	
+
 	const CUniqueKey& GetFormKey() const { return m_formKey; }
 
 	bool CompareFormKey(const CUniqueKey& formKey) const {
@@ -234,10 +230,7 @@ public:
 	virtual IMetaData* GetMetaData() const;
 
 	//runtime 
-	virtual CProcUnit* GetFormProcUnit() const {
-		return m_procUnit;
-	}
-
+	virtual CProcUnit* GetFormProcUnit() const { return m_procUnit; }
 	virtual CValueForm* GetImplValueRef() const override {
 		return const_cast<CValueForm*>(this);
 	}
@@ -255,7 +248,9 @@ public:
 
 	CValue GetCreatedValue() const { return m_createdValue; }
 
-	IValueFrame* GetOwnerControl() const { return (IValueFrame*)m_controlOwner; }
+	IValueFrame* GetOwnerControl() const {
+		return dynamic_cast<IValueFrame*>(m_controlOwner);
+	}
 
 	/**
 	* Get type form
@@ -271,8 +266,6 @@ public:
 
 public:
 
-	std::set<IValueControl*> m_listControl;
-
 	class CValueFormCollectionControl : public CValue {
 		wxDECLARE_DYNAMIC_CLASS(CValueFormCollectionControl);
 	public:
@@ -284,6 +277,7 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
+		
 		virtual void PrepareNames() const;
 
 		virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
@@ -305,8 +299,6 @@ public:
 		CValueForm* m_formOwner;
 		CMethodHelper* m_methodHelper;
 	};
-
-	CValueFormCollectionControl* m_formCollectionControl;
 
 protected:
 
@@ -419,24 +411,33 @@ private:
 
 protected:
 
+	friend class IValueControl;
+
 	enum
 	{
 		eDataBlock = 0x3550,
 		eChildBlock = 0x3570
 	};
 
-	form_identifier_t		m_defaultFormType;
+	CValue					m_createdValue;
 
+	form_identifier_t		m_formType;
 	CUniqueKey				m_formKey;
 
-	CValue					m_createdValue;
+	bool					m_formModified;
 
 	bool					m_closeOnChoice;
 	bool					m_closeOnOwnerClose;
 
-	IControlFrame* m_controlOwner;
+	const IMetaObjectForm* m_metaFormObject; // ref to metaData
 
+	IControlFrame* m_controlOwner;
+	ISourceDataObject* m_sourceObject;
+	
+	std::set<IValueControl*> m_listControl;
 	std::map<wxString, wxTimer*> m_idleHandlerArray;
+
+	CValuePtr<CValueFormCollectionControl> m_formCollectionControl;
 };
 
 #endif 

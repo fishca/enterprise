@@ -61,7 +61,7 @@ public:
 
 class FRONTEND_API IValueFrame : public CValue,
 	public IPropertyObjectHelper<IValueFrame>,
-	public IControlFrame, 
+	public IControlFrame,
 	public IActionDataObject {
 	wxDECLARE_ABSTRACT_CLASS(IValueFrame);
 protected:
@@ -72,9 +72,6 @@ protected:
 		eEvent,
 		eSizerItem,
 	};
-
-	//object of methods 
-	CMethodHelper* m_methodHelper;
 
 private:
 
@@ -124,11 +121,11 @@ public:
 	virtual wxString GetControlName() const = 0;
 
 	void ResetGuid() {
-	//	wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
+		//	wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
 	}
 
 	void GenerateGuid() {
-	//	wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
+		//	wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
 	}
 
 	virtual CGuid GetControlGuid() const { return m_controlGuid; }
@@ -288,8 +285,7 @@ public:
 	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm) override {}
 
 	class CValueEventContainer : public CValue {
-		CMethodHelper* m_methodHelper;
-		IValueFrame* m_controlEvent;
+		wxDECLARE_DYNAMIC_CLASS(CValueEventContainer);
 	public:
 
 		CValueEventContainer();
@@ -300,6 +296,7 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
+		
 		virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
@@ -320,7 +317,8 @@ public:
 		virtual unsigned int GetIteratorCount() const { return Count(); }
 
 	private:
-		wxDECLARE_DYNAMIC_CLASS(CValueEventContainer);
+		IValueFrame* m_controlEvent;
+		CMethodHelper* m_methodHelper;
 	};
 
 	virtual bool GetControlValue(CValue& pvarControlVal) const { return false; }
@@ -361,6 +359,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+	
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 	//attributes 
@@ -368,9 +367,7 @@ public:
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
-		return false;
-	}
+	virtual inline bool IsEmpty() const { return false; }
 
 	virtual bool Init() final override;
 	virtual bool Init(CValue** paParams, const long lSizeArray) final override;
@@ -402,12 +399,15 @@ protected:
 
 protected:
 
-	CValueEventContainer* m_valEventContainer;
+	bool m_expanded = true; // is expanded in the object tree, allows for saving to file
 
 	form_identifier_t	 m_controlId;
 	CGuid				 m_controlGuid;
 
-	bool m_expanded = true; // is expanded in the object tree, allows for saving to file
+	CValuePtr<CValueEventContainer> m_valEventContainer;
+
+	//object of methods 
+	CMethodHelper* m_methodHelper;
 };
 
 #endif // !_BASE_H_

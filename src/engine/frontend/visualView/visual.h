@@ -75,13 +75,6 @@ private:
 
 protected:
 
-	friend class CValueTableBox;
-
-	friend class CValueNotebook;
-	friend class CValueNotebookPage;
-
-	friend class CVisualDocument;
-
 	//Insert new control
 	void CreateControl(IValueFrame* obj, IValueFrame* parent = nullptr, bool firstCreated = false);
 
@@ -156,6 +149,9 @@ private:
 	}
 
 protected:
+
+	friend class CValueForm;
+	friend class CValueTableBox;
 
 	//controls
 	std::unordered_map<IValueFrame*, wxObject* > m_baseObjects;

@@ -14,15 +14,14 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
 //*************************************************************************
 
 IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
-m_methodHelper(new CMethodHelper()), m_valEventContainer(nullptr), m_controlId(0), m_controlGuid(CGuid::newGuid())
+m_methodHelper(new CMethodHelper()), 
+m_valEventContainer(CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this)), 
+m_controlId(0), m_controlGuid(CGuid::newGuid())
 {
-	m_valEventContainer = CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this);
-	m_valEventContainer->IncrRef();
 }
 
 IValueFrame::~IValueFrame()
 {
-	m_valEventContainer->DecrRef();
 	wxDELETE(m_methodHelper);
 }
 

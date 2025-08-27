@@ -159,9 +159,6 @@ class CRecordDataObjectDocument : public IRecordDataObjectRef {
 public:
 	class CRecorderRegisterDocument : public CValue {
 		wxDECLARE_DYNAMIC_CLASS(CRecorderRegisterDocument);
-	private:
-		CRecordDataObjectDocument* m_document;
-		std::map<meta_identifier_t, IRecordSetObject*> m_records;
 	public:
 
 		void CreateRecordSet();
@@ -185,14 +182,13 @@ public:
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
 		//check is empty
-		virtual inline bool IsEmpty() const {
-			return false;
-		}
-	protected:
+		virtual inline bool IsEmpty() const { return false; }
+
+	private:
+		CRecordDataObjectDocument* m_document;
+		std::map<meta_identifier_t, CValuePtr<IRecordSetObject>> m_records;
 		CMethodHelper* m_methodHelper;
 	};
-private:
-	CRecorderRegisterDocument* m_registerRecords;
 protected:
 	CRecordDataObjectDocument(CMetaObjectDocument* metaObject = nullptr, const CGuid& guid = wxNullGuid);
 	CRecordDataObjectDocument(const CRecordDataObjectDocument& source);
@@ -275,9 +271,9 @@ public:
 
 public:
 	virtual void SetDeletionMark(bool deletionMark = true);
-protected:
+private:
+	CValuePtr<CRecorderRegisterDocument> m_registerRecords;
 	friend class IMetaData;
-	friend class CMetaObjectDocument;
 };
 
 #endif

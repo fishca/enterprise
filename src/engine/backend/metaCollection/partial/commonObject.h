@@ -931,9 +931,7 @@ public:
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
-		return CValue::IsEmpty();
-	}
+	virtual inline bool IsEmpty() const { return CValue::IsEmpty(); }
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
@@ -942,7 +940,7 @@ public:
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
 
 	//Get presentation 
-	virtual wxString GetSourceCaption() const { 
+	virtual wxString GetSourceCaption() const {
 		return GetMetaObject() ? stringUtils::GenerateSynonym(GetMetaObject()->GetClassName()) + wxT(": ") + GetMetaObject()->GetSynonym() : GetString();
 	}
 
@@ -1173,7 +1171,7 @@ public:
 	virtual bool GetModel(IValueModel*& tableValue, const meta_identifier_t& id);
 
 	//Get presentation 
-	virtual wxString GetSourceCaption() const { 
+	virtual wxString GetSourceCaption() const {
 		return m_metaObject->GetSynonym() + wxT(": ") + (IsNewObject() ? _("Creating") : GetString());
 	}
 
@@ -1250,16 +1248,15 @@ public:
 
 protected:
 	IMetaObjectRegisterData* m_metaObject;
-	CMethodHelper* m_methodHelper;
 	valueArray_t m_keyValues;
+	CMethodHelper* m_methodHelper;
 };
 
 class BACKEND_API IRecordSetObject : public IValueTable, public IModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(IRecordSetObject);
 public:
 
-	virtual IValueModelColumnCollection* GetColumnCollection() const { return m_dataColumnCollection; }
-
+	virtual IValueModelColumnCollection* GetColumnCollection() const { return m_recordColumnCollection; }
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
@@ -1272,31 +1269,21 @@ public:
 
 		class CValueRecordSetRegisterColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CValueRecordSetRegisterColumnInfo);
-		private:
-			IMetaObjectAttribute* m_metaAttribute;
 		public:
-
-			virtual unsigned int GetColumnID() const {
-				return m_metaAttribute->GetMetaID();
-			}
-
-			virtual wxString GetColumnName() const {
-				return m_metaAttribute->GetName();
-			}
-
-			virtual wxString GetColumnCaption() const {
-				return m_metaAttribute->GetSynonym();
-			}
-
-			virtual const CTypeDescription GetColumnType() const {
-				return m_metaAttribute->GetTypeDesc();
-			}
 
 			CValueRecordSetRegisterColumnInfo();
 			CValueRecordSetRegisterColumnInfo(IMetaObjectAttribute* metaAttribute);
 			virtual ~CValueRecordSetRegisterColumnInfo();
 
+			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
+			virtual wxString GetColumnName() const { return m_metaAttribute->GetName(); }
+			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
+			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
+
 			friend CRecordSetObjectRegisterColumnCollection;
+
+		private:
+			IMetaObjectAttribute* m_metaAttribute;
 		};
 
 	public:
@@ -1333,32 +1320,26 @@ public:
 		friend class IRecordSetObject;
 
 	protected:
-
 		IRecordSetObject* m_ownerTable;
+		std::map<meta_identifier_t, CValuePtr<CValueRecordSetRegisterColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
-
-		std::map<meta_identifier_t, CValueRecordSetRegisterColumnInfo*> m_listColumnInfo;
 	};
 
 	class CRecordSetObjectRegisterReturnLine : public IValueModelReturnLine {
 		wxDECLARE_DYNAMIC_CLASS(CRecordSetObjectRegisterReturnLine);
-	public:
-		IRecordSetObject* m_ownerTable;
 	public:
 
 		CRecordSetObjectRegisterReturnLine(IRecordSetObject* ownerTable = nullptr,
 			const wxDataViewItem& line = wxDataViewItem(nullptr));
 		virtual ~CRecordSetObjectRegisterReturnLine();
 
-		virtual IValueTable* GetOwnerModel() const {
-			return m_ownerTable;
-		}
+		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
 
 		virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
-	
+
 		virtual void PrepareNames() const;
 
 		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
@@ -1366,6 +1347,7 @@ public:
 
 		friend class IRecordSetObject;
 	private:
+		IRecordSetObject* m_ownerTable;
 		CMethodHelper* m_methodHelper;
 	};
 
@@ -1398,7 +1380,6 @@ public:
 
 		protected:
 			meta_identifier_t m_metaId;
-
 			CMethodHelper* m_methodHelper;
 			IRecordSetObject* m_recordSet;
 		};
@@ -1407,9 +1388,7 @@ public:
 		CRecordSetObjectRegisterKeyValue(IRecordSetObject* recordSet = nullptr);
 		virtual ~CRecordSetObjectRegisterKeyValue();
 
-		virtual inline bool IsEmpty() const {
-			return false;
-		}
+		virtual inline bool IsEmpty() const { return false; }
 
 		//****************************************************************************
 		//*                              Support methods                             *
@@ -1430,9 +1409,6 @@ public:
 		IRecordSetObject* m_recordSet;
 		CMethodHelper* m_methodHelper;
 	};
-
-	CRecordSetObjectRegisterColumnCollection* m_dataColumnCollection;
-	CRecordSetObjectRegisterKeyValue* m_recordSetKeyValue;
 
 protected:
 	IRecordSetObject(IMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey);
@@ -1569,7 +1545,12 @@ protected:
 	bool m_selected;
 
 	valueArray_t m_keyValues;
+
 	IMetaObjectRegisterData* m_metaObject;
+
+	CValuePtr<CRecordSetObjectRegisterColumnCollection> m_recordColumnCollection;
+	CValuePtr<CRecordSetObjectRegisterKeyValue> m_recordSetKeyValue;
+
 	CMethodHelper* m_methodHelper;
 };
 
@@ -1672,9 +1653,7 @@ public:
 	virtual wxString GetString() const;
 
 	//operator 
-	virtual operator CValue() const {
-		return this;
-	}
+	virtual operator CValue() const { return this; }
 
 	//Working with iterators
 	virtual bool HasIterator() const { return true; }
@@ -1697,9 +1676,9 @@ protected:
 	CUniquePairKey m_objGuid;
 
 	IMetaObjectRegisterData* m_metaObject;
-	IRecordSetObject* m_recordSet;
 
-	IValueTable::IValueModelReturnLine* m_recordLine;
+	CValuePtr<IRecordSetObject> m_recordSet;
+	CValuePtr<IValueTable::IValueModelReturnLine> m_recordLine;
 
 	CMethodHelper* m_methodHelper;
 };

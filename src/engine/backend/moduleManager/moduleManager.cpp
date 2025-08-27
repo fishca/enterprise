@@ -19,32 +19,17 @@
 
 IModuleManager::IModuleManager(IMetaData* metadata, CMetaObjectModule* obj) :
 	CValue(eValueTypes::TYPE_VALUE), IModuleDataObject(new CCompileModule(obj)),
+	m_objectManager(new CContextSystemManager(metadata)), 
+	m_metaManager(new CMetadataUnit(metadata)),
 	m_methodHelper(new CMethodHelper()),
 	m_initialized(false)
 {
-	//increment reference
-	m_objectManager = new CContextSystemManager(metadata);
-	m_objectManager->IncrRef();
-
-	m_metaManager = new CMetadataUnit(metadata);
-	m_metaManager->IncrRef();
-
 	//add global variables 
 	m_listGlConstValue.insert_or_assign(objectMetadataManager, m_metaManager);
 }
 
 void IModuleManager::Clear()
 {
-	for (auto& compileCode : m_listCommonModuleValue) {
-		CValue* dataRef = compileCode.second;
-		wxASSERT(dataRef);
-		dataRef->DecrRef();
-	}
-
-	for (auto& moduleValue : m_listCommonModuleManager) {
-		moduleValue->DecrRef();
-	}
-
 	//clear compile table 
 	m_listCommonModuleValue.clear();
 	m_listCommonModuleManager.clear();
@@ -53,10 +38,6 @@ void IModuleManager::Clear()
 IModuleManager::~IModuleManager()
 {
 	Clear();
-
-	wxDELETE(m_objectManager);
-	wxDELETE(m_metaManager);
-
 	wxDELETE(m_methodHelper);
 }
 
@@ -68,15 +49,11 @@ bool IModuleManager::AddCompileModule(const IMetaObject* mobj, CValue* object)
 {
 	if (!appData->DesignerMode() || !object)
 		return true;
-
-	std::map<const IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(mobj);
-
-	if (founded == m_listCommonModuleValue.end()) {
-		m_listCommonModuleValue.insert_or_assign(mobj, object);
-		object->IncrRef();
+	auto iterator = m_listCommonModuleValue.find(mobj);
+	if (iterator == m_listCommonModuleValue.end()) {
+		m_listCommonModuleValue.emplace(mobj, object);
 		return true;
 	}
-
 	return false;
 }
 
@@ -84,28 +61,22 @@ bool IModuleManager::RemoveCompileModule(const IMetaObject* obj)
 {
 	if (!appData->DesignerMode())
 		return true;
-
-	std::map<const IMetaObject*, CValue*>::iterator founded = m_listCommonModuleValue.find(obj);
-
-	if (founded != m_listCommonModuleValue.end()) {
-		CValue* dataRef = founded->second;
-		m_listCommonModuleValue.erase(founded);
-		dataRef->DecrRef();
+	auto iterator = m_listCommonModuleValue.find(obj);
+	if (iterator != m_listCommonModuleValue.end()) {
+		m_listCommonModuleValue.erase(iterator);
 		return true;
 	}
-
 	return false;
 }
 
 bool IModuleManager::AddCommonModule(CMetaObjectCommonModule* commonModule, bool managerModule, bool runModule)
 {
-	CModuleUnit* moduleValue = new CModuleUnit(this, commonModule, managerModule);
-	moduleValue->IncrRef();
-
+	CValuePtr<CModuleUnit> moduleValue(new CModuleUnit(this, commonModule, managerModule));
+	
 	if (!IModuleManager::AddCompileModule(commonModule, moduleValue))
 		return false;
 
-	m_listCommonModuleManager.push_back(moduleValue);
+	m_listCommonModuleManager.emplace_back(moduleValue);
 
 	if (!commonModule->IsGlobalModule()) {
 		const wxString& strModuleName = commonModule->GetName();
@@ -168,28 +139,27 @@ bool IModuleManager::RenameCommonModule(CMetaObjectCommonModule* commonModule, c
 
 bool IModuleManager::RemoveCommonModule(CMetaObjectCommonModule* commonModule)
 {
-	IModuleManager::CModuleUnit* moduleValue = FindCommonModule(commonModule);
+	CValuePtr<IModuleManager::CModuleUnit> moduleValue(FindCommonModule(commonModule));
 	wxASSERT(moduleValue);
 
 	if (!IModuleManager::RemoveCompileModule(commonModule))
 		return false;
 
-	auto moduleObjectIt = std::find(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(), moduleValue);
+	auto iterator = std::find(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(), moduleValue);
 
-	if (moduleObjectIt == m_listCommonModuleManager.end())
+	if (iterator == m_listCommonModuleManager.end())
 		return false;
 
 	if (!commonModule->IsGlobalModule()) {
 		m_listGlConstValue.erase(commonModule->GetName());
 	}
 
-	m_listCommonModuleManager.erase(moduleObjectIt);
+	m_listCommonModuleManager.erase(iterator);
 
 	if (commonModule->IsGlobalModule()) {
 		m_compileModule->RemoveModule(moduleValue->GetCompileModule());
 	}
 
-	moduleValue->DecrRef();
 	return true;
 }
 

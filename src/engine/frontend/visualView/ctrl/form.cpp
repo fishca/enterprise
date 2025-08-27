@@ -15,17 +15,14 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 CValueForm::CValueForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
 	ISourceDataObject* srcObject, const CUniqueKey& formGuid) : IValueFrame(), IModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
-	m_defaultFormType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
+	m_formCollectionControl(CValue::CreateAndConvertObjectValueRef<CValueFormCollectionControl>(this)),
+	m_formType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
 {
 	//init default params
 	CValueForm::InitializeForm(creator, ownerControl, srcObject, formGuid);
 
 	//set default params
 	m_controlId = defaultFormId;
-
-	//init frame controls
-	m_formCollectionControl = CValue::CreateAndConvertObjectValueRef<CValueFormCollectionControl>(this);
-	m_formCollectionControl->IncrRef();
 }
 
 CValueForm::~CValueForm()
@@ -38,8 +35,6 @@ CValueForm::~CValueForm()
 		timer->Unbind(wxEVT_TIMER, &CValueForm::OnIdleHandler, this);
 		delete timer;
 	}
-
-	m_formCollectionControl->DecrRef();
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
 		IValueFrame* controlChild =
@@ -122,7 +117,7 @@ form_identifier_t CValueForm::GetTypeForm() const
 {
 	return m_metaFormObject ?
 		m_metaFormObject->GetTypeForm() :
-		m_defaultFormType;
+		m_formType;
 }
 
 bool CValueForm::IsEditable() const

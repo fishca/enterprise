@@ -24,8 +24,6 @@ public:
 		enum helperAlias {
 			eProcUnit
 		};
-	private:
-		CMethodHelper* m_methodHelper;
 	public:
 
 		CModuleUnit() {}
@@ -111,13 +109,13 @@ public:
 	protected:
 		IModuleManager* m_moduleManager;
 		IMetaObjectModule* m_moduleObject;
-	};
-
-	class BACKEND_API CMetadataUnit : 
-		public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CMetadataUnit);
 	private:
 		CMethodHelper* m_methodHelper;
+	};
+
+	class BACKEND_API CMetadataUnit :
+		public CValue {
+		wxDECLARE_DYNAMIC_CLASS(CMetadataUnit);
 	public:
 
 		CMetadataUnit() {}
@@ -125,14 +123,10 @@ public:
 		virtual ~CMetadataUnit();
 
 		//get common module 
-		IMetaData* GetMetaData() const {
-			return m_metaData;
-		}
+		IMetaData* GetMetaData() const { return m_metaData; }
 
 		//check is empty
-		virtual inline bool IsEmpty() const {
-			return false;
-		}
+		virtual inline bool IsEmpty() const { return false; }
 
 		//operator '=='
 		virtual inline bool CompareValueEQ(const CValue& cParam) const override
@@ -170,8 +164,9 @@ public:
 		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal) override;        //setting attribute
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal) override;                   //attribute value
 
-	protected:
+	private:
 		IMetaData* m_metaData;
+		CMethodHelper* m_methodHelper;
 	};
 
 private:
@@ -204,8 +199,10 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
+
 	//method call
 	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
@@ -215,9 +212,7 @@ public:
 	virtual long FindProp(const wxString& strName) const;
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
-		return false;
-	}
+	virtual inline bool IsEmpty() const { return false; }
 
 	//compile modules:
 	bool AddCompileModule(const IMetaObject* moduleObject, CValue* object);
@@ -227,7 +222,7 @@ public:
 	template <class T> inline bool FindCompileModule(const IMetaObject* moduleObject, T*& objValue) const {
 		auto& it = m_listCommonModuleValue.find(moduleObject);
 		if (it != m_listCommonModuleValue.end()) {
-			objValue = dynamic_cast<T*>(it->second);
+			objValue = dynamic_cast<T*>(&(*it->second));
 			return objValue != nullptr;
 		}
 		objValue = nullptr;
@@ -249,47 +244,36 @@ public:
 	bool RemoveCommonModule(CMetaObjectCommonModule* commonModule);
 
 	//system object:
-	CValue* GetObjectManager() const {
-		return m_objectManager;
-	}
+	CValue* GetObjectManager() const { return m_objectManager; }
+	CMetadataUnit* GetMetaManager() const { return m_metaManager; }
 
-	CMetadataUnit* GetMetaManager() const {
-		return m_metaManager;
-	}
-
-	virtual std::vector<CModuleUnit*>& GetCommonModules() {
-		return m_listCommonModuleManager;
-	}
+	virtual std::vector<CValuePtr<CModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
 
 	//associated map
-	virtual std::map<wxString, CValue*>& GetGlobalVariables() {
-		return m_listGlConstValue;
-	}
-
-	virtual std::map<wxString, CValue*>& GetContextVariables() {
-		return m_compileModule->m_listContextValue;
-	}
+	virtual std::map<wxString, CValuePtr<CValue>>& GetGlobalVariables() { return m_listGlConstValue; }
+	virtual std::map<wxString, CValue*>& GetContextVariables() { return m_compileModule->m_listContextValue; }
 
 	//return external module
-	virtual CValue* GetObjectValue() const {
-		return nullptr;
-	}
+	virtual CValue* GetObjectValue() const { return nullptr; }
 
 protected:
 
 	bool m_initialized;
 
 	//global manager
-	CValue* m_objectManager;
+	CValuePtr<CValue> m_objectManager;
+
 	// global metamanager
-	CMetadataUnit* m_metaManager;
+	CValuePtr<CMetadataUnit> m_metaManager;
 
 	//map with compile data
-	std::map<const IMetaObject*, CValue*> m_listCommonModuleValue;
+	std::map<const IMetaObject*, CValuePtr<CValue>> m_listCommonModuleValue;
+
 	//array of common modules
-	std::vector<CModuleUnit*> m_listCommonModuleManager;
+	std::vector<CValuePtr<CModuleUnit>> m_listCommonModuleManager;
+
 	//array of global variables
-	std::map<wxString, CValue*> m_listGlConstValue;
+	std::map<wxString, CValuePtr<CValue>> m_listGlConstValue;
 
 	friend class CMetaDataConfiguration;
 	friend class CMetaDataDataProcessor;
@@ -299,7 +283,7 @@ protected:
 	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CModuleManagerConfiguration : 
+class BACKEND_API CModuleManagerConfiguration :
 	public IModuleManager {
 	//system events:
 	bool BeforeStart();

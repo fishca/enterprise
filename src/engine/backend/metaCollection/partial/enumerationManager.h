@@ -33,8 +33,8 @@ public:
 
 protected:
 	//methods 
+	CMetaObjectEnumeration* m_metaObject;
 	CMethodHelper *m_methodHelper;
-	CMetaObjectEnumeration *m_metaObject;
 };
 
 #endif 

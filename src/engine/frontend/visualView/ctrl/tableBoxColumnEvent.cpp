@@ -38,9 +38,11 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 	CValue standartProcessing = true;
 	IValueControl::CallAsEvent(m_eventChoiceProcessing, GetValue(), vSelected, standartProcessing);
 	if (standartProcessing.GetBoolean()) {
-		IValueTable::IValueModelReturnLine* retLine = GetReturnLine();
-		if (retLine != nullptr) {
-			retLine->SetValueByMetaID(
+		
+		IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
+		
+		if (currentLine != nullptr) {
+			currentLine->SetValueByMetaID(
 				GetSourceColumn(), vSelected
 			);
 		}

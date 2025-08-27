@@ -24,7 +24,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CTabularSectionDataObjectRef, ITabularSectionDataObjec
 
 wxDataViewItem ITabularSectionDataObject::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
-	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_dataColumnCollection->GetColumnByName(colName);
+	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
 			const wxDataViewItem& item = GetItem(row);
@@ -50,7 +50,7 @@ bool ITabularSectionDataObject::GetAt(const CValue& varKeyValue, CValue& pvarVal
 		CBackendException::Error("Array index out of bounds");
 		return false;
 	}
-	IMetaData *metaData = m_metaTable->GetMetaData(); 
+	IMetaData* metaData = m_metaTable->GetMetaData();
 	wxASSERT(metaData);
 	pvarValue = metaData->CreateAndConvertObjectValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(index));
 	return true;
@@ -108,7 +108,7 @@ bool ITabularSectionDataObject::SetValueByMetaID(const wxDataViewItem& item, con
 		if (node != nullptr) {
 			IMetaObjectAttribute* metaAttribute = m_metaTable->FindProp(id);
 			wxASSERT(metaAttribute);
-			if (metaAttribute == nullptr) return false; 
+			if (metaAttribute == nullptr) return false;
 			return node->SetValue(
 				id, metaAttribute->AdjustValue(varMetaVal), true
 			);
@@ -241,7 +241,7 @@ bool ITabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 	for (unsigned int idx = 0; idx < colData->GetColumnCount(); idx++) {
 		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(idx);
 		wxASSERT(colInfo);
-		if (m_dataColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {
+		if (m_recordColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {
 			columnName.push_back(colInfo->GetColumnName());
 		}
 	}
@@ -266,8 +266,8 @@ IValueTable* ITabularSectionDataObject::SaveDataToTable() const
 {
 	CValueTable* valueTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
 	IValueModelColumnCollection* colData = valueTable->GetColumnCollection();
-	for (unsigned int idx = 0; idx < m_dataColumnCollection->GetColumnCount() - 1; idx++) {
-		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_dataColumnCollection->GetColumnInfo(idx);
+	for (unsigned int idx = 0; idx < m_recordColumnCollection->GetColumnCount() - 1; idx++) {
+		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnInfo(idx);
 		wxASSERT(colInfo);
 		IValueModelColumnCollection::IValueModelColumnInfo* newColInfo = colData->AddColumn(
 			colInfo->GetColumnName(), colInfo->GetColumnType(), colInfo->GetColumnCaption(), colInfo->GetColumnWidth()
@@ -388,31 +388,31 @@ wxString ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetStri
 
 wxIMPLEMENT_DYNAMIC_CLASS(ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection, IValueTable::IValueModelColumnCollection);
 
-ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSectionDataObjectColumnCollection() : IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
+ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSectionDataObjectColumnCollection() :
+	IValueModelColumnCollection(),
+	m_ownerTable(nullptr),
+	m_methodHelper(nullptr)
 {
 }
 
-ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSectionDataObjectColumnCollection(ITabularSectionDataObject* ownerTable) : IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSectionDataObjectColumnCollection(ITabularSectionDataObject* ownerTable) :
+	IValueModelColumnCollection(),
+	m_ownerTable(ownerTable),
+	m_methodHelper(new CMethodHelper())
 {
 	CMetaObjectTableData* metaTable = m_ownerTable->GetMetaObject();
 	wxASSERT(metaTable);
 	for (auto& obj : metaTable->GetObjectAttributes()) {
 		if (metaTable->IsNumberLine(obj->GetMetaID()))
 			continue;
-		CValueTabularSectionColumnInfo* columnInfo = CValue::CreateAndConvertObjectValueRef<CValueTabularSectionColumnInfo>(obj);
-		m_listColumnInfo.insert_or_assign(obj->GetMetaID(), columnInfo);
-		columnInfo->IncrRef();
+		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
+			CValue::CreateAndConvertObjectValueRef<CValueTabularSectionColumnInfo>(obj)
+		);
 	}
 }
 
 ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::~CTabularSectionDataObjectColumnCollection()
 {
-	for (auto& colInfo : m_listColumnInfo) {
-		CValueTabularSectionColumnInfo* columnInfo = colInfo.second;
-		wxASSERT(columnInfo);
-		columnInfo->DecrRef();
-	}
-
 	wxDELETE(m_methodHelper);
 }
 

@@ -16,7 +16,7 @@ CValue::CMethodHelper CValueTable::m_methodHelper;
 
 wxDataViewItem CValueTable::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
-	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_dataColumnCollection->GetColumnByName(colName);
+	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
 			const wxDataViewItem& item = GetItem(row);
@@ -35,22 +35,18 @@ wxDataViewItem CValueTable::FindRowValue(IValueModelReturnLine* retLine) const
 	return wxDataViewItem(nullptr);
 }
 
-CValueTable::CValueTable() : IValueTable()
+CValueTable::CValueTable() : IValueTable(),
+m_tableColumnCollection(CValue::CreateAndConvertObjectValueRef<CValueTableColumnCollection>(this))
 {
-	m_dataColumnCollection = CValue::CreateAndConvertObjectValueRef<CValueTableColumnCollection>(this);
-	m_dataColumnCollection->IncrRef();
 }
 
 CValueTable::CValueTable(const CValueTable& valueTable) : IValueTable(),
-m_dataColumnCollection(valueTable.m_dataColumnCollection)
+m_tableColumnCollection(valueTable.m_tableColumnCollection)
 {
-	m_dataColumnCollection->IncrRef();
 }
 
 CValueTable::~CValueTable()
 {
-	if (m_dataColumnCollection != nullptr)
-		m_dataColumnCollection->DecrRef();
 }
 
 void CValueTable::PrepareNames() const
@@ -67,17 +63,17 @@ void CValueTable::PrepareNames() const
 
 	m_methodHelper.AppendProp("columns");
 
-	if (m_dataColumnCollection != nullptr)
-		m_dataColumnCollection->PrepareNames();
+	if (m_tableColumnCollection != nullptr)
+		m_tableColumnCollection->PrepareNames();
 }
 
 bool CValueTable::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-		case enColumns:
-			pvarPropVal = m_dataColumnCollection;
-			return true;
+	case enColumns:
+		pvarPropVal = m_tableColumnCollection;
+		return true;
 	}
 
 	return false;
@@ -87,46 +83,46 @@ bool CValueTable::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue
 {
 	switch (lMethodNum)
 	{
-		case enAddRow:
-			pvarRetValue = GetRowAt(AppendRow());
-			return true;
-		case enClone:
-			pvarRetValue = Clone();
-			return true;
-		case enFind:
-		{
-			const wxDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
-			if (item.IsOk())
-				pvarRetValue = GetRowAt(item);
+	case enAddRow:
+		pvarRetValue = GetRowAt(AppendRow());
+		return true;
+	case enClone:
+		pvarRetValue = Clone();
+		return true;
+	case enFind:
+	{
+		const wxDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
+		if (item.IsOk())
+			pvarRetValue = GetRowAt(item);
+		return true;
+	}
+	case enCount:
+		pvarRetValue = (unsigned int)GetRowCount();
+		return true;
+	case enDelete:
+	{
+		CValueTableReturnLine* retLine = nullptr;
+		if (paParams[0]->ConvertToValue(retLine)) {
+			wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
+			if (node != nullptr)
+				IValueTable::Remove(node);
+		}
+		else {
+			wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(paParams[0]->GetInteger()));
+			if (node != nullptr) IValueTable::Remove(node);
+		}
+		return true;
+	}
+	case enClear:
+		Clear();
+		return true;
+	case enSort:
+		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(paParams[0]->GetString());
+		if (colInfo != nullptr) {
+			IValueTable::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
 			return true;
 		}
-		case enCount:
-			pvarRetValue = (unsigned int)GetRowCount();
-			return true;
-		case enDelete:
-		{
-			CValueTableReturnLine* retLine = nullptr;
-			if (paParams[0]->ConvertToValue(retLine)) {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
-				if (node != nullptr)
-					IValueTable::Remove(node);
-			}
-			else {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(paParams[0]->GetInteger()));
-				if (node != nullptr) IValueTable::Remove(node);
-			}
-			return true;
-		}
-		case enClear:
-			Clear();
-			return true;
-		case enSort:
-			IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_dataColumnCollection->GetColumnByName(paParams[0]->GetString());
-			if (colInfo != nullptr) {
-				IValueTable::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
-				return true;
-			}
-			return false;
+		return false;
 	}
 
 	return false;
@@ -152,14 +148,12 @@ bool CValueTable::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTable::CValueTableColumnCollection, IValueTable::IValueModelColumnCollection);
 
 CValueTable::CValueTableColumnCollection::CValueTableColumnCollection(CValueTable* ownerTable) : IValueModelColumnCollection(),
-m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable) {
+m_ownerTable(ownerTable),
+m_methodHelper(new CMethodHelper())
+{
 }
 
 CValueTable::CValueTableColumnCollection::~CValueTableColumnCollection() {
-	for (auto& colInfo : m_listColumnInfo) {
-		wxASSERT(colInfo);
-		colInfo->DecrRef();
-	}
 	wxDELETE(m_methodHelper);
 }
 
@@ -179,19 +173,19 @@ bool CValueTable::CValueTableColumnCollection::CallAsProc(const long lMethodNum,
 {
 	switch (lMethodNum)
 	{
-		case enRemoveColumn:
-		{
-			wxString columnName = paParams[0]->GetString();
-			auto it = std::find_if(m_listColumnInfo.begin(), m_listColumnInfo.end(),
-				[columnName](CValueTableColumnInfo* colData)
+	case enRemoveColumn:
+	{
+		wxString columnName = paParams[0]->GetString();
+		auto it = std::find_if(m_listColumnInfo.begin(), m_listColumnInfo.end(),
+			[columnName](CValueTableColumnInfo* colData)
 			{
 				return stringUtils::CompareString(columnName, colData->GetColumnName());
 			});
-			if (it != m_listColumnInfo.end()) {
-				RemoveColumn((*it)->GetColumnID());
-			}
-			return true;
+		if (it != m_listColumnInfo.end()) {
+			RemoveColumn((*it)->GetColumnID());
 		}
+		return true;
+	}
 	}
 	return false;
 }
@@ -200,21 +194,21 @@ bool CValueTable::CValueTableColumnCollection::CallAsFunc(const long lMethodNum,
 {
 	switch (lMethodNum)
 	{
-		case enAddColumn:
-		{
-			CValueType* valueType = nullptr;
-			if (lSizeArray > 1)
-				paParams[1]->ConvertToValue(valueType);
-			if (lSizeArray > 3)
-				pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[2]->GetString(), paParams[3]->GetInteger());
-			else if (lSizeArray > 2)
-				pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[2]->GetString(), wxDVC_DEFAULT_WIDTH);
-			else if (lSizeArray > 1)
-				pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
-			else
-				pvarRetValue = AddColumn(paParams[0]->GetString(), CTypeDescription(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
-			return true;
-		}
+	case enAddColumn:
+	{
+		CValueType* valueType = nullptr;
+		if (lSizeArray > 1)
+			paParams[1]->ConvertToValue(valueType);
+		if (lSizeArray > 3)
+			pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[2]->GetString(), paParams[3]->GetInteger());
+		else if (lSizeArray > 2)
+			pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[2]->GetString(), wxDVC_DEFAULT_WIDTH);
+		else if (lSizeArray > 1)
+			pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
+		else
+			pvarRetValue = AddColumn(paParams[0]->GetString(), CTypeDescription(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
+		return true;
+	}
 	}
 
 	return false;
@@ -271,7 +265,7 @@ CValueTable::CValueTableReturnLine::~CValueTableReturnLine() {
 void CValueTable::CValueTableReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	for (auto& colInfo : m_ownerTable->m_dataColumnCollection->m_listColumnInfo) {
+	for (auto& colInfo : m_ownerTable->m_tableColumnCollection->m_listColumnInfo) {
 		wxASSERT(colInfo);
 		m_methodHelper->AppendProp(
 			colInfo->GetColumnName(),
@@ -305,9 +299,9 @@ bool CValueTable::CValueTableReturnLine::GetPropVal(const long lPropNum, CValue&
 long CValueTable::AppendRow(unsigned int before)
 {
 	wxValueTableRow* rowData = new wxValueTableRow();
-	for (auto& colData : m_dataColumnCollection->m_listColumnInfo) {
+	for (auto& colData : m_tableColumnCollection->m_listColumnInfo) {
 		rowData->AppendTableValue(colData->GetColumnID(),
-			CValueTypeDescription::AdjustValue(m_dataColumnCollection->GetColumnType(colData->GetColumnID()))
+			CValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(colData->GetColumnID()))
 		);
 	}
 
@@ -328,7 +322,7 @@ void CValueTable::CopyRow()
 	if (node == nullptr)
 		return;
 	wxValueTableRow* rowData = new wxValueTableRow();
-	for (auto& colData : m_dataColumnCollection->m_listColumnInfo) {
+	for (auto& colData : m_tableColumnCollection->m_listColumnInfo) {
 		rowData->AppendTableValue(
 			colData->GetColumnID(), node->GetTableValue(colData->GetColumnID())
 		);

@@ -41,19 +41,7 @@ bool CValueTableBox::GetControlValue(CValue& pvarControlVal) const
 
 bool CValueTableBox::SetControlValue(const CValue& varControlVal)
 {
-	IValueModel* tableModel =
-		varControlVal.ConvertToType<IValueModel>();
-
-	if (m_tableModel) {
-		m_tableModel->DecrRef();
-		m_tableModel = nullptr;
-	}
-
-	if (tableModel != nullptr) {
-		m_tableModel = tableModel;
-		m_tableModel->IncrRef();
-	}
-
+	m_tableModel = varControlVal.ConvertToType<IValueModel>();
 	return true;
 }
 
@@ -147,23 +135,19 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* tableCtrl)
 	}
 }
 
-void CValueTableBox::CreateTable(bool recreateModel)
-{
-	if (m_tableModel != nullptr) {
-		if (recreateModel) {
-			m_tableModel->DecrRef();
-			m_tableModel = nullptr;
-		}
-	}
+void CValueTableBox::CreateTable(bool recreateModel) {
+
+	if (recreateModel && m_tableModel != nullptr) m_tableModel = nullptr;
 
 	if (m_tableModel == nullptr) {
-		IValueModel* modelValue = ITypeControlFactory::CreateAndConvertValueRef<IValueModel>();
-		//wxASSERT(modelValue);
-		if (modelValue != nullptr) {
+
+		m_tableModel = ITypeControlFactory::CreateAndConvertValueRef<IValueModel>();
+
+		if (m_tableModel != nullptr) {
 			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 				CValueTableBoxColumn* columnTable = wxDynamicCast(GetChild(idx), CValueTableBoxColumn);
 				if (columnTable != nullptr) {
-					IValueModel::IValueModelColumnCollection* columnData = modelValue->GetColumnCollection();
+					IValueModel::IValueModelColumnCollection* columnData = m_tableModel->GetColumnCollection();
 					wxASSERT(columnData);
 					IValueModel::IValueModelColumnCollection::IValueModelColumnInfo* column_info = columnData->AddColumn(
 						columnTable->GetControlName(),
@@ -171,11 +155,10 @@ void CValueTableBox::CreateTable(bool recreateModel)
 						columnTable->GetCaption(),
 						columnTable->GetWidthColumn()
 					);
+
 					if (column_info != nullptr) column_info->SetColumnID(columnTable->GetControlID());
 				}
 			}
-			m_tableModel = modelValue;
-			m_tableModel->IncrRef();
 		}
 	}
 }
@@ -187,14 +170,7 @@ void CValueTableBox::CreateModel(bool recreateModel)
 		if (srcObject != nullptr) {
 			IValueModel* tableModel = nullptr;
 			if (srcObject->GetModel(tableModel, m_propertySource->GetValueAsSource())) {
-				if (tableModel != m_tableModel) {
-					if (m_tableModel != nullptr) {
-						m_tableModel->DecrRef();
-						m_tableModel = nullptr;
-					}
-					m_tableModel = tableModel;
-					m_tableModel->IncrRef();
-				}
+				if (tableModel != m_tableModel) m_tableModel = tableModel;
 			}
 		}
 		CreateTable(false);
@@ -254,8 +230,6 @@ m_tableModel(nullptr), m_tableCurrentLine(nullptr), m_dataViewUpdated(false), m_
 
 CValueTableBox::~CValueTableBox()
 {
-	if (m_tableModel != nullptr)  m_tableModel->DecrRef();
-	if (m_tableCurrentLine != nullptr) m_tableCurrentLine->DecrRef();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -387,37 +361,25 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			if (m_tableModel != nullptr) {
 				const CValue& createdValue = m_formOwner->GetCreatedValue();
 				if (!createdValue.IsEmpty()) {
+					m_tableCurrentLine = nullptr;
 					const wxDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
-					if (currLine.IsOk()) {
-						if (m_tableCurrentLine != nullptr)
-							m_tableCurrentLine->DecrRef();
-						m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-						m_tableCurrentLine->IncrRef();
-					}
+					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 				}
 				else {
 					IValueFrame* ownerControl = m_formOwner->GetOwnerControl();
 					if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
 						CValue retValue; ownerControl->GetControlValue(retValue);
+						m_tableCurrentLine = nullptr;
 						const wxDataViewItem& currLine = m_tableModel->FindRowValue(retValue);
-						if (currLine.IsOk()) {
-							if (m_tableCurrentLine != nullptr)
-								m_tableCurrentLine->DecrRef();
-							m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-							m_tableCurrentLine->IncrRef();
-						}
+						if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					}
 				}
 			}
 
 			if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-				const wxDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
-				m_tableCurrentLine->DecrRef();
 				m_tableCurrentLine = nullptr;
-				if (currLine.IsOk()) {
-					m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-					m_tableCurrentLine->IncrRef();
-				}
+				const wxDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
+				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 			}
 		}
 
@@ -495,25 +457,16 @@ bool CValueTableBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	if (lPropAlias == eControl) {
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eTableValue) {
-			refreshColumn = true;
-			if (m_tableCurrentLine != nullptr)
-				m_tableCurrentLine->DecrRef();
-			m_tableCurrentLine = nullptr;
-			if (m_tableModel != nullptr)
-				m_tableModel->DecrRef();
 			m_tableModel = varPropVal.ConvertToType<IValueTable>();
-			m_tableModel->IncrRef();
+			m_tableCurrentLine = nullptr;
+			refreshColumn = true;
 		}
 		else if (lPropData == eCurrentRow) {
-			if (m_tableCurrentLine != nullptr)
-				m_tableCurrentLine->DecrRef();
 			m_tableCurrentLine = nullptr;
 			IValueTable::IValueModelReturnLine* tableReturnLine = nullptr;
 			if (varPropVal.ConvertToValue(tableReturnLine)) {
-				if (m_tableModel == tableReturnLine->GetOwnerModel()) {
+				if (m_tableModel == tableReturnLine->GetOwnerModel())
 					m_tableCurrentLine = tableReturnLine;
-					m_tableCurrentLine->IncrRef();
-				}
 			}
 		}
 	}

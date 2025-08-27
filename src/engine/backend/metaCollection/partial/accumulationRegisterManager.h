@@ -6,7 +6,7 @@
 
 class CAccumulationRegisterManager : public CValue,
 	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CInformationRegisterManager);
+	wxDECLARE_DYNAMIC_CLASS(CAccumulationRegisterManager);
 public:
 
 	CValue Balance(const CValue& cPeriod, const CValue& cFilter = CValue());
@@ -21,6 +21,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+	
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 

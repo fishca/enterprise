@@ -81,10 +81,7 @@ void CValueTableBox::OnSelectionChanged(wxDataViewEvent& event)
         standardProcessing //standardProcessing
     );
     if (standardProcessing.GetBoolean()) {
-        if (m_tableCurrentLine != nullptr)
-            m_tableCurrentLine->DecrRef();
         m_tableCurrentLine = m_tableModel->GetRowAt(item);
-        m_tableCurrentLine->IncrRef();
         event.Skip();
     }
     else {
@@ -308,17 +305,14 @@ void CValueTableBox::HandleOnScroll(wxScrollWinEvent& event)
 
             m_tableModel->CallRefreshItemModel(top_item, focused_item, countPerPage, scroll);
 
-            if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
+            if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {     
+                m_tableCurrentLine = nullptr;
                 const wxDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
                 if (currLine.IsOk()) {
-                    m_tableCurrentLine->DecrRef();
-                    m_tableCurrentLine = nullptr;
                     m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-                    m_tableCurrentLine->IncrRef();
                     dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());
                 }
             }
-
         }
     }
     event.Skip();

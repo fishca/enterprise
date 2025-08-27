@@ -6,7 +6,6 @@
 #include "backend/metaCollection/partial/dataReport.h"
 
 class BACKEND_API CModuleManagerExternalDataProcessor : public IModuleManager {
-	CRecordDataObjectDataProcessor* m_objectValue;
 public:
 
 	virtual CCompileModule* GetCompileModule() const;
@@ -19,9 +18,7 @@ public:
 	virtual ~CModuleManagerExternalDataProcessor();
 
 	//return external module
-	virtual IRecordDataObjectExt* GetObjectValue() const {
-		return m_objectValue;
-	}
+	virtual IRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -37,6 +34,7 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
+	
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
@@ -44,10 +42,12 @@ public:
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
 	virtual long FindProp(const wxString& strName) const;
+
+private:
+	CRecordDataObjectDataProcessor* m_objectValue;
 };
 
 class BACKEND_API CModuleManagerExternalReport : public IModuleManager {
-	CRecordDataObjectReport* m_objectValue;
 public:
 
 	virtual CCompileModule* GetCompileModule() const;
@@ -60,9 +60,7 @@ public:
 	virtual ~CModuleManagerExternalReport();
 
 	//return external module
-	virtual IRecordDataObjectExt* GetObjectValue() const {
-		return m_objectValue;
-	}
+	virtual IRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -78,12 +76,16 @@ public:
 
 	// this method is automatically called to initialize attribute and method names.
 	virtual void PrepareNames() const;
+	
 	//method call
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 	virtual long FindProp(const wxString& strName) const;
+
+private:
+	CRecordDataObjectReport* m_objectValue;
 };
 
 #endif

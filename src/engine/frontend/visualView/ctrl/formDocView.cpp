@@ -129,7 +129,7 @@ void CVisualDocument::SetDocParent(CMetaDocument* docParent)
 {
 	CMetaDocument::SetDocParent(docParent);
 
-	if (docParent == nullptr &&	
+	if (docParent == nullptr &&
 		(m_valueForm != nullptr && m_valueForm->m_controlOwner != nullptr)) {
 
 		m_valueForm->m_controlOwner->ControlDecrRef();
@@ -151,8 +151,6 @@ CVisualDocument::CVisualDocument(CValueForm* valueForm)
 
 		CVisualDocument::SetCommandProcessor(new CVisualCommandProcessor);
 		CVisualDocument::SetMetaObject(nullptr);
-
-		m_valueForm->IncrRef();
 	}
 
 	s_createdDocFormArray.insert(this);
@@ -160,9 +158,6 @@ CVisualDocument::CVisualDocument(CValueForm* valueForm)
 
 CVisualDocument::~CVisualDocument()
 {
-	if (m_valueForm != nullptr) 
-		m_valueForm->DecrRef();
-
 	s_createdDocFormArray.erase(this);
 }
 

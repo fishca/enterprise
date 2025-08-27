@@ -15,10 +15,7 @@ protected:
 private:
 
 	// implementation of base class virtuals to define model
-	virtual IValueModelColumnCollection* GetColumnCollection() const override {
-		return m_dataColumnCollection;
-	}
-
+	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) override {
 		if (!line.IsOk())
 			return nullptr;
@@ -44,30 +41,19 @@ public:
 	public:
 		class CDataObjectListColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CDataObjectListColumnInfo);
-			IMetaObjectAttribute* m_metaAttribute;
 		public:
 
-			virtual unsigned int GetColumnID() const {
-				return m_metaAttribute->GetMetaID();
-			}
-
-			virtual wxString GetColumnName() const {
-				return m_metaAttribute->GetName();
-			}
-
-			virtual wxString GetColumnCaption() const {
-				return m_metaAttribute->GetSynonym();
-			}
-
-			virtual const CTypeDescription GetColumnType() const {
-				return m_metaAttribute->GetTypeDesc();
-			}
+			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
+			virtual wxString GetColumnName() const { return m_metaAttribute->GetName(); }
+			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
+			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectListColumnInfo();
 			CDataObjectListColumnInfo(IMetaObjectAttribute* metaAttribute);
 			virtual ~CDataObjectListColumnInfo();
 
-			friend CDataObjectListColumnCollection;
+		private:
+			IMetaObjectAttribute* m_metaAttribute;
 		};
 
 	public:
@@ -101,14 +87,11 @@ public:
 		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
 		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
-		friend class IListDataObject;
-
 	protected:
 
 		IListDataObject* m_ownerTable;
+		std::map<meta_identifier_t, CValuePtr<CDataObjectListColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
-
-		std::map<meta_identifier_t, CDataObjectListColumnInfo*> m_listColumnInfo;
 	};
 
 	class CDataObjectListReturnLine : public IValueModelReturnLine {
@@ -126,14 +109,15 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
+
 		virtual void PrepareNames() const;
 
 		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
 	protected:
-		CMethodHelper* m_methodHelper;
 		IListDataObject* m_ownerTable;
+		CMethodHelper* m_methodHelper;
 	};
 
 public:
@@ -149,13 +133,8 @@ public:
 		);
 	}
 
-	virtual bool AutoCreateColumn() const {
-		return false;
-	}
-
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const {
-		return false;
-	}
+	virtual bool AutoCreateColumn() const { return false; }
+	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const { return false; }
 
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
@@ -216,7 +195,7 @@ public:
 
 protected:
 	CGuid m_objGuid;
-	CDataObjectListColumnCollection* m_dataColumnCollection;
+	CValuePtr<CDataObjectListColumnCollection> m_recordColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
 
@@ -262,7 +241,9 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+
 	virtual void PrepareNames() const;
+
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
@@ -354,7 +335,9 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+
 	virtual void PrepareNames() const;
+
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
@@ -375,9 +358,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataRef* GetMetaObject() const {
-		return m_metaObject;
-	};
+	virtual IMetaObjectRecordDataRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -460,8 +441,10 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
+
 	virtual void PrepareNames() const;
 	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);       // method call
+
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
@@ -524,10 +507,7 @@ protected:
 private:
 
 	// implementation of base class virtuals to define model
-	virtual IValueModelColumnCollection* GetColumnCollection() const override {
-		return m_dataColumnCollection;
-	}
-
+	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
@@ -541,30 +521,19 @@ public:
 	public:
 		class CDataObjectTreeColumnInfo : public IValueTree::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeColumnInfo);
-			IMetaObjectAttribute* m_metaAttribute;
 		public:
 
-			virtual unsigned int GetColumnID() const {
-				return m_metaAttribute->GetMetaID();
-			}
-
-			virtual wxString GetColumnName() const {
-				return m_metaAttribute->GetName();
-			}
-
-			virtual wxString GetColumnCaption() const {
-				return m_metaAttribute->GetSynonym();
-			}
-
-			virtual const CTypeDescription GetColumnType() const {
-				return m_metaAttribute->GetTypeDesc();
-			}
+			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
+			virtual wxString GetColumnName() const { return m_metaAttribute->GetName(); }
+			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
+			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectTreeColumnInfo();
 			CDataObjectTreeColumnInfo(IMetaObjectAttribute* metaAttribute);
 			virtual ~CDataObjectTreeColumnInfo();
 
-			friend CDataObjectTreeColumnCollection;
+		private:
+			IMetaObjectAttribute* m_metaAttribute;
 		};
 
 	public:
@@ -598,15 +567,11 @@ public:
 		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
 		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
-		friend class IListDataObject;
-
 	protected:
 
 		ITreeDataObject* m_ownerTable;
+		std::map<meta_identifier_t, CValuePtr<CDataObjectTreeColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
-
-		std::map<meta_identifier_t, CDataObjectTreeColumnInfo*> m_listColumnInfo;
-
 	};
 
 	class CDataObjectTreeReturnLine : public IValueModelReturnLine {
@@ -648,13 +613,8 @@ public:
 		);
 	}
 
-	virtual bool AutoCreateColumn() const {
-		return false;
-	}
-
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const {
-		return false;
-	}
+	virtual bool AutoCreateColumn() const { return false; }
+	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const { return false; }
 
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
@@ -680,8 +640,8 @@ public:
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
 
 	//Get presentation 
-	virtual wxString GetSourceCaption() const { 
-		return GetMetaObject() ? 
+	virtual wxString GetSourceCaption() const {
+		return GetMetaObject() ?
 			stringUtils::GenerateSynonym(GetMetaObject()->GetClassName()) + wxT(": ") + GetMetaObject()->GetSynonym() : GetString();
 	}
 
@@ -712,7 +672,7 @@ public:
 protected:
 
 	CGuid m_objGuid;
-	CDataObjectTreeColumnCollection* m_dataColumnCollection;
+	CValuePtr<CDataObjectTreeColumnCollection> m_recordColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
 
@@ -728,19 +688,15 @@ public:
 	};
 
 	struct wxValueTreeListNode : public wxValueTreeNode {
+		CGuid GetGuid() const { return m_objGuid; }
 		wxValueTreeListNode(wxValueTreeNode* parent, const CGuid& guid, ITreeDataObject* treeValue = nullptr, bool container = false) :
 			wxValueTreeNode(parent), m_objGuid(guid), m_container(container) {
 			m_valueTree = treeValue;
 		}
-		CGuid GetGuid() const {
-			return m_objGuid;
-		}
-		virtual bool IsContainer() const {
-			return m_container;
-		};
+		virtual bool IsContainer() const { return m_container; }
 	private:
-		bool m_container;
 		CGuid m_objGuid;
+		bool m_container;
 	};
 
 public:
@@ -791,9 +747,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataFolderMutableRef* GetMetaObject() const {
-		return m_metaObject;
-	};
+	virtual IMetaObjectRecordDataFolderMutableRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;

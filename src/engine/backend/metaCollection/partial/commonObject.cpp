@@ -1768,11 +1768,9 @@ bool IRecordDataObjectRef::InitializeObject(IRecordDataObjectRef* source, bool g
 		};
 	}
 
-	CReferenceDataObject* reference = source ?
-		source->GetReference() : nullptr;
-
-	if (reference != nullptr)
-		reference->IncrRef();
+	CValuePtr<CReferenceDataObject> reference(
+		source != nullptr ? source->GetReference() : nullptr
+	);
 
 	if (!generate && source != nullptr)
 		PrepareEmptyObject(source);
@@ -1795,10 +1793,9 @@ bool IRecordDataObjectRef::InitializeObject(IRecordDataObjectRef* source, bool g
 			succes = Filling(reference->GetValue());
 		}
 	}
-	if (reference != nullptr)
-		reference->DecrRef();
 
 	PrepareNames();
+
 	//is Ok
 	return succes;
 }
@@ -2275,25 +2272,22 @@ IRecordManagerObject* IRecordManagerObject::CopyRegisterValue()
 }
 
 IRecordManagerObject::IRecordManagerObject(IMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : CValue(eValueTypes::TYPE_VALUE),
-m_metaObject(metaObject), m_methodHelper(new CMethodHelper()), m_recordSet(m_metaObject->CreateRecordSetObjectValue(uniqueKey, false)), m_recordLine(nullptr),
+m_metaObject(metaObject), m_methodHelper(new CMethodHelper()),
+m_recordSet(m_metaObject->CreateRecordSetObjectValue(uniqueKey, false)), m_recordLine(nullptr),
 m_objGuid(uniqueKey)
 {
-	m_recordSet->IncrRef();
 }
 
 IRecordManagerObject::IRecordManagerObject(const IRecordManagerObject& source) : CValue(eValueTypes::TYPE_VALUE),
-m_metaObject(source.m_metaObject), m_methodHelper(new CMethodHelper()), m_recordSet(m_metaObject->CreateRecordSetObjectValue(source.m_recordSet, false)), m_recordLine(nullptr),
+m_metaObject(source.m_metaObject), m_methodHelper(new CMethodHelper()),
+m_recordSet(m_metaObject->CreateRecordSetObjectValue(source.m_recordSet, false)), m_recordLine(nullptr),
 m_objGuid(source.m_metaObject)
 {
-	m_recordSet->IncrRef();
 }
 
 IRecordManagerObject::~IRecordManagerObject()
 {
 	wxDELETE(m_methodHelper);
-
-	if (m_recordLine != nullptr) m_recordLine->DecrRef();
-	if (m_recordSet != nullptr) m_recordSet->DecrRef();
 }
 
 IBackendValueForm* IRecordManagerObject::GetForm() const
@@ -2384,26 +2378,20 @@ wxString IRecordManagerObject::GetString() const
 
 void IRecordManagerObject::PrepareEmptyObject(const IRecordManagerObject* source)
 {
-	if (m_recordLine != nullptr) {
-		m_recordLine->DecrRef();
-		m_recordLine = nullptr;
-	}
+	m_recordLine = nullptr;
 
 	if (source == nullptr) {
-
 		m_recordLine = new IRecordSetObject::CRecordSetObjectRegisterReturnLine(
 			m_recordSet,
 			m_recordSet->GetItem(
 				m_recordSet->AppendRow()
 			)
 		);
-		m_recordLine->IncrRef();
 	}
 	else if (source != nullptr) {
 		m_recordLine = m_recordSet->GetRowAt(
 			m_recordSet->GetItem(0)
 		);
-		m_recordLine->IncrRef();
 	}
 
 	m_recordSet->Modify(true);
@@ -2506,24 +2494,17 @@ IRecordSetObject* IRecordSetObject::CopyRegisterValue()
 ///////////////////////////////////////////////////////////////////////////////////
 
 IRecordSetObject::IRecordSetObject(IMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : IValueTable(),
-m_methodHelper(new CMethodHelper()),
-m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false)
+m_recordColumnCollection(new CRecordSetObjectRegisterColumnCollection(this)), m_recordSetKeyValue(new CRecordSetObjectRegisterKeyValue(this)),
+m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
+m_methodHelper(new CMethodHelper())
 {
-	m_dataColumnCollection = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterColumnCollection>(this);
-	m_dataColumnCollection->IncrRef();
-	m_recordSetKeyValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterKeyValue>(this);
-	m_recordSetKeyValue->IncrRef();
 }
 
 IRecordSetObject::IRecordSetObject(const IRecordSetObject& source) : IValueTable(),
-m_methodHelper(new CMethodHelper()),
-m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModified(true), m_selected(false)
+m_recordColumnCollection(new CRecordSetObjectRegisterColumnCollection(this)), m_recordSetKeyValue(new CRecordSetObjectRegisterKeyValue(this)),
+m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModified(true), m_selected(false),
+m_methodHelper(new CMethodHelper())
 {
-	m_dataColumnCollection = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterColumnCollection>(this);
-	m_dataColumnCollection->IncrRef();
-	m_recordSetKeyValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterKeyValue>(this);
-	m_recordSetKeyValue->IncrRef();
-
 	for (long row = 0; row < source.GetRowCount(); row++) {
 		wxValueTableRow* node = source.GetViewData<wxValueTableRow>(source.GetItem(row));
 		wxASSERT(node);
@@ -2534,14 +2515,6 @@ m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModifie
 IRecordSetObject::~IRecordSetObject()
 {
 	wxDELETE(m_methodHelper);
-
-	if (m_dataColumnCollection != nullptr) {
-		m_dataColumnCollection->DecrRef();
-	}
-
-	if (m_recordSetKeyValue != nullptr) {
-		m_recordSetKeyValue->DecrRef();
-	}
 }
 
 bool IRecordSetObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
@@ -2591,7 +2564,7 @@ bool IRecordSetObject::LoadDataFromTable(IValueTable* srcTable)
 	for (unsigned int idx = 0; idx < colData->GetColumnCount() - 1; idx++) {
 		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(idx);
 		wxASSERT(colInfo);
-		if (m_dataColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {
+		if (m_recordColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {
 			columnName.push_back(colInfo->GetColumnName());
 		}
 	}
@@ -2616,8 +2589,8 @@ IValueTable* IRecordSetObject::SaveDataToTable() const
 	CValueTable* valueTable = CValue::CreateAndConvertObjectRef<CValueTable>();
 
 	IValueModelColumnCollection* colData = valueTable->GetColumnCollection();
-	for (unsigned int idx = 0; idx < m_dataColumnCollection->GetColumnCount() - 1; idx++) {
-		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_dataColumnCollection->GetColumnInfo(idx);
+	for (unsigned int idx = 0; idx < m_recordColumnCollection->GetColumnCount() - 1; idx++) {
+		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnInfo(idx);
 		wxASSERT(colInfo);
 		IValueModelColumnCollection::IValueModelColumnInfo* newColInfo = colData->AddColumn(
 			colInfo->GetColumnName(), colInfo->GetColumnType(), colInfo->GetColumnCaption(), colInfo->GetColumnWidth()
@@ -2678,30 +2651,29 @@ bool IRecordSetObject::GetValueByMetaID(const wxDataViewItem& item, const meta_i
 
 wxIMPLEMENT_DYNAMIC_CLASS(IRecordSetObject::CRecordSetObjectRegisterColumnCollection, IValueTable::IValueModelColumnCollection);
 
-IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection() : IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
+IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection() : 
+	IValueModelColumnCollection(), 
+	m_ownerTable(nullptr), 
+	m_methodHelper(nullptr)
 {
 }
 
-IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection(IRecordSetObject* ownerTable) : IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection(IRecordSetObject* ownerTable) : 
+	IValueModelColumnCollection(), 
+	m_ownerTable(ownerTable), 
+	m_methodHelper(new CMethodHelper())
 {
 	IMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
 	wxASSERT(metaObject);
 
 	for (auto& obj : metaObject->GetGenericAttributes()) {
-		CValueRecordSetRegisterColumnInfo* columnInfo = CValue::CreateAndConvertObjectValueRef<CValueRecordSetRegisterColumnInfo>(obj);
-		m_listColumnInfo.insert_or_assign(obj->GetMetaID(), columnInfo);
-		columnInfo->IncrRef();
+		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
+			CValue::CreateAndConvertObjectValueRef<CValueRecordSetRegisterColumnInfo>(obj));
 	}
 }
 
 IRecordSetObject::CRecordSetObjectRegisterColumnCollection::~CRecordSetObjectRegisterColumnCollection()
 {
-	for (auto& colInfo : m_listColumnInfo) {
-		CValueRecordSetRegisterColumnInfo* columnInfo = colInfo.second;
-		wxASSERT(columnInfo);
-		columnInfo->DecrRef();
-	}
-
 	wxDELETE(m_methodHelper);
 }
 

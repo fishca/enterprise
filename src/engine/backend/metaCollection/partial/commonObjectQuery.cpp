@@ -865,7 +865,6 @@ bool IRecordManagerObject::ReadData()
 			m_recordLine = m_recordSet->GetRowAt(
 				m_recordSet->GetItem(0)
 			);
-			m_recordLine->IncrRef();
 		}
 		return true;
 	}

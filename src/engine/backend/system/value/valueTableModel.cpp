@@ -26,7 +26,7 @@ bool CValueTable::SetValueByRow(const wxVariant& variant,
 	if (node == nullptr)
 		return false;
 	const CTypeDescription& typeDescription =
-		m_dataColumnCollection->GetColumnType(col);
+		m_tableColumnCollection->GetColumnType(col);
 	CValue cValue; node->GetValue(col, cValue);
 	if (strData.Length() > 0) {
 		std::vector<CValue> listValue;

@@ -8,10 +8,6 @@
 #include "frontend/visualView/ctrl/widgets.h"
 
 class CVisualHost : public IVisualHost {
-	CValueForm* m_valueForm;
-	CVisualDocument* m_document;
-	bool m_dataViewSizeChanged;
-	wxSize m_dataViewSize;
 public:
 
 	// ctor
@@ -40,8 +36,11 @@ protected:
 	void OnSize(wxSizeEvent& event);
 	void OnIdle(wxIdleEvent& event);
 protected:
-	friend class CValueForm;
-};
 
+	bool m_dataViewSizeChanged;
+	wxSize m_dataViewSize;
+	CValuePtr<CValueForm> m_valueForm;
+	CVisualDocument* m_document;
+};
 
 #endif

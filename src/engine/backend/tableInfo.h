@@ -305,20 +305,18 @@ public:
 		public:
 
 			virtual unsigned int GetColumnID() const = 0;
-			virtual void SetColumnID(unsigned int col) {};
+			virtual void SetColumnID(unsigned int col) {}
 
 			virtual wxString GetColumnName() const = 0;
-			virtual void SetColumnName(const wxString& name) {};
+			virtual void SetColumnName(const wxString& name) {}
 
 			virtual wxString GetColumnCaption() const = 0;
-			virtual void SetColumnCaption(const wxString& caption) {};
+			virtual void SetColumnCaption(const wxString& caption) {}
 
 			virtual const CTypeDescription GetColumnType() const = 0;
-			virtual void SetColumnType(const CTypeDescription& typeData) {};
+			virtual void SetColumnType(const CTypeDescription& typeData) {}
 
-			virtual int GetColumnWidth() const {
-				return wxDVC_DEFAULT_WIDTH;
-			};
+			virtual int GetColumnWidth() const { return wxDVC_DEFAULT_WIDTH; }
 
 			virtual void SetColumnWidth(int width) {};
 

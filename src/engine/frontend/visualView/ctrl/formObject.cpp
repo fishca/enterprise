@@ -20,7 +20,7 @@
 
 void CValueForm::BuildForm(const form_identifier_t& formType)
 {
-	m_defaultFormType = formType;
+	m_formType = formType;
 
 	if (m_sourceObject != nullptr) {
 
@@ -232,7 +232,7 @@ void CValueForm::InitializeForm(const IMetaObjectForm* creator,
 	m_formKey = CreateFormUniqueKey(ownerControl, srcObject, formGuid);
 
 	if (creator != nullptr)
-		m_defaultFormType = creator->GetTypeForm();
+		m_formType = creator->GetTypeForm();
 
 	//SetReadOnly(readOnly);
 }

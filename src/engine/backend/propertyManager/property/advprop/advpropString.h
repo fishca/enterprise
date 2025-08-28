@@ -25,4 +25,22 @@ public:
 		int argFlags = 0) const override;
 };
 
+// -----------------------------------------------------------------------
+// wxMultilineStringProperty
+// -----------------------------------------------------------------------
+
+class BACKEND_API wxMultilineStringProperty : public wxLongStringProperty {
+	WX_PG_DECLARE_PROPERTY_CLASS(wxMultilineStringProperty)
+public:
+	wxMultilineStringProperty(const wxString& label = wxPG_LABEL,
+		const wxString& name = wxPG_LABEL,
+		const wxString& value = wxEmptyString) :
+		wxLongStringProperty(label, name, value)
+	{
+	}
+
+protected:
+	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
+};
+
 #endif

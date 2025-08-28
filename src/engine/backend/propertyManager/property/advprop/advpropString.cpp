@@ -55,3 +55,63 @@ bool wxGeneralStringProperty::StringToValue(wxVariant& variant,
 
 	return false;
 }
+
+// -----------------------------------------------------------------------
+// wxMultilineStringProperty
+// -----------------------------------------------------------------------
+
+wxPG_IMPLEMENT_PROPERTY_CLASS(wxMultilineStringProperty, wxLongStringProperty, TextCtrlAndButton)
+
+bool wxMultilineStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
+{
+    wxASSERT_MSG(value.IsType(wxS("string")), "Function called for incompatible property");
+
+    // launch editor dialog
+    wxDialog* dlg = new wxDialog(pg->GetPanel(), wxID_ANY,
+        m_dlgTitle.empty() ? GetLabel() : m_dlgTitle,
+        wxDefaultPosition, wxDefaultSize, m_dlgStyle);
+
+    dlg->SetFont(pg->GetFont()); // To allow entering chars of the same set as the propGrid
+
+    // Multi-line text editor dialog.
+    const int spacing = wxPropertyGrid::IsSmallScreen() ? 4 : 8;
+    wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* rowsizer = new wxBoxSizer(wxHORIZONTAL);
+    long edStyle = wxTE_MULTILINE;
+    if (HasFlag(wxPG_PROP_READONLY))
+        edStyle |= wxTE_READONLY;
+    wxTextCtrl* ed = new wxTextCtrl(dlg, wxID_ANY, value.GetString(),
+        wxDefaultPosition, wxDefaultSize, edStyle);
+    if (m_maxLen > 0)
+        ed->SetMaxLength(m_maxLen);
+
+    rowsizer->Add(ed, wxSizerFlags(1).Expand().Border(wxALL, spacing));
+    topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
+
+    long btnSizerFlags = wxCANCEL;
+    if (!HasFlag(wxPG_PROP_READONLY))
+        btnSizerFlags |= wxOK;
+    wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(btnSizerFlags);
+    topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));
+
+    dlg->SetSizer(topsizer);
+    topsizer->SetSizeHints(dlg);
+
+    if (!wxPropertyGrid::IsSmallScreen())
+    {
+        dlg->SetSize(400, 300);
+        dlg->Move(pg->GetGoodEditorDialogPosition(this, dlg->GetSize()));
+    }
+
+    int res = dlg->ShowModal();
+
+    if (res == wxID_OK)
+    {
+        value = ed->GetValue();
+        dlg->Destroy();
+        return true;
+    }
+    
+    dlg->Destroy();
+    return false;
+}

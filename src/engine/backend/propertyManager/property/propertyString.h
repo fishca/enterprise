@@ -7,16 +7,12 @@
 class BACKEND_API IPropertyString : public IProperty {
 public:
 
-	wxString GetValueAsString() const { 	
-		wxString strValue; 
-		wxPropertyGrid::ExpandEscapeSequences(strValue, m_propValue);
-		return strValue; 
+	wxString GetValueAsString() const {
+		return m_propValue;
 	}
-	
-	void SetValue(const wxString& val) { 	
-		wxString strValue;
-		wxPropertyGrid::CreateEscapeSequences(strValue, val);
-		m_propValue = strValue; 
+
+	void SetValue(const wxString& strValue) {
+		m_propValue = strValue;
 	}
 
 	IPropertyString(CPropertyCategory* cat, const wxString& name,
@@ -74,17 +70,17 @@ public:
 class CPropertyName : public IPropertyString {
 public:
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name, 
+	CPropertyName(CPropertyCategory* cat, const wxString& name,
 		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label, 
+	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label,
 		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, 
+	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
 		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}
@@ -116,11 +112,7 @@ public:
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		return new wxLongStringProperty(m_propLabel, m_propName, GetValueAsString());
-	}
-
-	virtual void RefreshPGProperty(wxPGProperty* pg) {	
-		pg->SetValueFromString(GetValueAsString());
+		return new wxMultilineStringProperty(m_propLabel, m_propName, GetValueAsString());
 	}
 };
 
@@ -141,12 +133,11 @@ public:
 	CPropertyText(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
 		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
-		//wxPropertyGrid::ExpandEscapeSequences(strVal, value.GetString());
 	}
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		return new wxLongStringProperty(m_propLabel, m_propName, GetValueAsString());
+		return new wxMultilineStringProperty(m_propLabel, m_propName, GetValueAsString());
 	}
 };
 

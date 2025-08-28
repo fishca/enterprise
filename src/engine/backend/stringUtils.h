@@ -98,12 +98,11 @@ namespace stringUtils
 	}
 
 	inline bool CompareString(const wxString& lhs, const wxString& rhs,
-		bool case_sensitive = false) {
-
-		if (lhs.size() != rhs.size())
+		bool case_sensitive = false) noexcept {
+		const size_t length = lhs.length();
+		if (length != rhs.length())
 			return false;
-
-		for (unsigned int idx = 0; idx < lhs.size(); idx++) {
+		for (unsigned int idx = 0; idx < length; idx++) {
 			if (case_sensitive) {
 				const wxUniChar& c1 = *(lhs.begin() + idx);
 				const wxUniChar& c2 = *(rhs.begin() + idx);

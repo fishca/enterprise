@@ -50,15 +50,14 @@ bool IMetaObject::BuildNewName()
 		}
 	}
 
-
 	if (foundedName) {
-		const wxString& metaOldName = m_propertyName->GetValueAsString();
-		bool isDigit = metaOldName.Length() > 0 ?
-			stringUtils::IsDigit(metaOldName[metaOldName.Length() - 1]) : false;
-		const wxString& metaName = m_metaData->GetNewName(GetClassType(), GetParent(), isDigit ? metaOldName.Left(metaOldName.Length() - 1) : metaOldName);
+		const wxString& metaPrevName = m_propertyName->GetValueAsString();
+		size_t length = metaPrevName.length();
+		while (length >= 0 && stringUtils::IsDigit(metaPrevName[--length]));
+		const wxString& metaName = m_metaData->GetNewName(GetClassType(), GetParent(), metaPrevName.Left(length + 1));
 		SetName(metaName);
-		const wxString& metaOldSynonym = m_propertySynonym->GetValueAsString();
-		const wxString& metaSynonym = metaOldSynonym.Length() > 0 ? stringUtils::GenerateSynonym(metaName) : wxEmptyString;
+		const wxString& metaPrevSynonym = m_propertySynonym->GetValueAsString();
+		const wxString& metaSynonym = metaPrevSynonym.Length() > 0 ? stringUtils::GenerateSynonym(metaName) : wxEmptyString;
 		SetSynonym(metaSynonym);
 	}
 
@@ -67,7 +66,7 @@ bool IMetaObject::BuildNewName()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true), 
+IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaultFlag), m_metaId(0)
 {
 	m_propertyName->SetValue(strName);

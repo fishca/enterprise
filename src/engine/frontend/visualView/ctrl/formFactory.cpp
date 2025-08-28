@@ -76,8 +76,14 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 
 		// Save the original name for use later.
 		static wxString GetOriginalName(const IValueFrame* control) {
+
 			wxString originalName = control->GetControlName();
-			if (originalName.IsEmpty()) {
+			if (!originalName.IsEmpty()) {
+				size_t length = originalName.length();
+				while (length >= 0 && stringUtils::IsDigit(originalName[--length]));
+				originalName = originalName.Left(length + 1);
+			}
+			else {
 				const IValueFrame* parentControl = control->GetParent();
 				if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
 					originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
@@ -92,34 +98,28 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 			return originalName;
 		}
 
-		static void FindAndGenerateUniqueName(std::set<wxString>& nameSetArray, IValueFrame* object, IValueFrame* top) {
-			for (unsigned int i = 0; i < top->GetChildCount(); i++) {
-				FindAndGenerateUniqueName(nameSetArray, object, top->GetChild(i));
-			}
-			nameSetArray.emplace(top->GetControlName());
-		}
-
 	public:
 
-		static void BuildNameSet(IValueFrame* object, IValueFrame* top) {
-				
+		static void BuildNameSet(IValueFrame* object, CValueForm* top) {
+
 			wxString originalName = GetOriginalName(object); // Save the original name for use later.
 			wxString generateName = originalName; // The name that gets incremented.
 
 			if (object->GetComponentType() != COMPONENT_TYPE_SIZERITEM) {
-				
-				std::set<wxString> nameSetArray;
-				unsigned int index = 0;
-
-				FindAndGenerateUniqueName(nameSetArray, object, top);
-				
 				// comprobamos si hay conflicto
-				std::set<wxString>::iterator it = nameSetArray.find(originalName);
-
-				while (it != nameSetArray.end()) {
-					generateName = wxString::Format(wxT("%s%i"), originalName, ++index);
-					it = nameSetArray.find(generateName);
-				}
+				unsigned int index = 0; bool founded_name = false;
+				do {
+					for (auto& valueControl : top->m_listControl) {
+						if (0 == valueControl->GetControlID()) continue;
+						if (object == valueControl) continue;
+						if (stringUtils::CompareString(generateName, valueControl->GetControlName())) {
+							founded_name = true;
+							break;
+						}
+						founded_name = false;
+					}
+					if (founded_name) generateName = wxString::Format(wxT("%s%i"), originalName, ++index);
+				} while (founded_name);
 			}
 
 			object->SetControlName(generateName);

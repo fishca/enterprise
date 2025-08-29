@@ -310,8 +310,10 @@ void CValueForm::NotifyCreate(const CValue& vCreated)
 	CValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
-	if (ownerForm != nullptr)
+	if (ownerForm != nullptr) {
 		ownerForm->m_createdValue = vCreated;
+		ownerForm->m_changedValue = wxEmptyValue;
+	}
 
 	CValueForm::Modify(false);
 }
@@ -321,8 +323,10 @@ void CValueForm::NotifyChange(const CValue& vChanged)
 	CValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
-	if (ownerForm != nullptr)
+	if (ownerForm != nullptr) {
 		ownerForm->m_createdValue = wxEmptyValue;
+		ownerForm->m_changedValue = vChanged;
+	}
 
 	CValueForm::Modify(false);
 }
@@ -332,8 +336,10 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 	CValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
-	if (ownerForm != nullptr)
+	if (ownerForm != nullptr) {
 		ownerForm->m_createdValue = wxEmptyValue;
+		ownerForm->m_changedValue = wxEmptyValue;
+	}
 
 	CValueForm::CloseForm(true);
 }

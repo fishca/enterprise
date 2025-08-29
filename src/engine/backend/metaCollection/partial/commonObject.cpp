@@ -1202,8 +1202,8 @@ IRecordManagerObject* IMetaObjectRegisterData::CreateRecordManagerObjectValue(IR
 
 IRecordManagerObject* IMetaObjectRegisterData::CopyRecordManagerObjectValue(const CUniquePairKey& uniqueKey)
 {
-	IRecordManagerObject* createdValue = CreateRecordManagerObjectRegValue(uniqueKey);
-	if (createdValue && !createdValue->InitializeObject(nullptr, true, true)) {
+	IRecordManagerObject* createdValue = CreateRecordManagerObjectRegValue();
+	if (createdValue && !createdValue->InitializeObject(uniqueKey)) {
 		wxDELETE(createdValue);
 		return nullptr;
 	}
@@ -2240,17 +2240,13 @@ void IRecordManagerObject::CreateEmptyKey()
 	m_recordSet->CreateEmptyKey();
 }
 
-bool IRecordManagerObject::InitializeObject(const IRecordManagerObject* source, bool newRecord, bool copyObject)
+bool IRecordManagerObject::InitializeObject(const IRecordManagerObject* source, bool newRecord)
 {
 	if (!m_recordSet->InitializeObject(source ? source->GetRecordSet() : nullptr, newRecord))
 		return false;
 
 	if (!appData->DesignerMode()) {
-		if (copyObject && ReadData()) {
-			m_recordSet->m_selected = false; // is new 
-			m_recordSet->Modify(true); // and modify
-		}
-		else if (!newRecord && !copyObject && !ReadData()) {
+		if (!newRecord && !ReadData(m_objGuid)) {
 			PrepareEmptyObject(source);
 		}
 		else if (newRecord) {
@@ -2262,6 +2258,31 @@ bool IRecordManagerObject::InitializeObject(const IRecordManagerObject* source, 
 	}
 
 	PrepareNames();
+
+	//is Ok
+	return true;
+}
+
+bool IRecordManagerObject::InitializeObject(const CUniquePairKey& key)
+{
+	if (!m_recordSet->InitializeObject(nullptr, true))
+		return false;
+
+	if (!appData->DesignerMode()) {
+		if (ReadData(key)) {
+			m_recordSet->m_selected = false; // is new 
+			m_recordSet->Modify(true); // and modify
+		}
+		else {
+			PrepareEmptyObject(nullptr);
+		}
+	}
+	else {
+		PrepareEmptyObject(nullptr);
+	}
+
+	PrepareNames();
+
 	//is Ok
 	return true;
 }
@@ -2417,13 +2438,16 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
+	
 	IModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
+	
 	if (m_compileModule == nullptr) {
 		m_compileModule = new CCompileModule(m_metaObject->GetModuleObject());
 		m_compileModule->SetParent(moduleManager->GetCompileModule());
 		m_compileModule->AddContextVariable(thisObject, this);
 	}
+	
 	if (!appData->DesignerMode()) {
 		try {
 			m_compileModule->Compile();
@@ -2435,6 +2459,7 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 			return false;
 		};
 	}
+	
 	if (source != nullptr) {
 		for (long row = 0; row < source->GetRowCount(); row++) {
 			wxValueTableRow* node = source->GetViewData<wxValueTableRow>(source->GetItem(row));
@@ -2442,11 +2467,11 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 			IValueTable::Append(new wxValueTableRow(*node), false);
 		}
 	}
+	
 	if (!appData->DesignerMode()) {
-		if (!newRecord) {
-			ReadData();
-		}
+		if (!newRecord) ReadData();
 	}
+
 	if (!appData->DesignerMode()) {
 		wxASSERT(m_procUnit == nullptr);
 		m_procUnit = new CProcUnit();
@@ -2455,6 +2480,7 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 	}
 
 	PrepareNames();
+
 	//is Ok
 	return true;
 }
@@ -2651,16 +2677,16 @@ bool IRecordSetObject::GetValueByMetaID(const wxDataViewItem& item, const meta_i
 
 wxIMPLEMENT_DYNAMIC_CLASS(IRecordSetObject::CRecordSetObjectRegisterColumnCollection, IValueTable::IValueModelColumnCollection);
 
-IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection() : 
-	IValueModelColumnCollection(), 
-	m_ownerTable(nullptr), 
+IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection() :
+	IValueModelColumnCollection(),
+	m_ownerTable(nullptr),
 	m_methodHelper(nullptr)
 {
 }
 
-IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection(IRecordSetObject* ownerTable) : 
-	IValueModelColumnCollection(), 
-	m_ownerTable(ownerTable), 
+IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegisterColumnCollection(IRecordSetObject* ownerTable) :
+	IValueModelColumnCollection(),
+	m_ownerTable(ownerTable),
 	m_methodHelper(new CMethodHelper())
 {
 	IMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();

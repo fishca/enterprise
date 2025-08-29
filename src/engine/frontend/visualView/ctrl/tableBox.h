@@ -188,7 +188,9 @@ private:
 	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("beforeDeleteRow"), _("beforeDeleteRow"), _("When row deletion is called"), wxArrayString{ "control", "cancel" });
 #pragma endregion 
 
-	bool m_dataViewSelected, m_dataViewUpdated, m_dataViewSizeChanged;
+	bool m_dataViewCreated, m_dataViewUpdated, 
+		m_dataViewSelected, m_dataViewSizeChanged;
+
 	wxSize m_dataViewSize;
 
 	CValuePtr<IValueModel> m_tableModel;

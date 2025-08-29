@@ -247,6 +247,7 @@ public:
 	virtual CValueForm* GetOwnerForm() const { return const_cast<CValueForm*>(this); }
 
 	CValue GetCreatedValue() const { return m_createdValue; }
+	CValue GetChangedValue() const { return m_changedValue; }
 
 	IValueFrame* GetOwnerControl() const {
 		return dynamic_cast<IValueFrame*>(m_controlOwner);
@@ -420,6 +421,7 @@ protected:
 	};
 
 	CValue					m_createdValue;
+	CValue					m_changedValue;
 
 	form_identifier_t		m_formType;
 	CUniqueKey				m_formKey;

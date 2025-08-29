@@ -289,8 +289,8 @@ void CValueTableBox::OnSize(wxSizeEvent& event)
 {
 	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
 
-	if (m_dataViewUpdated && !m_dataViewSizeChanged)
-		m_dataViewSizeChanged = (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
+	if (m_dataViewCreated)
+		m_dataViewSizeChanged = m_dataViewUpdated || (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
 
 	event.Skip();
 }
@@ -310,7 +310,6 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 		}
 
 		const CValue& createdValue = m_formOwner->GetCreatedValue();
-	
 		if (!createdValue.IsEmpty()) {
 			const wxDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
 			if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
@@ -328,10 +327,22 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 		}
 
 		if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
+
 			const wxDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
-			if (currLine.IsOk())
+			if (currLine.IsOk()) {
 				m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-			else m_tableCurrentLine.Reset();
+			}
+			else {
+				const CValue& changedValue = m_formOwner->GetChangedValue();
+				if (!changedValue.IsEmpty()) {
+					const wxDataViewItem& currLine = m_tableModel->FindRowValue(changedValue);
+					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
+					else m_tableCurrentLine.Reset();
+				}
+				else {
+					m_tableCurrentLine.Reset();
+				}
+			}
 		}
 
 		if (m_tableCurrentLine != nullptr) {
@@ -342,7 +353,7 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 	}
 
 	m_dataViewSize = dataViewCtrl->GetSize();
-	m_dataViewSizeChanged = false;
+	m_dataViewUpdated = m_dataViewSizeChanged = false;
 	event.Skip();
 }
 

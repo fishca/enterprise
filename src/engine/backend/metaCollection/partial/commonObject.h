@@ -1523,6 +1523,7 @@ protected:
 	virtual bool ExistData();
 	virtual bool ExistData(number_t& lastNum); //for records
 	virtual bool ReadData();
+	virtual bool ReadData(const CUniquePairKey& key);
 	virtual bool SaveData(bool replace = true, bool clearTable = true);
 	virtual bool DeleteData();
 
@@ -1567,7 +1568,9 @@ public:
 	virtual ~IRecordManagerObject();
 
 	virtual void CreateEmptyKey();
-	virtual bool InitializeObject(const IRecordManagerObject* source = nullptr, bool newRecord = false, bool copyObject = false);
+
+	virtual bool InitializeObject(const IRecordManagerObject* source = nullptr, bool newRecord = false);
+	virtual bool InitializeObject(const CUniquePairKey& key);
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
@@ -1667,7 +1670,7 @@ protected:
 protected:
 
 	virtual bool ExistData();
-	virtual bool ReadData();
+	virtual bool ReadData(const CUniquePairKey& key);
 	virtual bool SaveData(bool replace = true);
 	virtual bool DeleteData();
 

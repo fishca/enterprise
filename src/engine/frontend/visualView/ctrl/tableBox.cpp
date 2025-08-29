@@ -219,7 +219,8 @@ bool CValueTableBox::FilterSource(const CSourceExplorer& src, const meta_identif
 //***********************************************************************************
 
 CValueTableBox::CValueTableBox() : IValueWindow(), ITypeControlFactory(),
-m_tableModel(nullptr), m_tableCurrentLine(nullptr), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false)
+m_tableModel(nullptr), m_tableCurrentLine(nullptr),
+m_dataViewCreated(false), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false)
 {
 	m_propertySource->SetValue(CTypeDescription(g_valueTableCLSID));
 
@@ -316,13 +317,13 @@ void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 	UpdateWindow(dataViewCtrl);
 
 	if (dataViewCtrl != nullptr) {
-		
+
 		wxItemAttr attr(
 			dataViewCtrl->GetForegroundColour(),
 			dataViewCtrl->GetBackgroundColour(),
 			dataViewCtrl->GetFont()
 		);
-		
+
 		dataViewCtrl->SetHeaderAttr(attr);
 	}
 }
@@ -343,13 +344,15 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			m_tableCurrentLine.Reset();
 		}
 
-		if (!appData->DesignerMode()) m_dataViewUpdated = true;
+		if (!appData->DesignerMode()) 
+			m_dataViewCreated = m_dataViewUpdated = true;
 	}
 }
 
 void CValueTableBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(obj);
+	m_dataViewCreated = m_dataViewUpdated = false;
 	if (dataViewCtrl != nullptr) dataViewCtrl->AssociateModel(nullptr);
 	m_tableCurrentLine.Reset();
 }

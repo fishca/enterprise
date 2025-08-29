@@ -853,14 +853,14 @@ bool IRecordManagerObject::ExistData()
 	return success;
 }
 
-bool IRecordManagerObject::ReadData()
+bool IRecordManagerObject::ReadData(const CUniquePairKey& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendException::Error(_("database is not open!"));
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	if (m_recordSet->ReadData()) {
+	if (m_recordSet->ReadData(key)) {
 		if (m_recordLine == nullptr) {
 			m_recordLine = m_recordSet->GetRowAt(
 				m_recordSet->GetItem(0)
@@ -1013,6 +1013,64 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 	db_query->CloseResultSet(resultSet);
 	db_query->CloseStatement(statement);
 	return founded;
+}
+
+bool IRecordSetObject::ReadData(const CUniquePairKey& key)
+{
+	if (db_query != nullptr && !db_query->IsOpen())
+		CBackendException::Error(_("database is not open!"));
+	else if (db_query == nullptr)
+		CBackendException::Error(_("database is not open!"));
+
+	IValueTable::Clear(); int position = 1;
+
+	wxString tableName = m_metaObject->GetTableNameDB();
+	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
+
+	for (auto& obj : m_metaObject->GetGenericDimensions()) {
+		if (!key.FindKey(obj->GetMetaID()))
+			continue;
+		if (firstWhere) {
+			queryText = queryText + " WHERE ";
+		}
+		queryText = queryText +
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+		if (firstWhere) {
+			firstWhere = false;
+		}
+	}
+	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	if (statement == nullptr)
+		return false;
+	for (auto& obj : m_metaObject->GetGenericDimensions()) {
+		if (!key.FindKey(obj->GetMetaID()))
+			continue;
+		IMetaObjectAttribute::SetValueAttribute(
+			obj,
+			key.GetKey(obj->GetMetaID()),
+			statement,
+			position
+		);
+	}
+	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	if (resultSet == nullptr)
+		return false;
+	while (resultSet->Next()) {
+		wxValueTableRow* rowData = new wxValueTableRow();
+		for (auto& obj : m_metaObject->GetGenericDimensions()) {
+			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		}
+		for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		}
+		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+		m_selected = true;
+	}
+
+	resultSet->Close();
+	db_query->CloseResultSet(resultSet);
+	db_query->CloseStatement(statement);
+	return GetRowCount() > 0;
 }
 
 bool IRecordSetObject::ReadData()

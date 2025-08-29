@@ -594,11 +594,11 @@ public:
 	template <typename T> inline bool ConvertToValue(T*& ptr) const {
 		if (m_typeClass == eValueTypes::TYPE_REFFER) {
 			CValue* non_const_value = GetRef();
-			ptr = static_cast<T*>(non_const_value);
+			ptr = dynamic_cast<T*>(non_const_value);
 			return ptr != nullptr;
 		}
 		else if (m_typeClass != eValueTypes::TYPE_EMPTY) {
-			ptr = static_cast<T*>(const_cast<CValue*>(this));
+			ptr = dynamic_cast<T*>(const_cast<CValue*>(this));
 			return ptr != nullptr;
 		}
 		return false;

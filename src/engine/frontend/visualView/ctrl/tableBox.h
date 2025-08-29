@@ -31,7 +31,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	CValueTableBox();
-	virtual ~CValueTableBox();
+	virtual ~CValueTableBox() {}
 
 	//Get source attribute  
 	virtual IMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
@@ -188,7 +188,7 @@ private:
 	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("beforeDeleteRow"), _("beforeDeleteRow"), _("When row deletion is called"), wxArrayString{ "control", "cancel" });
 #pragma endregion 
 
-	bool m_dataViewUpdated, m_dataViewSizeChanged;
+	bool m_dataViewSelected, m_dataViewUpdated, m_dataViewSizeChanged;
 	wxSize m_dataViewSize;
 
 	CValuePtr<IValueModel> m_tableModel;
@@ -245,7 +245,7 @@ public:
 
 	///////////////////////////////////////////////////////////////////////
 
-	CValueTableBox* GetOwner() const { 
+	CValueTableBox* GetOwner() const {
 		return m_parent->ConvertToType<CValueTableBox>();
 	}
 

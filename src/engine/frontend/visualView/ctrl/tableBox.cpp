@@ -65,12 +65,12 @@ void CValueTableBox::AddColumn()
 	g_visualHostContext->RefreshEditor();
 }
 
-void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* tableCtrl)
+void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
 		return;
-	wxDataViewCtrl* tc = tableCtrl ?
-		tableCtrl : dynamic_cast<wxDataViewCtrl*>(GetWxObject());
+	wxDataViewCtrl* tc = dataViewCtrl ?
+		dataViewCtrl : dynamic_cast<wxDataViewCtrl*>(GetWxObject());
 	wxASSERT(tc);
 	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
 	//clear all controls 
@@ -219,7 +219,7 @@ bool CValueTableBox::FilterSource(const CSourceExplorer& src, const meta_identif
 //***********************************************************************************
 
 CValueTableBox::CValueTableBox() : IValueWindow(), ITypeControlFactory(),
-m_tableModel(nullptr), m_tableCurrentLine(nullptr), m_dataViewUpdated(false), m_dataViewSizeChanged(false)
+m_tableModel(nullptr), m_tableCurrentLine(nullptr), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false)
 {
 	m_propertySource->SetValue(CTypeDescription(g_valueTableCLSID));
 
@@ -228,81 +228,78 @@ m_tableModel(nullptr), m_tableCurrentLine(nullptr), m_dataViewUpdated(false), m_
 	m_propertyBG->SetValue(wxColour(255, 255, 255));
 }
 
-CValueTableBox::~CValueTableBox()
-{
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 
 wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* tableCtrl = new wxDataModelViewCtrl(wxparent, wxID_ANY,
+	wxDataModelViewCtrl* dataViewCtrl = new wxDataModelViewCtrl(wxparent, wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
 		wxDV_SINGLE | wxDV_HORIZ_RULES | wxDV_VERT_RULES | wxDV_ROW_LINES | wxDV_VARIABLE_LINE_HEIGHT | wxBORDER_SIMPLE);
 
 	const CVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
+
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 
-		tableCtrl->Bind(wxEVT_DATAVIEW_COLUMN_HEADER_CLICK, &CValueTableBox::OnColumnClick, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_COLUMN_REORDERED, &CValueTableBox::OnColumnReordered, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_COLUMN_HEADER_CLICK, &CValueTableBox::OnColumnClick, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_COLUMN_REORDERED, &CValueTableBox::OnColumnReordered, this);
 
 		//system events:
-		tableCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &CValueTableBox::OnSelectionChanged, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &CValueTableBox::OnSelectionChanged, this);
 
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &CValueTableBox::OnItemActivated, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_COLLAPSED, &CValueTableBox::OnItemCollapsed, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_EXPANDED, &CValueTableBox::OnItemExpanded, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_COLLAPSING, &CValueTableBox::OnItemCollapsing, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_EXPANDING, &CValueTableBox::OnItemExpanding, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_EDITING, &CValueTableBox::OnItemStartEditing, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_EDITING_STARTED, &CValueTableBox::OnItemEditingStarted, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_EDITING_DONE, &CValueTableBox::OnItemEditingDone, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, &CValueTableBox::OnItemValueChanged, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &CValueTableBox::OnItemActivated, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_COLLAPSED, &CValueTableBox::OnItemCollapsed, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_EXPANDED, &CValueTableBox::OnItemExpanded, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_COLLAPSING, &CValueTableBox::OnItemCollapsing, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_EXPANDING, &CValueTableBox::OnItemExpanding, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_EDITING, &CValueTableBox::OnItemStartEditing, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_EDITING_STARTED, &CValueTableBox::OnItemEditingStarted, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_EDITING_DONE, &CValueTableBox::OnItemEditingDone, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_VALUE_CHANGED, &CValueTableBox::OnItemValueChanged, this);
 
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_INSERTING, &CValueTableBox::OnItemStartInserting, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_DELETING, &CValueTableBox::OnItemStartDeleting, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_INSERTING, &CValueTableBox::OnItemStartInserting, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_START_DELETING, &CValueTableBox::OnItemStartDeleting, this);
 
 #if wxUSE_DRAG_AND_DROP 
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, &CValueTableBox::OnItemBeginDrag, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, &CValueTableBox::OnItemDropPossible, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP, &CValueTableBox::OnItemDrop, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, &CValueTableBox::OnItemBeginDrag, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, &CValueTableBox::OnItemDropPossible, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP, &CValueTableBox::OnItemDrop, this);
 #endif // wxUSE_DRAG_AND_DROP
 
-		tableCtrl->GenericGetHeader()->Bind(wxEVT_HEADER_RESIZING, &CValueTableBox::OnHeaderResizing, this);
+		dataViewCtrl->GenericGetHeader()->Bind(wxEVT_HEADER_RESIZING, &CValueTableBox::OnHeaderResizing, this);
 
-		tableCtrl->Bind(wxEVT_SCROLLWIN_TOP, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_BOTTOM, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_LINEUP, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_LINEDOWN, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_PAGEUP, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_PAGEDOWN, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_TOP, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_BOTTOM, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_LINEUP, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_LINEDOWN, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_PAGEUP, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_PAGEDOWN, &CValueTableBox::HandleOnScroll, this);
 
-		tableCtrl->Bind(wxEVT_SCROLLWIN_THUMBTRACK, &CValueTableBox::HandleOnScroll, this);
-		tableCtrl->Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_THUMBTRACK, &CValueTableBox::HandleOnScroll, this);
+		dataViewCtrl->Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &CValueTableBox::HandleOnScroll, this);
 
-		tableCtrl->GetMainWindow()->Bind(wxEVT_LEFT_DOWN, &CValueTableBox::OnMainWindowClick, this);
+		dataViewCtrl->GetMainWindow()->Bind(wxEVT_LEFT_DOWN, &CValueTableBox::OnMainWindowClick, this);
 
 #if wxUSE_DRAG_AND_DROP && wxUSE_UNICODE
-		tableCtrl->EnableDragSource(wxDF_UNICODETEXT);
-		tableCtrl->EnableDropTarget(wxDF_UNICODETEXT);
+		dataViewCtrl->EnableDragSource(wxDF_UNICODETEXT);
+		dataViewCtrl->EnableDropTarget(wxDF_UNICODETEXT);
 #endif // wxUSE_DRAG_AND_DROP && wxUSE_UNICODE
 
-		tableCtrl->Bind(wxEVT_SIZE, &CValueTableBox::OnSize, this);
-		tableCtrl->Bind(wxEVT_IDLE, &CValueTableBox::OnIdle, this);
+		dataViewCtrl->Bind(wxEVT_SIZE, &CValueTableBox::OnSize, this);
+		dataViewCtrl->Bind(wxEVT_IDLE, &CValueTableBox::OnIdle, this);
 
-		tableCtrl->Bind(wxEVT_MENU, &CValueTableBox::OnCommandMenu, this);
-		tableCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
+		dataViewCtrl->Bind(wxEVT_MENU, &CValueTableBox::OnCommandMenu, this);
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
 	}
 
-	return tableCtrl;
+	return dataViewCtrl;
 }
 
 void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	wxDataModelViewCtrl* tableCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
 
-	if (tableCtrl != nullptr) CValueTableBox::CreateModel();
+	if (dataViewCtrl != nullptr) CValueTableBox::CreateModel();
 
 	if (visualHost->IsDesignerHost() && GetChildCount() == 0
 		&& first—reated) {
@@ -314,90 +311,47 @@ void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* tableCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
 
-	UpdateWindow(tableCtrl);
+	UpdateWindow(dataViewCtrl);
 
-	if (tableCtrl != nullptr) {
+	if (dataViewCtrl != nullptr) {
+		
 		wxItemAttr attr(
-			tableCtrl->GetForegroundColour(),
-			tableCtrl->GetBackgroundColour(),
-			tableCtrl->GetFont()
+			dataViewCtrl->GetForegroundColour(),
+			dataViewCtrl->GetBackgroundColour(),
+			dataViewCtrl->GetFont()
 		);
-		tableCtrl->SetHeaderAttr(attr);
+		
+		dataViewCtrl->SetHeaderAttr(attr);
 	}
 }
 
 void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* tableCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
 
-	if (tableCtrl != nullptr) {
+	if (dataViewCtrl != nullptr) {
 
-		bool needRefresh = false;
-		if (m_tableModel != nullptr && !appData->DesignerMode()) {
-			needRefresh = true;
-		}
-
-		CValueTableBox::RefreshModel();
-
-		wxDataViewModel* dataViewModel = m_tableModel ?
+		wxDataViewModel* dataViewOldModel = dataViewCtrl->GetModel();
+		wxDataViewModel* dataViewNewModel = m_tableModel != nullptr ?
 			m_tableModel->GetDataViewModel() : nullptr;
 
-		if (dataViewModel != tableCtrl->GetModel()) {
-			tableCtrl->AssociateModel(dataViewModel);
-		}
-
-		if (needRefresh) {
-
-			try {
-				m_tableModel->CallRefreshModel(tableCtrl->GetTopItem(), tableCtrl->GetCountPerPage());
-			}
-			catch (const CBackendException* err) {
-				tableCtrl->AssociateModel(nullptr);
-				throw(err);
-			}
-
-			if (m_tableModel != nullptr) {
-				const CValue& createdValue = m_formOwner->GetCreatedValue();
-				if (!createdValue.IsEmpty()) {
-					m_tableCurrentLine = nullptr;
-					const wxDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
-					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-				}
-				else {
-					IValueFrame* ownerControl = m_formOwner->GetOwnerControl();
-					if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
-						CValue retValue; ownerControl->GetControlValue(retValue);
-						m_tableCurrentLine = nullptr;
-						const wxDataViewItem& currLine = m_tableModel->FindRowValue(retValue);
-						if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-					}
-				}
-			}
-
-			if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-				m_tableCurrentLine = nullptr;
-				const wxDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
-				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
-			}
-		}
-
-		if (m_tableCurrentLine != nullptr) {
-			tableCtrl->Select(
-				m_tableCurrentLine->GetLineItem()
-			);
+		if (dataViewNewModel != dataViewOldModel) {
+			if (dataViewOldModel == nullptr) dataViewCtrl->SetFocus();
+			dataViewCtrl->AssociateModel(dataViewNewModel);
+			m_tableCurrentLine.Reset();
 		}
 
 		if (!appData->DesignerMode()) m_dataViewUpdated = true;
-		m_dataViewSize = wxDefaultSize;
 	}
 }
 
 void CValueTableBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* tableCtrl = dynamic_cast<wxDataModelViewCtrl*>(obj);
-	if (tableCtrl != nullptr) tableCtrl->AssociateModel(nullptr);
+	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(obj);
+	if (dataViewCtrl != nullptr) dataViewCtrl->AssociateModel(nullptr);
+	m_tableCurrentLine.Reset();
 }
 
 //***********************************************************************************
@@ -458,15 +412,18 @@ bool CValueTableBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eTableValue) {
 			m_tableModel = varPropVal.ConvertToType<IValueTable>();
-			m_tableCurrentLine = nullptr;
+			m_tableCurrentLine.Reset();
 			refreshColumn = true;
 		}
 		else if (lPropData == eCurrentRow) {
-			m_tableCurrentLine = nullptr;
 			IValueTable::IValueModelReturnLine* tableReturnLine = nullptr;
 			if (varPropVal.ConvertToValue(tableReturnLine)) {
 				if (m_tableModel == tableReturnLine->GetOwnerModel())
 					m_tableCurrentLine = tableReturnLine;
+				else m_tableCurrentLine.Reset();
+			}
+			else {
+				m_tableCurrentLine.Reset();
 			}
 		}
 	}

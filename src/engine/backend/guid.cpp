@@ -330,10 +330,7 @@ bool CGuid::operator <= (const CGuid& other) const
 // overload equality operator
 bool CGuid::operator==(const CGuid& other) const
 {
-	for (unsigned int idx = 0; idx < 16; idx++)
-		if (_bytes[idx] != other._bytes[idx]) return false; 
-
-	return true; 
+	return std::memcmp(_bytes._Elems, other._bytes._Elems, 16) == 0;
 }
 
 // overload inequality operator

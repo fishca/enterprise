@@ -313,7 +313,11 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::UpdateItem(c
 
 	if (m_formHandler != nullptr &&
 		obj == m_formHandler->GetSelectedObject()) {
+		m_notifySelecting = true;
+		m_tcObjects->EnsureVisible(id);
+		m_tcObjects->SelectItem(id);
 		m_tcObjects->SetItemBold(id);
+		m_notifySelecting = false;
 	}
 }
 

@@ -327,10 +327,6 @@ public:
 	static IValueFrame* CreatePasteObject(const CMemoryReader& reader,
 		CValueForm* dstForm, IValueFrame* dstParent);
 
-	//copy & paste object 
-	virtual bool CopyObject(CMemoryWriter& writer) const;
-	virtual bool PasteObject(CMemoryReader& reader);
-
 	/**
 	* Property events
 	*/
@@ -339,6 +335,15 @@ public:
 
 	virtual bool OnEventChanging(IEvent* event, const wxString& newValue);
 	virtual void OnEventChanged(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
+
+	/**
+	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
+	*/
+	bool ChangeChildPosition(IValueFrame* obj, unsigned int pos);
+
+	//copy & paste object 
+	virtual bool CopyObject(CMemoryWriter& writer) const;
+	virtual bool PasteObject(CMemoryReader& reader);
 
 public:
 
@@ -386,6 +391,8 @@ public:
 	bool SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter(), bool copy_form = false);
 
 protected:
+
+	virtual void OnChangeChildPosition(IValueFrame* obj, unsigned int pos) {}
 
 	virtual void OnChoiceProcessing(CValue& vSelected) {}
 

@@ -220,13 +220,50 @@ bool CValueTableBox::FilterSource(const CSourceExplorer& src, const meta_identif
 
 CValueTableBox::CValueTableBox() : IValueWindow(), ITypeControlFactory(),
 m_tableModel(nullptr), m_tableCurrentLine(nullptr),
-m_dataViewCreated(false), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false)
+m_dataViewCreated(false), m_dataViewSelected(false), m_dataViewUpdated(false), m_dataViewSizeChanged(false),
+m_need_calculate_pos(false)
 {
 	m_propertySource->SetValue(CTypeDescription(g_valueTableCLSID));
 
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(300, 100));
 	m_propertyBG->SetValue(wxColour(255, 255, 255));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+void CValueTableBox::CalculateColumnPos()
+{
+	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(GetWxObject());
+	if (dataViewCtrl != nullptr) {
+
+		wxHeaderCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
+		if (headerCtrl != nullptr) {
+
+			bool need_reset_columns_order = false; ;
+
+			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
+
+				const IValueFrame* valueFrame = GetChild(idx);
+				wxASSERT(valueFrame);
+
+				wxDataViewColumn* column = dynamic_cast<wxDataViewColumn*>(valueFrame->GetWxObject());
+
+				const unsigned int column_model_index = dataViewCtrl->GetColumnIndex(column);
+				const unsigned int column_index = headerCtrl->GetColumnPos(column_model_index);
+
+				const unsigned int real_column_index = valueFrame->GetParentPosition();
+
+				if (column_index != real_column_index) {
+					dataViewCtrl->DeleteColumn(column);
+					dataViewCtrl->InsertColumn(real_column_index, column);
+					need_reset_columns_order = true;
+				}
+			}
+
+			if (need_reset_columns_order) headerCtrl->ResetColumnsOrder();
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -328,6 +365,8 @@ void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 	}
 }
 
+#include "frontend/visualView/dvc/dvc.h"
+
 void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
@@ -344,7 +383,7 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			m_tableCurrentLine.Reset();
 		}
 
-		if (!appData->DesignerMode()) 
+		if (!appData->DesignerMode())
 			m_dataViewCreated = m_dataViewUpdated = true;
 	}
 }

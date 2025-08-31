@@ -43,15 +43,15 @@ public:
 	}
 
 	virtual void CancelEditing() {
-		
+
 		if (m_colControl != nullptr) {
-			CValueForm *valueForm = m_colControl->GetOwnerForm();
-			if (valueForm != nullptr) valueForm->RefreshForm();	
+			CValueForm* valueForm = m_colControl->GetOwnerForm();
+			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
-		
+
 		wxDataViewCustomRenderer::CancelEditing();
 	}
-		
+
 	virtual bool FinishEditing() {
 
 		if (m_colControl != nullptr) {
@@ -121,7 +121,7 @@ public:
 #endif // wxUSE_ACCESSIBILITY
 
 	virtual bool HasEditorCtrl() const override {
-		return true; 
+		return true;
 	}
 
 	virtual wxWindow* CreateEditorCtrl(wxWindow* parent,
@@ -139,10 +139,8 @@ private:
 // ÑDataViewColumnContainer
 // ----------------------------------------------------------------------------
 
-class ÑDataViewColumnContainer : public wxObject,
-	public wxDataViewColumn {
-	unsigned int m_controlId; 
-	CValueTableBoxColumn* m_valColumn;
+class ÑDataViewColumnContainer : public wxDataViewColumn,
+	public wxObject {
 public:
 
 	ÑDataViewColumnContainer(CValueTableBoxColumn* col,
@@ -151,7 +149,8 @@ public:
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
-		: wxDataViewColumn(title, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
+		:
+		wxDataViewColumn(title, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
 	{
 	}
 
@@ -161,7 +160,8 @@ public:
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
-		: wxDataViewColumn(bitmap, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
+		:
+		wxDataViewColumn(bitmap, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
 	{
 	}
 
@@ -172,24 +172,20 @@ public:
 	}
 
 	void SetControlID(unsigned int obj_id) {
-		wxASSERT(m_controlId == 0); m_controlId = obj_id; 
+		wxASSERT(m_controlId == 0); m_controlId = obj_id;
 	}
 
-	void SetControl(CValueTableBoxColumn* control) {
-		m_valColumn = control;
-	}
+	void SetControl(CValueTableBoxColumn* control) { m_valColumn = control; }
 
-	CValueTableBoxColumn* GetControl() const {
-		return m_valColumn; 
-	}
+	CValueTableBoxColumn* GetControl() const { return m_valColumn; }
+	unsigned int GetControlID() const { return m_controlId; }
 
-	unsigned int GetControlID() const { 
-		return m_controlId; 
-	}
+	void SetColModel(unsigned int col_model) { m_model_column = col_model; }
 
-	void SetColModel(unsigned int col_model) {
-		m_model_column = col_model;
-	}
+private:
+
+	unsigned int m_controlId;
+	CValueTableBoxColumn* m_valColumn;
 };
 
 #endif // !_DVC_H__

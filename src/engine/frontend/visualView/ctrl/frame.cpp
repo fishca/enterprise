@@ -194,6 +194,14 @@ bool IValueFrame::Init(CValue** paParams, const long lSizeArray)
 
 //*******************************************************************
 
+bool IValueFrame::ChangeChildPosition(IValueFrame* obj, unsigned int pos)
+{
+	OnChangeChildPosition(obj, pos);
+	return IPropertyObjectHelper::ChangeChildPosition(obj, pos);
+}
+
+//*******************************************************************
+
 IValueFrame* IValueFrame::CreatePasteObject(const CMemoryReader& reader,
 	CValueForm* dstForm, IValueFrame* dstParent)
 {

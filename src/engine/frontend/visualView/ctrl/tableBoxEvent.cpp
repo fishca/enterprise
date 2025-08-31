@@ -64,21 +64,14 @@ void CValueTableBox::OnColumnReordered(wxDataViewEvent& event)
 	ÑDataViewColumnContainer* dataViewColumn =
 		dynamic_cast<ÑDataViewColumnContainer*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
-	if (g_visualHostContext != nullptr) {
-		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
-		wxASSERT(columnControl);
-		if (ChangeChildPosition(columnControl, event.GetColumn())) {
-			if (g_visualHostContext != nullptr) {
-				g_visualHostContext->RefreshEditor();
-			}
-		}
-	}
-	else if (!appData->DesignerMode()) {
-		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
-		wxASSERT(columnControl);
-		ChangeChildPosition(columnControl, event.GetColumn());
+
+	CValueTableBoxColumn* columnObject = dataViewColumn->GetControl();
+	wxASSERT(columnObject);
+	if (ChangeChildPosition(columnObject, event.GetColumn())) {
+		if (g_visualHostContext != nullptr) g_visualHostContext->RefreshEditor();
 	}
 
+	SetCalculateColumnPos();
 	event.Skip();
 }
 
@@ -350,6 +343,11 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 				m_tableCurrentLine->GetLineItem()
 			);
 		}
+	}
+
+	if (m_need_calculate_pos) {
+		CalculateColumnPos();
+		m_need_calculate_pos = false;
 	}
 
 	m_dataViewSize = dataViewCtrl->GetSize();

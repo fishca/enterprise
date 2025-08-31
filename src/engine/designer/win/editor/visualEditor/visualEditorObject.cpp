@@ -252,10 +252,9 @@ void InsertObjectCmd::ResetId()
 
 void InsertObjectCmd::DoExecute()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
-	if (m_parent) {
+	if (m_parent != nullptr) {
 		m_parent->AddChild(m_object);
 		m_object->SetParent(m_parent);
 	}
@@ -275,10 +274,10 @@ void InsertObjectCmd::DoExecute()
 	}
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
-	wxASSERT(visulEditor);
-	visulEditor->CreateControl(m_object, nullptr, m_firstCreated);
+	wxASSERT(visualEditor);
+	visualEditor->CreateControl(m_object, nullptr, m_firstCreated);
 
 	//select object
 	m_visualData->SelectObject(obj, false, false);
@@ -286,8 +285,7 @@ void InsertObjectCmd::DoExecute()
 
 void InsertObjectCmd::DoRestore()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
 	//remove control in visual editor
 	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* m_visualEditor =
@@ -350,12 +348,12 @@ void RemoveObjectCmd::ResetId()
 void RemoveObjectCmd::RemoveObject()
 {
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor = m_visualData->GetVisualEditor();
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 
 	m_parent->AddChild(m_object);
 	m_object->SetParent(m_parent);
 
-	visulEditor->RemoveControl(m_object);
+	visualEditor->RemoveControl(m_object);
 
 	m_parent->RemoveChild(m_object);
 	m_object->SetParent(nullptr);
@@ -365,8 +363,7 @@ void RemoveObjectCmd::RemoveObject()
 
 void RemoveObjectCmd::DoExecute()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
 	IValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
@@ -388,8 +385,7 @@ void RemoveObjectCmd::DoExecute()
 
 void RemoveObjectCmd::DoRestore()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
 	if (m_object->GetParent() == nullptr) {
 		m_parent->AddChild(m_object);
@@ -411,10 +407,10 @@ void RemoveObjectCmd::DoRestore()
 	m_visualData->SelectObject(m_oldSelected, true, false);
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
-	visulEditor->CreateControl(m_object);
+	visualEditor->CreateControl(m_object);
 }
 
 //-----------------------------------------------------------------------------
@@ -426,41 +422,43 @@ m_property(prop), m_oldValue(oldValue), m_newValue(newValue)
 
 void ModifyPropertyCmd::DoExecute()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor = m_visualData->GetVisualEditor();
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+
 	// Get the IValueFrame from the event
-	IValueFrame* m_object = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
+	IValueFrame* control = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
+	wxASSERT(control);
+
 	m_property->SetValue(m_newValue);
+	m_visualData->Modify(true);
 
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
-
-	if (g_controlFormCLSID == m_object->GetClassType()) {
-		visulEditor->UpdateVisualHost();
+	if (g_controlFormCLSID == control->GetClassType()) {
+		visualEditor->UpdateVisualHost();
 	}
 	else {
-		visulEditor->UpdateControl(m_object);
+		visualEditor->UpdateControl(control);
 	}
 }
 
 void ModifyPropertyCmd::DoRestore()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor = m_visualData->GetVisualEditor();
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	
 	// Get the IValueFrame from the event
-	IValueFrame* m_object = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
-
+	IValueFrame* control = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
+	wxASSERT(control);
+	
 	m_property->SetValue(m_oldValue);
 
-	if (g_controlFormCLSID == m_object->GetClassType()) {
-		visulEditor->UpdateVisualHost();
+	if (g_controlFormCLSID == control->GetClassType()) {
+		visualEditor->UpdateVisualHost();
 	}
 	else {
-		visulEditor->UpdateControl(m_object);
+		visualEditor->UpdateControl(control);
 	}
 
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
-	objectInspector->SelectObject(m_object);
+	objectInspector->SelectObject(control);
 }
 
 //-----------------------------------------------------------------------------
@@ -472,17 +470,13 @@ m_event(event), m_oldValue(oldValue), m_newValue(newValue)
 
 void ModifyEventCmd::DoExecute()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
-
+	m_visualData->Modify(true);
 	m_event->SetValue(m_newValue);
 }
 
 void ModifyEventCmd::DoRestore()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
-
+	m_visualData->Modify(true);
 	m_event->SetValue(m_oldValue);
 }
 
@@ -501,34 +495,32 @@ ShiftChildCmd::ShiftChildCmd(CVisualEditorNotebook::CVisualEditor* data, IValueF
 
 void ShiftChildCmd::DoExecute()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	if (m_oldPos != m_newPos) {
 		IValueFrame* parent(m_object->GetParent());
 		parent->ChangeChildPosition(m_object, m_newPos);
 
-		visulEditor->UpdateControl(m_object);
+		visualEditor->UpdateControl(m_object);
 	}
 
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 }
 
 void ShiftChildCmd::DoRestore()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	if (m_oldPos != m_newPos) {
 		IValueFrame* parent(m_object->GetParent());
 		parent->ChangeChildPosition(m_object, m_oldPos);
 
-		visulEditor->UpdateControl(m_object);
+		visualEditor->UpdateControl(m_object);
 	}
 
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -578,13 +570,13 @@ void CutObjectCmd::ResetId()
 void CutObjectCmd::RemoveObject()
 {
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	m_parent->AddChild(m_object);
 	m_object->SetParent(m_parent);
 
-	visulEditor->RemoveControl(m_object);
+	visualEditor->RemoveControl(m_object);
 
 	//remove control in visual editor
 	m_parent->RemoveChild(m_object);
@@ -593,16 +585,13 @@ void CutObjectCmd::RemoveObject()
 
 void CutObjectCmd::DoExecute()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
-
-	//m_visualData->SetClipboardObject(m_object);
+	m_visualData->Modify(true);
 
 	if (!m_needEvent) {
 		//remove control in visual editor
-		CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+		CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 			m_visualData->GetVisualEditor();
-		visulEditor->RemoveControl(m_object);
+		visualEditor->RemoveControl(m_object);
 	}
 
 	IValueFrame* obj = m_object;
@@ -630,8 +619,7 @@ void CutObjectCmd::DoExecute()
 
 void CutObjectCmd::DoRestore()
 {
-	if (m_visualData->m_document != nullptr)
-		m_visualData->m_document->Modify(true);
+	m_visualData->Modify(true);
 
 	// reubicamos el objeto donde estaba
 	m_parent->AddChild(m_object);
@@ -656,10 +644,10 @@ void CutObjectCmd::DoRestore()
 	m_visualData->SelectObject(m_oldSelected, true, false);
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visulEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
-	visulEditor->CreateControl(m_object, m_parent);
+	visualEditor->CreateControl(m_object, m_parent);
 }
 
 //-----------------------------------------------------------------------------
@@ -1083,10 +1071,6 @@ bool CVisualEditorNotebook::CVisualEditor::CanCopyObject() const
 	if (obj && obj->GetClassType() != g_controlFormCLSID)
 		return true;
 	return false;
-}
-
-bool CVisualEditorNotebook::CVisualEditor::IsModified() const {
-	return m_document->IsModified();
 }
 
 int CVisualEditorNotebook::CVisualEditor::CalcPositionOfInsertion(IValueFrame* selected, IValueFrame* parent)

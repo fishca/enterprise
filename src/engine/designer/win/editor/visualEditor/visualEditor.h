@@ -516,7 +516,15 @@ public:
 	bool CanPasteObject() const;
 	bool CanCopyObject() const;
 
-	bool IsModified() const;
+	bool IsModified() const {
+		return m_document != nullptr ?
+			m_document->IsModified() : false;
+	}
+
+	void Modify(bool mod) {
+		if (m_document != nullptr)
+			m_document->Modify(mod);
+	}
 
 	/**
 	* Calcula la posición donde deberá ser insertado el objeto.
@@ -689,7 +697,7 @@ public:
 			m_codeEditor->SaveModule();
 	}
 
-	void TestForm() { 
+	void TestForm() {
 		m_visualEditor->TestForm();
 	}
 

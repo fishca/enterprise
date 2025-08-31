@@ -137,7 +137,13 @@ public:
 	// get current line if exist 
 	IValueModel::IValueModelReturnLine* GetCurrentLine() const { return m_tableCurrentLine; }
 
+	void SetCalculateColumnPos() { m_need_calculate_pos = true; }
+
 protected:
+
+	virtual void OnChangeChildPosition(IValueFrame* obj, unsigned int pos) { SetCalculateColumnPos(); }
+
+	void CalculateColumnPos();
 
 	//events 
 	void OnColumnClick(wxDataViewEvent& event);
@@ -190,6 +196,8 @@ private:
 
 	bool m_dataViewCreated, m_dataViewUpdated, 
 		m_dataViewSelected, m_dataViewSizeChanged;
+
+	bool m_need_calculate_pos;
 
 	wxSize m_dataViewSize;
 

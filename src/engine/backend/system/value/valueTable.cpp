@@ -206,7 +206,7 @@ bool CValueTable::CValueTableColumnCollection::CallAsFunc(const long lMethodNum,
 		else if (lSizeArray > 1)
 			pvarRetValue = AddColumn(paParams[0]->GetString(), valueType ? valueType->GetOwnerTypeDescription() : *paParams[1]->ConvertToType<CValueTypeDescription>(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
 		else
-			pvarRetValue = AddColumn(paParams[0]->GetString(), CTypeDescription(), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
+			pvarRetValue = AddColumn(paParams[0]->GetString(), CTypeDescription(g_valueStringCLSID), paParams[0]->GetString(), wxDVC_DEFAULT_WIDTH);
 		return true;
 	}
 	}

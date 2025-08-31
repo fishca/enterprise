@@ -43,7 +43,7 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 		
 		if (currentLine != nullptr) {
 			currentLine->SetValueByMetaID(
-				GetSourceColumn(), vSelected
+				GetModelColumn(), vSelected
 			);
 		}
 

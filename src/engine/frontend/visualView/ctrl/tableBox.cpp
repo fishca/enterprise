@@ -69,9 +69,11 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
 		return;
+	
 	wxDataViewCtrl* tc = dataViewCtrl ?
 		dataViewCtrl : dynamic_cast<wxDataViewCtrl*>(GetWxObject());
 	wxASSERT(tc);
+	
 	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
 	//clear all controls 
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
@@ -83,13 +85,19 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 			wxASSERT(visualView);
 			visualView->RemoveControl(childColumn, this);
 		}
+
+		RemoveChild(childColumn);
+		
 		childColumn->SetParent(nullptr);
 		childColumn->DecrRef();
 	}
+	
 	//clear all children
 	RemoveAllChildren();
+	
 	//clear all old columns
 	tc->ClearColumns();
+	
 	//create new columns
 	IValueModel::IValueModelColumnCollection* tableColumns = m_tableModel->GetColumnCollection();
 	wxASSERT(tableColumns);
@@ -107,9 +115,7 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 
 		newTableBoxColumn->SetCaption(columnInfo->GetColumnCaption());
 		newTableBoxColumn->SetWidthColumn(columnInfo->GetColumnWidth());
-
-		//newTableBoxColumn->m_dataSource = GetGuidByID(columnInfo->GetColumnID());
-		newTableBoxColumn->SetSource(columnInfo->GetColumnID());
+		newTableBoxColumn->SetModelColumn(columnInfo->GetColumnID());
 
 		if (visualDocument != nullptr) {
 

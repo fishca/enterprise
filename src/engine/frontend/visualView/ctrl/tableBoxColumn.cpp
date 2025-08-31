@@ -70,7 +70,7 @@ bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 //***********************************************************************************
 
 CValueTableBoxColumn::CValueTableBoxColumn() :
-	IValueControl(), ITypeControlFactory()
+	IValueControl(), ITypeControlFactory(), m_model_id(wxNOT_FOUND)
 {
 }
 
@@ -126,7 +126,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	dataViewColumn->SetWidth(m_propertyWidth->GetValueAsUInteger());
 	dataViewColumn->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
-	const form_identifier_t source_column = GetSourceColumn();
+	const form_identifier_t source_column = GetModelColumn();
 
 	IValueModel* modelValue = GetOwner()->GetModel();
 	CSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
@@ -177,7 +177,7 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		currentLine->SetValueByMetaID(
-			GetSourceColumn(), varControlVal
+			GetModelColumn(), varControlVal
 		);
 	}
 
@@ -206,7 +206,7 @@ bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
 	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		return currentLine->GetValueByMetaID(
-			GetSourceColumn(), pvarControlVal
+			GetModelColumn(), pvarControlVal
 		);
 	}
 

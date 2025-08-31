@@ -185,6 +185,8 @@ public:
 	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
+	virtual bool AutoCreateColumn() const { return true; }
+
 	virtual IValueModelColumnCollection* GetColumnCollection() const { return m_tableColumnCollection; }
 
 	virtual CValueTableReturnLine* GetRowAt(const long& line) {

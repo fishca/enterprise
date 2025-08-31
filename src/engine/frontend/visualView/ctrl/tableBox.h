@@ -194,7 +194,7 @@ private:
 	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("beforeDeleteRow"), _("beforeDeleteRow"), _("When row deletion is called"), wxArrayString{ "control", "cancel" });
 #pragma endregion 
 
-	bool m_dataViewCreated, m_dataViewUpdated, 
+	bool m_dataViewCreated, m_dataViewUpdated,
 		m_dataViewSelected, m_dataViewSizeChanged;
 
 	bool m_need_calculate_pos;
@@ -215,13 +215,13 @@ protected:
 public:
 
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	form_identifier_t GetSourceColumn() const {
-		const form_identifier_t& id = GetSource();
+	form_identifier_t GetModelColumn() const {
+		const form_identifier_t& id = m_model_id != wxNOT_FOUND ? m_model_id : GetSource();
 		return id != wxNOT_FOUND ? id : m_controlId;
 	}
-
+	void SetModelColumn(const form_identifier_t& id) { m_model_id = id; }
 	////////////////////////////////////////////////////////////////////////////////////////
+
 	void SetSource(const meta_identifier_t& id) { m_propertySource->SetValue(id); }
 	meta_identifier_t GetSource() const { return m_propertySource->GetValueAsSource(); }
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -335,6 +335,8 @@ protected:
 
 	// text processing
 	bool TextProcessing(wxTextCtrl* textCtrl, const wxString& strData);
+
+	form_identifier_t m_model_id;
 
 private:
 

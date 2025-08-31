@@ -904,7 +904,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 					firstWhere = false;
 			}
 		}
-		wxString orderText; bool firstOrder = true; wxString dimText;
+		wxString orderText; bool firstOrder = true; bool firstOr = true; wxString dimText;
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (!sort.m_sortAscending) ? "ASC" : "DESC";
@@ -929,7 +929,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						if (firstOrder) firstOrder = false;
 					}
 				}
-				dimText += firstWhere ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
+				dimText += firstOr ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
 				if (firstWhere) whereText += " WHERE ";
 				whereText += (firstWhere ? " " : " AND ") + attribute->GetFieldNameDB() + "_TYPE = ? ";
 				if (firstWhere) firstWhere = false;
@@ -938,12 +938,13 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefName, operation_compare);
 					}
 					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
-						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(?, %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
+						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(cast(? as varchar(1024)), %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
 					}
 					else {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldName, operation_compare);
 					}
 				}
+				firstOr = false;
 			}
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes(), & vec_dim = m_metaObject->GetGenericDimensions();
@@ -1035,7 +1036,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 					firstWhere = false;
 			}
 		}
-		wxString orderText; bool firstOrder = true; wxString dimText;
+		wxString orderText; bool firstOrder = true; bool firstOr = true; wxString dimText;
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (sort.m_sortAscending) ? "ASC" : "DESC";
@@ -1060,7 +1061,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						if (firstOrder) firstOrder = false;
 					}
 				}
-				dimText += firstWhere ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
+				dimText += firstOr ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
 				if (firstWhere) whereText += " WHERE ";
 				whereText += (firstWhere ? " " : " AND ") + attribute->GetFieldNameDB() + "_TYPE = ? ";
 				if (firstWhere) firstWhere = false;
@@ -1069,12 +1070,13 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefName, operation_compare);
 					}
 					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
-						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(?, %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
+						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(cast(? as varchar(1024)), %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
 					}
 					else {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldName, operation_compare);
 					}
 				}
+				firstOr = false; 
 			}
 		};
 		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributes(), & vec_dim = m_metaObject->GetGenericDimensions();

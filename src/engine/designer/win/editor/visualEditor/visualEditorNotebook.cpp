@@ -145,8 +145,8 @@ void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue
 	m_visualEditor->ModifyEvent(event, oldValue, newValue);
 }
 
-#include "frontend/mainFrame/mainFrame.h"
 #include "backend/metaCollection/metaObject.h"
+#include "frontend/mainFrame/mainFrame.h"
 
 void CVisualEditorNotebook::OnPageChanged(wxAuiNotebookEvent& event) {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
@@ -161,7 +161,7 @@ void CVisualEditorNotebook::OnPageChanged(wxAuiNotebookEvent& event) {
 		m_codeEditor->SetSTCFocus(true);
 		m_codeEditor->SetFocus();
 	}
-	if (m_visualEditor->m_document != nullptr)
-		m_visualEditor->m_document->Activate();
+
+	m_visualEditor->Activate();
 	event.Skip();
 }

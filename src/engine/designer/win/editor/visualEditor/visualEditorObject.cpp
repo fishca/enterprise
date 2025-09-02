@@ -16,7 +16,7 @@
 // Comandos
 ///////////////////////////////////////////////////////////////////////////////
 
-class BaseVisualCmd : public CCommand
+class BaseVisualCmd : public CVisualEditorCmd
 {
 public:
 	BaseVisualCmd(CVisualEditorNotebook::CVisualEditor* visualData = nullptr) :
@@ -24,10 +24,10 @@ public:
 	}
 
 	virtual void Execute() {
-		CCommand::Execute();
+		CVisualEditorCmd::Execute();
 	}
 	virtual void Restore() {
-		CCommand::Restore();
+		CVisualEditorCmd::Restore();
 	}
 protected:
 	CVisualEditorNotebook::CVisualEditor* m_visualData;
@@ -416,7 +416,7 @@ void RemoveObjectCmd::DoRestore()
 //-----------------------------------------------------------------------------
 
 ModifyPropertyCmd::ModifyPropertyCmd(CVisualEditorNotebook::CVisualEditor* data, IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) : BaseVisualCmd(data),
-m_property(prop), m_oldValue(oldValue), m_newValue(newValue)
+m_property(prop), m_oldValue(prop), m_newValue(newValue)
 {
 }
 

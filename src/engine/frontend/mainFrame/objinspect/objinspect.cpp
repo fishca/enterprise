@@ -188,13 +188,13 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 
 	switch (m_style) {
 	case wxOES_OI_MULTIPAGE_STYLE:
-		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_TOOLBAR | wxPG_DESCRIPTION | wxPGMAN_DEFAULT_STYLE;
+		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_TOOLBAR | wxPG_DESCRIPTION | wxPG_TOOLTIPS | wxPGMAN_DEFAULT_STYLE;
 		defaultDescBoxHeight = 50;
 		break;
 	case wxOES_OI_DEFAULT_STYLE:
 	case wxOES_OI_SINGLE_PAGE_STYLE:
 	default:
-		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_DESCRIPTION | wxPGMAN_DEFAULT_STYLE;
+		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_DESCRIPTION | wxPG_TOOLTIPS | wxPGMAN_DEFAULT_STYLE;
 		defaultDescBoxHeight = 150;
 		break;
 	}
@@ -206,9 +206,10 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 		descBoxHeight = defaultDescBoxHeight;
 	}
 
-	wxPropertyGridManager* pg = new wxPropertyGridManager(parent, id, wxDefaultPosition, wxDefaultSize, pgStyle);
-	pg->SendSizeEvent();
+	wxPropertyGridManager* pg = new wxPropertyGridManager(parent, id, wxDefaultPosition, wxDefaultSize, pgStyle);	
+	pg->SetExtraStyle(wxPG_EX_NATIVE_DOUBLE_BUFFERING);
 	pg->SetDescBoxHeight(descBoxHeight);
+	pg->SendSizeEvent();
 	return pg;
 }
 

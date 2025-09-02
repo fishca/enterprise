@@ -12,6 +12,8 @@ enum
 	enClose = 10000,
 	enUpdate,
 	enHelp,
+
+	enChange,
 };
 
 //****************************************************************************
@@ -25,9 +27,12 @@ CValueForm::CActionCollection CValueForm::GetActionCollection(const form_identif
 	IActionDataObject* srcAction = dynamic_cast<IActionDataObject*>(CValueForm::GetSourceObject());
 	if (srcAction != nullptr) srcAction->AppendActionCollection(actionData, formType);
 
-	actionData.AddAction("close", _("Close"), enClose);
-	actionData.AddAction("update", _("Update"), enUpdate);
-	actionData.AddAction("help", _("Help"), enHelp);
+	actionData.AddAction(wxT("close"), _("Close"), enClose);
+	actionData.AddAction(wxT("update"), _("Update"), enUpdate);
+	actionData.AddAction(wxT("help"), _("Help"), enHelp);
+
+	actionData.AddSeparator();
+	actionData.AddAction(wxT("change"), _("Change form"), enChange);
 
 	return actionData;
 }
@@ -48,6 +53,9 @@ void CValueForm::ExecuteAction(const action_identifier_t& lNumAction, IBackendVa
 		break;
 	case enHelp:
 		HelpForm();
+		break;
+	case enChange:
+		ChangeForm();
 		break;
 	default:
 	{

@@ -390,6 +390,24 @@ IMetaObjectGenericData* CValueForm::GetMetaObject() const
 		m_sourceObject->GetSourceMetaObject() : nullptr;
 }
 
+//////////////////////////////////////////////////////////////
+
+wxString CValueForm::GetControlCaption() const
+{
+	if (m_propertyCaption->IsEmptyProperty()) {
+		
+		const IMetaObjectGenericData* metaSource = GetMetaObject();
+		if (metaSource != nullptr) return metaSource->GetSynonym();
+		
+		const IMetaObjectForm* metaForm = GetFormMetaObject();
+		if (metaForm != nullptr) return metaForm->GetSynonym();
+	}
+
+	return m_propertyCaption->GetValueAsString();
+}
+
+//////////////////////////////////////////////////////////////
+
 #include "frontend/docView/docManager.h"
 
 bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)

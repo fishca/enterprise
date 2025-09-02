@@ -7,7 +7,7 @@
 
 #include "backend/metaCollection/metaFormObject.h"
 
-void CVisualEditorNotebook::CVisualEditor::Execute(CCommand* cmd)
+void CVisualEditorNotebook::CVisualEditor::Execute(CVisualEditorCmd* cmd)
 {
 	if (m_cmdProc != nullptr) m_cmdProc->Execute(cmd);
 	NotifyEditorSaved();

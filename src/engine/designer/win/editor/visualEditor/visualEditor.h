@@ -8,7 +8,7 @@
 #include "frontend/visualView/ctrl/sizers.h"
 #include "frontend/visualView/ctrl/widgets.h"
 
-class CCommand {
+class CVisualEditorCmd {
 	bool m_executed;
 protected:
 
@@ -24,7 +24,7 @@ protected:
 
 public:
 
-	CCommand() : m_executed(false) {}
+	CVisualEditorCmd() : m_executed(false) {}
 
 	void Execute() {
 		if (!m_executed) {
@@ -42,27 +42,24 @@ public:
 };
 
 class CCommandProcessor {
-	typedef std::stack<CCommand*> CommandStack;
-	CommandStack m_undoStack, m_redoStack;
-	unsigned int m_savePoint;
 public:
 
 	CCommandProcessor() : m_savePoint(0) {}
 
 	~CCommandProcessor() {
 		while (!m_redoStack.empty()) {
-			CCommand* redoCmd = m_redoStack.top();
+			CVisualEditorCmd* redoCmd = m_redoStack.top();
 			delete redoCmd;
 			m_redoStack.pop();
 		}
 		while (!m_undoStack.empty()) {
-			CCommand* undoCmd = m_undoStack.top();
+			CVisualEditorCmd* undoCmd = m_undoStack.top();
 			delete undoCmd;
 			m_undoStack.pop();
 		}
 	}
 
-	void CCommandProcessor::Execute(CCommand* command) {
+	void CCommandProcessor::Execute(CVisualEditorCmd* command) {
 		command->Execute();
 		m_undoStack.push(command);
 		while (!m_redoStack.empty()) {
@@ -72,7 +69,7 @@ public:
 
 	bool CCommandProcessor::Undo() {
 		if (!m_undoStack.empty()) {
-			CCommand* command = m_undoStack.top();
+			CVisualEditorCmd* command = m_undoStack.top();
 			m_undoStack.pop();
 			command->Restore();
 			m_redoStack.push(command);
@@ -82,7 +79,7 @@ public:
 
 	bool CCommandProcessor::Redo() {
 		if (!m_redoStack.empty()) {
-			CCommand* command = m_redoStack.top();
+			CVisualEditorCmd* command = m_redoStack.top();
 			m_redoStack.pop();
 			command->Execute();
 			m_undoStack.push(command);
@@ -113,6 +110,11 @@ public:
 	bool CCommandProcessor::IsAtSavePoint() {
 		return m_savePoint == m_undoStack.size();
 	}
+
+private:
+	typedef std::stack<CVisualEditorCmd*> CommandStack;
+	CommandStack m_undoStack, m_redoStack;
+	unsigned int m_savePoint;
 };
 
 #include "frontend/visualView/visual.h"
@@ -127,13 +129,6 @@ public:
 */
 class CDesignerWindow : public CInnerFrame {
 	wxDECLARE_CLASS(CDesignerWindow);
-private:
-	int m_x;
-	int m_y;
-	wxSizer* m_selSizer = nullptr;
-	wxObject* m_selItem = nullptr;
-	IValueFrame* m_selObj = nullptr;
-	wxWindow* m_actPanel = nullptr;
 private:
 
 	void DrawRectangle(wxDC& dc, const wxPoint& point, const wxSize& size, IValueFrame* object);
@@ -171,7 +166,15 @@ public:
 	void HighlightSelection(wxDC& dc);
 	void OnPaint(wxPaintEvent& event);
 
-protected:
+private:
+
+	int m_x;
+	int m_y;
+	wxSizer* m_selSizer = nullptr;
+	wxObject* m_selItem = nullptr;
+	IValueFrame* m_selObj = nullptr;
+	wxWindow* m_actPanel = nullptr;
+
 	wxDECLARE_EVENT_TABLE();
 };
 
@@ -182,26 +185,7 @@ public: class CVisualEditor : public wxPanel {
 public:
 
 	class CVisualEditorHost : public IVisualHost {
-		friend class CVisualEditor;
-		friend class CVisualEditorObjectTree;
-		//designer 
-		CDesignerWindow* m_back;
-		//form handler
-		CVisualEditor* m_formHandler;
-		// Prevent OnSelected in components
-		bool m_stopSelectedEvent;
-		// Prevent OnModified in components
-		bool m_stopModifiedEvent;
 	public:
-
-		friend class ExpandObjectCmd;
-		friend class InsertObjectCmd;
-		friend class RemoveObjectCmd;
-		friend class ModifyPropertyCmd;
-		friend class ModifyEventCmd;
-		friend class ShiftChildCmd;
-		friend class CutObjectCmd;
-		friend class ReparentObjectCmd;
 
 		CVisualEditorHost(CVisualEditor* handler, wxWindow* parent, wxWindowID id = wxID_ANY);
 		virtual ~CVisualEditorHost() override;
@@ -274,10 +258,32 @@ public:
 		void ScrollToObject(IValueFrame* obj);
 
 	protected:
+
 		virtual void SetCaption(const wxString& strCaption);
 		virtual void SetOrientation(int orient);
 		virtual void UpdateHostSize();
-	protected:
+
+		friend class CVisualEditor;
+		friend class CVisualEditorObjectTree;
+
+		friend class ExpandObjectCmd;
+		friend class InsertObjectCmd;
+		friend class RemoveObjectCmd;
+		friend class ModifyPropertyCmd;
+		friend class ModifyEventCmd;
+		friend class ShiftChildCmd;
+		friend class CutObjectCmd;
+		friend class ReparentObjectCmd;
+
+		//designer 
+		CDesignerWindow* m_back;
+		//form handler
+		CVisualEditor* m_formHandler;
+		// Prevent OnSelected in components
+		bool m_stopSelectedEvent;
+		// Prevent OnModified in components
+		bool m_stopModifiedEvent;
+
 		wxDECLARE_EVENT_TABLE();
 	};
 
@@ -291,14 +297,68 @@ public:
 		void CreateTree();
 		void RebuildTree();
 		void AddChildren(IValueFrame* child, const wxTreeItemId& parent, bool is_root = false);
-		int GetImageIndex(const wxString& type);
-		void UpdateItem(const wxTreeItemId& id, IValueFrame* obj);
+
+		int GetImageIndex(const wxString& name) {
+			int index = wxNOT_FOUND; //default icon
+
+			std::map<wxString, int>::iterator it = m_iconIdx.find(name);
+			if (it != m_iconIdx.end()) { index = it->second; }
+			return index;
+		}
+
+		void UpdateItem(const wxTreeItemId& id, IValueFrame* obj) {
+
+			// mostramos el nombre
+			wxString class_name(obj->GetClassName());
+			wxString obj_name(obj->GetControlName());
+
+			wxString text = obj_name + wxT(" : ") + class_name;
+
+			// actualizamos el item
+			m_tcObjects->SetItemText(id, text);
+
+			if (m_formHandler != nullptr &&
+				obj == m_formHandler->GetSelectedObject()) {
+				m_notifySelecting = true;
+				m_tcObjects->EnsureVisible(id);
+				m_tcObjects->SelectItem(id);
+				m_tcObjects->SetItemBold(id);
+				m_notifySelecting = false;
+
+			}
+		}
+
 		void RestoreItemStatus(IValueFrame* obj);
 		void AddItem(IValueFrame* item, IValueFrame* parent);
-		void RemoveItem(IValueFrame* item);
-		void ClearMap(IValueFrame* obj);
+		void RemoveItem(IValueFrame* item) {
+			// remove affected object tree items only
+			std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(item);
+			if ((it != m_listItem.end()) && it->second.IsOk())
+			{
+				m_tcObjects->Delete(it->second);
+				// clear map records for all item's children
+				ClearMap(it->first);
+			}
+		}
 
-		IValueFrame* GetObjectFromTreeItem(const wxTreeItemId& item);
+		void ClearMap(IValueFrame* obj) {
+			m_listItem.erase(obj);
+			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
+				ClearMap(obj->GetChild(i));
+			}
+		}
+
+		IValueFrame* GetObjectFromTreeItem(const wxTreeItemId& item) {
+			if (item.IsOk()) {
+				wxTreeItemData* item_data = m_tcObjects->GetItemData(item);
+				if (item_data) {
+					IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
+					return obj;
+				}
+			}
+
+			return nullptr;
+		}
 
 	public:
 
@@ -313,7 +373,7 @@ public:
 		void OnPropertyModified(IProperty* prop);
 
 		CVisualEditorObjectTree(CVisualEditor* owner, wxWindow* parent, int id = wxID_ANY);
-		virtual ~CVisualEditorObjectTree() override;
+		virtual ~CVisualEditorObjectTree() override {}
 
 	protected:
 
@@ -346,13 +406,12 @@ public:
 	 * a facilitar obtener el objeto (IValueFrame) asociado a un item para
 	 * seleccionarlo pinchando en el item.
 	 */
-	class CVisualEditorObjectTreeItemData : public wxTreeItemData
-	{
+	class CVisualEditorObjectTreeItemData : public wxTreeItemData {
+	public:
+		CVisualEditorObjectTreeItemData(IValueFrame* obj) : m_object(obj) {}
+		IValueFrame* GetObject() { return m_object; }
 	private:
 		IValueFrame* m_object = nullptr;
-	public:
-		CVisualEditorObjectTreeItemData(IValueFrame* obj);
-		IValueFrame* GetObject() { return m_object; }
 	};
 
 	/**
@@ -362,9 +421,6 @@ public:
 	 * seleccionado.
 	 */
 	class CVisualEditorItemPopupMenu : public wxMenu {
-		IValueFrame* m_object = nullptr;
-		CVisualEditor* m_formHandler = nullptr;
-		int m_selID;
 	public:
 
 		bool HasDeleteObject();
@@ -376,49 +432,13 @@ public:
 		void OnMenuEvent(wxCommandEvent& event);
 
 	protected:
+
+		IValueFrame* m_object = nullptr;
+		CVisualEditor* m_formHandler = nullptr;
+		int m_selID;
+
 		wxDECLARE_EVENT_TABLE();
 	};
-
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	IValueFrame* m_selObj = nullptr;     // Objeto seleccionado
-
-	// Procesador de comandos Undo/Redo
-	CCommandProcessor* m_cmdProc;
-
-	//Elements form 
-	CVisualEditorHost* m_visualEditor;
-	CVisualEditorObjectTree* m_objectTree;
-
-	//Document & view 
-	CMetaDocument* m_document;
-
-	//access to private object  
-	friend class CValueNotebook;
-	friend class CValueNotebookPage;
-
-	friend class CValueToolbar;
-	friend class CValueToolBarItem;
-	friend class CValueToolBarSeparator;
-
-	friend class CValueTableBox;
-	friend class CValueTableBoxColumn;
-
-	friend class CVisualDesignerCommandProcessor;
-	friend class CVisualCommand;
-
-	friend class CValueForm;
-
-private:
-
-	CValueForm* m_valueForm;
-
-	friend class CVisualEditorHost;
-	friend class CVisualEditorObjectTree;
-
-private:
-
-	wxSplitterWindow* m_splitter = nullptr;
 
 public:
 
@@ -448,7 +468,7 @@ protected:
 	void NotifyEventModified(IEvent* event);
 
 	//Execute command 
-	void Execute(CCommand* cmd);
+	void Execute(CVisualEditorCmd* cmd);
 
 	/**
 	* Search a size in the hierarchy of an object
@@ -526,6 +546,11 @@ public:
 			m_document->Modify(mod);
 	}
 
+	void Activate() const {
+		if (m_document != nullptr)
+			m_document->Activate();
+	}
+
 	/**
 	* Calcula la posición donde deberá ser insertado el objeto.
 	*
@@ -547,16 +572,34 @@ public:
 	bool SaveForm();
 
 	void TestForm();
-};
 
 private:
 
-	CVisualEditor* m_visualEditor;
-	CCodeEditor* m_codeEditor;
+	IValueFrame* m_selObj = nullptr;     // Objeto seleccionado
+
+	// Procesador de comandos Undo/Redo
+	CCommandProcessor* m_cmdProc;
+
+	//Form handler 
+	CValueForm* m_valueForm;
+
+	//Elements form 
+	CVisualEditorHost* m_visualEditor;
+	CVisualEditorObjectTree* m_objectTree;
+
+	//Document & view 
+	CMetaDocument* m_document;
+
+	//Splitter for designer 
+	wxSplitterWindow* m_splitter = nullptr;
+
+	//access to private object  
+	friend class CVisualEditorNotebook;
+	friend class CVisualEditorHost;
+	friend class CVisualEditorObjectTree;
+};
 
 public:
-
-	//static CVisualEditorNotebook* FindEditorByForm(CValueForm* valueForm);
 
 	CVisualEditorNotebook(CMetaDocument* document, wxWindow* parent, wxWindowID id, long flags) :
 		wxAuiNotebook(parent, id, wxDefaultPosition, wxDefaultSize, wxAUI_NB_BOTTOM | wxAUI_NB_TAB_FIXED_WIDTH),
@@ -726,14 +769,15 @@ public:
 	}
 
 protected:
-
 	void OnPageChanged(wxAuiNotebookEvent& event);
+private:
+	CVisualEditor* m_visualEditor;
+	CCodeEditor* m_codeEditor;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 class CVisualDesignerCommandProcessor : public wxCommandProcessor {
-	CVisualEditorNotebook* m_visualNotebook;
 public:
 
 	CVisualDesignerCommandProcessor(CVisualEditorNotebook* visualNotebook) : wxCommandProcessor(),
@@ -745,6 +789,10 @@ public:
 
 	virtual bool CanUndo() const override { return m_visualNotebook->CanUndo(); }
 	virtual bool CanRedo() const override { return m_visualNotebook->CanRedo(); }
+
+private:
+
+	CVisualEditorNotebook* m_visualNotebook;
 };
 
 #endif

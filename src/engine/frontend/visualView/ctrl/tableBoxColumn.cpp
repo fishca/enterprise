@@ -80,6 +80,18 @@ IMetaData* CValueTableBoxColumn::GetMetaData() const
 		m_formOwner->GetMetaData() : nullptr;
 }
 
+wxString CValueTableBoxColumn::GetControlCaption() const
+{
+	if (m_propertyCaption->IsEmptyProperty() && !m_propertySource->IsEmptyProperty()) {
+		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		wxASSERT(metaObject);
+		return metaObject->GetSynonym();
+	}
+
+	return m_propertyCaption->IsEmptyProperty() ?
+		stringUtils::GenerateSynonym(m_propertyName->GetValueAsString()) : m_propertyCaption->GetValueAsString();
+}
+
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, m_propertyCaption->GetValueAsString(),
@@ -113,16 +125,9 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	ÑDataViewColumnContainer* dataViewColumn = dynamic_cast<ÑDataViewColumnContainer*>(wxobject);
 	wxASSERT(dataViewColumn);
 
-	wxString textCaption = m_propertyName->GetValueAsString();
-	if (!m_propertySource->IsEmptyProperty()) {
-		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
-		if (metaObject != nullptr) textCaption = metaObject->GetSynonym();
-	}
-
 	const unsigned int order_position = GetParentPosition();
 
-	dataViewColumn->SetTitle(m_propertyCaption->IsEmptyProperty() ?
-		textCaption : m_propertyCaption->GetValueAsString());
+	dataViewColumn->SetTitle(GetControlCaption());
 	dataViewColumn->SetWidth(m_propertyWidth->GetValueAsUInteger());
 	dataViewColumn->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
@@ -139,7 +144,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	if (sort != nullptr && sort->m_sortEnable && !sort->m_sortSystem && !appData->DesignerMode())
 		dataViewColumn->SetSortOrder(sort->m_sortAscending);
 
-	dataViewColumn->SetColModel(source_column);	
+	dataViewColumn->SetColModel(source_column);
 }
 
 void CValueTableBoxColumn::Cleanup(wxObject* obj, IVisualHost* visualHost)
@@ -148,7 +153,7 @@ void CValueTableBoxColumn::Cleanup(wxObject* obj, IVisualHost* visualHost)
 	wxASSERT(dataViewCtrl);
 	ÑDataViewColumnContainer* dataViewColumn = dynamic_cast<ÑDataViewColumnContainer*>(obj);
 	wxASSERT(dataViewColumn);
-	
+
 	dataViewCtrl->DeleteColumn(dataViewColumn);
 	GetOwner()->SetCalculateColumnPos();
 }

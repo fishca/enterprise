@@ -64,6 +64,18 @@ bool CValueCheckbox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
+wxString CValueCheckbox::GetControlCaption() const
+{
+	if (m_propertyCaption->IsEmptyProperty() && !m_propertySource->IsEmptyProperty()) {
+		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		wxASSERT(metaObject);
+		return metaObject->GetSynonym();
+	}
+
+	return m_propertyCaption->IsEmptyProperty() ?
+		stringUtils::GenerateSynonym(m_propertyName->GetValueAsString()) : m_propertyCaption->GetValueAsString();
+}
+
 wxObject* CValueCheckbox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxControlCheckbox* checkbox = new wxControlNavigationCheckbox(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
@@ -75,25 +87,25 @@ void CValueCheckbox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 {
 }
 
+#include "backend/appData.h"
+
 void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
 	wxControlCheckbox* checkbox = dynamic_cast<wxControlCheckbox*>(wxobject);
 
 	if (checkbox != nullptr) {
-		wxString textCaption = wxEmptyString;
 
 		if (!m_propertySource->IsEmptyProperty()) {
-			const ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
+			ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
 			if (srcObject != nullptr) {
-				const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
-				if (metaObject != nullptr)  textCaption = metaObject->GetSynonym() + wxT(":");
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 			}
 		}
 
-		checkbox->SetLabel(m_propertyCaption->IsEmptyProperty() ?
-			textCaption : m_propertyCaption->GetValueAsString());
-		checkbox->SetValue(m_selValue.GetBoolean());
+		checkbox->SetLabel(GetControlCaption());
+		if (!appData->DesignerMode()) {
+			checkbox->SetValue(m_selValue.GetBoolean());
+		}
 		checkbox->SetWindowStyle(
 			m_propertyTitle->GetValueAsInteger() == 1 ? wxALIGN_LEFT :
 			wxALIGN_RIGHT

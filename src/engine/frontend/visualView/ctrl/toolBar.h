@@ -103,6 +103,10 @@ public:
 
 	CValueToolBarItem();
 
+	//get caption 
+	virtual wxString GetControlCaption() const { return GetCaption(); }
+
+	//control factory
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;

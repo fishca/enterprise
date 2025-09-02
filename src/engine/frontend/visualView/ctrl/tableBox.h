@@ -215,15 +215,18 @@ protected:
 public:
 
 	////////////////////////////////////////////////////////////////////////////////////////
+
 	form_identifier_t GetModelColumn() const {
 		const form_identifier_t& id = m_model_id != wxNOT_FOUND ? m_model_id : GetSource();
 		return id != wxNOT_FOUND ? id : m_controlId;
 	}
 	void SetModelColumn(const form_identifier_t& id) { m_model_id = id; }
+
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	void SetSource(const meta_identifier_t& id) { m_propertySource->SetValue(id); }
 	meta_identifier_t GetSource() const { return m_propertySource->GetValueAsSource(); }
+
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
@@ -286,6 +289,10 @@ public:
 	//get type description 
 	virtual CTypeDescription& GetTypeDesc() const { return m_propertySource->GetValueAsTypeDesc(); }
 
+	//get caption 
+	virtual wxString GetControlCaption() const;
+
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstCreated) override;
 	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;

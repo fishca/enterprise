@@ -108,6 +108,18 @@ bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
+wxString CValueTextCtrl::GetControlCaption() const
+{
+	if (m_propertyCaption->IsEmptyProperty() && !m_propertySource->IsEmptyProperty()) {
+		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		wxASSERT(metaObject);
+		return metaObject->GetSynonym();
+	}
+
+	return m_propertyCaption->IsEmptyProperty() ?
+		stringUtils::GenerateSynonym(m_propertyName->GetValueAsString()) : m_propertyCaption->GetValueAsString();
+}
+
 wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxControlTextEditor* textEditor = new wxControlNavigationTextEditor(wxparent, wxID_ANY,
@@ -139,15 +151,6 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
-		wxString textCaption = wxEmptyString;
-
-		if (!m_propertySource->IsEmptyProperty()) {
-			const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
-			if (metaObject != nullptr) textCaption = metaObject->GetSynonym() + wxT(":");
-		}
-
-		textEditor->SetLabel(m_propertyCaption->IsEmptyProperty() ?
-			textCaption : m_propertyCaption->GetValueAsString());
 
 		if (!m_propertySource->IsEmptyProperty()) {
 			ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
@@ -155,7 +158,9 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 			}
 		}
-
+		
+		textEditor->SetLabel(GetControlCaption());
+		
 		if (!appData->DesignerMode()) {
 			textEditor->SetValue(m_selValue.GetString());
 		}

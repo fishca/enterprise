@@ -500,6 +500,14 @@ void CValueForm::HelpForm()
 	);
 }
 
+#include "frontend/win/dlgs/formEditor.h"
+
+void CValueForm::ChangeForm()
+{
+	CDialogFormEditor* formEditor = new CDialogFormEditor(this);
+	formEditor->ShowModal();
+}
+
 #include "frontend/win/dlgs/generation.h"
 
 bool CValueForm::GenerateForm(IRecordDataObjectRef* obj) const

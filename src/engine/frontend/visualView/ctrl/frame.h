@@ -3,8 +3,6 @@
 
 #include <wx/wx.h>
 
-class CProcUnit;
-
 #include "frontend/frontend.h"
 
 #include "backend/compiler/value.h"
@@ -18,6 +16,7 @@ class CProcUnit;
 #include "frontend/visualView/visual.h"
 
 class BACKEND_API CSourceExplorer;
+class BACKEND_API CProcUnit;
 
 class BACKEND_API IMetaObjectForm;
 
@@ -120,6 +119,10 @@ public:
 	virtual void SetControlName(const wxString& controlName) {};
 	virtual wxString GetControlName() const = 0;
 
+	virtual wxString GetControlCaption() const {
+		return stringUtils::GenerateSynonym(GetClassName());
+	}
+
 	void ResetGuid() {
 		//	wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
 	}
@@ -145,7 +148,7 @@ public:
 	/**
 	* Support default menu
 	*/
-	virtual void PrepareDefaultMenu(wxMenu* m_menu) {}
+	virtual void PrepareDefaultMenu(wxMenu* menu) {}
 	virtual void ExecuteMenu(IVisualHost* visualHost, int id) {}
 
 	/**
@@ -385,6 +388,24 @@ public:
 	virtual bool IsEditable() const;
 
 public:
+
+	static inline wxArrayString GetAllowedProperty() {
+
+		wxArrayString arr;
+
+		arr.Add(wxT("caption"));
+		arr.Add(wxT("minimum_size"));
+		arr.Add(wxT("maximum_size"));
+		arr.Add(wxT("font"));
+		arr.Add(wxT("fg"));
+		arr.Add(wxT("bg"));
+		arr.Add(wxT("align"));
+		arr.Add(wxT("orient"));
+		arr.Add(wxT("tooltip"));
+		arr.Add(wxT("visible"));
+
+		return arr;
+	}
 
 	//load & save object in metaObject 
 	bool LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader);

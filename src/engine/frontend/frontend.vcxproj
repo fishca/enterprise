@@ -269,6 +269,7 @@
     <ClCompile Include="win\dlgs\colHeight.cpp" />
     <ClCompile Include="win\dlgs\connectionDB.cpp" />
     <ClCompile Include="win\dlgs\errorDialog.cpp" />
+    <ClCompile Include="win\dlgs\formEditor.cpp" />
     <ClCompile Include="win\dlgs\formSelector\formSelector.cpp" />
     <ClCompile Include="win\dlgs\generation.cpp" />
     <ClCompile Include="win\dlgs\rowHeight.cpp" />
@@ -465,6 +466,7 @@
     <ClInclude Include="win\dlgs\colHeight.h" />
     <ClInclude Include="win\dlgs\connectionDB.h" />
     <ClInclude Include="win\dlgs\errorDialog.h" />
+    <ClInclude Include="win\dlgs\formEditor.h" />
     <ClInclude Include="win\dlgs\formSelector\formSelector.h" />
     <ClInclude Include="win\dlgs\generation.h" />
     <ClInclude Include="win\dlgs\rowHeight.h" />

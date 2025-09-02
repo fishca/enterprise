@@ -23,16 +23,15 @@ protected:
 
 public:
 
-	void SetCaption(const wxString& caption) {
-		return m_propertyCaption->SetValue(caption);
-	}
-
-	wxString GetCaption() const {
-		return m_propertyCaption->GetValueAsString();
-	}
+	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyCaption->GetValueAsString(); }
 
 	CValueButton();
 
+	//get caption 
+	virtual wxString GetControlCaption() const { return GetCaption(); }
+
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -64,6 +63,7 @@ public:
 
 	CValueStaticText();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -88,6 +88,7 @@ protected:
 protected:
 	bool GetChoiceForm(CPropertyList* property);
 protected:
+
 	CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textControl"), _("text control"));
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryText, wxT("caption"), wxEmptyString);
 	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("password mode"), false);
@@ -155,6 +156,9 @@ public:
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
+	//get caption 
+	virtual wxString GetControlCaption() const;
+
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
@@ -179,7 +183,7 @@ public:
 
 public:
 
-	virtual bool HasValueInControl() const { 
+	virtual bool HasValueInControl() const {
 		return m_propertySource->IsEmptyProperty();
 	}
 
@@ -215,6 +219,7 @@ public:
 
 	CValueComboBox();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -233,6 +238,7 @@ public:
 
 	CValueChoice();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -252,6 +258,7 @@ public:
 
 	CValueListBox();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -292,10 +299,10 @@ public:
 
 	CValueCheckbox();
 
-	//Get source object 
+	//get source object 
 	virtual ISourceObject* GetSourceObject() const;
 
-	//Get source attribute  
+	//get source attribute  
 	virtual IMetaObjectAttribute* GetSourceAttributeObject() const {
 		return m_propertySource->GetSourceAttributeObject();
 	}
@@ -318,6 +325,9 @@ public:
 
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+
+	//get caption 
+	virtual wxString GetControlCaption() const;
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -379,6 +389,10 @@ public:
 
 	CValueRadioButton();
 
+	//get caption 
+	virtual wxString GetControlCaption() const { return GetCaption(); }
+
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -404,6 +418,7 @@ public:
 
 	CValueStaticLine();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -433,6 +448,7 @@ public:
 
 	CValueSlider();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
@@ -461,6 +477,7 @@ public:
 
 	CValueGauge();
 
+	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;

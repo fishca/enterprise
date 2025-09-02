@@ -8,13 +8,250 @@
 
 #include <wx/imaglist.h>
 
-BEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree, wxPanel)
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RebuildTree()
+{
+	m_tcObjects->Freeze();
+
+	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+
+	IValueFrame* valueForm =
+		m_formHandler->GetValueForm();
+
+	// Clear the old tree and map
+	m_tcObjects->DeleteAllItems();
+	m_listItem.clear();
+
+	if (valueForm != nullptr) {
+		wxTreeItemId dummy;
+		AddChildren(valueForm, dummy, true);
+		// Expand items that were previously expanded
+		RestoreItemStatus(valueForm);
+	}
+
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+
+	m_tcObjects->Thaw();
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddChildren(IValueFrame* obj, const wxTreeItemId& parent, bool is_root)
+{
+	if (obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+		if (obj->GetChildCount() > 0) {
+			AddChildren(obj->GetChild(0), parent);
+		}
+		else {
+			// Si hemos llegado aquí ha sido porque el arbol no está bien formado
+			// y habrá que revisar cómo se ha creado.
+			wxString msg;
+			IValueFrame* itemParent = obj->GetParent();
+			assert(parent);
+
+			msg = wxString::Format(wxT("Item without object as child of \'%s:%s\'"),
+				itemParent->GetControlName().c_str(),
+				itemParent->GetClassName().c_str());
+
+			wxLogError(msg);
+		}
+	}
+	else {
+		wxTreeItemId new_parent;
+		CVisualEditorObjectTreeItemData* item_data = new CVisualEditorObjectTreeItemData(obj);
+		if (is_root) {
+			new_parent = m_tcObjects->AddRoot(wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
+		}
+		else {
+			unsigned int pos = 0;
+
+			IValueFrame* parent_obj = obj->GetParent();
+
+			// find a proper position where the added object should be displayed at
+			if (parent_obj && parent_obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+				parent_obj = parent_obj->GetParent();
+				if (parent_obj) {
+					pos = parent_obj->GetChildPosition(obj->GetParent());
+				}
+			}
+			else if (parent_obj) {
+				pos = parent_obj->GetChildPosition(obj);
+			}
+
+			// insert tree item to proper position
+			if (pos > 0) {
+				new_parent = m_tcObjects->InsertItem(parent, pos, wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
+			}
+			else {
+				new_parent = m_tcObjects->AppendItem(parent, wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
+			}
+		}
+
+		// Add the item to the map
+		m_listItem.insert(
+			std::map< IValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
+		);
+
+		// Set the image
+		int image_idx = GetImageIndex(obj->GetClassName());
+
+		if (image_idx != wxNOT_FOUND) {
+			m_tcObjects->SetItemImage(new_parent, image_idx);
+		}
+
+		// Set the name
+		UpdateItem(new_parent, obj);
+
+		// Add the rest of the children
+		unsigned int count = obj->GetChildCount();
+
+		for (unsigned int i = 0; i < count; i++) {
+			IValueFrame* child = obj->GetChild(i);
+			AddChildren(child, new_parent);
+		}
+	}
+}
+
+#define ICON_SIZE 22
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CreateTree()
+{
+	if (m_iconList != nullptr)
+		delete m_iconList;
+
+	m_iconList = new wxImageList(ICON_SIZE, ICON_SIZE);
+	for (auto objClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
+		wxBitmap controlImage = objClass->GetClassIcon();
+		if (controlImage.IsOk()) {
+			wxBitmap::Rescale(controlImage, wxSize(ICON_SIZE, ICON_SIZE));
+			const int retIndex = m_iconList->Add(controlImage);
+			if (retIndex != wxNOT_FOUND) {
+				m_iconIdx.insert(
+					std::map<wxString, int>::value_type(objClass->GetClassName(), retIndex)
+				);
+			}
+		}
+	}
+
+	m_tcObjects->AssignImageList(m_iconList);
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RestoreItemStatus(IValueFrame* obj)
+{
+	std::map< IValueFrame*, wxTreeItemId>::iterator item_it = m_listItem.find(obj);
+	if (item_it != m_listItem.end()) {
+		wxTreeItemId id = item_it->second;
+
+		if (obj->GetExpanded()) {
+			m_tcObjects->Expand(id);
+		}
+	}
+
+	unsigned int i, count = obj->GetChildCount();
+
+	for (i = 0; i < count; i++) {
+		RestoreItemStatus(obj->GetChild(i));
+	}
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddItem(IValueFrame* item, IValueFrame* parent)
+{
+	if (item && parent) {
+		// find parent item displayed in the object tree
+		while (parent && parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+			parent = parent->GetParent();
+		}
+
+		// add new item to the object tree
+		std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(parent);
+		if ((it != m_listItem.end()) && it->second.IsOk()) {
+			AddChildren(item, it->second, false);
+		}
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Enterprise IEvent Handlers
+/////////////////////////////////////////////////////////////////////////////
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorLoaded()
+{
+	RebuildTree();
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorRefresh()
+{
+	RebuildTree();
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectCreated(IValueFrame* obj)
+{
+	RebuildTree();
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectSelected(IValueFrame* obj)
+{
+	// Find the tree item associated with the object and select it
+	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
+	if (it != m_listItem.end()) {
+
+		m_notifySelecting = true;
+
+		// Ignore expand/collapse events	
+		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+
+		m_tcObjects->EnsureVisible(it->second);
+		m_tcObjects->SelectItem(it->second);
+
+		// Restore event handling
+		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
+
+		m_notifySelecting = false;
+	}
+	else {
+		wxLogError(wxT("There is no tree item associated with this object.\n\tClass: %s\n\tName: %s"), obj->GetClassName().c_str(), obj->GetControlName().c_str());
+	}
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectExpanded(IValueFrame* obj)
+{
+	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
+	if (it != m_listItem.end())
+	{
+		if (m_tcObjects->IsExpanded(it->second) != obj->GetExpanded())
+		{
+			if (obj->GetExpanded()) {
+				m_tcObjects->Expand(it->second);
+			}
+			else {
+				m_tcObjects->Collapse(it->second);
+			}
+		}
+	}
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectRemoved(IValueFrame* obj)
+{
+	RemoveItem(obj);
+}
+
+void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnPropertyModified(IProperty* prop)
+{
+	std::map< IValueFrame*, wxTreeItemId>::iterator it =
+		m_listItem.find((IValueFrame*)prop->GetPropertyObject());
+	if (it != m_listItem.end()) {
+		UpdateItem(it->second, it->first);
+	}
+}
+
+wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree, wxPanel)
 EVT_TREE_SEL_CHANGED(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged)
 EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnRightClick)
 EVT_TREE_BEGIN_DRAG(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnBeginDrag)
 EVT_TREE_END_DRAG(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEndDrag)
 EVT_TREE_KEY_DOWN(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnKeyDown)
-END_EVENT_TABLE()
+wxEND_EVENT_TABLE()
 
 CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CVisualEditorObjectTree(CVisualEditor* handler, wxWindow* parent, int id) :
 	wxPanel(parent, id),
@@ -69,52 +306,8 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnKeyDown(wx
 	}
 }
 
-CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::~CVisualEditorObjectTree()
-{
-}
-
-IValueFrame* CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::GetObjectFromTreeItem(const wxTreeItemId& item)
-{
-	if (item.IsOk()) {
-		wxTreeItemData* item_data = m_tcObjects->GetItemData(item);
-		if (item_data) {
-			IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
-			return obj;
-		}
-	}
-
-	return nullptr;
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RebuildTree()
-{
-	m_tcObjects->Freeze();
-
-	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-	Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-
-	IValueFrame* valueForm =
-		m_formHandler->GetValueForm();
-
-	// Clear the old tree and map
-	m_tcObjects->DeleteAllItems();
-	m_listItem.clear();
-
-	if (valueForm != nullptr) {
-		wxTreeItemId dummy;
-		AddChildren(valueForm, dummy, true);
-		// Expand items that were previously expanded
-		RestoreItemStatus(valueForm);
-	}
-
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-
-	m_tcObjects->Thaw();
-}
-
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnSelChanged(wxTreeEvent& event)
-{	
+{
 	// Make selected items bold
 	wxTreeItemId oldId = event.GetOldItem();
 	if (oldId.IsOk()) m_tcObjects->SetItemBold(oldId, false);
@@ -215,275 +408,6 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionC
 	}
 }
 
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddChildren(IValueFrame* obj, const wxTreeItemId& parent, bool is_root)
-{
-	if (obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		if (obj->GetChildCount() > 0) {
-			AddChildren(obj->GetChild(0), parent);
-		}
-		else {
-			// Si hemos llegado aquí ha sido porque el arbol no está bien formado
-			// y habrá que revisar cómo se ha creado.
-			wxString msg;
-			IValueFrame* itemParent = obj->GetParent();
-			assert(parent);
-
-			msg = wxString::Format(wxT("Item without object as child of \'%s:%s\'"),
-				itemParent->GetControlName().c_str(),
-				itemParent->GetClassName().c_str());
-
-			wxLogError(msg);
-		}
-	}
-	else {
-		wxTreeItemId new_parent;
-		CVisualEditorObjectTreeItemData* item_data = new CVisualEditorObjectTreeItemData(obj);
-		if (is_root) {
-			new_parent = m_tcObjects->AddRoot(wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
-		}
-		else {
-			unsigned int pos = 0;
-
-			IValueFrame* parent_obj = obj->GetParent();
-
-			// find a proper position where the added object should be displayed at
-			if (parent_obj && parent_obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				parent_obj = parent_obj->GetParent();
-				if (parent_obj) {
-					pos = parent_obj->GetChildPosition(obj->GetParent());
-				}
-			}
-			else if (parent_obj) {
-				pos = parent_obj->GetChildPosition(obj);
-			}
-
-			// insert tree item to proper position
-			if (pos > 0) {
-				new_parent = m_tcObjects->InsertItem(parent, pos, wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
-			}
-			else {
-				new_parent = m_tcObjects->AppendItem(parent, wxT(""), wxNOT_FOUND, wxNOT_FOUND, item_data);
-			}
-		}
-
-		// Add the item to the map
-		m_listItem.insert(
-			std::map< IValueFrame*, wxTreeItemId>::value_type(obj, new_parent)
-		);
-
-		// Set the image
-		int image_idx = GetImageIndex(obj->GetClassName());
-
-		if (image_idx != wxNOT_FOUND) {
-			m_tcObjects->SetItemImage(new_parent, image_idx);
-		}
-
-		// Set the name
-		UpdateItem(new_parent, obj);
-
-		// Add the rest of the children
-		unsigned int count = obj->GetChildCount();
-
-		for (unsigned int i = 0; i < count; i++) {
-			IValueFrame* child = obj->GetChild(i);
-			AddChildren(child, new_parent);
-		}
-	}
-}
-
-int CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::GetImageIndex(const wxString& name)
-{
-	int index = wxNOT_FOUND; //default icon
-
-	std::map<wxString, int>::iterator it = m_iconIdx.find(name);
-	if (it != m_iconIdx.end()) { index = it->second; }
-	return index;
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::UpdateItem(const wxTreeItemId& id, IValueFrame* obj)
-{
-	// mostramos el nombre
-	wxString class_name(obj->GetClassName());
-	wxString obj_name(obj->GetControlName());
-
-	wxString text = obj_name + wxT(" : ") + class_name;
-
-	// actualizamos el item
-	m_tcObjects->SetItemText(id, text);
-
-	if (m_formHandler != nullptr &&
-		obj == m_formHandler->GetSelectedObject()) {
-		m_notifySelecting = true;
-		m_tcObjects->EnsureVisible(id);
-		m_tcObjects->SelectItem(id);
-		m_tcObjects->SetItemBold(id);
-		m_notifySelecting = false;
-	}
-}
-
-#define ICON_SIZE 22
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CreateTree()
-{
-	if (m_iconList != nullptr)
-		delete m_iconList;
-
-	m_iconList = new wxImageList(ICON_SIZE, ICON_SIZE);
-	for (auto objClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
-		IControlTypeCtor* controlDesc = dynamic_cast<IControlTypeCtor*>(objClass);
-		wxASSERT(controlDesc);
-		wxBitmap controlImage = controlDesc->GetClassIcon();
-		if (controlImage.IsOk()) {
-			wxBitmap::Rescale(controlImage, wxSize(ICON_SIZE, ICON_SIZE));
-			const int retIndex = m_iconList->Add(controlImage);
-			if (retIndex != wxNOT_FOUND) {
-				m_iconIdx.insert(
-					std::map<wxString, int>::value_type(objClass->GetClassName(), retIndex)
-				);
-			}
-		}
-	}
-
-	m_tcObjects->AssignImageList(m_iconList);
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RestoreItemStatus(IValueFrame* obj)
-{
-	std::map< IValueFrame*, wxTreeItemId>::iterator item_it = m_listItem.find(obj);
-	if (item_it != m_listItem.end()) {
-		wxTreeItemId id = item_it->second;
-
-		if (obj->GetExpanded()) {
-			m_tcObjects->Expand(id);
-		}
-	}
-
-	unsigned int i, count = obj->GetChildCount();
-
-	for (i = 0; i < count; i++) {
-		RestoreItemStatus(obj->GetChild(i));
-	}
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddItem(IValueFrame* item, IValueFrame* parent)
-{
-	if (item && parent) {
-		// find parent item displayed in the object tree
-		while (parent && parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-			parent = parent->GetParent();
-		}
-
-		// add new item to the object tree
-		std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(parent);
-		if ((it != m_listItem.end()) && it->second.IsOk()) {
-			AddChildren(item, it->second, false);
-		}
-	}
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RemoveItem(IValueFrame* item)
-{
-	// remove affected object tree items only
-	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(item);
-	if ((it != m_listItem.end()) && it->second.IsOk())
-	{
-		m_tcObjects->Delete(it->second);
-		// clear map records for all item's children
-		ClearMap(it->first);
-	}
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::ClearMap(IValueFrame* obj)
-{
-	m_listItem.erase(obj);
-
-	for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
-		ClearMap(obj->GetChild(i));
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-// Enterprise IEvent Handlers
-/////////////////////////////////////////////////////////////////////////////
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorLoaded()
-{
-	RebuildTree();
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnEditorRefresh()
-{
-	RebuildTree();
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectCreated(IValueFrame* obj)
-{
-	RebuildTree();
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectSelected(IValueFrame* obj)
-{
-	// Find the tree item associated with the object and select it
-	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
-	if (it != m_listItem.end()) {
-
-		m_notifySelecting = true;
-
-		// Ignore expand/collapse events	
-		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-		Disconnect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-
-		m_tcObjects->EnsureVisible(it->second);
-		m_tcObjects->SelectItem(it->second);
-
-		// Restore event handling
-		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-		Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
-
-		m_notifySelecting = false;
-	}
-	else {
-		wxLogError(wxT("There is no tree item associated with this object.\n\tClass: %s\n\tName: %s"), obj->GetClassName().c_str(), obj->GetControlName().c_str());
-	}
-}
-
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectExpanded(IValueFrame* obj)
-{
-	std::map< IValueFrame*, wxTreeItemId>::iterator it = m_listItem.find(obj);
-	if (it != m_listItem.end())
-	{
-		if (m_tcObjects->IsExpanded(it->second) != obj->GetExpanded())
-		{
-			if (obj->GetExpanded()) {
-				m_tcObjects->Expand(it->second);
-			}
-			else {
-				m_tcObjects->Collapse(it->second);
-			}
-		}
-	}
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnObjectRemoved(IValueFrame* obj)
-{
-	RemoveItem(obj);
-}
-
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnPropertyModified(IProperty* prop)
-{
-	std::map< IValueFrame*, wxTreeItemId>::iterator it =
-		m_listItem.find((IValueFrame*)prop->GetPropertyObject());
-	if (it != m_listItem.end()) {
-		UpdateItem(it->second, it->first);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTreeItemData::CVisualEditorObjectTreeItemData(IValueFrame* obj) : m_object(obj) {}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 enum {
@@ -497,7 +421,6 @@ enum {
 	MENU_DELETE,
 	MENU_PROPERTIES,
 };
-
 
 wxBEGIN_EVENT_TABLE(CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu, wxMenu)
 EVT_MENU(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnMenuEvent)

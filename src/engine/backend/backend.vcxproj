@@ -767,7 +767,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ExecutablePath>$(VC_ExecutablePath_x64_x86);$(CommonExecutablePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ExecutablePath>$(VC_ExecutablePath_x64_x86);$(CommonExecutablePath);$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>

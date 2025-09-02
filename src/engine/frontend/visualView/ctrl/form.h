@@ -244,6 +244,8 @@ public:
 	* Support form
 	*/
 	virtual wxString GetControlName() const { return GetObjectTypeName(); }
+	virtual wxString GetControlCaption() const;
+
 	virtual CValueForm* GetOwnerForm() const { return const_cast<CValueForm*>(this); }
 
 	CValue GetCreatedValue() const { return m_createdValue; }
@@ -278,7 +280,7 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
-		
+
 		virtual void PrepareNames() const;
 
 		virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
@@ -357,6 +359,7 @@ public:
 	virtual void UpdateForm();
 	virtual bool CloseForm(bool force = false);
 	virtual void HelpForm();
+	virtual void ChangeForm();
 
 	virtual bool GenerateForm(IRecordDataObjectRef* obj) const;
 	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
@@ -435,7 +438,7 @@ protected:
 
 	IControlFrame* m_controlOwner;
 	ISourceDataObject* m_sourceObject;
-	
+
 	std::set<IValueControl*> m_listControl;
 	std::map<wxString, wxTimer*> m_idleHandlerArray;
 

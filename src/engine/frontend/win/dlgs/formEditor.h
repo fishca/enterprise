@@ -127,13 +127,15 @@ protected:
 	void UpdateItem(const wxTreeItemId& id, IValueFrame* obj) {
 
 		// mostramos el nombre
-		wxString class_name(obj->GetClassName());
-		wxString obj_name(obj->GetControlName());
-
-		wxString text = obj->GetControlCaption();
+		const wxString& caption = obj->GetControlCaption();
 
 		// actualizamos el item
-		m_treeControl->SetItemText(id, obj->GetControlCaption());
+		if (caption.IsEmpty()) {
+			m_treeControl->SetItemText(id, _("<empty caption>"));
+		}
+		else {
+			m_treeControl->SetItemText(id, caption);
+		}
 
 		if (m_owner != nullptr && obj == GetSelectedObject()) {
 			m_treeControl->EnsureVisible(id);

@@ -75,6 +75,18 @@ public:
 	// before/after run 
 	virtual bool InitializeControl() { CreateModel(); return true; }
 
+	//get caption 
+	virtual wxString GetControlCaption() const {
+
+		if (!m_propertySource->IsEmptyProperty()) {
+			CValue pvarPropVal;
+			if (m_propertySource->GetDataValue(pvarPropVal))
+				return _("TableBox:") + wxT(" ") + stringUtils::GenerateSynonym(pvarPropVal.GetString());
+		}
+
+		return _("TableBox:") + _("<empty source>");
+	}
+
 	//control factory 
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;

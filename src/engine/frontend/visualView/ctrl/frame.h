@@ -112,9 +112,7 @@ public:
 		return false;
 	}
 
-	virtual form_identifier_t GetControlID() const {
-		return m_controlId;
-	}
+	virtual form_identifier_t GetControlID() const { return m_controlId; }
 
 	virtual void SetControlName(const wxString& controlName) {};
 	virtual wxString GetControlName() const = 0;
@@ -299,7 +297,7 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
-		
+
 		virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
@@ -367,7 +365,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
-	
+
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 	//attributes 
@@ -389,7 +387,7 @@ public:
 
 public:
 
-	static inline wxArrayString GetAllowedProperty() {
+	static inline wxArrayString GetAllowedUserProperty() {
 
 		wxArrayString arr;
 
@@ -414,7 +412,6 @@ public:
 protected:
 
 	virtual void OnChangeChildPosition(IValueFrame* obj, unsigned int pos) {}
-
 	virtual void OnChoiceProcessing(CValue& vSelected) {}
 
 	//load & save object in control 

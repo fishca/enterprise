@@ -82,14 +82,15 @@ IMetaData* CValueTableBoxColumn::GetMetaData() const
 
 wxString CValueTableBoxColumn::GetControlCaption() const
 {
-	if (m_propertyCaption->IsEmptyProperty() && !m_propertySource->IsEmptyProperty()) {
+	if (!m_propertyCaption->IsEmptyProperty()) {
+		return m_propertyCaption->GetValueAsString();
+	}
+	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}
-
-	return m_propertyCaption->IsEmptyProperty() ?
-		stringUtils::GenerateSynonym(m_propertyName->GetValueAsString()) : m_propertyCaption->GetValueAsString();
+	return wxEmptyString;
 }
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)

@@ -285,7 +285,7 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 			static void FillPropertyByFrameValue(wxPropertyGridPage* propertyGridPage, IValueFrame* obj, std::map<wxPGProperty*, IProperty*>& pgArray) {
 				pgArray.clear(); propertyGridPage->Clear();
 
-				for (auto strProperty : IValueFrame::GetAllowedProperty()) {
+				for (auto strProperty : IValueFrame::GetAllowedUserProperty()) {
 
 					IProperty* prop = obj->GetProperty(strProperty);
 					if (prop == nullptr) continue;

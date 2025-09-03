@@ -34,6 +34,18 @@ public:
 
 	CValueToolbar();
 
+	//get caption 
+	virtual wxString GetControlCaption() const {
+
+		if (!m_actSource->IsEmptyProperty()) {
+			CValue pvarPropVal;
+			if (m_actSource->GetDataValue(pvarPropVal))
+				return _("ToolBar: ") + stringUtils::GenerateSynonym(pvarPropVal.GetClassName());
+		}
+
+		return _("ToolBar:") + _("<empty source>");
+	}
+
 	//control factory 
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
@@ -104,7 +116,11 @@ public:
 	CValueToolBarItem();
 
 	//get caption 
-	virtual wxString GetControlCaption() const { return GetCaption(); }
+	virtual wxString GetControlCaption() const {	
+		if (!m_propertyCaption->IsEmptyProperty()) 
+			return GetCaption();
+		return _("<empty caption>");
+	}
 
 	//control factory
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
@@ -131,6 +147,13 @@ class CValueToolBarSeparator : public IValueControl {
 public:
 
 	CValueToolBarSeparator();
+
+	//get caption 
+	virtual wxString GetControlCaption() const { 
+		return _("Separator"); 
+	}
+
+	//control factory
 	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
 	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
 	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;

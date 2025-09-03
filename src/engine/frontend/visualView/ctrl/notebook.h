@@ -36,6 +36,12 @@ public:
 
     CValueNotebook();
 
+    //get caption 
+    virtual wxString GetControlCaption() const {
+        return _("Notebook");
+    }
+
+    //control factory 
     virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
     virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
     virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -84,6 +90,14 @@ public:
 
     CValueNotebookPage();
 
+    //get caption 
+    virtual wxString GetControlCaption() const {
+        if (!m_propertyCaption->IsEmptyProperty())
+            return _("Page item: ") + m_propertyCaption->GetValueAsString();
+        return _("Page item: ") + _("<empty caption>");
+    }
+
+    //control factory 
     virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
     virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
     virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;

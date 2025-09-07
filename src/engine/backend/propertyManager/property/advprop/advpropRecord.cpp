@@ -128,7 +128,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
             wxBoxSizer* rowsizer = new wxBoxSizer(wxHORIZONTAL);
 
             wxPropertyCheckTree* tc = new wxPropertyCheckTree(dlg, wxID_ANY,
-                wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxPR_MULTIPLE_CHECK | wxPR_EMPTY_CHECK | wxSUNKEN_BORDER);
+                wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxPR_MULTIPLE_CHECK | wxPR_EMPTY_CHECK | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 
             wxTreeItemId rootItem = tc->AddRoot(wxEmptyString);
 

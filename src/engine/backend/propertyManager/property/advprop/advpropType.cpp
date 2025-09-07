@@ -530,7 +530,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
             compositeDataType->Show(selectorDataType != eSelectorDataType::eSelectorDataType_table);
 
             wxPropertyCheckTree* tc = new wxPropertyCheckTree(dlg, wxID_ANY,
-                wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | style | wxSUNKEN_BORDER);
+                wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | style | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 
             topsizer->Add(compositeDataType, wxSizerFlags(0).Border(wxALL, spacing));
             rowsizer->Add(tc, wxSizerFlags(1).Expand().Border(wxALL, spacing));

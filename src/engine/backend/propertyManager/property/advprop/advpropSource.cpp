@@ -143,7 +143,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			const bool is_tableBox = typeFactory->GetFilterSourceDataType() == eSourceDataType::eSourceDataVariant_table;
 
 			wxTreeCtrl* tc = new wxTreeCtrl(dlg, wxID_ANY,
-				wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxSUNKEN_BORDER);
+				wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 
 			// Make an state image list containing small icons
 			tc->SetImageList(GetSourceImageList());

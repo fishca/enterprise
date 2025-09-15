@@ -90,7 +90,8 @@ wxString CValueTableBoxColumn::GetControlCaption() const
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}
-	return wxEmptyString;
+
+	return m_propertyName->GetValueAsString();
 }
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)

@@ -58,9 +58,10 @@ wxString wxVariantDataSource::MakeString() const
 	if (m_ownerProperty != nullptr) {
 		const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 		if (sourceObject != nullptr) {
-			IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
+			const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 			//wxASSERT(genericObject);
-			IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
+			const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+				genericObject->FindMetaObjectByID(m_dataSource) : nullptr;
 			if (metaObject != nullptr && !metaObject->IsAllowed()) return _("<not selected>");
 			else if (metaObject == nullptr) return _("<not selected>");
 			return metaObject->GetName();
@@ -77,9 +78,11 @@ meta_identifier_t wxVariantDataSource::GetIdByGuid(const CGuid& guid) const
 	if (guid.isValid() && sourceObject != nullptr) {
 		const IMetaObjectSourceData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
-		const IMetaObject* metaObject = genericObject ? genericObject->FindMetaObjectByID(guid) : nullptr;
+		const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+			genericObject->FindMetaObjectByID(guid) : nullptr;
 		//wxASSERT(metaObject);
-		return metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetMetaID() : wxNOT_FOUND;
+		return metaObject != nullptr &&
+			metaObject->IsAllowed() ? metaObject->GetMetaID() : wxNOT_FOUND;
 	}
 	return wxNOT_FOUND;
 }
@@ -124,7 +127,8 @@ void wxVariantDataSource::SetSource(const meta_identifier_t& id, bool fillTypeDe
 		//wxASSERT(genericObject);
 		const IMetaObject* metaObject = genericObject->FindMetaObjectByID(id);
 		//wxASSERT(metaObject);
-		m_dataSource = metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetGuid() : wxNullGuid;
+		m_dataSource = metaObject != nullptr && metaObject->IsAllowed() ?
+			metaObject->GetGuid() : wxNullGuid;
 	}
 	else {
 		m_dataSource.reset();

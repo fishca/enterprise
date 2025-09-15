@@ -135,12 +135,13 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 	success = success && commonMetaData->RoolbackDatabase()
 		&& m_metadataTree->Load();
 
+	client_window->Thaw();
+
 	if (success) {
 		objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
 		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
 	}
 
-	client_window->Thaw();
 }
 
 #include "backend/appData.h"

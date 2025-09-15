@@ -92,7 +92,7 @@ public:
 				wxS("Logic error: child [not] activated when it should [not] have been.")
 			);
 		}
-		
+
 		pClientWindow->Thaw();
 		pClientWindow->Update();
 		return true;
@@ -100,15 +100,38 @@ public:
 
 	virtual bool Destroy() override {
 
-		wxAuiMDIClientWindow* pClientWindow = m_pMDIParentFrame->GetClientWindow();
-		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
+		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
+		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
+
+		wxAuiMDIClientWindow* pClientWindow = pParentFrame->GetClientWindow();
+		wxASSERT_MSG(pClientWindow, wxT("Missing MDI Client Window"));
 
 		pClientWindow->Freeze();
-		bool result = wxAuiMDIChildFrame::Destroy();
-		pClientWindow->Thaw();		
 
+		if (pParentFrame->GetActiveChild() == this) {
+			// deactivate ourself
+			wxActivateEvent event(wxEVT_ACTIVATE, false, GetId());
+			event.SetEventObject(this);
+			GetEventHandler()->ProcessEvent(event);
+
+			pParentFrame->SetChildMenuBar(NULL);
+		}
+
+		wxAuiTabCtrl* tabCtrl = nullptr;
+
+		bool success = false; int page_idx = 0;
+		if (pClientWindow->FindTab(this, &tabCtrl, &page_idx)) {
+		
+			// state the window hidden to prevent flicker
+			if (pClientWindow->GetPageCount() == 1)
+				tabCtrl->Show(false);
+
+			success = pClientWindow->DeletePage(page_idx);
+		}
+
+		pClientWindow->Thaw();
 		pClientWindow->Update();
-		return result;
+		return success;
 	}
 
 	virtual void SetIcons(const wxIconBundle& icons) override {

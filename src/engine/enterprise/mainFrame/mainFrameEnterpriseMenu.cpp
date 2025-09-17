@@ -91,10 +91,13 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 	m_menuHelp->Append(wxID_ENTERPRISE_ABOUT, _("About"));
 	m_frameMenuBar->Append(m_menuHelp, wxGetStockLabel(wxID_HELP, wxSTOCK_NOFLAGS));
 
-	m_keyBinder.AddCommandsFromMenuBar(m_frameMenuBar);
+	wxMenuBar* mb = GetMenuBar();
+	m_frameMenuBar = nullptr;
+	SetMenuBar(mb);
+
+	m_keyBinder.AddCommandsFromMenuBar(mb);
 
 	SetDefaultHotKeys();
-	SetMenuBar(m_frameMenuBar);
 
 	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnClickAllOperation, this, wxID_ENTERPRISE_ALL_OPERATIONS);
 	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnToolsSettings, this, wxID_ENTERPRISE_SETTING);
@@ -102,5 +105,5 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnAbout, this, wxID_ENTERPRISE_ABOUT);
 
 	m_keyBinder.UpdateWindow(this);
-	m_keyBinder.UpdateMenuBar(GetMenuBar());
+	m_keyBinder.UpdateMenuBar(mb);
 }

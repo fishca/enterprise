@@ -123,7 +123,11 @@ void CDocDesignerMDIFrame::LoadOptions()
 		}
 	}
 
-	m_keyBinder.AddCommandsFromMenuBar(m_frameMenuBar);
+	wxMenuBar* mb = GetMenuBar();
+	m_frameMenuBar = nullptr;
+	SetMenuBar(mb);
+
+	m_keyBinder.AddCommandsFromMenuBar(mb);
 
 	if (keyBindingNode != nullptr) {
 		m_keyBinder.Load(keyBindingNode);
@@ -132,10 +136,8 @@ void CDocDesignerMDIFrame::LoadOptions()
 		SetDefaultHotKeys();
 	}
 
-	SetMenuBar(m_frameMenuBar);
-
 	m_keyBinder.UpdateWindow(this);
-	m_keyBinder.UpdateMenuBar(GetMenuBar());
+	m_keyBinder.UpdateMenuBar(mb);
 
 	UpdateEditorOptions();
 }

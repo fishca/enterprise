@@ -32,9 +32,7 @@ void CDocEnterpriseMDIFrame::SetDefaultHotKeys()
 //********************************************************************************
 
 void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
-{
-	wxMenuBar *menuBar = new wxMenuBar(wxMB_DOCKABLE);
-	
+{	
 	// and its menu bar
 	m_menuFile = new wxMenu();
 
@@ -54,7 +52,7 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 	m_menuFile->AppendSeparator();
 	m_menuFile->Append(wxID_EXIT);
 
-	menuBar->Append(m_menuFile, wxGetStockLabel(wxID_FILE));
+	m_frameMenuBar->Append(m_menuFile, wxGetStockLabel(wxID_FILE));
 
 	// A nice touch: a history of files visited. Use this menu.
 	m_docManager->FileHistoryUseMenu(m_menuFile);
@@ -75,28 +73,28 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 	m_menuEdit->AppendSeparator();
 	m_menuEdit->Append(wxID_FIND);
 
-	menuBar->Append(m_menuEdit, wxGetStockLabel(wxID_EDIT));
+	m_frameMenuBar->Append(m_menuEdit, wxGetStockLabel(wxID_EDIT));
 
 	m_menuOperations = new wxMenu;
 	m_menuOperations->Append(wxID_ENTERPRISE_ALL_OPERATIONS, _("All operations..."));
-	menuBar->Append(m_menuOperations, _("Operations"));
+	m_frameMenuBar->Append(m_menuOperations, _("Operations"));
 
 	m_menuSetting = new wxMenu;
-	menuBar->Append(m_menuSetting, _("Tools"));
+	m_frameMenuBar->Append(m_menuSetting, _("Tools"));
 	m_menuSetting->Append(wxID_ENTERPRISE_SETTING, _("Options..."));
 
 	m_menuAdministration = new wxMenu;
 	m_menuAdministration->Append(wxID_ENTERPRISE_ACTIVE_USERS, _("Active users"));
-	menuBar->Append(m_menuAdministration, _("Administration"));
+	m_frameMenuBar->Append(m_menuAdministration, _("Administration"));
 
 	m_menuHelp = new wxMenu;
 	m_menuHelp->Append(wxID_ENTERPRISE_ABOUT, _("About"));
-	menuBar->Append(m_menuHelp, wxGetStockLabel(wxID_HELP, wxSTOCK_NOFLAGS));
+	m_frameMenuBar->Append(m_menuHelp, wxGetStockLabel(wxID_HELP, wxSTOCK_NOFLAGS));
 
-	m_keyBinder.AddCommandsFromMenuBar(menuBar);
+	m_keyBinder.AddCommandsFromMenuBar(m_frameMenuBar);
 
 	SetDefaultHotKeys();
-	SetMenuBar(menuBar);
+	SetMenuBar(m_frameMenuBar);
 
 	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnClickAllOperation, this, wxID_ENTERPRISE_ALL_OPERATIONS);
 	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnToolsSettings, this, wxID_ENTERPRISE_SETTING);

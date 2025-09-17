@@ -35,12 +35,15 @@ bool CInterfaceEditView::OnCreate(CMetaDocument* doc, long flags)
 
 #if wxUSE_MENUS	
 
-wxMenu* CInterfaceEditView::CreateViewMenu() const
+wxMenuBar* CInterfaceEditView::CreateMenuBar() const
 {
+	wxMenuBar* mb = new wxMenuBar;
+	
 	// and its menu bar
-	wxMenu* menuInterface = new wxMenu(_("Interface"));
+	wxMenu* menuInterface = new wxMenu;
 	menuInterface->Append(wxID_TEST_INTERFACE, _("Test interface"));
-	return menuInterface;
+	mb->Append(menuInterface, _("Interface"));
+	return mb;
 }
 
 void CInterfaceEditView::OnMenuItemClicked(int id)

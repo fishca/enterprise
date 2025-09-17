@@ -33,8 +33,7 @@ CDocDesignerMDIFrame::CDocDesignerMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) : CDocMDIFrame(title, pos, size),
 	m_metadataTree(nullptr),
-	m_outputWindow(nullptr), m_stackWindow(nullptr), m_watchWindow(nullptr),
-	m_menuBar(nullptr)
+	m_outputWindow(nullptr), m_stackWindow(nullptr), m_watchWindow(nullptr)
 {
 	m_docManager = new CDesignerDocManager;
 }
@@ -124,7 +123,7 @@ void CDocDesignerMDIFrame::LoadOptions()
 		}
 	}
 
-	m_keyBinder.AddCommandsFromMenuBar(m_menuBar);
+	m_keyBinder.AddCommandsFromMenuBar(m_frameMenuBar);
 
 	if (keyBindingNode != nullptr) {
 		m_keyBinder.Load(keyBindingNode);
@@ -133,7 +132,7 @@ void CDocDesignerMDIFrame::LoadOptions()
 		SetDefaultHotKeys();
 	}
 
-	SetMenuBar(m_menuBar);
+	SetMenuBar(m_frameMenuBar);
 
 	m_keyBinder.UpdateWindow(this);
 	m_keyBinder.UpdateMenuBar(GetMenuBar());

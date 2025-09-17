@@ -73,7 +73,6 @@ public:
 
 				wxBitmap mdiChildIcon;
 				mdiChildIcon.CopyFromIcon(m_icons.GetIcon(sizeIcon));
-
 				pClientWindow->AddPage(this, m_title, m_activateOnCreate, mdiChildIcon);
 
 			}
@@ -114,14 +113,14 @@ public:
 			event.SetEventObject(this);
 			GetEventHandler()->ProcessEvent(event);
 
-			pParentFrame->SetChildMenuBar(NULL);
+			pParentFrame->SetChildMenuBar(nullptr);
 		}
 
 		wxAuiTabCtrl* tabCtrl = nullptr;
 
 		bool success = false; int page_idx = 0;
 		if (pClientWindow->FindTab(this, &tabCtrl, &page_idx)) {
-		
+
 			// state the window hidden to prevent flicker
 			if (pClientWindow->GetPageCount() == 1)
 				tabCtrl->Show(false);
@@ -184,7 +183,19 @@ public:
 		);
 	}
 
+#if wxUSE_MENUS
+	virtual void SetMenuBar(wxMenuBar* menuBar) override;
+	virtual wxMenuBar* GetMenuBar() const override;
+#endif // wxUSE_MENUS
+
 	virtual void SetLabel(const wxString& label) override;
+
+protected:
+
+#if __WXMSW__
+	// override base class version to add menu bar accel processing
+	virtual bool MSWTranslateMessage(WXMSG* msg) override { return false; }
+#endif
 
 private:
 

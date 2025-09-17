@@ -19,7 +19,6 @@
 
 #include "backend/metadataConfiguration.h"
 
-
 wxBEGIN_EVENT_TABLE(CMetaDocManager, wxDocManager)
 
 EVT_MENU(wxID_OPEN, CMetaDocManager::OnFileOpen)
@@ -94,46 +93,22 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 CMetaDocManager::CMetaDocManager()
 	: wxDocManager(), m_findDialog(nullptr)
 {
-	AddDocTemplate("Text document", "*.txt;*.text", "", "txt;text", "Text Doc", "Text View", CLASSINFO(CTextEditDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate("Spreadsheet document", "*.oxl", "", "oxl", "Spreadsheet Doc", "Spreadsheet View", CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView), wxTEMPLATE_VISIBLE);
-
-	//if (appData->DesignerMode()) {
-
-	//	AddDocTemplate("External data processor", "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorFileDocument), CLASSINFO(CDataProcessorView), wxTEMPLATE_VISIBLE);
-	//	AddDocTemplate("External report", "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportFileDocument), CLASSINFO(CReportView), wxTEMPLATE_VISIBLE);
-	//	AddDocTemplate("Configuration", "*.conf", "", "conf", "Configuration Doc", "Configuration View", CLASSINFO(CMetataEditDocument), CLASSINFO(CMetadataView), wxTEMPLATE_ONLY_OPEN);
-
-	//	//common objects 
-	//	AddDocTemplate(g_metaCommonModuleCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));
-	//	AddDocTemplate(g_metaCommonFormCLSID, CLASSINFO(CFormEditDocument), CLASSINFO(CFormEditView));
-	//	AddDocTemplate(g_metaCommonTemplateCLSID, CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView));
-
-	//	AddDocTemplate(g_metaInterfaceCLSID, CLASSINFO(CInterfaceEditDocument), CLASSINFO(CInterfaceEditView));
-	//	AddDocTemplate(g_metaRoleCLSID, CLASSINFO(CRoleEditDocument), CLASSINFO(CRoleEditView));
-
-	//	//advanced object
-	//	AddDocTemplate(g_metaModuleCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));
-	//	AddDocTemplate(g_metaManagerCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));
-	//	AddDocTemplate(g_metaFormCLSID, CLASSINFO(CFormEditDocument), CLASSINFO(CFormEditView));
-	//	AddDocTemplate(g_metaTemplateCLSID, CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView));
-	//}
-	//else {
-	//	AddDocTemplate("External data processor", "*.edp", "", "edp", "Data processor Doc", "Data processor View", CLASSINFO(CDataProcessorDocument), CLASSINFO(CDataProcessorView), wxTEMPLATE_ONLY_OPEN);
-	//	AddDocTemplate("External report", "*.erp", "", "erp", "Report Doc", "Report View", CLASSINFO(CReportDocument), CLASSINFO(CReportView), wxTEMPLATE_ONLY_OPEN);
-	//}
+	AddDocTemplate(_("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextEditDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView), wxTEMPLATE_VISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
+	
 	// initialize print data and setup
-	wxPrintData m_printData;
+	wxPrintData printData;
 
 	wxPrintPaperType* paper = wxThePrintPaperDatabase->FindPaperType(wxPAPER_A4);
 
-	m_printData.SetPaperId(paper->GetId());
-	m_printData.SetPaperSize(paper->GetSize());
-	m_printData.SetOrientation(wxPORTRAIT);
+	printData.SetPaperId(paper->GetId());
+	printData.SetPaperSize(paper->GetSize());
+	printData.SetOrientation(wxPORTRAIT);
 
 	// copy over initial paper size from print record
-	m_pageSetupDialogData.SetPrintData(m_printData);
+	m_pageSetupDialogData.SetPrintData(printData);
 
 #endif // wxUSE_PRINTING_ARCHITECTURE
 }
@@ -720,15 +695,15 @@ CGuid CMetaDocManager::AddDocTemplate(
 	data.m_className = docTypeName;
 	data.m_classDescr = descr;
 	data.m_docTemplate = new CMetaDocTemplate(
-		this, 
-		descr, 
+		this,
+		descr,
 		filter,
-		dir, 
-		ext, 
-		docTypeName, 
+		dir,
+		ext,
+		docTypeName,
 		viewTypeName,
-		docClassInfo, 
-		viewClassInfo, 
+		docClassInfo,
+		viewClassInfo,
 		flags
 	);
 
@@ -815,7 +790,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 
 				newDocument->SetIcon(metaObject->GetIcon());
 
-				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {					
+				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {
 					wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
 					if (cmdProc != nullptr)
 						newDocument->SetCommandProcessor(cmdProc);

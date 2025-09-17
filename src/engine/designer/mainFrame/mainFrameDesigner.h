@@ -51,8 +51,6 @@ enum {
 
 class CDocDesignerMDIFrame : public CDocMDIFrame
 {
-	wxMenuBar* m_menuBar;
-
 	wxMenu* m_menuFile;
 	wxMenu* m_menuEdit;
 	wxMenu* m_menuConfiguration;

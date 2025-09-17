@@ -7,15 +7,34 @@ wxIMPLEMENT_DYNAMIC_CLASS(CFormEditView, CMetaView);
 // CTextEditView implementation
 // ----------------------------------------------------------------------------
 
+enum {
+	wxID_ADD_COMMENTS = wxID_HIGHEST + 10000,
+	wxID_REMOVE_COMMENTS,
+	wxID_SYNTAX_CONTROL,
+	wxID_GOTOLINE,
+	wxID_PROCEDURES_FUNCTIONS,
+
+	wxID_TEST_FORM = 15001
+};
+
+
+
 wxBEGIN_EVENT_TABLE(CFormEditView, CMetaView)
 EVT_MENU(wxID_COPY, CFormEditView::OnCopy)
 EVT_MENU(wxID_PASTE, CFormEditView::OnPaste)
 EVT_MENU(wxID_SELECTALL, CFormEditView::OnSelectAll)
 EVT_FIND(wxID_ANY, CFormEditView::OnFind)
 EVT_FIND_NEXT(wxID_ANY, CFormEditView::OnFind)
+
+EVT_MENU(wxID_ADD_COMMENTS, CFormEditView::OnMenuClicked)
+EVT_MENU(wxID_REMOVE_COMMENTS, CFormEditView::OnMenuClicked)
+EVT_MENU(wxID_SYNTAX_CONTROL, CFormEditView::OnMenuClicked)
+EVT_MENU(wxID_GOTOLINE, CFormEditView::OnMenuClicked)
+EVT_MENU(wxID_PROCEDURES_FUNCTIONS, CFormEditView::OnMenuClicked)
+EVT_MENU(wxID_TEST_FORM, CFormEditView::OnMenuClicked)
+
 wxEND_EVENT_TABLE()
 
-#define wxID_TEST_FORM 15001
 
 static wxWindowID nextId = wxID_HIGHEST + 3000;
 
@@ -28,14 +47,6 @@ bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags) &&
 		m_visualNotebook->LoadForm();
 }
-
-enum {
-	wxID_ADD_COMMENTS = wxID_HIGHEST + 10000,
-	wxID_REMOVE_COMMENTS,
-	wxID_SYNTAX_CONTROL,
-	wxID_GOTOLINE,
-	wxID_PROCEDURES_FUNCTIONS
-};
 
 void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
@@ -77,26 +88,21 @@ void CFormEditView::OnRemoveToolbar(wxAuiToolBar* toolbar)
 
 #if wxUSE_MENUS	
 
-wxMenu* CFormEditView::CreateViewMenu() const
+wxMenuBar* CFormEditView::CreateMenuBar() const
 {
 	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
+
+		wxMenuBar* mb = new wxMenuBar;
 		// and its menu bar
-		wxMenu* menuForm = new wxMenu(_("Form"));
-		menuForm->Append(wxID_TEST_FORM, _("Test form"));
-		return menuForm;
+		wxMenu* menuForm = new wxMenu;
+		menuForm->Append(wxID_TEST_FORM, _("Test form\tCtrl+R"));
+		mb->Append(menuForm, _("Form"));
+
+		return mb;
 	}
+
 	return nullptr;
 }
-
-void CFormEditView::OnMenuItemClicked(int id)
-{
-	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
-		if (id == wxID_TEST_FORM) {
-			m_visualNotebook->TestForm();
-		}
-	}
-}
-
 #endif 
 
 void CFormEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
@@ -181,11 +187,17 @@ void CFormEditView::OnMenuClicked(wxCommandEvent& event)
 			m_visualNotebook->ShowMethods();
 		}
 	}
-	else {
-		wxAuiToolBar* toolBar = mainFrame->GetDocToolbar();
-		m_visualNotebook->CreateControl(
-			toolBar->GetToolShortHelp(event.GetId())
-		);
+	else if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
+		
+		if (event.GetId() == wxID_TEST_FORM) {
+			m_visualNotebook->TestForm();
+		}
+		else {
+			wxAuiToolBar* toolBar = mainFrame->GetDocToolbar();
+			m_visualNotebook->CreateControl(
+				toolBar->GetToolShortHelp(event.GetId())
+			);
+		}
 	}
 }
 

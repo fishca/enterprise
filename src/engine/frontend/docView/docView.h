@@ -145,7 +145,7 @@ public:
 	}
 
 	bool ShowFrame(bool show = true) {
-		
+
 		if (m_viewFrame != nullptr &&
 			m_viewFrame->Show(show)) {
 			return true;
@@ -155,16 +155,12 @@ public:
 	}
 
 #if wxUSE_MENUS	
-	virtual wxMenu* CreateViewMenu() const {
-		return nullptr;
-	}
+	virtual wxMenuBar* CreateMenuBar() const { return nullptr; }
 #endif // wxUSE_MENUS
 
 	// Called by valueFramework if created automatically by the default document
 	// manager class: gives view a chance to initialise
-	virtual bool OnCreate(CMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) {
-		return true;
-	}
+	virtual bool OnCreate(CMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) { return true; }
 
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 
@@ -176,9 +172,7 @@ public:
 	virtual void OnUpdate(wxView* sender, wxObject* hint = NULL) {}
 
 	virtual void OnDraw(wxDC* dc) override {}
-	virtual bool OnClose(bool deleteWindow = true) override {
-		return wxView::OnClose(deleteWindow);
-	}
+	virtual bool OnClose(bool deleteWindow = true) override { return wxView::OnClose(deleteWindow); }
 
 	// A view's window can call this to notify the view it is (in)active.
 	// The function then notifies the document manager.

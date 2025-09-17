@@ -95,7 +95,9 @@ bool CDocMDIFrame::Create(const wxString& title,
 	m_mgr.SetManagedWindow(this);
 	m_mgr.SetArtProvider(new wxAuiLunaDockArt());
 
+	SetMenuBar(new wxMenuBar(wxMB_DOCKABLE));
 	SetIcon(wxICON(oes));
+
 	return true;
 }
 
@@ -138,6 +140,22 @@ void CDocMDIFrame::RefreshFrame()
 
 	Refresh();
 }
+
+#if wxUSE_MENUS
+void CDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
+{
+	if (m_pMyMenuBar == nullptr) {
+
+		//Remove the Window menu from the old menu bar
+		RemoveWindowMenu(GetMenuBar());
+
+		//Add the Window menu to the new menu bar.
+		AddWindowMenu(pMenuBar);
+	}
+
+	wxFrame::SetMenuBar(pMenuBar);
+}
+#endif // wxUSE_MENUS
 
 // bring window to front
 void CDocMDIFrame::Raise()

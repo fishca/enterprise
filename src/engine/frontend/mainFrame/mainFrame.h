@@ -145,6 +145,10 @@ public:
 	virtual void SetStatusText(const wxString& text, int number = 0) override { wxAuiMDIParentFrame::SetStatusText(text, number); }
 	virtual bool Show(bool show = true) override { return (show && AllowRun() || !show && AllowClose()) && wxAuiMDIParentFrame::Show(show); }
 
+#if wxUSE_MENUS
+	virtual void SetMenuBar(wxMenuBar* pMenuBar) override;
+#endif // wxUSE_MENUS
+
 	// bring window to front
 	virtual void Raise() override;
 

@@ -12,8 +12,6 @@
 
 // The view using a standard wxTextCtrl to show its contents
 class CFormEditView : public CMetaView {
-	CVisualEditorNotebook* m_visualNotebook;
-private:
 
 	void OnCopy(wxCommandEvent& WXUNUSED(event)) {
 		m_visualNotebook->Copy();
@@ -36,15 +34,11 @@ private:
 
 public:
 
-	CVisualEditorNotebook* GetVisualNotebook() const {
-		return m_visualNotebook;
-	}
+	CVisualEditorNotebook* GetVisualNotebook() const { return m_visualNotebook; }
 
 public:
 
-	CFormEditView() :
-		CMetaView() {
-	}
+	CFormEditView() : CMetaView() {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
@@ -58,8 +52,7 @@ public:
 	virtual void OnRemoveToolbar(wxAuiToolBar* toolbar) override;
 
 #if wxUSE_MENUS		
-	virtual wxMenu* CreateViewMenu() const;
-	virtual void OnMenuItemClicked(int id);
+	virtual wxMenuBar* CreateMenuBar() const;
 #endif // wxUSE_MENUS
 
 protected:
@@ -67,6 +60,8 @@ protected:
 	void OnMenuClicked(wxCommandEvent& event);
 
 private:
+
+	CVisualEditorNotebook* m_visualNotebook;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(CFormEditView);
@@ -79,9 +74,7 @@ private:
 class CFormDocument : public IModuleDocument {
 public:
 
-	CFormDocument() :
-		IModuleDocument() {
-	}
+	CFormDocument() : IModuleDocument() {}
 
 	virtual wxCommandProcessor* CreateCommandProcessor() const override;
 
@@ -106,9 +99,8 @@ protected:
 class CFormEditDocument : public CFormDocument
 {
 public:
-	CFormEditDocument() :
-		CFormDocument() {
-	}
+
+	CFormEditDocument() : CFormDocument() {}
 
 	virtual CVisualEditorNotebook* GetVisualNotebook() const override;
 
@@ -149,7 +141,7 @@ public:
 
 	virtual CCodeEditor* GetCodeEditor() const {
 		CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
-		if (visualNotebook != nullptr) 
+		if (visualNotebook != nullptr)
 			return visualNotebook->GetCodeEditor();
 		return nullptr;
 	};

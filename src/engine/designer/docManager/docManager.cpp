@@ -37,7 +37,7 @@ CDesignerDocManager::CDesignerDocManager()
 	AddDocTemplate(g_metaCommonFormCLSID, CLASSINFO(CFormEditDocument), CLASSINFO(CFormEditView));
 	AddDocTemplate(g_metaCommonTemplateCLSID, CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView));
 
-	AddDocTemplate(g_metaInterfaceCLSID, CLASSINFO(CInterfaceEditDocument), CLASSINFO(CInterfaceEditView));
+	AddDocTemplate(g_metaSubsystemCLSID, CLASSINFO(CInterfaceEditDocument), CLASSINFO(CInterfaceEditView));
 	AddDocTemplate(g_metaRoleCLSID, CLASSINFO(CRoleEditDocument), CLASSINFO(CRoleEditView));
 
 	//advanced object

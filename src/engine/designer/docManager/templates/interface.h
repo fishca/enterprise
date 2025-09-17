@@ -20,7 +20,7 @@ public:
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 #if wxUSE_MENUS		
-	virtual wxMenu* CreateViewMenu() const;
+	virtual wxMenuBar* CreateMenuBar() const;
 	virtual void OnMenuItemClicked(int id);
 #endif // wxUSE_MENUS
 

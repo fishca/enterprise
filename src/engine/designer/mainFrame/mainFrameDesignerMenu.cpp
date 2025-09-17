@@ -52,6 +52,8 @@ enum MDI_MENU_ID
 
 void CDocDesignerMDIFrame::InitializeDefaultMenu()
 {
+	m_frameMenuBar = new wxMenuBar;
+
 	// and its menu bar
 	m_menuFile = new wxMenu();
 

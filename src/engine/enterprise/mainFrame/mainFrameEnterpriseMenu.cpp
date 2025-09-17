@@ -33,6 +33,8 @@ void CDocEnterpriseMDIFrame::SetDefaultHotKeys()
 
 void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 {	
+	m_frameMenuBar = new wxMenuBar;
+
 	// and its menu bar
 	m_menuFile = new wxMenu();
 

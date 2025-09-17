@@ -95,9 +95,7 @@ bool CDocMDIFrame::Create(const wxString& title,
 	m_mgr.SetManagedWindow(this);
 	m_mgr.SetArtProvider(new wxAuiLunaDockArt());
 
-	SetMenuBar(new wxMenuBar(wxMB_DOCKABLE));
 	SetIcon(wxICON(oes));
-
 	return true;
 }
 

@@ -295,13 +295,18 @@ void CDocDesignerMDIFrame::OnToolsSettings(wxCommandEvent& event)
 	{
 		m_keyBinder.ClearCommands();
 
-		for (unsigned int i = 0; i < keyBinder->GetNumCommands(); ++i)
-		{
+		for (unsigned int i = 0; i < keyBinder->GetNumCommands(); ++i) {
 			m_keyBinder.AddCommand(keyBinder->GetCommand(i));
 		}
 
 		m_keyBinder.UpdateWindow(this);
+
+#if wxUSE_MENUBAR
+		if (m_pMyMenuBar != nullptr)
+			m_keyBinder.UpdateMenuBar(m_pMyMenuBar);
+
 		m_keyBinder.UpdateMenuBar(GetMenuBar());
+#endif
 
 		m_fontColorSettings = fontColorSettings->GetSettings();
 		m_editorSettings = editorSettings->GetSettings();

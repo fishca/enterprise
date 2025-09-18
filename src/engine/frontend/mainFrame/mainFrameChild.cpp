@@ -58,12 +58,20 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 		}
 	};
 
+	wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
+	wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
+
+	const bool is_active_child = 
+		pParentFrame->GetActiveChild() == this;
+
 	if (m_pMenuBar != nullptr) {
 
-		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
-		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
-
+		// replace current menu bars
+		if (is_active_child)
+			pParentFrame->SetChildMenuBar(nullptr);
+				
 		wxMenuBar* pMenuBar = pParentFrame->GetMenuBar();
+
 		if (pMenuBar != nullptr) {
 
 			const int pos_edit = pMenuBar->FindMenu(wxGetStockLabel(wxID_EDIT, wxSTOCK_NOFLAGS));
@@ -97,19 +105,10 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 
 		m_pMenuBar->SetParent(pParentFrame);
 
-		if (pParentFrame->GetActiveChild() == this) {
-
-			// replace current menu bars
-			if (pOldMenuBar != nullptr)
-				pParentFrame->SetChildMenuBar(nullptr);
-			pParentFrame->SetChildMenuBar(this);
-		}
+		if (is_active_child)
+			pParentFrame->SetChildMenuBar(this);		
 	}
-	else {
-
-		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
-		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
-
+	else if (is_active_child) {
 		pParentFrame->SetChildMenuBar(nullptr);
 	}
 }

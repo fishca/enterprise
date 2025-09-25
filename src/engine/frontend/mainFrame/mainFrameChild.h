@@ -118,14 +118,16 @@ public:
 
 		wxAuiTabCtrl* tabCtrl = nullptr;
 
-		bool success = false; int page_idx = 0;
-		if (pClientWindow->FindTab(this, &tabCtrl, &page_idx)) {
+		bool success = false; int page_tab_idx = 0;
+		if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
 
 			// state the window hidden to prevent flicker
 			if (pClientWindow->GetPageCount() == 1)
 				tabCtrl->Show(false);
 
-			success = pClientWindow->DeletePage(page_idx);
+			const int page_idx = pClientWindow->GetPageIndex(this);
+			success = page_idx != wxNOT_FOUND ? 
+				pClientWindow->DeletePage(page_idx) : false;
 		}
 
 		pClientWindow->Thaw();

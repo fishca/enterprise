@@ -1,5 +1,6 @@
 #include "toolbar.h"
 #include "backend/metaCollection/partial/commonObject.h"
+#include "frontend/visualView/visualHost.h"
 
 //**********************************************************************************
 //*                              Events                                            *
@@ -12,15 +13,15 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 	);
 	wxASSERT(toolBar);
 	if (g_visualHostContext != nullptr) {
-		wxAuiToolBarItem* foundedItem = toolBar->FindToolByPosition(event.GetX(), event.GetY());
-		if (foundedItem == nullptr) g_visualHostContext->SelectControl(this);
+		const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+		if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
+			wxAuiToolBarItem* foundedItem = toolBar->FindToolByPosition(event.GetX(), event.GetY());
+			if (foundedItem == nullptr) g_visualHostContext->SelectControl(this);
+		}
 	}
 
 	event.Skip();
 }
-
-#include "backend/appData.h"
-#include "frontend/visualView/visualHost.h"
 
 void CValueToolbar::OnTool(wxCommandEvent& event)
 {

@@ -157,16 +157,15 @@ protected:
 	std::unordered_map<IValueFrame*, wxObject* > m_baseObjects;
 };
 
+#include "frontend/docView/docView.h"
+
 class FRONTEND_API IVisualEditorNotebook {
-	static std::set<IVisualEditorNotebook*> ms_visualEditorArray;
 public:
 
 	static IVisualEditorNotebook* FindEditorByForm(const IValueFrame* valueForm);
 
 	IVisualEditorNotebook();
 	virtual ~IVisualEditorNotebook();
-
-	virtual IVisualHost* GetVisualHost() const = 0;
 
 	virtual void CreateControl(const wxString& controlName) = 0;
 	virtual void RemoveControl(IValueFrame* obj) = 0;
@@ -180,10 +179,16 @@ public:
 	virtual void ModifyEvent(class IEvent* event, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 	virtual void ModifyProperty(class IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 
-	virtual IValueFrame* GetValueForm() const = 0;
 	virtual void RefreshEditor() = 0;
 
+	virtual IValueFrame* GetValueForm() const = 0;
+	virtual CMetaDocument* GetEditorDocument() const = 0;
+	virtual IVisualHost* GetVisualHost() const = 0;
+
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const = 0;
+
+private:
+	static std::set<IVisualEditorNotebook*> ms_visualEditorArray;
 };
 
 #define g_visualHostContext FindVisualEditor()

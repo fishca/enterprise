@@ -130,10 +130,10 @@
     <ClInclude Include="metaCollection\attribute\metaAttributeObjectEnum.h" />
     <ClInclude Include="metaCollection\dimension\metaDimensionObject.h" />
     <ClInclude Include="metaCollection\enumeration\metaEnumObject.h" />
+    <ClInclude Include="metaCollection\metaInterfaceObject.h" />
     <ClInclude Include="metaCollection\metaSource.h" />
     <ClInclude Include="metaCollection\metaFormObject.h" />
     <ClInclude Include="metaCollection\metaGridObject.h" />
-    <ClInclude Include="metaCollection\metaInterfaceObject.h" />
     <ClInclude Include="metaCollection\metaModuleObject.h" />
     <ClInclude Include="metaCollection\metaObject.h" />
     <ClInclude Include="metaCollection\metaObjectMetadata.h" />
@@ -228,6 +228,7 @@
     <ClInclude Include="srcExplorer.h" />
     <ClInclude Include="srcObject.h" />
     <ClInclude Include="stringUtils.h" />
+    <ClInclude Include="interfaceHelper.h" />
     <ClInclude Include="system\systemEnum.h" />
     <ClInclude Include="system\systemManager.h" />
     <ClInclude Include="system\systemManagerEnum.h" />
@@ -501,6 +502,7 @@
     <ClCompile Include="propertyManager\property\variant\sourceVariant.cpp" />
     <ClCompile Include="propertyManager\property\variant\typeVariant.cpp" />
     <ClCompile Include="roleHelper.cpp" />
+    <ClCompile Include="interfaceHelper.cpp" />
     <ClCompile Include="system\systemManager.cpp" />
     <ClCompile Include="system\systemManagerEnum.cpp" />
     <ClCompile Include="system\systemManagerFunc.cpp" />

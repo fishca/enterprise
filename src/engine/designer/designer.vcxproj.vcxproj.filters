@@ -12,7 +12,7 @@
     <ClCompile Include="mainFrame\mainFrameDesigner.cpp">
       <Filter>mainFrame</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\mainFrameDesignerComponent.cpp">
+    <ClCompile Include="mainFrame\mainFrameDesignerParts.cpp">
       <Filter>mainFrame</Filter>
     </ClCompile>
     <ClCompile Include="docManager\docManager.cpp">
@@ -101,9 +101,6 @@
     </ClCompile>
     <ClCompile Include="win\editor\interfaceEditor\interfaceEditor.cpp">
       <Filter>win\editor\interfaceEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="win\editor\interfaceEditor\property\interfaceEditorProperty.cpp">
-      <Filter>win\editor\interfaceEditor\property</Filter>
     </ClCompile>
     <ClCompile Include="win\editor\roleEditor\roleEditor.cpp">
       <Filter>win\editor\roleEditor</Filter>
@@ -237,9 +234,6 @@
     <ClInclude Include="win\editor\interfaceEditor\interfaceEditor.h">
       <Filter>win\editor\interfaceEditor</Filter>
     </ClInclude>
-    <ClInclude Include="win\editor\interfaceEditor\property\interfaceEditorProperty.h">
-      <Filter>win\editor\interfaceEditor\property</Filter>
-    </ClInclude>
     <ClInclude Include="win\editor\roleEditor\roleEditor.h">
       <Filter>win\editor\roleEditor</Filter>
     </ClInclude>
@@ -346,9 +340,6 @@
     </Filter>
     <Filter Include="win\editor\interfaceEditor">
       <UniqueIdentifier>{7c154e02-e0fe-4b7c-a23a-0a9a58117ed6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="win\editor\interfaceEditor\property">
-      <UniqueIdentifier>{c948c112-8f06-4b66-8ad6-b2e70ad48cad}</UniqueIdentifier>
     </Filter>
     <Filter Include="win\editor\roleEditor">
       <UniqueIdentifier>{1ad7d1dd-d4f4-4d64-b86d-649c849b6089}</UniqueIdentifier>

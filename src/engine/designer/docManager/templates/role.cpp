@@ -15,15 +15,15 @@ bool CRoleEditView::OnCreate(CMetaDocument* doc, long flags)
 {
 	m_roleEditor = new CRoleEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
 	m_roleEditor->SetReadOnly(flags == wxDOC_READONLY);
-
+	
+	m_roleEditor->RefreshRole();	
 	return CMetaView::OnCreate(doc, flags);
 }
 
 void CRoleEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
-	if (m_roleEditor != nullptr) {
-		m_roleEditor->RefreshRole();
-	}
+	if (m_roleEditor != nullptr) 
+		m_roleEditor->RefreshRole();	
 }
 
 void CRoleEditView::OnDraw(wxDC* WXUNUSED(dc))

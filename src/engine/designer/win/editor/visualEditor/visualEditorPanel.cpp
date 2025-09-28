@@ -122,8 +122,6 @@ bool CVisualEditorNotebook::CVisualEditor::SaveForm()
 	return true;
 }
 
-#include "frontend/visualView/visualHost.h"
-
 void CVisualEditorNotebook::CVisualEditor::TestForm()
 {
 	m_valueForm->ShowForm(m_document, false);

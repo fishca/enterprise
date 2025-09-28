@@ -9,54 +9,21 @@ wxIMPLEMENT_DYNAMIC_CLASS(CInterfaceEditView, CMetaView);
 wxBEGIN_EVENT_TABLE(CInterfaceEditView, CMetaView)
 wxEND_EVENT_TABLE()
 
-#define wxID_TEST_INTERFACE 15001
-
-wxMenu* CreateMenuInterface()
-{
-	// and its menu bar
-	wxMenu* menuForm = new wxMenu();
-	menuForm->Append(wxID_TEST_INTERFACE, _("Test interface"));
-	return menuForm;
-}
-
-
 #include "win/editor/interfaceEditor/interfaceEditor.h"
-
-#define formName _("Interfaces")
-#define formPos 2
 
 bool CInterfaceEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_interfaceEditor = new CInterfaceEditor(m_viewFrame, wxID_ANY, doc, doc->GetMetaObject());
+	m_interfaceEditor = new CInterfaceEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
 	m_interfaceEditor->SetReadOnly(flags == wxDOC_READONLY);
 
+	m_interfaceEditor->RefreshInterface();
 	return CMetaView::OnCreate(doc, flags);
 }
 
-#if wxUSE_MENUS	
-
-wxMenuBar* CInterfaceEditView::CreateMenuBar() const
+void CInterfaceEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
-	wxMenuBar* mb = new wxMenuBar;
-	
-	// and its menu bar
-	wxMenu* menuInterface = new wxMenu;
-	menuInterface->Append(wxID_TEST_INTERFACE, _("Test interface"));
-	mb->Append(menuInterface, _("Interface"));
-	return mb;
-}
-
-void CInterfaceEditView::OnMenuItemClicked(int id)
-{
-	if (id == wxID_TEST_INTERFACE)
-		m_interfaceEditor->TestInterface();
-}
-
-#endif 
-
-void CInterfaceEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
-{
-	CMetaView::OnActivateView(activate, activeView, deactiveView);
+	if (m_interfaceEditor != nullptr) 
+		m_interfaceEditor->RefreshInterface();	
 }
 
 void CInterfaceEditView::OnDraw(wxDC* WXUNUSED(dc))

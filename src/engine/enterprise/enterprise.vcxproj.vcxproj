@@ -193,9 +193,10 @@
     <ClCompile Include="mainApp.cpp" />
     <ClCompile Include="mainAppEvent.cpp" />
     <ClCompile Include="mainFrame\mainFrameEnterprise.cpp" />
-    <ClCompile Include="mainFrame\mainFrameEnterpriseComponent.cpp" />
+    <ClCompile Include="mainFrame\mainFrameEnterpriseParts.cpp" />
     <ClCompile Include="mainFrame\mainFrameEnterpriseEvent.cpp" />
     <ClCompile Include="mainFrame\mainFrameEnterpriseMenu.cpp" />
+    <ClCompile Include="mainFrame\mainFrameEnterpriseInterface.cpp" />
     <ClCompile Include="mainFrame\output\outputWindow.cpp" />
     <ClCompile Include="win\dlg\enterpriseOption.cpp" />
     <ClCompile Include="win\dlg\functionAll.cpp" />

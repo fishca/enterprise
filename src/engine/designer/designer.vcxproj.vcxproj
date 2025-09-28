@@ -200,7 +200,7 @@
     <ClCompile Include="mainFrame\debugger\debugClientImpl.cpp" />
     <ClCompile Include="mainFrame\local\localWindow.cpp" />
     <ClCompile Include="mainFrame\mainFrameDesigner.cpp" />
-    <ClCompile Include="mainFrame\mainFrameDesignerComponent.cpp" />
+    <ClCompile Include="mainFrame\mainFrameDesignerParts.cpp" />
     <ClCompile Include="mainFrame\mainFrameDesignerEvent.cpp" />
     <ClCompile Include="mainFrame\mainFrameDesignerMenu.cpp" />
     <ClCompile Include="mainFrame\metatree\external\dataProcessorWnd.cpp" />
@@ -233,7 +233,6 @@
     <ClCompile Include="win\editor\codeEditor\components\helpers\listBoxWnd.cpp" />
     <ClCompile Include="win\editor\codeEditor\components\helpers\popupWnd.cpp" />
     <ClCompile Include="win\editor\interfaceEditor\interfaceEditor.cpp" />
-    <ClCompile Include="win\editor\interfaceEditor\property\interfaceEditorProperty.cpp" />
     <ClCompile Include="win\editor\roleEditor\roleEditor.cpp" />
     <ClCompile Include="win\editor\visualEditor\innerFrame.cpp" />
     <ClCompile Include="win\editor\visualEditor\titleFrame.cpp" />
@@ -281,7 +280,6 @@
     <ClInclude Include="win\editor\codeEditor\components\helpers\listBoxWnd.h" />
     <ClInclude Include="win\editor\codeEditor\components\helpers\popupWnd.h" />
     <ClInclude Include="win\editor\interfaceEditor\interfaceEditor.h" />
-    <ClInclude Include="win\editor\interfaceEditor\property\interfaceEditorProperty.h" />
     <ClInclude Include="win\editor\roleEditor\roleEditor.h" />
     <ClInclude Include="win\editor\visualEditor\innerFrame.h" />
     <ClInclude Include="win\editor\visualEditor\printout\formPrintOut.h" />

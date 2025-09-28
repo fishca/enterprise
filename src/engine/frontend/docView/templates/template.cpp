@@ -1,6 +1,18 @@
 #include "template.h"
 #include "frontend/mainFrame/mainFrame.h"
 
+enum
+{
+	wxID_MERGE_CELLS = wxID_HIGHEST + 100,
+	wxID_SECTION_ADD,
+	wxID_SECTION_REMOVE,
+	wxID_SHOW_CELLS,
+	wxID_SHOW_HEADERS,
+	wxID_SHOW_SECTIONS,
+	wxID_BORDERS,
+	wxID_DOCK_TABLE,
+};
+
 // ----------------------------------------------------------------------------
 // CGridEditView implementation
 // ----------------------------------------------------------------------------
@@ -11,22 +23,16 @@ wxBEGIN_EVENT_TABLE(CGridEditView, CMetaView)
 EVT_MENU(wxID_COPY, CGridEditView::OnCopy)
 EVT_MENU(wxID_PASTE, CGridEditView::OnPaste)
 EVT_MENU(wxID_SELECTALL, CGridEditView::OnSelectAll)
+
+EVT_MENU(wxID_MERGE_CELLS, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_SECTION_ADD, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_SECTION_REMOVE, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_CELLS, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_HEADERS, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDERS, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_DOCK_TABLE, CGridEditView::OnMenuEvent)
+
 wxEND_EVENT_TABLE()
-
-enum
-{
-	wxID_MERGE_CELLS = wxID_HIGHEST + 100,
-
-	wxID_SECTION_ADD,
-	wxID_SECTION_REMOVE,
-
-	wxID_SHOW_CELLS,
-	wxID_SHOW_HEADERS,
-	wxID_SHOW_SECTIONS,
-
-	wxID_BORDERS,
-	wxID_DOCK_TABLE,
-};
 
 bool CGridEditView::OnCreate(CMetaDocument* doc, long flags)
 {
@@ -67,9 +73,6 @@ void CGridEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	toolbar->SetToolDropDown(wxID_BORDERS, true);
 	toolbar->AddSeparator();
 	toolbar->AddTool(wxID_DOCK_TABLE, _("Dock table"), wxArtProvider::GetBitmap(wxART_DOCK_TABLE, wxART_DOC_TEMPLATE), _("Dock table"));
-
-	toolbar->Bind(wxEVT_TOOL, &CGridEditView::OnToolClicked, this, wxID_MERGE_CELLS, wxID_DOCK_TABLE);
-	toolbar->Bind(wxEVT_AUITOOLBAR_TOOL_DROPDOWN, &CGridEditView::OnToolDropDown, this);
 }
 
 bool CGridEditView::OnClose(bool deleteWindow)
@@ -87,7 +90,7 @@ bool CGridEditView::OnClose(bool deleteWindow)
 	return false;
 }
 
-void CGridEditView::OnToolClicked(wxCommandEvent& event)
+void CGridEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	switch (event.GetId())
 	{
@@ -115,11 +118,6 @@ void CGridEditView::OnToolClicked(wxCommandEvent& event)
 	}
 
 	//event.Skip();
-}
-
-void CGridEditView::OnToolDropDown(wxAuiToolBarEvent& event)
-{
-	event.Skip();
 }
 
 // ----------------------------------------------------------------------------

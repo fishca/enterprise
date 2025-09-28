@@ -6,8 +6,6 @@
 #include "mainFrameEnterprise.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
-#include <wx/artprov.h>
-
 void CDocEnterpriseMDIFrame::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
@@ -53,6 +51,7 @@ void CDocEnterpriseMDIFrame::CreateWideGui()
 
 	m_mgr.AddPane(m_docToolbar, m_infoAdditional);
 
+	CreateSubSystem();
 	CreatePropertyPane();
 	CreateBottomPane();
 

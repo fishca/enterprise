@@ -294,9 +294,6 @@
     <ClInclude Include="metaCollection\metaGridObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
-    <ClInclude Include="metaCollection\metaInterfaceObject.h">
-      <Filter>metaCollection</Filter>
-    </ClInclude>
     <ClInclude Include="metaCollection\metaModuleObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
@@ -639,6 +636,10 @@
     </ClInclude>
     <ClInclude Include="value_cast.h" />
     <ClInclude Include="value_ptr.h" />
+    <ClInclude Include="interfaceHelper.h" />
+    <ClInclude Include="metaCollection\metaInterfaceObject.h">
+      <Filter>metaCollection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -894,15 +895,6 @@
       <Filter>metaCollection</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\metaGridObjectMenu.cpp">
-      <Filter>metaCollection</Filter>
-    </ClCompile>
-    <ClCompile Include="metaCollection\metaInterfaceObject.cpp">
-      <Filter>metaCollection</Filter>
-    </ClCompile>
-    <ClCompile Include="metaCollection\metaInterfaceObject_res.cpp">
-      <Filter>metaCollection</Filter>
-    </ClCompile>
-    <ClCompile Include="metaCollection\metaInterfaceObjectMenu.cpp">
       <Filter>metaCollection</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\metaModuleObject.cpp">
@@ -1411,6 +1403,16 @@
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="value_cast.cpp" />
+    <ClCompile Include="interfaceHelper.cpp" />
+    <ClCompile Include="metaCollection\metaInterfaceObject_res.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\metaInterfaceObjectMenu.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\metaInterfaceObject.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

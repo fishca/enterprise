@@ -52,6 +52,64 @@ void CDocMDIFrame::ShowProperty()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "frontend/docView/docManager.h"
+
+void CDocMDIFrame::ActivateView(CMetaView* view, bool activate) {
+
+	if (m_docToolbar != nullptr) {
+
+		wxAuiPaneInfo& infoToolBar = m_mgr.GetPane(m_docToolbar);
+
+		if (activate) {
+
+			m_docToolbar->Freeze();
+			m_docToolbar->Clear();
+			view->OnCreateToolbar(m_docToolbar);
+			m_docToolbar->Realize();
+
+#if wxUSE_MENUS	
+			wxFrame* viewFrame = dynamic_cast<wxFrame*>(view->GetFrame());
+			if (viewFrame != nullptr)
+				viewFrame->SetMenuBar(view->CreateMenuBar());
+#endif
+			m_docToolbar->Thaw();
+		}
+		else {
+
+			unsigned int view_count = 0;
+			for (auto& doc : m_docManager->GetDocumentsVector()) {
+				for (auto& view : doc->GetViewsVector()) view_count++;
+			}
+
+			if (view_count <= 1) {
+
+				m_docToolbar->Freeze();
+
+#if wxUSE_MENUS		
+				wxFrame* viewFrame = dynamic_cast<wxFrame*>(view->GetFrame());
+				if (viewFrame != nullptr)
+					viewFrame->SetMenuBar(nullptr);
+#endif
+				m_docToolbar->Clear();
+				m_docToolbar->Realize();
+
+				m_docToolbar->Thaw();
+			}
+		}
+
+		infoToolBar.Show(m_docToolbar->GetToolCount() > 0);
+
+		infoToolBar.BestSize(m_docToolbar->GetSize());
+		infoToolBar.FloatingSize(
+			m_docToolbar->GetSize().x,
+			m_docToolbar->GetSize().y + 25
+		);
+
+		m_mgr.Update();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include "frontend/win/dlgs/authorization.h"
 #include "frontend/visualView/ctrl/form.h"
 
@@ -127,47 +185,6 @@ IBackendValueForm* CDocMDIFrame::FindFormBySourceUniqueKey(const CUniqueKey& gui
 bool CDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 {
 	return CValueForm::UpdateFormUniqueKey(guid);
-}
-
-void CDocMDIFrame::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) {
-
-	if (m_docToolbar != nullptr) {
-
-		m_docToolbar->Freeze();
-
-		if (deactiveView != nullptr) {
-			
-			CMetaView* deactView = dynamic_cast<CMetaView*>(deactiveView);
-			
-			if (deactView != nullptr) {
-				deactView->OnRemoveToolbar(m_docToolbar);
-			}
-			
-			m_docToolbar->Clear();
-		}
-
-		wxAuiPaneInfo& infoToolBar = m_mgr.GetPane(m_docToolbar);
-
-		if (activate) {
-			CMetaView* actView = dynamic_cast<CMetaView*>(activeView);
-			if (actView != nullptr) {
-				actView->OnCreateToolbar(m_docToolbar);
-			}
-		}
-
-		m_docToolbar->Realize();
-
-		infoToolBar.Show(m_docToolbar->GetToolCount() > 0);
-
-		infoToolBar.BestSize(m_docToolbar->GetSize());
-		infoToolBar.FloatingSize(
-			m_docToolbar->GetSize().x, 
-			m_docToolbar->GetSize().y + 25
-		);
-
-		m_docToolbar->Thaw();
-		m_mgr.Update();
-	}
 }
 
 IPropertyObject* CDocMDIFrame::GetProperty() const

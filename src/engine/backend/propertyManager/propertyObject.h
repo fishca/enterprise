@@ -375,6 +375,10 @@ public:
 
 protected:
 
+	//copy & paste property 
+	bool CopyProperty(CMemoryWriter& writer) const;
+	bool PasteProperty(CMemoryReader& reader);
+
 	CPropertyCategory* m_category;
 
 private:

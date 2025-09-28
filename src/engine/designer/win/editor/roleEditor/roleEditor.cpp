@@ -15,7 +15,7 @@ CRoleEditor::CRoleEditor(wxWindow* parent,
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_checkCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxCR_EMPTY_CHECK | wxSUNKEN_BORDER);
+	m_checkCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxCR_EMPTY_CHECK | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 	m_checkCtrl->SetDoubleBuffered(true);
 	m_checkCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CRoleEditor::OnCheckItem, this);
 
@@ -27,7 +27,9 @@ CRoleEditor::CRoleEditor(wxWindow* parent,
 	treeSizer->Add(m_checkCtrl, 1, wxEXPAND);
 	mainSizer->Add(treeSizer, 1, wxEXPAND, 1);
 
-	wxSplitterWindow::SplitVertically(m_roleCtrl, m_checkCtrl, -300);
+	wxSplitterWindow::SetSashGravity(0.5);
+	wxSplitterWindow::SplitVertically(m_roleCtrl, m_checkCtrl,
+		250);
 
 	wxSplitterWindow::SetSizer(mainSizer);
 	wxSplitterWindow::Layout();
@@ -77,8 +79,6 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 }
 
 #include "frontend/artProvider/artProvider.h"
-
-#define metadataName _("metaData")
 
 #define commonName _("common")
 #define commonFormsName _("common forms")
@@ -168,7 +168,7 @@ void CRoleEditor::FillData()
 {
 	IMetaData* metaData = m_metaRole->GetMetaData();
 	wxASSERT(metaData);
-	IMetaObject *commonObject = commonMetaData->GetCommonMetaObject();
+	IMetaObject* commonObject = commonMetaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_roleCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());

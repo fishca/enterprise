@@ -1,9 +1,17 @@
-﻿#ifndef __role_h__
-#define __role_h__
+﻿#ifndef __ROLE_HELPER_H__
+#define __ROLE_HELPER_H__
 
 #include "backend_core.h"
 
-class IAccessObject;
+//********************************************************************************************
+//*                                     Defines                                              *
+//********************************************************************************************
+
+class BACKEND_API IAccessObject;
+
+//********************************************************************************************
+//*										 Role												 *
+//********************************************************************************************
 
 class BACKEND_API CRole {
 	wxString m_roleName;
@@ -32,6 +40,8 @@ public:
 
 	friend class IAccessObject;
 };
+
+#include "backend/fileSystem/fs.h"
 
 class BACKEND_API IAccessObject {
 public:
@@ -84,8 +94,12 @@ public:
 
 protected:
 
-	virtual void DoSetRight(const CRole* role) {}
 	virtual bool DoAccessRight(const CRole* role) const { return true; }
+	virtual void DoSetRight(const CRole* role, const bool& set) {}
+
+	//load & save role in metaobject 
+	bool LoadRole(CMemoryReader& reader);
+	bool SaveRole(CMemoryWriter& writer = CMemoryWriter());
 
 	/**
 	* Añade una propiedad al objeto.
@@ -95,7 +109,6 @@ protected:
 	* Los objetos siempre se crearán a través del registro de descriptores.
 	*/
 	void AddRole(CRole* value);
-
 
 	template <typename... Args>
 	inline CRole* CreateRole(Args&&... args) {
@@ -108,6 +121,5 @@ protected:
 
 	std::vector<std::pair<wxString, CRole*>> m_roles;
 };
-
 
 #endif

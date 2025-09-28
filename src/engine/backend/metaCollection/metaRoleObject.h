@@ -4,7 +4,7 @@
 #include "metaObject.h"
 
 class BACKEND_API CMetaObjectRole : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectModule);
+	wxDECLARE_DYNAMIC_CLASS(CMetaObjectRole);
 protected:
 	enum
 	{

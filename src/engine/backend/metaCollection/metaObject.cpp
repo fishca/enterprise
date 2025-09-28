@@ -76,23 +76,7 @@ m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaul
 
 IMetaObject::~IMetaObject()
 {
-	//if (GetParent()) GetParent()->RemoveChild(this);
 	wxDELETE(m_methodHelper);
-}
-
-bool IMetaObject::LoadRole(CMemoryReader& dataReader)
-{
-	unsigned int countRole = dataReader.r_u32(); m_valRoles.clear();
-	for (unsigned int idx = 0; idx < countRole; idx++) {
-		unsigned int countData = dataReader.r_u32();
-		meta_identifier_t id = dataReader.r_s32();
-		for (unsigned int idc = 0; idc < countData; idc++) {
-			wxString roleName = dataReader.r_stringZ();
-			bool roleValue = dataReader.r_u8();
-			m_valRoles[id].insert_or_assign(roleName, roleValue);
-		}
-	}
-	return true;
 }
 
 bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
@@ -118,87 +102,15 @@ bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 		MarkAsDeleted();
 	}
 
-	//load roles 
-	if (!LoadRole(dataReader)) {
+	//load interface 
+	if (!LoadInterface(dataReader))
 		return false;
-	}
+
+	//load roles 
+	if (!LoadRole(dataReader))
+		return false;
 
 	return LoadData(dataReader);
-}
-
-bool IMetaObject::SaveRole(CMemoryWriter& dataWritter)
-{
-	dataWritter.w_u32(m_valRoles.size());
-	for (auto role_id : m_valRoles) {
-		dataWritter.w_u32(role_id.second.size());
-		dataWritter.w_s32(role_id.first); // role id
-		for (auto role_data : role_id.second) {
-			dataWritter.w_stringZ(role_data.first); //strName role
-			dataWritter.w_u8(role_data.second); // value true/false
-		}
-	}
-
-	return true;
-}
-
-#define propBlock 0x00023456
-#define eventBlock 0x00023457
-
-bool IMetaObject::CopyProperty(CMemoryWriter& writter) const
-{
-	CMemoryWriter propWritter;
-	for (unsigned int idx = 0; idx < GetPropertyCount(); idx++) {
-		IProperty* prop = GetProperty(idx);
-		wxASSERT(prop);
-		CMemoryWriter propDataWritter;
-		propDataWritter.w_stringZ(prop->GetName());
-		if (!prop->CopyData(propDataWritter))
-			return false;
-		propWritter.w_chunk(idx, propDataWritter.pointer(), propDataWritter.size());
-	}
-
-	writter.w_chunk(propBlock, propWritter.pointer(), propWritter.size());
-
-	CMemoryWriter eventWritter;
-	for (unsigned int idx = 0; idx < GetEventCount(); idx++) {
-		IEvent* event = GetEvent(idx);
-		wxASSERT(event);
-		CMemoryWriter eventDataWritter;
-		eventDataWritter.w_stringZ(event->GetName());
-		if (!event->CopyData(eventDataWritter))
-			return false;
-		eventWritter.w_chunk(idx, eventDataWritter.pointer(), eventDataWritter.size());
-	}
-
-	writter.w_chunk(eventBlock, eventWritter.pointer(), eventWritter.size());
-	return true;
-}
-
-bool IMetaObject::PasteProperty(CMemoryReader& reader)
-{
-	std::shared_ptr <CMemoryReader>propReader(reader.open_chunk(propBlock));
-	if (propReader != nullptr) {
-		for (u64 iter_pos = 0; ; iter_pos++) {
-			std::shared_ptr <CMemoryReader>propDataReader(propReader->open_chunk(iter_pos));
-			if (propDataReader == nullptr)
-				break;
-			IProperty* prop = GetProperty(propDataReader->r_stringZ());
-			if (prop != nullptr && !prop->PasteData(*propDataReader))
-				return false;
-		}
-	}
-	std::shared_ptr <CMemoryReader>eventReader(reader.open_chunk(eventBlock));
-	if (eventReader != nullptr) {
-		for (u64 iter_pos = 0; ; iter_pos++) {
-			std::shared_ptr <CMemoryReader>eventDataReader(eventReader->open_chunk(iter_pos));
-			if (eventDataReader == nullptr)
-				break;
-			IEvent* event = GetEvent(eventDataReader->r_stringZ());
-			if (event != nullptr && !event->PasteData(*eventDataReader))
-				return false;
-		};
-	}
-	return true;
 }
 
 bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
@@ -220,10 +132,13 @@ bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 	//special info deleted
 	dataWritter.w_u8(IsDeleted());
 
-	//save roles 
-	if (!SaveRole(dataWritter)) {
+	//save interface 
+	if (!SaveInterface(dataWritter))
 		return false;
-	}
+
+	//save roles 
+	if (!SaveRole(dataWritter))
+		return false;
 
 	return SaveData(dataWritter);
 }
@@ -324,8 +239,14 @@ bool IMetaObject::OnAfterCloseMetaObject()
 	return true;
 }
 
-#pragma region role 
-void IMetaObject::DoSetRight(const CRole* role)
+#pragma region interface_h
+void IMetaObject::DoSetInterface(const meta_identifier_t& id, const bool& val)
+{
+	m_metaData->Modify(true);
+}
+#pragma endregion
+#pragma region role_h 
+void IMetaObject::DoSetRight(const CRole* role, const bool& val)
 {
 	m_metaData->Modify(true);
 }

@@ -161,14 +161,9 @@ public:
 	// Called by valueFramework if created automatically by the default document
 	// manager class: gives view a chance to initialise
 	virtual bool OnCreate(CMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) { return true; }
-
-	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
-
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) {}
-	virtual void OnRemoveToolbar(wxAuiToolBar* toolbar) {}
 
-	virtual void OnMenuItemClicked(int id) {}
-
+	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override {}
 	virtual void OnUpdate(wxView* sender, wxObject* hint = NULL) {}
 
 	virtual void OnDraw(wxDC* dc) override {}
@@ -177,9 +172,6 @@ public:
 	// A view's window can call this to notify the view it is (in)active.
 	// The function then notifies the document manager.
 	virtual void Activate(bool activate) override;
-
-protected:
-	void OnViewMenuClicked(wxCommandEvent& event);
 };
 
 #endif

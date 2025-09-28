@@ -198,6 +198,8 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 	const wxTreeItemId& item = GetSelectionIdentifier();
 	if (!item.IsOk()) return nullptr;
 
+	Freeze();
+
 	IMetaObject* createdObject = NewItem(
 		GetClassIdentifier(),
 		GetMetaIdentifier()
@@ -212,6 +214,8 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
+
+	Thaw();
 
 	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;

@@ -13,23 +13,12 @@
 // The view using a standard wxTextCtrl to show its contents
 class CFormEditView : public CMetaView {
 
-	void OnCopy(wxCommandEvent& WXUNUSED(event)) {
-		m_visualNotebook->Copy();
-	}
-
-	void OnPaste(wxCommandEvent& WXUNUSED(event)) {
-		m_visualNotebook->Paste();
-	}
-
-	void OnSelectAll(wxCommandEvent& WXUNUSED(event)) {
-		m_visualNotebook->SelectAll();
-	}
+	void OnCopy(wxCommandEvent& WXUNUSED(event)) { m_visualNotebook->Copy(); }
+	void OnPaste(wxCommandEvent& WXUNUSED(event)) { m_visualNotebook->Paste(); }
+	void OnSelectAll(wxCommandEvent& WXUNUSED(event)) { m_visualNotebook->SelectAll(); }
 
 	void OnFind(wxFindDialogEvent& event) {
-		m_visualNotebook->FindText(
-			event.GetFindString(),
-			event.GetFlags()
-		);
+		m_visualNotebook->FindText(event.GetFindString(), event.GetFlags());
 	}
 
 public:
@@ -41,6 +30,8 @@ public:
 	CFormEditView() : CMetaView() {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
+
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint) override;
 	virtual void OnDraw(wxDC* dc) override;
@@ -48,18 +39,24 @@ public:
 
 	virtual wxPrintout* OnCreatePrintout() override;
 
-	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
-	virtual void OnRemoveToolbar(wxAuiToolBar* toolbar) override;
-
 #if wxUSE_MENUS		
 	virtual wxMenuBar* CreateMenuBar() const;
 #endif // wxUSE_MENUS
 
 protected:
 
-	void OnMenuClicked(wxCommandEvent& event);
+	void OnMenuEvent(wxCommandEvent& event);
 
 private:
+
+	struct CControlData {
+
+		wxString m_name;
+		wxBitmap m_bmp;
+		wxWindowID m_id;
+	};
+
+	std::vector< CControlData> m_controlDataArray;
 
 	CVisualEditorNotebook* m_visualNotebook;
 

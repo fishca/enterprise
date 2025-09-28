@@ -190,6 +190,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 		//if (metaObjectValue != nullptr) SetCaption(metaObjectValue->GetSynonym());
 	}
 	else {
+
 		CValueToolbar* mainToolBar =
 			wxDynamicCast(
 				CValueForm::CreateControl(wxT("toolbar")), CValueToolbar
@@ -202,14 +203,21 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 		const CActionCollection& actionData = CValueForm::GetActionCollection(formType);
 		for (unsigned int idx = 0; idx < actionData.GetCount(); idx++) {
-			CValueToolBarItem* toolBarItem =
-				wxDynamicCast(
-					CValueForm::CreateControl(wxT("tool"), mainToolBar), CValueToolBarItem
-				);
+
 			const action_identifier_t& id = actionData.GetID(idx);
-			toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(id));
-			toolBarItem->SetCaption(actionData.GetCaptionByID(id));
-			toolBarItem->SetAction(id);
+
+			if (id != wxNOT_FOUND) {
+				CValueToolBarItem* toolBarItem =
+					wxDynamicCast(
+						CValueForm::CreateControl(wxT("tool"), mainToolBar), CValueToolBarItem
+					);
+				toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(id));
+				toolBarItem->SetCaption(actionData.GetCaptionByID(id));
+				toolBarItem->SetAction(id);
+			}
+			else {
+				CValueForm::CreateControl(wxT("toolSeparator"), mainToolBar);
+			}
 		}
 
 		//SetCaption(m_metaFormObject != nullptr ? m_metaFormObject->GetSynonym() : _("Form"));

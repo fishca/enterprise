@@ -14,7 +14,7 @@
 #include "mainFrame/watch/watchWindow.h"
 
 enum {
-	
+
 	wxID_DESIGNER_DEBUG_START = 10000,
 	wxID_DESIGNER_DEBUG_START_WITHOUT_DEBUGGING,
 	wxID_DESIGNER_DEBUG_ATTACH_FOR_DEBUGGING,
@@ -49,47 +49,7 @@ enum {
 
 #define mainFrame	(CDocDesignerMDIFrame::GetFrame())
 
-class CDocDesignerMDIFrame : public CDocMDIFrame
-{
-	wxMenu* m_menuFile;
-	wxMenu* m_menuEdit;
-	wxMenu* m_menuConfiguration;
-	wxMenu* m_menuDebug;
-	wxMenu* m_menuSetting;
-	wxMenu* m_menuAdministration;
-	wxMenu* m_menuHelp;
-
-protected:
-
-	CMetadataTree* m_metadataTree;
-
-	COutputWindow* m_outputWindow;
-	CStackWindow* m_stackWindow;
-	CWatchWindow* m_watchWindow;
-	CLocalWindow* m_localWindow;
-
-protected:
-
-	void InitializeDefaultMenu();
-
-	virtual void CreateMetadataPane();
-	virtual void CreateBottomPane();
-	virtual void CreateWideGui();
-
-	virtual bool AllowRun() const;
-	virtual bool AllowClose() const;
-
-	/**
-	* Adds the default profile to the hot keys.
-	*/
-	void SetDefaultHotKeys();
-
-	/**
-	* Updates all of the open editors with the current font, color, etc.
-	* options.
-	*/
-	void UpdateEditorOptions();
-
+class CDocDesignerMDIFrame : public CDocMDIFrame {
 public:
 
 	static CDocDesignerMDIFrame* GetFrame();
@@ -103,7 +63,7 @@ public:
 	void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	void ClearMessage() { m_outputWindow->ClearAll(); }
 
-	void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const { 
+	void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {
 		m_outputWindow->SharedOutput(strErrorMessage, eStatusMessage::eStatusMessage_Error, strFileName, strDocPath, line);
 	}
 
@@ -133,6 +93,26 @@ public:
 	virtual void OnDestroyConfiguration(enum eConfigType cfg);
 protected:
 
+	void InitializeDefaultMenu();
+
+	virtual void CreateMetadataPane();
+	virtual void CreateBottomPane();
+	virtual void CreateWideGui();
+
+	virtual bool AllowRun() const;
+	virtual bool AllowClose() const;
+
+	/**
+	* Adds the default profile to the hot keys.
+	*/
+	void SetDefaultHotKeys();
+
+	/**
+	* Updates all of the open editors with the current font, color, etc.
+	* options.
+	*/
+	void UpdateEditorOptions();
+
 	//events 
 	void OnToolbarClicked(wxEvent& event);
 
@@ -152,5 +132,22 @@ protected:
 	void OnConnection(wxCommandEvent& event);
 
 	void OnAbout(wxCommandEvent& event);
+
+private:
+
+	wxMenu* m_menuFile;
+	wxMenu* m_menuEdit;
+	wxMenu* m_menuConfiguration;
+	wxMenu* m_menuDebug;
+	wxMenu* m_menuSetting;
+	wxMenu* m_menuAdministration;
+	wxMenu* m_menuHelp;
+
+	CMetadataTree* m_metadataTree;
+
+	COutputWindow* m_outputWindow;
+	CStackWindow* m_stackWindow;
+	CWatchWindow* m_watchWindow;
+	CLocalWindow* m_localWindow;
 };
 #endif 

@@ -101,7 +101,7 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 			if (cmdProc != nullptr)
 				newDocument->SetCommandProcessor(cmdProc);
 
-			newDocument->UpdateAllViews();
+			//newDocument->UpdateAllViews();
 		}
 		else {
 

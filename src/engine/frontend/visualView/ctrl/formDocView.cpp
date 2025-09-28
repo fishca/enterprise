@@ -59,8 +59,8 @@ bool CVisualDocument::OnCreate(const wxString& path, long flags)
 	CVisualDocument::SetFilename(m_valueForm->GetFormKey());
 
 	if (IsVisualDemonstrationDoc()) m_childDoc = false;
-	return CMetaDocument::OnCreate(path, flags);
 
+	return CMetaDocument::OnCreate(path, flags);
 }
 
 bool CVisualDocument::OnSaveModified()
@@ -375,8 +375,10 @@ CVisualDocument* CValueForm::GetVisualDocument() const
 {
 	for (auto& visualDocument : s_createdDocFormArray) {
 		if (visualDocument != nullptr &&
-			visualDocument->CompareFormKey(m_formKey))
+			visualDocument->CompareFormKey(m_formKey)) 
+		{
 			return visualDocument;
+		}
 	}
 
 	return nullptr;
@@ -395,10 +397,10 @@ IMetaObjectGenericData* CValueForm::GetMetaObject() const
 wxString CValueForm::GetControlCaption() const
 {
 	if (m_propertyCaption->IsEmptyProperty()) {
-		
+
 		const IMetaObjectGenericData* metaSource = GetMetaObject();
 		if (metaSource != nullptr) return metaSource->GetSynonym();
-		
+
 		const IMetaObjectForm* metaForm = GetFormMetaObject();
 		if (metaForm != nullptr) return metaForm->GetSynonym();
 	}

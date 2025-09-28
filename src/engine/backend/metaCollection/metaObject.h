@@ -4,6 +4,8 @@
 #include "backend/propertyManager/propertyManager.h"
 #include "backend/metaCtor.h"
 #include "backend/backend_metatree.h"
+
+#include "backend/interfaceHelper.h"
 #include "backend/roleHelper.h"
 
 //*******************************************************************************
@@ -21,7 +23,7 @@ const class_identifier_t g_metaCommonFormCLSID = string_to_clsid("MD_CFRM");
 const class_identifier_t g_metaCommonTemplateCLSID = string_to_clsid("MD_CTMP");
 
 const class_identifier_t g_metaRoleCLSID = string_to_clsid("MD_ROLE");
-const class_identifier_t g_metaInterfaceCLSID = string_to_clsid("MD_INTF");
+const class_identifier_t g_metaInterfaceCLSID = string_to_clsid("MD_SSYST");
 
 //ADVANCED OBJECTS
 const class_identifier_t g_metaAttributeCLSID = string_to_clsid("MD_ATTR");
@@ -144,8 +146,12 @@ enum metaObjectFlags {
 #define repairMetaTable  0x0008000
 
 class BACKEND_API IMetaObject :
+	
+	public CValue,
+
 	public IPropertyObjectHelper<IMetaObject>,
-	public IAccessObject, public CValue {
+	public IAccessObject, public IInterfaceObject {
+
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
 
 protected:
@@ -407,10 +413,6 @@ public:
 
 protected:
 
-	//load & save event in control 
-	virtual bool LoadRole(CMemoryReader& reader);
-	virtual bool SaveRole(CMemoryWriter& writer = CMemoryWriter());
-
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags) { return true; }
 
@@ -418,10 +420,6 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader) { return true; }
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
 	virtual bool DeleteData() { return true; }
-
-	//copy & paste property 
-	bool CopyProperty(CMemoryWriter& writer) const;
-	bool PasteProperty(CMemoryReader& reader);
 
 protected:
 
@@ -494,8 +492,12 @@ protected:
 		return createdObject;
 	}
 
-#pragma region role 
-	virtual void DoSetRight(const CRole* role);
+#pragma region interface_h
+	virtual void DoSetInterface(const meta_identifier_t& id, const bool& val = true);
+#pragma endregion
+
+#pragma region role_h
+	virtual void DoSetRight(const CRole* role, const bool& val = true);
 #pragma endregion
 
 protected:

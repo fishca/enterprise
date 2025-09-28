@@ -5,10 +5,7 @@
 #include "mainFrame/metatree/metatreeWnd.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CMetadataView : public CMetaView
-{
-	CMetadataTree* m_metaTree;
-
+class CMetadataView : public CMetaView {
 public:
 
 	CMetadataView() : CMetaView() {}
@@ -20,6 +17,8 @@ public:
 	CMetadataTree* GetMetaTree() const {  return m_metaTree; }
 
 protected:
+
+	CMetadataTree* m_metaTree;
 
 	wxDECLARE_DYNAMIC_CLASS(CMetadataView);
 };

@@ -1,7 +1,13 @@
 #include "moduleEditor.h"
-
 #include "frontend/mainFrame/mainFrame.h"
-#include "backend/metaDefines.h"
+
+enum {
+	wxID_ADD_COMMENTS = wxID_HIGHEST + 10000,
+	wxID_REMOVE_COMMENTS,
+	wxID_SYNTAX_CONTROL,
+	wxID_GOTOLINE,
+	wxID_PROCEDURES_FUNCTIONS
+};
 
 // ----------------------------------------------------------------------------
 // CTextEditView implementation
@@ -15,6 +21,13 @@ EVT_MENU(wxID_PASTE, CModuleEditView::OnPaste)
 EVT_MENU(wxID_SELECTALL, CModuleEditView::OnSelectAll)
 EVT_FIND(wxID_ANY, CModuleEditView::OnFind)
 EVT_FIND_NEXT(wxID_ANY, CModuleEditView::OnFind)
+
+EVT_MENU(wxID_ADD_COMMENTS, CModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_REMOVE_COMMENTS, CModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_SYNTAX_CONTROL, CModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_GOTOLINE, CModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_PROCEDURES_FUNCTIONS, CModuleEditView::OnMenuEvent)
+
 wxEND_EVENT_TABLE()
 
 bool CModuleEditView::OnCreate(CMetaDocument* doc, long flags)
@@ -28,17 +41,6 @@ bool CModuleEditView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags)
 		&& m_codeEditor->LoadModule();
 }
-
-enum
-{
-	wxID_ADD_COMMENTS = wxID_HIGHEST + 10000,
-	wxID_REMOVE_COMMENTS,
-
-	wxID_SYNTAX_CONTROL,
-
-	wxID_GOTOLINE,
-	wxID_PROCEDURES_FUNCTIONS
-};
 
 #include "frontend/artProvider/artProvider.h"
 
@@ -59,13 +61,6 @@ void CModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 		toolbar->AddTool(wxID_GOTOLINE, _("Goto line"), wxArtProvider::GetBitmap(wxART_GOTO_LINE, wxART_DOC_MODULE), _("Goto"), wxItemKind::wxITEM_NORMAL);
 		toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmap(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
 	}
-
-	toolbar->Bind(wxEVT_MENU, &CModuleEditView::OnMenuClicked, this);
-}
-
-void CModuleEditView::OnRemoveToolbar(wxAuiToolBar* toolbar)
-{
-	toolbar->Unbind(wxEVT_MENU, &CModuleEditView::OnMenuClicked, this);
 }
 
 void CModuleEditView::OnDraw(wxDC* WXUNUSED(dc))
@@ -106,7 +101,7 @@ wxPrintout* CModuleEditView::OnCreatePrintout()
 #include "win/dlg/lineInput/lineInput.h"
 #include "win/dlg/functionSearcher/functionSearcher.h"
 
-void CModuleEditView::OnMenuClicked(wxCommandEvent& event)
+void CModuleEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	if (event.GetId() == wxID_ADD_COMMENTS) {
 		int nStartLine, nEndLine;
@@ -160,7 +155,7 @@ bool CModuleDocument::OnCreate(const wxString& path, long flags)
 		return false;
 
 	//return GetCodeEditor()->LoadModule();
-	return true; 
+	return true;
 }
 
 bool CModuleDocument::OnOpenDocument(const wxString& filename)

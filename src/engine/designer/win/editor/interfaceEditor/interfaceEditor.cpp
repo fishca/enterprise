@@ -3,297 +3,206 @@
 #define ICON_SIZE 16
 
 CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
-	wxWindowID winid, CMetaDocument* document, IMetaObject* metaObject) :
-	wxPanel(parent, winid), m_document(document), m_metaObject(metaObject)
+	wxWindowID winid, IMetaObject* metaObject) :
+	wxWindow(parent, winid, wxDefaultPosition, wxDefaultSize), m_metaInterface(metaObject)
 {
-	m_metaTreeToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT);
-	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
-	m_metaTreeToolbar->AddTool(ID_MENUEDIT_NEW, _("New"), wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
-	m_metaTreeToolbar->AddTool(ID_MENUEDIT_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU));
-	m_metaTreeToolbar->AddTool(ID_MENUEDIT_REMOVE, _("Remove"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
-	m_metaTreeToolbar->Realize();
+	m_interfaceCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
+	m_interfaceCtrl->SetDoubleBuffered(true);
+	m_interfaceCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CInterfaceEditor::OnCheckItem, this);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CInterfaceEditor::OnCreateItem, this, ID_MENUEDIT_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CInterfaceEditor::OnEditItem, this, ID_MENUEDIT_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CInterfaceEditor::OnRemoveItem, this, ID_MENUEDIT_REMOVE);
-
-	m_menuCtrl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_SINGLE | wxTR_TWIST_BUTTONS | wxSIMPLE_BORDER);
-	m_menuCtrl->SetDoubleBuffered(true);
-
-	m_menuCtrl->Bind(wxEVT_TREE_SEL_CHANGED, &CInterfaceEditor::OnSelectedItem, this);
-	m_menuCtrl->Bind(wxEVT_TREE_BEGIN_DRAG, &CInterfaceEditor::OnBeginDrag, this);
-	m_menuCtrl->Bind(wxEVT_TREE_END_DRAG, &CInterfaceEditor::OnEndDrag, this);
-	m_menuCtrl->Bind(wxEVT_TREE_ITEM_RIGHT_CLICK, &CInterfaceEditor::OnRightClickItem, this);
-
-	m_menuCtrl->Bind(wxEVT_MENU, &CInterfaceEditor::OnCreateItem, this, ID_MENUEDIT_NEW);
-	m_menuCtrl->Bind(wxEVT_MENU, &CInterfaceEditor::OnEditItem, this, ID_MENUEDIT_EDIT);
-	m_menuCtrl->Bind(wxEVT_MENU, &CInterfaceEditor::OnRemoveItem, this, ID_MENUEDIT_REMOVE);
-
-	CreateDefaultMenu();
-
-	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-	mainSizer->Add(m_metaTreeToolbar, 0, wxEXPAND, 1);
-	mainSizer->Add(m_menuCtrl, 1, wxEXPAND, 1);
-	wxPanel::SetSizer(mainSizer);
-	wxPanel::Layout();
-}
-
-CInterfaceEditor::~CInterfaceEditor() {
-
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CInterfaceEditor::OnCreateItem, this, ID_MENUEDIT_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CInterfaceEditor::OnEditItem, this, ID_MENUEDIT_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CInterfaceEditor::OnRemoveItem, this, ID_MENUEDIT_REMOVE);
-}
-
-void CInterfaceEditor::OnCreateItem(wxCommandEvent& event) {
-
-	wxItemId selection = m_menuCtrl->GetSelection();
-	if (!selection.IsOk())
-		return;
-	CInterfaceEditor::AppendMenu(selection, _("new item"));
-	event.Skip();
-}
-
-void CInterfaceEditor::OnEditItem(wxCommandEvent& event) {
-	event.Skip();
-}
-
-void CInterfaceEditor::OnRemoveItem(wxCommandEvent& event) {
-	wxItemId selection = m_menuCtrl->GetSelection();
-	if (!selection.IsOk())
-		return;
-	m_menuCtrl->Delete(selection);
-	event.Skip();
-}
-
-void CInterfaceEditor::OnPropertyItem(wxCommandEvent& event) {
-	event.Skip();
-}
-
-void CInterfaceEditor::OnBeginDrag(wxTreeEvent& event) {
-
-	// need to explicitly allow drag
-	if (event.GetItem() == m_menuCtrl->GetRootItem())
-		return;
-
-	m_draggedItem = event.GetItem();
-	event.Allow();
-}
-
-void CInterfaceEditor::OnEndDrag(wxTreeEvent& event) {
-
-	bool copy = ::wxGetKeyState(WXK_CONTROL);
-	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
-	m_draggedItem = (wxTreeItemId)0l;
-
-	// ensure that itemDst is not itemSrc or a child of itemSrc
-	wxTreeItemId item = itemDst;
-	while (item.IsOk()) {
-		if (item == itemSrc)
-			return;
-		item = m_menuCtrl->GetItemParent(item);
-	}
-
-	event.Skip();
-}
-
-#include "frontend/mainFrame/mainFrame.h"
-
-void CInterfaceEditor::OnRightClickItem(wxTreeEvent& event)
-{
-	wxMenu menu; wxMenuItem* item = nullptr;
-
-	m_menuCtrl->SelectItem(event.GetItem());
-
-	item = menu.Append(ID_MENUEDIT_NEW, _("New"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
-	item = menu.Append(ID_MENUEDIT_EDIT, _("Edit"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU));
-	item = menu.Append(ID_MENUEDIT_REMOVE, _("Remove"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
-
-	if (m_menuCtrl->PopupMenu(&menu, event.GetPoint())) {
-		event.Skip();
-	}
-}
-
-void CInterfaceEditor::OnSelectedItem(wxTreeEvent& event)
-{
-	// need to explicitly allow drag
-	if (event.GetItem() == m_menuCtrl->GetRootItem())
-		return;
-	wxInterfaceItemData* itemData = dynamic_cast<wxInterfaceItemData*>(m_menuCtrl->GetItemData(event.GetItem()));
-	objectInspector->SelectObject(itemData->GetProperty());
-	event.Skip();
-}
-
-#include "backend/metaCollection/metaObject.h"
-
-wxTreeItemId CInterfaceEditor::AppendMenu(const wxTreeItemId& parent, wxStandardID id) const
-{
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-	wxTreeItemId newItem = m_menuCtrl->AppendItem(parent, wxGetStockLabel(id, wxSTOCK_NOFLAGS),
-		imageIndex,
-		imageIndex,
-		new wxInterfaceItemData(eMenuType::eMenu, wxGetStockLabel(id, wxSTOCK_NOFLAGS))
-	);
-	m_menuCtrl->SelectItem(newItem);
-	return newItem;
-}
-
-wxTreeItemId CInterfaceEditor::AppendMenu(const wxTreeItemId& parent, const wxString& name) const
-{
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-	wxTreeItemId newItem = m_menuCtrl->AppendItem(parent, name,
-		imageIndex,
-		imageIndex,
-		new wxInterfaceItemData(eMenuType::eMenu, name)
-	);
-	m_menuCtrl->SelectItem(newItem);
-	return newItem;
-}
-
-wxTreeItemId CInterfaceEditor::AppendSubMenu(const wxTreeItemId& parent, wxStandardID id) const
-{
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-	wxTreeItemId newItem = m_menuCtrl->AppendItem(parent, wxGetStockLabel(id, wxSTOCK_NOFLAGS),
-		imageIndex,
-		imageIndex,
-		new wxInterfaceItemData(eMenuType::eSubMenu, wxGetStockLabel(id, wxSTOCK_NOFLAGS))
-	);
-	m_menuCtrl->SelectItem(newItem);
-	return newItem;
-}
-
-wxTreeItemId CInterfaceEditor::AppendSubMenu(const wxTreeItemId& parent, const wxString& name) const
-{
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-	wxTreeItemId newItem = m_menuCtrl->AppendItem(parent, name,
-		imageIndex,
-		imageIndex,
-		new wxInterfaceItemData(eMenuType::eSubMenu, name)
-	);
-	m_menuCtrl->SelectItem(newItem);
-	return newItem;
-}
-
-wxTreeItemId CInterfaceEditor::AppendSeparator(const wxTreeItemId& parent) const
-{
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-	wxTreeItemId newItem = m_menuCtrl->AppendItem(parent, wxT("---...---"),
-		imageIndex,
-		imageIndex,
-		new wxInterfaceItemData(eMenuType::eSeparator)
-	);
-	m_menuCtrl->SelectItem(newItem);
-	return newItem;
-}
-
-void CInterfaceEditor::CreateDefaultMenu()
-{
 	//set image list
-	m_menuCtrl->AssignImageList(
+	m_interfaceCtrl->SetImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_menuCtrl->DeleteAllItems();
+	InitInterface();
 
-	wxImageList* imageList = m_menuCtrl->GetImageList();
-	wxASSERT(imageList);
-	int imageIndex = imageList->Add(m_metaObject->GetIcon());
-
-	const wxTreeItemId& root = m_menuCtrl->AddRoot(m_metaObject->GetClassName(),
-		imageIndex, imageIndex);
-
-	CInterfaceEditor::AppendSubMenu(root, wxID_FILE);
-	CInterfaceEditor::AppendSubMenu(root, wxID_EDIT);
-	CInterfaceEditor::AppendSubMenu(root, wxID_HELP);
-
-	m_menuCtrl->ExpandAll();
+	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+	mainSizer->Add(m_interfaceCtrl, 1, wxEXPAND);
+	wxWindow::SetSizer(mainSizer);
+	wxWindow::Layout();
 }
 
-void CInterfaceEditor::FillMenu(const wxTreeItemId& parent, wxMenu* menu)
+void CInterfaceEditor::OnCheckItem(wxTreeEvent& event)
 {
-	wxTreeItemIdValue cookie;
-	wxTreeItemId nextItem = m_menuCtrl->GetFirstChild(
-		parent,
-		cookie
-	);
-
-	while (nextItem.IsOk()) {
-		if (m_menuCtrl->HasChildren(nextItem)) {
-			wxMenu* child = new wxMenu;
-			FillMenu(nextItem, child);
-			menu->AppendSubMenu(child, m_menuCtrl->GetItemText(nextItem));
-		}
-		else {
-			menu->Append(wxID_ANY, m_menuCtrl->GetItemText(nextItem));
-		}
-		nextItem = m_menuCtrl->GetNextChild(nextItem, cookie);
+	wxTreeItemMetaData* data = dynamic_cast<wxTreeItemMetaData*>(
+		m_interfaceCtrl->GetItemData(event.GetItem())
+		);
+	if (data != nullptr) {
+		IInterfaceObject* metaObject = data->GetMetaObject();
+		wxASSERT(metaObject);
+		metaObject->SetInterface(m_metaInterface->GetMetaID(), event.GetExtraLong());
 	}
+
+	event.Skip();
 }
 
-#include "frontend/docView/docManager.h"
-#include "win/ctrl/menuBar.h"
+#include "frontend/artProvider/artProvider.h"
 
-bool CInterfaceEditor::TestInterface()
+#define commonName _("common")
+#define commonFormsName _("common forms")
+
+#define constantsName _("constants")
+
+#define catalogsName _("catalogs")
+#define documentsName _("documents")
+#define dataProcessorName _("data processors")
+#define reportsName _("reports")
+#define informationRegisterName _("information Registers")
+#define accumulationRegisterName _("accumulation Registers")
+
+void CInterfaceEditor::InitInterface()
 {
-	class CInterfaceDocument : public CMetaDocument {
-	public:
-		CInterfaceDocument(CMetaDocument* parent, IMetaObject* metaObject) : CMetaDocument(parent) {
-			CMetaDocument::SetIcon(metaObject->GetIcon());
-			CMetaDocument::SetMetaObject(metaObject);
-			CMetaDocument::SetTitle(_("interface demonstration"));
-			CMetaDocument::SetFilename((wxString)CGuid::newGuid());
-		}
-	};
+	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
+	wxASSERT(typeCtor);
 
-	CInterfaceDocument* interfaceDoc = new CInterfaceDocument(m_document, m_metaObject);
+	wxImageList* imageList = m_interfaceCtrl->GetImageList();
+	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(commonMetaData->GetCommonMetaObject()));
 
-	class CInterfaceView : public CMetaView {
-	public:
-		CInterfaceView(CInterfaceDocument* doc) : CMetaView() {
-			CMetaView::SetDocument(doc);
-		}
-	};
+	m_interfaceCtrl->SelectItem(m_treeMETADATA);
 
-	wxScopedPtr<CInterfaceView> view(
-		new CInterfaceView(interfaceDoc)
-	);
+	//*****************************************************************************************************
+	//*                                      Common objects                                               *
+	//*****************************************************************************************************
 
-	// create a child valueForm of appropriate class for the current mode
-	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE);
+	int imageCommonIndex = imageList->Add(wxArtProvider::GetIcon(wxART_COMMON_FOLDER, wxART_METATREE));
+	m_treeCOMMON = m_interfaceCtrl->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
-	wxTreeItemIdValue cookie;
-	wxTreeItemId nextItem = m_menuCtrl->GetFirstChild(
-		m_menuCtrl->GetRootItem(),
-		cookie
-	);
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//Create menubar 
-	CPanelMenuBar* menuBar = new CPanelMenuBar(view->GetFrame(), wxID_ANY);
+	m_treeFORMS = AppendGroupItem(m_treeCOMMON, g_metaCommonFormCLSID, commonFormsName);
 
-	while (nextItem.IsOk()) {
-		wxMenu* menu = new wxMenu;
-		if (m_menuCtrl->HasChildren(nextItem)) {
-			FillMenu(nextItem, menu);
-		}
-		menuBar->AppendMenu(menu, m_menuCtrl->GetItemText(nextItem));
-		nextItem = m_menuCtrl->GetNextChild(nextItem, cookie);
+	//*****************************************************************************************************
+	//*                                      Custom objects                                               *
+	//*****************************************************************************************************
+
+	m_treeCONSTANTS = AppendGroupItem(m_treeMETADATA, g_metaConstantCLSID, constantsName);
+	m_treeCATALOGS = AppendGroupItem(m_treeMETADATA, g_metaCatalogCLSID, catalogsName);
+	m_treeDOCUMENTS = AppendGroupItem(m_treeMETADATA, g_metaDocumentCLSID, documentsName);
+
+	m_treeDATAPROCESSORS = AppendGroupItem(m_treeMETADATA, g_metaDataProcessorCLSID, dataProcessorName);
+	m_treeREPORTS = AppendGroupItem(m_treeMETADATA, g_metaReportCLSID, reportsName);
+
+	m_treeINFORMATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaInformationRegisterCLSID, informationRegisterName);
+	m_treeACCUMULATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaAccumulationRegisterCLSID, accumulationRegisterName);
+
+	//Set item bold and name
+	m_interfaceCtrl->SetItemText(m_treeMETADATA, _("configuration"));
+	m_interfaceCtrl->SetItemBold(m_treeMETADATA);
+
+	m_interfaceCtrl->ExpandAll();
+}
+
+void CInterfaceEditor::ClearInterface() {
+
+	//*****************************************************************************************************
+	//*                                      Common objects                                               *
+	//*****************************************************************************************************
+
+	if (m_treeFORMS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeFORMS);
+
+	if (m_treeCONSTANTS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeCONSTANTS);
+
+	//*****************************************************************************************************
+	//*                                      Custom objects                                               *
+	//*****************************************************************************************************
+
+	if (m_treeCATALOGS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeCATALOGS);
+	if (m_treeDOCUMENTS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeDOCUMENTS);
+
+	if (m_treeDATAPROCESSORS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeDATAPROCESSORS);
+	if (m_treeREPORTS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeREPORTS);
+	if (m_treeINFORMATION_REGISTERS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeINFORMATION_REGISTERS);
+	if (m_treeACCUMULATION_REGISTERS.IsOk()) m_interfaceCtrl->DeleteChildren(m_treeACCUMULATION_REGISTERS);
+
+	//delete all items
+	m_interfaceCtrl->DeleteAllItems();
+
+	//Initialize tree
+	InitInterface();
+}
+
+void CInterfaceEditor::FillData()
+{
+	IMetaData* metaData = m_metaInterface->GetMetaData();
+	wxASSERT(metaData);
+	IMetaObject* commonObject = commonMetaData->GetCommonMetaObject();
+	wxASSERT(commonObject);
+
+	m_interfaceCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());
+
+	//****************************************************************
+	//*                          CommonForms                         *
+	//****************************************************************
+	for (auto commonForm : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+		if (commonForm->IsDeleted())
+			continue;
+		AppendItem(m_treeFORMS, commonForm);
 	}
 
-	if (!view->ShowFrame())
-		return false;
+	//****************************************************************
+	//*                          Constants                           *
+	//****************************************************************
+	for (auto constant : commonMetaData->GetMetaObject(g_metaConstantCLSID)) {
+		if (constant->IsDeleted())
+			continue;
+		AppendItem(m_treeCONSTANTS, constant);
+	}
 
-	return view.release() != nullptr;
+	//****************************************************************
+	//*                        Catalogs                              *
+	//****************************************************************
+	for (auto catalog : commonMetaData->GetMetaObject(g_metaCatalogCLSID)) {
+		if (catalog->IsDeleted())
+			continue;
+		AppendItem(m_treeCATALOGS, catalog);
+	}
+
+	//****************************************************************
+	//*                        Documents                             *
+	//****************************************************************
+	for (auto document : commonMetaData->GetMetaObject(g_metaDocumentCLSID)) {
+		if (document->IsDeleted())
+			continue;
+		AppendItem(m_treeDOCUMENTS, document);
+	}
+
+	//****************************************************************
+	//*                          Data processor                      *
+	//****************************************************************
+	for (auto dataProcessor : commonMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+		if (dataProcessor->IsDeleted())
+			continue;
+		AppendItem(m_treeDATAPROCESSORS, dataProcessor);
+	}
+
+	//****************************************************************
+	//*                          Report			                     *
+	//****************************************************************
+	for (auto report : commonMetaData->GetMetaObject(g_metaReportCLSID)) {
+		if (report->IsDeleted())
+			continue;
+		AppendItem(m_treeREPORTS, report);
+	}
+
+	//****************************************************************
+	//*                          Information register			     *
+	//****************************************************************
+	for (auto informationRegister : commonMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+		if (informationRegister->IsDeleted())
+			continue;
+		AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
+	}
+
+	//****************************************************************
+	//*                          Accumulation register			     *
+	//****************************************************************
+	for (auto accumulationRegister : commonMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+		if (accumulationRegister->IsDeleted())
+			continue;
+		AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);
+	}
+
+	m_interfaceCtrl->Enable(m_metaInterface->IsEnabled());
 }

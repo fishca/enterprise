@@ -448,6 +448,8 @@ public:
 	CValueForm* GetValueForm() const { return m_valueForm; }
 	void SetValueForm(CValueForm* valueForm) { m_valueForm = valueForm; }
 
+	CMetaDocument* GetEditorDocument() const { return m_document; }
+
 	bool IsEditable() const { return true; }
 	void SetReadOnly(bool readOnly = true) {}
 
@@ -744,7 +746,15 @@ public:
 		m_visualEditor->TestForm();
 	}
 
-	void RefreshEditor() {
+	bool IsEditable() const {
+		return m_visualEditor->IsEditable() &&
+			m_codeEditor->IsEditable();
+	}
+
+	CVisualEditor* GetVisualEditor() const { return m_visualEditor; }
+	CCodeEditor* GetCodeEditor() const { return m_codeEditor; }
+
+	virtual void RefreshEditor() {
 
 		if (m_visualEditor != nullptr)
 			m_visualEditor->RefreshEditor();
@@ -753,16 +763,17 @@ public:
 			m_codeEditor->RefreshEditor();
 	}
 
-	bool IsEditable() const {
-		return m_visualEditor->IsEditable() &&
-			m_codeEditor->IsEditable();
+	virtual	CValueForm* GetValueForm() const {
+		return m_visualEditor->GetValueForm();
 	}
 
-	CValueForm* GetValueForm() const { return m_visualEditor->GetValueForm(); }
-	IVisualHost* GetVisualHost() const { return m_visualEditor->GetVisualEditor(); }
+	virtual	CMetaDocument* GetEditorDocument() const {
+		return m_visualEditor->GetEditorDocument();
+	}
 
-	CVisualEditor* GetVisualEditor() const { return m_visualEditor; }
-	CCodeEditor* GetCodeEditor() const { return m_codeEditor; }
+	virtual IVisualHost* GetVisualHost() const {
+		return m_visualEditor->GetVisualEditor();
+	}
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const {
 		return new CDesignerWindow::CHighlightPaintHandler(wnd);

@@ -29,8 +29,7 @@ private:
 	virtual wxPrintout *OnCreatePrintout() override;
 	virtual void OnCreateToolbar(wxAuiToolBar *toolbar) override;
 
-	void OnToolClicked(wxCommandEvent &event);
-	void OnToolDropDown(wxAuiToolBarEvent& event);
+	void OnMenuEvent(wxCommandEvent &event);
 
 	CGrid *m_gridEditor;
 

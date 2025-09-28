@@ -6,7 +6,7 @@
     <ClCompile Include="mainFrame\mainFrameEnterprise.cpp">
       <Filter>mainFrame</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\mainFrameEnterpriseComponent.cpp">
+    <ClCompile Include="mainFrame\mainFrameEnterpriseParts.cpp">
       <Filter>mainFrame</Filter>
     </ClCompile>
     <ClCompile Include="mainFrame\mainFrameEnterpriseEvent.cpp">
@@ -32,6 +32,9 @@
     </ClCompile>
     <ClCompile Include="mainFrame\output\outputWindow.cpp">
       <Filter>mainFrame\output</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\mainFrameEnterpriseInterface.cpp">
+      <Filter>mainFrame</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

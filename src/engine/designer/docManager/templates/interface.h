@@ -15,14 +15,9 @@ public:
 	CInterfaceEditView() : CMetaView() {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
-	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
+	virtual void OnUpdate(wxView* sender, wxObject* hint) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
-
-#if wxUSE_MENUS		
-	virtual wxMenuBar* CreateMenuBar() const;
-	virtual void OnMenuItemClicked(int id);
-#endif // wxUSE_MENUS
 
 private:
 

@@ -50,7 +50,7 @@ bool CMetadataBrowserDocument::OnCreate(const wxString& path, long flags)
 {
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
-
+	
 	return GetMetaTree()->Load(m_metaData);
 }
 

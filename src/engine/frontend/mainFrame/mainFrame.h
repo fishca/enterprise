@@ -36,65 +36,9 @@ class CMetaView;
 #define wxAUI_DEFAULT_COLOUR wxColour(41, 57, 85) 
 #define wxAUI_WHITE_COLOUR wxColour(255, 255, 255) 
 
-class FRONTEND_API CDocMDIFrame : public IBackendDocMDIFrame, public wxAuiMDIParentFrame,
-	public wxDocParentFrameAnyBase
-{
-	static CDocMDIFrame* s_instance;
-protected:
-
-	class CFrameManager : public wxAuiManager {
-	public:
-		CFrameManager(wxWindow* managedWnd = nullptr,
-			unsigned int flags = wxAUI_MGR_DEFAULT) :
-			wxAuiManager(managedWnd, flags) {
-		}
-
-		void Refresh() { Repaint(); }
-	};
-
-	KeyBinder             m_keyBinder;
-	FontColorSettings     m_fontColorSettings;
-	EditorSettings        m_editorSettings;
-
-	// Create frame manager 
-	CFrameManager m_mgr;
-
-	wxAuiToolBar* m_mainFrameToolbar;
-	wxAuiToolBar* m_docToolbar;
-
-protected:
-
-	CObjectInspector* m_objectInspector;
-
-protected:
-
-	virtual void CreatePropertyPane();
-
-public:
-
-	bool IsShownProperty();
-
-	/**
-	* Show property in mainFrame
-	*/
-	void ShowProperty();
-
-public:
-
-	static CObjectInspector* GetObjectInspector() {
-		if (s_instance != nullptr)
-			return s_instance->m_objectInspector;
-		return nullptr;
-	}
-
-	static CDocMDIFrame* GetFrame() { return s_instance; }
-
-	// Force the static appData instance to Init()
-	static void InitFrame(CDocMDIFrame* mf);
-	static bool ShowFrame();
-
-	static void DestroyFrame();
-
+class FRONTEND_API CDocMDIFrame :
+	public IBackendDocMDIFrame, public wxAuiMDIParentFrame,
+	public wxDocParentFrameAnyBase {
 public:
 
 	static wxWindow* CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
@@ -134,8 +78,6 @@ public:
 	virtual wxAuiToolBar* GetMainFrameToolbar() const { return m_mainFrameToolbar; }
 	virtual wxAuiToolBar* GetDocToolbar() const { return m_docToolbar; }
 
-	void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView);
-
 	virtual wxFrame* GetFrameHandler() const { return s_instance; }
 
 	virtual IPropertyObject* GetProperty() const;
@@ -171,8 +113,6 @@ protected:
 	virtual bool AllowRun() const { return true; }
 	virtual bool AllowClose() const { return true; }
 
-protected:
-
 	CDocMDIFrame(const wxString& title,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
@@ -189,15 +129,65 @@ public:
 
 	virtual ~CDocMDIFrame();
 
-	//Events 
+	static CObjectInspector* GetObjectInspector() {
+		if (s_instance != nullptr)
+			return s_instance->m_objectInspector;
+		return nullptr;
+	}
+
+	static CDocMDIFrame* GetFrame() { return s_instance; }
+
+	// Force the static appData instance to Init()
+	static void InitFrame(CDocMDIFrame* mf);
+	static bool ShowFrame();
+
+	static void DestroyFrame();
+
+	/**
+	* Show property in mainFrame
+	*/
+	bool IsShownProperty();
+	void ShowProperty();
+
+	// Activate view 
+	void ActivateView(CMetaView* view, bool activate = true);
+
+protected:
+
+	// Events 
 	void OnCloseWindow(wxCloseEvent& event);
 	void OnExit(wxCommandEvent& WXUNUSED(event));
+
+	virtual void CreatePropertyPane();
+
+	class CFrameManager : public wxAuiManager {
+	public:
+		CFrameManager(wxWindow* managedWnd = nullptr,
+			unsigned int flags = wxAUI_MGR_DEFAULT) :
+			wxAuiManager(managedWnd, flags) {
+		}
+
+		void Refresh() { Repaint(); }
+	};
+
+	static CDocMDIFrame* s_instance;
+
+	CObjectInspector* m_objectInspector;
+
+	KeyBinder             m_keyBinder;
+	FontColorSettings     m_fontColorSettings;
+	EditorSettings        m_editorSettings;
+
+	wxAuiToolBar* m_mainFrameToolbar;
+	wxAuiToolBar* m_docToolbar;
+
+	// Create frame manager 
+	CFrameManager m_mgr;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CDocBottomStatusBar : public wxStatusBar {
-	wxStaticText* m_statusBarText;
 public:
 
 	CDocBottomStatusBar() : wxStatusBar() {};
@@ -219,6 +209,9 @@ public:
 			GetStatusText(field)
 		);
 	}
+
+private:
+	wxStaticText* m_statusBarText;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -236,13 +229,12 @@ public:
 		)
 	{
 		wxTheApp->SetTopWindow(this);
+
 		//Needed to get the splashscreen to paint
 		wxSplashScreen::Update();
 	}
 
-	virtual int FilterEvent(wxEvent& event) wxOVERRIDE {
-		return Event_Skip;
-	}
+	virtual int FilterEvent(wxEvent& event) wxOVERRIDE { return Event_Skip; }
 };
 
 //pane 

@@ -1,91 +1,87 @@
-#ifndef _INTERFACE_EDITOR_H__
-#define _INTERFACE_EDITOR_H__
+#ifndef __INTERFACE_EDITOR_H__
+#define __INTERFACE_EDITOR_H__
 
-#include <wx/artprov.h>
-#include <wx/panel.h>
 #include <wx/treectrl.h>
+#include <wx/splitter.h>
 
-#include "frontend/docView/docView.h"
+#include "backend/metadataConfiguration.h"
+
 #include "frontend/win/theme/luna_toolbarart.h"
+#include "frontend/win/ctrls/checktree.h"
 
-#include "property/interfaceEditorProperty.h"
+class CInterfaceEditor : public wxWindow {
 
-class CInterfaceEditor : public wxPanel {
+	wxTreeItemId m_treeMETADATA;
+	wxTreeItemId m_treeCOMMON; //special tree
 
-	enum
-	{
-		ID_MENUEDIT_NEW = 15000,
-		ID_MENUEDIT_EDIT,
-		ID_MENUEDIT_REMOVE,
-		ID_MENUEDIT_PROPERTY,
-	};
+	wxTreeItemId m_treeFORMS;
 
-	CMetaDocument* m_document;
-	IMetaObject* m_metaObject;
+	wxTreeItemId m_treeCONSTANTS;
 
-	class wxInterfaceItemData : public wxTreeItemData {
-		CPropertyInterfaceItem* m_interfaceProperty;
+	wxTreeItemId m_treeCATALOGS;
+	wxTreeItemId m_treeDOCUMENTS;
+	wxTreeItemId m_treeDATAPROCESSORS;
+	wxTreeItemId m_treeREPORTS;
+	wxTreeItemId m_treeINFORMATION_REGISTERS;
+	wxTreeItemId m_treeACCUMULATION_REGISTERS;
+
+	IMetaObject* m_metaInterface;
+
+	class wxTreeItemMetaData : public wxTreeItemData {
+		IInterfaceObject* m_metaObject; //тип элемента
 	public:
-
-		CPropertyInterfaceItem* GetProperty() const {
-			return m_interfaceProperty;
-		}
-
-		wxInterfaceItemData(eMenuType menuType) :
-			m_interfaceProperty(new CPropertyInterfaceItem(menuType)) {
-		}
-
-		wxInterfaceItemData(eMenuType menuType, const wxString &caption) :
-			m_interfaceProperty(new CPropertyInterfaceItem(menuType)) {
-		}
-
-		virtual ~wxInterfaceItemData() {
-			delete m_interfaceProperty;
-		}
+		wxTreeItemMetaData(IInterfaceObject* metaObject) : m_metaObject(metaObject) {}
+		IInterfaceObject* GetMetaObject() const { return m_metaObject; }
 	};
 
-	wxAuiToolBar* m_metaTreeToolbar;
-	wxTreeCtrl* m_menuCtrl;
+	wxCheckTree* m_interfaceCtrl;
 
-	wxTreeItemId m_draggedItem;
+protected:
 
-	void OnCreateItem(wxCommandEvent& event);
-	void OnEditItem(wxCommandEvent& event);
-	void OnRemoveItem(wxCommandEvent& event);
-	void OnPropertyItem(wxCommandEvent& event);
-
-	void OnBeginDrag(wxTreeEvent& event);
-	void OnEndDrag(wxTreeEvent& event);
-
-	void OnRightClickItem(wxTreeEvent& event);
-	void OnSelectedItem(wxTreeEvent& event);
+	void OnCheckItem(wxTreeEvent& event);
 
 private:
 
-	wxTreeItemId AppendMenu(const wxTreeItemId& parent,
-		wxStandardID id) const;
-	wxTreeItemId AppendMenu(const wxTreeItemId& parent,
-		const wxString& name) const;
-	wxTreeItemId AppendSubMenu(const wxTreeItemId& parent,
-		wxStandardID id) const;
-	wxTreeItemId AppendSubMenu(const wxTreeItemId& parent,
-		const wxString& name) const;
-	wxTreeItemId AppendSeparator(const wxTreeItemId& parent) const;
+	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
+		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
+		IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+		wxASSERT(typeCtor);
+		wxImageList* imageList = m_interfaceCtrl->GetImageList();
+		wxASSERT(imageList);
+		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		return m_interfaceCtrl->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name, imageIndex, imageIndex, nullptr);
+	}
 
-	void CreateDefaultMenu();
-	void FillMenu(const wxTreeItemId& parent, wxMenu *menu);
+	wxTreeItemId AppendItem(const wxTreeItemId& parent,
+		IMetaObject* metaObject) const {
+		wxImageList* imageList = m_interfaceCtrl->GetImageList();
+		wxASSERT(imageList);
+		int imageIndex = imageList->Add(metaObject->GetIcon());
+		wxTreeItemId createItem = m_interfaceCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
+		m_interfaceCtrl->SetItemState(createItem, metaObject->IsSetInterface(m_metaInterface->GetMetaID()) ? wxCheckTree::CHECKED : wxCheckTree::UNCHECKED);
+		return createItem;
+	}
+
+	void InitInterface();
+	void ClearInterface();
+
+	void FillData();
 
 public:
-	
-	bool TestInterface();
 
-public:
+	void RefreshInterface() {
+		ClearInterface();
+		FillData();
+	}
 
-	void SetReadOnly(bool readOnly = true) {}
+	void SetReadOnly(bool readOnly = true) {
+		m_interfaceCtrl->Enable(!readOnly);
+	}
 
 	CInterfaceEditor(wxWindow* parent,
-		wxWindowID winid = wxID_ANY, CMetaDocument *document = nullptr, IMetaObject* metaObject = nullptr);
-	virtual ~CInterfaceEditor();
+		wxWindowID winid = wxID_ANY,
+		IMetaObject* metaObject = nullptr
+	);
 };
 
 #endif 

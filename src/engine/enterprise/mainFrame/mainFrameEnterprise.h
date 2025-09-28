@@ -22,35 +22,7 @@ enum {
 
 #define mainFrame	(CDocEnterpriseMDIFrame::GetFrame())
 
-class CDocEnterpriseMDIFrame : public CDocMDIFrame
-{
-	wxMenu* m_menuFile;
-	wxMenu* m_menuEdit;
-
-	wxMenu* m_menuOperations;
-	wxMenu* m_menuSetting;
-	wxMenu* m_menuAdministration;
-	wxMenu* m_menuHelp;
-
-protected:
-
-	COutputWindow* m_outputWindow;
-
-protected:
-
-	void InitializeDefaultMenu();
-
-	virtual void CreateBottomPane();
-	virtual void CreateWideGui();
-
-	virtual bool AllowRun() const;
-	virtual bool AllowClose() const;
-
-	/**
-	* Adds the default profile to the hot keys.
-	*/
-	void SetDefaultHotKeys();
-
+class CDocEnterpriseMDIFrame : public CDocMDIFrame {
 public:
 
 	static CDocEnterpriseMDIFrame* GetFrame();
@@ -72,11 +44,36 @@ public:
 
 protected:
 
+	void InitializeDefaultMenu();
+
+	virtual void CreateSubSystem();
+	virtual void CreateBottomPane();
+	virtual void CreateWideGui();
+
+	virtual bool AllowRun() const;
+	virtual bool AllowClose() const;
+
+	/**
+	* Adds the default profile to the hot keys.
+	*/
+	void SetDefaultHotKeys();
+
 	//events:
 	void OnClickAllOperation(wxCommandEvent& event);
 	void OnToolsSettings(wxCommandEvent& event);
 	void OnActiveUsers(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
+
+private:
+
+	wxMenu* m_menuFile;
+	wxMenu* m_menuEdit;
+	wxMenu* m_menuOperations;
+	wxMenu* m_menuSetting;
+	wxMenu* m_menuAdministration;
+	wxMenu* m_menuHelp;
+
+	COutputWindow* m_outputWindow;
 };
 
 #endif 

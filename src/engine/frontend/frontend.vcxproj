@@ -33,7 +33,7 @@
     <ClCompile Include="mainFrame\grid\property\gridProperty.cpp" />
     <ClCompile Include="mainFrame\mainFrame.cpp" />
     <ClCompile Include="mainFrame\mainFrameChild.cpp" />
-    <ClCompile Include="mainFrame\mainFrameComponent.cpp" />
+    <ClCompile Include="mainFrame\mainFrameParts.cpp" />
     <ClCompile Include="mainFrame\objinspect\objinspect.cpp" />
     <ClCompile Include="mainFrame\settings\editorsettings.cpp" />
     <ClCompile Include="mainFrame\settings\editorsettingspanel.cpp" />

@@ -7,52 +7,34 @@
 #include <wx/fdrepdlg.h>
 
 // The view using a standard wxTextCtrl to show its contents
-class CModuleEditView : public CMetaView
-{
-	CCodeEditor* m_codeEditor;
-
+class CModuleEditView : public CMetaView {
 public:
 
 	CModuleEditView() : CMetaView(), m_codeEditor(nullptr) {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
+
 	virtual void OnDraw(wxDC* dc) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
 	virtual wxPrintout* OnCreatePrintout() override;
 
-	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
-	virtual void OnRemoveToolbar(wxAuiToolBar* toolbar) override;
-
-	CCodeEditor* GetCodeEditor() const {
-		return m_codeEditor;
-	}
+	CCodeEditor* GetCodeEditor() const { return m_codeEditor; }
 
 private:
 
-	void OnCopy(wxCommandEvent& WXUNUSED(event)) {
-		m_codeEditor->Copy();
-	}
+	void OnCopy(wxCommandEvent& WXUNUSED(event)) { m_codeEditor->Copy(); }
+	void OnPaste(wxCommandEvent& WXUNUSED(event)) { m_codeEditor->Paste(); }
+	void OnSelectAll(wxCommandEvent& WXUNUSED(event)) { m_codeEditor->SelectAll(); }
+	void OnFind(wxFindDialogEvent& event) { m_codeEditor->FindText(event.GetFindString(), event.GetFlags()); }
 
-	void OnPaste(wxCommandEvent& WXUNUSED(event)) {
-		m_codeEditor->Paste();
-	}
-
-	void OnSelectAll(wxCommandEvent& WXUNUSED(event)) {
-		m_codeEditor->SelectAll();
-	}
-
-	void OnFind(wxFindDialogEvent& event) {
-		m_codeEditor->FindText(
-			event.GetFindString(),
-			event.GetFlags()
-		);
-	}
-
-	void OnMenuClicked(wxCommandEvent& event);
+	void OnMenuEvent(wxCommandEvent& event);
 
 protected:
+
+	CCodeEditor* m_codeEditor;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(CModuleEditView);
@@ -65,7 +47,7 @@ protected:
 class CModuleDocument : public IModuleDocument {
 public:
 
-	CModuleDocument() : IModuleDocument() { }
+	CModuleDocument() : IModuleDocument() {}
 
 	virtual wxCommandProcessor* CreateCommandProcessor() const override;
 
@@ -97,10 +79,10 @@ protected:
 
 class CModuleEditDocument : public CModuleDocument {
 public:
-	CModuleEditDocument() : CModuleDocument() { }
+	CModuleEditDocument() : CModuleDocument() {}
 
 	virtual CCodeEditor* GetCodeEditor() const override;
-	
+
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) override;
 	virtual void SetToolTip(const wxString& resultStr) override;
 	virtual void ShowAutoComplete(const struct CDebugAutoCompleteData& debugData) override;

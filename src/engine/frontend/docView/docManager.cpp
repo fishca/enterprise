@@ -794,7 +794,8 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 					wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
 					if (cmdProc != nullptr)
 						newDocument->SetCommandProcessor(cmdProc);
-					newDocument->UpdateAllViews();
+					
+					//newDocument->UpdateAllViews();
 					//newDocument->Activate();
 					return newDocument;
 				}

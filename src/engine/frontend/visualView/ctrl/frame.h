@@ -418,10 +418,6 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader) { return true; }
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) { return true; }
 
-	//load & save event in control 
-	bool PasteProperty(CMemoryReader& reader);
-	bool CopyProperty(CMemoryWriter& writer = CMemoryWriter()) const;
-
 protected:
 
 	bool m_expanded = true; // is expanded in the object tree, allows for saving to file

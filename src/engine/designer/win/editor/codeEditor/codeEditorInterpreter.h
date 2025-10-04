@@ -10,7 +10,7 @@ struct CParamValue {
 	CValue m_paramObject;
 };
 
-class CPrecompileModule;
+class CPrecompileCode;
 struct CPrecompileFunction;
 
 struct CPrecompileVariable
@@ -34,8 +34,8 @@ struct CPrecompileVariable
 
 struct CPrecompileContext
 {
-	CPrecompileModule* pModule;
-	void SetModule(CPrecompileModule* pSetModule) { pModule = pSetModule; }
+	CPrecompileCode* pModule;
+	void SetModule(CPrecompileCode* pSetModule) { pModule = pSetModule; }
 
 	CPrecompileContext* pParent;//родительский контекст
 	CPrecompileContext* pStopParent;//начало запрещенной области прародителя
@@ -132,7 +132,7 @@ struct CPrecompileFunction
 //*******************************************************************
 //*                         Класс: пре-компилятор                   *
 //*******************************************************************
-class CPrecompileModule : public CTranslateCode
+class CPrecompileCode : public CTranslateCode
 {
 	int m_numCurrentCompile;		//текущее положение в массиве лексем
 
@@ -164,21 +164,16 @@ public:
 	virtual void Clear();//Сброс данных для повторного использования объекта
 	void PrepareModuleData();
 
-	CPrecompileModule(IMetaObjectModule* moduleObject);
-	virtual ~CPrecompileModule();
+	CPrecompileCode(IMetaObjectModule* moduleObject);
+	virtual ~CPrecompileCode();
 
-	CValue GetComputeValue() const {
-		return m_valObject;
-	}
-
+	CValue GetComputeValue() const { return m_valObject; }
 	CPrecompileContext* GetContext() {
 		cContext.SetModule(this);
 		return &cContext;
 	};
 
-	CPrecompileContext* GetCurrentContext() const {
-		return m_pCurrentContext;
-	}
+	CPrecompileContext* GetCurrentContext() const { return m_pCurrentContext; }
 
 	bool Compile();
 
@@ -206,9 +201,9 @@ protected:
 	CLexem PreviewGetLexem();
 	CLexem GetLexem();
 	CLexem GETLexem();
-	void GETDelimeter(const wxUniChar &c);
+	void GETDelimeter(const wxUniChar& c);
 
-	bool IsNextDelimeter(const wxUniChar &c);
+	bool IsNextDelimeter(const wxUniChar& c);
 	bool IsNextKeyWord(int nKey);
 	void GETKeyWord(int nKey);
 	wxString GETIdentifier(bool strRealName = false);

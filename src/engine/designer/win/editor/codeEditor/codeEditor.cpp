@@ -367,7 +367,7 @@ bool CCodeEditor::LoadModule()
 	if (m_document != nullptr) {
 		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
 		if (moduleObject != nullptr) {
-			m_precompileModule = new CPrecompileModule(moduleObject);
+			m_precompileModule = new CPrecompileCode(moduleObject);
 
 			if (IsEditable()) {
 				SetText(moduleObject->GetModuleText()); m_bInitialized = true;

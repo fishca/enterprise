@@ -107,7 +107,7 @@ public:
 
 private:
 
-	CPrecompileModule* m_precompileModule;
+	CPrecompileCode* m_precompileModule;
 
 	bool m_bInitialized;
 	int  m_bIndentationSize;

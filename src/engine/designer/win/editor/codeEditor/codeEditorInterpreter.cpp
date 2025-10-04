@@ -13,7 +13,7 @@
 //array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
-CPrecompileModule::CPrecompileModule(IMetaObjectModule* moduleObject) :
+CPrecompileCode::CPrecompileCode(IMetaObjectModule* moduleObject) :
 	CTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
 	m_moduleObject(moduleObject), m_pContext(nullptr), m_pCurrentContext(nullptr),
 	m_numCurrentCompile(wxNOT_FOUND), m_nCurrentPos(0), nLastPosition(0),
@@ -45,9 +45,9 @@ CPrecompileModule::CPrecompileModule(IMetaObjectModule* moduleObject) :
 	Load(m_moduleObject->GetModuleText());
 }
 
-CPrecompileModule::~CPrecompileModule() {}
+CPrecompileCode::~CPrecompileCode() {}
 
-void CPrecompileModule::Clear() //Сброс данных для повторного использования объекта
+void CPrecompileCode::Clear() //Сброс данных для повторного использования объекта
 {
 	m_pCurrentContext = nullptr;
 	if (m_defineList != nullptr) m_defineList->Clear();
@@ -63,7 +63,7 @@ void CPrecompileModule::Clear() //Сброс данных для повторного использования объе
 #include "backend/compiler/enumFactory.h"
 #include "codeEditorParser.h"
 
-void CPrecompileModule::PrepareModuleData()
+void CPrecompileCode::PrepareModuleData()
 {
 	IModuleDataObject* contextVariable = nullptr;
 
@@ -73,7 +73,7 @@ void CPrecompileModule::PrepareModuleData()
 		IModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (!moduleManager->FindCompileModule(m_moduleObject, contextVariable)) {
-			wxASSERT_MSG(false, "CPrecompileModule::PrepareModuleData");
+			wxASSERT_MSG(false, "CPrecompileCode::PrepareModuleData");
 		}
 		for (auto pair : moduleManager->GetContextVariables()) {
 			//добавляем переменные из менеджера
@@ -316,7 +316,7 @@ void CPrecompileModule::PrepareModuleData()
 	}
 }
 
-bool CPrecompileModule::PrepareLexem()
+bool CPrecompileCode::PrepareLexem()
 {
 	wxString s;
 	m_listLexem.clear();
@@ -429,7 +429,7 @@ bool CPrecompileModule::PrepareLexem()
 	return true;
 }
 
-void CPrecompileModule::PatchLexem(unsigned int line, int offsetLine, unsigned int offsetString, unsigned int modFlags)
+void CPrecompileCode::PatchLexem(unsigned int line, int offsetLine, unsigned int offsetString, unsigned int modFlags)
 {
 	unsigned int nLexPos = m_listLexem.size() > 1 ? m_listLexem.size() - 2 : 0;
 	for (unsigned int i = 0; i <= m_listLexem.size() - 1; i++) {
@@ -594,7 +594,7 @@ void CPrecompileModule::PatchLexem(unsigned int line, int offsetLine, unsigned i
 	}
 }
 
-bool CPrecompileModule::Compile()
+bool CPrecompileCode::Compile()
 {
 	Clear();
 
@@ -613,7 +613,7 @@ bool CPrecompileModule::Compile()
 	return CompileModule();
 }
 
-bool CPrecompileModule::CompileModule()
+bool CPrecompileCode::CompileModule()
 {
 	m_pContext = GetContext();// context of the module itself
 
@@ -653,7 +653,7 @@ bool CPrecompileModule::CompileModule()
 	return true;
 }
 
-bool CPrecompileModule::CompileFunction()
+bool CPrecompileCode::CompileFunction()
 {
 	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
 	CLexem lex;
@@ -795,7 +795,7 @@ bool CPrecompileModule::CompileFunction()
 	return true;
 }
 
-bool CPrecompileModule::CompileDeclaration()
+bool CPrecompileCode::CompileDeclaration()
 {
 	wxString strType;
 	const CLexem& lex = PreviewGetLexem();
@@ -847,7 +847,7 @@ bool CPrecompileModule::CompileDeclaration()
 	return true;
 }
 
-bool CPrecompileModule::CompileBlock()
+bool CPrecompileCode::CompileBlock()
 {
 	CLexem lex;
 
@@ -920,7 +920,10 @@ bool CPrecompileModule::CompileBlock()
 			case KEY_FUNCTION:
 			case KEY_PROCEDURE: GetLexem(); break;
 
-			default: return true;// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)
+			default:
+				// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)
+				m_numCurrentCompile++;
+				break;
 			}
 		}
 		else
@@ -966,7 +969,7 @@ bool CPrecompileModule::CompileBlock()
 	return true;
 }
 
-bool CPrecompileModule::CompileNewObject()
+bool CPrecompileCode::CompileNewObject()
 {
 	GETKeyWord(KEY_NEW);
 
@@ -1002,13 +1005,13 @@ bool CPrecompileModule::CompileNewObject()
 	return true;
 }
 
-bool CPrecompileModule::CompileGoto()
+bool CPrecompileCode::CompileGoto()
 {
 	GETKeyWord(KEY_GOTO);
 	return true;
 }
 
-bool CPrecompileModule::CompileIf()
+bool CPrecompileCode::CompileIf()
 {
 	GETKeyWord(KEY_IF);
 
@@ -1039,7 +1042,7 @@ bool CPrecompileModule::CompileIf()
 	return true;
 }
 
-bool CPrecompileModule::CompileWhile()
+bool CPrecompileCode::CompileWhile()
 {
 	GETKeyWord(KEY_WHILE);
 
@@ -1052,7 +1055,7 @@ bool CPrecompileModule::CompileWhile()
 	return true;
 }
 
-bool CPrecompileModule::CompileFor()
+bool CPrecompileCode::CompileFor()
 {
 	GETKeyWord(KEY_FOR);
 
@@ -1081,7 +1084,7 @@ bool CPrecompileModule::CompileFor()
 	return true;
 }
 
-bool CPrecompileModule::CompileForeach()
+bool CPrecompileCode::CompileForeach()
 {
 	GETKeyWord(KEY_FOREACH);
 
@@ -1118,7 +1121,7 @@ bool CPrecompileModule::CompileForeach()
  * Возвращаемое значение:
  * 0 или указатель на лексему
  */
-CLexem CPrecompileModule::GetLexem()
+CLexem CPrecompileCode::GetLexem()
 {
 	CLexem lex;
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
@@ -1128,7 +1131,7 @@ CLexem CPrecompileModule::GetLexem()
 }
 
 //Получить следующую лексему из списка байт кода без увеличения счетчика текущей позиции
-CLexem CPrecompileModule::PreviewGetLexem()
+CLexem CPrecompileCode::PreviewGetLexem()
 {
 	CLexem lex;
 	while (true) {
@@ -1147,7 +1150,7 @@ CLexem CPrecompileModule::PreviewGetLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-CLexem CPrecompileModule::GETLexem()
+CLexem CPrecompileCode::GETLexem()
 {
 	const CLexem& lex = GetLexem();
 	if (lex.m_lexType == ERRORTYPE) {}
@@ -1160,7 +1163,7 @@ CLexem CPrecompileModule::GETLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void CPrecompileModule::GETDelimeter(const wxUniChar& c)
+void CPrecompileCode::GETDelimeter(const wxUniChar& c)
 {
 	CLexem lex = GETLexem();
 
@@ -1179,7 +1182,7 @@ void CPrecompileModule::GETDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool CPrecompileModule::IsNextDelimeter(const wxUniChar& c)
+bool CPrecompileCode::IsNextDelimeter(const wxUniChar& c)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
 		CLexem lex = m_listLexem[m_numCurrentCompile + 1];
@@ -1197,7 +1200,7 @@ bool CPrecompileModule::IsNextDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool CPrecompileModule::IsNextKeyWord(int nKey)
+bool CPrecompileCode::IsNextKeyWord(int nKey)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
 		const CLexem& lex = m_listLexem[m_numCurrentCompile + 1];
@@ -1214,7 +1217,7 @@ bool CPrecompileModule::IsNextKeyWord(int nKey)
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void CPrecompileModule::GETKeyWord(int nKey)
+void CPrecompileCode::GETKeyWord(int nKey)
 {
 	CLexem lex = GETLexem();
 	while (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
@@ -1230,7 +1233,7 @@ void CPrecompileModule::GETKeyWord(int nKey)
  * Возвращаемое значение:
  * строка-идентификатор
  */
-wxString CPrecompileModule::GETIdentifier(bool strRealName)
+wxString CPrecompileCode::GETIdentifier(bool strRealName)
 {
 	const CLexem& lex = GETLexem();
 	if (lex.m_lexType != IDENTIFIER) {
@@ -1249,7 +1252,7 @@ wxString CPrecompileModule::GETIdentifier(bool strRealName)
  * Возвращаемое значение:
  * константа
  */
-CValue CPrecompileModule::GETConstant()
+CValue CPrecompileCode::GETConstant()
 {
 	CLexem lex;
 	int iNumRequire = 0;
@@ -1273,7 +1276,7 @@ CValue CPrecompileModule::GETConstant()
 }
 
 // getting the number with a string constant (to determine the method number)
-int CPrecompileModule::GetConstString(const wxString& sMethod)
+int CPrecompileCode::GetConstString(const wxString& sMethod)
 {
 	if (!m_aHashConstList[sMethod])
 	{
@@ -1282,7 +1285,7 @@ int CPrecompileModule::GetConstString(const wxString& sMethod)
 	return ((int)m_aHashConstList[sMethod]) - 1;
 }
 
-int CPrecompileModule::IsTypeVar(const wxString& strType)
+int CPrecompileCode::IsTypeVar(const wxString& strType)
 {
 	if (!strType.IsEmpty()) {
 		if (CValue::IsRegisterCtor(strType, eCtorObjectType::eCtorObjectType_object_primitive))
@@ -1297,7 +1300,7 @@ int CPrecompileModule::IsTypeVar(const wxString& strType)
 	return false;
 }
 
-wxString CPrecompileModule::GetTypeVar(const wxString& strType)
+wxString CPrecompileCode::GetTypeVar(const wxString& strType)
 {
 	if (!strType.IsEmpty()) {
 		if (CValue::IsRegisterCtor(strType, eCtorObjectType::eCtorObjectType_object_primitive))
@@ -1317,7 +1320,7 @@ wxString CPrecompileModule::GetTypeVar(const wxString& strType)
 /**
  * Компиляция произвольного выражения (служебные вызовы из самой функции)
  */
-CParamValue CPrecompileModule::GetExpression(int nPriority)
+CParamValue CPrecompileCode::GetExpression(int nPriority)
 {
 	CParamValue sVariable;
 	CLexem lex = GETLexem();
@@ -1542,7 +1545,7 @@ MOperation:
  * nIsSet - на выходе: 1 - признак того что точно ожидается присваивание выражения (т.е. должен встретиться знак '=')
  * номер идекса переменной, где лежит значение идентификатора
 */
-CParamValue CPrecompileModule::GetCurrentIdentifier(int& nIsSet)
+CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 {
 	int nPrevSet = nIsSet;
 
@@ -1814,7 +1817,7 @@ MLabel:
 /**
  * обработка вызова функции или процедуры
  */
-CParamValue CPrecompileModule::GetCallFunction(const wxString& strName)
+CParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
 {
 	std::vector<CParamValue> aParamList;
 
@@ -1859,7 +1862,7 @@ CParamValue CPrecompileModule::GetCallFunction(const wxString& strName)
  * Назначение:
  * Добавить имя и адрес внешней перменной в специальный массив для дальнейшего использования
  */
-void CPrecompileModule::AddVariable(const wxString& strVarName, const CValue& varVal)
+void CPrecompileCode::AddVariable(const wxString& strVarName, const CValue& varVal)
 {
 	if (strVarName.IsEmpty())
 		return;
@@ -1871,7 +1874,7 @@ void CPrecompileModule::AddVariable(const wxString& strVarName, const CValue& va
 /**
  * Функция возвращает номер переменной по строковому имени
  */
-CParamValue CPrecompileModule::GetVariable(const wxString& strName, bool bCheckError)
+CParamValue CPrecompileCode::GetVariable(const wxString& strName, bool bCheckError)
 {
 	return m_pContext->GetVariable(strName, true, bCheckError);
 }
@@ -1879,7 +1882,7 @@ CParamValue CPrecompileModule::GetVariable(const wxString& strName, bool bCheckE
 /**
  * Cоздаем новый идентификатор переменной
  */
-CParamValue CPrecompileModule::GetVariable()
+CParamValue CPrecompileCode::GetVariable()
 {
 	const wxString& strVarName = wxString::Format("@%d", m_pContext->nTempVar); //@ - для гарантии уникальности имени
 	CParamValue sVariable = m_pContext->GetVariable(strVarName, false);//временную переменную ищем только в локальном контексте
@@ -1887,7 +1890,7 @@ CParamValue CPrecompileModule::GetVariable()
 	return sVariable;
 }
 
-void CPrecompileModule::SetVariable(const wxString& strVarName, const CValue& varVal)
+void CPrecompileCode::SetVariable(const wxString& strVarName, const CValue& varVal)
 {
 	m_pContext->SetVariable(strVarName, varVal);
 }
@@ -1896,7 +1899,7 @@ void CPrecompileModule::SetVariable(const wxString& strVarName, const CValue& va
  * Получает номер константы из уникального списка значений
  * (если такого значения в списке нет, то оно создается)
  */
-CParamValue CPrecompileModule::FindConst(CValue& vData)
+CParamValue CPrecompileCode::FindConst(CValue& vData)
 {
 	CParamValue Const;
 	wxString strType = vData.GetClassName();

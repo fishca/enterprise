@@ -53,26 +53,23 @@ struct CLexem {
 	short m_lexType;
 
 	//lexem content:
-	short m_numData; // keyword number (KEYWORD) or delimiter symbol (DELIMITER)
-	CValue m_valData; // value, if it is a constant or real identifier name
-	wxString m_strData; // or identifier name (variable, function, etc.)
+	short m_numData;			// keyword number (KEYWORD) or delimiter symbol (DELIMITER)
+	wxString m_strData;			// or identifier name (variable, function, etc.)
+	CValue m_valData;			// value, if it is a constant or real identifier name
 
 	//additional information:
-	wxString m_strModuleName; // module name (since it is possible to include connections from different modules)
-	wxString m_strDocPath; // unique path to the document
-	wxString m_strFileName; // file path (if external processing)
+	wxString m_strModuleName;	// module name (since it is possible to include connections from different modules)
+	wxString m_strDocPath;		// unique path to the document
+	wxString m_strFileName;		// file path (if external processing)
 
-	unsigned int m_numLine; //source line number (for breakpoints)
-	unsigned int m_numString; //source text number (for error output)
+	unsigned int m_numLine;		//source line number (for breakpoints)
+	unsigned int m_numString;	//source text number (for error output)
 
 public:
 
-	unsigned int GetLine() const {
-		return m_numLine + 1;
-	}
+	unsigned int GetLine() const { return m_numLine + 1; }
 
-	unsigned int GetLength() const
-	{
+	unsigned int GetLength() const {
 		if (m_lexType == DELIMITER)
 			return 1;
 		else if (m_lexType == IDENTIFIER)
@@ -88,13 +85,8 @@ public:
 		return 0;
 	}
 
-	unsigned int StartPos() const {
-		return m_numString;
-	}
-
-	unsigned int EndPos() const {
-		return m_numString + GetLength();
-	}
+	unsigned int StartPos() const { return m_numString; }
+	unsigned int EndPos() const { return m_numString + GetLength(); }
 
 	//Constructor:
 	CLexem() :
@@ -133,14 +125,14 @@ public:
 		m_strDocPath(std::move(src.m_strDocPath)),
 		m_strFileName(std::move(src.m_strFileName))
 	{
+
 		src.m_lexType = 0;
 		src.m_numData = 0;
 		src.m_numString = 0;
 		src.m_numLine = 0;
 	}
 
-	CLexem& operator =(const CLexem& src)
-	{
+	CLexem& operator =(const CLexem& src) {
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;
 		m_numString = src.m_numString;

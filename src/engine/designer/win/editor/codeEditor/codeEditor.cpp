@@ -862,10 +862,10 @@ void CCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 
 void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 {
-	int modFlags = event.GetModificationType();
+	const int modFlags = event.GetModificationType();
 
-	if ((modFlags & (wxSTC_MOD_BEFOREINSERT)) == 0 &&
-		(modFlags & (wxSTC_MOD_BEFOREDELETE)) == 0)
+	if ((modFlags & (wxSTC_MOD_INSERTTEXT)) == 0 &&
+		(modFlags & (wxSTC_MOD_DELETETEXT)) == 0)
 		return;
 
 	if (m_bInitialized) {
@@ -874,33 +874,40 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 		if (moduleObject != nullptr) {
 
-			IMetaData* metaData = moduleObject->GetMetaData();
-			wxASSERT(metaData);
+			const wxString& codeText = GetText();
+			const int line = LineFromPosition(event.GetPosition());
 
-			std::string codeRaw = GetTextRaw();
-			unsigned int length = 0; int patchLine = 0; bool hasChanged = false;
-
-			const wxString& insertText = event.GetString();
-
-			if ((modFlags & wxSTC_MOD_BEFOREINSERT) != 0)
 			{
-				std::string strBuffer = insertText.utf8_str();
-				for (auto c : strBuffer)
-				{
-					if (c != ' ' && c != '\t' && c != '\n' && c != '\r') hasChanged = true;
-					if (c == '\n') patchLine++;
-				}
-			}
-			else {
-				std::string strBuffer = codeRaw.substr(event.GetPosition(), event.GetLength());
-				for (auto c : strBuffer) {
-					if (c != ' ' && c != '\t' && c != '\n' && c != '\r')
-						hasChanged = true;
-					if (c == '\n') patchLine--;
-				}
-			}
+				m_precompileModule->Load(codeText);
 
-			if (hasChanged) {
+				if (event.m_linesAdded != 0) {
+					debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(), line + 1, event.m_linesAdded);
+				}
+
+				try {
+#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0	
+					const wxString& strPatch = event.GetString();
+					const int str_length = strPatch.Length();
+					const int str_utf8_length = event.GetLength();
+					if ((modFlags & (wxSTC_MOD_INSERTTEXT)) != 0) {
+						m_precompileModule->PrepareLexem(line,
+							event.m_linesAdded, str_length);
+					}
+					else if ((modFlags & (wxSTC_MOD_DELETETEXT)) != 0) {
+						m_precompileModule->PrepareLexem(line,
+							event.m_linesAdded, -str_length);
+					}
+#else 
+					m_precompileModule->PrepareLexem();
+#endif
+				}
+				catch (...)
+				{
+				}
+
+				IMetaData* metaData = moduleObject->GetMetaData();
+				wxASSERT(metaData);
+
 				IModuleManager* moduleManager = metaData->GetModuleManager();
 				wxASSERT(moduleManager);
 				IModuleDataObject* pRefData = nullptr;
@@ -909,59 +916,10 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 					wxASSERT(compileModule);
 					if (!compileModule->m_changedCode) compileModule->m_changedCode = true;
 				}
+
+				m_document->Modify(true);
+				moduleObject->SetModuleText(codeText);
 			}
-
-			m_document->Modify(true);
-
-			if ((modFlags & wxSTC_MOD_BEFOREINSERT) != 0)
-				length = insertText.Length();
-			else
-				length = wxString::FromUTF8(codeRaw.substr(event.GetPosition(), event.GetLength())).Length();
-
-			if ((modFlags & wxSTC_MOD_BEFOREINSERT) != 0)
-				codeRaw.insert(event.GetPosition(), insertText.utf8_str());
-			else
-				codeRaw.erase(event.GetPosition(), event.GetLength());
-
-			const wxString& codeText = wxString::FromUTF8(codeRaw);
-
-			unsigned int startPos = 0;
-			unsigned int endPos = event.GetPosition();
-
-			std::string strBuffer = codeRaw.substr(0, endPos);
-
-			unsigned int currLine = 0; bool needChangePos = false;
-
-			for (unsigned int i = 0; i < strBuffer.size(); i++)
-			{
-				if (strBuffer[i] == '\n') {
-					currLine++; startPos = i - 1;
-				}
-			}
-
-			if (patchLine != 0) {
-				debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(), needChangePos ? currLine + 1 : currLine, patchLine);
-			}
-
-#if _USE_OLD_TEXT_PARSER_IN_CODE_EDITOR == 0	
-			m_precompileModule->Load(codeText);
-			m_precompileModule->m_currentLine = currLine > 0 ? currLine - 1 : 0;
-			m_precompileModule->m_currentPos = wxString::FromUTF8(strBuffer.substr(0, startPos)).Length();
-			try {
-				m_precompileModule->PatchLexem(currLine, patchLine, length, modFlags);
-			}
-			catch (...) {
-			}
-#else 
-			m_precompileModule->Load(wxString::FromUTF8(codeRaw));
-
-			try {
-				m_precompileModule->PrepareLexem();
-			}
-			catch (...) {
-			}
-#endif
-			moduleObject->SetModuleText(codeText);
 		}
 	}
 }

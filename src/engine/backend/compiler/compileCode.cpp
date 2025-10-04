@@ -734,7 +734,11 @@ wxString CCompileCode::GetTypeVar(const wxString& strType)
 		SetError(ERROR_TYPE_DEF);
 		return wxEmptyString;
 	}
-	return lex.m_strData.Upper();
+	wxString strUpper;
+	std::transform(lex.m_strData.begin(), lex.m_strData.end(),
+		strUpper.begin(), ::toupper
+	);
+	return strUpper;
 }
 
 /**

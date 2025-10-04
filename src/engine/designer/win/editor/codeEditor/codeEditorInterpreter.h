@@ -178,7 +178,7 @@ public:
 	bool Compile();
 
 	bool PrepareLexem();
-	void PatchLexem(unsigned int line, int offsetLine, unsigned int offsetString, unsigned int modFlags);
+	void PrepareLexem(unsigned int line, int offsetLine, const int& str_length);
 
 protected:
 

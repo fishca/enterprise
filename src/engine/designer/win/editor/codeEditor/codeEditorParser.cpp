@@ -121,18 +121,18 @@ bool CParserModule::ParseModule(const wxString& sModule)
 			int m_numLine = lex.m_numLine;
 			int nRes = m_strBuffer.find('\n', lex.m_numString);
 			if (nRes >= 0) {
-				strShortDescription = m_strBuffer.Mid(lex.m_numString, nRes - lex.m_numString - 1);
+				strShortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
 				nRes = strShortDescription.find_first_of('/');
 				if (nRes > 0)
 				{
 					if (strShortDescription[nRes - 1] == '/') {// so this is a comment
-						strShortDescription = strShortDescription.Mid(nRes + 1);
+						strShortDescription = strShortDescription.substr(nRes + 1);
 					}
 				}
 				else
 				{
 					nRes = strShortDescription.find_first_of(')');
-					strShortDescription = strShortDescription.Left(nRes + 1);
+					strShortDescription = strShortDescription.substr(0, nRes + 1);
 				}
 			}
 

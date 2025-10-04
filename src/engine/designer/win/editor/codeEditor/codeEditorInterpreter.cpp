@@ -322,47 +322,51 @@ bool CPrecompileCode::PrepareLexem()
 	m_listLexem.clear();
 
 	while (!IsEnd()) {
-		CLexem bytecode;
-		bytecode.m_numLine = m_currentLine;
-		bytecode.m_numString = m_currentPos;//если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
-		bytecode.m_strModuleName = m_strModuleName;
+
+		m_current_lex.m_numLine = m_currentLine;
+		m_current_lex.m_numString = m_currentPos;//если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
+		m_current_lex.m_strModuleName = m_strModuleName;
 
 		if (IsWord()) {
+
 			wxString sOrig;
-			s = GetWord(false, false, &sOrig);
+			if (GetWord(s, sOrig)) {
 
-			//undefined
-			if (s.Lower() == wxT("undefined")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetType(eValueTypes::TYPE_EMPTY);
-			}
-			//boolean
-			else if (s.Lower() == wxT("true") || s.Lower() == wxT("false")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetBoolean(s);
-			}
-			//null
-			else if (s.Lower() == wxT("null")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetType(eValueTypes::TYPE_NULL);
-			}
+				const int k = IsKeyWord(s);
 
-			if (bytecode.m_lexType != CONSTANT) {
-				int n = IsKeyWord(s);
-				bytecode.m_valData = sOrig;
-				if (n >= 0) {
-					bytecode.m_lexType = KEYWORD;
-					bytecode.m_numData = n;
+				//undefined
+				if (k == KEY_UNDEFINED) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetType(eValueTypes::TYPE_EMPTY);
+				}
+				//boolean
+				else if (k == KEY_TRUE || k == KEY_FALSE) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetBoolean(s);
+				}
+				//null
+				else if (k == KEY_NULL) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
-					bytecode.m_lexType = IDENTIFIER;
+					if (k >= 0) {
+						m_current_lex.m_lexType = KEYWORD;
+						m_current_lex.m_numData = k;
+					}
+					else {
+						m_current_lex.m_lexType = IDENTIFIER;
+					}
+
+					m_current_lex.m_valData = sOrig;
 				}
 			}
 		}
 		else if (IsNumber() || IsString() || IsDate()) {
-			bytecode.m_lexType = CONSTANT;
+			m_current_lex.m_lexType = CONSTANT;
 			if (IsNumber()) {
-				bytecode.m_valData.SetNumber(GetNumber());
+				wxString strNumber; GetNumber(strNumber);
+				m_current_lex.m_valData.SetNumber(strNumber);
 				int n = m_listLexem.size() - 1;
 				if (n >= 0) {
 					if (m_listLexem[n].m_lexType == DELIMITER && (m_listLexem[n].m_numData == '-' || m_listLexem[n].m_numData == '+')) {
@@ -372,8 +376,8 @@ bool CPrecompileCode::PrepareLexem()
 							{
 								n++;
 								if (m_listLexem[n].m_numData == '-')
-									bytecode.m_valData.m_fData = -bytecode.m_valData.m_fData;
-								m_listLexem[n] = bytecode;
+									m_current_lex.m_valData.m_fData = -m_current_lex.m_valData.m_fData;
+								m_listLexem[n] = m_current_lex;
 								continue;
 							}
 						}
@@ -382,14 +386,16 @@ bool CPrecompileCode::PrepareLexem()
 			}
 			else {
 				if (IsString()) {
-					bytecode.m_valData.SetString(GetString());
+					wxString strString; GetString(strString);
+					m_current_lex.m_valData.SetString(strString);
 				}
 				else if (IsDate()) {
-					bytecode.m_valData.SetDate(GetDate());
+					wxString strDate; GetDate(strDate);
+					m_current_lex.m_valData.SetDate(strDate);
 				}
 			}
 
-			m_listLexem.push_back(bytecode);
+			m_listLexem.push_back(m_current_lex);
 			continue;
 		}
 		else if (IsByte('~')) {
@@ -400,32 +406,31 @@ bool CPrecompileCode::PrepareLexem()
 		}
 		else {
 			s.clear();
-			bytecode.m_lexType = DELIMITER;
-			bytecode.m_numData = GetByte();
-			if (bytecode.m_numData <= 13) {
+			m_current_lex.m_lexType = DELIMITER;
+			m_current_lex.m_numData = GetByte();
+			if (m_current_lex.m_numData <= 13) {
 				continue;
 			}
 		}
-		bytecode.m_strData = s;
-		if (bytecode.m_lexType == KEYWORD)
+		m_current_lex.m_strData = s;
+		if (m_current_lex.m_lexType == KEYWORD)
 		{
-			if (bytecode.m_numData == KEY_DEFINE)continue; //задание произвольного идентификатора
-			else if (bytecode.m_numData == KEY_UNDEF) continue; //удаление идентификатора
-			else if (bytecode.m_numData == KEY_IFDEF || bytecode.m_numData == KEY_IFNDEF) continue; //условное компилирование
-			else if (bytecode.m_numData == KEY_ENDIFDEF) continue; //конец условного компилирования
-			else if (bytecode.m_numData == KEY_ELSEDEF) continue; //"Иначе" условного компилирования
-			else if (bytecode.m_numData == KEY_REGION) continue;
-			else if (bytecode.m_numData == KEY_ENDREGION) continue;
+			if (m_current_lex.m_numData == KEY_DEFINE)continue; //задание произвольного идентификатора
+			else if (m_current_lex.m_numData == KEY_UNDEF) continue; //удаление идентификатора
+			else if (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF) continue; //условное компилирование
+			else if (m_current_lex.m_numData == KEY_ENDIFDEF) continue; //конец условного компилирования
+			else if (m_current_lex.m_numData == KEY_ELSEDEF) continue; //"Иначе" условного компилирования
+			else if (m_current_lex.m_numData == KEY_REGION) continue;
+			else if (m_current_lex.m_numData == KEY_ENDREGION) continue;
 		}
-		m_listLexem.push_back(bytecode);
+		m_listLexem.emplace_back(std::move(m_current_lex));
 	}
 
-	CLexem bytecode;
-	bytecode.m_lexType = ENDPROGRAM;
-	bytecode.m_numData = 0;
-	bytecode.m_numString = m_currentPos;
-	m_listLexem.push_back(bytecode);
+	m_current_lex.m_lexType = ENDPROGRAM;
+	m_current_lex.m_numData = 0;
+	m_current_lex.m_numString = m_currentPos;
 
+	m_listLexem.emplace_back(std::move(m_current_lex));
 	return true;
 }
 
@@ -457,55 +462,55 @@ void CPrecompileCode::PatchLexem(unsigned int line, int offsetLine, unsigned int
 		if ((modFlags & wxSTC_MOD_BEFOREINSERT) != 0 && m_currentLine > (line + offsetLine)) break;
 		else if ((modFlags & wxSTC_MOD_BEFOREDELETE) != 0 && (m_currentLine > line)) break;
 
-		CLexem bytecode;
-		bytecode.m_numLine = m_currentLine;
-		bytecode.m_numString = m_currentPos; //если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
-		bytecode.m_strModuleName = m_strModuleName;
+		m_current_lex.m_numLine = m_currentLine;
+		m_current_lex.m_numString = m_currentPos; //если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
+		m_current_lex.m_strModuleName = m_strModuleName;
 
 		wxString s;
 
-		if (IsWord())
-		{
+		if (IsWord()) {
+
 			wxString sOrig;
-			s = GetWord(false, false, &sOrig);
+			if (GetWord(s, sOrig)) {
 
-			//undefined
-			if (s.Lower() == wxT("undefined")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetType(eValueTypes::TYPE_EMPTY);
-			}
-			//boolean
-			else if (s.Lower() == wxT("true") || s.Lower() == wxT("false")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetBoolean(s);
-			}
-			//null
-			else if (s.Lower() == wxT("null")) {
-				bytecode.m_lexType = CONSTANT;
-				bytecode.m_valData.SetType(eValueTypes::TYPE_NULL);
-			}
+				const int k = IsKeyWord(s);
 
-			if (bytecode.m_lexType != CONSTANT) {
-				int n = IsKeyWord(s);
-
-				bytecode.m_valData = sOrig;
-
-				if (n >= 0) {
-					bytecode.m_lexType = KEYWORD;
-					bytecode.m_numData = n;
+				//undefined
+				if (k == KEY_UNDEFINED) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetType(eValueTypes::TYPE_EMPTY);
 				}
-				else
-				{
-					bytecode.m_lexType = IDENTIFIER;
+				//boolean
+				else if (k == KEY_TRUE || k == KEY_FALSE) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetBoolean(s);
+				}
+				//null
+				else if (k == KEY_NULL) {
+					m_current_lex.m_lexType = CONSTANT;
+					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
+				}
+				else {
+					if (k >= 0) {
+						m_current_lex.m_lexType = KEYWORD;
+						m_current_lex.m_numData = k;
+					}
+					else {
+						m_current_lex.m_lexType = IDENTIFIER;
+					}
+
+					m_current_lex.m_valData = sOrig;
 				}
 			}
 		}
 		else if (IsNumber() || IsString() || IsDate())
 		{
-			bytecode.m_lexType = CONSTANT;
+			m_current_lex.m_lexType = CONSTANT;
 
 			if (IsNumber()) {
-				bytecode.m_valData.SetNumber(GetNumber());
+
+				wxString strNumber; GetNumber(strNumber);
+				m_current_lex.m_valData.SetNumber(strNumber);
 
 				int n = nLexPos;
 
@@ -520,8 +525,8 @@ void CPrecompileCode::PatchLexem(unsigned int line, int offsetLine, unsigned int
 							{
 								n++;
 								if (m_listLexem[n].m_numData == '-')
-									bytecode.m_valData.m_fData = -bytecode.m_valData.m_fData;
-								m_listLexem[n] = bytecode;
+									m_current_lex.m_valData.m_fData = -m_current_lex.m_valData.m_fData;
+								m_listLexem[n] = m_current_lex;
 								continue;
 							}
 						}
@@ -530,13 +535,16 @@ void CPrecompileCode::PatchLexem(unsigned int line, int offsetLine, unsigned int
 			}
 			else {
 				if (IsString()) {
-					bytecode.m_valData.SetString(GetString());
+					wxString strString; GetString(strString);
+					m_current_lex.m_valData.SetString(strString);
 				}
 				else if (IsDate()) {
-					bytecode.m_valData.SetDate(GetDate());
+					wxString strDate; GetDate(strDate);
+					m_current_lex.m_valData.SetDate(strDate);
 				}
 			}
-			m_listLexem.insert(m_listLexem.begin() + nLexPos, bytecode);
+
+			m_listLexem.emplace(m_listLexem.begin() + nLexPos, std::move(m_current_lex));
 			nLexPos++;
 			continue;
 		}
@@ -550,30 +558,30 @@ void CPrecompileCode::PatchLexem(unsigned int line, int offsetLine, unsigned int
 		}
 		else {
 			s.clear();
-			bytecode.m_lexType = DELIMITER;
-			bytecode.m_numData = GetByte();
-			if (bytecode.m_numData <= 13) {
+			m_current_lex.m_lexType = DELIMITER;
+			m_current_lex.m_numData = GetByte();
+			if (m_current_lex.m_numData <= 13) {
 				nLexPos++;
 				continue;
 			}
 		}
-		bytecode.m_strData = s;
-		if (bytecode.m_lexType == KEYWORD) {
+		m_current_lex.m_strData = s;
+		if (m_current_lex.m_lexType == KEYWORD) {
 			if (
-				bytecode.m_numData == KEY_DEFINE //задание произвольного идентификатора
-				|| bytecode.m_numData == KEY_UNDEF //удаление идентификатора
-				|| (bytecode.m_numData == KEY_IFDEF || bytecode.m_numData == KEY_IFNDEF)  //условное компилирование
-				|| bytecode.m_numData == KEY_ENDIFDEF  //конец условного компилирования
-				|| bytecode.m_numData == KEY_ELSEDEF  //"Иначе" условного компилирования
-				|| bytecode.m_numData == KEY_REGION
-				|| bytecode.m_numData == KEY_ENDREGION
+				m_current_lex.m_numData == KEY_DEFINE //задание произвольного идентификатора
+				|| m_current_lex.m_numData == KEY_UNDEF //удаление идентификатора
+				|| (m_current_lex.m_numData == KEY_IFDEF || m_current_lex.m_numData == KEY_IFNDEF)  //условное компилирование
+				|| m_current_lex.m_numData == KEY_ENDIFDEF  //конец условного компилирования
+				|| m_current_lex.m_numData == KEY_ELSEDEF  //"Иначе" условного компилирования
+				|| m_current_lex.m_numData == KEY_REGION
+				|| m_current_lex.m_numData == KEY_ENDREGION
 				)
 			{
 				continue;
 			}
 		}
 
-		m_listLexem.insert(m_listLexem.begin() + nLexPos, bytecode); nLexPos++;
+		m_listLexem.emplace(m_listLexem.begin() + nLexPos, std::move(m_current_lex)); nLexPos++;
 	}
 
 	for (unsigned int i = nLexPos; i < m_listLexem.size() - 1; i++) {
@@ -686,19 +694,19 @@ bool CPrecompileCode::CompileFunction()
 	int nRes = m_strBuffer.find('\n', lex.m_numString);
 	if (nRes >= 0)
 	{
-		strShortDescription = m_strBuffer.Mid(lex.m_numString, nRes - lex.m_numString - 1);
+		strShortDescription = m_strBuffer.substr(lex.m_numString, nRes - lex.m_numString - 1);
 		nRes = strShortDescription.find_first_of('/');
 		if (nRes > 0)
 		{
 			if (strShortDescription[nRes - 1] == '/')// so this is a comment
 			{
-				strShortDescription = strShortDescription.Mid(nRes + 1);
+				strShortDescription = strShortDescription.substr(nRes + 1);
 			}
 		}
 		else
 		{
 			nRes = strShortDescription.find_first_of(')');
-			strShortDescription = strShortDescription.Left(nRes + 1);
+			strShortDescription = strShortDescription.substr(0, nRes + 1);
 		}
 	}
 

@@ -627,7 +627,7 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 		currPos = fromPos + translate.GetCurrentPos();
 		if (translate.IsWord()) {
 			try {
-				strWord = translate.GetWord();
+				translate.GetWord(strWord);
 			}
 			catch (...) {
 			}

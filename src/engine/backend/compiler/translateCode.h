@@ -104,6 +104,79 @@ public:
 		m_numLine(0)
 	{
 	}
+
+	CLexem(const CLexem& src) :
+		m_lexType(src.m_lexType),
+		m_numData(src.m_numData),
+		m_numString(src.m_numString),
+		m_numLine(src.m_numLine),
+
+		m_valData(src.m_valData),
+		m_strData(src.m_strData),
+
+		m_strModuleName(src.m_strModuleName),
+		m_strDocPath(src.m_strDocPath),
+		m_strFileName(src.m_strFileName)
+	{
+	}
+
+	CLexem(CLexem&& src) :
+		m_lexType(src.m_lexType),
+		m_numData(src.m_numData),
+		m_numString(src.m_numString),
+		m_numLine(src.m_numLine),
+
+		m_valData(std::move(src.m_valData)),
+		m_strData(std::move(src.m_strData)),
+
+		m_strModuleName(std::move(src.m_strModuleName)),
+		m_strDocPath(std::move(src.m_strDocPath)),
+		m_strFileName(std::move(src.m_strFileName))
+	{
+		src.m_lexType = 0;
+		src.m_numData = 0;
+		src.m_numString = 0;
+		src.m_numLine = 0;
+	}
+
+	CLexem& operator =(const CLexem& src)
+	{
+		m_lexType = src.m_lexType;
+		m_numData = src.m_numData;
+		m_numString = src.m_numString;
+		m_numLine = src.m_numLine;
+
+		m_valData = src.m_valData;
+		m_strData = src.m_strData;
+
+		m_strModuleName = src.m_strModuleName;
+		m_strDocPath = src.m_strDocPath;
+		m_strFileName = src.m_strFileName;
+
+		return *this;
+	}
+
+	CLexem& operator =(CLexem&& src)
+	{
+		m_lexType = src.m_lexType;
+		m_numData = src.m_numData;
+		m_numString = src.m_numString;
+		m_numLine = src.m_numLine;
+
+		m_valData = std::move(src.m_valData);
+		m_strData = std::move(src.m_strData);
+
+		m_strModuleName = std::move(src.m_strModuleName);
+		m_strDocPath = std::move(src.m_strDocPath);
+		m_strFileName = std::move(src.m_strFileName);
+
+		src.m_lexType = 0;
+		src.m_numData = 0;
+		src.m_numString = 0;
+		src.m_numLine = 0;
+
+		return *this;
+	}
 };
 
 typedef std::vector<CLexem> CLexemList;
@@ -193,43 +266,47 @@ public:
 	wxUniChar GetByte() const;
 
 	bool IsWord() const;
-	wxString GetWord(bool bOrigin = false, bool bGetPoint = false, wxString* psOrig = nullptr);
+#pragma region get_word
+	bool GetWord(bool realName = false, bool get_point = false) const { return GetWord(nullptr, nullptr, realName, get_point); }
+	bool GetWord(wxString& strWord, bool realName = false, bool get_point = false) const { return GetWord(&strWord, nullptr, realName, get_point); }
+	bool GetWord(wxString& strWord, wxString& strRealName, bool realName = false, bool get_point = false) const { return GetWord(&strWord, &strRealName, realName, get_point); }
+	bool GetWord(wxString* strWord, wxString* strRealName, bool realName, bool get_point) const;
+#pragma endregion  
 
 	bool IsNumber() const;
-	wxString GetNumber() const;
+#pragma region get_number
+	bool GetNumber() const { return GetNumber(nullptr); }
+	bool GetNumber(wxString& strNumber) const { return GetNumber(&strNumber); }
+	bool GetNumber(wxString* strNumber) const;
+#pragma endregion  
 
 	bool IsString() const;
-	wxString GetString() const;
+#pragma region get_string
+	bool GetString() const { return GetString(nullptr); }
+	bool GetString(wxString& strString) const { return GetString(&strString); }
+	bool GetString(wxString* strString) const;
+#pragma endregion  
 
 	bool IsDate() const;
-	wxString GetDate() const;
+#pragma region get_date
+	bool GetDate() const { return GetDate(nullptr); }
+	bool GetDate(wxString& strDate) const { return GetDate(&strDate); }
+	bool GetDate(wxString* strDate) const;
+#pragma endregion 
 
 	bool IsEnd() const;
 
-#if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
-	static long long IsKeyWord(const wxString& sKeyWord);
-#else
 	static int IsKeyWord(const wxString& sKeyWord);
-#endif
+	static wxString GetKeyWord(int keyword);
 
 	wxString GetStrToEndLine() const;
 	void PrepareFromCurrent(int nMode, const wxString& strName = wxEmptyString);
 
-	wxString GetModuleName() const {
-		return m_strModuleName;
-	}
+	wxString GetModuleName() const { return m_strModuleName; }
 
-	unsigned int GetBufferSize() const {
-		return m_strBuffer.size();
-	}
-
-	unsigned int GetCurrentPos() const {
-		return m_currentPos;
-	}
-
-	unsigned int GetCurrentLine() const {
-		return m_currentLine;
-	}
+	unsigned int GetBufferSize() const { return m_strBuffer.size(); }
+	unsigned int GetCurrentPos() const { return m_currentPos; }
+	unsigned int GetCurrentLine() const { return m_currentLine; }
 
 public:
 
@@ -244,6 +321,11 @@ protected:
 		const wxString& errorDesc = wxEmptyString) const
 	{
 	}
+
+	size_t CalcAllocSize() const;
+
+	//current lexem
+	CLexem m_current_lex;
 
 	//methods and variables for text parsing
 	std::vector<CTranslateCode*> m_listTranslateCode;
@@ -261,8 +343,8 @@ protected:
 
 	unsigned int m_bufferSize;//size of the original text
 
-	//original text:
-	wxString m_strBuffer;
+	//original and upper text :
+	wxStringImpl m_strBuffer, m_strBUFFER;
 
 	mutable unsigned int m_currentPos; //current position of the processed text
 	mutable unsigned int m_currentLine; //current line of the processed text

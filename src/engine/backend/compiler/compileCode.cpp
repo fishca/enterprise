@@ -1087,16 +1087,16 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 	const int numLine = lex.m_numLine;
 	int numRes = m_strBuffer.find('\n', lex.m_numLine);
 	if (numRes >= 0) {
-		strShortDescription = m_strBuffer.Mid(lex.m_numLine, numRes - lex.m_numLine - 1);
+		strShortDescription = m_strBuffer.substr(lex.m_numLine, numRes - lex.m_numLine - 1);
 		numRes = strShortDescription.find_first_of('/');
 		if (numRes > 0) {
 			if (strShortDescription[numRes - 1] == '/') { // so this is a comment
-				strShortDescription = strShortDescription.Mid(numRes + 1);
+				strShortDescription = strShortDescription.substr(numRes + 1);
 			}
 		}
 		else {
 			numRes = strShortDescription.find_first_of(')');
-			strShortDescription = strShortDescription.Left(numRes + 1);
+			strShortDescription = strShortDescription.substr(0, numRes + 1);
 		}
 	}
 

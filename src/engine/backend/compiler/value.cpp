@@ -45,6 +45,13 @@ CValue::CValue(const CValue& varValue)
 	DEBUG_VALUE_CREATE();
 }
 
+CValue::CValue(CValue&& varValue)
+	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false)
+{
+	Move(std::move(varValue));
+	DEBUG_VALUE_CREATE();
+}
+
 CValue::CValue(CValue* pValue)
 	: m_typeClass(eValueTypes::TYPE_EMPTY), m_refCount(0), m_pRef(pValue), m_bReadOnly(false)
 {
@@ -134,7 +141,9 @@ CVALUE_BYTYPE(const number_t&, eValueTypes::TYPE_NUMBER, m_fData);
 
 CVALUE_BYTYPE(wxLongLong_t, eValueTypes::TYPE_DATE, m_dData);
 
-CVALUE_BYTYPE_MOVE(char*, eValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(char*, eValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(wchar_t*, eValueTypes::TYPE_STRING, m_sData);
+
 CVALUE_BYTYPE_MOVE(const wxString&, eValueTypes::TYPE_STRING, m_sData);
 
 #undef CVALUE_BYTYPE
@@ -200,6 +209,49 @@ void CValue::Copy(const CValue& cOld)
 		m_typeClass = eValueTypes::TYPE_EMPTY;
 		break;
 	}
+}
+
+void CValue::Move(CValue&& cOld)
+{
+	if (this == &cOld)
+		return;
+
+	Reset();
+
+	m_typeClass = cOld.m_typeClass;
+
+	switch (m_typeClass) {
+	case eValueTypes::TYPE_NULL:
+		break;
+	case eValueTypes::TYPE_BOOLEAN:
+		m_bData = std::move(cOld.m_bData);
+		break;
+	case eValueTypes::TYPE_NUMBER:
+		m_fData = std::move(cOld.m_fData);
+		break;
+	case eValueTypes::TYPE_STRING:
+		m_sData = std::move(cOld.m_sData);
+		break;
+	case eValueTypes::TYPE_DATE:
+		m_dData = std::move(cOld.m_dData);
+		break;
+	case eValueTypes::TYPE_ENUM:
+	case eValueTypes::TYPE_OLE:
+	case eValueTypes::TYPE_VALUE:
+		m_typeClass = eValueTypes::TYPE_REFFER;
+		m_pRef = const_cast<CValue*>(&cOld);
+		m_pRef->IncrRef();
+		break;
+	case eValueTypes::TYPE_REFFER:
+		m_pRef = cOld.m_pRef;
+		m_pRef->IncrRef();
+		break;
+	default:
+		m_typeClass = eValueTypes::TYPE_EMPTY;
+		break;
+	}
+
+	cOld.Reset();
 }
 
 void CValue::operator = (bool cParam)
@@ -296,6 +348,12 @@ void CValue::operator = (const CValue& cParam)
 {
 	if (this != &cParam && !m_bReadOnly)
 		Copy(cParam);
+}
+
+void CValue::operator=(CValue&& cParam)
+{
+	if (this != &cParam && !m_bReadOnly)
+		Move(std::move(cParam));
 }
 
 void CValue::operator = (eValueTypes type)

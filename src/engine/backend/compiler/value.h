@@ -480,6 +480,7 @@ public:
 	 //constructors:
 	CValue();
 	CValue(const CValue& cParam);
+	CValue(CValue&& cParam);
 	CValue(CValue* pParam);
 	CValue(IBackendValue* pParam);
 	CValue(eValueTypes nType, bool readOnly = false);
@@ -493,8 +494,11 @@ public:
 	CValue(wxLongLong_t cParam); //date
 	CValue(const wxDateTime& cParam); //date
 	CValue(int nYear, int nMonth, int nDay, unsigned short nHour = 0, unsigned short nMinute = 0, unsigned short nSecond = 0); //date
-	CValue(const wxString& sParam); //string
+
 	CValue(char* sParam); //string
+	CValue(wchar_t* sParam); //string
+	CValue(const wxStringImpl& sParam); //string
+	CValue(const wxString& sParam); //string
 
 	//destructor:
 	virtual ~CValue();
@@ -514,6 +518,7 @@ public:
 
 	//operators:
 	void operator = (const CValue& cParam);
+	void operator = (CValue&& cParam);
 
 	void operator = (bool cParam);
 	void operator = (short cParam);
@@ -723,8 +728,9 @@ public:
 
 public:
 
-	//special copy function
+	//special copy & move function
 	inline void Copy(const CValue& cOld);
+	inline void Move(CValue&& cOld);
 
 	void FromDate(int& nYear, int& nMonth, int& nDay) const;
 	void FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour, unsigned short& nMinute, unsigned short& nSecond) const;

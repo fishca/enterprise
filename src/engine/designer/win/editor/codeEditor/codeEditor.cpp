@@ -18,11 +18,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CCodeEditor::CCodeEditor()
-	: wxStyledTextCtrl(), m_document(nullptr), ac(this), ct(this), m_precompileModule(nullptr), m_bInitialized(false) {
+	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false) {
 }
 
 CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), ac(this), ct(this), m_precompileModule(nullptr), m_bInitialized(false)
+	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false)
 {
 	// initialize styles
 	StyleClearAll();
@@ -288,75 +288,6 @@ void CCodeEditor::SetFontColorSettings(const FontColorSettings& settings)
 	SetCaretForeground(GetInverse(settings.GetColors(FontColorSettings::DisplayItem_Default).backColor));
 }
 
-void CCodeEditor::AppendText(const wxString& text)
-{
-	int lastLine = wxStyledTextCtrl::GetLineCount() - 1;
-
-	m_bInitialized = false;
-	wxStyledTextCtrl::AppendText(text);
-	m_bInitialized = true;
-
-	const IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
-
-	if (moduleObject != nullptr) {
-
-		try {
-			m_precompileModule->Load(GetText());
-			m_precompileModule->PrepareLexem();
-		}
-		catch (...) {
-		}
-
-		SaveModule();
-
-		debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(),
-			lastLine, wxStyledTextCtrl::GetLineCount() - lastLine - 1
-		);
-
-		m_document->Modify(true);
-	}
-}
-
-void CCodeEditor::Replace(long from, long to, const wxString& text)
-{
-	int lineStart = wxStyledTextCtrl::LineFromPosition(from);
-	int lineEnd = wxStyledTextCtrl::LineFromPosition(to);
-
-	int patchLine = 0;
-
-	const std::string strBuffer = text.utf8_str();
-
-	for (auto c : strBuffer) {
-		if (c == '\n') {
-			patchLine++;
-		}
-	}
-
-	m_bInitialized = false;
-	wxStyledTextCtrl::Replace(from, to, text);
-	m_bInitialized = true;
-
-	const IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
-
-	if (moduleObject != nullptr) {
-		try {
-			m_precompileModule->Load(GetText());
-			m_precompileModule->PrepareLexem();
-		}
-		catch (...) {
-		}
-		SaveModule();
-		if (moduleObject != nullptr) {
-			if (patchLine > (lineEnd - lineStart)) {
-				debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(),
-					lineStart, patchLine
-				);
-			}
-		}
-		m_document->Modify(true);
-	}
-}
-
 bool CCodeEditor::LoadModule()
 {
 	ClearAll();
@@ -388,8 +319,11 @@ bool CCodeEditor::LoadModule()
 
 			EmptyUndoBuffer();
 		}
+		
+		m_fp.RecreateFoldLevel();
 		return moduleObject != nullptr;
 	}
+	
 	return m_document != nullptr;
 }
 
@@ -525,7 +459,7 @@ bool CCodeEditor::SyntaxControl(bool throwMessage) const
 
 #define appendStyle(style) \
 CCodeEditor::StartStyling(currPos); \
-CCodeEditor::SetStyling(fromPos + translate.GetCurrentPos() - currPos, style);
+CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                          Styling                                                                       //
@@ -536,83 +470,7 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 	const int fromPos, const int toPos,
 	const wxString& strCode)
 {
-	class CFoldParser {
-		wxStyledTextCtrl* m_stc;
-	public:
-		CFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
-			m_stc(stc), m_fromLine(fromLine), m_toLine(toLine), m_foldLevel(0) {
-			m_foldLevel = m_stc->GetFoldLevel(fromLine);
-		}
-
-		void OpenFold(const int currentLine) {
-			m_folding_vector.emplace_back(m_fromLine + currentLine, +1);
-		}
-
-		void MarkFold(const int currentLine, const int mask = wxSTC_FOLDLEVELELSE_FLAG) {
-			m_mask_folding_vector.emplace_back(m_fromLine + currentLine, mask);
-		}
-
-		void CloseFold(const int currentLine) {
-			m_folding_vector.emplace_back(m_fromLine + currentLine, -1);
-		}
-
-		void PatchFold() {
-			int level = m_foldLevel ^ wxSTC_FOLDLEVELBASE_FLAG;
-			if ((m_foldLevel & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELHEADER_FLAG;
-			}
-			else if ((m_foldLevel & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELELSE_FLAG;
-			}
-			else if ((m_foldLevel & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
-				level = level ^ wxSTC_FOLDLEVELWHITE_FLAG;
-			}
-			for (int l = m_fromLine; l <= m_toLine; l++) {
-				const short curr_level = GetFoldLevel(l);
-				const int curr_mask = wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0);
-				if (curr_level > 0)
-					m_stc->SetFoldLevel(l, curr_mask | wxSTC_FOLDLEVELHEADER_FLAG);
-				else if (curr_level < 0)
-					m_stc->SetFoldLevel(l, curr_mask | wxSTC_FOLDLEVELWHITE_FLAG);
-				else
-					m_stc->SetFoldLevel(l, curr_mask | GetFoldMask(l));
-				level += curr_level;
-			}
-		}
-
-	private:
-		short GetFoldLevel(const int l) {
-			short foldLevel = 0;
-			for (auto& v : m_folding_vector) {
-				if (v.first == l) {
-					foldLevel += v.second;
-				}
-			}
-			return foldLevel;
-		}
-
-		short GetFoldMask(const int l) {
-			short foldMask = 0;
-			for (auto& v : m_mask_folding_vector) {
-				if (v.first == l) {
-					foldMask |= v.second;
-				}
-			}
-			return foldMask;
-		}
-	private:
-		//build a vector to include line and folding level
-		std::vector<std::pair<size_t, int>> m_folding_vector;
-		std::vector<std::pair<size_t, int>> m_mask_folding_vector;
-
-		int m_fromLine, m_toLine;
-		int m_foldLevel;
-	};
-
-	CFoldParser foldParser(this, fromLine, toLine);
-
-	CTranslateCode translate;
-	translate.Load(strCode);
+	m_tc.Load(strCode);
 
 	//вдруг строка начинается с комментария:
 	int wasLeftPoint = wxNOT_FOUND;
@@ -623,45 +481,16 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 
 	wxString strWord;
 	unsigned int currPos = fromPos;
-	while (!translate.IsEnd()) {
-		currPos = fromPos + translate.GetCurrentPos();
-		if (translate.IsWord()) {
+	while (!m_tc.IsEnd()) {
+		currPos = fromPos + m_tc.GetCurrentPos();
+		if (m_tc.IsWord()) {
 			try {
-				translate.GetWord(strWord);
+				m_tc.GetWord(strWord);
 			}
 			catch (...) {
 			}
 			const short keyWord = CTranslateCode::IsKeyWord(strWord);
-			if (keyWord != wxNOT_FOUND && wasLeftPoint != translate.GetCurrentLine()) {
-
-				if (keyWord == KEY_PROCEDURE
-					|| keyWord == KEY_FUNCTION
-					|| keyWord == KEY_IF
-					|| keyWord == KEY_FOR
-					|| keyWord == KEY_FOREACH
-					|| keyWord == KEY_WHILE
-					|| keyWord == KEY_TRY
-					) {
-					foldParser.OpenFold(translate.GetCurrentLine());
-				}
-				else if (
-					keyWord == KEY_ELSE
-					|| keyWord == KEY_ELSEIF
-					|| keyWord == KEY_EXCEPT
-					)
-				{
-					foldParser.MarkFold(translate.GetCurrentLine());
-				}
-				else if (
-					keyWord == KEY_ENDPROCEDURE
-					|| keyWord == KEY_ENDFUNCTION
-					|| keyWord == KEY_ENDIF
-					|| keyWord == KEY_ENDDO
-					|| keyWord == KEY_ENDTRY
-					) {
-					foldParser.CloseFold(translate.GetCurrentLine());
-				}
-
+			if (keyWord != wxNOT_FOUND && wasLeftPoint != m_tc.GetCurrentLine()) {
 				if (strWord.Left(1) == '#') {
 					appendStyle(wxSTC_C_PREPROCESSOR);
 				}
@@ -674,26 +503,26 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 			}
 			wasLeftPoint = wxNOT_FOUND;
 		}
-		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
-			if (translate.IsNumber()) {
+		else if (m_tc.IsNumber() || m_tc.IsString() || m_tc.IsDate()) {
+			if (m_tc.IsNumber()) {
 				try {
-					(void)translate.GetNumber();
+					(void)m_tc.GetNumber();
 				}
 				catch (...) {
 				}
 				appendStyle(wxSTC_C_NUMBER);
 			}
-			else if (translate.IsString()) {
+			else if (m_tc.IsString()) {
 				try {
-					(void)translate.GetString();
+					(void)m_tc.GetString();
 				}
 				catch (...) {
 				}
 				appendStyle(wxSTC_C_OPERATOR);
 			}
-			else if (translate.IsDate()) {
+			else if (m_tc.IsDate()) {
 				try {
-					(void)translate.GetDate();
+					(void)m_tc.GetDate();
 				}
 				catch (...) {
 				}
@@ -702,15 +531,16 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 			wasLeftPoint = wxNOT_FOUND;
 		}
 		else {
-			const wxUniChar& c = translate.GetByte();
+			const wxUniChar& c = m_tc.GetByte();
 			appendStyle(wxSTC_C_IDENTIFIER);
 			if (c == '.')
-				wasLeftPoint = translate.GetCurrentLine();
+				wasLeftPoint = m_tc.GetCurrentLine();
 			else
 				wasLeftPoint = wxNOT_FOUND;
 		}
 	}
-	foldParser.PatchFold();
+
+	m_fp.UpdateFoldLevel();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -921,6 +751,8 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				moduleObject->SetModuleText(codeText);
 			}
 		}
+
+		m_fp.RecreateFoldLevel();
 	}
 }
 
@@ -996,10 +828,9 @@ void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 	}
 	case WXK_NUMPAD_ENTER:
 	case WXK_RETURN: PrepareTABs(); break;
-		//case '.': if (m_bEnableAutoComplete) LoadAutoComplete(); event.Skip(); break;
 	case ' ': if (m_bEnableAutoComplete && event.ControlDown()) LoadAutoComplete(); event.Skip(); break;
 	case '9': if (m_bEnableAutoComplete && event.ShiftDown()) LoadCallTip(); event.Skip(); break;
-	case '0': if (m_bEnableAutoComplete && event.ShiftDown()) ct.Cancel(); event.Skip(); break;
+	case '0': if (m_bEnableAutoComplete && event.ShiftDown()) m_ct.Cancel(); event.Skip(); break;
 
 	case WXK_F8:
 	{
@@ -1020,9 +851,4 @@ void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 	break;
 	default: event.Skip(); break;
 	}
-}
-
-void CCodeEditor::OnMouseMove(wxMouseEvent& event)
-{
-	LoadToolTip(event.GetPosition()); event.Skip();
 }

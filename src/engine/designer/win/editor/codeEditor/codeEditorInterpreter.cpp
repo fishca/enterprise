@@ -318,8 +318,7 @@ void CPrecompileCode::PrepareModuleData()
 
 bool CPrecompileCode::PrepareLexem()
 {
-	wxString s;
-
+	wxString strWord;
 	m_listLexem.clear();
 
 	while (!IsEnd()) {
@@ -330,11 +329,11 @@ bool CPrecompileCode::PrepareLexem()
 
 		if (IsWord()) {
 
-			wxString sOrig;
+			wxString strOrig;
 
-			if (GetWord(s, sOrig)) {
+			if (GetWord(strWord, strOrig)) {
 
-				const int k = IsKeyWord(s);
+				const int k = IsKeyWord(strWord);
 
 				//undefined
 				if (k == KEY_UNDEFINED) {
@@ -344,7 +343,7 @@ bool CPrecompileCode::PrepareLexem()
 				//boolean
 				else if (k == KEY_TRUE || k == KEY_FALSE) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetBoolean(s);
+					m_current_lex.m_valData.SetBoolean(strWord);
 				}
 				//null
 				else if (k == KEY_NULL) {
@@ -360,15 +359,15 @@ bool CPrecompileCode::PrepareLexem()
 						m_current_lex.m_lexType = IDENTIFIER;
 					}
 
-					m_current_lex.m_valData = sOrig;
+					m_current_lex.m_valData = strOrig;
 				}
 			}
 		}
 		else if (IsNumber() || IsString() || IsDate()) {
 			m_current_lex.m_lexType = CONSTANT;
 			if (IsNumber()) {
-				GetNumber(s);
-				m_current_lex.m_valData.SetNumber(s);
+				GetNumber(strWord);
+				m_current_lex.m_valData.SetNumber(strWord);
 				int n = m_listLexem.size() - 1;
 				if (n >= 0) {
 					if (m_listLexem[n].m_lexType == DELIMITER && (m_listLexem[n].m_numData == '-' || m_listLexem[n].m_numData == '+')) {
@@ -388,33 +387,33 @@ bool CPrecompileCode::PrepareLexem()
 			}
 			else {
 				if (IsString()) {
-					GetString(s);
-					m_current_lex.m_valData.SetString(s);
+					GetString(strWord);
+					m_current_lex.m_valData.SetString(strWord);
 				}
 				else if (IsDate()) {
-					GetDate(s);
-					m_current_lex.m_valData.SetDate(s);
+					GetDate(strWord);
+					m_current_lex.m_valData.SetDate(strWord);
 				}
 			}
 
-			m_listLexem.push_back(m_current_lex);
+			m_listLexem.emplace_back(std::move(m_current_lex));
 			continue;
 		}
 		else if (IsByte('~')) {
-			s.clear();
+			strWord.clear();
 
 			GetByte();//пропускаем разделитель и вспомог. символ метки (как лишние)
 			continue;
 		}
 		else {
 
-			s.clear();
+			strWord.clear();
 			m_current_lex.m_lexType = DELIMITER;
 			m_current_lex.m_numData = GetByte();
 
 			if (m_current_lex.m_numData <= 13) continue;
 		}
-		m_current_lex.m_strData = s;
+		m_current_lex.m_strData = strWord;
 		if (m_current_lex.m_lexType == KEYWORD)
 		{
 			if (m_current_lex.m_numData == KEY_DEFINE)continue; //задание произвольного идентификатора
@@ -442,6 +441,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 
 	m_currentPos = m_currentPos = 0;
 	auto hint = m_listLexem.begin();
+	bool insert_after = false;
 
 	for (unsigned int i = 0; i <= m_listLexem.size() - 1; i++) {
 
@@ -454,7 +454,8 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 				m_currentLine = m_listLexem[lexem_start_idx - 1].m_numLine;
 				m_currentPos = m_listLexem[lexem_start_idx - 1].m_numString;
 				lexem_idx = lexem_start_idx - 1;
-				std::advance(hint, lexem_idx - 1);
+				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
+				insert_after = lexem_idx > 0;
 			}
 			break;
 		}
@@ -464,18 +465,19 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 				m_currentPos = m_listLexem[i - 1].m_numString;
 				lexem_idx = i - 1;
 				std::advance(hint, lexem_idx - 1);
+				insert_after = true;
 			}
 			break;
 		}
 	}
 
-	wxString s;
+	wxString strWord;
 
 	const bool insert_text = pos_offset > 0;
 	const bool delete_text = pos_offset < 0;
 
 	m_listLexem.erase(
-		std::remove_if(m_listLexem.begin() + lexem_idx, m_listLexem.end() - 1,
+		std::remove_if(std::execution::par, m_listLexem.begin() + lexem_idx, m_listLexem.end() - 1,
 			[line, line_offset, insert_text, delete_text](const auto& e) {
 				if (insert_text) return e.m_numLine <= line;
 				if (delete_text) return e.m_numLine <= (line - line_offset);
@@ -483,8 +485,6 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			}),
 		m_listLexem.end() - 1
 	);
-
-	bool insert_after = hint != m_listLexem.begin();
 
 	while (!IsEnd()) {
 
@@ -498,11 +498,11 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 
 		if (IsWord()) {
 
-			wxString sOrig;
+			wxString strOrig;
 
-			if (GetWord(s, sOrig)) {
+			if (GetWord(strWord, strOrig)) {
 
-				const int k = IsKeyWord(s);
+				const int k = IsKeyWord(strWord);
 
 				//undefined
 				if (k == KEY_UNDEFINED) {
@@ -512,7 +512,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 				//boolean
 				else if (k == KEY_TRUE || k == KEY_FALSE) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetBoolean(s);
+					m_current_lex.m_valData.SetBoolean(strWord);
 				}
 				//null
 				else if (k == KEY_NULL) {
@@ -527,22 +527,22 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 					else {
 						m_current_lex.m_lexType = IDENTIFIER;
 					}
-					m_current_lex.m_valData = sOrig;
+					m_current_lex.m_valData = strOrig;
 				}
 			}
 
-			m_current_lex.m_strData = s;
+			m_current_lex.m_strData = strWord;
 		}
 		else if (IsNumber() || IsString() || IsDate()) {
 			m_current_lex.m_lexType = CONSTANT;
 			if (IsNumber()) {
 
-				GetNumber(s); m_current_lex.m_valData.SetNumber(s);
+				GetNumber(strWord); m_current_lex.m_valData.SetNumber(strWord);
 
 				if (hint != m_listLexem.begin() && hint->m_lexType == DELIMITER && (hint->m_numData == '-' || hint->m_numData == '+')) {
 					auto prev = std::prev(hint, 1);
 					if (prev != m_listLexem.begin() && prev->m_lexType == DELIMITER && (prev->m_numData == '[' || prev->m_numData == '(' || prev->m_numData == ',' || prev->m_numData == '<' || prev->m_numData == '>' || prev->m_numData == '=')) {
-						if (hint->m_numData == '-') 
+						if (hint->m_numData == '-')
 							m_current_lex.m_valData.m_fData = -m_current_lex.m_valData.m_fData;
 						*hint = std::move(m_current_lex);
 						continue;
@@ -551,10 +551,10 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			}
 			else {
 				if (IsString()) {
-					GetString(s); m_current_lex.m_valData.SetString(s);
+					GetString(strWord); m_current_lex.m_valData.SetString(strWord);
 				}
 				else if (IsDate()) {
-					GetDate(s); m_current_lex.m_valData.SetDate(s);
+					GetDate(strWord); m_current_lex.m_valData.SetDate(strWord);
 				}
 			}
 
@@ -571,20 +571,20 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			continue;
 		}
 		else if (IsByte('~')) {
-			s.clear();
+			strWord.clear();
 			GetByte();//пропускаем разделитель и вспомог. символ метки (как лишние)
 			continue;
 		}
 		else {
 
-			s.clear();
+			strWord.clear();
 
 			m_current_lex.m_lexType = DELIMITER;
 			m_current_lex.m_numData = GetByte();
 
 			if (m_current_lex.m_numData <= 13) continue;
 		}
-		m_current_lex.m_strData = s;
+		m_current_lex.m_strData = strWord;
 		if (m_current_lex.m_lexType == KEYWORD) {
 			if (
 				m_current_lex.m_numData == KEY_DEFINE //задание произвольного идентификатора
@@ -612,11 +612,15 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 	}
 
 	const size_t lex_size = m_listLexem.size() - 1;
-	const size_t lex_distance = std::distance(m_listLexem.begin(), insert_after ? hint + 1 : hint);
 
-	for (unsigned int i = lex_distance; i < lex_size; i++) {
-		m_listLexem[i].m_numLine += line_offset;
-		m_listLexem[i].m_numString += pos_offset;
+	if (lex_size > 0) {
+		
+		const size_t lex_distance = std::distance(m_listLexem.begin(), insert_after ? hint + 1 : hint);
+		
+		for (unsigned int i = lex_distance; i < lex_size; i++) {
+			m_listLexem[i].m_numLine += line_offset;
+			m_listLexem[i].m_numString += pos_offset;
+		}
 	}
 
 	m_listLexem[lex_size].m_numString += pos_offset;

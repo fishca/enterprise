@@ -227,6 +227,7 @@ void CTranslateCode::LoadKeyWords()
 void CTranslateCode::Clear()
 {
 	m_strBuffer.clear();
+	m_strBUFFER.clear();
 
 	//m_listLexem.Clear();
 	//m_listTranslateCode.Clear();
@@ -249,16 +250,21 @@ void CTranslateCode::Load(const wxString& strCode)
 
 	m_bufferSize = strCode.length();
 
-	m_strBuffer.assign(strCode);
-	m_strBUFFER.assign(strCode);
+	if (m_bufferSize > 0) {
 
-	std::transform(m_strBUFFER.begin(), m_strBUFFER.end(),
-		m_strBUFFER.begin(), ::toupper
-	);
+		m_strBuffer.assign(strCode);
+		m_strBUFFER.assign(strCode);
 
-	const size_t alloc_size = CalcAllocSize(); 
-	if (alloc_size > m_listLexem.capacity()) 
-		m_listLexem.reserve(alloc_size);
+		std::transform(std::execution::par,
+			strCode.begin(), strCode.end(),
+			m_strBUFFER.begin(),
+			::toupper
+		);
+
+		const size_t alloc_size = CalcAllocSize();
+		if (alloc_size > m_listLexem.capacity())
+			m_listLexem.reserve(alloc_size + 1000);
+	}
 }
 
 /**
@@ -734,8 +740,8 @@ bool CTranslateCode::IsEnd() const
 
 int CTranslateCode::IsKeyWord(const wxString& strKeyWord)
 {
-	auto it = std::find_if(
-		ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(), [strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
+	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
+		[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
 			return stringUtils::CompareString(pair.first, strKeyWord);
 		}
 	);
@@ -748,8 +754,8 @@ int CTranslateCode::IsKeyWord(const wxString& strKeyWord)
 
 wxString CTranslateCode::GetKeyWord(int k)
 {
-	auto it = std::find_if(
-		ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(), [k](const std::pair<const wxString, void*>& pair) -> bool {
+	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(), 
+		[k](const std::pair<const wxString, void*>& pair) -> bool {
 			return k == ((int)pair.second) - 1;
 		}
 	);
@@ -768,7 +774,6 @@ wxString CTranslateCode::GetKeyWord(int k)
 bool CTranslateCode::PrepareLexem()
 {
 	m_listLexem.clear();
-	m_listLexem.reserve(CalcAllocSize());
 
 	if (m_defineList == nullptr) {
 		m_defineList = new CDefineList();
@@ -834,7 +839,7 @@ bool CTranslateCode::PrepareLexem()
 					}
 					m_current_lex.m_valData = strOrig;
 				}
-			
+
 				m_current_lex.m_strData = s;
 			}
 		}
@@ -1148,6 +1153,7 @@ size_t CTranslateCode::CalcAllocSize() const {
 			alloc_size++;
 		}
 	}
+
 
 	m_currentLine = store_line; m_currentPos = store_pos;
 	return alloc_size;

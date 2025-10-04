@@ -17,14 +17,14 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 		vObject.GetType() != eValueTypes::TYPE_OLE) {
 		for (long i = 0; i < vObject.GetNMethods(); i++) {
 			if (vObject.HasRetVal(i)) {
-				ac.Append(
+				m_ac.Append(
 					eContentType::eFunction,
 					vObject.GetMethodName(i),
 					vObject.GetMethodHelper(i)
 				);
 			}
 			else {
-				ac.Append(
+				m_ac.Append(
 					eContentType::eProcedure,
 					vObject.GetMethodName(i),
 					vObject.GetMethodHelper(i)
@@ -32,7 +32,7 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 			}
 		}
 		for (long i = 0; i < vObject.GetNProps(); i++) {
-			ac.Append(
+			m_ac.Append(
 				eContentType::eVariable,
 				vObject.GetPropName(i),
 				wxEmptyString
@@ -46,21 +46,21 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
 						if (code.eType == eExportVariable) {
-							ac.Append(
+							m_ac.Append(
 								eContentType::eExportVariable,
 								code.strName,
 								wxEmptyString
 							);
 						}
 						else if (code.eType == eExportProcedure) {
-							ac.Append(
+							m_ac.Append(
 								eContentType::eExportFunction,
 								code.strName,
 								code.strShortDescription
 							);
 						}
 						else if (code.eType == eExportFunction) {
-							ac.Append(
+							m_ac.Append(
 								eContentType::eExportFunction,
 								code.strName,
 								code.strShortDescription
@@ -78,13 +78,13 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 				if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
 						if (code.eType == eExportVariable) {
-							ac.Append(eContentType::eExportVariable, code.strName, wxEmptyString);
+							m_ac.Append(eContentType::eExportVariable, code.strName, wxEmptyString);
 						}
 						else if (code.eType == eExportProcedure) {
-							ac.Append(eContentType::eExportFunction, code.strName, code.strShortDescription);
+							m_ac.Append(eContentType::eExportFunction, code.strName, code.strShortDescription);
 						}
 						else if (code.eType == eExportFunction) {
-							ac.Append(eContentType::eExportFunction, code.strName, code.strShortDescription);
+							m_ac.Append(eContentType::eExportFunction, code.strName, code.strShortDescription);
 						}
 					}
 				}
@@ -94,7 +94,7 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 	else if (debugClient->IsEnterLoop()) {
 		CPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
 		if (currContext && currContext->FindVariable(m_precompileModule->sLastParentKeyword)) {
-			ac.Cancel();
+			m_ac.Cancel();
 			const IMetaObject *metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateAutocomplete(
@@ -216,74 +216,119 @@ void CCodeEditor::PrepareTABs()
 	const int curr_line =
 		CCodeEditor::LineFromPosition(curr_position);
 
-	const int level = CCodeEditor::GetFoldLevel(curr_line);
+	const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
+	const int level = m_fp.GetFoldMask(curr_line);
+
+	wxString rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
+
 	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
 
 	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
-		const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
-		if (start_line_pos + fold_level != curr_position) {
-			fold_level = fold_level + 1;
+	
+		int current_fold = 0; int replace_pos = 0;
+		std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
+		const int length = curr_position - start_line_pos;
+		for (int i = 0; i < length; i++) {
+			if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
+				current_fold++; replace_pos = i + 1;
+			}
+			else break;
 		}
+
+		if (current_fold != fold_level) {
+
+			(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+
+			unsigned short replace_correct =
+				(replace_pos > fold_level ? replace_pos - fold_level : 0);
+
+			rawBufferLine.replace(
+				0, replace_correct + strBuffer.length(), strBuffer);
+		}
+
+		if (start_line_pos + fold_level != curr_position) fold_level++;
 	}
 	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELELSE_FLAG);
 		if (fold_level >= 0) {
+			
 			const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
-			int currFold = 0; int toPos = 0;
+		
+			int current_fold = 0; int replace_pos = 0;
+			
 			std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
 			const int length = curr_position - start_line_pos;
 			for (int i = 0; i < length; i++) {
 				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					currFold++; toPos = i + 1;
+					current_fold++; replace_pos = i + 1;
 				}
 				else break;
-			};
-			if (currFold != (fold_level - 1)) {
-				(void)strBuffer.replace(0, toPos, fold_level - 1, '\t');
-				(void)strBuffer.append(toPos > (fold_level - 1) ? toPos - (fold_level - 1) : 0, ' ');
-				CCodeEditor::Replace(
-					start_line_pos,
-					start_line_pos + strBuffer.length(),
-					strBuffer
-				);
+			}
+			
+			if (current_fold != (fold_level - 1)) {
+
+				(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+
+				unsigned short replace_correct =
+					(replace_pos > fold_level ? replace_pos - fold_level : 0);
+
+				rawBufferLine.replace(
+					0, replace_correct + strBuffer.length(), strBuffer);
 			}
 
-			if (start_line_pos + fold_level - 1 == curr_position) {
-				fold_level = fold_level - 1;
-			}
+			if (start_line_pos + fold_level - 1 == curr_position) fold_level--;	
 		}
 	}
 	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
 		if (fold_level >= 0) {
 			const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
-			int currFold = 0; int toPos = 0;
+			int current_fold = 0; int replace_pos = 0;
 			std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
 			const int length = curr_position - start_line_pos;
 			for (int i = 0; i < length; i++) {
 				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					currFold++; toPos = i + 1;
+					current_fold++; replace_pos = i + 1;
 				}
 				else break;
-			};
-			if (currFold != fold_level) {
-				(void)strBuffer.replace(0, toPos, fold_level, '\t');
-				(void)strBuffer.append(toPos > fold_level ? toPos - fold_level : 0, ' ');
-				CCodeEditor::Replace(
-					start_line_pos,
-					start_line_pos + strBuffer.length(),
-					strBuffer
-				);
+			}
+			if (current_fold != fold_level) {
+
+				(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+
+				unsigned short replace_correct =
+					(replace_pos > fold_level ? replace_pos - fold_level : 0);
+
+				rawBufferLine.replace(
+					0, replace_correct + strBuffer.length(), strBuffer);
 			}
 		}
 	}
-	std::string strBuffer;
-	strBuffer.append("\r\n");
-	for (int i = 0; i < fold_level; i++) strBuffer.push_back('\t');
-	CCodeEditor::InsertText(curr_position, strBuffer);
-	CCodeEditor::GotoLine(CCodeEditor::LineFromPosition(curr_position + strBuffer.length()));
-	CCodeEditor::SetEmptySelection(curr_position + strBuffer.length());
+
+	wxString strEOL;
+	switch (CCodeEditor::GetEOLMode())
+	{
+	case wxSTC_EOL_CRLF:
+		strEOL.Append('\r');
+		strEOL.Append('\n');
+		break;
+	case wxSTC_EOL_CR:
+		strEOL.Append('\r');
+		break;
+	default:
+		strEOL.Append('\n');
+		break;
+	}
+
+	rawBufferLine.Append(strEOL);
+	rawBufferLine.Append('\t', fold_level);
+
+	CCodeEditor::Replace(start_line_pos, curr_position, rawBufferLine);
+	
+	const size_t length = rawBufferLine.length();
+	CCodeEditor::GotoLine(CCodeEditor::LineFromPosition(start_line_pos + length));
+	CCodeEditor::SetEmptySelection(start_line_pos + length);
 }
 
 void CCodeEditor::LoadAutoComplete()
@@ -301,11 +346,11 @@ void CCodeEditor::LoadAutoComplete()
 
 	wxString strExpression, strKeyWord, strCurWord; bool hasPoint = true;
 
-	if (ct.Active())
-		ct.Cancel();
+	if (m_ct.Active())
+		m_ct.Cancel();
 
 	if (!PrepareExpression(realPos, strExpression, strKeyWord, strCurWord, hasPoint)) {
-		ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
+		m_ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
 		if (hasPoint) {
 			LoadIntelliList();
 		}
@@ -314,13 +359,13 @@ void CCodeEditor::LoadAutoComplete()
 		}
 	}
 	else {
-		ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
+		m_ac.Start(strCurWord, currentPos, lenEntered, TextHeight(GetCurrentLine()));
 		LoadFromKeyWord(strKeyWord);
 	}
 
 	wxPoint position = PointFromPosition(wordStartPos);
 	position.y += TextHeight(GetCurrentLine());
-	ac.Show(position);
+	m_ac.Show(position);
 }
 
 void CCodeEditor::LoadToolTip(const wxPoint& pos)
@@ -450,7 +495,7 @@ void CCodeEditor::LoadCallTip()
 	}
 
 	if (!sDescription.IsEmpty()) {
-		ct.Show(currentPos, sDescription);
+		m_ct.Show(currentPos, sDescription);
 	}
 
 	m_precompileModule->Clear();
@@ -461,7 +506,7 @@ void CCodeEditor::LoadSysKeyword()
 	m_precompileModule->m_nCurrentPos = GetRealPosition();
 
 	for (int i = 0; i < LastKeyWord; i++) {
-		ac.Append(eContentType::eVariable,
+		m_ac.Append(eContentType::eVariable,
 			s_listKeyWord[i].m_strKeyWord,
 			s_listKeyWord[i].m_strShortDescription
 		);
@@ -473,7 +518,7 @@ void CCodeEditor::LoadSysKeyword()
 			CPrecompileVariable m_variable = variable.second;
 			if (m_variable.bTempVar)
 				continue;
-			ac.Append(m_variable.bExport ?
+			m_ac.Append(m_variable.bExport ?
 				eContentType::eExportVariable : eContentType::eVariable, m_variable.strRealName, wxEmptyString
 			);
 		}
@@ -482,14 +527,14 @@ void CCodeEditor::LoadSysKeyword()
 			CPrecompileFunction* m_functionContext = function.second;
 			if (m_functionContext->m_pContext) {
 				if (m_functionContext->m_pContext->nReturn == RETURN_FUNCTION) {
-					ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
+					m_ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
 				}
 				else {
-					ac.Append(m_functionContext->bExport ? eContentType::eExportProcedure : eContentType::eProcedure, m_functionContext->strRealName, m_functionContext->strShortDescription);
+					m_ac.Append(m_functionContext->bExport ? eContentType::eExportProcedure : eContentType::eProcedure, m_functionContext->strRealName, m_functionContext->strShortDescription);
 				}
 			}
 			else {
-				ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
+				m_ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
 			}
 
 			if (m_precompileModule->m_pCurrentContext && m_precompileModule->m_pCurrentContext == m_functionContext->m_pContext) {
@@ -497,7 +542,7 @@ void CCodeEditor::LoadSysKeyword()
 					CPrecompileVariable m_variable = variable.second;
 					if (m_variable.bTempVar)
 						continue;
-					ac.Append(m_variable.bExport ?
+					m_ac.Append(m_variable.bExport ?
 						eContentType::eExportVariable : eContentType::eVariable, m_variable.strRealName, wxEmptyString
 					);
 				}
@@ -529,24 +574,24 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 {
 	if (stringUtils::CompareString(strKeyWord, wxT("new"))) {
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_value))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 	}
 	else if (stringUtils::CompareString(strKeyWord, wxT("type")))
 	{
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_primitive))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_value))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_system))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		for (auto class_obj : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_enum))
-			ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 
 		if (m_document) {
 			const IMetaObject* metaObject = m_document->GetMetaObject();
@@ -555,15 +600,15 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 				wxASSERT(metaData);
 
 				for (auto class_obj : metaData->GetListCtorsByType(eCtorMetaType::eCtorMetaType_Object))
-					ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+					m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 				for (auto class_obj : metaData->GetListCtorsByType(eCtorMetaType::eCtorMetaType_Reference))
-					ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+					m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 				for (auto class_obj : metaData->GetListCtorsByType(eCtorMetaType::eCtorMetaType_List))
-					ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+					m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 				for (auto class_obj : metaData->GetListCtorsByType(eCtorMetaType::eCtorMetaType_Manager))
-					ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+					m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 				for (auto class_obj : metaData->GetListCtorsByType(eCtorMetaType::eCtorMetaType_Selection))
-					ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
+					m_ac.Append(eContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 			}
 		}
 	}
@@ -576,7 +621,7 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 		wxASSERT(metaData);
 
 		for (auto& obj : metaData->GetMetaObject(g_metaCommonFormCLSID))
-			ac.Append(eContentType::eVariable, obj->GetName(), wxEmptyString);
+			m_ac.Append(eContentType::eVariable, obj->GetName(), wxEmptyString);
 	}
 }
 
@@ -584,20 +629,20 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 
 void CCodeEditor::ShowAutoComplete(const CDebugAutoCompleteData& autoCompleteData)
 {
-	ac.Cancel();
+	m_ac.Cancel();
 
 	for (unsigned int i = 0; i < autoCompleteData.m_arrVar.size(); i++) {
-		ac.Append(eContentType::eVariable, autoCompleteData.m_arrVar[i].m_variableName, wxEmptyString);
+		m_ac.Append(eContentType::eVariable, autoCompleteData.m_arrVar[i].m_variableName, wxEmptyString);
 	}
 
 	for (unsigned int i = 0; i < autoCompleteData.m_arrMeth.size(); i++) {
-		ac.Append(autoCompleteData.m_arrMeth[i].m_methodRet ? eContentType::eFunction : eContentType::eProcedure,
+		m_ac.Append(autoCompleteData.m_arrMeth[i].m_methodRet ? eContentType::eFunction : eContentType::eProcedure,
 			autoCompleteData.m_arrMeth[i].m_methodName, 
 			autoCompleteData.m_arrMeth[i].m_methodHelper
 		);
 	}
 	
-	ac.Start(autoCompleteData.m_keyword,
+	m_ac.Start(autoCompleteData.m_keyword,
 		autoCompleteData.m_currentPos,
 		autoCompleteData.m_keyword.Length(),
 		TextHeight(GetCurrentLine())
@@ -605,5 +650,5 @@ void CCodeEditor::ShowAutoComplete(const CDebugAutoCompleteData& autoCompleteDat
 
 	wxPoint position = PointFromPosition(autoCompleteData.m_currentPos);
 	position.y += TextHeight(GetCurrentLine());
-	ac.Show(position);
+	m_ac.Show(position);
 }

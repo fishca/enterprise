@@ -274,51 +274,14 @@ void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxStrin
 		};
 	}
 
-	const int currLine = 1 + m_strBuffer.Left(start_pos).Replace('\n', '\n');
+	const int currLine = 1 + std::count(
+		m_strBuffer.begin(), m_strBuffer.begin() + start_pos, '\n');
 
 	CTranslateCode::SetError(codeError,
 		m_strFileName, m_strModuleName, m_strDocPath,
 		currPos, currLine,
-		errorDesc);
-}
-
-/**
-* SetError
-* Purpose:
-* Remember the translation error and raise an exception
-* Return value:
-* The method does not return control!strCurWord
-*/
-
-void CTranslateCode::SetError(int codeError,
-	const wxString& strFileName, const wxString& strModuleName, const wxString& strDocPath,
-	int currPos, int currLine,
-	const wxString& strErrorDesc) const
-{
-	const wxString& strCodeLineError =
-		CBackendException::FindErrorCodeLine(m_strBuffer, currPos);
-
-	ProcessError(
-		strFileName,
-		strModuleName, strDocPath,
-		currPos, currLine,
-		strCodeLineError, codeError, strErrorDesc
+		errorDesc
 	);
-}
-
-/**
-* ProcessError
-* Purpose:
-* Remember translation error and raise exception
-* Return value:
-* Method does not return control!strCurWord
-*/
-
-void CTranslateCode::ProcessError(const wxString& strFileName,
-	const wxString& strModuleName, const wxString& strDocPath,
-	unsigned int currPos, unsigned int currLine,
-	const wxString& strCodeLineError, int codeError, const wxString& strErrorDesc) const
-{
 }
 
 /**

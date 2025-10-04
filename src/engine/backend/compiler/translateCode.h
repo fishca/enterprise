@@ -178,13 +178,13 @@ protected:
 	void SetError(int codeError,
 		const wxString& strFileName, const wxString& strModuleName, const wxString& strDocPath,
 		int currPos, int currLine,
-		const wxString& errorDesc = wxEmptyString) const;
-public:
-	virtual void ProcessError(const wxString& strFileName,
-		const wxString& strModuleName, const wxString& strDocPath,
-		unsigned int currPos, unsigned int currLine,
-		const wxString& strCodeLineError, int codeError, const wxString& strErrorDesc
-	) const;
+		const wxString& errorDesc = wxEmptyString) const
+	{
+		DoSetError(codeError,
+			strFileName, strModuleName, strDocPath,
+			currPos, currLine, errorDesc
+		);
+	}
 public:
 
 	inline void SkipSpaces() const;
@@ -238,9 +238,15 @@ public:
 
 protected:
 
+	virtual void DoSetError(int codeError,
+		const wxString& strFileName, const wxString& strModuleName, const wxString& strDocPath,
+		unsigned int currPos, unsigned int currLine,
+		const wxString& errorDesc = wxEmptyString) const
+	{
+	}
+
 	//methods and variables for text parsing
 	std::vector<CTranslateCode*> m_listTranslateCode;
-
 
 	//Support for "defines":
 	CDefineList* m_defineList;

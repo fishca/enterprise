@@ -101,20 +101,21 @@ public:
 	};
 
 private:
+	
 	// methods for displaying errors during compilation::
 	void SetError(int nErr, const wxString& strError = wxEmptyString);
 	void SetError(int nErr, const wxUniChar& c);
-public:
 
-	virtual void ProcessError(const wxString& strFileName,
-		const wxString& strModuleName, const wxString& strDocPath,
-		unsigned int currPos, unsigned int currLine,
-		const wxString& strCodeLineError, int codeError, const wxString& strErrorDesc
-	) const;
+public:
 
 	CParamUnit GetExpression(CCompileContext* context, int priority = 0);
 
 protected:
+
+	virtual void DoSetError(int codeError,
+		const wxString& strFileName, const wxString& strModuleName, const wxString& strDocPath,
+		unsigned int currPos, unsigned int currLine,
+		const wxString& strErrorDesc) const;
 
 	CLexem PreviewGetLexem();
 	CLexem GetLexem();
@@ -136,11 +137,8 @@ protected:
 
 	bool CompileModule();
 	bool CompileFunction(CCompileContext* context);
-
 	bool CompileDeclaration(CCompileContext* context);
-
 	bool CompileBlock(CCompileContext* context);
-
 	bool CompileNewObject(CCompileContext* context);
 	bool CompileGoto(CCompileContext* context);
 	bool CompileIf(CCompileContext* context);

@@ -1,5 +1,6 @@
 #include "compileModule.h"
 #include "backend/metaCollection/metaModuleObject.h"
+#include "appData.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4018)
@@ -54,7 +55,7 @@ bool CCompileModule::Compile()
 	}
 
 	//recursively compile modules in case of any changes
-	if (m_parent != nullptr) {
+	if (m_parent != nullptr && appData->DesignerMode()) {
 
 		std::stack<CCompileModule*> compileModule; bool callRecompile = false;
 

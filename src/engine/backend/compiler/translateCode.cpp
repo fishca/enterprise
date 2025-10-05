@@ -256,9 +256,9 @@ void CTranslateCode::Load(const wxString& strCode)
 		m_strBUFFER.assign(strCode);
 
 		std::transform(std::execution::par,
-			strCode.begin(), strCode.end(),
+			m_strBUFFER.begin(), m_strBUFFER.end(),
 			m_strBUFFER.begin(),
-			::toupper
+			[](const auto& c) { return std::toupper(c); }
 		);
 
 		const size_t alloc_size = CalcAllocSize();
@@ -740,21 +740,26 @@ bool CTranslateCode::IsEnd() const
 
 int CTranslateCode::IsKeyWord(const wxString& strKeyWord)
 {
-	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
-		[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
-			return stringUtils::CompareString(pair.first, strKeyWord);
-		}
-	);
+	//auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
+	//	[strKeyWord](const std::pair<const wxString, void*>& pair) -> bool {
+	//		return stringUtils::CompareString(pair.first, strKeyWord);
+	//	}
+	//);
 
-	if (it != ms_listHashKeyWord.end())
-		return ((int)it->second) - 1;
+	//if (it != ms_listHashKeyWord.end())
+	//	return ((int)it->second) - 1;
+
+	for (auto& pair : ms_listHashKeyWord) {
+		if (stringUtils::CompareString(pair.first, strKeyWord))
+			return reinterpret_cast<int>(pair.second) - 1;
+	}
 
 	return wxNOT_FOUND;
 }
 
 wxString CTranslateCode::GetKeyWord(int k)
 {
-	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(), 
+	auto it = std::find_if(std::execution::par, ms_listHashKeyWord.begin(), ms_listHashKeyWord.end(),
 		[k](const std::pair<const wxString, void*>& pair) -> bool {
 			return k == ((int)pair.second) - 1;
 		}

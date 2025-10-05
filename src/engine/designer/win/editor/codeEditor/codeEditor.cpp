@@ -92,7 +92,7 @@ CCodeEditor::~CCodeEditor()
 
 void CCodeEditor::EditDebugPoint(int line_to_edit)
 {
-	//Обновляем список точек останова
+	//Update the list of breakpoints
 	const int dwFlags = MarkerGet(line_to_edit);
 	if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
 		debugClient->RemoveBreakpoint(m_document->GetFilename(), line_to_edit);
@@ -105,7 +105,8 @@ void CCodeEditor::EditDebugPoint(int line_to_edit)
 void CCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
 {
 	MarkerDeleteAll(CCodeEditor::Breakpoint);
-	//Обновляем список точек останова
+
+	//Update the list of breakpoints
 	for (auto& line_to_edit : debugClient->GetDebugList(m_document->GetFilename())) {
 		const int dwFlags = MarkerGet(line_to_edit);
 		if (!(dwFlags & (1 << CCodeEditor::Breakpoint))) {
@@ -163,8 +164,7 @@ void CCodeEditor::SetEditorSettings(const EditorSettings& settings)
 	if (settings.GetShowLineNumbers()) {
 		// Figure out how wide the margin needs to be do display
 		// the most number of linqes we'd reasonbly have.
-		int marginSize = TextWidth(wxSTC_STYLE_LINENUMBER, "_999999");
-		SetMarginWidth(DEF_LINENUMBER_ID, marginSize);
+		SetMarginWidth(DEF_LINENUMBER_ID, TextWidth(wxSTC_STYLE_LINENUMBER, "_9999999"));
 	}
 
 	// set margin as unused
@@ -317,7 +317,7 @@ bool CCodeEditor::LoadModule()
 
 			EmptyUndoBuffer();
 		}
-		
+
 		m_fp.RecreateFoldLevel();
 		RefreshEditor();
 		return moduleObject != nullptr;
@@ -668,7 +668,7 @@ void CCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 	case DEF_BREAKPOINT_ID: {
 		const int dwFlags = CCodeEditor::MarkerGet(line_from_pos);
 		if (IsEditable()) {
-			//Обновляем список точек останова
+			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
 			if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
@@ -710,7 +710,11 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				m_precompileModule->Load(codeText);
 
 				if (event.m_linesAdded != 0) {
-					debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(), line + 1, event.m_linesAdded);
+
+					debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(),
+						line + event.m_linesAdded, event.m_linesAdded);
+
+					RefreshBreakpoint();
 				}
 
 				try {
@@ -835,7 +839,7 @@ void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 	{
 		const int line_from_pos = LineFromPosition(GetCurrentPos());
 		if (IsEditable()) {
-			//Обновляем список точек останова
+			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
 			if ((CCodeEditor::MarkerGet(line_from_pos) & (1 << CCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {

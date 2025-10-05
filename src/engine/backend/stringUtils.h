@@ -99,20 +99,31 @@ namespace stringUtils
 
 	inline bool CompareString(const wxString& lhs, const wxString& rhs,
 		bool case_sensitive = false) noexcept {
+
 		const size_t length = lhs.length();
 		if (length != rhs.length())
 			return false;
+
+#ifndef _WXSTRING_COMPARE_STRING_
+		const auto& stl_lhs = lhs.ToStdWstring();
+		const auto& stl_rhs = rhs.ToStdWstring();
+#endif // !_WXSTRING_COMPARE_STRING_
+
 		for (unsigned int idx = 0; idx < length; idx++) {
-			if (case_sensitive) {
-				const wxUniChar& c1 = *(lhs.begin() + idx);
-				const wxUniChar& c2 = *(rhs.begin() + idx);
-				if (c1 != c2) return false;
-			}
-			else {
-				const wxUniChar& c1 = wxTolower(*(lhs.begin() + idx));
-				const wxUniChar& c2 = wxTolower(*(rhs.begin() + idx));
-				if (c1 != c2) return false;
-			}
+#ifndef _WXSTRING_COMPARE_STRING_
+			const auto& c1 = stl_lhs.at(idx);
+			const auto& c2 = stl_rhs.at(idx);
+#else
+			const auto& c1 = lhs.at(idx);
+			const auto& c2 = rhs.at(idx);
+#endif
+			if (!case_sensitive && c1 == c2)
+				continue;
+			
+			if (!case_sensitive && ::toupper(c1) != toupper(c2))
+				return false;
+			else if (case_sensitive && c1 != c2)
+				return false;
 		}
 
 		return true;

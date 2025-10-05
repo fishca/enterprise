@@ -95,13 +95,13 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 		CPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
 		if (currContext && currContext->FindVariable(m_precompileModule->sLastParentKeyword)) {
 			m_ac.Cancel();
-			const IMetaObject *metaObject = m_document->GetMetaObject();
+			const IMetaObject* metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateAutocomplete(
-				metaObject->GetFileName(), 
-				metaObject->GetDocPath(), 
-				m_precompileModule->sLastExpression, 
-				m_precompileModule->sLastKeyword, 
+				metaObject->GetFileName(),
+				metaObject->GetDocPath(),
+				m_precompileModule->sLastExpression,
+				m_precompileModule->sLastKeyword,
 				GetCurrentPos()
 			);
 		}
@@ -222,12 +222,13 @@ void CCodeEditor::PrepareTABs()
 	wxString rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
 
 	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
+	int current_fold = 0, replace_pos = 0;
 
 	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
+
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
-	
-		int current_fold = 0; int replace_pos = 0;
-		std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
+
+		std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
 		const int length = curr_position - start_line_pos;
 		for (int i = 0; i < length; i++) {
 			if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
@@ -242,7 +243,6 @@ void CCodeEditor::PrepareTABs()
 
 			unsigned short replace_correct =
 				(replace_pos > fold_level ? replace_pos - fold_level : 0);
-
 			rawBufferLine.replace(
 				0, replace_correct + strBuffer.length(), strBuffer);
 		}
@@ -250,14 +250,12 @@ void CCodeEditor::PrepareTABs()
 		if (start_line_pos + fold_level != curr_position) fold_level++;
 	}
 	else if ((level & wxSTC_FOLDLEVELELSE_FLAG) != 0) {
+
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELELSE_FLAG);
+
 		if (fold_level >= 0) {
-			
-			const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
-		
-			int current_fold = 0; int replace_pos = 0;
-			
-			std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
+
+			std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
 			const int length = curr_position - start_line_pos;
 			for (int i = 0; i < length; i++) {
 				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
@@ -266,26 +264,26 @@ void CCodeEditor::PrepareTABs()
 				else break;
 			}
 			
-			if (current_fold != (fold_level - 1)) {
+			if (current_fold != (fold_level - 1) && fold_level > 0) {
 
-				(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+				(void)strBuffer.replace(0, replace_pos, fold_level - 1, '\t');
 
 				unsigned short replace_correct =
-					(replace_pos > fold_level ? replace_pos - fold_level : 0);
-
+					(replace_pos > fold_level - 1 ? replace_pos - fold_level - 1 : 0);
 				rawBufferLine.replace(
 					0, replace_correct + strBuffer.length(), strBuffer);
 			}
 
-			if (start_line_pos + fold_level - 1 == curr_position) fold_level--;	
+			if (start_line_pos + fold_level - 1 == curr_position) fold_level--;
 		}
 	}
 	else if ((level & wxSTC_FOLDLEVELWHITE_FLAG) != 0) {
+
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELWHITE_FLAG) - 1;
+
 		if (fold_level >= 0) {
-			const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
-			int current_fold = 0; int replace_pos = 0;
-			std::string strBuffer(CCodeEditor::GetLineRaw(curr_line));
+
+			std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
 			const int length = curr_position - start_line_pos;
 			for (int i = 0; i < length; i++) {
 				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
@@ -299,33 +297,30 @@ void CCodeEditor::PrepareTABs()
 
 				unsigned short replace_correct =
 					(replace_pos > fold_level ? replace_pos - fold_level : 0);
-
 				rawBufferLine.replace(
 					0, replace_correct + strBuffer.length(), strBuffer);
 			}
 		}
 	}
 
-	wxString strEOL;
 	switch (CCodeEditor::GetEOLMode())
 	{
 	case wxSTC_EOL_CRLF:
-		strEOL.Append('\r');
-		strEOL.Append('\n');
+		rawBufferLine.Append('\r');
+		rawBufferLine.Append('\n');
 		break;
 	case wxSTC_EOL_CR:
-		strEOL.Append('\r');
+		rawBufferLine.Append('\r');
 		break;
 	default:
-		strEOL.Append('\n');
+		rawBufferLine.Append('\n');
 		break;
 	}
 
-	rawBufferLine.Append(strEOL);
 	rawBufferLine.Append('\t', fold_level);
 
 	CCodeEditor::Replace(start_line_pos, curr_position, rawBufferLine);
-	
+
 	const size_t length = rawBufferLine.length();
 	CCodeEditor::GotoLine(CCodeEditor::LineFromPosition(start_line_pos + length));
 	CCodeEditor::SetEmptySelection(start_line_pos + length);
@@ -379,7 +374,7 @@ void CCodeEditor::LoadToolTip(const wxPoint& pos)
 		strExpression.Trim(true).Trim(false);
 
 		if (strExpression.IsEmpty()) {
-			SetToolTip(nullptr); return; 
+			SetToolTip(nullptr); return;
 		}
 
 		auto& it = std::find_if(m_expressions.begin(), m_expressions.end(),
@@ -637,11 +632,11 @@ void CCodeEditor::ShowAutoComplete(const CDebugAutoCompleteData& autoCompleteDat
 
 	for (unsigned int i = 0; i < autoCompleteData.m_arrMeth.size(); i++) {
 		m_ac.Append(autoCompleteData.m_arrMeth[i].m_methodRet ? eContentType::eFunction : eContentType::eProcedure,
-			autoCompleteData.m_arrMeth[i].m_methodName, 
+			autoCompleteData.m_arrMeth[i].m_methodName,
 			autoCompleteData.m_arrMeth[i].m_methodHelper
 		);
 	}
-	
+
 	m_ac.Start(autoCompleteData.m_keyword,
 		autoCompleteData.m_currentPos,
 		autoCompleteData.m_keyword.Length(),

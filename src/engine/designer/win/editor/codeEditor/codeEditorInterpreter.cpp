@@ -437,11 +437,11 @@ bool CPrecompileCode::PrepareLexem()
 
 void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset)
 {
+	m_currentLine = m_currentPos = 0;
+	
 	unsigned int lexem_idx = 0, lexem_line = 0, lexem_start_idx = 0;
-
-	m_currentPos = m_currentPos = 0;
-	auto hint = m_listLexem.begin();
 	bool insert_after = false;
+	auto hint = m_listLexem.begin();
 
 	for (unsigned int i = 0; i <= m_listLexem.size() - 1; i++) {
 
@@ -464,7 +464,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 				m_currentLine = m_listLexem[i - 1].m_numLine;
 				m_currentPos = m_listLexem[i - 1].m_numString;
 				lexem_idx = i - 1;
-				std::advance(hint, lexem_idx - 1);
+				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
 				insert_after = true;
 			}
 			break;
@@ -478,13 +478,18 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 
 	m_listLexem.erase(
 		std::remove_if(std::execution::par, m_listLexem.begin() + lexem_idx, m_listLexem.end() - 1,
-			[line, line_offset, insert_text, delete_text](const auto& e) {
+			[&](const auto& e) {
 				if (insert_text) return e.m_numLine <= line;
 				if (delete_text) return e.m_numLine <= (line - line_offset);
 				return false;
 			}),
 		m_listLexem.end() - 1
 	);
+
+	if (m_listLexem.size() <= 1) {
+		hint = m_listLexem.begin();
+		insert_after = false;
+	}
 
 	while (!IsEnd()) {
 
@@ -614,9 +619,9 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 	const size_t lex_size = m_listLexem.size() - 1;
 
 	if (lex_size > 0) {
-		
+
 		const size_t lex_distance = std::distance(m_listLexem.begin(), insert_after ? hint + 1 : hint);
-		
+
 		for (unsigned int i = lex_distance; i < lex_size; i++) {
 			m_listLexem[i].m_numLine += line_offset;
 			m_listLexem[i].m_numString += pos_offset;

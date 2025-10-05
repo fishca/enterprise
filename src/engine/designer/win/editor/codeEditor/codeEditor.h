@@ -68,53 +68,73 @@ class CCodeEditor : public wxStyledTextCtrl {
 	};
 
 	class CFoldLevelParser {
+
+		enum {
+			FOLD_PROCEDURE,
+			FOLD_FUNCTION,
+			FOLD_IF,
+			FOLD_DO,
+			FOLD_TRY
+		};
+
 	public:
 
-		CFoldLevelParser(CCodeEditor* codeEditor) : m_codeEditor(codeEditor), m_update_fold(false) {}
+		CFoldLevelParser(CCodeEditor* codeEditor) : m_codeEditor(codeEditor), m_update_fold(false),
+			m_proc_count(0), m_func_count(0), m_if_count(0), m_do_count(0), m_try_count(0)
+		{
+		}
 
 		void RecreateFoldLevel() const { m_update_fold = true; }
 		void UpdateFoldLevel() {
 
 			if (m_update_fold) {
+
 				CalcFoldLevel();
-				int level = 0;
-				const unsigned int line_count = m_codeEditor->GetLineCount();
-				for (unsigned int l = 0; l <= line_count; l++) {
 
-					const int curr_level = GetFoldLevel(l);
-
-					int unclosed = 0, open = 0;
-					for (unsigned int idx = 0; idx < m_folding_vector.size(); idx++) {
-						const std::pair<size_t, int>& v = m_folding_vector.at(idx);
-						unclosed += v.second;
-						if (v.first < l && unclosed == 0)
-							open = 0;
-						if (v.second > 0) open++;
+				auto hint_ignore_fold = m_folding_vector.end();
+				if (m_folding_vector.size() > 0) {
+					int unclosed = 0;
+					for (auto& v : m_folding_vector) unclosed += v.second;
+					while (hint_ignore_fold != m_folding_vector.begin()) {
+						if (unclosed == 0)
+							break;
+						hint_ignore_fold = std::prev(hint_ignore_fold);
+						if (hint_ignore_fold->second > 0) unclosed--;
 					}
+				}
 
-					bool allowed = true;
+				int level = 0, fold_start = 0;
 
-					if (curr_level > 0) { allowed = (open - unclosed) > level; }
-					else if (curr_level < 0) { allowed = level > 0; }
+				for (auto it = m_folding_vector.begin(); it < m_folding_vector.end(); it++) {
 
-					if (allowed && curr_level > 0)
-						m_codeEditor->SetFoldLevel(l, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0) | wxSTC_FOLDLEVELHEADER_FLAG);
-					else if (allowed && curr_level < 0)
-						m_codeEditor->SetFoldLevel(l, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0) | wxSTC_FOLDLEVELWHITE_FLAG);
-					else
+					if (hint_ignore_fold != m_folding_vector.end() && it >= hint_ignore_fold && it->second > 0)
+						continue;
+
+					for (int l = fold_start + 1; l <= it->first - 1; l++)
 						m_codeEditor->SetFoldLevel(l, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0));
 
-					if (allowed) level += curr_level;
+					if (it->second > 0)
+						m_codeEditor->SetFoldLevel(it->first, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0) | wxSTC_FOLDLEVELHEADER_FLAG);
+					else if (it->second < 0)
+						m_codeEditor->SetFoldLevel(it->first, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0) | wxSTC_FOLDLEVELWHITE_FLAG);
+					else if (it->second == 0)
+						m_codeEditor->SetFoldLevel(it->first, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0));
+
+					level += it->second;
+					fold_start = it->first;
+				}
+
+				for (int l = fold_start + 1; l <= m_codeEditor->GetLineCount(); l++) {
+					m_codeEditor->SetFoldLevel(l, wxSTC_FOLDLEVELBASE_FLAG + std::max(level, 0));
 				}
 
 				m_update_fold = false;
 			}
 		}
 
-		int GetFoldMask(unsigned int line) const {
-			int level = 0; short flag = 0; const size_t fold_size = m_folding_vector.size();
-			for (unsigned int idx = 0; idx < fold_size; idx++) {
-				const auto& v = m_folding_vector[idx];
+		int GetFoldMask(int line) const {
+			int level = 0; short flag = 0;
+			for (auto& v : m_folding_vector) {
 				if (v.first > line)
 					break;
 				if (v.first == line && v.second > 0)
@@ -123,7 +143,6 @@ class CCodeEditor : public wxStyledTextCtrl {
 					flag = wxSTC_FOLDLEVELWHITE_FLAG;
 				else if (v.first == line && v.second == 0)
 					flag = wxSTC_FOLDLEVELELSE_FLAG;
-
 				level += v.second;
 			}
 
@@ -139,19 +158,60 @@ class CCodeEditor : public wxStyledTextCtrl {
 
 	private:
 
-		void OpenFold(const int currentLine) { m_folding_vector.emplace_back(currentLine, +1); }
-		void MarkFold(const int currentLine) { m_folding_vector.emplace_back(currentLine, 0); }
-		void CloseFold(const int currentLine) { m_folding_vector.emplace_back(currentLine, -1); }
+		void OpenFold(const int l, short t) {
 
-		void ClearFoldLevel() { m_folding_vector.clear(); }
+			if (t == FOLD_PROCEDURE) { m_proc_count++; }
+			else if (t == FOLD_FUNCTION) { m_func_count++; }
+			else if (t == FOLD_IF) { m_if_count++; }
+			else if (t == FOLD_DO) { m_do_count++; }
+			else if (t == FOLD_TRY) { m_try_count++; }
+
+			m_folding_vector.emplace_back(l, +1);
+		}
+
+		void MarkFold(const int l) {
+			m_folding_vector.emplace_back(l, 0);
+		}
+
+		void CloseFold(const int l, short t) {
+
+			if (t == FOLD_PROCEDURE && m_proc_count > 0) {
+				m_folding_vector.emplace_back(l, -1);
+				m_proc_count--;
+			}
+			else if (t == FOLD_FUNCTION && m_func_count > 0) {
+				m_folding_vector.emplace_back(l, -1);
+				m_func_count--;
+			}
+			else if (t == FOLD_IF && m_if_count > 0) {
+				m_folding_vector.emplace_back(l, -1);
+				m_if_count--;
+			}
+			else if (t == FOLD_DO && m_do_count > 0) {
+				m_folding_vector.emplace_back(l, -1);
+				m_do_count--;
+			}
+			else if (t == FOLD_TRY && m_try_count > 0) {
+				m_folding_vector.emplace_back(l, -1);
+				m_try_count--;
+			}
+		}
+
+		void ClearFoldLevel() {
+			m_proc_count = m_func_count = m_if_count = m_do_count = m_try_count = 0;
+			m_folding_vector.clear();
+		}
 
 		short GetFoldLevel(const int l) const {
-			short foldLevel = 0; const size_t fold_size = m_folding_vector.size();
-			for (unsigned int idx = 0; idx < fold_size; idx++) {
-				const auto& v = m_folding_vector[idx];
-				if (v.first == l) foldLevel += v.second;
+			short foldLevel = 0;
+			for (auto& v : m_folding_vector) {
+				if (v.first < l)
+					continue;
+				else if (v.first > l)
+					break;
+				else if (v.first == l)
+					foldLevel += v.second;
 			}
-
 			return foldLevel;
 		}
 
@@ -163,34 +223,38 @@ class CCodeEditor : public wxStyledTextCtrl {
 				const CLexem& lex = m_codeEditor->m_precompileModule->m_listLexem[idx];
 				if (lex.m_lexType == KEYWORD) {
 
-					if (lex.m_numData == KEY_PROCEDURE
-						|| lex.m_numData == KEY_FUNCTION
-						|| lex.m_numData == KEY_IF
-						|| lex.m_numData == KEY_FOR
-						|| lex.m_numData == KEY_FOREACH
-						|| lex.m_numData == KEY_WHILE
-						|| lex.m_numData == KEY_TRY
-						)
-					{
-						OpenFold(lex.m_numLine);
+					if (lex.m_numData == KEY_PROCEDURE) {
+						OpenFold(lex.m_numLine, FOLD_PROCEDURE);
 					}
-					else if (
-						lex.m_numData == KEY_ELSE
-						|| lex.m_numData == KEY_ELSEIF
-						|| lex.m_numData == KEY_EXCEPT
-						)
-					{
+					else if (lex.m_numData == KEY_FUNCTION) {
+						OpenFold(lex.m_numLine, FOLD_FUNCTION);
+					}
+					else if (lex.m_numData == KEY_IF) {
+						OpenFold(lex.m_numLine, FOLD_IF);
+					}
+					else if (lex.m_numData == KEY_FOR || lex.m_numData == KEY_FOREACH || lex.m_numData == KEY_WHILE) {
+						OpenFold(lex.m_numLine, FOLD_DO);
+					}
+					else if (lex.m_numData == KEY_TRY) {
+						OpenFold(lex.m_numLine, FOLD_TRY);
+					}
+					else if (lex.m_numData == KEY_ELSE || lex.m_numData == KEY_ELSEIF || lex.m_numData == KEY_EXCEPT) {
 						MarkFold(lex.m_numLine);
 					}
-					else if (
-						lex.m_numData == KEY_ENDPROCEDURE
-						|| lex.m_numData == KEY_ENDFUNCTION
-						|| lex.m_numData == KEY_ENDIF
-						|| lex.m_numData == KEY_ENDDO
-						|| lex.m_numData == KEY_ENDTRY
-						)
-					{
-						CloseFold(lex.m_numLine);
+					else if (lex.m_numData == KEY_ENDPROCEDURE) {
+						CloseFold(lex.m_numLine, FOLD_PROCEDURE);
+					}
+					else if (lex.m_numData == KEY_ENDFUNCTION) {
+						CloseFold(lex.m_numLine, FOLD_FUNCTION);
+					}
+					else if (lex.m_numData == KEY_ENDIF) {
+						CloseFold(lex.m_numLine, FOLD_IF);
+					}
+					else if (lex.m_numData == KEY_ENDDO) {
+						CloseFold(lex.m_numLine, FOLD_DO);
+					}
+					else if (lex.m_numData == KEY_ENDTRY) {
+						CloseFold(lex.m_numLine, FOLD_TRY);
 					}
 				}
 			}
@@ -200,12 +264,13 @@ class CCodeEditor : public wxStyledTextCtrl {
 
 		// calculate flag
 		mutable bool m_update_fold;
+		short m_proc_count, m_func_count, m_if_count, m_do_count, m_try_count;
 
 		// current code editor
 		CCodeEditor* m_codeEditor;
 
 		// build a vector to include line and folding level
-		std::vector<std::pair<size_t, int>> m_folding_vector;
+		std::vector<std::pair<int, short>> m_folding_vector;
 	};
 
 public:

@@ -293,8 +293,6 @@ bool CCodeEditor::LoadModule()
 	ClearAll();
 	wxDELETE(m_precompileModule);
 
-	RefreshEditor();
-
 	if (m_document != nullptr) {
 		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
 		if (moduleObject != nullptr) {
@@ -321,9 +319,10 @@ bool CCodeEditor::LoadModule()
 		}
 		
 		m_fp.RecreateFoldLevel();
+		RefreshEditor();
 		return moduleObject != nullptr;
 	}
-	
+
 	return m_document != nullptr;
 }
 

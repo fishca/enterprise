@@ -229,6 +229,21 @@ void CCodeEditor::PrepareTABs()
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
 
 		std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+
+		switch (CCodeEditor::GetEOLMode())
+		{
+		case wxSTC_EOL_CRLF:
+			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+			break;
+		case wxSTC_EOL_CR:
+			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+			break;
+		default:
+			strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+			break;
+		}
+
 		const int length = curr_position - start_line_pos;
 		for (int i = 0; i < length; i++) {
 			if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
@@ -255,23 +270,53 @@ void CCodeEditor::PrepareTABs()
 
 		if (fold_level >= 0) {
 
-			std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
-			const int length = curr_position - start_line_pos;
-			for (int i = 0; i < length; i++) {
-				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					current_fold++; replace_pos = i + 1;
+			const int len = CCodeEditor::LineLength(curr_line);
+			if (len > 0) {
+
+				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+
+				switch (CCodeEditor::GetEOLMode())
+				{
+				case wxSTC_EOL_CRLF:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+					break;
+				case wxSTC_EOL_CR:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+					break;
+				default:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+					break;
 				}
-				else break;
-			}
-			
-			if (current_fold != (fold_level - 1) && fold_level > 0) {
 
-				(void)strBuffer.replace(0, replace_pos, fold_level - 1, '\t');
+				const int length = curr_position - start_line_pos;
 
-				unsigned short replace_correct =
-					(replace_pos > fold_level - 1 ? replace_pos - fold_level - 1 : 0);
-				rawBufferLine.replace(
-					0, replace_correct + strBuffer.length(), strBuffer);
+				for (int i = 0; i < length; i++) {
+					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
+						current_fold++; replace_pos = i + 1;
+					}
+					else break;
+				}
+
+				if (current_fold != (fold_level - 1) && fold_level > 0) {
+
+					(void)strBuffer.replace(0, replace_pos, fold_level - 1, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > fold_level - 1 ? replace_pos - fold_level - 1 : 0);
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
+				else if (current_fold != 0 && fold_level == 0) {
+
+					(void)strBuffer.replace(0, replace_pos, 0, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > 0 ? replace_pos : 0);
+
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
 			}
 
 			if (start_line_pos + fold_level - 1 == curr_position) fold_level--;
@@ -283,22 +328,91 @@ void CCodeEditor::PrepareTABs()
 
 		if (fold_level >= 0) {
 
-			std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
-			const int length = curr_position - start_line_pos;
-			for (int i = 0; i < length; i++) {
-				if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
-					current_fold++; replace_pos = i + 1;
+			const int len = CCodeEditor::LineLength(curr_line);
+			if (len > 0) {
+
+				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+
+				switch (CCodeEditor::GetEOLMode())
+				{
+				case wxSTC_EOL_CRLF:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+					break;
+				case wxSTC_EOL_CR:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\r'), strBuffer.end());
+					break;
+				default:
+					strBuffer.erase(std::remove(strBuffer.begin(), strBuffer.end(), '\n'), strBuffer.end());
+					break;
 				}
-				else break;
+
+				const int length = curr_position - start_line_pos;
+				for (int i = 0; i < length; i++) {
+					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
+						current_fold++; replace_pos = i + 1;
+					}
+					else break;
+				}
+
+				if (current_fold != fold_level) {
+
+					(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > fold_level ? replace_pos - fold_level : 0);
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
+				else if (current_fold != 0 && fold_level == 0) {
+
+					(void)strBuffer.replace(0, replace_pos, 0, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > 0 ? replace_pos : 0);
+
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
 			}
-			if (current_fold != fold_level) {
+		}
+	}
+	else if ((level & wxSTC_FOLDLEVELBASE_FLAG) != 0) {
 
-				(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+		if (fold_level >= 0) {
 
-				unsigned short replace_correct =
-					(replace_pos > fold_level ? replace_pos - fold_level : 0);
-				rawBufferLine.replace(
-					0, replace_correct + strBuffer.length(), strBuffer);
+			const int len = CCodeEditor::LineLength(curr_line);
+			
+			if (len > 0) {
+
+				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+				const int length = curr_position - start_line_pos;
+				for (int i = 0; i < length; i++) {
+					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {
+						current_fold++; replace_pos = i + 1;
+					}
+					else break;
+				}
+
+				if (current_fold != fold_level) {
+
+					(void)strBuffer.replace(0, replace_pos, fold_level, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > fold_level ? replace_pos - fold_level : 0);
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
+				else if (current_fold != 0 && fold_level == 0) {
+
+					(void)strBuffer.replace(0, replace_pos, 0, '\t');
+
+					unsigned short replace_correct =
+						(replace_pos > 0 ? replace_pos : 0);
+
+					rawBufferLine.replace(
+						0, replace_correct + strBuffer.length(), strBuffer);
+				}
 			}
 		}
 	}

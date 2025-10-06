@@ -219,7 +219,10 @@ void CCodeEditor::PrepareTABs()
 	const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
 	const int level = m_fp.GetFoldMask(curr_line);
 
-	std::string rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
+	std::string rawBufferLine;
+
+	if (start_line_pos != curr_position)
+		rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
 
 	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
 	int current_fold = 0, replace_pos = 0;
@@ -382,7 +385,7 @@ void CCodeEditor::PrepareTABs()
 		if (fold_level >= 0) {
 
 			const int len = CCodeEditor::LineLength(curr_line);
-			
+
 			if (len > 0) {
 
 				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);

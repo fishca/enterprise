@@ -219,7 +219,7 @@ void CCodeEditor::PrepareTABs()
 	const int start_line_pos = CCodeEditor::PositionFromLine(curr_line);
 	const int level = m_fp.GetFoldMask(curr_line);
 
-	wxString rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
+	std::string rawBufferLine = CCodeEditor::GetTextRangeRaw(start_line_pos, curr_position);
 
 	int fold_level = level ^ wxSTC_FOLDLEVELBASE_FLAG;
 	int current_fold = 0, replace_pos = 0;
@@ -420,20 +420,22 @@ void CCodeEditor::PrepareTABs()
 	switch (CCodeEditor::GetEOLMode())
 	{
 	case wxSTC_EOL_CRLF:
-		rawBufferLine.Append('\r');
-		rawBufferLine.Append('\n');
+		rawBufferLine.push_back('\r');
+		rawBufferLine.push_back('\n');
 		break;
 	case wxSTC_EOL_CR:
-		rawBufferLine.Append('\r');
+		rawBufferLine.push_back('\r');
 		break;
 	default:
-		rawBufferLine.Append('\n');
+		rawBufferLine.push_back('\n');
 		break;
 	}
 
-	rawBufferLine.Append('\t', fold_level);
+	rawBufferLine.append(fold_level, '\t');
 
-	CCodeEditor::Replace(start_line_pos, curr_position, rawBufferLine);
+	CCodeEditor::SetTargetStart((int)start_line_pos);
+	CCodeEditor::SetTargetEnd((int)curr_position);
+	CCodeEditor::ReplaceTargetRaw(rawBufferLine.c_str(), rawBufferLine.length());
 
 	const size_t length = rawBufferLine.length();
 	CCodeEditor::GotoLine(CCodeEditor::LineFromPosition(start_line_pos + length));

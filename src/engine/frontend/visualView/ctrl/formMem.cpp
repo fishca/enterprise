@@ -86,7 +86,7 @@ wxMemoryBuffer CValueForm::SaveForm()
 	writterMemory.w_chunk(GetControlID(), writterMetaMemory.pointer(), writterMetaMemory.size());
 	writterData.w_chunk(GetClassType(), writterMemory.pointer(), writterMemory.size());
 
-	CValueForm::PrepareNames();
+	//CValueForm::PrepareNames();
 	return writterData.buffer();
 }
 

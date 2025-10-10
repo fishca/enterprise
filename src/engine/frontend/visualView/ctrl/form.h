@@ -55,8 +55,6 @@ public:
 	virtual bool IsVisualDemonstrationDoc() const { return false; }
 
 	virtual bool OnCreate(const wxString& WXUNUSED(path), long flags) override;
-
-	virtual bool OnSaveModified() override;
 	virtual bool OnCloseDocument() override;
 
 	virtual bool IsCloseOnOwnerClose() const override;
@@ -83,10 +81,6 @@ public:
 	}
 
 	virtual bool IsVisualDemonstrationDoc() const { return true; }
-
-	bool CVisualDemoDocument::OnCloseDocument() {
-		return CMetaDocument::OnCloseDocument();
-	}
 };
 
 class FRONTEND_API CVisualView : public CMetaView {

@@ -31,8 +31,6 @@ enum
 
 class FRONTEND_API CMetaDocument : public IBackendMetaDocument, public wxDocument {
 	wxDECLARE_ABSTRACT_CLASS(CMetaDocument);
-private:
-	wxIcon m_docIcon;
 public:
 
 	virtual void SetIcon(const wxIcon& icon) { m_docIcon = icon; }
@@ -76,14 +74,14 @@ public:
 	virtual void SetDocParent(CMetaDocument* docParent) {
 		if (docParent != nullptr) {
 			docParent->m_childDocs.Append(this);
-			m_docParent = docParent;
+			m_documentParent = docParent;
 		}
 		else {
-			auto it = m_docParent->m_childDocs.Find(this);
+			auto it = m_documentParent->m_childDocs.Find(this);
 			wxASSERT(it != nullptr);
 			if (it->GetData() != nullptr) {
-				m_docParent->m_childDocs.Erase(it);
-				m_docParent = nullptr;
+				m_documentParent->m_childDocs.Erase(it);
+				m_documentParent = nullptr;
 			}
 		}
 	}
@@ -98,8 +96,8 @@ public:
 		// though we don't have our own template (as children are not opened/saved
 		// directly).
 
-		if (m_docParent != nullptr) {
-			return m_docParent->GetDocumentManager();
+		if (m_documentParent != nullptr) {
+			return m_documentParent->GetDocumentManager();
 		}
 
 		return wxDocument::GetDocumentManager();
@@ -112,11 +110,14 @@ public:
 
 protected:
 
-	CMetaDocument* m_docParent;
+	CMetaDocument* m_documentParent;
 	IMetaObject* m_metaObject;	// current metadata object
 
 	wxDList<CMetaDocument> m_childDocs;
 	bool m_childDoc;
+
+private:
+	wxIcon m_docIcon;
 };
 
 class FRONTEND_API IMetaDataDocument : public CMetaDocument {

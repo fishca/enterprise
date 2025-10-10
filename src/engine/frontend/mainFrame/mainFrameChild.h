@@ -51,11 +51,13 @@ public:
 		SetMDIParentFrame(parent);
 
 		m_title = title;
-
 		return true;
 	}
 
 	virtual bool Show(bool show = true) override {
+
+		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
+		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
 
 		wxAuiMDIClientWindow* pClientWindow = m_pMDIParentFrame->GetClientWindow();
 		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
@@ -77,7 +79,33 @@ public:
 
 			}
 			else if (!show && idx != wxNOT_FOUND) {
+
 				pClientWindow->RemovePage(idx);
+
+				if (pParentFrame->GetActiveChild() == this) {
+					// deactivate ourself
+					wxActivateEvent event(wxEVT_ACTIVATE, false, GetId());
+					event.SetEventObject(this);
+					GetEventHandler()->ProcessEvent(event);
+
+					pParentFrame->SetChildMenuBar(nullptr);
+				}
+
+				wxAuiTabCtrl* tabCtrl = nullptr;
+
+				bool success = false; int page_tab_idx = 0;
+				if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
+
+					// state the window hidden to prevent flicker
+					if (pClientWindow->GetPageCount() == 1)
+						tabCtrl->Show(false);
+
+					const int page_idx = pClientWindow->GetPageIndex(this);
+					success = page_idx != wxNOT_FOUND ?
+						pClientWindow->DeletePage(page_idx) : false;
+				}
+
+				if (!success) return false;
 			}
 
 			// Check that the parent notion of the active child coincides with our one.
@@ -92,8 +120,9 @@ public:
 			);
 		}
 
-		pClientWindow->Thaw();
 		pClientWindow->Update();
+		pClientWindow->Thaw();
+
 		return true;
 	}
 
@@ -126,12 +155,13 @@ public:
 				tabCtrl->Show(false);
 
 			const int page_idx = pClientWindow->GetPageIndex(this);
-			success = page_idx != wxNOT_FOUND ? 
+			success = page_idx != wxNOT_FOUND ?
 				pClientWindow->DeletePage(page_idx) : false;
 		}
 
-		pClientWindow->Thaw();
 		pClientWindow->Update();
+		pClientWindow->Thaw();
+
 		return success;
 	}
 
@@ -147,8 +177,7 @@ class FRONTEND_API CAuiDocChildFrame :
 public:
 
 	// default ctor, use Create after it
-	CAuiDocChildFrame() {
-	}
+	CAuiDocChildFrame() {}
 
 	// ctor for a valueForm showing the given view of the specified document
 	CAuiDocChildFrame(wxDocument* doc,
@@ -161,8 +190,7 @@ public:
 		long style = wxDEFAULT_FRAME_STYLE,
 		const wxString& name = wxASCII_STR(wxFrameNameStr))
 		:
-		wxDocChildFrameAny(doc, view,
-			parent, id, title, pos, size, style, name)
+		wxDocChildFrameAny(doc, view, parent, id, title, pos, size, style, name), m_docManager(doc ? doc->GetDocumentManager() : nullptr)
 	{
 	}
 
@@ -194,12 +222,128 @@ public:
 
 protected:
 
+	virtual bool Destroy() {
+
+		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
+		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
+
+		wxAuiMDIClientWindow* pClientWindow = pParentFrame->GetClientWindow();
+		wxASSERT_MSG(pClientWindow, wxT("Missing MDI Client Window"));
+
+		pClientWindow->Freeze();
+
+		if (pParentFrame->GetActiveChild() == this) {
+			// deactivate ourself
+			pParentFrame->SetChildMenuBar(nullptr);
+		}
+
+		bool success = false;
+
+		if (m_docManager != nullptr) {
+
+			wxView* const view = m_docManager->GetCurrentView();
+			wxDocument* doc = view ? view->GetDocument() : nullptr;
+
+			if (doc == nullptr) {
+
+				const int page_idx = pClientWindow->GetPageIndex(this);
+
+				// save active window pointer
+				wxWindow* new_active = nullptr;
+
+				// find out which onscreen tab ctrl owns this tab
+				wxAuiTabCtrl* tabCtrl = nullptr; int page_tab_idx = 0;
+				if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
+
+					bool is_curpage = page_idx == pClientWindow->GetSelection();
+					bool is_active_in_split = tabCtrl->GetPage(page_tab_idx).active;
+
+					if (is_active_in_split) {
+						const int ctrl_new_page_count = (int)tabCtrl->GetPageCount();
+						if (page_tab_idx > 0 && page_tab_idx < (int)tabCtrl->GetPageCount()) {
+							if (is_curpage) new_active = tabCtrl->GetWindowFromIdx(page_tab_idx - 1);
+						}
+					}
+				}
+
+				if (new_active == nullptr) {
+
+					const int page_count = pClientWindow->GetPageCount();
+
+					// we haven't yet found a new page to active,
+					// so select the next page from the main tab
+					// catalogue
+
+					if (page_idx > 0 && page_idx < (int)page_count) {
+						new_active = pClientWindow->GetPage(page_idx - 1);
+					}
+
+					if (new_active == nullptr && page_count > 1) {
+						new_active = pClientWindow->GetPage(page_count - 1);
+					}
+				}
+
+				if (new_active != nullptr) {
+					for (auto current_doc : m_docManager->GetDocumentsVector()) {
+						for (auto current_view : current_doc->GetViewsVector()) {
+							if (new_active == current_view->GetFrame()) {
+								doc = current_doc;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (doc != nullptr) doc->Activate();
+		}
+
+		wxAuiTabCtrl* tabCtrl = nullptr; int page_tab_idx = 0;
+
+		if (pParentFrame->GetActiveChild() == this && pClientWindow->GetPageCount() <= 1) {
+			// deactivate ourself
+			wxActivateEvent event(wxEVT_ACTIVATE, false, GetId());
+			event.SetEventObject(this);
+			GetEventHandler()->ProcessEvent(event);
+		}
+
+		if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
+
+			// state the window hidden to prevent flicker
+			if (pClientWindow->GetPageCount() == 1)
+				tabCtrl->Show(false);
+
+			// save active window pointer
+			wxWindow* new_active = pClientWindow->GetPage(pClientWindow->GetSelection());
+
+			pClientWindow->SetEvtHandlerEnabled(false);
+
+			const int page_idx = pClientWindow->GetPageIndex(this);
+			success = page_idx != wxNOT_FOUND ?
+				pClientWindow->DeletePage(page_idx) : false;
+
+			const int restore_selection = pClientWindow->GetPageIndex(new_active);
+
+			if (restore_selection != page_idx)
+				pClientWindow->SetSelection(restore_selection);
+
+			pClientWindow->SetEvtHandlerEnabled(true);
+		}
+
+		pClientWindow->Update();
+		pClientWindow->Thaw();
+
+		return success;
+	}
+
 #if __WXMSW__
 	// override base class version to add menu bar accel processing
 	virtual bool MSWTranslateMessage(WXMSG* msg) override { return false; }
 #endif
 
 private:
+
+	wxDocManager* m_docManager;
 
 	wxDECLARE_CLASS(CAuiDocChildFrame);
 	wxDECLARE_NO_COPY_CLASS(CAuiDocChildFrame);

@@ -38,18 +38,18 @@ wxString CMetaDocument::GetModuleName() const
 CMetaDocument::CMetaDocument(CMetaDocument* docParent) :
 	wxDocument(), m_metaObject(nullptr), m_childDoc(true)
 {
-	m_docParent = docParent;
-	if (docParent != nullptr) {
+	m_documentParent = docParent;
+
+	if (docParent != nullptr)
 		docParent->m_childDocs.push_back(this);
-	}
+
 	m_documentModified = false;
 }
 
 CMetaDocument::~CMetaDocument()
 {
-	if (m_docParent != nullptr) {
-		m_docParent->m_childDocs.remove(this);
-	}
+	if (m_documentParent != nullptr)
+		m_documentParent->m_childDocs.remove(this);
 }
 
 bool CMetaDocument::OnCreate(const wxString& path, long flags)
@@ -98,7 +98,7 @@ bool CMetaDocument::OnSaveDocument(const wxString& filename)
 
 bool CMetaDocument::OnCloseDocument()
 {
-	if (m_docParent != nullptr) {
+	if (m_documentParent != nullptr) {
 		docManager->RemoveDocument(this);
 	}
 
@@ -148,12 +148,12 @@ bool CMetaDocument::Save()
 	if (AlreadySaved())
 		return true;
 
-	if (m_docParent != nullptr &&
-		!m_docParent->Save()) {
+	if (m_documentParent != nullptr &&
+		!m_documentParent->Save()) {
 		return false;
 	}
 
-	if ((m_docParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
+	if ((m_documentParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
 		if (commonMetaData->SaveDatabase()) return false;
 	}
 
@@ -179,6 +179,7 @@ bool CMetaDocument::Close()
 
 	// When the parent document closes, its children must be closed as well as
 	// they can't exist without the parent.
+	CMetaDocument const* documentParent = m_documentParent;
 
 	// As usual, first check if all children can be closed.
 	wxDList<CMetaDocument>::const_iterator it = m_childDocs.begin();
@@ -190,6 +191,8 @@ bool CMetaDocument::Close()
 			}
 		}
 	}
+
+	wxDocManager* documentManager = GetDocumentManager();
 
 	// Now that they all did, do close them: as m_childDocs is modified as
 	// we iterate over it, don't use the usual for-style iteration here.
@@ -208,10 +211,16 @@ bool CMetaDocument::Close()
 			childDoc->DeleteAllViews();
 		}
 		else {
-			childDoc->SetDocParent(nullptr);
-			docManager->AddDocument(childDoc);
+			if (documentManager != nullptr) {
+				childDoc->SetDocParent(nullptr);
+				documentManager->AddDocument(childDoc);
+			}
 		}
 	}
+
+	//if (documentManager != nullptr && documentParent != nullptr) {
+	//	documentManager->ActivateView(documentParent->GetFirstView());
+	//}
 
 	return OnCloseDocument();
 }

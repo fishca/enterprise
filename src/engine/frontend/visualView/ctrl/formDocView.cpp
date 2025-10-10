@@ -63,27 +63,19 @@ bool CVisualDocument::OnCreate(const wxString& path, long flags)
 	return CMetaDocument::OnCreate(path, flags);
 }
 
-bool CVisualDocument::OnSaveModified()
-{
-	if (wxDocument::OnSaveModified()) {
-
-		if (m_valueForm != nullptr) {
-			CValueForm* controlOwner = m_valueForm->m_controlOwner != nullptr ?
-				m_valueForm->m_controlOwner->GetOwnerForm() : nullptr;
-			if (controlOwner != nullptr) controlOwner->ActivateForm();
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
 bool CVisualDocument::OnCloseDocument()
 {
-	if (m_valueForm != nullptr) {
+	if (m_valueForm != nullptr)
 		m_valueForm->m_formModified = false;
-	}
+
+	wxDocManager* documentManager = GetDocumentManager();
+
+	// When the parent document closes, its children must be closed as well as
+	// they can't exist without the parent.
+	CMetaDocument const* documentParent = m_documentParent;
+
+	if (documentManager != nullptr && documentParent != nullptr)
+		documentManager->ActivateView(documentParent->GetFirstView());
 
 	return CMetaDocument::OnCloseDocument();
 }
@@ -97,17 +89,16 @@ bool CVisualDocument::IsCloseOnOwnerClose() const
 
 void CVisualDocument::Modify(bool modify)
 {
-	if (m_valueForm != nullptr) {
+	if (m_valueForm != nullptr)
 		m_valueForm->m_formModified = modify;
-	}
 
 	if (modify != m_documentModified) {
+
 		m_documentModified = modify;
+
 		// Allow views to append asterix to the title
 		CVisualView* view = GetFirstView();
-		if (view != nullptr) {
-			view->OnChangeFilename();
-		}
+		if (view != nullptr) view->OnChangeFilename();
 	}
 }
 
@@ -166,9 +157,7 @@ CVisualDocument::~CVisualDocument()
 #define runFlag 0x000000
 #define demoFlag 0x000001
 
-wxPrintout* CVisualView::OnCreatePrintout() {
-	return nullptr;
-}
+wxPrintout* CVisualView::OnCreatePrintout() { return nullptr; }
 
 bool CVisualView::OnCreate(CMetaDocument* doc, long flags)
 {
@@ -375,7 +364,7 @@ CVisualDocument* CValueForm::GetVisualDocument() const
 {
 	for (auto& visualDocument : s_createdDocFormArray) {
 		if (visualDocument != nullptr &&
-			visualDocument->CompareFormKey(m_formKey)) 
+			visualDocument->CompareFormKey(m_formKey))
 		{
 			return visualDocument;
 		}

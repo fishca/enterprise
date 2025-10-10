@@ -56,9 +56,6 @@ public:
 
 	virtual bool Show(bool show = true) override {
 
-		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
-		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
-
 		wxAuiMDIClientWindow* pClientWindow = m_pMDIParentFrame->GetClientWindow();
 		wxASSERT_MSG((pClientWindow != NULL), wxT("Missing MDI client window."));
 
@@ -76,36 +73,14 @@ public:
 				wxBitmap mdiChildIcon;
 				mdiChildIcon.CopyFromIcon(m_icons.GetIcon(sizeIcon));
 				pClientWindow->AddPage(this, m_title, m_activateOnCreate, mdiChildIcon);
-
 			}
-			else if (!show && idx != wxNOT_FOUND) {
 
-				pClientWindow->RemovePage(idx);
-
-				if (pParentFrame->GetActiveChild() == this) {
-					// deactivate ourself
-					wxActivateEvent event(wxEVT_ACTIVATE, false, GetId());
-					event.SetEventObject(this);
-					GetEventHandler()->ProcessEvent(event);
-
-					pParentFrame->SetChildMenuBar(nullptr);
-				}
-
-				wxAuiTabCtrl* tabCtrl = nullptr;
-
-				bool success = false; int page_tab_idx = 0;
-				if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
-
-					// state the window hidden to prevent flicker
-					if (pClientWindow->GetPageCount() == 1)
-						tabCtrl->Show(false);
-
-					const int page_idx = pClientWindow->GetPageIndex(this);
-					success = page_idx != wxNOT_FOUND ?
-						pClientWindow->DeletePage(page_idx) : false;
-				}
-
-				if (!success) return false;
+			wxAuiTabCtrl* tabCtrl = nullptr; int page_tab_idx = 0;
+			if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
+#ifdef __WXMSW__
+				tabCtrl->HandlePaint();
+#endif
+				tabCtrl->SetTabOffset(page_tab_idx);
 			}
 
 			// Check that the parent notion of the active child coincides with our one.
@@ -120,7 +95,6 @@ public:
 			);
 		}
 
-		pClientWindow->Update();
 		pClientWindow->Thaw();
 
 		return true;
@@ -130,6 +104,8 @@ public:
 
 		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
+
+		bool success = false;
 
 		wxAuiMDIClientWindow* pClientWindow = pParentFrame->GetClientWindow();
 		wxASSERT_MSG(pClientWindow, wxT("Missing MDI Client Window"));
@@ -145,9 +121,7 @@ public:
 			pParentFrame->SetChildMenuBar(nullptr);
 		}
 
-		wxAuiTabCtrl* tabCtrl = nullptr;
-
-		bool success = false; int page_tab_idx = 0;
+		wxAuiTabCtrl* tabCtrl = nullptr; int page_tab_idx = 0;
 		if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
 
 			// state the window hidden to prevent flicker
@@ -159,7 +133,6 @@ public:
 				pClientWindow->DeletePage(page_idx) : false;
 		}
 
-		pClientWindow->Update();
 		pClientWindow->Thaw();
 
 		return success;
@@ -227,6 +200,8 @@ protected:
 		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
 
+		bool success = false;
+
 		wxAuiMDIClientWindow* pClientWindow = pParentFrame->GetClientWindow();
 		wxASSERT_MSG(pClientWindow, wxT("Missing MDI Client Window"));
 
@@ -236,8 +211,6 @@ protected:
 			// deactivate ourself
 			pParentFrame->SetChildMenuBar(nullptr);
 		}
-
-		bool success = false;
 
 		if (m_docManager != nullptr) {
 
@@ -330,7 +303,6 @@ protected:
 			pClientWindow->SetEvtHandlerEnabled(true);
 		}
 
-		pClientWindow->Update();
 		pClientWindow->Thaw();
 
 		return success;

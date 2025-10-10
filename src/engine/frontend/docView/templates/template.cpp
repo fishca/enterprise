@@ -84,8 +84,10 @@ bool CGridEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow))
+	if (CMetaView::OnClose(deleteWindow)) {
+		m_gridEditor->Freeze();
 		return m_gridEditor->Destroy();
+	}
 
 	return false;
 }

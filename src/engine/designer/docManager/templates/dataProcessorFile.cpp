@@ -24,8 +24,10 @@ bool CDataProcessorView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow))
+	if (CMetaView::OnClose(deleteWindow)) {
+		m_metaTree->Freeze();
 		return m_metaTree->Destroy();
+	}
 
 	return false;
 }

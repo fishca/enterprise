@@ -19,7 +19,7 @@
 
 IModuleManager::IModuleManager(IMetaData* metadata, CMetaObjectModule* obj) :
 	CValue(eValueTypes::TYPE_VALUE), IModuleDataObject(new CCompileModule(obj)),
-	m_objectManager(new CContextSystemManager(metadata)), 
+	m_objectManager(new CContextSystemManager(metadata)),
 	m_metaManager(new CMetadataUnit(metadata)),
 	m_methodHelper(new CMethodHelper()),
 	m_initialized(false)
@@ -72,7 +72,7 @@ bool IModuleManager::RemoveCompileModule(const IMetaObject* obj)
 bool IModuleManager::AddCommonModule(CMetaObjectCommonModule* commonModule, bool managerModule, bool runModule)
 {
 	CValuePtr<CModuleUnit> moduleValue(new CModuleUnit(this, commonModule, managerModule));
-	
+
 	if (!IModuleManager::AddCompileModule(commonModule, moduleValue))
 		return false;
 
@@ -88,6 +88,7 @@ bool IModuleManager::AddCommonModule(CMetaObjectCommonModule* commonModule, bool
 		m_compileModule->RemoveVariable(strModuleName);
 		m_compileModule->AppendModule(moduleValue->GetCompileModule());
 	}
+
 	if (runModule) {
 		if (!commonModule->IsGlobalModule()) {
 			try {
@@ -292,7 +293,7 @@ bool CModuleManagerConfiguration::DestroyMainModule()
 		return true;
 
 	//Добавление глобальных констант
-	for (auto &variable : m_listGlConstValue) {
+	for (auto& variable : m_listGlConstValue) {
 		m_compileModule->RemoveVariable(variable.first);
 	}
 

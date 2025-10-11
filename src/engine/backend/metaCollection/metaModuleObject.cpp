@@ -62,6 +62,7 @@ bool IMetaObjectModule::OnBeforeRunMetaObject(int flags)
 	else {
 		debugServer->InitializeBreakpoints(GetDocPath(), 0, nNumber);
 	}
+	
 	return IMetaObject::OnBeforeRunMetaObject(flags);
 }
 
@@ -119,24 +120,6 @@ bool CMetaObjectCommonModule::SaveData(CMemoryWriter& writer)
 	return true;
 }
 
-bool CMetaObjectCommonModule::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
-{
-	if (m_propertyGlobalModule == property) {
-		return CMetaObjectCommonModule::OnAfterCloseMetaObject();
-	}
-
-	return IMetaObjectModule::OnPropertyChanging(property, newValue);
-}
-
-void CMetaObjectCommonModule::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
-{
-	if (m_propertyGlobalModule == property) {
-		CMetaObjectCommonModule::OnBeforeRunMetaObject(newObjectFlag);
-	}
-
-	IMetaObjectModule::OnPropertyChanged(property, oldValue, newValue);
-}
-
 //***********************************************************************
 //*                          common value object                        *
 //***********************************************************************
@@ -174,17 +157,17 @@ bool CMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
 
 bool CMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 {
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
-}
-
-bool CMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
-{
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCommonModule(this, false, (flags & newObjectFlag) != 0))
 		return false;
 
+	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+}
+
+bool CMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
+{
 	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
@@ -210,17 +193,17 @@ bool CMetaObjectCommonModule::OnAfterCloseMetaObject()
 
 bool CMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
 {
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
-}
-
-bool CMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
-{
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCommonModule(this, true, (flags & newObjectFlag) != 0))
 		return false;
 
+	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+}
+
+bool CMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
+{
 	return IMetaObjectModule::OnAfterRunMetaObject(flags);
 }
 
@@ -244,7 +227,7 @@ bool CMetaObjectManagerModule::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectModule, "baseModule", g_metaModuleCLSID);
+METADATA_TYPE_REGISTER(CMetaObjectModule, "module", g_metaModuleCLSID);
 
 METADATA_TYPE_REGISTER(CMetaObjectCommonModule, "commonModule", g_metaCommonModuleCLSID);
 METADATA_TYPE_REGISTER(CMetaObjectManagerModule, "managerModule", g_metaManagerCLSID);

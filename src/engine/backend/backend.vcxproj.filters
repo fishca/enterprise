@@ -1413,6 +1413,9 @@
     <ClCompile Include="metaCollection\metaInterfaceObject.cpp">
       <Filter>metaCollection</Filter>
     </ClCompile>
+    <ClCompile Include="metaCollection\metaModuleObjectProperty.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

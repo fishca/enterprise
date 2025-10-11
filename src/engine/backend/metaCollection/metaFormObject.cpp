@@ -304,7 +304,7 @@ bool CMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 		}
 		return false;
 	}
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return IMetaObjectModule::OnAfterRunMetaObject(flags);
 }
 
 bool CMetaObjectCommonForm::OnBeforeCloseMetaObject()

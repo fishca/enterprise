@@ -350,6 +350,7 @@
     <ClCompile Include="metaCollection\metaInterfaceObject_res.cpp" />
     <ClCompile Include="metaCollection\metaModuleObject.cpp" />
     <ClCompile Include="metaCollection\metaModuleObjectMenu.cpp" />
+    <ClCompile Include="metaCollection\metaModuleObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaModuleObject_res.cpp" />
     <ClCompile Include="metaCollection\metaObject.cpp" />
     <ClCompile Include="metaCollection\metaObjectMetadata.cpp" />

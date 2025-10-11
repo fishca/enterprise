@@ -558,7 +558,7 @@ wxString IMetaObject::GetFullName() const
 
 	IMetaObject* metaParent = GetParent();
 
-	if (metaParent != nullptr && g_metaModuleCLSID != GetClassType())
+	if (metaParent != nullptr && g_metaModuleCLSID != GetClassType() && g_metaManagerCLSID != GetClassType())
 		strFullName = strFullName + GetClassName() + '.' + GetName();
 	else
 		strFullName = GetName();

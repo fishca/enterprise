@@ -557,15 +557,22 @@ wxString IMetaObject::GetFullName() const
 	wxString strFullName;
 
 	IMetaObject* metaParent = GetParent();
+
+	if (metaParent != nullptr && g_metaModuleCLSID != GetClassType())
+		strFullName = strFullName + GetClassName() + '.' + GetName();
+	else
+		strFullName = GetName();
+
 	while (metaParent != nullptr) {
 		if (g_metaCommonMetadataCLSID != metaParent->GetClassType()) {
-			const wxString& strModuleName = metaParent->GetName();
-			strFullName = strModuleName + '.' + strFullName;
+			strFullName = metaParent->GetClassName() + '.' +
+				metaParent->GetName() + '.' +
+				strFullName;
 		}
 		metaParent = metaParent->GetParent();
 	}
 
-	return strFullName + GetName();
+	return strFullName;
 }
 
 wxString IMetaObject::GetFileName() const

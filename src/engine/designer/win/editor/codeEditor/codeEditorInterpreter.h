@@ -140,7 +140,7 @@ class CPrecompileCode : public CTranslateCode
 
 	std::map<wxString, unsigned int> m_aHashConstList;
 
-	CPrecompileContext	cContext;
+	CPrecompileContext	m_cContext;
 	CPrecompileContext* m_pContext;
 	CPrecompileContext* m_pCurrentContext;
 
@@ -148,9 +148,9 @@ class CPrecompileCode : public CTranslateCode
 
 	unsigned int nLastPosition;
 
-	wxString sLastExpression;
-	wxString sLastKeyword;
-	wxString sLastParentKeyword;
+	wxString m_strLastExpression;
+	wxString m_strLastKeyword;
+	wxString m_strLastParentKeyword;
 
 	bool m_bCalcValue;
 
@@ -169,8 +169,8 @@ public:
 
 	CValue GetComputeValue() const { return m_valObject; }
 	CPrecompileContext* GetContext() {
-		cContext.SetModule(this);
-		return &cContext;
+		m_cContext.SetModule(this);
+		return &m_cContext;
 	};
 
 	CPrecompileContext* GetCurrentContext() const { return m_pCurrentContext; }
@@ -178,7 +178,11 @@ public:
 	bool Compile();
 
 	bool PrepareLexem();
+#ifdef UTF8_LEXEM_TRANSLATE
+	void PrepareLexem(unsigned int line, int offsetLine, const int& str_length, const int& str_utf8_length);
+#else 
 	void PrepareLexem(unsigned int line, int offsetLine, const int& str_length);
+#endif
 
 protected:
 

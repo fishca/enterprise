@@ -93,15 +93,15 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 	}
 	else if (debugClient->IsEnterLoop()) {
 		CPrecompileContext* currContext = m_precompileModule->GetCurrentContext();
-		if (currContext && currContext->FindVariable(m_precompileModule->sLastParentKeyword)) {
+		if (currContext && currContext->FindVariable(m_precompileModule->m_strLastParentKeyword)) {
 			m_ac.Cancel();
 			const IMetaObject* metaObject = m_document->GetMetaObject();
 			wxASSERT(metaObject);
 			debugClient->EvaluateAutocomplete(
 				metaObject->GetFileName(),
 				metaObject->GetDocPath(),
-				m_precompileModule->sLastExpression,
-				m_precompileModule->sLastKeyword,
+				m_precompileModule->m_strLastExpression,
+				m_precompileModule->m_strLastKeyword,
 				GetCurrentPos()
 			);
 		}

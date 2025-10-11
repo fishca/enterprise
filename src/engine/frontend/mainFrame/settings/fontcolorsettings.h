@@ -25,6 +25,7 @@ public:
     {
         DisplayItem_Default,
         DisplayItem_Comment,
+        DisplayItem_Preprocessor,
         DisplayItem_Keyword,
         DisplayItem_Operator,
         DisplayItem_String,

@@ -312,11 +312,7 @@ void CFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 	while (!translate.IsEnd()) {
 		currPos = fromPos + translate.GetCurrentPos();
 		if (translate.IsWord()) {
-			try {
-				translate.GetWord(strWord);
-			}
-			catch (...) {
-			}
+			(void)translate.GetWord(strWord);
 			const short keyWord = CTranslateCode::IsKeyWord(strWord);
 			if (keyWord != wxNOT_FOUND && wasLeftPoint != translate.GetCurrentLine()) {
 
@@ -362,38 +358,22 @@ void CFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 		}
 		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
 			if (translate.IsNumber()) {
-				try {
-					(void)translate.GetNumber();
-				}
-				catch (...) {
-				}
+				(void)translate.GetNumber();
 				appendStyle(wxSTC_C_NUMBER);
 			}
 			else if (translate.IsString()) {
-				try {
-					(void)translate.GetString();
-				}
-				catch (...) {
-				}
+				(void)translate.GetString();
 				appendStyle(wxSTC_C_OPERATOR);
 			}
 			else if (translate.IsDate()) {
-				try {
-					(void)translate.GetDate();
-				}
-				catch (...) {
-				}
+				(void)translate.GetDate();
 				appendStyle(wxSTC_C_OPERATOR);
 			}
 			wasLeftPoint = wxNOT_FOUND;
 		}
 		else {
-			const wxUniChar& c = translate.GetByte();
+			translate.GetByte();
 			appendStyle(wxSTC_C_IDENTIFIER);
-			if (c == '.')
-				wasLeftPoint = translate.GetCurrentLine();
-			else
-				wasLeftPoint = wxNOT_FOUND;
 		}
 	}
 	foldParser.PatchFold();
@@ -410,7 +390,7 @@ void CFrameCodeRunner::PrepareTABs()
 
 	if ((level & wxSTC_FOLDLEVELHEADER_FLAG) != 0) {
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
-		const int start_line_pos = m_codeEditor->PositionFromLine(curr_line);		
+		const int start_line_pos = m_codeEditor->PositionFromLine(curr_line);
 		if (start_line_pos + fold_level != curr_position) {
 			fold_level = fold_level + 1;
 		}
@@ -522,10 +502,10 @@ void CFrameCodeRunner::SetFontColorSettings()
 
 	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENT, wxColor(0x00, 0x80, 0x00));
 	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENT, wxColor(0xFF, 0xFF, 0xFF));
-	
+
 	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENTLINE, wxColor(0x00, 0x80, 0x00));
 	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENTLINE, wxColor(0xFF, 0xFF, 0xFF));
-	
+
 	m_codeEditor->StyleSetForeground(wxSTC_C_COMMENTDOC, wxColor(0x00, 0x80, 0x00));
 	m_codeEditor->StyleSetBackground(wxSTC_C_COMMENTDOC, wxColor(0xFF, 0xFF, 0xFF));
 

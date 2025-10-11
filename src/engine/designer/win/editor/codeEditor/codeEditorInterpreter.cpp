@@ -51,11 +51,15 @@ void CPrecompileCode::Clear() //—брос данных дл€ повторного использовани€ объект
 {
 	m_pCurrentContext = nullptr;
 	if (m_defineList != nullptr) m_defineList->Clear();
-	m_bufferSize = m_currentPos = m_currentLine = 0;
-	for (auto& function : cContext.cFunctions) wxDELETE(function.second);
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_bufferSize = m_currentLine = m_currentPos = m_currentUtf8Pos = 0;
+#else 
+	m_bufferSize = m_currentLine = m_currentPos = 0;
+#endif
+	for (auto& function : m_cContext.cFunctions) wxDELETE(function.second);
 	m_numCurrentCompile = wxNOT_FOUND;
-	cContext.cVariables.clear();
-	cContext.cFunctions.clear();
+	m_cContext.cVariables.clear();
+	m_cContext.cFunctions.clear();
 
 	m_valObject.Reset();
 }
@@ -119,7 +123,7 @@ void CPrecompileCode::PrepareModuleData()
 					for (auto code : cParser.GetAllContent()) {
 						if (code.eType == eExportVariable) {
 							wxString sAttributeName = code.strName;
-							if (cContext.FindVariable(sAttributeName))
+							if (m_cContext.FindVariable(sAttributeName))
 								continue;
 							//determine the number and type of the variable
 							CPrecompileVariable cVariables;
@@ -136,7 +140,7 @@ void CPrecompileCode::PrepareModuleData()
 						}
 						else if (code.eType == eExportProcedure) {
 							wxString sMethodName = code.strName;
-							if (cContext.FindFunction(sMethodName))
+							if (m_cContext.FindFunction(sMethodName))
 								continue;
 							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 							procContext->SetModule(this);
@@ -157,7 +161,7 @@ void CPrecompileCode::PrepareModuleData()
 						}
 						else if (code.eType == eExportFunction) {
 							wxString sMethodName = code.strName;
-							if (cContext.FindFunction(sMethodName)) continue;
+							if (m_cContext.FindFunction(sMethodName)) continue;
 
 							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 							procContext->SetModule(this);
@@ -195,7 +199,7 @@ void CPrecompileCode::PrepareModuleData()
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
 						wxString sAttributeName = pRefData->GetPropName(i);
-						if (cContext.FindVariable(sAttributeName))
+						if (m_cContext.FindVariable(sAttributeName))
 							continue;
 
 						//determine the number and type of the variable
@@ -215,7 +219,7 @@ void CPrecompileCode::PrepareModuleData()
 					// add methods from context
 					for (long i = 0; i < pRefData->GetNMethods(); i++) {
 						wxString sMethodName = pRefData->GetMethodName(i);
-						if (cContext.FindFunction(sMethodName))
+						if (m_cContext.FindFunction(sMethodName))
 							continue;
 
 						CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
@@ -247,7 +251,7 @@ void CPrecompileCode::PrepareModuleData()
 							for (auto code : cParser.GetAllContent()) {
 								if (code.eType == eExportVariable) {
 									wxString sAttributeName = code.strName;
-									if (cContext.FindVariable(sAttributeName))
+									if (m_cContext.FindVariable(sAttributeName))
 										continue;
 									//determine the number and type of the variable
 									CPrecompileVariable cVariables;
@@ -264,7 +268,7 @@ void CPrecompileCode::PrepareModuleData()
 								}
 								else if (code.eType == eExportProcedure) {
 									wxString sMethodName = code.strName;
-									if (cContext.FindFunction(sMethodName))
+									if (m_cContext.FindFunction(sMethodName))
 										continue;
 
 									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
@@ -286,7 +290,7 @@ void CPrecompileCode::PrepareModuleData()
 								}
 								else if (code.eType == eExportFunction) {
 									wxString sMethodName = code.strName;
-									if (cContext.FindFunction(sMethodName))
+									if (m_cContext.FindFunction(sMethodName))
 										continue;
 
 									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
@@ -318,22 +322,26 @@ void CPrecompileCode::PrepareModuleData()
 
 bool CPrecompileCode::PrepareLexem()
 {
-	wxString strWord;
+	wxString s;
 	m_listLexem.clear();
 
 	while (!IsEnd()) {
 
+		m_current_lex.m_strModuleName = m_strModuleName;
+
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;//если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
-		m_current_lex.m_strModuleName = m_strModuleName;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_current_lex.m_numUtf8String = m_currentUtf8Pos;
+#endif // UTF8_LEXEM_TRANSLATE	
 
 		if (IsWord()) {
 
 			wxString strOrig;
 
-			if (GetWord(strWord, strOrig)) {
+			if (GetWord(s, strOrig)) {
 
-				const int k = IsKeyWord(strWord);
+				const int k = IsKeyWord(s);
 
 				//undefined
 				if (k == KEY_UNDEFINED) {
@@ -343,7 +351,7 @@ bool CPrecompileCode::PrepareLexem()
 				//boolean
 				else if (k == KEY_TRUE || k == KEY_FALSE) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetBoolean(strWord);
+					m_current_lex.m_valData.SetBoolean(s);
 				}
 				//null
 				else if (k == KEY_NULL) {
@@ -351,6 +359,7 @@ bool CPrecompileCode::PrepareLexem()
 					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
+					
 					if (k >= 0) {
 						m_current_lex.m_lexType = KEYWORD;
 						m_current_lex.m_numData = k;
@@ -366,8 +375,8 @@ bool CPrecompileCode::PrepareLexem()
 		else if (IsNumber() || IsString() || IsDate()) {
 			m_current_lex.m_lexType = CONSTANT;
 			if (IsNumber()) {
-				GetNumber(strWord);
-				m_current_lex.m_valData.SetNumber(strWord);
+				GetNumber(s);
+				m_current_lex.m_valData.SetNumber(s);
 				int n = m_listLexem.size() - 1;
 				if (n >= 0) {
 					if (m_listLexem[n].m_lexType == DELIMITER && (m_listLexem[n].m_numData == '-' || m_listLexem[n].m_numData == '+')) {
@@ -387,12 +396,12 @@ bool CPrecompileCode::PrepareLexem()
 			}
 			else {
 				if (IsString()) {
-					GetString(strWord);
-					m_current_lex.m_valData.SetString(strWord);
+					GetString(s);
+					m_current_lex.m_valData.SetString(s);
 				}
 				else if (IsDate()) {
-					GetDate(strWord);
-					m_current_lex.m_valData.SetDate(strWord);
+					GetDate(s);
+					m_current_lex.m_valData.SetDate(s);
 				}
 			}
 
@@ -400,20 +409,23 @@ bool CPrecompileCode::PrepareLexem()
 			continue;
 		}
 		else if (IsByte('~')) {
-			strWord.clear();
+			s.clear();
 
 			GetByte();//пропускаем разделитель и вспомог. символ метки (как лишние)
 			continue;
 		}
 		else {
 
-			strWord.clear();
+			s.clear();
+
 			m_current_lex.m_lexType = DELIMITER;
-			m_current_lex.m_numData = GetByte();
+			m_current_lex.m_lexType = DELIMITER;
+			wxUniChar byte; GetByte(byte);
+			m_current_lex.m_numData = byte;
 
 			if (m_current_lex.m_numData <= 13) continue;
 		}
-		m_current_lex.m_strData = strWord;
+		m_current_lex.m_strData = s;
 		if (m_current_lex.m_lexType == KEYWORD)
 		{
 			if (m_current_lex.m_numData == KEY_DEFINE)continue; //задание произвольного идентификатора
@@ -430,15 +442,22 @@ bool CPrecompileCode::PrepareLexem()
 	m_current_lex.m_lexType = ENDPROGRAM;
 	m_current_lex.m_numData = 0;
 	m_current_lex.m_numString = m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_current_lex.m_numUtf8String = m_currentUtf8Pos;
+#endif // UTF8_LEXEM_TRANSLATE	
 
 	m_listLexem.emplace_back(std::move(m_current_lex));
 	return true;
 }
 
+#ifdef UTF8_LEXEM_TRANSLATE
+void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset, const int& pos_offset_utf8)
+#else 
 void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset)
+#endif
 {
 	m_currentLine = m_currentPos = 0;
-	
+
 	unsigned int lexem_idx = 0, lexem_line = 0, lexem_start_idx = 0;
 	bool insert_after = false;
 	auto hint = m_listLexem.begin();
@@ -453,6 +472,9 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			if (i > 0) {
 				m_currentLine = m_listLexem[lexem_start_idx - 1].m_numLine;
 				m_currentPos = m_listLexem[lexem_start_idx - 1].m_numString;
+#ifdef UTF8_LEXEM_TRANSLATE
+				m_currentUtf8Pos = m_listLexem[lexem_start_idx - 1].m_numUtf8String;
+#endif
 				lexem_idx = lexem_start_idx - 1;
 				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
 				insert_after = lexem_idx > 0;
@@ -463,6 +485,9 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			if (i > 0) {
 				m_currentLine = m_listLexem[i - 1].m_numLine;
 				m_currentPos = m_listLexem[i - 1].m_numString;
+#ifdef UTF8_LEXEM_TRANSLATE
+				m_currentUtf8Pos = m_listLexem[i - 1].m_numUtf8String;
+#endif
 				lexem_idx = i - 1;
 				if (lexem_idx > 0) std::advance(hint, lexem_idx - 1);
 				insert_after = true;
@@ -471,7 +496,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 		}
 	}
 
-	wxString strWord;
+	wxString s;
 
 	const bool insert_text = pos_offset > 0;
 	const bool delete_text = pos_offset < 0;
@@ -496,18 +521,21 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 		if (insert_text && m_currentLine > (line + line_offset)) break;
 		else if (delete_text && (m_currentLine > line)) break;
 
+		m_current_lex.m_strModuleName = m_strModuleName;
+
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos; //если в дальнейшем произойдет ошибка, то именно эту строку нужно выдать пользователю
-
-		m_current_lex.m_strModuleName = m_strModuleName;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_current_lex.m_numUtf8String = m_currentUtf8Pos;
+#endif // UTF8_LEXEM_TRANSLATE	
 
 		if (IsWord()) {
 
 			wxString strOrig;
 
-			if (GetWord(strWord, strOrig)) {
+			if (GetWord(s, strOrig)) {
 
-				const int k = IsKeyWord(strWord);
+				const int k = IsKeyWord(s);
 
 				//undefined
 				if (k == KEY_UNDEFINED) {
@@ -517,7 +545,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 				//boolean
 				else if (k == KEY_TRUE || k == KEY_FALSE) {
 					m_current_lex.m_lexType = CONSTANT;
-					m_current_lex.m_valData.SetBoolean(strWord);
+					m_current_lex.m_valData.SetBoolean(s);
 				}
 				//null
 				else if (k == KEY_NULL) {
@@ -525,6 +553,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
+					
 					if (k >= 0) {
 						m_current_lex.m_lexType = KEYWORD;
 						m_current_lex.m_numData = k;
@@ -532,17 +561,18 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 					else {
 						m_current_lex.m_lexType = IDENTIFIER;
 					}
+					
 					m_current_lex.m_valData = strOrig;
 				}
 			}
 
-			m_current_lex.m_strData = strWord;
+			m_current_lex.m_strData = s;
 		}
 		else if (IsNumber() || IsString() || IsDate()) {
 			m_current_lex.m_lexType = CONSTANT;
 			if (IsNumber()) {
 
-				GetNumber(strWord); m_current_lex.m_valData.SetNumber(strWord);
+				GetNumber(s); m_current_lex.m_valData.SetNumber(s);
 
 				if (hint != m_listLexem.begin() && hint->m_lexType == DELIMITER && (hint->m_numData == '-' || hint->m_numData == '+')) {
 					auto prev = std::prev(hint, 1);
@@ -556,10 +586,10 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			}
 			else {
 				if (IsString()) {
-					GetString(strWord); m_current_lex.m_valData.SetString(strWord);
+					GetString(s); m_current_lex.m_valData.SetString(s);
 				}
 				else if (IsDate()) {
-					GetDate(strWord); m_current_lex.m_valData.SetDate(strWord);
+					GetDate(s); m_current_lex.m_valData.SetDate(s);
 				}
 			}
 
@@ -576,20 +606,21 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 			continue;
 		}
 		else if (IsByte('~')) {
-			strWord.clear();
+			s.clear();
 			GetByte();//пропускаем разделитель и вспомог. символ метки (как лишние)
 			continue;
 		}
 		else {
 
-			strWord.clear();
+			s.clear();
 
 			m_current_lex.m_lexType = DELIMITER;
-			m_current_lex.m_numData = GetByte();
+			wxUniChar byte; GetByte(byte);
+			m_current_lex.m_numData = byte;
 
 			if (m_current_lex.m_numData <= 13) continue;
 		}
-		m_current_lex.m_strData = strWord;
+		m_current_lex.m_strData = s;
 		if (m_current_lex.m_lexType == KEYWORD) {
 			if (
 				m_current_lex.m_numData == KEY_DEFINE //задание произвольного идентификатора
@@ -625,10 +656,17 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 		for (unsigned int i = lex_distance; i < lex_size; i++) {
 			m_listLexem[i].m_numLine += line_offset;
 			m_listLexem[i].m_numString += pos_offset;
+#ifdef UTF8_LEXEM_TRANSLATE
+			m_listLexem[i].m_numUtf8String += pos_offset_utf8;
+#endif // UTF8_LEXEM_TRANSLATE
 		}
 	}
 
 	m_listLexem[lex_size].m_numString += pos_offset;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_listLexem[lex_size].m_numUtf8String += pos_offset_utf8;
+#endif
+
 }
 
 bool CPrecompileCode::Compile()
@@ -930,9 +968,9 @@ bool CPrecompileCode::CompileBlock()
 
 					CParamValue returnValue = GetExpression();
 
-					if (!cContext.sCurFuncName.IsEmpty())
+					if (!m_cContext.sCurFuncName.IsEmpty())
 					{
-						CPrecompileFunction* m_precompile = static_cast<CPrecompileFunction*>(cContext.cFunctions[cContext.sCurFuncName]);
+						CPrecompileFunction* m_precompile = static_cast<CPrecompileFunction*>(m_cContext.cFunctions[m_cContext.sCurFuncName]);
 						m_precompile->RealRetValue = returnValue;
 					}
 				}
@@ -955,12 +993,13 @@ bool CPrecompileCode::CompileBlock()
 			case KEY_BREAK: GETKeyWord(KEY_BREAK); break;
 
 			case KEY_FUNCTION:
-			case KEY_PROCEDURE: GetLexem(); break;
+			case KEY_PROCEDURE: 
+				GetLexem(); 					
+				break;
 
 			default:
 				// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)
-				m_numCurrentCompile++;
-				break;
+				return true;
 			}
 		}
 		else
@@ -1205,7 +1244,7 @@ void CPrecompileCode::GETDelimeter(const wxUniChar& c)
 	CLexem lex = GETLexem();
 
 	if (lex.m_lexType == DELIMITER && c == lex.m_numData)
-		sLastExpression += c;
+		m_strLastExpression += c;
 
 	while (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
 		if (m_numCurrentCompile + 1 >= m_listLexem.size()) break;
@@ -1610,12 +1649,12 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 		nIsSet = 0; m_numCurrentCompile = endContext; return sVariable;
 	}
 
-	sLastExpression = strRealName;
+	m_strLastExpression = strRealName;
 
 	if (IsNextDelimeter('('))// this is a function call
 	{
 		CValue valContext;
-		if (cContext.FindFunction(strRealName, valContext, true))
+		if (m_cContext.FindFunction(strRealName, valContext, true))
 		{
 			std::vector <CParamValue> aParamList;
 			GETDelimeter('(');
@@ -1669,7 +1708,7 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 	}
 	else//это вызов переменной
 	{
-		sLastParentKeyword = strRealName;
+		m_strLastParentKeyword = strRealName;
 
 		bool bCheckError = !nPrevSet;
 
@@ -1677,7 +1716,7 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 			bCheckError = true;
 
 		CValue valContext;
-		if (cContext.FindVariable(strRealName, valContext, true)) {
+		if (m_cContext.FindVariable(strRealName, valContext, true)) {
 			nIsSet = 0;
 			if (IsNextDelimeter('=') && nPrevSet == 1) {
 				GETDelimeter('=');
@@ -1735,7 +1774,7 @@ MLabel:
 
 	if (IsNextDelimeter('.'))// this is a method call или атрибута агрегатного объекта
 	{
-		wxString sTempExpression = sLastExpression;
+		wxString sTempExpression = m_strLastExpression;
 
 		GETDelimeter('.');
 
@@ -1747,17 +1786,17 @@ MLabel:
 			strRealMethod = sMethod = wxEmptyString;
 		}
 
-		sLastExpression += strRealMethod;
+		m_strLastExpression += strRealMethod;
 
 		if (m_listLexem[m_numCurrentCompile].m_numString > (m_nCurrentPos - strRealMethod.length() - 1))
 		{
-			sLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; sLastKeyword = strRealMethod;
+			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
 			m_valObject = sVariable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
 			return sVariable;
 		}
 		else if (m_listLexem[m_numCurrentCompile].m_lexType == ENDPROGRAM)
 		{
-			sLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; sLastKeyword = strRealMethod;
+			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
 			m_valObject = sVariable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
 			return sVariable;
 		}
@@ -1887,9 +1926,9 @@ CParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
 
 	CValue retValue;
 
-	if (cContext.cFunctions.find(strName) != cContext.cFunctions.end())
+	if (m_cContext.cFunctions.find(strName) != m_cContext.cFunctions.end())
 	{
-		CPrecompileFunction* pDefFunction = cContext.cFunctions[strName];
+		CPrecompileFunction* pDefFunction = m_cContext.cFunctions[strName];
 		pDefFunction->aParamList = aParamList;
 		retValue = pDefFunction->RealRetValue.m_paramObject;
 	}
@@ -1910,7 +1949,7 @@ void CPrecompileCode::AddVariable(const wxString& strVarName, const CValue& varV
 		return;
 
 	// take into account external variables during compilation
-	cContext.GetVariable(strVarName, false, false, varVal);
+	m_cContext.GetVariable(strVarName, false, false, varVal);
 }
 
 /**

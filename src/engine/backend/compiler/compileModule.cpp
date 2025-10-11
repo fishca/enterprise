@@ -36,22 +36,19 @@ bool CCompileModule::Compile()
 	//clear functions & variables 
 	Reset();
 
-	if (m_parent != nullptr) {
-		
-		if (m_moduleObject != nullptr &&
-			m_moduleObject->IsGlobalModule()) {
+	if (m_moduleObject != nullptr &&
+		m_moduleObject->IsGlobalModule()) {
 
-			m_strModuleName = m_moduleObject->GetFullName();
-			m_strDocPath = m_moduleObject->GetDocPath();
-			m_strFileName = m_moduleObject->GetFileName();
+		m_strModuleName = m_moduleObject->GetFullName();
+		m_strDocPath = m_moduleObject->GetDocPath();
+		m_strFileName = m_moduleObject->GetFileName();
 
-			m_changedCode = false;
+		m_changedCode = false;
 
-			Load(m_moduleObject->GetModuleText());
+		Load(m_moduleObject->GetModuleText());
 
-			return m_parent != nullptr ?
-				m_parent->Compile() : true;
-		}
+		return m_parent != nullptr ?
+			m_parent->Compile() : true;
 	}
 
 	//recursively compile modules in case of any changes
@@ -121,7 +118,7 @@ bool CCompileModule::Recompile()
 	Reset();
 
 	if (m_parent != nullptr) {
-		
+
 		if (m_moduleObject != nullptr &&
 			m_moduleObject->IsGlobalModule()) {
 

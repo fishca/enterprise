@@ -365,11 +365,7 @@ private:
 	void LoadCallTip();
 
 	//Support styling 
-	void HighlightSyntaxAndCalculateFoldLevel(
-		const int fromLine, const int toLine,
-		const int fromPos, const int toPos,
-		const wxString& strCode
-	);
+	void HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos);
 
 	//Support debugger 
 	void EditDebugPoint(int line);

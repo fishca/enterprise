@@ -57,9 +57,7 @@ public:
 	void RemoveVariable(const wxString& strName);
 
 	void SetParent(CCompileCode* parent); // setting the parent module and prohibited max. ancestor
-	virtual CCompileCode* GetParent() const {
-		return m_parent;
-	}
+	virtual CCompileCode* GetParent() const { return m_parent; }
 
 	virtual bool Recompile(); // recompiling a module from a meta object
 
@@ -101,7 +99,7 @@ public:
 	};
 
 private:
-	
+
 	// methods for displaying errors during compilation::
 	void SetError(int nErr, const wxString& strError = wxEmptyString);
 	void SetError(int nErr, const wxUniChar& c);

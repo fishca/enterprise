@@ -12,7 +12,7 @@
 static std::map<wxString, void*> s_listHelpDescription; //description of keywords and system functions
 static std::map<wxString, void*> s_listHashKeyword;
 
-CTranslateCode::CDefineList CTranslateCode::ms_listDefine; //глобальный массив определений
+CTranslateCode::CDefineCollection CTranslateCode::ms_listDefine; //глобальный массив определений
 std::map<wxString, void*>	CTranslateCode::ms_listHashKeyWord;//список ключевых слов
 
 //////////////////////////////////////////////////////////////////////
@@ -79,38 +79,46 @@ struct СKeyWords s_listKeyWord[] =
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-void CTranslateCode::CDefineList::RemoveDef(const wxString& strName)
+void CTranslateCode::CDefineCollection::RemoveDef(const wxString& strName)
 {
-	m_defineList.erase(stringUtils::MakeUpper(strName));
+	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
+		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
+	);
+
+	if (iterator != m_defineList.end()) m_defineList.erase(iterator);
 }
 
-bool CTranslateCode::CDefineList::HasDefine(const wxString& strName) const
+bool CTranslateCode::CDefineCollection::HasDefine(const wxString& strName) const
 {
-	auto it = m_defineList.find(stringUtils::MakeUpper(strName));
-	if (it != m_defineList.end())
-		return true;
+	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
+		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
+	);
+
+	if (iterator != m_defineList.end()) return true;
 
 	static int nLevel = 0;
-	nLevel++;
-	if (nLevel > MAX_OBJECTS_LEVEL) {
-		CBackendException::Error(_("Recursive module call (#3)"));
-	}
 
-	//ищем в родителях
-	bool bRes = false;
+	nLevel++;
+
+	if (nLevel > MAX_OBJECTS_LEVEL) CBackendException::Error(_("Recursive module call (#3)"));
+
+	//find in parent
+	bool result = false;
 	if (m_parentDefine != nullptr)
-		bRes = m_parentDefine->HasDefine(strName);
+		result = m_parentDefine->HasDefine(strName);
 	nLevel--;
-	return bRes;
+	return result;
 }
 
-CLexemList* CTranslateCode::CDefineList::GetDefine(const wxString& strName)
+CLexemList* CTranslateCode::CDefineCollection::GetDefine(const wxString& strName)
 {
-	auto it = m_defineList.find(stringUtils::MakeUpper(strName));
-	if (it != m_defineList.end())
-		return it->second;
+	auto iterator = std::find_if(m_defineList.begin(), m_defineList.end(),
+		[strName](const auto& pair) { return stringUtils::CompareString(pair.first, strName); }
+	);
 
-	//ищем в родителях
+	if (iterator != m_defineList.end()) return iterator->second;
+
+	//find in parent
 	if (m_parentDefine != nullptr && m_parentDefine->HasDefine(strName))
 		return m_parentDefine->GetDefine(strName);
 
@@ -119,7 +127,7 @@ CLexemList* CTranslateCode::CDefineList::GetDefine(const wxString& strName)
 	return lexList;
 }
 
-void CTranslateCode::CDefineList::SetDefine(const wxString& strName, CLexemList* src)
+void CTranslateCode::CDefineCollection::SetDefine(const wxString& strName, CLexemList* src)
 {
 	CLexemList* dst = GetDefine(strName);
 	dst->clear();
@@ -128,21 +136,22 @@ void CTranslateCode::CDefineList::SetDefine(const wxString& strName, CLexemList*
 	}
 }
 
-void CTranslateCode::CDefineList::SetDefine(const wxString& strName, const wxString& strValue)
+void CTranslateCode::CDefineCollection::SetDefine(const wxString& strName, const wxString& strValue)
 {
 	CLexemList listLexem;
+
 	if (strValue.length() > 0) {
 		CLexem Lex;
 		Lex.m_lexType = CONSTANT;
-		if (strValue[0] == '-' || strValue[0] == '+' || (strValue[0] >= '0' && strValue[0] <= '9')) //digit
+		if (strValue[0] == wxT('-') || strValue[0] == wxT('+') || (strValue[0] >= wxT('0') && strValue[0] <= wxT('9'))) //digit
 			Lex.m_valData.SetNumber(strValue);
 		else
 			Lex.m_valData.SetString(strValue);
 		listLexem.push_back(Lex);
-		SetDefine(stringUtils::MakeUpper(strName), &listLexem);
+		SetDefine(strName, &listLexem);
 	}
 	else {
-		SetDefine(stringUtils::MakeUpper(strName), nullptr);
+		SetDefine(strName, nullptr);
 	}
 }
 
@@ -155,9 +164,8 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) {
+	if (ms_listHashKeyWord.size() == 0)
 		LoadKeyWords(); //only once
-	}
 
 	Clear();
 }
@@ -168,9 +176,8 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) {
+	if (ms_listHashKeyWord.size() == 0)
 		LoadKeyWords(); //only once
-	}
 
 	Clear();
 }
@@ -181,9 +188,8 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0) {
+	if (ms_listHashKeyWord.size() == 0)
 		LoadKeyWords(); //only once
-	}
 
 	Clear();
 }
@@ -233,7 +239,12 @@ void CTranslateCode::Clear()
 	//m_listTranslateCode.Clear();
 
 	if (m_defineList != nullptr) m_defineList->Clear();
+
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_bufferSize = m_currentPos = m_currentLine = m_currentUtf8Pos = 0;
+#else
 	m_bufferSize = m_currentPos = m_currentLine = 0;
+#endif // UTF8_LEXEM_TRANSLATE
 }
 
 /**
@@ -258,7 +269,11 @@ void CTranslateCode::Load(const wxString& strCode)
 		std::transform(std::execution::par,
 			m_strBUFFER.begin(), m_strBUFFER.end(),
 			m_strBUFFER.begin(),
-			[](const auto& c) { return std::toupper(c); }
+#ifdef wxUSE_UNICODE
+			[](const auto& c) { return ::towupper(c); }
+#else
+			[](const auto& c) { return ::toupper(c); }
+#endif // wxUSE_UNICODE
 		);
 
 		const size_t alloc_size = CalcAllocSize();
@@ -281,13 +296,13 @@ void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxStrin
 
 	//look for the beginning of the string where the translation error message is returned
 	for (unsigned int i = (currPos == m_strBuffer.length() ? currPos - 1 : currPos); i > 0; i--) {
-		if (m_strBuffer[i] == '\n') {
+		if (m_strBuffer[i] == wxT('\n')) {
 			start_pos = i + 1; break;
 		};
 	}
 
 	const int currLine = 1 + std::count(
-		m_strBuffer.begin(), m_strBuffer.begin() + start_pos, '\n');
+		m_strBuffer.begin(), m_strBuffer.begin() + start_pos, wxT('\n'));
 
 	CTranslateCode::SetError(codeError,
 		m_strFileName, m_strModuleName, m_strDocPath,
@@ -308,34 +323,71 @@ void CTranslateCode::SetError(int codeError, unsigned int currPos, const wxStrin
 void CTranslateCode::SkipSpaces() const
 {
 	unsigned int i = m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif	
 	for (; i < m_bufferSize; i++) {
 		const auto& c = m_strBuffer[i];
-		if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
-			if (c == '/') { //maybe it's a comment
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif
+		if (c != wxT(' ') && c != wxT('\t') && c != wxT('\n') && c != wxT('\r')) {
+			if (c == wxT('/')) { //maybe it's a comment
 				if (i + 1 < m_bufferSize) {
-					if (m_strBuffer[i + 1] == '/') { //skip comments
+					if (m_strBuffer[i + 1] == wxT('/')) { //skip comments
+
+#ifdef UTF8_LEXEM_TRANSLATE
+						unsigned int j_utf8 = i_utf8;
+						unsigned int j_utf8_offset = j_utf8;
+#endif	
 						for (unsigned int j = i; j < m_bufferSize; j++) {
+
+							const auto& w = m_strBuffer[j];
+#ifdef UTF8_LEXEM_TRANSLATE
+							j_utf8 = j_utf8_offset;
+							j_utf8_offset = j_utf8;
+							unsigned int j_utf8_step = 0;
+							(void)SetUtf8CharOffset(w, j_utf8_step);
+							j_utf8_offset += j_utf8_step;
+#endif
 							m_currentPos = j;
-							if (m_strBuffer[j] == '\n' || m_strBuffer[j] == 13) {
+#ifdef UTF8_LEXEM_TRANSLATE
+							m_currentUtf8Pos = j_utf8;
+#endif
+							if (w == wxT('\n') || w == wxT('\r')) {
 								//process next line
 								SkipSpaces();
 								return;
 							}
 						}
 						i = m_currentPos + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+						i_utf8 = m_currentUtf8Pos + i_utf8_step;
+#endif
 					}
 				}
 			}
 			m_currentPos = i;
+#ifdef UTF8_LEXEM_TRANSLATE
+			m_currentUtf8Pos = i_utf8;
+#endif
 			break;
 		}
-		else if (c == '\n') {
+		else if (c == wxT('\n')) {
 			m_currentLine++;
 		}
 	}
 
 	if (i == m_bufferSize) {
-		m_currentPos = m_bufferSize;
+		m_currentPos = i;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_currentUtf8Pos = i_utf8;
+#endif
 	}
 }
 
@@ -367,13 +419,21 @@ bool CTranslateCode::IsByte(const wxUniChar& c) const
 * Byte from the buffer
 */
 
-wxUniChar CTranslateCode::GetByte() const
+bool CTranslateCode::GetByte(wxUniChar* c) const
 {
 	SkipSpaces();
-	if (m_currentPos < m_bufferSize)
-		return m_strBuffer[m_currentPos++];
+
+	if (m_currentPos < m_bufferSize) {
+		const auto& byte = m_strBuffer[m_currentPos++];
+#ifdef UTF8_LEXEM_TRANSLATE
+		SetUtf8CharOffset(byte, m_currentUtf8Pos);
+#endif
+		if (c != nullptr) *c = byte;
+		return true;
+	}
+
 	SetError(ERROR_TRANSLATE_BYTE, m_currentPos);
-	return '\0';
+	return false;
 }
 
 /**
@@ -390,10 +450,11 @@ bool CTranslateCode::IsWord() const
 	SkipSpaces();
 	if (m_currentPos < m_bufferSize) {
 		const auto& c = m_strBuffer[m_currentPos];
-		if (((c == '_') ||
-			(c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-			(c >= 'А' && c <= 'Я') || (c >= 'а' && c <= 'я') ||
-			(c == '#')) && (c != '[' && c != ']'))
+#ifdef wxUSE_UNICODE
+		if (((c == wxT('_')) || iswalpha(c) || (c == wxT('#'))) && (c != wxT('[') && c != wxT(']')))
+#else 
+		if (((c == wxT('_')) || isalpha(c) || (c == wxT('#'))) && (c != wxT('[') && c != wxT(']')))
+#endif
 			return true;
 	}
 	return false;
@@ -419,24 +480,46 @@ bool CTranslateCode::GetWord(wxString* strWord, wxString* strRealName, bool real
 		return false;
 	}
 
-	unsigned int next_pos = m_currentPos;
+	int next_pos = m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	int next_utf8_pos = m_currentUtf8Pos;
+#endif
 
-	if (strWord != nullptr) strWord->Clear();
+	if (strWord != nullptr) strWord->clear();
+
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif
+
 	for (unsigned int i = m_currentPos; i < m_bufferSize; i++) {
 		const auto& c = m_strBuffer[i];
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif	
 		// if array then break
-		if (c == '[' || c == ']') break;
-		if ((c == '_') ||
-			(c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-			(c >= 'А' && c <= 'Я') || (c >= 'а' && c <= 'я') ||
+		if (c == wxT('[') || c == wxT(']')) break;
 
-			(c >= '0' && c <= '9') ||
-			(c == '#' && i == m_currentPos) || //if the first # symbol is a special word
-			(c == '.' && get_point)) {
-			if (c == L'.' && get_point)
+		if ((c == wxT('_')) ||
+#ifdef wxUSE_UNICODE
+			iswalpha(c) || isdigit(c) ||
+#else 
+			isalpha(c) || isdigit(c) ||
+#endif 
+			(c == wxT('#') && i == m_currentPos) || //if the first # symbol is a special word
+			(c == wxT('.') && get_point)) {
+
+			if (c == wxT('.') && get_point)
 				get_point = false; //the dot must appear only once
 
 			next_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = i_utf8 + i_utf8_step;
+#endif
 		}
 		else break;
 
@@ -447,6 +530,9 @@ bool CTranslateCode::GetWord(wxString* strWord, wxString* strRealName, bool real
 	const unsigned int first_pos = m_currentPos;
 
 	m_currentPos = next_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentUtf8Pos = next_utf8_pos;
+#endif
 
 	if (first_pos == next_pos) {
 		SetError(ERROR_TRANSLATE_WORD, first_pos);
@@ -467,12 +553,32 @@ wxString CTranslateCode::GetStrToEndLine() const
 {
 	unsigned int start_pos = m_currentPos;
 	unsigned int i = m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif
 	for (; i < m_bufferSize; i++) {
-		if (m_strBuffer[i] == '\r' || m_strBuffer[i] == '\n') {
-			i++; break;
+		const auto& c = m_strBuffer[i];
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif
+		if (c == wxT('\r') || c == wxT('\n')) {
+			i += 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			i_utf8 += i_utf8_step;
+#endif
+			if (c == wxT('\n')) m_currentLine++;
+			break;
 		}
 	}
 	m_currentPos = i;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentUtf8Pos = i_utf8;
+#endif	
 	return m_strBuffer.substr(start_pos, m_currentPos - start_pos);
 }
 
@@ -488,9 +594,8 @@ wxString CTranslateCode::GetStrToEndLine() const
 bool CTranslateCode::IsNumber() const
 {
 	SkipSpaces();
-	if (m_currentPos < m_bufferSize) {
-		return m_strBuffer[m_currentPos] >= '0' && m_strBuffer[m_currentPos] <= '9';
-	}
+	if (m_currentPos < m_bufferSize)
+		return isdigit(m_strBuffer[m_currentPos]);
 	return false;
 }
 
@@ -515,13 +620,30 @@ bool CTranslateCode::GetNumber(wxString* strNumber) const
 		return wxEmptyString;
 	}
 	unsigned int next_pos = m_currentPos, error_pos = m_currentPos, point_pos = 0;
-	if (strNumber != nullptr) strNumber->Clear();
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int next_utf8_pos = m_currentUtf8Pos;
+#endif
+	if (strNumber != nullptr) strNumber->clear();
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif
 	for (unsigned int i = m_currentPos; i < m_bufferSize; i++) {
 		const auto& c = m_strBuffer[i];
-		if ((c >= '0' && c <= '9') || (c == '.')) {
-			if (c == '.')
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif
+		if (isdigit(c) || (c == wxT('.'))) {
+			if (c == wxT('.'))
 				point_pos++; //dot must appear only once
 			next_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = i_utf8 + i_utf8_step;
+#endif
 		}
 		else break;
 		error_pos = i + 1;
@@ -529,12 +651,17 @@ bool CTranslateCode::GetNumber(wxString* strNumber) const
 	}
 
 	const unsigned int first_pos = m_currentPos;
+
 	m_currentPos = next_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentUtf8Pos = next_utf8_pos;
+#endif	
+
 	if (first_pos == next_pos) {
 		SetError(ERROR_TRANSLATE_NUMBER, first_pos);
 		return false;
 	}
-	else if (IsWord() && m_strBuffer[next_pos] != ' ') {
+	else if (IsWord() && m_strBuffer[next_pos] != wxT(' ')) {
 		SetError(ERROR_TRANSLATE_NUMBER, error_pos);
 		return false;
 	}
@@ -556,7 +683,7 @@ bool CTranslateCode::GetNumber(wxString* strNumber) const
 
 bool CTranslateCode::IsString() const
 {
-	return IsByte('\"') || IsByte('|');
+	return IsByte(wxT('\"')) || IsByte(wxT('|'));
 }
 
 /**
@@ -581,34 +708,61 @@ bool CTranslateCode::GetString(wxString* strString) const
 		return false;
 	}
 	unsigned int next_pos = m_currentPos, error_pos = m_currentPos;
-	if (strString != nullptr) strString->Clear();
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int next_utf8_pos = m_currentUtf8Pos, error_utf8_pos = m_currentUtf8Pos;
+#endif
+	if (strString != nullptr) strString->clear();
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif
 	for (unsigned int i = m_currentPos; i < m_bufferSize; i++) {
 		const auto& c = m_strBuffer[i];
-		if (c == '\n') {
-			if (strString != nullptr) strString->Append('\n');
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif	
+		if (c == wxT('\n')) {
+			if (strString != nullptr) strString->Append(wxT('\n'));
 			next_pos = m_currentPos + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = m_currentUtf8Pos + 1;
+#endif
 			m_currentLine++;
 			skip_space = true;
 		}
-		if (skip_space && c == '|') {
+		if (skip_space && c == wxT('|')) {
 			skip_space = false;
 			continue;
 		}
-		else if (skip_space && (c == ' ' || c == '\t' || c == '\n' || c == '\r')) {
+		else if (skip_space && (c == wxT(' ') || c == wxT('\t') || c == wxT('\n') || c == wxT('\r'))) {
 			continue;
 		}
-		else if (skip_space && (c != ' ' && c != '\t' && c != '\n' && c != '\r')) {
+		else if (skip_space && (c != wxT(' ') && c != wxT('\t') && c != wxT('\n') && c != wxT('\r'))) {
 			break;
 		}
 		error_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+		error_utf8_pos = i_utf8 + i_utf8_step;
+#endif
 		if (count_char < 2) {
 			next_pos = i + 1;
-			if (c == '\"') {
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = i_utf8 + i_utf8_step;
+#endif
+			if (c == wxT('\"')) {
 				if (i != m_currentPos && i + 1 < m_bufferSize) {
-					if (m_strBuffer[i + 1] == '\"') {
-						if (strString != nullptr) strString->Append('\"');
+					if (m_strBuffer[i + 1] == wxT('\"')) {
+						if (strString != nullptr) strString->Append(wxT('\"'));
 						i++;
 						next_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+						i_utf8++;
+						next_utf8_pos = i_utf8 + 1;
+#endif
 						continue;
 					}
 				}
@@ -621,7 +775,11 @@ bool CTranslateCode::GetString(wxString* strString) const
 	}
 
 	const unsigned int first_pos = m_currentPos;
+
 	m_currentPos = next_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentUtf8Pos = next_utf8_pos;
+#endif
 
 	if (first_pos == next_pos) {
 		SetError(ERROR_TRANSLATE_STRING, first_pos);
@@ -629,12 +787,15 @@ bool CTranslateCode::GetString(wxString* strString) const
 	}
 	else if (count_char < 2) {
 		SetError(ERROR_TRANSLATE_STRING, error_pos);
+		m_currentPos = error_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_currentUtf8Pos = error_utf8_pos;
+#endif
 		return false;
 	}
 
 	return true;
 }
-
 
 /**
 * IsDate
@@ -646,7 +807,7 @@ bool CTranslateCode::GetString(wxString* strString) const
 
 bool CTranslateCode::IsDate() const
 {
-	return IsByte('\'');
+	return IsByte(wxT('\''));
 }
 
 /**
@@ -664,30 +825,50 @@ bool CTranslateCode::GetDate(wxString* strDate) const
 		SetError(ERROR_TRANSLATE_DATE, m_currentPos);
 		return false;
 	}
-
 	unsigned int count_char = 0;
 	SkipSpaces();
 	if (m_currentPos >= m_bufferSize) {
 		SetError(ERROR_TRANSLATE_WORD, m_currentPos);
 		return false;
 	}
-
 	unsigned int next_pos = m_currentPos, error_pos = m_currentPos;
-	if (strDate != nullptr) strDate->Clear();
-
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int next_utf8_pos = m_currentUtf8Pos, error_utf8_pos = m_currentUtf8Pos;
+#endif
+	if (strDate != nullptr) strDate->clear();
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int i_utf8 = m_currentUtf8Pos;
+	unsigned int i_utf8_offset = i_utf8;
+#endif
 	for (unsigned int i = m_currentPos; i < m_bufferSize; i++) {
 		const auto& c = m_strBuffer[i];
-		if (c == '\n') {
+#ifdef UTF8_LEXEM_TRANSLATE
+		i_utf8 = i_utf8_offset;
+		i_utf8_offset = i_utf8;
+		unsigned int i_utf8_step = 0;
+		(void)SetUtf8CharOffset(c, i_utf8_step);
+		i_utf8_offset += i_utf8_step;
+#endif
+		if (c == wxT('\n')) {
 			next_pos = m_currentPos + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = m_currentUtf8Pos + i_utf8_step;
+#endif
 			m_currentLine++;
 			break;
 		}
 		error_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+		error_utf8_pos = i_utf8 + i_utf8_step;
+#endif
 		if (count_char < 2) {
-			if (c == '\'') {
+			if (c == wxT('\'')) {
 				count_char++;
 			}
 			next_pos = i + 1;
+#ifdef UTF8_LEXEM_TRANSLATE
+			next_utf8_pos = i_utf8 + i_utf8_step;
+#endif
 		}
 		else break;
 		if (strDate != nullptr) strDate->Append(c);
@@ -696,6 +877,9 @@ bool CTranslateCode::GetDate(wxString* strDate) const
 	const unsigned int first_pos = m_currentPos;
 
 	m_currentPos = next_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentUtf8Pos = next_utf8_pos;
+#endif
 
 	if (first_pos == next_pos) {
 		SetError(ERROR_TRANSLATE_DATE, first_pos);
@@ -703,13 +887,16 @@ bool CTranslateCode::GetDate(wxString* strDate) const
 	}
 	else if (count_char < 2) {
 		SetError(ERROR_TRANSLATE_DATE, error_pos);
+		m_currentPos = error_pos;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_currentUtf8Pos = error_utf8_pos;
+#endif
 		return false;
 	}
 	else if (IsWord()) {
 		SetError(ERROR_TRANSLATE_DATE, error_pos);
 		return false;
 	}
-
 	return true;
 }
 
@@ -781,9 +968,33 @@ bool CTranslateCode::PrepareLexem()
 	m_listLexem.clear();
 
 	if (m_defineList == nullptr) {
-		m_defineList = new CDefineList();
+		m_defineList = new CDefineCollection();
 		m_defineList->SetParent(&ms_listDefine);
 		m_bAutoDeleteDefList = true;//indication that the array with definitions was created by us (and not passed as a definition translation)
+	}
+
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int total_line = 0,
+		total_pos = 0, total_pos_utf8 = 0;
+#else 
+	unsigned int total_line = 0,
+		total_pos = 0;
+#endif
+
+	for (auto& translateCode : m_listTranslateCode) {
+		translateCode->m_currentLine = translateCode->m_currentPos = 0;
+		if (!translateCode->PrepareLexem())
+			return false;
+		for (auto& m_current_lex : translateCode->m_listLexem) {
+			if (m_current_lex.m_lexType != ENDPROGRAM) {
+				m_listLexem.push_back(m_current_lex);
+			}
+		}
+		total_line += translateCode->m_currentLine;
+		total_pos += translateCode->m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+		total_pos_utf8 += translateCode->m_currentUtf8Pos;
+#endif
 	}
 
 	wxString s;
@@ -796,6 +1007,9 @@ bool CTranslateCode::PrepareLexem()
 
 		m_current_lex.m_numLine = m_currentLine;
 		m_current_lex.m_numString = m_currentPos;//if an error occurs later, this is the string that should be returned to the user
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_current_lex.m_numUtf8String = m_currentUtf8Pos;
+#endif
 
 		if (IsWord()) {
 
@@ -809,6 +1023,9 @@ bool CTranslateCode::PrepareLexem()
 						CLexem* m_current_lex = pDef[i].data();
 						m_current_lex->m_numString = m_currentPos;
 						m_current_lex->m_numLine = m_currentLine;//for breakpoints
+#ifdef UTF8_LEXEM_TRANSLATE
+						m_current_lex->m_numUtf8String = m_currentUtf8Pos;
+#endif
 						m_current_lex->m_strModuleName = m_strModuleName;
 						m_current_lex->m_strDocPath = m_strDocPath;
 						m_current_lex->m_strFileName = m_strFileName;
@@ -835,6 +1052,7 @@ bool CTranslateCode::PrepareLexem()
 					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
+
 					if (k >= 0) {
 						m_current_lex.m_lexType = KEYWORD;
 						m_current_lex.m_numData = k;
@@ -842,6 +1060,7 @@ bool CTranslateCode::PrepareLexem()
 					else {
 						m_current_lex.m_lexType = IDENTIFIER;
 					}
+
 					m_current_lex.m_valData = strOrig;
 				}
 
@@ -859,19 +1078,19 @@ bool CTranslateCode::PrepareLexem()
 				m_current_lex.m_strData = s;
 				int n = m_listLexem.size() - 1;
 				if (n >= 0) {
-					if (m_listLexem[n].m_lexType == DELIMITER && (m_listLexem[n].m_numData == '-' || m_listLexem[n].m_numData == '+')) {
+					if (m_listLexem[n].m_lexType == DELIMITER && (m_listLexem[n].m_numData == wxT('-') || m_listLexem[n].m_numData == wxT('+'))) {
 						n--;
 						if (n >= 0) {
 							if (m_listLexem[n].m_lexType == DELIMITER &&
 								(
-									m_listLexem[n].m_numData == '[' ||
-									m_listLexem[n].m_numData == '(' ||
-									m_listLexem[n].m_numData == ',' ||
-									m_listLexem[n].m_numData == '<' ||
-									m_listLexem[n].m_numData == '>' ||
-									m_listLexem[n].m_numData == '=')) {
+									m_listLexem[n].m_numData == wxT('[') ||
+									m_listLexem[n].m_numData == wxT('(') ||
+									m_listLexem[n].m_numData == wxT(',') ||
+									m_listLexem[n].m_numData == wxT('<') ||
+									m_listLexem[n].m_numData == wxT('>') ||
+									m_listLexem[n].m_numData == wxT('='))) {
 								n++;
-								if (m_listLexem[n].m_numData == '-')
+								if (m_listLexem[n].m_numData == wxT('-'))
 									m_current_lex.m_valData.m_fData = -m_current_lex.m_valData.m_fData;
 								m_listLexem[n] = m_current_lex;
 								continue;
@@ -912,7 +1131,8 @@ bool CTranslateCode::PrepareLexem()
 			s.Clear();
 
 			m_current_lex.m_lexType = DELIMITER;
-			m_current_lex.m_numData = GetByte();
+			wxUniChar byte; GetByte(byte);
+			m_current_lex.m_numData = byte;
 
 			if (m_current_lex.m_numData <= 13) continue;
 		}
@@ -989,11 +1209,17 @@ bool CTranslateCode::PrepareLexem()
 			}
 			else if (m_current_lex.m_numData == KEY_ENDIFDEF) {//end of conditional compilation
 				m_currentPos = m_current_lex.m_numString;//here we saved the previous value
+#ifdef UTF8_LEXEM_TRANSLATE
+				m_currentUtf8Pos = m_current_lex.m_numUtf8String;
+#endif
 				break;
 			}
 			else if (m_current_lex.m_numData == KEY_ELSEDEF) {//"Otherwise" of conditional compilation
 				//return to the beginning of the conditional operator
 				m_currentPos = m_current_lex.m_numString;//here we saved the previous value
+#ifdef UTF8_LEXEM_TRANSLATE
+				m_currentUtf8Pos = m_current_lex.m_numUtf8String;
+#endif
 				break;
 			}
 			else if (m_current_lex.m_numData == KEY_REGION) {
@@ -1014,23 +1240,13 @@ bool CTranslateCode::PrepareLexem()
 			}
 			else if (m_current_lex.m_numData == KEY_ENDREGION) {
 				m_currentPos = m_current_lex.m_numString;//here we saved the previous value
+#ifdef UTF8_LEXEM_TRANSLATE
+				m_currentUtf8Pos = m_current_lex.m_numUtf8String;
+#endif
 				break;
 			}
 		}
 		m_listLexem.emplace_back(std::move(m_current_lex));
-	}
-
-	for (auto& translateCode : m_listTranslateCode) {
-		translateCode->m_currentLine = translateCode->m_currentPos = 0;
-		if (!translateCode->PrepareLexem())
-			return false;
-		for (auto& m_current_lex : translateCode->m_listLexem) {
-			if (m_current_lex.m_lexType != ENDPROGRAM) {
-				m_listLexem.push_back(m_current_lex);
-			}
-		}
-		m_currentLine += translateCode->m_currentLine;
-		m_currentPos += translateCode->m_currentPos;
 	}
 
 	m_current_lex.m_lexType = ENDPROGRAM;
@@ -1040,8 +1256,11 @@ bool CTranslateCode::PrepareLexem()
 	m_current_lex.m_strDocPath = m_strDocPath;
 	m_current_lex.m_strFileName = m_strFileName;
 
-	m_current_lex.m_numLine = m_currentLine;
-	m_current_lex.m_numString = m_currentPos;
+	m_current_lex.m_numLine = total_line + m_currentLine;
+	m_current_lex.m_numString = total_pos + m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_current_lex.m_numUtf8String = total_pos_utf8 + m_currentUtf8Pos;
+#endif
 
 	m_listLexem.emplace_back(std::move(m_current_lex));
 	return true;
@@ -1064,6 +1283,9 @@ void CTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 	//start line number
 	translate.m_currentLine = m_currentLine;
 	translate.m_currentPos = m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+	translate.m_currentUtf8Pos = m_currentUtf8Pos;
+#endif
 
 	//end line number
 	if (nMode == LEXEM_ADDDEF) {
@@ -1082,35 +1304,41 @@ void CTranslateCode::PrepareFromCurrent(int nMode, const wxString& strName)
 			m_listLexem.push_back(translate.m_listLexem[i]);
 		}
 
-		m_currentPos = translate.m_currentPos;
 		m_currentLine = translate.m_currentLine;
+		m_currentPos = translate.m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+		translate.m_currentUtf8Pos = m_currentUtf8Pos;
+#endif
 	}
 	else {
-		m_currentPos = translate.m_currentPos;
 		m_currentLine = translate.m_currentLine;
+		m_currentPos = translate.m_currentPos;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_currentUtf8Pos = translate.m_currentUtf8Pos;
+#endif
 	}
 }
 
 void CTranslateCode::AppendModule(CTranslateCode* module)
 {
-	auto& it = std::find(m_listTranslateCode.begin(), m_listTranslateCode.end(), module);
-	if (it == m_listTranslateCode.end()) {
-		m_listTranslateCode.push_back(module);
-	}
+	auto iterator = std::find(m_listTranslateCode.begin(), m_listTranslateCode.end(), module);
+	if (iterator != m_listTranslateCode.end())
+		return;
+	m_listTranslateCode.push_back(module);
 }
 
 void CTranslateCode::RemoveModule(CTranslateCode* module)
 {
-	auto& it = std::find(m_listTranslateCode.begin(), m_listTranslateCode.end(), module);
-	if (it != m_listTranslateCode.end()) {
-		m_listTranslateCode.erase(it);
-	}
+	m_listTranslateCode.erase(
+		std::remove(m_listTranslateCode.begin(), m_listTranslateCode.end(), module),
+		m_listTranslateCode.end()
+	);
 }
 
 void CTranslateCode::OnSetParent(CTranslateCode* setParent)
 {
 	if (!m_defineList) {
-		m_defineList = new CDefineList;
+		m_defineList = new CDefineCollection;
 		m_defineList->SetParent(&ms_listDefine);
 		m_bAutoDeleteDefList = true;//sign of auto deletion
 	}
@@ -1127,40 +1355,73 @@ void CTranslateCode::OnSetParent(CTranslateCode* setParent)
 
 size_t CTranslateCode::CalcAllocSize() const {
 
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int store_line = m_currentLine,
+		store_pos = m_currentPos, store_pos_utf8 = m_currentUtf8Pos;
+	m_currentPos = m_currentLine = m_currentUtf8Pos = 0;
+#else 
 	unsigned int store_line = m_currentLine,
 		store_pos = m_currentPos;
-
 	m_currentPos = m_currentLine = 0;
+#endif
 
 	size_t alloc_size = 1;
 
 	while (!IsEnd()) {
 		if (IsWord()) {
-			(void)GetWord();
-			alloc_size++;
+			try {
+				(void)GetWord();
+				alloc_size++;
+			}
+			catch (...)
+			{
+			}
 		}
 		else if (IsNumber() || IsString() || IsDate()) {
 			if (IsNumber()) {
-				(void)GetNumber();
-				alloc_size++;
+				try {
+					(void)GetNumber();
+					alloc_size++;
+				}
+				catch (...)
+				{
+				}
 			}
 			else if (IsString()) {
-				(void)GetString();
-				alloc_size++;
+				try {
+					(void)GetString();
+					alloc_size++;
+				}
+				catch (...)
+				{
+				}
 			}
 			else if (IsDate()) {
-				(void)GetDate();
-				alloc_size++;
+				try {
+					(void)GetDate();
+					alloc_size++;
+				}
+				catch (...)
+				{
+				}
 			}
 		}
 		else {
-			(void)GetByte();
-			alloc_size++;
+			try {
+				(void)GetByte();
+				alloc_size++;
+			}
+			catch (...)
+			{
+			}
 		}
 	}
 
-
+#ifdef UTF8_LEXEM_TRANSLATE
+	m_currentLine = store_line; m_currentPos = store_pos; m_currentUtf8Pos = store_pos_utf8;
+#else
 	m_currentLine = store_line; m_currentPos = store_pos;
+#endif
 	return alloc_size;
 }
 

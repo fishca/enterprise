@@ -247,6 +247,12 @@ void CCodeEditor::SetFontColorSettings(const FontColorSettings& settings)
 	StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
 	StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
 
+	font = settings.GetFont(FontColorSettings::DisplayItem_Preprocessor);
+
+	StyleSetFont(wxSTC_C_PREPROCESSOR, font);
+	StyleSetForeground(wxSTC_C_PREPROCESSOR, settings.GetColors(FontColorSettings::DisplayItem_Preprocessor).foreColor);
+	StyleSetBackground(wxSTC_C_PREPROCESSOR, settings.GetColors(FontColorSettings::DisplayItem_Preprocessor).backColor);
+
 	font = settings.GetFont(FontColorSettings::DisplayItem_Keyword);
 
 	StyleSetFont(wxSTC_C_WORD, font);
@@ -456,23 +462,23 @@ bool CCodeEditor::SyntaxControl(bool throwMessage) const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef UTF8_LEXEM_TRANSLATE
+#define appendStyle(style) \
+CCodeEditor::StartStyling(currPos); \
+CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentUtf8Pos() - currPos, style);
+#else
 #define appendStyle(style) \
 CCodeEditor::StartStyling(currPos); \
 CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                          Styling                                                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
-	const int fromLine, const int toLine,
-	const int fromPos, const int toPos,
-	const wxString& strCode)
+void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos)
 {
-	m_tc.Load(strCode);
-
-	//вдруг строка начинается с комментария:
-	int wasLeftPoint = wxNOT_FOUND;
+	m_tc.Load(CCodeEditor::GetTextRange(fromPos, toPos));
 
 	//remove old styling
 	CCodeEditor::StartStyling(fromPos); //from here
@@ -480,16 +486,17 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 
 	wxString strWord;
 	unsigned int currPos = fromPos;
+
 	while (!m_tc.IsEnd()) {
+#ifdef UTF8_LEXEM_TRANSLATE
+		currPos = fromPos + m_tc.GetCurrentUtf8Pos();
+#else 
 		currPos = fromPos + m_tc.GetCurrentPos();
+#endif 
 		if (m_tc.IsWord()) {
-			try {
-				m_tc.GetWord(strWord);
-			}
-			catch (...) {
-			}
+			(void)m_tc.GetWord(strWord, false, true);
 			const short keyWord = CTranslateCode::IsKeyWord(strWord);
-			if (keyWord != wxNOT_FOUND && wasLeftPoint != m_tc.GetCurrentLine()) {
+			if (keyWord != wxNOT_FOUND) {
 				if (strWord.Left(1) == '#') {
 					appendStyle(wxSTC_C_PREPROCESSOR);
 				}
@@ -500,42 +507,24 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(
 			else {
 				appendStyle(wxSTC_C_WORD);
 			}
-			wasLeftPoint = wxNOT_FOUND;
 		}
 		else if (m_tc.IsNumber() || m_tc.IsString() || m_tc.IsDate()) {
 			if (m_tc.IsNumber()) {
-				try {
-					(void)m_tc.GetNumber();
-				}
-				catch (...) {
-				}
+				(void)m_tc.GetNumber();
 				appendStyle(wxSTC_C_NUMBER);
 			}
 			else if (m_tc.IsString()) {
-				try {
-					(void)m_tc.GetString();
-				}
-				catch (...) {
-				}
+				(void)m_tc.GetString();
 				appendStyle(wxSTC_C_OPERATOR);
 			}
 			else if (m_tc.IsDate()) {
-				try {
-					(void)m_tc.GetDate();
-				}
-				catch (...) {
-				}
+				(void)m_tc.GetDate();
 				appendStyle(wxSTC_C_OPERATOR);
 			}
-			wasLeftPoint = wxNOT_FOUND;
 		}
 		else {
-			const wxUniChar& c = m_tc.GetByte();
+			(void)m_tc.GetByte();
 			appendStyle(wxSTC_C_IDENTIFIER);
-			if (c == '.')
-				wasLeftPoint = m_tc.GetCurrentLine();
-			else
-				wasLeftPoint = wxNOT_FOUND;
 		}
 	}
 
@@ -574,9 +563,7 @@ void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 
 	if (line_end < line_start) {
 		//that happens when you select parts that are in front of the styled area
-		size_t temp = line_end;
-		line_end = line_start;
-		line_start = temp;
+		wxSwap(line_end, line_start);
 	}
 
 	//style the line following the style area too (if present) in case fold level decreases in that one
@@ -585,75 +572,9 @@ void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 	}
 
 	//get exact start positions
-	size_t pos_start = CCodeEditor::PositionFromLine(line_start);
-	size_t pos_end = CCodeEditor::GetLineEndPosition(line_end);
-
-	wxString strCode; int space_char = 0;
-	strCode.reserve(pos_end - pos_start);
-
-	// get str code 
-	const std::string strBuffer(CCodeEditor::GetTextRangeRaw(pos_start, pos_end));
-	for (unsigned int i = 0; i < strBuffer.size(); i++) {
-		const unsigned char& c = strBuffer[i];
-		if (c == ' ' || stringUtils::IsSymbol(c) || !stringUtils::IsWord(c)) {
-			(void)strCode.append(space_char, '_'); space_char = 0;
-		}
-		if ((c & 0x80) == 0) {
-			wchar_t wc = c;
-			(void)strCode.append(wc);
-		}
-		else if ((c & 0xE0) == 0xC0) {
-			space_char += 1;
-			wchar_t wc = (c & 0x1F) << 6;
-			wc |= (strBuffer[i + 1] & 0x3F);
-			(void)strCode.append(wc);
-			i += 1;
-		}
-		else if ((c & 0xF0) == 0xE0) {
-			space_char += 2;
-			wchar_t wc = (c & 0xF) << 12;
-			wc |= (strBuffer[i + 1] & 0x3F) << 6;
-			wc |= (strBuffer[i + 2] & 0x3F);
-			(void)strCode.append(wc);
-			i += 2;
-		}
-		else if ((c & 0xF8) == 0xF0) {
-			space_char += 3;
-			wchar_t wc = (c & 0x7) << 18;
-			wc |= (strBuffer[i + 1] & 0x3F) << 12;
-			wc |= (strBuffer[i + 2] & 0x3F) << 6;
-			wc |= (strBuffer[i + 3] & 0x3F);
-			(void)strCode.append(wc);
-			i += 3;
-		}
-		else if ((c & 0xFC) == 0xF8) {
-			space_char += 4;
-			wchar_t wc = (c & 0x3) << 24;
-			wc |= (strBuffer[i + 1] & 0x3F) << 18;
-			wc |= (strBuffer[i + 2] & 0x3F) << 12;
-			wc |= (strBuffer[i + 3] & 0x3F) << 6;
-			wc |= (strBuffer[i + 4] & 0x3F);
-			(void)strCode.append(wc);
-			i += 4;
-		}
-		else if ((c & 0xFE) == 0xFC) {
-			space_char += 5;
-			wchar_t wc = (c & 0x1) << 30;
-			wc |= (strBuffer[i + 1] & 0x3F) << 24;
-			wc |= (strBuffer[i + 2] & 0x3F) << 18;
-			wc |= (strBuffer[i + 3] & 0x3F) << 12;
-			wc |= (strBuffer[i + 4] & 0x3F) << 6;
-			wc |= (strBuffer[i + 5] & 0x3F);
-			(void)strCode.append(wc);
-			i += 5;
-		}
-	}
-
-	(void)strCode.append(space_char, '_'); space_char = 0;
-
 	HighlightSyntaxAndCalculateFoldLevel(
-		line_start, line_end,
-		pos_start, pos_end, strCode
+		CCodeEditor::PositionFromLine(line_start),
+		CCodeEditor::GetLineEndPosition(line_end)
 	);
 
 	event.Skip();
@@ -724,11 +645,19 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 					const int str_utf8_length = event.GetLength();
 					if ((modFlags & (wxSTC_MOD_INSERTTEXT)) != 0) {
 						m_precompileModule->PrepareLexem(line,
+#ifdef UTF8_LEXEM_TRANSLATE
+							event.m_linesAdded, str_length, str_utf8_length);
+#else
 							event.m_linesAdded, str_length);
+#endif
 					}
 					else if ((modFlags & (wxSTC_MOD_DELETETEXT)) != 0) {
 						m_precompileModule->PrepareLexem(line,
+#ifdef UTF8_LEXEM_TRANSLATE
+							event.m_linesAdded, -str_length, str_utf8_length);
+#else
 							event.m_linesAdded, -str_length);
+#endif
 					}
 #else 
 					m_precompileModule->PrepareLexem();

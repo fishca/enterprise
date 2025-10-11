@@ -46,6 +46,7 @@ enum {
 };
 
 //definitions
+#define UTF8_LEXEM_TRANSLATE 
 
 //storing one primitive from the source code
 struct CLexem {
@@ -66,10 +67,13 @@ struct CLexem {
 	unsigned int m_numLine;		//source line number (for breakpoints)
 	unsigned int m_numString;	//source text number (for error output)
 
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int m_numUtf8String; //source text number 
+#endif
+
 public:
 
 	unsigned int GetLine() const { return m_numLine + 1; }
-
 	unsigned int GetLength() const {
 		if (m_lexType == DELIMITER)
 			return 1;
@@ -93,16 +97,24 @@ public:
 	CLexem() :
 		m_lexType(0),
 		m_numData(0),
+		m_numLine(0),
+#ifdef UTF8_LEXEM_TRANSLATE
 		m_numString(0),
-		m_numLine(0)
+		m_numUtf8String(0)
+#else
+		m_numString(0)
+#endif // UTF8_LEXEM_TRANSLATE
 	{
 	}
 
 	CLexem(const CLexem& src) :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
-		m_numString(src.m_numString),
 		m_numLine(src.m_numLine),
+		m_numString(src.m_numString),
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_numUtf8String(src.m_numUtf8String),
+#endif // UTF8_LEXEM_TRANSLATE
 
 		m_valData(src.m_valData),
 		m_strData(src.m_strData),
@@ -116,8 +128,11 @@ public:
 	CLexem(CLexem&& src) :
 		m_lexType(src.m_lexType),
 		m_numData(src.m_numData),
-		m_numString(src.m_numString),
 		m_numLine(src.m_numLine),
+		m_numString(src.m_numString),
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_numUtf8String(src.m_numUtf8String),
+#endif // UTF8_LEXEM_TRANSLATE
 
 		m_valData(std::move(src.m_valData)),
 		m_strData(std::move(src.m_strData)),
@@ -126,18 +141,24 @@ public:
 		m_strDocPath(std::move(src.m_strDocPath)),
 		m_strFileName(std::move(src.m_strFileName))
 	{
-
 		src.m_lexType = 0;
 		src.m_numData = 0;
-		src.m_numString = 0;
 		src.m_numLine = 0;
+		src.m_numString = 0;
+#ifdef UTF8_LEXEM_TRANSLATE
+		src.m_numUtf8String = 0;
+#endif
 	}
 
-	CLexem& operator =(const CLexem& src) {
+	CLexem& operator =(const CLexem& src)
+	{
 		m_lexType = src.m_lexType;
 		m_numData = src.m_numData;
-		m_numString = src.m_numString;
 		m_numLine = src.m_numLine;
+		m_numString = src.m_numString;
+#ifdef UTF8_LEXEM_TRANSLATE
+		m_numUtf8String = src.m_numUtf8String;
+#endif
 
 		m_valData = src.m_valData;
 		m_strData = src.m_strData;
@@ -165,9 +186,11 @@ public:
 
 		src.m_lexType = 0;
 		src.m_numData = 0;
-		src.m_numString = 0;
 		src.m_numLine = 0;
-
+		src.m_numString = 0;
+#ifdef UTF8_LEXEM_TRANSLATE
+		src.m_numUtf8String = 0;
+#endif
 		return *this;
 	}
 };
@@ -185,28 +208,27 @@ the text of the executable code, the second procedure performs translation
 class BACKEND_API CTranslateCode {
 
 	//class for storing user definitions
-	class CDefineList {
-		CDefineList* m_parentDefine;
-		std::map<wxString, CLexemList*> m_defineList;//contains arrays of lexemes
+	class CDefineCollection {
 	public:
-
-		CDefineList() : m_parentDefine(nullptr) {};
-		~CDefineList() { Clear(); }
+		CDefineCollection() : m_parentDefine(nullptr) {};
+		~CDefineCollection() { Clear(); }
 
 		void Clear() { m_defineList.clear(); }
-
-		void SetParent(CDefineList* parent) {
-			m_parentDefine = parent;
-		}
+		void SetParent(CDefineCollection* parent) { m_parentDefine = parent; }
 
 		void RemoveDef(const wxString& strName);
 		bool HasDefine(const wxString& strName) const;
 		CLexemList* GetDefine(const wxString& strName);
 		void SetDefine(const wxString& strName, CLexemList*);
 		void SetDefine(const wxString& strName, const wxString& strValue);
+
+	private:
+		
+		std::map<wxString, CLexemList*> m_defineList;//contains arrays of lexemes	
+		CDefineCollection* m_parentDefine;
 	};
 
-	static CDefineList ms_listDefine;
+	static CDefineCollection ms_listDefine;
 
 public:
 
@@ -256,7 +278,11 @@ public:
 	inline void SkipSpaces() const;
 
 	bool IsByte(const wxUniChar& c) const;
-	wxUniChar GetByte() const;
+#pragma region get_byte
+	bool GetByte() const { return GetByte(nullptr); }
+	bool GetByte(wxUniChar& c) const { return GetByte(&c); }
+	bool GetByte(wxUniChar* c) const;
+#pragma endregion  
 
 	bool IsWord() const;
 #pragma region get_word
@@ -298,8 +324,13 @@ public:
 	wxString GetModuleName() const { return m_strModuleName; }
 
 	unsigned int GetBufferSize() const { return m_strBuffer.size(); }
-	unsigned int GetCurrentPos() const { return m_currentPos; }
+
 	unsigned int GetCurrentLine() const { return m_currentLine; }
+	unsigned int GetCurrentPos() const { return m_currentPos; }
+
+#ifdef UTF8_LEXEM_TRANSLATE
+	unsigned int GetCurrentUtf8Pos() const { return m_currentUtf8Pos; }
+#endif
 
 public:
 
@@ -307,6 +338,43 @@ public:
 	static void LoadKeyWords();
 
 protected:
+
+#ifdef UTF8_LEXEM_TRANSLATE
+
+	inline unsigned int GetUtf8CharOffset(const wxUniChar& c) const {
+
+		unsigned int code = c.GetValue();
+
+		//    Char. number range   |        UTF-8 octet sequence
+		//       (hexadecimal)     |              (binary)
+		//   ----------------------+---------------------------------------------
+		//   0000 0000 - 0000 007F | 0xxxxxxx
+		//   0000 0080 - 0000 07FF | 110xxxxx 10xxxxxx
+		//   0000 0800 - 0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+		//   0001 0000 - 0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+		//
+		//   Code point value is stored in bits marked with 'x', lowest-order bit
+		//   of the value on the right side in the diagram above.
+		//                                                        (from RFC 3629)
+
+		if (code <= 0x7F)
+			return 1;
+		else if (code <= 0x07FF)
+			return 2;
+		else if (code < 0xFFFF)
+			return 3;
+		else if (code <= 0x10FFFF)
+			return 4;
+
+		wxFAIL_MSG(wxT("trying to encode undefined Unicode character"));
+		return 0;
+	}
+
+	inline void SetUtf8CharOffset(const wxUniChar& c, unsigned int& raw_pos) const {
+		raw_pos += GetUtf8CharOffset(c);
+	}
+
+#endif // UTF8_LEXEM_TRANSLATE
 
 	virtual void DoSetError(int codeError,
 		const wxString& strFileName, const wxString& strModuleName, const wxString& strDocPath,
@@ -324,7 +392,7 @@ protected:
 	std::vector<CTranslateCode*> m_listTranslateCode;
 
 	//Support for "defines":
-	CDefineList* m_defineList;
+	CDefineCollection* m_defineList;
 
 	bool m_bAutoDeleteDefList;
 	int m_nModePreparing;
@@ -341,6 +409,9 @@ protected:
 
 	mutable unsigned int m_currentPos; //current position of the processed text
 	mutable unsigned int m_currentLine; //current line of the processed text
+#ifdef UTF8_LEXEM_TRANSLATE
+	mutable unsigned int m_currentUtf8Pos; //current raw position of the processed text
+#endif // UTF8_LEXEM_TRANSLATE
 
 	//intermediate array with lexemes:
 	std::vector<CLexem> m_listLexem;

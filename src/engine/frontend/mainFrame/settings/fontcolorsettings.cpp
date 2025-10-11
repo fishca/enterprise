@@ -4,7 +4,7 @@
 
 #include <wx/xml/xml.h>
 
-const char* FontColorSettings::s_displayItemName[] = { "Default", "Comment", "Keyword", "Operator", "String", "Number", "Error", "Warning", "Selection" };
+const char* FontColorSettings::s_displayItemName[] = { "Default", "Comment", "Preprocessor", "Keyword", "Operator", "String", "Number", "Error", "Warning", "Selection" };
 
 FontColorSettings::FontColorSettings()
 {
@@ -20,6 +20,11 @@ FontColorSettings::FontColorSettings()
     m_colors[DisplayItem_Comment].backColor     = wxColor(0xFF, 0xFF, 0xFF);
     m_colors[DisplayItem_Comment].bold          = false;
     m_colors[DisplayItem_Comment].italic        = false;
+
+    m_colors[DisplayItem_Preprocessor].foreColor = wxColor(0x80, 0x00, 0x00);
+    m_colors[DisplayItem_Preprocessor].backColor = wxColor(0xFF, 0xFF, 0xFF);
+    m_colors[DisplayItem_Preprocessor].bold = false;
+    m_colors[DisplayItem_Preprocessor].italic = false;
 
     m_colors[DisplayItem_Keyword].foreColor     = wxColor(0x00, 0x00, 0xFF);
     m_colors[DisplayItem_Keyword].backColor     = wxColor(0xFF, 0xFF, 0xFF);

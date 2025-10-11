@@ -822,6 +822,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 	else if (commandFromClient == CommandId_PatchComplete) {
 	}
 	else if (commandFromClient == CommandId_Continue) {
+		sm_debugServer->m_bDebugStopLine = false;
 		sm_debugServer->m_bDebugLoop = sm_debugServer->m_bDoLoop = false;
 	}
 	else if (commandFromClient == CommandId_StepInto) {

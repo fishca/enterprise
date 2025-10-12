@@ -204,6 +204,22 @@ bool CMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 	return IMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
 }
 
+bool CMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
+{
+	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+		return false;
+
+	return IMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
+}
+
+bool CMetaObjectEnumeration::OnBeforeCloseMetaObject()
+{
+	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+		return false;
+
+	return IMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
+}
+
 bool CMetaObjectEnumeration::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())

@@ -248,6 +248,12 @@ bool CMetaObjectInformationRegister::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectInformationRegister::OnAfterRunMetaObject(int flags)
 {
+	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -270,6 +276,12 @@ bool CMetaObjectInformationRegister::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectInformationRegister::OnBeforeCloseMetaObject()
 {
+	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 

@@ -223,6 +223,16 @@ bool CMetaObjectDataProcessor::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectDataProcessor::OnAfterRunMetaObject(int flags)
 {
+	if (m_objMode == METAOBJECT_NORMAL) {
+		if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) {
+			return false;
+		}
+	}
+
+	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) {
+		return false;
+	}
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -237,6 +247,16 @@ bool CMetaObjectDataProcessor::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectDataProcessor::OnBeforeCloseMetaObject()
 {
+	if (m_objMode == METAOBJECT_NORMAL) {
+		if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) {
+			return false;
+		}
+	}
+
+	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) {
+		return false;
+	}
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 

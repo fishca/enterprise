@@ -106,6 +106,9 @@ bool CMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectConstant::OnAfterRunMetaObject(int flags)
 {
+	if (!m_propertyModule->GetMetaObject()->OnAfterRunMetaObject(flags))
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -122,6 +125,9 @@ bool CMetaObjectConstant::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectConstant::OnBeforeCloseMetaObject()
 {
+	if (!m_propertyModule->GetMetaObject()->OnBeforeCloseMetaObject())
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 

@@ -204,6 +204,15 @@ bool CMetaObjectAccumulationRegister::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectAccumulationRegister::OnAfterRunMetaObject(int flags)
 {
+	if (!(*m_propertyAttributeRecordType)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -223,6 +232,15 @@ bool CMetaObjectAccumulationRegister::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectAccumulationRegister::OnBeforeCloseMetaObject()
 {
+	if (!(*m_propertyAttributeRecordType)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 

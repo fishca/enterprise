@@ -61,6 +61,9 @@ public:
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterRunMetaObject(int flags);
+
+	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 

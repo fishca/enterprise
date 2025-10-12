@@ -396,6 +396,21 @@ bool CMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 {
+	if (!(*m_propertyAttributeNumber)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyAttributeDate)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyAttributePosted)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags))
+		return false;
+
+	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
@@ -413,6 +428,21 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 {
+	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject())
+		return false;
+
+	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
+		return false;
+
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 

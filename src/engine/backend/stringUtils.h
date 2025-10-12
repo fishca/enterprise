@@ -119,8 +119,11 @@ namespace stringUtils
 #endif
 			if (!case_sensitive && c1 == c2)
 				continue;
-			
-			if (!case_sensitive && ::toupper(c1) != toupper(c2))
+#ifdef wxUSE_UNICODE	
+			if (!case_sensitive && ::towupper(c1) != ::towupper(c2))
+#else 
+			if (!case_sensitive && ::toupper(c1) != ::toupper(c2))
+#endif
 				return false;
 			else if (case_sensitive && c1 != c2)
 				return false;

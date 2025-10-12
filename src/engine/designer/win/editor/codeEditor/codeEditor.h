@@ -133,17 +133,25 @@ class CCodeEditor : public wxStyledTextCtrl {
 		}
 
 		int GetFoldMask(int line) const {
-			int level = 0; short flag = 0;
+			int level = 0; short flag = 0; int prev_line = -1;
 			for (auto& v : m_folding_vector) {
+				
 				if (v.first > line)
 					break;
-				if (v.first == line && v.second > 0)
-					flag = wxSTC_FOLDLEVELHEADER_FLAG;
-				else if (v.first == line && v.second < 0)
-					flag = wxSTC_FOLDLEVELWHITE_FLAG;
-				else if (v.first == line && v.second == 0)
-					flag = wxSTC_FOLDLEVELELSE_FLAG;
-				level += v.second;
+				
+				if (prev_line != v.first) {
+					
+					if (v.first == line && v.second > 0)
+						flag = wxSTC_FOLDLEVELHEADER_FLAG;
+					else if (v.first == line && v.second < 0)
+						flag = wxSTC_FOLDLEVELWHITE_FLAG;
+					else if (v.first == line && v.second == 0)
+						flag = wxSTC_FOLDLEVELELSE_FLAG;
+
+					level += v.second;
+				}
+
+				prev_line = v.first;
 			}
 
 			if (level < 0) level = 0;

@@ -231,7 +231,7 @@ void CCodeEditor::PrepareTABs()
 
 		fold_level = (fold_level ^ wxSTC_FOLDLEVELHEADER_FLAG);
 
-		std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+		std::string strBuffer = rawBufferLine;
 
 		switch (CCodeEditor::GetEOLMode())
 		{
@@ -276,7 +276,7 @@ void CCodeEditor::PrepareTABs()
 			const int len = CCodeEditor::LineLength(curr_line);
 			if (len > 0) {
 
-				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+				std::string strBuffer = rawBufferLine;
 
 				switch (CCodeEditor::GetEOLMode())
 				{
@@ -334,7 +334,7 @@ void CCodeEditor::PrepareTABs()
 			const int len = CCodeEditor::LineLength(curr_line);
 			if (len > 0) {
 
-				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+				std::string strBuffer = rawBufferLine;
 
 				switch (CCodeEditor::GetEOLMode())
 				{
@@ -388,7 +388,8 @@ void CCodeEditor::PrepareTABs()
 
 			if (len > 0) {
 
-				std::string strBuffer = CCodeEditor::GetLineRaw(curr_line);
+				std::string strBuffer = rawBufferLine;
+
 				const int length = curr_position - start_line_pos;
 				for (int i = 0; i < length; i++) {
 					if (strBuffer[i] == '\t' || strBuffer[i] == ' ') {

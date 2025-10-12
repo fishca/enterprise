@@ -209,11 +209,11 @@ void CEnterpriseApp::OnFatalException()
 	report.AddCurrentDump();
 	report.AddExceptionDump();
 
+	appDataDestroy();
+
 	//show error
 	wxDebugReportPreviewStd preview;
 	if (preview.Show(report)) report.Process();
-
-	appDataDestroy();
 }
 
 int CEnterpriseApp::OnExit()

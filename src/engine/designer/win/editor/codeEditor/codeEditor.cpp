@@ -85,6 +85,19 @@ CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID i
 
 CCodeEditor::~CCodeEditor()
 {
+	const IMetaObject* metaObject = m_document->GetMetaObject();
+	wxASSERT(metaObject);
+	const IMetaData* metaData = metaObject->GetMetaData();
+	wxASSERT(metaData);
+	const IModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	IModuleDataObject* dataRef = nullptr;
+	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
+		CCompileModule* compileModule = dataRef->GetCompileModule();
+		if (compileModule != nullptr) compileModule->ResizeLexem();
+	}
+
 	wxDELETE(m_precompileModule);
 }
 

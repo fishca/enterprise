@@ -251,12 +251,12 @@ public:
 	void RemoveModule(CTranslateCode* module);
 
 	virtual void OnSetParent(CTranslateCode* setParent);
-
 	virtual void Clear();
 
-	void ClearLexem() {
-		m_listLexem.clear();
-		m_listTranslateCode.clear();
+	//free memory 
+	void ResizeLexem(const size_t new_size = 0) {
+		m_listLexem.resize(new_size);
+		//m_listTranslateCode.resize(new_size);
 	}
 
 	bool PrepareLexem();

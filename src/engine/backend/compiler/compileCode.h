@@ -10,8 +10,6 @@
 
 class BACKEND_API CCompileCode : public CTranslateCode {
 
-	friend class CProcUnit;
-
 	struct CCallFunction {
 
 		wxString m_strName;			// name of called function
@@ -33,6 +31,7 @@ class BACKEND_API CCompileCode : public CTranslateCode {
 		std::vector<CParamUnit> m_listParam; // list of passed parameters (list of variables, if the value is not specified, then d.b. (-1, -1))
 	};
 
+	friend class CProcUnit;
 	friend struct CCompileContext;
 
 public:
@@ -64,6 +63,25 @@ public:
 	virtual bool Compile(); // compiling a module from a meta object
 	virtual bool Compile(const wxString& strCode); // Compiling module
 
+public:
+
+	static void InitializeCompileModule();
+
+	CCompileContext* GetContext() {
+		m_rootContext->SetModule(this);
+		return m_rootContext;
+	};
+
+private:
+
+	// methods for displaying errors during compilation::
+	void SetError(int nErr, const wxString& strError = wxEmptyString);
+	void SetError(int nErr, const wxUniChar& c);
+
+public:
+
+	CParamUnit GetExpression(CCompileContext* context, int priority = 0);
+
 	//attributes:
 	bool m_onlyFunction; // true - only functions and export functions 
 
@@ -83,30 +101,6 @@ public:
 
 	// matching context variables
 	std::map<wxString, CValue*> m_listContextValue;
-
-protected:
-
-	std::map<wxString, unsigned int> m_listHashConst;
-	std::vector <std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
-
-public:
-
-	static void InitializeCompileModule();
-
-	CCompileContext* GetContext() {
-		m_rootContext->SetModule(this);
-		return m_rootContext;
-	};
-
-private:
-
-	// methods for displaying errors during compilation::
-	void SetError(int nErr, const wxString& strError = wxEmptyString);
-	void SetError(int nErr, const wxUniChar& c);
-
-public:
-
-	CParamUnit GetExpression(CCompileContext* context, int priority = 0);
 
 protected:
 
@@ -157,6 +151,9 @@ protected:
 	void AddTypeSet(const CParamUnit& sVariable);
 
 	const int GetConstString(const wxString& strConstName);
+
+	std::map<wxString, unsigned int> m_listHashConst;
+	std::vector <std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
 };
 
 #endif 

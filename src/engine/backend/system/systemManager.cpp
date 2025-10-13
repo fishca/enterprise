@@ -293,7 +293,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		case enClearMessage: ClearMessage(); return true;
 		case enSetError: SetError(paParams[0]->GetString()); return true;
 		case enRaise: Raise(paParams[0]->GetString()); return true;
-		case enErrorDescription: pvarRetValue = ErrorDescription();
+		case enErrorDescription: pvarRetValue = ErrorDescription(); return true;
 		case enIsEmptyValue: pvarRetValue = IsEmptyValue(*paParams[0]); return true;
 		case enEvaluate: pvarRetValue = Evaluate(paParams[0]->GetString()); return true;
 		case enExecute: Execute(paParams[0]->GetString()); return true;

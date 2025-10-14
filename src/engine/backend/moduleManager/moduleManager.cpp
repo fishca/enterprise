@@ -358,5 +358,5 @@ bool CModuleManagerConfiguration::ExitMainModule(bool force)
 
 SYSTEM_TYPE_REGISTER(CModuleManagerConfiguration, "configModuleManager", string_to_clsid("SO_COMM"));
 
-SYSTEM_TYPE_REGISTER(IModuleManager::CModuleUnit, "module", string_to_clsid("SO_MODL"));
-SYSTEM_TYPE_REGISTER(IModuleManager::CMetadataUnit, "metaData", string_to_clsid("SO_METD"));
+SYSTEM_TYPE_REGISTER(IModuleManager::CModuleUnit, "moduleManager", string_to_clsid("SO_MODL"));
+SYSTEM_TYPE_REGISTER(IModuleManager::CMetadataUnit, "metadata", string_to_clsid("SO_METD"));

@@ -51,5 +51,5 @@ CDesignerDocManager::CDesignerDocManager()
 
 void CDesignerDocManager::OnUpdateSaveMetadata(wxUpdateUIEvent& event)
 {
-	event.Enable(commonMetaData->IsModified());
+	event.Enable(commonMetaData != nullptr && commonMetaData->IsModified());
 }

@@ -156,9 +156,10 @@ void CMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
 	CMetaDocument* doc = GetCurrentDocument();
 
 	if (!doc) {
-		if (commonMetaData->IsModified()) {
+		
+		if (commonMetaData != nullptr && commonMetaData->IsModified()) 
 			commonMetaData->SaveDatabase();
-		}
+		
 		return;
 	}
 
@@ -337,7 +338,7 @@ void CMetaDocManager::OnUpdateFileSave(wxUpdateUIEvent& event)
 	CMetaDocument* const doc = GetCurrentDocument();
 	event.Enable(
 		(doc && !doc->AlreadySaved()) ||
-		(doc == nullptr && commonMetaData->IsModified())
+		(doc == nullptr && (commonMetaData != nullptr && commonMetaData->IsModified()))
 	);
 }
 
@@ -380,7 +381,7 @@ void CMetaDocManager::OnUpdateRedo(wxUpdateUIEvent& event)
 
 void CMetaDocManager::OnUpdateSaveMetadata(wxUpdateUIEvent& event)
 {
-	event.Enable(commonMetaData->IsModified());
+	event.Enable(commonMetaData != nullptr && commonMetaData->IsModified());
 }
 
 wxDocument* CMetaDocManager::CreateDocument(const wxString& pathOrig, long flags)

@@ -185,14 +185,15 @@ void CDebuggerServer::DoDebugLoop(const wxString& filePath, const wxString& strM
 
 	//start debug loop
 	while (m_bDebugLoop) {
-		// нет конфигуратора или как-то отвалилось соединение 
+
+		// there is no configurator or the connection was somehow lost
 		if (m_socketThread == nullptr || !m_socketThread->IsConnected()) {
 			m_bUseDebug = false;
 			m_bDebugLoop = false;
 			break;
 		}
 
-		//отвалился поток 
+		//the thread was lost
 		if (m_socketThread == nullptr || !m_socketThread->IsRunning()) {
 			m_bUseDebug = false;
 			m_bDebugLoop = false;
@@ -226,7 +227,7 @@ void CDebuggerServer::EnterDebugger(CRunContext* runContext, CByteUnit& CurCode,
 			if (CurCode.m_numLine != nPrevLine) {
 				int offsetPoint = 0; m_bDoLoop = false;
 				if (m_bDebugStopLine &&
-					CurCode.m_numLine >= 0) { //шагнуть в 
+					CurCode.m_numLine >= 0) { //step into 
 					std::map<unsigned int, int> offsetPointList = m_listOffsetBreakpoint[CurCode.m_strDocPath];
 					std::map<unsigned int, int>::iterator foundedOffsetList = offsetPointList.find(CurCode.m_numLine);
 					m_bDebugStopLine = false;
@@ -237,7 +238,7 @@ void CDebuggerServer::EnterDebugger(CRunContext* runContext, CByteUnit& CurCode,
 				}
 				else if (m_numCurrentNumberStopContext &&
 					m_numCurrentNumberStopContext >= CProcUnit::GetCountRunContext() &&
-					CurCode.m_numLine >= 0) { // шагнуть через
+					CurCode.m_numLine >= 0) { // step through 
 					std::map<unsigned int, int> aOffsetPointList = m_listOffsetBreakpoint[CurCode.m_strDocPath];
 					std::map<unsigned int, int>::iterator foundedOffsetList = aOffsetPointList.find(CurCode.m_numLine);
 					m_numCurrentNumberStopContext = CProcUnit::GetCountRunContext();
@@ -246,7 +247,7 @@ void CDebuggerServer::EnterDebugger(CRunContext* runContext, CByteUnit& CurCode,
 						offsetPoint = foundedOffsetList->second;
 					}
 				}
-				else {//произвольная точка останова
+				else {//arbitrary breakpoint 
 					if (CurCode.m_numLine >= 0) {
 						std::map<unsigned int, int> debugPointList = m_listBreakpoint[CurCode.m_strDocPath];
 						std::map<unsigned int, int>::iterator foundedDebugPoint = debugPointList.find(CurCode.m_numLine);
@@ -344,14 +345,18 @@ void CDebuggerServer::SendLocalVariables()
 	commandChannel.w_u32(compileContext->m_listVariable.size());
 
 	for (auto variable : compileContext->m_listVariable) {
-		const CVariable& currentVariable = variable.second;
-		const CValue* locRefValue = m_runContext->m_pRefLocVars[currentVariable.m_numVariable];
+
+		const auto locRefVariable = variable.second;
+		const auto locRefValue = m_runContext->m_pRefLocVars[locRefVariable->m_numVariable];
+
 		//send temp var 
-		commandChannel.w_u8(currentVariable.m_bTempVar);
+		commandChannel.w_u8(locRefVariable->m_bTempVar);
+
 		//send attribute body
-		commandChannel.w_stringZ(currentVariable.m_strRealName);
+		commandChannel.w_stringZ(locRefVariable->m_strRealName);
 		commandChannel.w_stringZ(locRefValue->GetString());
 		commandChannel.w_stringZ(locRefValue->GetClassName());
+
 		//send attribute count 
 		commandChannel.w_u32(locRefValue->GetNProps());
 	}
@@ -386,7 +391,7 @@ void CDebuggerServer::SendStack()
 					strFullName += compileContext->m_functionContext->m_strRealName;
 					strFullName += wxT("(");
 					for (unsigned int j = 0; j < compileContext->m_functionContext->m_listParam.size(); j++) {
-						const wxString& valStr = runContext->m_pRefLocVars[compileContext->m_listVariable[stringUtils::MakeUpper(compileContext->m_functionContext->m_listParam[j].m_strName)].m_numVariable]->GetString();
+						const wxString& valStr = runContext->m_pRefLocVars[compileContext->m_listVariable[stringUtils::MakeUpper(compileContext->m_functionContext->m_listParam[j].m_strName)]->m_numVariable]->GetString();
 						if (j != compileContext->m_functionContext->m_listParam.size() - 1) {
 							strFullName += compileContext->m_functionContext->m_listParam[j].m_strName + wxT(" = ") + valStr + wxT(", ");
 						}
@@ -426,14 +431,14 @@ void CDebuggerServer::OnSocketServerEvent(wxSocketEvent& event)
 {
 	if (event.GetSocketEvent() == wxSOCKET_CONNECTION) {
 		if (m_socketThread == nullptr && !m_waitConnection) {
-			while (!m_socketServer->WaitForAccept(0, waitDebuggerTimeout)) {			
-				
+			while (!m_socketServer->WaitForAccept(0, waitDebuggerTimeout)) {
+
 				m_socketThread = new CDebuggerThreadServer(this, m_socketServer->Accept(false));
 				m_socketThread->SetPriority(wxPRIORITY_MIN);
-				
-				if (m_socketThread->Run() == wxTHREAD_NO_ERROR && 
+
+				if (m_socketThread->Run() == wxTHREAD_NO_ERROR &&
 					m_socketThread->IsConnected()) break;
-				
+
 				m_socketThread->Delete();
 			}
 		}

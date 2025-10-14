@@ -18,11 +18,11 @@ class BACKEND_API CCompileCode : public CTranslateCode {
 		CParamUnit m_puRetValue;	// variable where the result of the function execution should be returned
 		CParamUnit m_puContextVal;  // pointer to the Context variable
 
-		unsigned int m_numAddLine;	// position in the bytecode array where the call was encountered (for the case where there is a call, but the function has not yet been declared)
-		unsigned int m_numError;	// to display error messages
+		unsigned int m_numAddLine = 0;	// position in the bytecode array where the call was encountered (for the case where there is a call, but the function has not yet been declared)
+		unsigned int m_numError = 0;	// to display error messages
 
-		unsigned int m_numString;	// source text number (for error output)
-		unsigned int m_numLine;		// source line number (for breakpoints)
+		unsigned int m_numString = 0;	// source text number (for error output)
+		unsigned int m_numLine = 0;		// source line number (for breakpoints)
 
 		int m_numIsSet = 0;			// a sign that there is no assignment
 
@@ -43,7 +43,8 @@ public:
 	virtual ~CCompileCode();
 
 	// basic methods:
-	void Reset(); // resetting data to reuse an object
+	void Reset(); // resetting data to reuse an object	
+	void ResetAndFree() { Reset(); ClearLexem(); } // resetting and free data to reuse an object
 
 	void PrepareModuleData();
 
@@ -109,9 +110,10 @@ protected:
 		unsigned int currPos, unsigned int currLine,
 		const wxString& strErrorDesc) const;
 
-	CLexem PreviewGetLexem();
-	CLexem GetLexem();
-	CLexem GETLexem();
+	const CLexem& PreviewGetLexem();
+	const CLexem& GetLexem();
+	const CLexem& GETLexem();
+
 	void GETDelimeter(const wxUniChar& c);
 
 	bool IsDelimeter(const wxUniChar& c);
@@ -143,8 +145,8 @@ protected:
 
 	CParamUnit FindConst(const CValue& constData);
 
-	bool PushCallFunction(const std::shared_ptr<CCallFunction>& callFunction);
-	CFunction* GetFunction(const wxString& strName, int* pNumFunction = nullptr);
+	bool PushCallFunction(const std::shared_ptr<CCallFunction>& function);
+	bool GetFunction(const wxString& strName, std::shared_ptr<CFunction>& function, int* pNumFunction = nullptr);
 
 	bool IsTypeVar(const wxString& sVariable = wxEmptyString);
 	wxString GetTypeVar(const wxString& sVariable = wxEmptyString);
@@ -153,7 +155,7 @@ protected:
 	const int GetConstString(const wxString& strConstName);
 
 	std::map<wxString, unsigned int> m_listHashConst;
-	std::vector <std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
+	std::vector<std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
 };
 
 #endif 

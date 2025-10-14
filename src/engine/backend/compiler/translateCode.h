@@ -42,7 +42,6 @@ enum {
 	DEF_VAR_TEMP = -3,//flag of a temporary local variable
 	DEF_VAR_NORET = -7,//function (procedure) does not return values
 	DEF_VAR_CONST = 1000,//loading constants
-
 };
 
 //definitions
@@ -251,13 +250,9 @@ public:
 	void RemoveModule(CTranslateCode* module);
 
 	virtual void OnSetParent(CTranslateCode* setParent);
+	
 	virtual void Clear();
-
-	//free memory 
-	void ResizeLexem(const size_t new_size = 0) {
-		m_listLexem.resize(new_size);
-		//m_listTranslateCode.resize(new_size);
-	}
+	void ClearLexem() { m_listLexem.resize(0); } // resetting and free data to reuse an object
 
 	bool PrepareLexem();
 
@@ -416,4 +411,8 @@ protected:
 	//intermediate array with lexemes:
 	std::vector<CLexem> m_listLexem;
 };
+
+//empty lexem  
+extern BACKEND_API const CLexem gs_nullLexem;
+
 #endif

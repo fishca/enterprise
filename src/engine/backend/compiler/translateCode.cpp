@@ -9,11 +9,15 @@
 //                           Constants
 //////////////////////////////////////////////////////////////////////
 
+//empty lexem  
+const CLexem gs_nullLexem = {};
+
+//keywords 
 static std::map<wxString, void*> s_listHelpDescription; //description of keywords and system functions
 static std::map<wxString, void*> s_listHashKeyword;
 
-CTranslateCode::CDefineCollection CTranslateCode::ms_listDefine; //глобальный массив определений
-std::map<wxString, void*>	CTranslateCode::ms_listHashKeyWord;//список ключевых слов
+CTranslateCode::CDefineCollection CTranslateCode::ms_listDefine; //global array of definitions
+std::map<wxString, void*> CTranslateCode::ms_listHashKeyWord; //list of keywords
 
 //////////////////////////////////////////////////////////////////////
 // Global array
@@ -164,10 +168,7 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0)
-		LoadKeyWords(); //only once
-
-	Clear();
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
 }
 
 CTranslateCode::CTranslateCode(const wxString& strModuleName, const wxString& strDocPath) : m_defineList(nullptr),
@@ -176,10 +177,7 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0)
-		LoadKeyWords(); //only once
-
-	Clear();
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
 }
 
 CTranslateCode::CTranslateCode(const wxString& strFileName) : m_defineList(nullptr),
@@ -188,10 +186,7 @@ m_bAutoDeleteDefList(false),
 m_nModePreparing(LEXEM_ADD)
 {
 	//prepare keyword buffer
-	if (ms_listHashKeyWord.size() == 0)
-		LoadKeyWords(); //only once
-
-	Clear();
+	if (ms_listHashKeyWord.size() == 0) LoadKeyWords(); //only once
 }
 
 CTranslateCode::~CTranslateCode()
@@ -223,7 +218,7 @@ void CTranslateCode::LoadKeyWords()
 //////////////////////////////////////////////////////////////////////
 
 /**
-* Clear
+* Reset
 * Purpose:
 * Prepare variables to start compilation
 * Return value:

@@ -87,13 +87,13 @@ void CCompileCode::InitializeCompileModule()
 	gs_operPriority['<'] = 3;
 	gs_operPriority['='] = 3;
 
-	gs_operPriority[gs_operPriority.size() - 1] = true;
+	gs_operPriority[gs_operPriority.size() - 1] = 1;
 }
 
 void CCompileCode::Reset()
 {
-	m_listHashConst.clear();
 	m_cByteCode.Reset();
+	m_listHashConst.clear();
 
 	m_rootContext->m_numDoNumber = 0;
 	m_rootContext->m_numReturn = 0;
@@ -109,10 +109,6 @@ void CCompileCode::Reset()
 	m_rootContext->m_strCurFuncName = wxEmptyString;
 
 	// clear functions & variables 
-	for (auto& function : m_rootContext->m_listFunction) {
-		wxDELETE(function.second);
-	}
-
 	m_rootContext->m_listVariable.clear();
 	m_rootContext->m_listFunction.clear();
 
@@ -123,12 +119,12 @@ void CCompileCode::PrepareModuleData()
 {
 	for (auto& externValue : m_listExternValue) {
 		m_rootContext->AddVariable(externValue.first, wxEmptyString, true);
-		m_cByteCode.m_listExternValue.push_back(externValue.second);
+		m_cByteCode.m_listExternValue.emplace_back(externValue.second);
 	}
 
 	for (auto& contextValue : m_listContextValue) {
 		m_rootContext->AddVariable(contextValue.first, wxEmptyString, true, true);
-		m_cByteCode.m_listExternValue.push_back(contextValue.second);
+		m_cByteCode.m_listExternValue.emplace_back(contextValue.second);
 	}
 
 	for (auto& pair : m_listContextValue) {
@@ -141,17 +137,17 @@ void CCompileCode::PrepareModuleData()
 		for (unsigned int i = 0; i < contextValue->GetNProps(); i++) {
 
 			const wxString& strPropName = contextValue->GetPropName(i);
+			const wxString& strPropUpperName = stringUtils::MakeUpper(strPropName);
 
 			// determine the number and type of the variable
-			CVariable contextVariable(strPropName);
-			contextVariable.m_strContextVar = pair.first;
-			contextVariable.m_bContext = true;
-			contextVariable.m_bExport = true;
-			contextVariable.m_numVariable = i;
+			std::shared_ptr <CVariable> contextVariable(new CVariable(strPropName));
 
-			GetContext()->m_listVariable.insert_or_assign(
-				stringUtils::MakeUpper(strPropName), contextVariable
-			);
+			contextVariable->m_strContextVar = pair.first;
+			contextVariable->m_bContext = true;
+			contextVariable->m_bExport = true;
+			contextVariable->m_numVariable = i;
+
+			GetContext()->m_listVariable.insert_or_assign(strPropUpperName, std::move(contextVariable));
 		}
 
 		CCompileContext* mainContext = GetContext();
@@ -160,6 +156,7 @@ void CCompileCode::PrepareModuleData()
 		for (long i = 0; i < contextValue->GetNMethods(); i++) {
 
 			const wxString& strMethodName = contextValue->GetMethodName(i);
+			const wxString& strMethodUppperName = stringUtils::MakeUpper(strMethodName);
 
 			CCompileContext* compileContext(new CCompileContext(mainContext));
 			compileContext->SetModule(this);
@@ -168,7 +165,8 @@ void CCompileCode::PrepareModuleData()
 			else compileContext->m_numReturn = RETURN_PROCEDURE;
 
 			// define the number and type of the function
-			CFunction* contextFunction = new CFunction(strMethodName, compileContext);
+			std::shared_ptr<CFunction> contextFunction(new CFunction(strMethodName, compileContext));
+
 			contextFunction->m_nStart = i;
 			contextFunction->m_bContext = true;
 			contextFunction->m_bExport = true;
@@ -179,16 +177,14 @@ void CCompileCode::PrepareModuleData()
 			contextVariable.m_valData.m_numIndex = DEF_VAR_DEFAULT;
 
 			for (long arg = 0; arg < contextValue->GetNParams(i); arg++) {
-				contextFunction->m_listParam.push_back(contextVariable);
+				contextFunction->m_listParam.emplace_back(contextVariable);
 			}
 
 			contextFunction->m_strRealName = strMethodName;
 			contextFunction->m_strShortDescription = contextValue->GetMethodHelper(i);
 
 			// check for typing
-			GetContext()->m_listFunction.insert_or_assign(
-				stringUtils::MakeUpper(strMethodName), contextFunction
-			);
+			GetContext()->m_listFunction.insert_or_assign(strMethodUppperName, std::move(contextFunction));
 		}
 	}
 }
@@ -297,25 +293,25 @@ void CCompileCode::AddLineInfo(CByteUnit& code)
  * 0 or pointer to token
  */
 
-CLexem CCompileCode::GetLexem()
+const CLexem& CCompileCode::GetLexem()
 {
-	CLexem lex;
-	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
-		lex = m_listLexem[++m_numCurrentCompile];
-	}
-	return lex;
+	if (m_numCurrentCompile + 1 < m_listLexem.size())
+		return m_listLexem[++m_numCurrentCompile];
+	return gs_nullLexem;
 }
 
 // get the next token from a list of bytecodes without incrementing the current position counter
-CLexem CCompileCode::PreviewGetLexem()
+const CLexem& CCompileCode::PreviewGetLexem()
 {
-	CLexem lex;
 	while (true) {
-		lex = GetLexem();
-		if (!(lex.m_lexType == DELIMITER && lex.m_numData == ';')) break;
+		const CLexem& lex = GetLexem();
+		if (!(lex.m_lexType == DELIMITER && lex.m_numData == ';')) {
+			m_numCurrentCompile--;
+			return lex;
+		}
 	}
-	m_numCurrentCompile--;
-	return lex;
+
+	return gs_nullLexem;
 }
 
 /**
@@ -326,13 +322,13 @@ CLexem CCompileCode::PreviewGetLexem()
  * no (if failure occurs, an exception is thrown)
  */
 
-CLexem CCompileCode::GETLexem()
+const CLexem& CCompileCode::GETLexem()
 {
-	CLexem lex = GetLexem();
+	const CLexem& lex = GetLexem();
 	if (lex.m_lexType == ERRORTYPE) {
 		m_numCurrentCompile--;
 		SetError(ERROR_CODE_DEFINE);
-		return CLexem();
+		return gs_nullLexem;
 	}
 	return lex;
 }
@@ -347,7 +343,7 @@ CLexem CCompileCode::GETLexem()
 
 void CCompileCode::GETDelimeter(const wxUniChar& c)
 {
-	CLexem lex = GETLexem();
+	const CLexem& lex = GETLexem();
 	if (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
 		m_numCurrentCompile--;
 		SetError(ERROR_DELIMETER, c);
@@ -493,33 +489,32 @@ CValue CCompileCode::GETConstant()
 	}
 
 	if (iNumRequire) {
+
 		// check that the constant is of numeric type
 		if (lex.m_valData.GetType() != eValueTypes::TYPE_NUMBER) {
 			SetError(ERROR_CONST_DEFINE);
 			return CValue();
 		}
+
 		// change sign for minus
 		if (iNumRequire == -1) {
 			lex.m_valData.m_fData = -lex.m_valData.m_fData;
 		}
 	}
+
 	return lex.m_valData;
 }
 
 // getting the number with a string constant (to determine the method number)
 const int CCompileCode::GetConstString(const wxString& strConstName)
 {
-	auto& it = std::find_if(m_listHashConst.begin(), m_listHashConst.end(),
-		[strConstName](std::pair <const wxString, unsigned int>& pair)
-		{
-			return stringUtils::CompareString(strConstName, pair.first);
-		}
-	);
+	auto iterator = std::find_if(m_listHashConst.begin(), m_listHashConst.end(),
+		[strConstName](const auto pair) { return stringUtils::CompareString(strConstName, pair.first); });
 
-	if (it != m_listHashConst.end())
-		return it->second - 1;
+	if (iterator != m_listHashConst.end())
+		return iterator->second - 1;
 
-	m_cByteCode.m_listConst.push_back(strConstName);
+	m_cByteCode.m_listConst.emplace_back(strConstName);
 	m_listHashConst.insert_or_assign(strConstName, m_cByteCode.m_listConst.size());
 
 	return m_cByteCode.m_listConst.size() - 1;
@@ -772,7 +767,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 					CBackendException::Error("Recursive call of modules!");
 				}
 			}
-			CVariable* currentVariable = nullptr;
+			std::shared_ptr<CVariable> currentVariable = nullptr;
 			if (pCurContext->FindVariable(strName, currentVariable)) { // found
 				if (currentVariable->m_bExport ||
 					pCurContext->m_compileModule == this) {
@@ -818,7 +813,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 			code.m_numOper = OPER_SET_ARRAY_SIZE;
 			code.m_param1 = variable;
 			code.m_param2.m_numArray = nArrayCount;//число элементов в массиве
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 
 		AddTypeSet(variable);
@@ -834,7 +829,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 			code.m_numOper = OPER_LET;
 			code.m_param1 = variable;
 			code.m_param2 = GetExpression(context);
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 
 		if (!IsNextDelimeter(','))
@@ -856,13 +851,15 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 
 bool CCompileCode::CompileModule()
 {
-	CLexem lex;
-
 	// set the cursor to the beginning of the token array
 	m_numCurrentCompile = -1;
 	CCompileContext* mainContext = GetContext(); // context of the module itself
 
-	while ((lex = PreviewGetLexem()).m_lexType != ERRORTYPE) {
+	while (true) {
+
+		const CLexem& lex = PreviewGetLexem();
+		if (lex.m_lexType == ERRORTYPE) break;
+
 		if ((KEYWORD == lex.m_lexType && lex.m_numData == KEY_VAR) || (IDENTIFIER == lex.m_lexType && IsTypeVar(lex.m_strData))) {
 			if (!m_onlyFunction) {
 				CompileDeclaration(mainContext); // load variable declaration
@@ -873,8 +870,8 @@ bool CCompileCode::CompileModule()
 			}
 		}
 		else if (KEYWORD == lex.m_lexType && (KEY_PROCEDURE == lex.m_numData || KEY_FUNCTION == lex.m_numData)) {
-			CompileFunction(mainContext); // load function declaration
 			// don't forget to restore the current module context (if necessary)...
+			CompileFunction(mainContext); // load function declaration
 		}
 		else break;
 	}
@@ -890,7 +887,7 @@ bool CCompileCode::CompileModule()
 	AddLineInfo(code);
 	code.m_numOper = OPER_END;
 
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 	m_cByteCode.m_lVarCount = mainContext->m_listVariable.size();
 
 	// we finish processing procedures and functions that were called before they were declared
@@ -907,17 +904,17 @@ bool CCompileCode::CompileModule()
 			code.m_numLine = callFunc->m_numLine;
 			code.m_numString = callFunc->m_numString;
 			code.m_param1.m_numIndex = callFunc->m_numAddLine + 1; // after calling the function we go back
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 	}
 
 	// get a list of variables
 	for (auto it : mainContext->m_listVariable) {
-		if (it.second.m_bTempVar || it.second.m_bContext)
+		if (it.second->m_bTempVar || it.second->m_bContext)
 			continue;
-		m_cByteCode.m_listVar[it.first] = it.second.m_numVariable;
-		if (it.second.m_bExport) {
-			m_cByteCode.m_listExportVar[it.first] = it.second.m_numVariable;
+		m_cByteCode.m_listVar[it.first] = it.second->m_numVariable;
+		if (it.second->m_bExport) {
+			m_cByteCode.m_listExportVar[it.first] = it.second->m_numVariable;
 		}
 	}
 
@@ -935,29 +932,31 @@ bool CCompileCode::CompileModule()
 }
 
 // search for function definition in the current module and all parent ones
-CFunction* CCompileCode::GetFunction(const wxString& strName, int* pNumFunction)
+bool CCompileCode::GetFunction(const wxString& strName, std::shared_ptr<CFunction>& function, int* pNumFunction)
 {
 	int numCanUseLocalInParent = m_rootContext->m_numFindLocalInParent - 1;
 	int numFunction = 0;
+
 	// search in the current module
-	CFunction* foundedFunc = nullptr;
-	if (!GetContext()->FindFunction(strName, foundedFunc)) {
+	if (!GetContext()->FindFunction(strName, function)) {
 		CCompileCode* pCurModule = m_parent;
 		while (pCurModule != nullptr) {
 			numFunction++;
-			if (pCurModule->GetContext()->FindFunction(strName, foundedFunc)) { // found
+			if (pCurModule->GetContext()->FindFunction(strName, function)) { // found
 				// see if this is an export function or not
-				if (numCanUseLocalInParent > 0 || foundedFunc->m_bExport)
+				if (numCanUseLocalInParent > 0 || function->m_bExport)
 					break;//ок
-				foundedFunc = nullptr;
+				function = nullptr;
 			}
 			numCanUseLocalInParent--;
 			pCurModule = pCurModule->m_parent;
 		}
 	}
+
 	if (pNumFunction)
 		*pNumFunction = numFunction;
-	return foundedFunc;
+
+	return function != nullptr;
 }
 
 // adding the bytecode of the function call to the array
@@ -966,8 +965,9 @@ bool CCompileCode::PushCallFunction(const std::shared_ptr<CCallFunction>& callFu
 	int numModule = 0;
 
 	// find the definition of the function
-	CFunction* foundedFunc = GetFunction(callFunction->m_strName, &numModule);
-	if (foundedFunc == nullptr) {
+	std::shared_ptr<CFunction> foundedFunc = nullptr;
+
+	if (!GetFunction(callFunction->m_strName, foundedFunc, &numModule)) {
 		m_numCurrentCompile = callFunction->m_numError;
 		SetError(ERROR_CALL_FUNCTION, callFunction->m_strRealName);// there is no such function in the module
 		return false;
@@ -1013,7 +1013,7 @@ bool CCompileCode::PushCallFunction(const std::shared_ptr<CCallFunction>& callFu
 		code.m_param4 = callFunction->m_puContextVal;	// context variable
 	}
 
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	for (unsigned int i = 0; i < numDefCount; i++) {
 		CByteUnit code;
@@ -1041,7 +1041,7 @@ bool CCompileCode::PushCallFunction(const std::shared_ptr<CCallFunction>& callFu
 			code.m_numOper = OPER_SETCONST;	// default values
 			code.m_param1 = foundedFunc->m_listParam[i].m_valData;
 		}
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
 
 	return true;
@@ -1085,7 +1085,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 	}
 
 	// pull out the text of the function declaration
-	CLexem lex = PreviewGetLexem();
+	const CLexem& lex = PreviewGetLexem();
 
 	wxString strShortDescription;
 	const int numLine = lex.m_numLine;
@@ -1110,7 +1110,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 
 	const int errorPlace = m_numCurrentCompile;
 
-	CFunction* createdFunction = new CFunction(strFuncName, functionContext);
+	std::shared_ptr<CFunction> createdFunction(new CFunction(strFuncName, functionContext));
 
 	createdFunction->m_strRealName = strFuncRealName;
 	createdFunction->m_strShortDescription = strShortDescription;
@@ -1136,7 +1136,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		cVariable.m_strName = strRealName;
 		cVariable.m_strType = typeVar;
 
-		CVariable* foundedVar = nullptr;
+		std::shared_ptr<CVariable> foundedVar = nullptr;
 
 		// register this variable as local
 		if (functionContext->FindVariable(strRealName, foundedVar)) { // there was an announcement + repeated announcement = error
@@ -1154,9 +1154,11 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		}
 
 		functionContext->AddVariable(strRealName, typeVar);
-		createdFunction->m_listParam.push_back(cVariable);
+		createdFunction->m_listParam.emplace_back(std::move(cVariable));
+
 		if (!IsNextDelimeter(',') || IsNextDelimeter(')'))
 			break;
+
 		GETDelimeter(',');
 	}
 	GETDelimeter(')');
@@ -1176,7 +1178,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 			}
 		}
 
-		CFunction* foundedFunc = nullptr;
+		std::shared_ptr<CFunction> foundedFunc = nullptr;
 		if (pCurContext->FindFunction(strFuncName, foundedFunc)) { // found
 			if (foundedFunc != createdFunction && foundedFunc->m_bExport) {
 				m_numCurrentCompile = errorPlace;
@@ -1199,7 +1201,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 #else
 	code0.m_param1.m_numArray = reinterpret_cast<int>(functionContext);
 #endif
-	m_cByteCode.m_listCode.push_back(code0);
+	m_cByteCode.m_listCode.emplace_back(std::move(code0));
 
 	const long lAddres = createdFunction->m_nStart = m_cByteCode.m_listCode.size() - 1;
 
@@ -1229,7 +1231,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		}
 		code.m_param1 = createdFunction->m_listParam[i].m_valData;
 		code.m_param2.m_numIndex = createdFunction->m_listParam[i].m_bByRef;
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 		//Set type variable
 		CParamUnit variable;
@@ -1254,7 +1256,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 	CByteUnit code;
 	AddLineInfo(code);
 	code.m_numOper = OPER_ENDFUNC;
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	createdFunction->m_nFinish = m_cByteCode.m_listCode.size() - 1;
 	createdFunction->m_lVarCount = functionContext->m_listVariable.size();
@@ -1262,7 +1264,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 	m_cByteCode.m_listCode[lAddres].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
 	m_cByteCode.m_listCode[lAddres].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
 
-	functionContext->SetFunction(createdFunction);
+	functionContext->m_functionContext = std::move(createdFunction); 
 	return true;
 }
 
@@ -1278,7 +1280,7 @@ void CCompileCode::AddTypeSet(const CParamUnit& variable)
 		code.m_numOper = OPER_SET_TYPE;
 		code.m_param1 = variable;
 		code.m_param2.m_numArray = CValue::GetIDObjectFromString(variable.m_strType);
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
 }
 
@@ -1322,16 +1324,13 @@ if(!sKey.m_strType.IsEmpty())\
 
 bool CCompileCode::CompileBlock(CCompileContext* context)
 {
-	CLexem lex;
-	while ((lex = PreviewGetLexem()).m_lexType != ERRORTYPE)
-	{
-		/*if (IDENTIFIER == lex.m_lexType && IsTypeVar(lex.m_strData))
-		{
-			CompileDeclaration();
-		}
-		else*/
-		if (KEYWORD == lex.m_lexType)
-		{
+	while (true) {
+
+		const CLexem& lex = PreviewGetLexem();
+		if (lex.m_lexType == ERRORTYPE) break;
+
+		if (KEYWORD == lex.m_lexType) {
+
 			switch (lex.m_numData)
 			{
 			case KEY_VAR: // setting variables and arrays
@@ -1358,23 +1357,20 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 			case KEY_RETURN:
 			{
 				GETKeyWord(KEY_RETURN);
-
 				if (context->m_numReturn == RETURN_NONE) {
 					SetError(ERROR_USE_RETURN); // return operator cannot be used outside a procedure or function
 					return false;
 				}
-
+				
 				CByteUnit code;
 				AddLineInfo(code);
 				code.m_numOper = OPER_RET;
 
 				if (context->m_numReturn == RETURN_FUNCTION) { // some value is returned
-
 					if (IsNextDelimeter(';')) {
 						SetError(ERROR_EXPRESSION_REQUIRE);
 						return false;
 					}
-
 					code.m_param1 = GetExpression(context);
 				}
 				else {
@@ -1382,22 +1378,24 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 					code.m_param1.m_numIndex = DEF_VAR_NORET;
 				}
 
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 				break;
 			}
 			case KEY_TRY:
 			{
 				GETKeyWord(KEY_TRY);
-				CByteUnit code;
-				AddLineInfo(code);
-				code.m_numOper = OPER_TRY;
-				m_cByteCode.m_listCode.push_back(code);
+				CByteUnit code1;
+				AddLineInfo(code1);
+				code1.m_numOper = OPER_TRY;
+				m_cByteCode.m_listCode.emplace_back(std::move(code1));
 
 				const int lineTry = m_cByteCode.m_listCode.size() - 1;
 
+				CByteUnit code2;
+				AddLineInfo(code2);
 				CompileBlock(context);
-				code.m_numOper = OPER_ENDTRY;
-				m_cByteCode.m_listCode.push_back(code);
+				code2.m_numOper = OPER_ENDTRY;
+				m_cByteCode.m_listCode.emplace_back(std::move(code2));
 
 				const int addrLine = m_cByteCode.m_listCode.size() - 1;
 
@@ -1424,7 +1422,7 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 				else {
 					code.m_numOper = OPER_RAISE;
 				}
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 				break;
 			}
 			case KEY_CONTINUE:
@@ -1434,10 +1432,10 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 					CByteUnit code;
 					AddLineInfo(code);
 					code.m_numOper = OPER_GOTO;
-					m_cByteCode.m_listCode.push_back(code);
+					m_cByteCode.m_listCode.emplace_back(std::move(code));
 					const int addrLine = m_cByteCode.m_listCode.size() - 1;
 					std::vector<int>* pList = context->m_listContinue[context->m_numDoNumber];
-					pList->push_back(addrLine);
+					pList->emplace_back(addrLine);
 				}
 				else {
 					SetError(ERROR_USE_CONTINUE); // continue statement can only be used inside a loop
@@ -1452,10 +1450,10 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 					CByteUnit code;
 					AddLineInfo(code);
 					code.m_numOper = OPER_GOTO;
-					m_cByteCode.m_listCode.push_back(code);
+					m_cByteCode.m_listCode.emplace_back(std::move(code));
 					const int addrLine = m_cByteCode.m_listCode.size() - 1;
 					std::vector<int>* pList = context->m_listBreak[context->m_numDoNumber];
-					pList->push_back(addrLine);
+					pList->emplace_back(addrLine);
 				}
 				else {
 					SetError(ERROR_USE_BREAK); // break operator can only be used inside a loop
@@ -1466,7 +1464,7 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 			case KEY_FUNCTION:
 			case KEY_PROCEDURE:
 			{
-				GetLexem();
+				(void)GetLexem();
 				SetError(ERROR_USE_BLOCK);
 				return false;
 				break;
@@ -1475,20 +1473,19 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 				return true;	// means the operator bracket ending this block has been encountered (for example, ENDIF, ENDDO, ENDFUNCTION, etc.)
 			}
 		}
-		else
-		{
-			lex = GetLexem();
+		else {
 
-			if (IDENTIFIER == lex.m_lexType) {
+			const CLexem& next_lexem = GetLexem();
+			if (IDENTIFIER == next_lexem.m_lexType) {
 				context->m_numTempVar = 0;
 				if (IsNextDelimeter(':')) {// this is a label task encountered
-					unsigned int pLabel = context->m_listLabelDef[lex.m_strData];
+					unsigned int pLabel = context->m_listLabelDef[next_lexem.m_strData];
 					if (pLabel > 0) {
-						SetError(ERROR_IDENTIFIER_DUPLICATE, lex.m_strData);// duplicate label definitions occurred
+						SetError(ERROR_IDENTIFIER_DUPLICATE, next_lexem.m_strData);// duplicate label definitions occurred
 						return false;
 					}
 					// write the address of the label:
-					context->m_listLabelDef[lex.m_strData] = m_cByteCode.m_listCode.size() - 1;
+					context->m_listLabelDef[next_lexem.m_strData] = m_cByteCode.m_listCode.size() - 1;
 					GETDelimeter(':');
 				}
 				else { //function and method calls, expression assignments are processed here
@@ -1543,17 +1540,17 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 						else {
 							code.m_param1 = variable;
 							code.m_param2 = expression;
-							m_cByteCode.m_listCode.push_back(code);
+							m_cByteCode.m_listCode.emplace_back(std::move(code));
 						}
 					}
 				}
 			}
 			else {
-				if (DELIMITER == lex.m_lexType
-					&& ';' == lex.m_numData)
+				if (DELIMITER == next_lexem.m_lexType
+					&& ';' == next_lexem.m_numData)
 				{
 				}
-				else if (ENDPROGRAM == lex.m_lexType) {
+				else if (ENDPROGRAM == next_lexem.m_lexType) {
 					break;
 				}
 				else {
@@ -1582,7 +1579,7 @@ bool CCompileCode::CompileNewObject(CCompileContext* context)
 				CParamUnit data;
 				data.m_numArray = DEF_VAR_SKIP;// missing parameter
 				data.m_numIndex = DEF_VAR_SKIP;
-				listParam.push_back(data);
+				listParam.emplace_back(std::move(data));
 			}
 			else {
 				listParam.emplace_back(GetExpression(context));
@@ -1608,7 +1605,7 @@ bool CCompileCode::CompileNewObject(CCompileContext* context)
 
 	CParamUnit variable = context->CreateVariable();
 	code.m_param1 = variable;// variable into which the value is returned
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	for (unsigned int arg = 0; arg < listParam.size(); arg++) {
 
@@ -1617,7 +1614,7 @@ bool CCompileCode::CompileNewObject(CCompileContext* context)
 		code.m_numOper = OPER_SET;
 		code.m_param1 = listParam[arg];
 
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
 
 	return true;
@@ -1636,17 +1633,18 @@ bool CCompileCode::CompileGoto(CCompileContext* context)
 {
 	GETKeyWord(KEY_GOTO);
 
-	CLabel data;
-	data.m_strName = GETIdentifier();
-	data.m_numLine = m_cByteCode.m_listCode.size();//запоминаем те переходы, которые потом надо будет обработать
-	data.m_numError = m_numCurrentCompile;
+	std::shared_ptr<CLabel> data(new CLabel);
 
-	context->m_listLabel.push_back(data);
+	data->m_strName = GETIdentifier();
+	data->m_numLine = m_cByteCode.m_listCode.size();//remember those transitions that will need to be processed later
+	data->m_numError = m_numCurrentCompile;
+
+	context->m_listLabel.emplace_back(std::move(data));
 
 	CByteUnit code;
 	AddLineInfo(code);
 	code.m_numOper = OPER_GOTO;
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	return true;
 }
@@ -1669,7 +1667,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 	const wxString& strName = stringUtils::MakeUpper(strRealName);
 
 	if (IsNextDelimeter('(')) { // this is a function call
-		CFunction* foundedFunc = nullptr;
+		std::shared_ptr<CFunction> foundedFunc = nullptr;
 		if (m_rootContext->FindFunction(strName, foundedFunc, true)) {
 			const int numConst = GetConstString(strRealName);
 			std::vector <CParamUnit> listParam;
@@ -1679,7 +1677,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 					CParamUnit data;
 					data.m_numArray = DEF_VAR_SKIP; // missing parameter
 					data.m_numIndex = DEF_VAR_SKIP;
-					listParam.push_back(data);
+					listParam.emplace_back(std::move(data));
 				}
 				else {
 					listParam.emplace_back(GetExpression(context));
@@ -1708,14 +1706,14 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 			code.m_param3.m_numArray = listParam.size();// number of parameters
 			variable = context->CreateVariable();
 			code.m_param1 = variable;// variable into which the value is returned
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 			for (unsigned int i = 0; i < listParam.size(); i++) {
 				CByteUnit code;
 				AddLineInfo(code);
 				code.m_numOper = OPER_SET;
 				code.m_param1 = listParam[i];
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 			}
 		}
 		else {
@@ -1727,7 +1725,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 		numIsSet = 0;
 	}
 	else { //this is a variable call
-		CVariable* foundedVar = nullptr; numIsSet = 1;
+		std::shared_ptr<CVariable> foundedVar = nullptr; numIsSet = 1;
 		if (m_rootContext->FindVariable(strRealName, foundedVar, true)) {
 			CByteUnit code;
 			AddLineInfo(code);
@@ -1738,7 +1736,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 				code.m_param1 = context->GetVariable(foundedVar->m_strContextVar, true, false, true);//variable for which the attribute is called
 				code.m_param2.m_numIndex = numConst;//number of the called method from the list of encountered attributes and methods
 				code.m_param3 = GetExpression(context);
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 				return variable;
 			}
 			else {
@@ -1747,7 +1745,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 				code.m_param3.m_numIndex = numConst;//number of the attribute to be called from the list of attributes and methods encountered
 				variable = context->CreateVariable();
 				code.m_param1 = variable;// variable into which the value is returned
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 			}
 		}
 		else {
@@ -1776,7 +1774,7 @@ loopLabel:
 			code.m_numOper = OPER_CHECK_ARRAY;
 			code.m_param1 = variable;//variable is an array
 			code.m_param2 = variableKey;//array index
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 		if (IsNextDelimeter('=') && numPrevSet == 1) {
 			GETDelimeter('=');
@@ -1789,7 +1787,7 @@ loopLabel:
 
 			CorrectTypeDef(variableKey);// check value type of index variable
 
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 			return variable;
 		}
 		else {
@@ -1801,7 +1799,7 @@ loopLabel:
 			variable = context->CreateVariable();
 			code.m_param1 = variable;// variable into which the value is returned
 			CorrectTypeDef(variableKey);// check value type индексной переменной
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 		goto loopLabel;
 	}
@@ -1818,7 +1816,7 @@ loopLabel:
 					CParamUnit data;
 					data.m_numArray = DEF_VAR_SKIP;// missing parameter
 					data.m_numIndex = DEF_VAR_SKIP;
-					listParam.push_back(data);
+					listParam.emplace_back(std::move(data));
 				}
 				else {
 					listParam.emplace_back(GetExpression(context));
@@ -1837,13 +1835,13 @@ loopLabel:
 			code.m_param3.m_numArray = listParam.size();// number of parameters
 			variable = context->CreateVariable();
 			code.m_param1 = variable;// variable into which the value is returned
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 			for (unsigned int i = 0; i < listParam.size(); i++) {
 				CByteUnit code;
 				AddLineInfo(code);
 				code.m_numOper = OPER_SET;
 				code.m_param1 = listParam[i];
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 			}
 
 			numIsSet = 0;
@@ -1862,7 +1860,7 @@ loopLabel:
 				code.m_param1 = variable;//variable for which the attribute is called
 				code.m_param2.m_numIndex = numConst;//number of the called method from the list of encountered attributes and methods
 				code.m_param3 = GetExpression(context);
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 				return variable;
 			}
 			else {
@@ -1871,7 +1869,7 @@ loopLabel:
 				code.m_param3.m_numIndex = numConst;//number of the called attribute from the list of encountered attributes and methods
 				variable = context->CreateVariable();
 				code.m_param1 = variable;// variable into which the value is returned
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 			}
 		}
 		goto loopLabel;
@@ -1894,7 +1892,7 @@ bool CCompileCode::CompileIf(CCompileContext* context)
 	code.m_param1 = variable;
 	CorrectTypeDef(variable);// check value type
 
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	int nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
@@ -1903,23 +1901,31 @@ bool CCompileCode::CompileIf(CCompileContext* context)
 
 	while (IsNextKeyWord(KEY_ELSEIF)) {
 
+		CByteUnit code1;
+
 		// write the output from all checks for the previous block
-		code.m_numOper = OPER_GOTO;
-		m_cByteCode.m_listCode.push_back(code);
-		listAddrLine.push_back(m_cByteCode.m_listCode.size() - 1);//the parameter for the GOTO operator will be known later
+		AddLineInfo(code1);
+
+		code1.m_numOper = OPER_GOTO;
+		m_cByteCode.m_listCode.emplace_back(std::move(code1));
+
+		listAddrLine.emplace_back(m_cByteCode.m_listCode.size() - 1);//the parameter for the GOTO operator will be known later
 
 		//for the previous condition, set the jump address if the condition does not match
 		m_cByteCode.m_listCode[nLastIFLine].m_param2.m_numIndex = m_cByteCode.m_listCode.size();
 
+		CByteUnit code2;
+		AddLineInfo(code2);
+
 		GETKeyWord(KEY_ELSEIF);
-		AddLineInfo(code);
-		code.m_numOper = OPER_IF;
+		AddLineInfo(code2);
+		code2.m_numOper = OPER_IF;
 
 		variable = GetExpression(context);
-		code.m_param1 = variable;
+		code2.m_param1 = variable;
 		CorrectTypeDef(variable);// check value type
 
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code2));
 		nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
 		GETKeyWord(KEY_THEN);
@@ -1927,11 +1933,16 @@ bool CCompileCode::CompileIf(CCompileContext* context)
 	}
 
 	if (IsNextKeyWord(KEY_ELSE)) {
+
+		CByteUnit code1;
+
 		// write the output from all checks for the previous block
-		AddLineInfo(code);
-		code.m_numOper = OPER_GOTO;
-		m_cByteCode.m_listCode.push_back(code);
-		listAddrLine.push_back(m_cByteCode.m_listCode.size() - 1);//the parameter for the GOTO operator will be known later
+		AddLineInfo(code1);
+
+		code1.m_numOper = OPER_GOTO;
+		m_cByteCode.m_listCode.emplace_back(std::move(code1));
+
+		listAddrLine.emplace_back(m_cByteCode.m_listCode.size() - 1);//the parameter for the GOTO operator will be known later
 
 		//for the previous condition, set the jump address if the condition does not match
 		m_cByteCode.m_listCode[nLastIFLine].m_param2.m_numIndex = m_cByteCode.m_listCode.size();
@@ -1973,7 +1984,7 @@ bool CCompileCode::CompileWhile(CCompileContext* context)
 
 	const int numEndWhile = m_cByteCode.m_listCode.size();
 
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	GETKeyWord(KEY_DO);
 	CompileBlock(context);
@@ -1983,7 +1994,7 @@ bool CCompileCode::CompileWhile(CCompileContext* context)
 	AddLineInfo(code2);
 	code2.m_numOper = OPER_GOTO;
 	code2.m_param1.m_numIndex = nStartWhile;
-	m_cByteCode.m_listCode.push_back(code2);
+	m_cByteCode.m_listCode.emplace_back(std::move(code2));
 
 	m_cByteCode.m_listCode[numEndWhile].m_param2.m_numIndex = m_cByteCode.m_listCode.size();
 
@@ -2020,7 +2031,7 @@ bool CCompileCode::CompileFor(CCompileContext* context)
 	code0.m_numOper = OPER_LET;
 	code0.m_param1 = variable;
 	code0.m_param2 = variable2;
-	m_cByteCode.m_listCode.push_back(code0);
+	m_cByteCode.m_listCode.emplace_back(std::move(code0));
 
 	// check value type
 	if (!variable.m_strType.IsEmpty()) {
@@ -2040,14 +2051,14 @@ bool CCompileCode::CompileFor(CCompileContext* context)
 	code1.m_numOper = OPER_LET;
 	code1.m_param1 = variableTo;
 	code1.m_param2 = GetExpression(context);
-	m_cByteCode.m_listCode.push_back(code1);
+	m_cByteCode.m_listCode.emplace_back(std::move(code1));
 
 	CByteUnit code;
 	AddLineInfo(code);
 	code.m_numOper = OPER_FOR;
 	code.m_param1 = variable;
 	code.m_param2 = variableTo;
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	const int nStartFOR = m_cByteCode.m_listCode.size() - 1;
 
@@ -2060,7 +2071,7 @@ bool CCompileCode::CompileFor(CCompileContext* context)
 	code2.m_numOper = OPER_NEXT;
 	code2.m_param1 = variable;
 	code2.m_param2.m_numIndex = nStartFOR;
-	m_cByteCode.m_listCode.push_back(code2);
+	m_cByteCode.m_listCode.emplace_back(std::move(code2));
 
 	m_cByteCode.m_listCode[nStartFOR].m_param3.m_numIndex = m_cByteCode.m_listCode.size();
 
@@ -2076,8 +2087,8 @@ bool CCompileCode::CompileForeach(CCompileContext* context)
 
 	GETKeyWord(KEY_FOREACH);
 
-	wxString strRealName = GETIdentifier(true);
-	wxString strName = stringUtils::MakeUpper(strRealName);
+	const wxString& strRealName = GETIdentifier(true);
+	const wxString& strName = stringUtils::MakeUpper(strRealName);
 
 	CParamUnit variable = context->GetVariable(strRealName);
 
@@ -2091,7 +2102,7 @@ bool CCompileCode::CompileForeach(CCompileContext* context)
 	code1.m_numOper = OPER_LET;
 	code1.m_param1 = variableIn;
 	code1.m_param2 = GetExpression(context);
-	m_cByteCode.m_listCode.push_back(code1);
+	m_cByteCode.m_listCode.emplace_back(std::move(code1));
 
 	CParamUnit variableIt =
 		context->GetVariable(strName + wxT("@it_"), true, false, false, true);  //storage iterpos;
@@ -2103,7 +2114,7 @@ bool CCompileCode::CompileForeach(CCompileContext* context)
 	code.m_param2 = variableIn;
 	code.m_param3 = variableIt; // for storage iterpos;
 
-	m_cByteCode.m_listCode.push_back(code);
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 	const int numStartFOREACH = m_cByteCode.m_listCode.size() - 1;
 
@@ -2116,7 +2127,7 @@ bool CCompileCode::CompileForeach(CCompileContext* context)
 	code2.m_numOper = OPER_NEXT_ITER;
 	code2.m_param1 = variableIt; // for storage iterpos;
 	code2.m_param2.m_numIndex = numStartFOREACH;
-	m_cByteCode.m_listCode.push_back(code2);
+	m_cByteCode.m_listCode.emplace_back(std::move(code2));
 
 	m_cByteCode.m_listCode[numStartFOREACH].m_param4.m_numIndex = m_cByteCode.m_listCode.size();
 
@@ -2144,7 +2155,7 @@ CParamUnit CCompileCode::GetCallFunction(CCompileContext* context, const wxStrin
 			CParamUnit data;
 			data.m_numArray = DEF_VAR_SKIP;// missing parameter
 			data.m_numIndex = DEF_VAR_SKIP;
-			callFunc->m_listParam.push_back(data);
+			callFunc->m_listParam.emplace_back(std::move(data));
 		}
 		else {
 			callFunc->m_listParam.emplace_back(GetExpression(context));
@@ -2166,27 +2177,31 @@ CParamUnit CCompileCode::GetCallFunction(CCompileContext* context, const wxStrin
 
 	callFunc->m_numIsSet = numIsSet;
 
-	CFunction* foundedFunc = nullptr;
-
-	if (m_bExpressionOnly) foundedFunc = GetFunction(callFunc->m_strName);
-	else context->FindFunction(callFunc->m_strName, foundedFunc);
+	std::shared_ptr<CFunction> foundedFunc = nullptr;
+	if (m_bExpressionOnly)
+		(void)GetFunction(callFunc->m_strName, foundedFunc);
+	else
+		(void)context->FindFunction(callFunc->m_strName, foundedFunc);
 
 	if (foundedFunc != nullptr && context->m_strCurFuncName != callFunc->m_strName) {
 		if (!PushCallFunction(callFunc))
 			return CParamUnit();
 	}
-	else {
-		if (m_bExpressionOnly) {
-			SetError(ERROR_CALL_FUNCTION, strRealName);
-			return CParamUnit();
-		}
-		code.m_numOper = OPER_GOTO;// jump to the end of the bytecode where the expanded call will be made
-		m_cByteCode.m_listCode.push_back(code);
-		callFunc->m_numAddLine = m_cByteCode.m_listCode.size() - 1;
-		m_listCallFunc.push_back(callFunc);
+
+	if (m_bExpressionOnly) {
+		SetError(ERROR_CALL_FUNCTION, strRealName);
+		return CParamUnit();
 	}
 
-	return callFunc->m_puRetValue;
+	code.m_numOper = OPER_GOTO;// jump to the end of the bytecode where the expanded call will be made
+	m_cByteCode.m_listCode.emplace_back(std::move(code));
+
+	CParamUnit& puRetValue = callFunc->m_puRetValue;
+
+	callFunc->m_numAddLine = m_cByteCode.m_listCode.size() - 1;
+	m_listCallFunc.emplace_back(std::move(callFunc));
+
+	return puRetValue;
 }
 
 /**
@@ -2207,7 +2222,7 @@ CParamUnit CCompileCode::FindConst(const CValue& constData)
 	}
 	else {
 		variable.m_numIndex = m_cByteCode.m_listConst.size();
-		m_cByteCode.m_listConst.push_back(constData);
+		m_cByteCode.m_listConst.emplace_back(constData);
 		m_listHashConst.insert_or_assign(strConstant, variable.m_numIndex + 1);
 	}
 	variable.m_strType = GetTypeVar(constData.GetClassName());
@@ -2222,8 +2237,10 @@ CParamUnit CCompileCode::FindConst(const CValue& constData)
 
 CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 {
+	const CLexem& lex = GETLexem();
+
+	// create variable 
 	CParamUnit variable;
-	CLexem lex = GETLexem();
 
 	// first we process Left operators
 	if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NOT) || (lex.m_lexType == DELIMITER && lex.m_numData == '!')) {
@@ -2246,10 +2263,10 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 		code.m_param1 = variable;
 		code.m_param2 = variable2;
 
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
-	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW))
-	{
+	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW)) {
+
 		const wxString strObjectName = GETIdentifier(true);
 		const int numConst = GetConstString(strObjectName);
 
@@ -2258,15 +2275,13 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 		if (IsNextDelimeter('(')) { // this is a method call
 			GETDelimeter('(');
 			while (!IsNextDelimeter(')')) {
-				if (IsNextDelimeter(','))
-				{
+				if (IsNextDelimeter(',')) {
 					CParamUnit data;
 					data.m_numArray = DEF_VAR_SKIP;// missing parameter
 					data.m_numIndex = DEF_VAR_SKIP;
-					listParam.push_back(data);
+					listParam.emplace_back(std::move(data));
 				}
-				else
-				{
+				else {
 					listParam.emplace_back(GetExpression(context));
 					if (!IsNextDelimeter(',') || IsNextDelimeter(')'))
 						break;
@@ -2290,23 +2305,21 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 
 		variable = context->CreateVariable();
 		code.m_param1 = variable;// variable into which the value is returned
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 		for (unsigned int arg = 0; arg < listParam.size(); arg++) {
 			CByteUnit code;
 			AddLineInfo(code);
 			code.m_numOper = OPER_SET;
 			code.m_param1 = listParam[arg];
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 	}
-	else if (lex.m_lexType == DELIMITER && lex.m_numData == '(')
-	{
+	else if (lex.m_lexType == DELIMITER && lex.m_numData == '(') {
 		variable = GetExpression(context);
 		GETDelimeter(')');
 	}
-	else if (lex.m_lexType == DELIMITER && lex.m_numData == '?')
-	{
+	else if (lex.m_lexType == DELIMITER && lex.m_numData == '?') {
 		variable = context->CreateVariable();
 		CByteUnit code;
 		AddLineInfo(code);
@@ -2319,20 +2332,18 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 		GETDelimeter(',');
 		code.m_param4 = GetExpression(context);
 		GETDelimeter(')');
-		m_cByteCode.m_listCode.push_back(code);
+		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
-	else if (lex.m_lexType == IDENTIFIER)
-	{
+	else if (lex.m_lexType == IDENTIFIER) {
 		m_numCurrentCompile--;// step back
 		int numSet = 0;
 		variable = GetCurrentIdentifier(context, numSet);
 	}
-	else if (lex.m_lexType == CONSTANT)
-	{
+	else if (lex.m_lexType == CONSTANT) {
 		variable = FindConst(lex.m_valData);
 	}
-	else if ((lex.m_lexType == DELIMITER && lex.m_numData == '+') || (lex.m_lexType == DELIMITER && lex.m_numData == '-'))
-	{
+	else if ((lex.m_lexType == DELIMITER && lex.m_numData == '+') || (lex.m_lexType == DELIMITER && lex.m_numData == '-')) {
+
 		// check the admissibility of such assignment
 		const int numCurPriority = gs_operPriority[lex.m_numData];
 
@@ -2342,8 +2353,7 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 		}
 
 		// this is a user-defined expression sign
-		if (lex.m_numData == '+')// do nothing (ignore)
-		{
+		if (lex.m_numData == '+') { // do nothing (ignore)
 			CByteUnit code;
 			variable = GetExpression(context, nPriority);
 			if (!variable.m_strType.IsEmpty()) {
@@ -2352,8 +2362,7 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 			variable.m_strType = CValue::GetNameObjectFromVT(eValueTypes::TYPE_NUMBER, true);
 			return variable;
 		}
-		else
-		{
+		else {
 			variable = GetExpression(context, 100);//super high priority!
 			CByteUnit code;
 			AddLineInfo(code);
@@ -2367,11 +2376,10 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 			variable = context->CreateVariable();
 			variable.m_strType = CValue::GetNameObjectFromVT(eValueTypes::TYPE_NUMBER, true);
 			code.m_param1 = variable;
-			m_cByteCode.m_listCode.push_back(code);
+			m_cByteCode.m_listCode.emplace_back(std::move(code));
 		}
 	}
-	else
-	{
+	else {
 		m_numCurrentCompile--;
 		SetError(ERROR_EXPRESSION);
 		return CParamUnit();
@@ -2382,50 +2390,50 @@ CParamUnit CCompileCode::GetExpression(CCompileContext* context, int nPriority)
 
 delimOperation:
 
-	lex = PreviewGetLexem();
+	const CLexem& preview_lex = PreviewGetLexem();
 
-	if (lex.m_lexType == DELIMITER && lex.m_numData == ')')
+	if (preview_lex.m_lexType == DELIMITER && preview_lex.m_numData == ')')
 		return variable;
 
 	// we look to see if there are any further operators for performing actions on this variable
-	if ((lex.m_lexType == DELIMITER && lex.m_numData != ';') || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_AND) || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_OR))
-	{
-		if (lex.m_numData >= 0 && lex.m_numData <= 255)
-		{
-			const int numCurPriority = gs_operPriority[lex.m_numData];
+	if ((preview_lex.m_lexType == DELIMITER && preview_lex.m_numData != ';') || (preview_lex.m_lexType == KEYWORD && preview_lex.m_numData == KEY_AND) || (preview_lex.m_lexType == KEYWORD && preview_lex.m_numData == KEY_OR)) {
+		if (preview_lex.m_numData >= 0 && preview_lex.m_numData <= 255) {
+			const int numCurPriority = gs_operPriority[preview_lex.m_numData];
 			if (nPriority < numCurPriority) { // сompare the priorities of the left (previous operation) and the currently running operation
+
 				CByteUnit code;
 				AddLineInfo(code);
-				lex = GetLexem();
-				if (lex.m_numData == '*') {
+				const CLexem& next_lex = GetLexem();
+
+				if (next_lex.m_numData == '*') {
 					SetOper(OPER_MULT);
 				}
-				else if (lex.m_numData == '/') {
+				else if (next_lex.m_numData == '/') {
 					SetOper(OPER_DIV);
 				}
-				else if (lex.m_numData == '+') {
+				else if (next_lex.m_numData == '+') {
 					SetOper(OPER_ADD);
 				}
-				else if (lex.m_numData == '-') {
+				else if (next_lex.m_numData == '-') {
 					SetOper(OPER_SUB);
 				}
-				else if (lex.m_numData == '%') {
+				else if (next_lex.m_numData == '%') {
 					SetOper(OPER_MOD);
 				}
-				else if (lex.m_numData == KEY_AND) {
+				else if (next_lex.m_numData == KEY_AND) {
 					SetOper(OPER_AND);
 				}
-				else if (lex.m_numData == KEY_OR) {
+				else if (next_lex.m_numData == KEY_OR) {
 					SetOper(OPER_OR);
 				}
-				else if (lex.m_numData == '>') {
+				else if (next_lex.m_numData == '>') {
 					SetOper(OPER_GT);
 					if (IsNextDelimeter('=')) {
 						GETDelimeter('=');
 						SetOper(OPER_GE);
 					}
 				}
-				else if (lex.m_numData == '<') {
+				else if (next_lex.m_numData == '<') {
 					SetOper(OPER_LS);
 					if (IsNextDelimeter('=')) {
 						GETDelimeter('=');
@@ -2436,7 +2444,7 @@ delimOperation:
 						SetOper(OPER_NE);
 					}
 				}
-				else if (lex.m_numData == '=') {
+				else if (next_lex.m_numData == '=') {
 					SetOper(OPER_EQ);
 				}
 				else {
@@ -2475,7 +2483,7 @@ delimOperation:
 				code.m_param2 = puVariable2;
 				code.m_param3 = puVariable3;
 
-				m_cByteCode.m_listCode.push_back(code);
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
 
 				variable = puVariable1;
 				goto delimOperation;

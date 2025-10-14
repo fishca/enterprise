@@ -4,26 +4,19 @@
 #include "byteCode.h"
 #include "compileContext.h"
 
+//*******************************************************************************
+
+class BACKEND_API CProcUnit;
+class BACKEND_API CProcUnitEvaluate;
+
+//*******************************************************************************
+
 struct CRunContextSmall {
-
-	long m_lStart, m_lParamCount;
-
-	CValue m_cLocVars[MAX_STATIC_VAR] = {};
-	CValue* m_pLocVars = nullptr;
-
-	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
-	CValue** m_pRefLocVars = nullptr;
-
-	long m_lVarCount;
-
-public:
 
 	CRunContextSmall(int varCount = wxNOT_FOUND) :
 		m_lVarCount(0), m_lParamCount(0) {
-		if (varCount >= 0) {
-			SetLocalCount(varCount);
-		}
-	};
+		if (varCount >= 0) SetLocalCount(varCount);
+	}
 
 	~CRunContextSmall();
 
@@ -43,17 +36,8 @@ public:
 	};
 
 	long GetLocalCount() const { return m_lVarCount; }
-};
 
-class BACKEND_API CProcUnit;
-
-struct CRunContext {
-
-	CProcUnit* m_procUnit = nullptr;
-	CCompileContext* m_compileContext = nullptr;
-
-	long m_lStart, m_lCurLine; //current executing bytecode line
-	long m_lVarCount, m_lParamCount;
+	long m_lStart, m_lParamCount;
 
 	CValue m_cLocVars[MAX_STATIC_VAR] = {};
 	CValue* m_pLocVars = nullptr;
@@ -61,19 +45,17 @@ struct CRunContext {
 	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
 	CValue** m_pRefLocVars = nullptr;
 
-	std::map<wxString, CProcUnit*> m_listEval;
+	long m_lVarCount;
+};
 
-public:
+struct CRunContext {
 
 	CRunContext(int varCount = wxNOT_FOUND) :
 		m_lVarCount(0), m_lParamCount(0), m_lStart(0), m_lCurLine(0) {
-		if (varCount >= 0) {
-			SetLocalCount(varCount);
-		}
-	};
+		if (varCount >= 0) SetLocalCount(varCount);
+	}
 
 	~CRunContext();
-	CByteCode* CRunContext::GetByteCode() const;
 
 	void SetLocalCount(const long varCount) {
 
@@ -92,9 +74,24 @@ public:
 	}
 
 	long GetLocalCount() const { return m_lVarCount; }
+	CByteCode* GetByteCode() const;
 
 	void SetProcUnit(CProcUnit* procUnit) { m_procUnit = procUnit; }
 	CProcUnit* GetProcUnit() const { return m_procUnit; }
+
+	CProcUnit* m_procUnit = nullptr;
+	CCompileContext* m_compileContext = nullptr;
+
+	long m_lStart, m_lCurLine; //current executing bytecode line
+	long m_lVarCount, m_lParamCount;
+
+	CValue m_cLocVars[MAX_STATIC_VAR] = {};
+	CValue* m_pLocVars = nullptr;
+
+	CValue* m_cRefLocVars[MAX_STATIC_VAR] = {};
+	CValue** m_pRefLocVars = nullptr;
+
+	std::map<wxString, std::shared_ptr<CProcUnitEvaluate>> m_listEval;
 };
 
 #endif // ! _PROC_CONTEXT__H__

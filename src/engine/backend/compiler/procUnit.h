@@ -4,18 +4,6 @@
 #include "procContext.h"
 
 class BACKEND_API CProcUnit {
-	//attributes:
-	int m_numAutoDeleteParent; //flag for deleting the parent module
-	CByteCode* m_pByteCode = nullptr;
-	CValue*** m_pppArrayList = {}; //pointers to arrays of variable pointers (0 - local variables, 1 - variables of the current module, 2 and higher - variables of parent modules)
-	CProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
-	std::vector <CProcUnit*> m_procParent;
-	//static attributes
-	static CProcUnit* m_currentRunModule;
-private:
-	CRunContext m_cCurContext;
-	//static attributes
-	static std::vector <CRunContext*> ms_runContext; //list of executable module codes
 public:
 
 	//Constructors/destructors
@@ -25,9 +13,7 @@ public:
 		m_numAutoDeleteParent(0) {
 	}
 
-	virtual ~CProcUnit() {
-		Clear();
-	}
+	virtual ~CProcUnit() { Clear(); }
 
 	//Methods
 	void Reset() {
@@ -65,7 +51,6 @@ public:
 				m_procParent.push_back(procParent->m_procParent[i - 1]);
 			}
 		}
-
 	}
 
 	CProcUnit* GetParent(unsigned int iLevel = 0) const {
@@ -79,18 +64,13 @@ public:
 		}
 	}
 
-	unsigned int GetParentCount() const {
-		return m_procParent.size();
-	}
-
-	CByteCode* GetByteCode() const {
-		return m_pByteCode;
-	}
+	unsigned int GetParentCount() const { return m_procParent.size(); }
+	CByteCode* GetByteCode() const { return m_pByteCode; }
 
 	void Execute(CByteCode& ByteCode) { Execute(ByteCode, nullptr, true); }
 	void Execute(CByteCode& ByteCode, bool bRunModule) { Execute(ByteCode, nullptr, bRunModule); }
 	void Execute(CByteCode& ByteCode, CValue& pvarRetValue, bool bRunModule = true) { Execute(ByteCode, &pvarRetValue, bRunModule); }
-	
+
 private:
 	void Execute(CByteCode& ByteCode, CValue* pvarRetValue, bool bRunModule = true);
 	void Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta); // bDelta=true - flag for executing module operators that come at the end of functions and procedures
@@ -100,9 +80,7 @@ public:
 	bool CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue, CCompileCode& cModule, bool bCompileBlock);
 
 	//call an arbitrary function of the executable module
-	long FindExportMethod(const wxString& strMethodName) const {
-		return FindMethod(strMethodName, false, 2);
-	}
+	long FindExportMethod(const wxString& strMethodName) const { return FindMethod(strMethodName, false, 2); }
 
 	//Search for export functions
 	long FindMethod(const wxString& strMethodName, bool bError = false, int bExportOnly = 0) const;
@@ -118,7 +96,7 @@ public:
 
 	template <typename ...Types>
 	inline void CallAsFunc(const wxString& funcName, CValue& pvarRetValue, Types&... args) {
-		CValue* ppParams[] = {&args..., nullptr};
+		CValue* ppParams[] = { &args..., nullptr };
 		CallAsFunc(funcName, pvarRetValue, ppParams, (const long)sizeof ...(args));
 	}
 
@@ -137,22 +115,12 @@ public:
 	bool GetPropVal(const long lPropNum, CValue& pvarPropVal);//attribute value
 
 	//run module 
-	static CProcUnit* GetCurrentRunModule() {
-		return m_currentRunModule;
-	}
-
-	static void ClearCurrentRunModule() {
-		m_currentRunModule = nullptr;
-	}
+	static CProcUnit* GetCurrentRunModule() { return m_currentRunModule; }
+	static void ClearCurrentRunModule() { m_currentRunModule = nullptr; }
 
 	//run context
-	static void CProcUnit::AddRunContext(CRunContext* runContext) {
-		ms_runContext.push_back(runContext);
-	}
-
-	static unsigned int CProcUnit::GetCountRunContext() {
-		return ms_runContext.size();
-	}
+	static void CProcUnit::AddRunContext(CRunContext* runContext) { ms_runContext.push_back(runContext); }
+	static unsigned int CProcUnit::GetCountRunContext() { return ms_runContext.size(); }
 
 	static CRunContext* CProcUnit::GetPrevRunContext() {
 		if (ms_runContext.size() < 2)
@@ -172,9 +140,7 @@ public:
 		return ms_runContext[idx];
 	}
 
-	static void CProcUnit::BackRunContext() {
-		ms_runContext.pop_back();
-	}
+	static void CProcUnit::BackRunContext() { ms_runContext.pop_back(); }
 
 	static CByteCode* GetCurrentByteCode() {
 		const CRunContext* runContext = GetCurrentRunContext();
@@ -185,10 +151,29 @@ public:
 
 	static void Raise();
 
-private:
+protected:
 
-	friend struct CRunContextSmall;
-	friend struct CRunContext;
+	//attributes:
+	int m_numAutoDeleteParent; //flag for deleting the parent module
+	CByteCode* m_pByteCode = nullptr;
+	CValue*** m_pppArrayList = {}; //pointers to arrays of variable pointers (0 - local variables, 1 - variables of the current module, 2 and higher - variables of parent modules)
+	CProcUnit** m_ppArrayCode = {}; //pointers to arrays of executable modules (0 - current module, 1 and higher - parent modules)
+	std::vector <CProcUnit*> m_procParent;
+
+	//static attributes
+	static CProcUnit* m_currentRunModule;
+
+	CRunContext m_cCurContext;
+
+	//static attributes
+	static std::vector <CRunContext*> ms_runContext; //list of executable module codes
+};
+
+class BACKEND_API CProcUnitEvaluate : public CProcUnit {
+public:
+
+	//Constructors/destructors
+	virtual ~CProcUnitEvaluate();
 };
 
 #endif 

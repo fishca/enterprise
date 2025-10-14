@@ -89,24 +89,31 @@ public:
 
 	public:
 		wxFormatErrorString(int codeError)
-			: wxFormatString(GetErrorDesc(codeError)) {}
+			: wxFormatString(GetErrorDesc(codeError)) {
+		}
 
 #ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
 		wxFormatErrorString(const char* str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 #endif
 		wxFormatErrorString(const wchar_t* str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 		wxFormatErrorString(const wxString& str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 		wxFormatErrorString(const wxCStrData& str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 #ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
 		wxFormatErrorString(const wxScopedCharBuffer& str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 #endif
 		wxFormatErrorString(const wxScopedWCharBuffer& str)
-			: wxFormatString(str) {}
+			: wxFormatString(str) {
+		}
 
 	};
 
@@ -133,13 +140,8 @@ public:
 		return strLastError;
 	}
 
-	static void SetEvalMode(bool mode = true) {
-		sm_evalMode = mode;
-	}
-
-	static bool IsEvalMode() {
-		return sm_evalMode;
-	}
+	static void SetEvalMode(bool mode = true) { sm_evalMode = mode; }
+	static bool IsEvalMode() { return sm_evalMode; }
 };
 
 class BACKEND_API CBackendInterrupt : public CBackendException {

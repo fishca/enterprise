@@ -40,20 +40,13 @@
 CProcUnit* CProcUnit::m_currentRunModule = nullptr;
 
 struct CErrorPlace {
-	long m_errorLine;
-	CByteCode* m_byteCode;
-	CByteCode* m_skipByteCode;
-public:
-	CErrorPlace() {
-		Reset();
-	}
-	bool IsEmpty() const {
-		return m_errorLine == wxNOT_FOUND;
-	}
-	void Reset() {
-		m_byteCode = m_skipByteCode = nullptr;
-		m_errorLine = wxNOT_FOUND;
-	};
+
+	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
+	void Reset() { m_byteCode = m_skipByteCode = nullptr; m_errorLine = wxNOT_FOUND; }
+
+	long m_errorLine = wxNOT_FOUND;
+	CByteCode* m_byteCode = nullptr;
+	CByteCode* m_skipByteCode = nullptr;
 };
 
 static CErrorPlace s_errorPlace;
@@ -69,11 +62,9 @@ std::vector <CRunContext*> CProcUnit::ms_runContext;
 //*                                              stack support                                                 *
 //**************************************************************************************************************
 
-inline void BeginByteCode(CRunContext* pCode)
-{
-	CProcUnit::AddRunContext(pCode);
-}
+static short s_nRecCount = 0; //control looping
 
+inline void BeginByteCode(CRunContext* pCode) { CProcUnit::AddRunContext(pCode); }
 inline bool EndByteCode()
 {
 	unsigned int n = CProcUnit::GetCountRunContext();
@@ -85,20 +76,14 @@ inline bool EndByteCode()
 	return true;
 }
 
-//Îáíóëåíèå ñòåêà
-inline void ResetByteCode()
-{
-	while (EndByteCode());
-}
+//Stack reset
+inline void ResetByteCode() { while (EndByteCode()); }
 
-static int s_nRecCount = 0;//control looping
+struct CProcStackGuard {
 
-struct CStackGuard {
-	CRunContext* m_currentContext;
-public:
-	CStackGuard(CRunContext* runContext) {
+	CProcStackGuard(CRunContext* runContext) {
 		if (s_nRecCount > MAX_REC_COUNT) { //critical error
-			wxString strError = "";
+			wxString strError;
 			for (unsigned int i = 0; i < CProcUnit::GetCountRunContext(); i++) {
 				CRunContext* pLastContext = CProcUnit::GetRunContext(i);
 				wxASSERT(pLastContext);
@@ -109,18 +94,17 @@ public:
 					m_pByteCode->m_listCode[pLastContext->m_lCurLine].m_numLine + 1
 				);
 			}
-			CBackendException::Error(
-				_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError
-			);
+			CBackendException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
 		}
 		s_nRecCount++;
 		m_currentContext = runContext;
 		BeginByteCode(runContext);
-	};
-	~CStackGuard() {
-		s_nRecCount--;
-		EndByteCode();
-	};
+	}
+
+	~CProcStackGuard() { s_nRecCount--; EndByteCode(); }
+
+private:
+	CRunContext* m_currentContext;
 };
 
 //**************************************************************************************************************
@@ -308,28 +292,71 @@ inline void CopyValue(CValue& cValue1, CValue& cValue2)
 
 	switch (cValue2.m_typeClass)
 	{
-		case eValueTypes::TYPE_NULL:
-			break;
-		case eValueTypes::TYPE_BOOLEAN:
-			cValue1.m_bData = cValue2.m_bData;
-			break;
-		case eValueTypes::TYPE_NUMBER:
-			cValue1.m_fData = cValue2.m_fData;
-			break;
-		case eValueTypes::TYPE_STRING:
-			cValue1.m_sData = cValue2.m_sData;
-			break;
-		case eValueTypes::TYPE_DATE: cValue1.m_dData = cValue2.m_dData;
-			break;
-		case eValueTypes::TYPE_REFFER: cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
-			break;
-		case eValueTypes::TYPE_ENUM:
-		case eValueTypes::TYPE_VALUE:
-			cValue1.m_typeClass = eValueTypes::TYPE_REFFER;
-			cValue1.m_pRef = &cValue2; cValue1.m_pRef->IncrRef();
-			break;
-		default: cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
+	case eValueTypes::TYPE_NULL:
+		break;
+	case eValueTypes::TYPE_BOOLEAN:
+		cValue1.m_bData = cValue2.m_bData;
+		break;
+	case eValueTypes::TYPE_NUMBER:
+		cValue1.m_fData = cValue2.m_fData;
+		break;
+	case eValueTypes::TYPE_STRING:
+		cValue1.m_sData = cValue2.m_sData;
+		break;
+	case eValueTypes::TYPE_DATE:
+		cValue1.m_dData = cValue2.m_dData;
+		break;
+	case eValueTypes::TYPE_REFFER:
+		cValue1.m_pRef = cValue2.m_pRef; cValue1.m_pRef->IncrRef();
+		break;
+	case eValueTypes::TYPE_OLE:
+	case eValueTypes::TYPE_ENUM:
+	case eValueTypes::TYPE_VALUE:
+		cValue1.m_typeClass = eValueTypes::TYPE_REFFER;
+		cValue1.m_pRef = &cValue2; cValue1.m_pRef->IncrRef();
+		break;
+	default: cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
 	}
+}
+
+inline void MoveValue(CValue&& cValue1, CValue&& cValue2)
+{
+	if (&cValue1 == &cValue2)
+		return;
+
+	cValue1.m_typeClass = cValue2.m_typeClass;
+
+	switch (cValue2.m_typeClass)
+	{
+	case eValueTypes::TYPE_NULL:
+		break;
+	case eValueTypes::TYPE_BOOLEAN:
+		cValue1.m_bData = std::move(cValue2.m_bData);
+		break;
+	case eValueTypes::TYPE_NUMBER:
+		cValue1.m_fData = std::move(cValue2.m_fData);
+		break;
+	case eValueTypes::TYPE_STRING:
+		cValue1.m_sData = std::move(cValue2.m_sData);
+		break;
+	case eValueTypes::TYPE_DATE:
+		cValue1.m_dData = std::move(cValue2.m_dData);
+		break;
+	case eValueTypes::TYPE_REFFER:
+		cValue1.m_pRef = cValue2.m_pRef;
+		cValue1.m_pRef->IncrRef();
+		break;
+	case eValueTypes::TYPE_OLE:
+	case eValueTypes::TYPE_ENUM:
+	case eValueTypes::TYPE_VALUE:
+		cValue1.m_typeClass = eValueTypes::TYPE_REFFER;
+		cValue1.m_pRef = &cValue2;
+		cValue1.m_pRef->IncrRef();
+		break;
+	default: cValue1.m_typeClass = eValueTypes::TYPE_EMPTY;
+	}
+
+	cValue2.Reset();
 }
 
 inline bool IsEmptyValue(const CValue& cValue1)
@@ -401,8 +428,6 @@ inline CValue GetValue(CValue& cValue1)
 #pragma region iterator_support
 class CValueIterator : public CValue {
 	wxDECLARE_DYNAMIC_CLASS(CValueIterator);
-private:
-	CValue& m_ownerValue;
 public:
 	CValueIterator(CValue& ownerValue = CValue()) : CValue(eValueTypes::TYPE_VALUE),
 		m_ownerValue(ownerValue), m_currentPos(0) {
@@ -424,6 +449,8 @@ public:
 	void ResetIterator() { m_currentPos = 0; };
 protected:
 	unsigned long m_currentPos = 0;
+private:
+	CValue& m_ownerValue;
 };
 
 //**************************************************************************************************************
@@ -439,15 +466,12 @@ const class_identifier_t g_valueIterator = string_to_clsid("SO_ITER");
 
 void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta)
 {
-	struct tryData_t {
+	struct CTryLabel {
+
+		CTryLabel() :m_lStartLine(0), m_lEndLine(0) {}
+		CTryLabel(const long& lStartLine, const long& lEndLine) :m_lStartLine(lStartLine), m_lEndLine(lEndLine) {}
+
 		long m_lStartLine, m_lEndLine;
-	public:
-		tryData_t() :
-			m_lStartLine(0), m_lEndLine(0) {
-		}
-		tryData_t(const long& lStartLine, const long& lEndLine) :
-			m_lStartLine(lStartLine), m_lEndLine(lEndLine) {
-		}
 	};
 
 #ifdef DEBUG
@@ -460,7 +484,7 @@ void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta
 
 	pContext->SetProcUnit(this);
 
-	CStackGuard cStack(pContext);
+	CProcStackGuard stackGuard(pContext);
 
 	CValue* pLocVars = pContext->m_pLocVars;
 	CValue** pRefLocVars = pContext->m_pRefLocVars;
@@ -471,7 +495,7 @@ void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta
 	long lFinish = m_pByteCode->m_listCode.size();
 	long lPrevLine = wxNOT_FOUND;
 
-	std::vector<tryData_t> tryList;
+	std::vector<CTryLabel> tryList;
 
 start_label:
 
@@ -489,317 +513,318 @@ start_label:
 
 			switch (curCode.m_numOper)
 			{
-				case OPER_CONST: CopyValue(variable1, m_pByteCode->m_listConst[index2]); break;
-				case OPER_CONSTN: SetTypeNumber(variable1, index2); break;
-				case OPER_ADD: AddValue(variable1, variable2, variable3); break;
-				case OPER_SUB: SubValue(variable1, variable2, variable3); break;
-				case OPER_DIV: DivValue(variable1, variable2, variable3); break;
-				case OPER_MOD: ModValue(variable1, variable2, variable3); break;
-				case OPER_MULT: MultValue(variable1, variable2, variable3); break;
-				case OPER_LET: CopyValue(variable1, variable2); break;
-				case OPER_INVERT: SetTypeNumber(variable1, -variable2.GetNumber()); break;
-				case OPER_NOT: SetTypeBoolean(variable1, IsEmptyValue(variable2)); break;
-				case OPER_AND: if (IsHasValue(variable2) && IsHasValue(variable3))
-					SetTypeBoolean(variable1, true); else SetTypeBoolean(variable1, false);
-					break;
-				case OPER_OR:
-					if (IsHasValue(variable2) || IsHasValue(variable3))
-						SetTypeBoolean(variable1, true);
-					else SetTypeBoolean(variable1, false); break;
-				case OPER_EQ: CompareValueEQ(variable1, variable2, variable3); break;
-				case OPER_NE: CompareValueNE(variable1, variable2, variable3); break;
-				case OPER_GT: CompareValueGT(variable1, variable2, variable3); break;
-				case OPER_LS: CompareValueLS(variable1, variable2, variable3); break;
-				case OPER_GE: CompareValueGE(variable1, variable2, variable3); break;
-				case OPER_LE: CompareValueLE(variable1, variable2, variable3); break;
-				case OPER_IF:
-					if (IsEmptyValue(variable1))
-						lCodeLine = index2 - 1;
-					break;
-				case OPER_FOR:
-					if (variable1.m_typeClass != eValueTypes::TYPE_NUMBER)
-						CBackendException::Error("Only variables with type can be used to organize the loop \"number\"");
-					if (variable1.m_fData == variable2.m_fData)
-						lCodeLine = index3 - 1;
-					break;
-				case OPER_FOREACH:
-				{
-					if (!variable2.HasIterator())
-						CBackendException::Error("Undefined value iterator");
-					if (g_valueIterator != variable3.GetClassType())
-						CopyValue(variable3, CValue(new CValueIterator(variable2)));
-					CValueIterator* iterator = variable3.ConvertToType<CValueIterator>();
-					if (!iterator->GetCurrentValue(variable1)) {
-						variable3.Reset(); lCodeLine = index4 - 1;
-					}
-				} break;
-				case OPER_NEXT:
-				{
-					if (variable1.m_typeClass == eValueTypes::TYPE_NUMBER) variable1.m_fData++;
+			case OPER_CONST: CopyValue(variable1, m_pByteCode->m_listConst[index2]); break;
+			case OPER_CONSTN: SetTypeNumber(variable1, index2); break;
+			case OPER_ADD: AddValue(variable1, variable2, variable3); break;
+			case OPER_SUB: SubValue(variable1, variable2, variable3); break;
+			case OPER_DIV: DivValue(variable1, variable2, variable3); break;
+			case OPER_MOD: ModValue(variable1, variable2, variable3); break;
+			case OPER_MULT: MultValue(variable1, variable2, variable3); break;
+			case OPER_LET: CopyValue(variable1, variable2); break;
+			case OPER_INVERT: SetTypeNumber(variable1, -variable2.GetNumber()); break;
+			case OPER_NOT: SetTypeBoolean(variable1, IsEmptyValue(variable2)); break;
+			case OPER_AND: if (IsHasValue(variable2) && IsHasValue(variable3))
+				SetTypeBoolean(variable1, true); else SetTypeBoolean(variable1, false);
+				break;
+			case OPER_OR:
+				if (IsHasValue(variable2) || IsHasValue(variable3))
+					SetTypeBoolean(variable1, true);
+				else SetTypeBoolean(variable1, false); break;
+			case OPER_EQ: CompareValueEQ(variable1, variable2, variable3); break;
+			case OPER_NE: CompareValueNE(variable1, variable2, variable3); break;
+			case OPER_GT: CompareValueGT(variable1, variable2, variable3); break;
+			case OPER_LS: CompareValueLS(variable1, variable2, variable3); break;
+			case OPER_GE: CompareValueGE(variable1, variable2, variable3); break;
+			case OPER_LE: CompareValueLE(variable1, variable2, variable3); break;
+			case OPER_IF:
+				if (IsEmptyValue(variable1))
 					lCodeLine = index2 - 1;
-				} break;
-				case OPER_NEXT_ITER:
-				{
-					CValueIterator* value_iterator =
-						variable1.ConvertToType<CValueIterator>();
-					value_iterator->NextIterator();
-					lCodeLine = index2 - 1;
-				} break;
-				case OPER_ITER:
-				{
-					if (IsHasValue(variable2))
-						CopyValue(variable1, variable3);
-					else
-						CopyValue(variable1, variable4);
-				}  break;
-				case OPER_NEW:
-				{
-					CValue* pRetValue = &variable1;
-					CRunContextSmall cRunContext(array2);
-					cRunContext.m_lParamCount = array2;
-					const wxString className = m_pByteCode->m_listConst[index2].m_sData;
-					//load parameters
-					for (long i = 0; i < cRunContext.m_lParamCount; i++) {
-						lCodeLine++;
-						if (index1 >= 0) {
-							if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
-								CopyValue(cRunContext.m_pLocVars[i], variable1);
-							}
-							else {
-								cRunContext.m_pRefLocVars[i] = &variable1;
-							}
-						}
-					}
-					CopyValue(*pRetValue, CValue::CreateObject(className, cRunContext.m_lParamCount > 0 ? cRunContext.m_pRefLocVars : nullptr, cRunContext.m_lParamCount));
-				} break;
-				case OPER_SET_A:
-				{//setting attribute
-					const wxString& strPropName = m_pByteCode->m_listConst[index2].m_sData;
-					const long lPropNum = variable1.FindProp(strPropName);
-					if (lPropNum < 0) CheckAndError(variable1, strPropName);
-					if (!variable1.IsPropWritable(lPropNum)) CBackendException::Error("Object field not writable (%s)", strPropName);
-					variable1.SetPropVal(lPropNum, GetValue(variable3));
-				} break;
-				case OPER_GET_A://get attribute
-				{
-					CValue* pRetValue = &variable1;
-					CValue* pVariable2 = &variable2;
-					const wxString& strPropName = m_pByteCode->m_listConst[index3].m_sData;
-					const long lPropNum = variable2.FindProp(strPropName);
-					if (lPropNum < 0) CheckAndError(variable2, strPropName);
-					if (!variable2.IsPropReadable(lPropNum)) CBackendException::Error("Object field not readable (%s)", strPropName);
-					CValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
-					if (result && vRet.m_typeClass == eValueTypes::TYPE_REFFER)
-						*pRetValue = vRet;
-					else if (result)
-						CopyValue(*pRetValue, vRet);
-					break;
+				break;
+			case OPER_FOR:
+				if (variable1.m_typeClass != eValueTypes::TYPE_NUMBER)
+					CBackendException::Error("Only variables with type can be used to organize the loop \"number\"");
+				if (variable1.m_fData == variable2.m_fData)
+					lCodeLine = index3 - 1;
+				break;
+			case OPER_FOREACH:
+			{
+				if (!variable2.HasIterator())
+					CBackendException::Error("Undefined value iterator");
+				if (g_valueIterator != variable3.GetClassType())
+					CopyValue(variable3, CValue(new CValueIterator(variable2)));
+				CValueIterator* iterator = variable3.ConvertToType<CValueIterator>();
+				if (!iterator->GetCurrentValue(variable1)) {
+					variable3.Reset(); lCodeLine = index4 - 1;
 				}
-				case OPER_CALL_M://method call
-				{
-					CValue* pRetValue = &variable1;
-					CValue* pVariable2 = &variable2;
-
-					const wxString& funcName = m_pByteCode->m_listConst[index3].m_sData;
-					long lMethodNum = wxNOT_FOUND;
-					//call optimization
-					CValue* storageValue = reinterpret_cast<CValue*>(array4);
-					if (storageValue && storageValue == pVariable2->GetRef()) { //previously there were calls
-						lMethodNum = index4;
-#ifdef DEBUG
-						lMethodNum = pVariable2->FindMethod(funcName);
-						if (lMethodNum != index4) CBackendException::Error("Error value %d must %d (It is recommended to turn off method optimization)", index4, lMethodNum);
-#endif
-					}
-					else {//there were no calls
-						lMethodNum = pVariable2->FindMethod(funcName);
-						index4 = lMethodNum;
-						array4 = reinterpret_cast<wxLongLong_t>(pVariable2->GetRef());
-					}
-
-					if (lMethodNum < 0)
-						CheckAndError(variable2, funcName);
-
-					CRunContextSmall cRunContext(std::max(array3, MAX_STATIC_VAR));
-					cRunContext.m_lParamCount = array3;
-
-					// too many parameters
-					const long paramCount = pVariable2->GetNParams(lMethodNum);
-
-					if (paramCount < cRunContext.m_lParamCount)
-						CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
-					else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
-						CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
-
-					//load parameters
-					for (long i = 0; i < cRunContext.m_lParamCount; i++) {
-						lCodeLine++;
-						if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
-							if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
-								CopyValue(cRunContext.m_pLocVars[i], variable1);
-							}
-							else {
-								cRunContext.m_pRefLocVars[i] = &variable1;
-							}
-						}
-					}
-
-					if (pVariable2->HasRetVal(lMethodNum)) {
-						pVariable2->CallAsFunc(lMethodNum, *pRetValue, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
-					}
-					else {
-						// operator =
-						if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET)
-							CBackendException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
-						pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
-					} break;
-				}
-				case OPER_CALL:
-				{ //call a regular function
-					const long lModuleNumber = array2;
-					CRunContext cRunContext(index3);
-					cRunContext.m_lStart = index2;
-					cRunContext.m_lParamCount = array3;
-					CByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
-					cRunContext.m_compileContext = reinterpret_cast<CCompileContext*>(pLocalByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
-					CValue* pRetValue = &variable1;
-					//load parameters
-					for (long i = 0; i < cRunContext.m_lParamCount; i++) {
-						lCodeLine++;
-						if (curCode.m_numOper == OPER_SETCONST) {
-							CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
+			} break;
+			case OPER_NEXT:
+			{
+				if (variable1.m_typeClass == eValueTypes::TYPE_NUMBER)
+					variable1.m_fData++;
+				lCodeLine = index2 - 1;
+			} break;
+			case OPER_NEXT_ITER:
+			{
+				CValueIterator* value_iterator =
+					variable1.ConvertToType<CValueIterator>();
+				value_iterator->NextIterator();
+				lCodeLine = index2 - 1;
+			} break;
+			case OPER_ITER:
+			{
+				if (IsHasValue(variable2))
+					CopyValue(variable1, variable3);
+				else
+					CopyValue(variable1, variable4);
+			}  break;
+			case OPER_NEW:
+			{
+				CValue* pRetValue = &variable1;
+				CRunContextSmall cRunContext(array2);
+				cRunContext.m_lParamCount = array2;
+				const wxString className = m_pByteCode->m_listConst[index2].m_sData;
+				//load parameters
+				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
+					lCodeLine++;
+					if (index1 >= 0) {
+						if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
+							CopyValue(cRunContext.m_pLocVars[i], variable1);
 						}
 						else {
-							if (variable1.m_bReadOnly || index2 == 1) {//pass parameter by value
-								CopyValue(cRunContext.m_pLocVars[i], variable1);
-							}
-							else {
-								cRunContext.m_pRefLocVars[i] = &variable1;
-							}
+							cRunContext.m_pRefLocVars[i] = &variable1;
 						}
 					}
-					m_ppArrayCode[lModuleNumber]->Execute(&cRunContext, pRetValue, false);
-					break;
 				}
-				case OPER_SET_ARRAY:
-					if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-						CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
-					break; //setting the array value
-				case OPER_GET_ARRAY:
-					if (!GetArrayValue(variable1, variable2, variable3))
-						CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
-					break; //getting the array value
-				case OPER_GOTO: case OPER_ENDTRY:
-				{
-					const long tryCodeLine = index1;
-					const long trySize = tryList.size() - 1;
-					if (trySize >= 0) {
-						if (tryCodeLine >= tryList[trySize].m_lEndLine ||
-							tryCodeLine <= tryList[trySize].m_lStartLine) {
-							tryList.resize(trySize);//exit from try..catch scope
+				CopyValue(*pRetValue, CValue::CreateObject(className, cRunContext.m_lParamCount > 0 ? cRunContext.m_pRefLocVars : nullptr, cRunContext.m_lParamCount));
+			} break;
+			case OPER_SET_A:
+			{//setting attribute
+				const wxString& strPropName = m_pByteCode->m_listConst[index2].m_sData;
+				const long lPropNum = variable1.FindProp(strPropName);
+				if (lPropNum < 0) CheckAndError(variable1, strPropName);
+				if (!variable1.IsPropWritable(lPropNum)) CBackendException::Error("Object field not writable (%s)", strPropName);
+				variable1.SetPropVal(lPropNum, GetValue(variable3));
+			} break;
+			case OPER_GET_A://get attribute
+			{
+				CValue* pRetValue = &variable1;
+				CValue* pVariable2 = &variable2;
+				const wxString& strPropName = m_pByteCode->m_listConst[index3].m_sData;
+				const long lPropNum = variable2.FindProp(strPropName);
+				if (lPropNum < 0) CheckAndError(variable2, strPropName);
+				if (!variable2.IsPropReadable(lPropNum)) CBackendException::Error("Object field not readable (%s)", strPropName);
+				CValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
+				if (result && vRet.m_typeClass == eValueTypes::TYPE_REFFER)
+					*pRetValue = vRet;
+				else if (result)
+					CopyValue(*pRetValue, vRet);
+				break;
+			}
+			case OPER_CALL_M://method call
+			{
+				CValue* pRetValue = &variable1;
+				CValue* pVariable2 = &variable2;
+
+				const wxString& funcName = m_pByteCode->m_listConst[index3].m_sData;
+				long lMethodNum = wxNOT_FOUND;
+				//call optimization
+				CValue* storageValue = reinterpret_cast<CValue*>(array4);
+				if (storageValue && storageValue == pVariable2->GetRef()) { //previously there were calls
+					lMethodNum = index4;
+#ifdef DEBUG
+					lMethodNum = pVariable2->FindMethod(funcName);
+					if (lMethodNum != index4) CBackendException::Error("Error value %d must %d (It is recommended to turn off method optimization)", index4, lMethodNum);
+#endif
+				}
+				else {//there were no calls
+					lMethodNum = pVariable2->FindMethod(funcName);
+					index4 = lMethodNum;
+					array4 = reinterpret_cast<wxLongLong_t>(pVariable2->GetRef());
+				}
+
+				if (lMethodNum < 0)
+					CheckAndError(variable2, funcName);
+
+				CRunContextSmall cRunContext(std::max(array3, MAX_STATIC_VAR));
+				cRunContext.m_lParamCount = array3;
+
+				// too many parameters
+				const long paramCount = pVariable2->GetNParams(lMethodNum);
+
+				if (paramCount < cRunContext.m_lParamCount)
+					CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+				else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
+					CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+
+				//load parameters
+				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
+					lCodeLine++;
+					if (index1 >= 0 && !pVariable2->GetParamDefValue(lMethodNum, i, *cRunContext.m_pRefLocVars[i])) {
+						if (variable1.m_bReadOnly && variable1.m_typeClass != eValueTypes::TYPE_REFFER) {
+							CopyValue(cRunContext.m_pLocVars[i], variable1);
+						}
+						else {
+							cRunContext.m_pRefLocVars[i] = &variable1;
 						}
 					}
-					lCodeLine = tryCodeLine - 1;//since we'll add 1 later
+				}
+
+				if (pVariable2->HasRetVal(lMethodNum)) {
+					pVariable2->CallAsFunc(lMethodNum, *pRetValue, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
+				}
+				else {
+					// operator =
+					if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET)
+						CBackendException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;
-				case OPER_TRY:
-					tryList.emplace_back(lCodeLine, index1);
-					break; //transition on error
-				case OPER_RAISE: CBackendException::Error(CBackendException::GetLastError()); break;
-				case OPER_RAISE_T: CBackendException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
-				case OPER_RET:
-					if (index1 != DEF_VAR_NORET) {
-						if (pvarRetValue == nullptr)
-							CBackendException::Error(_("Cannot set return value in procedure!"));
-						CopyValue(*pvarRetValue, variable1);
+			}
+			case OPER_CALL:
+			{ //call a regular function
+				const long lModuleNumber = array2;
+				CRunContext cRunContext(index3);
+				cRunContext.m_lStart = index2;
+				cRunContext.m_lParamCount = array3;
+				CByteCode* pLocalByteCode = m_ppArrayCode[lModuleNumber]->m_pByteCode;
+				cRunContext.m_compileContext = reinterpret_cast<CCompileContext*>(pLocalByteCode->m_listCode[cRunContext.m_lStart].m_param1.m_numArray);
+				CValue* pRetValue = &variable1;
+				//load parameters
+				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
+					lCodeLine++;
+					if (curCode.m_numOper == OPER_SETCONST) {
+						CopyValue(cRunContext.m_pLocVars[i], pLocalByteCode->m_listConst[index1]);
 					}
-				case OPER_ENDFUNC:
-				case OPER_END:
-					lCodeLine = lFinish;
-					break; //exit
-				case OPER_FUNC: if (bDelta) {
-					while (lCodeLine < lFinish) {
-						if (curCode.m_numOper != OPER_ENDFUNC) {
-							lCodeLine++;
+					else {
+						if (variable1.m_bReadOnly || index2 == 1) {//pass parameter by value
+							CopyValue(cRunContext.m_pLocVars[i], variable1);
 						}
-						else break;
+						else {
+							cRunContext.m_pRefLocVars[i] = &variable1;
+						}
 					}
-				} break; //this is the initial run - skip the bodies of procedures and functions
-				case OPER_SET_TYPE:
-					variable1.SetType(CValue::GetVTByID(array2));
-					break;
-					//Operators for working with typed data
-					//NUMBER
-				case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
-				case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
-				case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
-				case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
-				case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
-				case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
-				case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
-				case OPER_INVERT + TYPE_DELTA1: variable1.m_fData = -variable2.m_fData; break;
-				case OPER_EQ + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData == variable3.m_fData); break;
-				case OPER_NE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData != variable3.m_fData); break;
-				case OPER_GT + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData > variable3.m_fData); break;
-				case OPER_LS + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData < variable3.m_fData); break;
-				case OPER_GE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData >= variable3.m_fData); break;
-				case OPER_LE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData <= variable3.m_fData); break;
-				case OPER_SET_ARRAY + TYPE_DELTA1:
-					if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-						CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
-					break;//set array value
-				case OPER_GET_ARRAY + TYPE_DELTA1:
-					if (!GetArrayValue(variable1, variable2, variable3))
-						CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
-					break; //getting the array value
-				case OPER_IF + TYPE_DELTA1: if (variable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
-					//STRING
-				case OPER_ADD + TYPE_DELTA2: variable1.m_sData = variable2.m_sData + variable3.m_sData; break;
-				case OPER_LET + TYPE_DELTA2: variable1.m_sData = variable2.m_sData; break;
-				case OPER_SET_ARRAY + TYPE_DELTA2:
-					if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-						CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
-					break; //set array value
-				case OPER_GET_ARRAY + TYPE_DELTA2:
-					if (!GetArrayValue(variable1, variable2, variable3))
-						CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
-					break; //getting the array value
-				case OPER_IF + TYPE_DELTA2: if (variable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
-					//DATE
-				case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
-				case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
-				case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
-				case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
-				case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
-				case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
-				case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;
-				case OPER_INVERT + TYPE_DELTA3: variable1.m_dData = -variable2.m_dData; break;
-				case OPER_EQ + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData == variable3.m_dData); break;
-				case OPER_NE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData != variable3.m_dData); break;
-				case OPER_GT + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData > variable3.m_dData); break;
-				case OPER_LS + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData < variable3.m_dData); break;
-				case OPER_GE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData >= variable3.m_dData); break;
-				case OPER_LE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData <= variable3.m_dData); break;
-				case OPER_SET_ARRAY + TYPE_DELTA3:
-					if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-						CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
-					break; //setting the array value
-				case OPER_GET_ARRAY + TYPE_DELTA3:
-					if (!GetArrayValue(variable1, variable2, variable3))
-						CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
-					break; //getting the array value
-				case OPER_IF + TYPE_DELTA3: if (!variable1.m_dData) lCodeLine = index2 - 1; break;
-					//BOOLEAN
-				case OPER_ADD + TYPE_DELTA4: variable1.m_bData = variable2.m_bData + variable3.m_bData; break;
-				case OPER_LET + TYPE_DELTA4: variable1.m_bData = variable2.m_bData; break;
-				case OPER_NOT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
-				case OPER_INVERT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
-				case OPER_EQ + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData == variable3.m_bData); break;
-				case OPER_NE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData != variable3.m_bData); break;
-				case OPER_GT + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData > variable3.m_bData); break;
-				case OPER_LS + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData < variable3.m_bData); break;
-				case OPER_GE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData >= variable3.m_bData); break;
-				case OPER_LE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData <= variable3.m_bData); break;
-				case OPER_IF + TYPE_DELTA4: if (!variable1.m_bData) lCodeLine = index2 - 1; break;
+				}
+				m_ppArrayCode[lModuleNumber]->Execute(&cRunContext, pRetValue, false);
+				break;
+			}
+			case OPER_SET_ARRAY:
+				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
+					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				break; //setting the array value
+			case OPER_GET_ARRAY:
+				if (!GetArrayValue(variable1, variable2, variable3))
+					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				break; //getting the array value
+			case OPER_GOTO: case OPER_ENDTRY:
+			{
+				const long tryCodeLine = index1;
+				const long trySize = tryList.size() - 1;
+				if (trySize >= 0) {
+					if (tryCodeLine >= tryList[trySize].m_lEndLine ||
+						tryCodeLine <= tryList[trySize].m_lStartLine) {
+						tryList.resize(trySize);//exit from try..catch scope
+					}
+				}
+				lCodeLine = tryCodeLine - 1;//since we'll add 1 later
+			} break;
+			case OPER_TRY:
+				tryList.emplace_back(lCodeLine, index1);
+				break; //transition on error
+			case OPER_RAISE: CBackendException::Error(CBackendException::GetLastError()); break;
+			case OPER_RAISE_T: CBackendException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
+			case OPER_RET:
+				if (index1 != DEF_VAR_NORET) {
+					if (pvarRetValue == nullptr)
+						CBackendException::Error(_("Cannot set return value in procedure!"));
+					CopyValue(*pvarRetValue, variable1);
+				}
+			case OPER_ENDFUNC:
+			case OPER_END:
+				lCodeLine = lFinish;
+				break; //exit
+			case OPER_FUNC: if (bDelta) {
+				while (lCodeLine < lFinish) {
+					if (curCode.m_numOper != OPER_ENDFUNC) {
+						lCodeLine++;
+					}
+					else break;
+				}
+			} break; //this is the initial run - skip the bodies of procedures and functions
+			case OPER_SET_TYPE:
+				variable1.SetType(CValue::GetVTByID(array2));
+				break;
+				//Operators for working with typed data
+				//NUMBER
+			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
+			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
+			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
+			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
+			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
+			case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
+			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
+			case OPER_INVERT + TYPE_DELTA1: variable1.m_fData = -variable2.m_fData; break;
+			case OPER_EQ + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData == variable3.m_fData); break;
+			case OPER_NE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData != variable3.m_fData); break;
+			case OPER_GT + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData > variable3.m_fData); break;
+			case OPER_LS + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData < variable3.m_fData); break;
+			case OPER_GE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData >= variable3.m_fData); break;
+			case OPER_LE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData <= variable3.m_fData); break;
+			case OPER_SET_ARRAY + TYPE_DELTA1:
+				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
+					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				break;//set array value
+			case OPER_GET_ARRAY + TYPE_DELTA1:
+				if (!GetArrayValue(variable1, variable2, variable3))
+					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				break; //getting the array value
+			case OPER_IF + TYPE_DELTA1: if (variable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
+				//STRING
+			case OPER_ADD + TYPE_DELTA2: variable1.m_sData = variable2.m_sData + variable3.m_sData; break;
+			case OPER_LET + TYPE_DELTA2: variable1.m_sData = variable2.m_sData; break;
+			case OPER_SET_ARRAY + TYPE_DELTA2:
+				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
+					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				break; //set array value
+			case OPER_GET_ARRAY + TYPE_DELTA2:
+				if (!GetArrayValue(variable1, variable2, variable3))
+					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				break; //getting the array value
+			case OPER_IF + TYPE_DELTA2: if (variable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
+				//DATE
+			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
+			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
+			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
+			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
+			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
+			case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
+			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;
+			case OPER_INVERT + TYPE_DELTA3: variable1.m_dData = -variable2.m_dData; break;
+			case OPER_EQ + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData == variable3.m_dData); break;
+			case OPER_NE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData != variable3.m_dData); break;
+			case OPER_GT + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData > variable3.m_dData); break;
+			case OPER_LS + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData < variable3.m_dData); break;
+			case OPER_GE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData >= variable3.m_dData); break;
+			case OPER_LE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData <= variable3.m_dData); break;
+			case OPER_SET_ARRAY + TYPE_DELTA3:
+				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
+					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+				break; //setting the array value
+			case OPER_GET_ARRAY + TYPE_DELTA3:
+				if (!GetArrayValue(variable1, variable2, variable3))
+					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+				break; //getting the array value
+			case OPER_IF + TYPE_DELTA3: if (!variable1.m_dData) lCodeLine = index2 - 1; break;
+				//BOOLEAN
+			case OPER_ADD + TYPE_DELTA4: variable1.m_bData = variable2.m_bData + variable3.m_bData; break;
+			case OPER_LET + TYPE_DELTA4: variable1.m_bData = variable2.m_bData; break;
+			case OPER_NOT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
+			case OPER_INVERT + TYPE_DELTA4: variable1.m_bData = !variable2.m_bData; break;
+			case OPER_EQ + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData == variable3.m_bData); break;
+			case OPER_NE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData != variable3.m_bData); break;
+			case OPER_GT + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData > variable3.m_bData); break;
+			case OPER_LS + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData < variable3.m_bData); break;
+			case OPER_GE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData >= variable3.m_bData); break;
+			case OPER_LE + TYPE_DELTA4: variable1.m_bData = (variable2.m_bData <= variable3.m_bData); break;
+			case OPER_IF + TYPE_DELTA4: if (!variable1.m_bData) lCodeLine = index2 - 1; break;
 			}
 			lCodeLine++;
 		}
@@ -1095,14 +1120,10 @@ void CProcUnit::CallAsFunc(const long lCodeLine, CValue& pvarRetValue, CValue** 
 
 long CProcUnit::FindProp(const wxString& strPropName) const
 {
-	auto& it = std::find_if(m_pByteCode->m_listExportVar.begin(), m_pByteCode->m_listExportVar.end(),
-		[strPropName](const std::pair<const wxString, long>& pair)
-	{
-		return stringUtils::CompareString(strPropName, pair.first);
-	}
-	);
-	if (it != m_pByteCode->m_listExportVar.end())
-		return (long)it->second;
+	auto iterator = std::find_if(m_pByteCode->m_listExportVar.begin(), m_pByteCode->m_listExportVar.end(),
+		[strPropName](const auto pair) {return stringUtils::CompareString(strPropName, pair.first); });
+	if (iterator != m_pByteCode->m_listExportVar.end())
+		return (long)iterator->second;
 	return wxNOT_FOUND;
 }
 
@@ -1147,42 +1168,43 @@ bool CProcUnit::Evaluate(const wxString& strExpression, CRunContext* pRunContext
 {
 	if (pRunContext == nullptr)
 		pRunContext = CProcUnit::GetCurrentRunContext();
+
 	if (strExpression.IsEmpty() || pRunContext == nullptr)
 		return false;
+
 	bool isEvalMode = CBackendException::IsEvalMode();
 	if (!isEvalMode) CBackendException::SetEvalMode(true);
-	auto& it = std::find_if(pRunContext->m_listEval.begin(), pRunContext->m_listEval.end(),
-		[strExpression](std::pair<const wxString, CProcUnit*>& pair)
-	{
-		return stringUtils::CompareString(strExpression, pair.first);
-	}
-	);
-	CProcUnit* pRunEval = nullptr;
-	if (it == pRunContext->m_listEval.end()) { //this text has not yet been compiled
-		CCompileCode* compileCode = new CCompileCode;
-		compileCode->Load(strExpression);
-		CProcUnit* simpleRun = new CProcUnit;
 
-		if (!simpleRun->CompileExpression(pRunContext, pvarRetValue, *compileCode, ñompileBlock)) {
+	auto iterator = std::find_if(pRunContext->m_listEval.begin(), pRunContext->m_listEval.end(),
+		[strExpression](const auto pair) {return stringUtils::CompareString(strExpression, pair.first); });
+
+	std::shared_ptr<CProcUnitEvaluate> runEvaluate = nullptr;
+	if (iterator == pRunContext->m_listEval.end()) { //this text has not yet been compiled
+
+		CCompileCode* compileExpression = new CCompileCode;
+		compileExpression->Load(strExpression);
+
+		CProcUnitEvaluate* evalUnit = new CProcUnitEvaluate;
+		if (!evalUnit->CompileExpression(pRunContext, pvarRetValue, *compileExpression, ñompileBlock)) {
 			//delete from memory
-			wxDELETE(simpleRun);
-			wxDELETE(compileCode);
+			wxDELETE(evalUnit);
+			wxDELETE(compileExpression);
 			if (!isEvalMode) CBackendException::SetEvalMode(false);
 			return false;
 		}
 
-		//everything is OK
-		pRunContext->m_listEval.insert_or_assign(
-			stringUtils::MakeUpper(strExpression), simpleRun
-		);
+		runEvaluate = std::shared_ptr<CProcUnitEvaluate>(evalUnit);
 
-		pRunEval = simpleRun;
+		//everything is OK
+		pRunContext->m_listEval.insert_or_assign(stringUtils::MakeUpper(strExpression), runEvaluate);
 	}
 	else {
-		pRunEval = it->second;
+		runEvaluate = iterator->second;
 	}
+
 	//Launch
 	bool bDelta = false;
+
 	CCompileContext* compileContext = pRunContext->m_compileContext;
 	wxASSERT(compileContext);
 	CCompileCode* compileCode = compileContext->m_compileModule;
@@ -1200,18 +1222,18 @@ bool CProcUnit::Evaluate(const wxString& strExpression, CRunContext* pRunContext
 			bDelta = true;
 		}
 	}
-	else {
-		if (compileContext->m_numReturn == RETURN_NONE) {
-			bDelta = true;
-		}
+	else if (compileContext->m_numReturn == RETURN_NONE) {
+		bDelta = true;
 	}
+
 	try {
-		pRunEval->Execute(&pRunEval->m_cCurContext, &pvarRetValue, bDelta);
+		runEvaluate->Execute(&runEvaluate->m_cCurContext, &pvarRetValue, bDelta);
 	}
 	catch (const CBackendException*) {
 		if (!isEvalMode) CBackendException::SetEvalMode(false);
 		return false;
 	}
+
 	if (!isEvalMode) CBackendException::SetEvalMode(false);
 	return true;
 }
@@ -1300,6 +1322,17 @@ bool CProcUnit::CompileExpression(CRunContext* pRunContext, CValue& pvarRetValue
 	}
 
 	return true;
+}
+
+//////////////////////////////////////////////////////////////////////
+//						Construction/Destruction                    //
+//////////////////////////////////////////////////////////////////////
+
+CProcUnitEvaluate::~CProcUnitEvaluate()
+{
+	if (m_pByteCode != nullptr) {
+		delete m_pByteCode->m_compileModule;
+	}
 }
 
 //**********************************************************************

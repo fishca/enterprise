@@ -5,7 +5,10 @@
 
 struct CCompileContext;
 
-struct CVariable {
+struct CVariable
+{
+	CVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
+	CVariable(const wxString& strVariableName) : m_strName(strVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
 
 	bool m_bExport;
 	bool m_bContext;
@@ -15,30 +18,34 @@ struct CVariable {
 	wxString m_strType; // Value type
 	wxString m_strContextVar; // Context variable name
 	wxString m_strRealName; // Real variable name
-
-public:
-
-	CVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {};
-	CVariable(const wxString& sVariableName) : m_strName(sVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {};
 };
 
-struct CParamVariable {
+struct CParamVariable
+{
+	CParamVariable() : m_bByRef(false) {
+		m_valData.m_numArray = -1;
+		m_valData.m_numIndex = -1;
+	}
 
 	bool m_bByRef;
 	wxString m_strName; // Variable name
 	wxString m_strType; // Value type
 	CParamUnit m_valData; // Default value
-
-public:
-
-	CParamVariable() : m_bByRef(false) {
-		m_valData.m_numArray = -1;
-		m_valData.m_numIndex = -1;
-	};
 };
 
 //function definition
-struct CFunction {
+struct CFunction
+{
+	CFunction(const wxString& funcName, CCompileContext* compileContext = nullptr) :
+		m_strName(funcName),
+		m_compileContext(compileContext),
+		m_bExport(false),
+		m_bContext(false),
+		m_lVarCount(0), m_nStart(0), m_nFinish(0), m_numLine(0)
+	{
+		m_realRetValue.m_numArray = 0;
+		m_realRetValue.m_numIndex = 0;
+	}
 
 	bool m_bExport, m_bContext;
 
@@ -62,53 +69,20 @@ struct CFunction {
 	wxString m_strContextVar; //name of the context variable
 
 	std::vector<CParamVariable> m_listParam;
-
-public:
-
-	CFunction(const wxString& funcName, CCompileContext* compileContext = nullptr);
-	~CFunction();
 };
 
-struct CLabel {
-	int		 m_numLine;
-	int		 m_numError;
+struct CLabel
+{
+	int		 m_numLine = 0;
+	int		 m_numError = 0;
 	wxString m_strName;
 };
 
 struct CCompileContext {
 
-	CFunction* m_functionContext;
-	CCompileContext* m_parentContext; //parent context
-	CCompileCode* m_compileModule;
-
-	//VARIABLES
-	std::map <wxString, CVariable> m_listVariable;
-
-	int m_numTempVar;//current temporary variable number
-	int m_numFindLocalInParent;//flag for searching variables in the parent (one level up), in other cases only export variables are searched in parents)
-
-	//FUNCTIONS AND PROCEDURES
-	std::map<wxString, CFunction*> m_listFunction; //list of encountered function definitions
-
-	short m_numReturn;//RETURN operator processing mode: RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
-	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
-
-	//LOOPS
-	//Service attributes
-	unsigned short m_numDoNumber;//nested loop number
-
-	std::map<unsigned short, std::vector<int>*> m_listContinue;//addresses of Continue operators
-	std::map<unsigned short, std::vector<int>*> m_listBreak;//addresses of Break operators
-
-	//LABELS
-	std::map<wxString, unsigned int> m_listLabelDef; //declarations
-	std::vector <CLabel> m_listLabel; //list of encountered transitions to labels
-
-public:
-
 	//Setting jump addresses for Continue and Break commands
 	void StartDoList() {
-	
+
 		//create lists for Continue and Break commands (they will store the addresses of byte codes where the corresponding commands were encountered)
 		m_numDoNumber++;
 		m_listContinue[m_numDoNumber] = new std::vector<int>();
@@ -143,21 +117,47 @@ public:
 	void DoLabels();
 
 	void SetModule(CCompileCode* module) { m_compileModule = module; }
-	void SetFunction(CFunction* function) { m_functionContext = function; }
 
 	CParamUnit CreateVariable(const wxString strPrefix = wxT("@temp_"));
 	CParamUnit AddVariable(const wxString& strVarName, const wxString& strType = wxEmptyString, bool bExport = false, bool bContext = false, bool bTempVar = false);
 	CParamUnit GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, bool bContext = false, bool bTempVar = false);
 
-	bool FindVariable(const wxString& strVarName, CVariable*& foundedVar, bool context = false);
-	bool FindFunction(const wxString& funcName, CFunction*& foundedFunc, bool context = false);
+	bool FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool context = false);
+	bool FindFunction(const wxString& funcName, std::shared_ptr<CFunction>& foundedFunc, bool context = false);
 
-	CCompileContext(CCompileContext* parentContext = nullptr) : 
+	CCompileContext(CCompileContext* parentContext = nullptr) :
 		m_parentContext(parentContext), m_functionContext(nullptr), m_compileModule(nullptr),
 		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
-	};
+	}
 
-	virtual ~CCompileContext();
+	CCompileCode* m_compileModule;
+	CCompileContext* m_parentContext; //parent context
+
+	//current context 
+	std::shared_ptr<CFunction> m_functionContext;
+
+	//VARIABLES
+	std::map<wxString, std::shared_ptr<CVariable>> m_listVariable;
+
+	int m_numTempVar;//current temporary variable number
+	int m_numFindLocalInParent;//flag for searching variables in the parent (one level up), in other cases only export variables are searched in parents)
+
+	//FUNCTIONS AND PROCEDURES
+	std::map<wxString, std::shared_ptr<CFunction>> m_listFunction; //list of encountered function definitions
+
+	short m_numReturn;//RETURN operator processing mode: RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
+	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
+
+	//LOOPS
+	//Service attributes
+	unsigned short m_numDoNumber;//nested loop number
+
+	std::map<unsigned short, std::vector<int>*> m_listContinue;//addresses of Continue operators
+	std::map<unsigned short, std::vector<int>*> m_listBreak;//addresses of Break operators
+
+	//LABELS
+	std::map<wxString, unsigned int> m_listLabelDef; //declarations
+	std::vector<std::shared_ptr<CLabel>> m_listLabel; //list of encountered transitions to labels
 };
 
 #endif

@@ -95,7 +95,7 @@ CCodeEditor::~CCodeEditor()
 	IModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
 		CCompileModule* compileModule = dataRef->GetCompileModule();
-		if (compileModule != nullptr) compileModule->ResizeLexem();
+		if (compileModule != nullptr) compileModule->ClearLexem();
 	}
 
 	wxDELETE(m_precompileModule);

@@ -31,6 +31,8 @@ CRoleEditor::CRoleEditor(wxWindow* parent,
 	wxSplitterWindow::SplitVertically(m_roleCtrl, m_checkCtrl,
 		250);
 
+	m_roleCtrl->SelectItem(m_treeMETADATA);
+
 	wxSplitterWindow::SetSizer(mainSizer);
 	wxSplitterWindow::Layout();
 }
@@ -100,8 +102,6 @@ void CRoleEditor::InitRole()
 	wxImageList* imageList = m_roleCtrl->GetImageList();
 	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 	m_treeMETADATA = m_roleCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(commonMetaData->GetCommonMetaObject()));
-
-	m_roleCtrl->SelectItem(m_treeMETADATA);
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *

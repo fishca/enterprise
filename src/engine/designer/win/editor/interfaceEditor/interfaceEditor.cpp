@@ -19,6 +19,9 @@ CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	mainSizer->Add(m_interfaceCtrl, 1, wxEXPAND);
+		
+	m_interfaceCtrl->SelectItem(m_treeMETADATA);
+
 	wxWindow::SetSizer(mainSizer);
 	wxWindow::Layout();
 }
@@ -59,8 +62,6 @@ void CInterfaceEditor::InitInterface()
 	wxImageList* imageList = m_interfaceCtrl->GetImageList();
 	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(commonMetaData->GetCommonMetaObject()));
-
-	m_interfaceCtrl->SelectItem(m_treeMETADATA);
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *

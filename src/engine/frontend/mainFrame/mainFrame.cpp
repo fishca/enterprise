@@ -13,15 +13,6 @@
 #include "frontend/win/theme/luna_tabart.h"
 #include "frontend/win/theme/luna_dockart.h"
 
-#include <wx/artprov.h>
-#include <wx/config.h>
-#include <wx/clipbrd.h>
-#include <wx/cmdproc.h>
-
-#include <wx/ffile.h>
-#include <wx/tokenzr.h>
-#include <wx/sysopt.h>
-
 //***********************************************************************************
 //*                                 mainFrame                                       *
 //***********************************************************************************
@@ -37,16 +28,35 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 	}
 }
 
+#include <wx/display.h>
+
 bool CDocMDIFrame::ShowFrame()
 {
 	if (s_instance == nullptr)
 		return false;
 
 	if (!s_instance->IsShown()) {
+
+		// Get the primary display
+		wxDisplay display;
+
+		// Get the PPI (pixels per inch)
+		const wxRect clientArea = display.GetClientArea();
+
+		s_instance->SetSize(
+			clientArea.GetWidth() - 100, 
+			clientArea.GetHeight() - 100
+		);
+		
 		s_instance->SetFocus();
-		s_instance->Raise();
-		s_instance->Maximize();
-		return s_instance->Show();
+		s_instance->Center();
+
+		if (s_instance->Show()) {
+			s_instance->Raise();
+			return true;
+		}
+
+		return false;
 	}
 
 	return false;

@@ -32,14 +32,14 @@ bool CDebuggerClient::Initialize()
 	sm_debugClient->LoadBreakpointCollection();
 
 	unsigned int debugOffsetPort = 0;
-	while (debugOffsetPort < diapasonDebuggerPort) {	
+	while (debugOffsetPort < diapasonDebuggerPort) {
 		sm_debugClient->CreateConnection(
-			defaultHost, 
+			defaultHost,
 			defaultDebuggerPort + debugOffsetPort
 		);
 		debugOffsetPort++;
 	}
-	
+
 	return true;
 }
 
@@ -527,19 +527,10 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 		bool connected = m_socketClient->Connect(addr, false);
 
-		while (!TestDestroy()) {
+		if (!connected && m_socketClient->Wait())
+			connected = m_socketClient->IsConnected();
 
-			if (m_socketClient->WaitForLost(0, waitDebuggerTimeout)) {
-				connected = false;
-				break;
-			}
-			else if (m_socketClient->WaitOnConnect(0, waitDebuggerTimeout)) {
-				connected = m_socketClient->IsConnected();
-				break;
-			}
-		}
-
-		if (connected) {
+		if (!TestDestroy() && connected) {
 
 			///////////////////////////////////////////////////////////////////////
 			CMemoryWriter commandChannel;
@@ -548,7 +539,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 			///////////////////////////////////////////////////////////////////////
 
 			unsigned int length = 0;
-	
+
 			while (CDebuggerThreadClient::IsConnected()) {
 
 				if (m_verifiedConnection) break;
@@ -619,8 +610,10 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 			wxMilliSleep(waitDebuggerTimeout);
 		}
 
+		if (m_connectionType != ConnectionType::ConnectionType_Unknown)
+			m_connectionType = ConnectionType::ConnectionType_Scanner;
+
 		m_verifiedConnection = false;
-		if (m_connectionType != ConnectionType::ConnectionType_Unknown) m_connectionType = ConnectionType::ConnectionType_Scanner;
 	}
 
 	m_socketClient->Close();

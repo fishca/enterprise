@@ -288,6 +288,8 @@ enum prop
 
 void CRecordSetObjectInformationRegister::PrepareNames() const
 {
+	m_methodHelper->ClearHelper();
+
 	m_methodHelper->AppendFunc("add", "add()");
 	m_methodHelper->AppendFunc("count", "count()");
 	m_methodHelper->AppendFunc("clear", "clear()");
@@ -306,6 +308,7 @@ void CRecordSetObjectInformationRegister::PrepareNames() const
 void CRecordManagerObjectInformationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
+
 	m_methodHelper->AppendFunc("copy", "copy()");
 	m_methodHelper->AppendFunc("write", 1, "write(replace)");
 	m_methodHelper->AppendFunc("delete", "delete()");

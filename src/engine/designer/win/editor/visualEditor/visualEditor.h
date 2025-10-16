@@ -763,23 +763,20 @@ public:
 			m_codeEditor->RefreshEditor();
 	}
 
-	virtual	CValueForm* GetValueForm() const {
-		return m_visualEditor->GetValueForm();
-	}
+	virtual	CValueForm* GetValueForm() const { return m_visualEditor->GetValueForm(); }
+	virtual	CMetaDocument* GetEditorDocument() const { return m_visualEditor->GetEditorDocument(); }
+	virtual IVisualHost* GetVisualHost() const { return m_visualEditor->GetVisualEditor(); }
 
-	virtual	CMetaDocument* GetEditorDocument() const {
-		return m_visualEditor->GetEditorDocument();
-	}
-
-	virtual IVisualHost* GetVisualHost() const {
-		return m_visualEditor->GetVisualEditor();
-	}
-
-	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const {
-		return new CDesignerWindow::CHighlightPaintHandler(wnd);
-	}
+	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const { return new CDesignerWindow::CHighlightPaintHandler(wnd); }
 
 protected:
+	//A general selection function
+	virtual int DoModifySelection(size_t n, bool events) override {
+		wxAuiNotebook::Freeze();
+		const int selection = wxAuiNotebook::DoModifySelection(n, events);
+		wxAuiNotebook::Thaw();
+		return selection;
+	}
 	void OnPageChanged(wxAuiNotebookEvent& event);
 private:
 	CVisualEditor* m_visualEditor;

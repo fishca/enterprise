@@ -41,13 +41,7 @@ class FRONTEND_API CDocMDIFrame :
 	public wxDocParentFrameAnyBase {
 public:
 
-	static wxWindow* CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
-
 	virtual wxMenu* GetDefaultMenu(int idMenu) const { return nullptr; }
-
-	KeyBinder             GetKeyBinder() const { return m_keyBinder; }
-	FontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
-	EditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	virtual void CreateGUI() = 0;
 
@@ -91,6 +85,8 @@ public:
 	virtual void SetMenuBar(wxMenuBar* pMenuBar) override;
 #endif // wxUSE_MENUS
 
+	virtual wxAuiMDIClientWindow* OnCreateClient() override;
+
 	// bring window to front
 	virtual void Raise() override;
 
@@ -107,8 +103,6 @@ protected:
 		// before our own TryProcessEvent() is executed, not afterwards.
 		return wxAuiMDIParentFrame::TryBefore(event) || TryProcessEvent(event);
 	}
-
-protected:
 
 	virtual bool AllowRun() const { return true; }
 	virtual bool AllowClose() const { return true; }
@@ -129,6 +123,9 @@ public:
 
 	virtual ~CDocMDIFrame();
 
+	static wxWindow* CreateChildFrame(CMetaView* view,
+		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
+
 	static CObjectInspector* GetObjectInspector() {
 		if (s_instance != nullptr)
 			return s_instance->m_objectInspector;
@@ -142,6 +139,10 @@ public:
 	static bool ShowFrame();
 
 	static void DestroyFrame();
+
+	KeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	FontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	EditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	/**
 	* Show property in mainFrame

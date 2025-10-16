@@ -78,16 +78,16 @@ void IMetaDataTree::Modify(bool modify)
 bool IMetaDataTree::OpenFormMDI(IMetaObject* obj)
 {
 	CMetaDocument* foundedDoc = GetDocument(obj);
-	//не найден в списке уже существующих
+	//not found in the list of existing ones
 	if (foundedDoc == nullptr) {
 		foundedDoc = docManager->OpenFormMDI(obj, m_docParent, m_bReadOnly ? wxDOC_READONLY : wxDOC_NEW);
-		//Значит, подходящего шаблона не было! 
-		if (foundedDoc != nullptr) {
+		//So there was no suitable template!
+		if (foundedDoc != nullptr)
 			return true;
-		}
 	}
 	else {
-		foundedDoc->Activate();
+		wxWindow* docWindow = foundedDoc->GetDocumentWindow();
+		if (docWindow != nullptr) docWindow->Raise();
 		return true;
 	}
 
@@ -98,19 +98,19 @@ bool IMetaDataTree::OpenFormMDI(IMetaObject* obj, IBackendMetaDocument*& doc)
 {
 	CMetaDocument* foundedDoc = GetDocument(obj);
 
-	//не найден в списке уже существующих
+	//not found in the list of existing ones
 	if (foundedDoc == nullptr) {
 		foundedDoc = docManager->OpenFormMDI(obj, m_docParent, m_bReadOnly ? wxDOC_READONLY : wxDOC_NEW);
-		//Значит, подходящего шаблона не было! 
+		//So there was no suitable template!
 		if (foundedDoc != nullptr) {
 			doc = foundedDoc;
-			foundedDoc->Activate();
 			return true;
 		}
 	}
 	else {
+		wxWindow* docWindow = foundedDoc->GetDocumentWindow();
+		if (docWindow != nullptr) docWindow->Raise();
 		doc = foundedDoc;
-		foundedDoc->Activate();
 		return true;
 	}
 
@@ -121,7 +121,7 @@ bool IMetaDataTree::CloseFormMDI(IMetaObject* obj)
 {
 	CMetaDocument* foundedDoc = GetDocument(obj);
 
-	//не найден в списке уже существующих
+	//not found in the list of existing ones
 	if (foundedDoc != nullptr) {
 		objectInspector->SelectObject(obj, this);
 		if (foundedDoc->Close()) {
@@ -154,7 +154,7 @@ CMetaDocument* IMetaDataTree::GetDocument(IMetaObject* obj) const
 
 void IMetaDataTree::EditModule(const wxString& fullName, int lineNumber, bool setRunLine)
 {
-	IMetaData* metaData = GetMetaData();
+	const IMetaData* metaData = GetMetaData();
 	if (metaData == nullptr)
 		return;
 
@@ -166,13 +166,14 @@ void IMetaDataTree::EditModule(const wxString& fullName, int lineNumber, bool se
 	if (m_bReadOnly)
 		return;
 
-	IBackendMetaDocument* foundedDoc = nullptr;
-	if (OpenFormMDI(metaObject, foundedDoc)) {
-		IModuleDocument* moduleDoc = static_cast<IModuleDocument*>(foundedDoc);
-		if (moduleDoc != nullptr) {
-			moduleDoc->SetCurrentLine(lineNumber, setRunLine);
-		}
-	}
+	CMetaDocument* foundedDoc = GetDocument(metaObject);
+
+	//not found in the list of existing ones
+	if (foundedDoc == nullptr)
+		foundedDoc = docManager->OpenFormMDI(metaObject, m_docParent, m_bReadOnly ? wxDOC_READONLY : wxDOC_NEW);
+
+	IModuleDocument* moduleDoc = static_cast<IModuleDocument*>(foundedDoc);
+	if (moduleDoc != nullptr) moduleDoc->SetCurrentLine(lineNumber, setRunLine);
 }
 
 //***********************************************************************

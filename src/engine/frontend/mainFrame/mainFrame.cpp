@@ -44,10 +44,10 @@ bool CDocMDIFrame::ShowFrame()
 		const wxRect clientArea = display.GetClientArea();
 
 		s_instance->SetSize(
-			clientArea.GetWidth() - 100, 
+			clientArea.GetWidth() - 100,
 			clientArea.GetHeight() - 100
 		);
-		
+
 		s_instance->SetFocus();
 		s_instance->Center();
 
@@ -164,6 +164,27 @@ void CDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 	wxFrame::SetMenuBar(pMenuBar);
 }
 #endif // wxUSE_MENUS
+
+wxAuiMDIClientWindow* CDocMDIFrame::OnCreateClient()
+{
+	class wxAuiMDIClientWindowImpl : public wxAuiMDIClientWindow {
+	public:
+		wxAuiMDIClientWindowImpl() : wxAuiMDIClientWindow() {}
+		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {}
+	
+	protected:
+
+		//A general selection function
+		virtual int DoModifySelection(size_t n, bool events) {
+			wxAuiNotebook::Freeze();
+			const int selection = wxAuiNotebook::DoModifySelection(n, events);
+			wxAuiNotebook::Thaw();
+			return selection;
+		}
+	};
+
+	return new wxAuiMDIClientWindowImpl(this);
+}
 
 // bring window to front
 void CDocMDIFrame::Raise()

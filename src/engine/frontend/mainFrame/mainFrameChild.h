@@ -200,8 +200,6 @@ protected:
 		wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 		wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
 
-		bool success = false;
-
 		wxAuiMDIClientWindow* pClientWindow = pParentFrame->GetClientWindow();
 		wxASSERT_MSG(pClientWindow, wxT("Missing MDI Client Window"));
 
@@ -211,6 +209,8 @@ protected:
 			// deactivate ourself
 			pParentFrame->SetChildMenuBar(nullptr);
 		}
+
+		bool success_destroy = false;
 
 		if (m_docManager != nullptr) {
 
@@ -268,18 +268,13 @@ protected:
 				}
 			}
 
-			if (doc != nullptr) doc->Activate();
+			if (doc != nullptr) {
+				wxWindow* docWindow = doc->GetDocumentWindow();
+				if (docWindow != nullptr) docWindow->Raise();	
+			}
 		}
 
 		wxAuiTabCtrl* tabCtrl = nullptr; int page_tab_idx = 0;
-
-		if (pParentFrame->GetActiveChild() == this && pClientWindow->GetPageCount() <= 1) {
-			// deactivate ourself
-			wxActivateEvent event(wxEVT_ACTIVATE, false, GetId());
-			event.SetEventObject(this);
-			GetEventHandler()->ProcessEvent(event);
-		}
-
 		if (pClientWindow->FindTab(this, &tabCtrl, &page_tab_idx)) {
 
 			// state the window hidden to prevent flicker
@@ -292,7 +287,7 @@ protected:
 			pClientWindow->SetEvtHandlerEnabled(false);
 
 			const int page_idx = pClientWindow->GetPageIndex(this);
-			success = page_idx != wxNOT_FOUND ?
+			success_destroy = page_idx != wxNOT_FOUND ?
 				pClientWindow->DeletePage(page_idx) : false;
 
 			const int restore_selection = pClientWindow->GetPageIndex(new_active);
@@ -305,7 +300,7 @@ protected:
 
 		pClientWindow->Thaw();
 
-		return success;
+		return success_destroy;
 	}
 
 #if __WXMSW__

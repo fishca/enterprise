@@ -58,21 +58,6 @@ protected:
 
 	class BACKEND_API CDebuggerThreadClient : public wxThread {
 		friend class CDebuggerClient;
-	private:
-		bool			m_verifiedConnection;
-
-		wxString		m_hostName;
-		unsigned short	m_port;
-
-		wxSocketClient* m_socketClient;
-
-		wxString		m_confGuid;
-		wxString		m_md5Hash;
-		wxString		m_userName;
-		wxString		m_compName;
-
-		ConnectionType	m_connectionType;
-
 	public:
 
 		bool IsConnected() const {
@@ -127,6 +112,21 @@ protected:
 
 		void RecvCommand(void* pointer, unsigned int length);
 		void SendCommand(void* pointer, unsigned int length);
+
+	private:
+		bool			m_verifiedConnection;
+
+		wxString		m_hostName;
+		unsigned short	m_port;
+
+		wxSocketClient* m_socketClient;
+
+		wxString		m_confGuid;
+		wxString		m_md5Hash;
+		wxString		m_userName;
+		wxString		m_compName;
+
+		ConnectionType	m_connectionType;
 	};
 
 	CDebuggerClient() :

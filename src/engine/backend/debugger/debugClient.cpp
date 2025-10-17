@@ -521,7 +521,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 	addr.Service(m_port);
 
 	// set the appropriate flags for the socket
-	m_socketClient = new wxSocketClient(wxSOCKET_WAITALL | wxSOCKET_BLOCK);
+	m_socketClient = new wxSocketClient(wxSOCKET_BLOCK);
 
 	while (!TestDestroy()) {
 

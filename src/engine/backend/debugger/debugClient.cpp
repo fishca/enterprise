@@ -521,12 +521,11 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 	addr.Service(m_port);
 
 	// set the appropriate flags for the socket
-	m_socketClient = new wxSocketClient(wxSOCKET_BLOCK);
+	m_socketClient = new wxSocketClient(wxSOCKET_BLOCK | wxSOCKET_WAITALL);
 
 	while (!TestDestroy()) {
 
 		bool connected = m_socketClient->Connect(addr, false);
-
 		if (!connected && m_socketClient->Wait())
 			connected = m_socketClient->IsConnected();
 

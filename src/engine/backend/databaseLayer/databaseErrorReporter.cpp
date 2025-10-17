@@ -33,7 +33,7 @@ void CDatabaseErrorReporter::SetErrorCode(int nErrorCode)
 
 void CDatabaseErrorReporter::ResetErrorCodes()
 {
-	m_strErrorMessage = _("");
+	m_strErrorMessage.Clear();
 	m_nErrorCode = DATABASE_LAYER_OK;
 }
 

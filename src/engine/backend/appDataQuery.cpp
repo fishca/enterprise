@@ -9,7 +9,7 @@
 #define timeInterval 5
 ///////////////////////////////////////////////////////////////////////////////
 
-wxCriticalSection CApplicationData::CApplicationDataSessionUpdater::sm_sessionLocker;
+wxCriticalSection CApplicationData::CApplicationDataSessionUpdater::ms_sessionLocker;
 
 ///////////////////////////////////////////////////////////////////////////////
 //								CApplicationDataSessionUpdater
@@ -38,6 +38,10 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_ClearLostSession()
 	);
 
 	m_session_db->Commit();
+
+	if (dbResultSetRecord != nullptr)
+		dbResultSetRecord->Close();
+
 	m_session_db->CloseResultSet(dbResultSetRecord);
 }
 
@@ -82,11 +86,18 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_CalcActiveSession()
 
 		dbSessionPrepareData->RunQuery();
 
+		if (dbSessionPrepareData != nullptr)
+			dbSessionPrepareData->Close();
+
 		m_session_db->CloseStatement(dbSessionPrepareData);
 	}
 
-	m_session_db->CloseResultSet(dbSessionCountResult);
 	m_session_db->Commit();
+
+	if (dbSessionCountResult != nullptr)
+		dbSessionCountResult->Close();
+
+	m_session_db->CloseResultSet(dbSessionCountResult);
 }
 
 void CApplicationData::CApplicationDataSessionUpdater::Job_UpdateActiveSession()
@@ -98,25 +109,21 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_UpdateActiveSession()
 		session_table
 	);
 
-	wxCriticalSectionLocker enter(sm_sessionLocker);
+	wxCriticalSectionLocker enter(ms_sessionLocker);
 
 	if (dbSessionResult != nullptr) {
-
-		CApplicationDataSessionArray sessionArray;
-
+		m_sessionArray.ClearSession();
 		while (dbSessionResult->Next()) {
-
-			sessionArray.AppendSession(
+			m_sessionArray.AppendSession(
 				static_cast<eRunMode>(dbSessionResult->GetResultInt("application")),
 				dbSessionResult->GetResultDate("started"),
 				dbSessionResult->GetResultString("userName"),
 				dbSessionResult->GetResultString("computer"),
 				dbSessionResult->GetResultString("session")
 			);
-		};
+		}
 
-		if (m_sessionArray != sessionArray)
-			m_sessionArray = sessionArray;
+		dbSessionResult->Close();
 	}
 
 	m_session_db->CloseResultSet(dbSessionResult);
@@ -124,7 +131,7 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_UpdateActiveSession()
 
 void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 {
-	wxCriticalSectionLocker enter(sm_sessionLocker);
+	wxCriticalSectionLocker enter(ms_sessionLocker);
 
 	m_session_db->BeginTransaction();
 
@@ -143,8 +150,12 @@ void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 		currentTime.Subtract(wxTimeSpan(0, 0, timeInterval)).FormatISOCombined(' ')
 	);
 
-	m_session_db->CloseResultSet(dbResultSetRecord);
 	m_session_db->Commit();
+
+	if (dbResultSetRecord != nullptr)
+		dbResultSetRecord->Close();
+
+	m_session_db->CloseResultSet(dbResultSetRecord);
 
 	//clear session 
 	m_sessionArray.ClearSession();
@@ -157,9 +168,7 @@ void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 	);
 
 	if (dbSessionResult != nullptr) {
-
 		while (dbSessionResult->Next()) {
-
 			m_sessionArray.AppendSession(
 				static_cast<eRunMode>(dbSessionResult->GetResultInt("application")),
 				dbSessionResult->GetResultDate("started"),
@@ -167,7 +176,8 @@ void CApplicationData::CApplicationDataSessionUpdater::ClearLostSessionUpdater()
 				dbSessionResult->GetResultString("computer"),
 				dbSessionResult->GetResultString("session")
 			);
-		};
+		}
+		dbSessionResult->Close();
 	}
 
 	m_session_db->CloseResultSet(dbSessionResult);
@@ -210,7 +220,7 @@ void CApplicationData::CApplicationDataSessionUpdater::StartSessionUpdater()
 
 const CApplicationDataSessionArray CApplicationData::CApplicationDataSessionUpdater::GetSessionArray() const
 {
-	wxCriticalSectionLocker enter(sm_sessionLocker);
+	wxCriticalSectionLocker enter(ms_sessionLocker);
 	return m_sessionArray;
 }
 
@@ -223,7 +233,7 @@ bool CApplicationData::CApplicationDataSessionUpdater::VerifySessionUpdater() co
 
 			try {
 				CBackendException::Error(
-					_("Another designer process is already running:\n%s, %s, %s"),		
+					_("Another designer process is already running:\n%s, %s, %s"),
 					m_sessionArray.GetStartedDate(idx),
 					m_sessionArray.GetComputerName(idx),
 					m_sessionArray.GetUserName(idx)
@@ -263,7 +273,8 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 		session_table
 	);
 
-	if (dbSessionPrepareData == nullptr) return (wxThread::ExitCode)1;
+	if (dbSessionPrepareData == nullptr)
+		return (wxThread::ExitCode)1;
 
 	dbSessionPrepareData->SetParamString(1, m_session.str());
 	dbSessionPrepareData->SetParamString(2, wxEmptyString); //empty user!
@@ -276,45 +287,25 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 	dbSessionPrepareData->Close();
 
 	m_sessionArray.AppendSession(
-		appData->m_runMode,
-		appData->m_startedDate,
-		appData->m_strUserIB,
-		appData->m_strComputer,
-		m_session
+		appData->m_runMode, appData->m_startedDate, appData->m_strUserIB, appData->m_strComputer, m_session.str()
 	);
 
-	m_session_db->CloseStatement(dbSessionPrepareData);
+	if (dbSessionPrepareData != nullptr)
+		dbSessionPrepareData->Close();
 
+	m_session_db->CloseStatement(dbSessionPrepareData);
 	m_sessionCreated = true;
 
 	bool lastSessionStarted = m_sessionStarted;
-
 	while (!TestDestroy()) {
 
-		m_currentDateTime = wxDateTime::UNow();
+		m_currentDateTime = std::move(wxDateTime::UNow());
 
-		{
-			Job_ClearLostSession();
-		}
+		Job_ClearLostSession();
+		Job_CalcActiveSession();
+		Job_UpdateActiveSession();
 
-		const wxTimeSpan& job_ClearLostSession_done = wxDateTime::UNow() - m_currentDateTime;
-
-		{
-			Job_CalcActiveSession();
-		}
-
-		const wxTimeSpan& job_CalcActiveSession_done = wxDateTime::UNow() - m_currentDateTime -
-			job_ClearLostSession_done;
-
-		{
-			Job_UpdateActiveSession();
-		}
-
-		const wxTimeSpan& job_UpdateActiveSession_done = wxDateTime::UNow() - m_currentDateTime -
-			job_ClearLostSession_done - job_CalcActiveSession_done;
-
-		const wxTimeSpan& job_allTotal_done =
-			wxDateTime::UNow() - m_currentDateTime;
+		const wxTimeSpan& job_allTotal_done = wxDateTime::UNow() - m_currentDateTime;
 
 		for (unsigned int milliseconds =
 			job_allTotal_done.GetMilliseconds().GetValue();
@@ -452,6 +443,9 @@ bool CApplicationData::HasAllowedUser() const
 	if (dbUserResult == nullptr) return false;
 	bool hasUsers = false;
 	if (dbUserResult->Next()) hasUsers = true;
+
+	if (dbUserResult != nullptr)
+		dbUserResult->Close();
 	db_query->CloseResultSet(dbUserResult);
 	return hasUsers;
 }
@@ -461,25 +455,28 @@ bool CApplicationData::HasAllowedUser() const
 bool CApplicationData::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
 {
 	if (!HasAllowedUser()) return true;
-	
+
 	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
 		wxT("SELECT * FROM %s WHERE name = '%s';"),
 		user_table, userName
 	);
-	
-	if (dbUserResult == nullptr) return false;
 
-	bool succes = false; 
+	if (dbUserResult == nullptr)
+		return false;
+
+	bool succes = false;
 
 	if (dbUserResult->Next()) {
 		wxString md5Password; wxMemoryBuffer buffer;
 		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
 		CMemoryReader reader(buffer.GetData(), buffer.GetDataLen());
 		reader.r_stringZ(md5Password);
-		if (md5Password == CApplicationData::ComputeMd5(userPassword)) succes = true; 
+		if (md5Password == CApplicationData::ComputeMd5(userPassword)) succes = true;
 	}
-	
-	db_query->CloseResultSet(dbUserResult);	
+
+	if (dbUserResult != nullptr)
+		dbUserResult->Close();
+	db_query->CloseResultSet(dbUserResult);
 	return succes;
 }
 

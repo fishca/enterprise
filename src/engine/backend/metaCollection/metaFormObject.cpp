@@ -182,14 +182,14 @@ bool CMetaObjectForm::OnCreateMetaObject(IMetaData* metaData, int flags)
 
 		wxASSERT(metaObject);
 
-		form_identifier_t res = wxID_CANCEL;
+		form_identifier_t res = wxNOT_FOUND;
 		if (metaData != nullptr) {
 			IBackendMetadataTree* metaTree = metaData->GetMetaTree();
 			if (metaTree != nullptr) {
 				res = metaTree->SelectFormType(this);
 			}
 		}
-		if (res != wxID_CANCEL) {
+		if (res != wxNOT_FOUND) {
 			m_properyFormType->SetValue(res);
 		}
 		else {

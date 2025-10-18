@@ -54,15 +54,15 @@ form_identifier_t IMetaDataTree::SelectFormType(CMetaObjectForm* metaObject) con
 	IMetaObjectGenericData* parent = wxDynamicCast(
 		metaObject->GetParent(), IMetaObjectGenericData
 	);
+
+	CDialogSelectTypeForm dlg(parent, metaObject);
 	CFormTypeList optList = parent->GetFormType();
-	CDialogSelectTypeForm* selectTypeForm = new CDialogSelectTypeForm(parent, metaObject);
 	for (unsigned int idx = 0; idx < optList.GetItemCount(); idx++) {
-		selectTypeForm->AppendTypeForm(optList.GetItemName(idx), optList.GetItemLabel(idx), optList.GetItemId(idx));
+		dlg.AppendTypeForm(optList.GetItemName(idx), optList.GetItemLabel(idx), optList.GetItemId(idx));
 	}
-	selectTypeForm->CreateSelector();
-	const form_identifier_t& sel_id = selectTypeForm->ShowModal();
-	selectTypeForm->Destroy();
-	return sel_id;
+
+	dlg.CreateSelector();
+	return dlg.ShowModal();
 }
 
 void IMetaDataTree::Modify(bool modify)
@@ -206,19 +206,21 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 		GetMetaIdentifier()
 	);
 
-	if (createdObject == nullptr) return nullptr;
+	if (createdObject != nullptr) {
 
-	if (showValue) { OpenFormMDI(createdObject); }
-	UpdateToolbar(createdObject, FillItem(createdObject, item));
+		if (showValue) { OpenFormMDI(createdObject); }
+		UpdateToolbar(createdObject, FillItem(createdObject, item));
 
-	for (auto& doc : docManager->GetDocumentsVector()) {
-		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
-		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		for (auto& doc : docManager->GetDocumentsVector()) {
+			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		}
 	}
 
 	Thaw();
 
-	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
+	if (createdObject != nullptr) 
+		objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
 }
 

@@ -15,30 +15,31 @@
 
 #include <wx/timer.h>
 
-#include <map>
-
 class CDialogDebugItem : public wxDialog {
-	wxListCtrl* m_availableList;
-	wxListCtrl* m_attachedList;
-
-	std::vector<std::pair<unsigned short, wxString>> m_listAvailable;
-	std::vector<std::pair<unsigned short, wxString>> m_listAttached;
-
-	wxTimer *m_connectionScanner;
-
 public:
 
-	void RefreshDebugList();
-
-	CDialogDebugItem(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Debug items"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 400), long style = wxDEFAULT_DIALOG_STYLE);
+	CDialogDebugItem(wxWindow* parent, wxWindowID id = wxID_ANY,
+		const wxString& title = _("Debug items"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 400), long style = wxDEFAULT_DIALOG_STYLE);
 	virtual ~CDialogDebugItem();
 
 protected:
 
-	void OnAttachedItemSelected(wxListEvent &event);
-	void OnAvailableItemSelected(wxListEvent &event);
+	void RefreshDebugList();
 
-	void OnIdleHandler(wxTimerEvent& event);
+	void OnAttachedItemSelected(wxListEvent& event);
+	void OnAvailableItemSelected(wxListEvent& event);
+
+	void OnIdleHandler(wxTimerEvent& event) { 
+		RefreshDebugList(); 
+		event.Skip(); 
+	}
+private:
+
+	wxTimer* m_connectionScanner;
+	wxListCtrl* m_availableList, * m_attachedList;
+
+	std::vector<std::pair<unsigned short, wxString>> m_listAvailable;
+	std::vector<std::pair<unsigned short, wxString>> m_listAttached;
 };
 
 #endif 

@@ -114,8 +114,6 @@ protected:
 	void UpdateEditorOptions();
 
 	//events 
-	void OnToolbarClicked(wxEvent& event);
-
 	void OnStartDebug(wxCommandEvent& WXUNUSED(event));
 	void OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event));
 	void OnAttachForDebugging(wxCommandEvent& WXUNUSED(event));

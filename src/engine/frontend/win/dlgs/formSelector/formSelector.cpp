@@ -115,7 +115,7 @@ void CDialogSelectTypeForm::OnButtonOk(wxCommandEvent& event)
 
 void CDialogSelectTypeForm::OnButtonCancel(wxCommandEvent& event)
 {
-	EndModal(wxID_CANCEL);
+	EndModal(wxNOT_FOUND);
 	event.Skip();
 }
 

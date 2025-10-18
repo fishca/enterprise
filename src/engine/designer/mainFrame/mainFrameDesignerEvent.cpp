@@ -4,8 +4,11 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "mainFrameDesigner.h"
+
 #include "backend/appData.h"
 #include "backend/debugger/debugClient.h"
+
+#include "frontend/window_ptr.h"
 
 #include "frontend/mainFrame/settings/settingsdialog.h"
 #include "frontend/mainFrame/settings/keybinderdialog.h" 
@@ -56,8 +59,8 @@ void CDocDesignerMDIFrame::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(eve
 
 void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 {
-	CDialogDebugItem* debugItemsWnd = new CDialogDebugItem(this, wxID_ANY);
-	debugItemsWnd->Show();
+	CWindowPtr<CDialogDebugItem> dlg(new CDialogDebugItem(this, wxID_ANY));
+	dlg->Show();
 }
 
 #include "backend/metaData.h"
@@ -119,7 +122,6 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 			newDocument->DeleteAllViews();
 		}
 	}
-
 }
 
 void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
@@ -128,7 +130,7 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 
 	wxAuiMDIClientWindow* client_window = GetClientWindow();
 	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
-	
+
 	client_window->Freeze();
 
 	bool success = m_docManager->CloseDocuments();
@@ -141,10 +143,7 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 		objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
 		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
 	}
-
 }
-
-#include "backend/appData.h"
 
 void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 {
@@ -321,7 +320,7 @@ void CDocDesignerMDIFrame::OnToolsSettings(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnUsers(wxCommandEvent& event)
 {
-	CDialogUserList* dlg = new CDialogUserList(this, wxID_ANY);
+	CWindowPtr<CDialogUserList> dlg(new CDialogUserList(this, wxID_ANY));
 	dlg->Show();
 }
 
@@ -329,7 +328,7 @@ void CDocDesignerMDIFrame::OnUsers(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnActiveUsers(wxCommandEvent& event)
 {
-	CDialogActiveUser* dlg = new CDialogActiveUser(this, wxID_ANY);
+	CWindowPtr<CDialogActiveUser> dlg(new CDialogActiveUser(this, wxID_ANY));
 	dlg->Show();
 }
 
@@ -337,25 +336,14 @@ void CDocDesignerMDIFrame::OnActiveUsers(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnConnection(wxCommandEvent& event)
 {
-	CDialogConnection* dlg = new CDialogConnection(this, wxID_ANY);
-	dlg->ShowModal();
-
+	CDialogConnection dlg(this, wxID_ANY);
+	dlg.ShowModal();
 }
 
 #include "frontend/win/dlgs/about.h"
 
 void CDocDesignerMDIFrame::OnAbout(wxCommandEvent& event)
 {
-	CDialogAbout* dlg = new CDialogAbout(this, wxID_ANY);
-	const int ret = dlg->ShowModal();
-	dlg->Destroy();
-}
-
-//********************************************************************************
-//*                                    Toolbar                                   *
-//********************************************************************************
-
-void CDocDesignerMDIFrame::OnToolbarClicked(wxEvent& event)
-{
-	event.Skip();
+	CDialogAbout dlg(this, wxID_ANY);
+	dlg.ShowModal();
 }

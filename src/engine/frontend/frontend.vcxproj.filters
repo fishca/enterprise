@@ -1364,6 +1364,7 @@
     <ClInclude Include="win\dlgs\formEditor.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
+    <ClInclude Include="window_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">

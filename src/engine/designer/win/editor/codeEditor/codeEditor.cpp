@@ -415,22 +415,23 @@ void CCodeEditor::FindText(const wxString& findString, int wxflags)
 	}
 }
 
+#include "frontend/window_ptr.h"
+
 void CCodeEditor::ShowGotoLine()
 {
-	CDialogLineInput* lineInput = new CDialogLineInput(this);
-	const int ret = lineInput->ShowModal();
+	CDialogLineInput dlg(this);
+	const int ret = dlg.ShowModal();
+
 	if (ret != wxNOT_FOUND) {
 		CCodeEditor::SetFocus();
 		CCodeEditor::GotoLine(ret - 1);
 	}
-	lineInput->Destroy();
 }
 
 void CCodeEditor::ShowMethods()
 {
-	CFunctionList* funcList = new CFunctionList(m_document, this);
-	const int ret = funcList->ShowModal();
-	funcList->Destroy();
+	CFunctionList dlg(m_document, this);
+	dlg.ShowModal();
 }
 
 #include "backend/system/systemManager.h"

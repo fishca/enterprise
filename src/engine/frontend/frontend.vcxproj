@@ -327,6 +327,7 @@
     <ClInclude Include="visualView\special\enum\valueEnum.h" />
     <ClInclude Include="visualView\visualHost.h" />
     <ClInclude Include="visualView\visual.h" />
+    <ClInclude Include="window_ptr.h" />
     <ClInclude Include="win\ctrls\charts\wxareachart.h" />
     <ClInclude Include="win\ctrls\charts\wxareachartctrl.h" />
     <ClInclude Include="win\ctrls\charts\wxareachartdatasetoptions.h" />

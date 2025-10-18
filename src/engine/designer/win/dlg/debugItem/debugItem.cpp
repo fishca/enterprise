@@ -1,10 +1,10 @@
 #include "debugItem.h"
-
 #include "backend/debugger/debugClient.h"
-
 
 void CDialogDebugItem::RefreshDebugList()
 {
+	debugClient->SearchDebugger();
+
 	m_listAvailable.clear(); m_listAttached.clear();
 
 	m_availableList->ClearAll();
@@ -22,7 +22,7 @@ void CDialogDebugItem::RefreshDebugList()
 		m_availableList->SetItem(index, 1, connection->GetComputerName());
 		m_availableList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
 
-		m_listAvailable.push_back(
+		m_listAvailable.emplace_back(
 			std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
 		);
 	}
@@ -42,13 +42,14 @@ void CDialogDebugItem::RefreshDebugList()
 		m_attachedList->SetItem(index, 1, connection->GetComputerName());
 		m_attachedList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
 
-		m_listAttached.push_back(
+		m_listAttached.emplace_back(
 			std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
 		);
 	}
 }
 
-CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
+CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) 
+	: wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -86,6 +87,7 @@ CDialogDebugItem::~CDialogDebugItem()
 	if (m_connectionScanner->IsRunning()) {
 		m_connectionScanner->Stop();
 	}
+	
 	m_connectionScanner->Unbind(wxEVT_TIMER, &CDialogDebugItem::OnIdleHandler, this);
 	delete m_connectionScanner;
 }
@@ -114,7 +116,3 @@ void CDialogDebugItem::OnAvailableItemSelected(wxListEvent &event)
 	m_listAvailable.erase(m_listAvailable.begin() + event.GetIndex());
 }
 
-void CDialogDebugItem::OnIdleHandler(wxTimerEvent &event)
-{
-	RefreshDebugList();
-}

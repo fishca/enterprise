@@ -24,7 +24,6 @@ void CDocDesignerMDIFrame::CreateWideGui()
 	m_mainFrameToolbar->AddSeparator();
 	m_mainFrameToolbar->AddTool(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database"), wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(24, 24)), _("Update database"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->Realize();
-	m_mainFrameToolbar->Connect(wxEVT_MENU, wxEventHandler(CDocDesignerMDIFrame::OnToolbarClicked), nullptr, this);
 
 	wxAuiPaneInfo paneInfoMainTool;
 	paneInfoMainTool.Name(wxT("mainTool"));

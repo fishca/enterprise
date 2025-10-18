@@ -274,11 +274,16 @@ bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 		writterMemory.w_chunk(copyBlock, writterCopyMemory.pointer(), writterCopyMemory.size());
 
 		if (srcControl->CopyObject(writterMemory)) {
-			// create an RTF data object
-			wxCustomDataObject* pdo = new wxCustomDataObject(oes_clipboard_frame);
-			pdo->SetData(writterMemory.size(), writterMemory.pointer()); // the +1 is used to force copy of the \0 character
-			// tell clipboard about our RTF
-			wxTheClipboard->SetData(pdo);
+
+			wxDataObjectComposite* composite_object = new wxDataObjectComposite;
+			wxCustomDataObject* custom_object = new wxCustomDataObject(oes_clipboard_frame);
+			custom_object->SetData(writterMemory.size(), writterMemory.pointer()); // the +1 is used to force copy of the \0 character		
+
+			composite_object->Add(custom_object);
+			composite_object->Add(new wxTextDataObject(srcControl->GetControlName()), true);
+
+			// tell clipboard 
+			wxTheClipboard->SetData(composite_object);
 		}
 
 		wxTheClipboard->Close();

@@ -182,13 +182,13 @@ void CMetadataTree::CMetadataTreeWnd::OnEndDrag(wxTreeEvent& event) {
 	bool copy = ::wxGetKeyState(WXK_CONTROL);
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
 	m_draggedItem = (wxTreeItemId)0l;
-	
+
 	// ensure that itemDst is not itemSrc or a child of itemSrc
 	IMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
 
 	if (metaSrcObject != nullptr) {
 
-		const wxTreeItemId &item = m_ownerTree->GetSelectionIdentifier(itemDst);
+		const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier(itemDst);
 
 		if (!item.IsOk())
 			return;
@@ -201,7 +201,7 @@ void CMetadataTree::CMetadataTreeWnd::OnEndDrag(wxTreeEvent& event) {
 
 		if (createdMetaObject != nullptr) {
 
-			CMemoryWriter dataWritter; 		
+			CMemoryWriter dataWritter;
 			if (metaSrcObject->CopyObject(dataWritter)) {
 
 				CMemoryReader reader(dataWritter.pointer(), dataWritter.size());
@@ -224,8 +224,8 @@ void CMetadataTree::CMetadataTreeWnd::OnStartSearch(wxCommandEvent& event)
 
 void CMetadataTree::CMetadataTreeWnd::OnCancelSearch(wxCommandEvent& event)
 {
-	const wxString &strSearch = event.GetString(); 
-	if (strSearch.IsEmpty()) 
+	const wxString& strSearch = event.GetString();
+	if (strSearch.IsEmpty())
 		m_ownerTree->Search(wxEmptyString); //Fill all data from metaData	
 	event.Skip();
 }
@@ -299,19 +299,27 @@ void CMetadataTree::CMetadataTreeWnd::OnCopyItem(wxCommandEvent& event)
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
 		return;
+
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
+
 		IMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
+
 			CMemoryWriter dataWritter;
 			if (metaObject->CopyObject(dataWritter)) {
-				// create an RTF data object
-				wxCustomDataObject* pdo = new wxCustomDataObject();
-				pdo->SetFormat(oes_clipboard_metadata);
-				pdo->SetData(dataWritter.size(), dataWritter.pointer()); // the +1 is used to force copy of the \0 character
-				// tell clipboard about our RTF
-				wxTheClipboard->SetData(pdo);
+
+				wxDataObjectComposite* composite_object = new wxDataObjectComposite;
+				wxCustomDataObject* custom_object = new wxCustomDataObject(oes_clipboard_metadata);
+				custom_object->SetData(dataWritter.size(), dataWritter.pointer()); // the +1 is used to force copy of the \0 character		
+
+				composite_object->Add(custom_object);
+				composite_object->Add(new wxTextDataObject(metaObject->GetName()), true);
+
+				// tell clipboard 
+				wxTheClipboard->SetData(composite_object);
 			}
+
 			wxTheClipboard->Close();
 		}
 	}
@@ -327,9 +335,11 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 	const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier();
 	if (!item.IsOk())
 		return;
-	if (wxTheClipboard->Open()
-		&& wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
+
+	if (wxTheClipboard->Open() && wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
+
 		wxCustomDataObject data(oes_clipboard_metadata);
+
 		if (wxTheClipboard->GetData(data)) {
 
 			IMetaObject* metaObject = m_ownerTree->NewItem(
@@ -346,9 +356,10 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 				m_ownerTree->FillItem(metaObject, item);
 			}
 		}
+
 		wxTheClipboard->Close();
 	}
-	
+
 	Update();
 	event.Skip();
 }
@@ -362,10 +373,10 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 		docManager->ActivateView(m_metaView);
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
-		
-		const CAuiDocChildFrame* child = 
-			dynamic_cast<CAuiDocChildFrame *>(mainFrame->GetActiveChild());
-		
+
+		const CAuiDocChildFrame* child =
+			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+
 		docManager->ActivateView(
 			child ? child->GetView() : docManager->GetAnyUsableView()
 		);

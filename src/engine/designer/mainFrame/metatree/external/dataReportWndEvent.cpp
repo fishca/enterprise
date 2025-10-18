@@ -180,22 +180,30 @@ void CDataReportTree::CDataReportTreeWnd::OnCommandItem(wxCommandEvent &event)
 
 void CDataReportTree::CDataReportTreeWnd::OnCopyItem(wxCommandEvent &event)
 {
-	wxTreeItemId item = GetSelection();
+	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
 		return;
+
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
+
 		IMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
+
 			CMemoryWriter dataWritter;
 			if (metaObject->CopyObject(dataWritter)) {
-				// create an RTF data object
-				wxCustomDataObject* pdo = new wxCustomDataObject();
-				pdo->SetFormat(oes_clipboard_metadata);
-				pdo->SetData(dataWritter.size(), dataWritter.pointer()); // the +1 is used to force copy of the \0 character
-				// tell clipboard about our RTF
-				wxTheClipboard->SetData(pdo);
+
+				wxDataObjectComposite* composite_object = new wxDataObjectComposite;
+				wxCustomDataObject* custom_object = new wxCustomDataObject(oes_clipboard_metadata);
+				custom_object->SetData(dataWritter.size(), dataWritter.pointer()); // the +1 is used to force copy of the \0 character		
+
+				composite_object->Add(custom_object);
+				composite_object->Add(new wxTextDataObject(metaObject->GetName()), true);
+
+				// tell clipboard 
+				wxTheClipboard->SetData(composite_object);
 			}
+
 			wxTheClipboard->Close();
 		}
 	}

@@ -152,7 +152,7 @@ IMetaObjectAttribute* CMetaObjectTableData::FindProp(const meta_identifier_t& id
 {
 	for (auto metaObject : m_listMetaObject) {
 		if (metaObject->GetClassType() == g_metaAttributeCLSID && metaObject->GetMetaID() == id) {
-			return dynamic_cast<IMetaObjectAttribute*>(metaObject);
+			return metaObject->ConvertToType<IMetaObjectAttribute>();
 		}
 	}
 

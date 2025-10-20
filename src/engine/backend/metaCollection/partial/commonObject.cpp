@@ -1105,13 +1105,7 @@ std::vector<CMetaObjectGrid*> IMetaObjectRegisterData::GetObjectTemplates() cons
 IMetaObjectAttribute* IMetaObjectRegisterData::FindProp(const meta_identifier_t& id) const
 {
 	for (auto metaObject : m_listMetaObject) {
-		if (
-			metaObject->GetClassType() == g_metaDefaultAttributeCLSID ||
-			metaObject->GetClassType() == g_metaAttributeCLSID ||
-			metaObject->GetClassType() == g_metaDimensionCLSID ||
-			metaObject->GetClassType() == g_metaResourceCLSID ||
-
-			metaObject->GetMetaID() == id) {
+		if ((metaObject->GetClassType() == g_metaDefaultAttributeCLSID || metaObject->GetClassType() == g_metaAttributeCLSID || metaObject->GetClassType() == g_metaDimensionCLSID || metaObject->GetClassType() == g_metaResourceCLSID) && metaObject->GetMetaID() == id)  {
 			return metaObject->ConvertToType<IMetaObjectAttribute>();
 		}
 	}
@@ -2438,16 +2432,16 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	
+
 	IModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	
+
 	if (m_compileModule == nullptr) {
 		m_compileModule = new CCompileModule(m_metaObject->GetModuleObject());
 		m_compileModule->SetParent(moduleManager->GetCompileModule());
 		m_compileModule->AddContextVariable(thisObject, this);
 	}
-	
+
 	if (!appData->DesignerMode()) {
 		try {
 			m_compileModule->Compile();
@@ -2459,7 +2453,7 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 			return false;
 		};
 	}
-	
+
 	if (source != nullptr) {
 		for (long row = 0; row < source->GetRowCount(); row++) {
 			wxValueTableRow* node = source->GetViewData<wxValueTableRow>(source->GetItem(row));
@@ -2467,7 +2461,7 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 			IValueTable::Append(new wxValueTableRow(*node), false);
 		}
 	}
-	
+
 	if (!appData->DesignerMode()) {
 		if (!newRecord) ReadData();
 	}

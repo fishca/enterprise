@@ -12,12 +12,12 @@
 #endif 
 
 ///////////////////////////////////////////////////////////////////////
-CDebuggerClient* CDebuggerClient::sm_debugClient = nullptr;
+CDebuggerClient* CDebuggerClient::ms_debugClient = nullptr;
 ///////////////////////////////////////////////////////////////////////
 
 void CDebuggerClient::Destroy()
 {
-	wxDELETE(sm_debugClient);
+	wxDELETE(ms_debugClient);
 }
 
 bool CDebuggerClient::Initialize()
@@ -26,14 +26,14 @@ bool CDebuggerClient::Initialize()
 		CDebuggerClient::CreateBreakpointDatabase();
 	}
 
-	if (sm_debugClient != nullptr) sm_debugClient->Destroy();
+	if (ms_debugClient != nullptr) ms_debugClient->Destroy();
 
-	sm_debugClient = new CDebuggerClient();
-	sm_debugClient->LoadBreakpointCollection();
+	ms_debugClient = new CDebuggerClient();
+	ms_debugClient->LoadBreakpointCollection();
 
 	unsigned int debugOffsetPort = 0;
 	while (debugOffsetPort < diapasonDebuggerPort) {
-		sm_debugClient->CreateConnection(
+		ms_debugClient->CreateConnection(
 			defaultHost,
 			defaultDebuggerPort + debugOffsetPort
 		);
@@ -43,17 +43,17 @@ bool CDebuggerClient::Initialize()
 	return true;
 }
 
-void CDebuggerClient::ConnectToDebugger(const wxString& hostName, unsigned short port)
+void CDebuggerClient::ConnectToServer(const wxString& hostName, unsigned short port)
 {
-	CDebuggerThreadClient* foundedConnection = FindConnection(hostName, port);
+	CDebuggerClientConnection* foundedConnection = FindConnection(hostName, port);
 	if (foundedConnection != nullptr) {
 		foundedConnection->AttachConnection();
 	}
 }
 
-CDebuggerClient::CDebuggerThreadClient* CDebuggerClient::FindConnection(const wxString& hostName, unsigned short port)
+CDebuggerClient::CDebuggerClientConnection* CDebuggerClient::FindConnection(const wxString& hostName, unsigned short port)
 {
-	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerThreadClient* client) {
+	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerClientConnection* client) {
 		return client->m_hostName == hostName && client->m_port == port;
 		}
 	);
@@ -65,9 +65,9 @@ CDebuggerClient::CDebuggerThreadClient* CDebuggerClient::FindConnection(const wx
 	return nullptr;
 }
 
-CDebuggerClient::CDebuggerThreadClient* CDebuggerClient::FindDebugger(const wxString& hostName, unsigned short port)
+CDebuggerClient::CDebuggerClientConnection* CDebuggerClient::FindDebugger(const wxString& hostName, unsigned short port)
 {
-	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerThreadClient* client) {
+	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerClientConnection* client) {
 		return client->m_hostName == hostName && client->m_port == port && client->GetConnectionType() == ConnectionType::ConnectionType_Debugger;
 		});
 
@@ -78,10 +78,10 @@ CDebuggerClient::CDebuggerThreadClient* CDebuggerClient::FindDebugger(const wxSt
 	return nullptr;
 }
 
-void CDebuggerClient::SearchDebugger(const wxString& hostName, unsigned short startPort)
+void CDebuggerClient::SearchServer(const wxString& hostName, unsigned short startPort)
 {
 	for (unsigned short currentPort = startPort; currentPort < startPort + diapasonDebuggerPort; currentPort++) {
-		CDebuggerThreadClient* sockDebugger = FindConnection(hostName, currentPort);
+		CDebuggerClientConnection* sockDebugger = FindConnection(hostName, currentPort);
 		if (sockDebugger && !sockDebugger->m_verifiedConnection) { sockDebugger->AttachConnection(); break; }
 	}
 }
@@ -118,73 +118,121 @@ void CDebuggerClient::Pause()
 void CDebuggerClient::Stop(bool kill)
 {
 	for (auto connection : m_listConnection) {
-		if (connection->IsConnected()) {
-			connection->DetachConnection(kill);
-		}
+		if (connection->IsConnected()) connection->DetachConnection(kill);
 	}
 }
 
 void CDebuggerClient::InitializeBreakpoints(const wxString& strModuleName, unsigned int from, unsigned int to)
 {
-	std::map<unsigned int, int>& moduleOffsets = m_listOffsetBreakpoint[strModuleName];
-	moduleOffsets.clear(); for (unsigned int i = from; i < to; i++) moduleOffsets[i] = 0;
+	std::map<unsigned int, int>& list_module_offset = m_listOffsetBreakpoint[strModuleName];
+	list_module_offset.clear(); for (unsigned int i = from; i < to; i++) list_module_offset[i] = 0;
 }
 
-void CDebuggerClient::PatchBreakpointCollection(const wxString& strModuleName, unsigned int line, int offsetLine)
+void CDebuggerClient::PatchBreakpointCollection(const wxString& strModuleName, unsigned int line, int line_offset)
 {
-#pragma message("nouverbe to nouverbe: необходимо исправить проблему при очистке большого количества строк!")
+	auto iterator_breakpoint = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
+		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
-	std::map<unsigned int, int>& moduleBreakpoints = m_listBreakpoint[strModuleName];
-	for (auto it = moduleBreakpoints.begin(); it != moduleBreakpoints.end(); it++) {
-		if (((it->first + it->second) >= line)) it->second += offsetLine;
+	if (iterator_breakpoint != m_listBreakpoint.end()) {
+
+		auto& list_breakpoint = iterator_breakpoint->second;
+		{
+			auto list_breakpoint_iterator = list_breakpoint.begin();
+			while (list_breakpoint_iterator != list_breakpoint.end()) {
+
+				const unsigned int calc_line = list_breakpoint_iterator->first + list_breakpoint_iterator->second;
+
+				if (calc_line > line)
+					list_breakpoint_iterator->second += line_offset;
+
+				list_breakpoint_iterator = std::next(list_breakpoint_iterator);
+
+				while (line_offset > 0 && list_breakpoint_iterator != list_breakpoint.end()) {
+					const unsigned int next_calc_line = list_breakpoint_iterator->first + list_breakpoint_iterator->second;
+					if (calc_line != next_calc_line)
+						break;
+					list_breakpoint_iterator = list_breakpoint.erase(list_breakpoint_iterator);
+				}
+			}
+		}
 	}
 
-	std::map<unsigned int, int>& moduleOffsets = m_listOffsetBreakpoint[strModuleName];
-	for (auto it = moduleOffsets.begin(); it != moduleOffsets.end(); it++) {
-		if (((it->first + it->second) >= line)) it->second += offsetLine;
+	auto iterator_module_offset = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
+		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+
+	if (iterator_module_offset != m_listOffsetBreakpoint.end()) {
+
+		auto& list_module_offset = iterator_module_offset->second;
+		{
+			auto list_module_offset_iterator = list_module_offset.begin();
+			while (list_module_offset_iterator != list_module_offset.end()) {
+
+				const unsigned int calc_line = list_module_offset_iterator->first + list_module_offset_iterator->second;
+
+				if (calc_line > line)
+					list_module_offset_iterator->second += line_offset;
+
+				auto list_module_offset_iterator_start = list_module_offset_iterator;
+				auto list_module_offset_iterator_end = list_module_offset_iterator;
+
+				list_module_offset_iterator = std::next(list_module_offset_iterator);
+
+				while (line_offset > 0 && list_module_offset_iterator != list_module_offset.end()) {
+
+					const unsigned int next_calc_line = list_module_offset_iterator->first + list_module_offset_iterator->second;
+					if (calc_line != next_calc_line)
+						break;
+
+					list_module_offset_iterator->second += line_offset;
+
+					list_module_offset_iterator_end = list_module_offset_iterator;
+					list_module_offset_iterator = std::next(list_module_offset_iterator);
+				}
+			}
+		}
 	}
 
 	CMemoryWriter commandChannel;
 
-	commandChannel.w_u16(offsetLine > 0 ? CommandId_PatchInsertLine : CommandId_PatchDeleteLine);
+	commandChannel.w_u16(line_offset > 0 ? CommandId_PatchInsertLine : CommandId_PatchDeleteLine);
 	commandChannel.w_stringZ(strModuleName);
 	commandChannel.w_u32(line);
-	commandChannel.w_s32(offsetLine);
+	commandChannel.w_s32(line_offset);
 
 	SendCommand(commandChannel.pointer(), commandChannel.size());
 }
 
 bool CDebuggerClient::SaveBreakpoints(const wxString& strModuleName)
 {
-#pragma message("nouverbe to nouverbe: необходимо исправить проблему при сохрании точек, если есть удаленные с ними строки!")
-
 	//initialize breakpoint 
-	auto itBreakpoint = m_listBreakpoint.find(strModuleName);
+	auto iterator_breakpoint = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
+		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
-	if (itBreakpoint != m_listBreakpoint.end()) {
-		std::map<unsigned int, int>& moduleBreakpoints = itBreakpoint->second, moduleBreakpointsNew;
-		for (auto it = moduleBreakpoints.begin(); it != moduleBreakpoints.end(); it++) {
-			if (!OffsetBreakpointInDB(itBreakpoint->first, it->first, it->second))
+	if (iterator_breakpoint != m_listBreakpoint.end()) {
+		std::map<unsigned int, int>& list_breakpoint = iterator_breakpoint->second, moduleBreakpointsNew;
+		for (auto it = list_breakpoint.begin(); it != list_breakpoint.end(); it++) {
+			if (!OffsetBreakpointInDB(iterator_breakpoint->first, it->first, it->second))
 				return false;
 			moduleBreakpointsNew.emplace(it->first + it->second, 0);
 		}
-		moduleBreakpoints.clear();
+		list_breakpoint.clear();
 		for (auto it = moduleBreakpointsNew.begin(); it != moduleBreakpointsNew.end(); it++) {
-			moduleBreakpoints.emplace(it->first, it->second);
+			list_breakpoint.emplace(it->first, it->second);
 		}
 	}
 
 	//initialize offsets 
-	auto itOffsetpoint = m_listOffsetBreakpoint.find(strModuleName);
+	auto iterator_module_offset = std::find_if(m_listOffsetBreakpoint.begin(), m_listOffsetBreakpoint.end(),
+		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
 
-	if (itOffsetpoint != m_listOffsetBreakpoint.end()) {
-		std::map<unsigned int, int>& moduleOffsets = itOffsetpoint->second;
-		std::map<unsigned int, int> ::iterator it = moduleOffsets.begin(); std::advance(it, moduleOffsets.size() - 1);
-		if (it != moduleOffsets.end()) {
-			InitializeBreakpoints(itOffsetpoint->first, 0, it->first + it->second + 1);
+	if (iterator_module_offset != m_listOffsetBreakpoint.end()) {
+		std::map<unsigned int, int>& list_module_offset = iterator_module_offset->second;
+		std::map<unsigned int, int> ::iterator it = list_module_offset.begin(); std::advance(it, list_module_offset.size() - 1);
+		if (it != list_module_offset.end()) {
+			InitializeBreakpoints(iterator_module_offset->first, 0, it->first + it->second + 1);
 		}
 		else {
-			InitializeBreakpoints(itOffsetpoint->first, 0, 1);
+			InitializeBreakpoints(iterator_module_offset->first, 0, 1);
 		}
 	}
 
@@ -200,38 +248,36 @@ bool CDebuggerClient::SaveBreakpoints(const wxString& strModuleName)
 
 bool CDebuggerClient::SaveAllBreakpoints()
 {
-#pragma message("nouverbe to nouverbe: необходимо исправить проблему при сохрании точек, если есть удаленные с ними строки!")
-
 	//initialize breakpoint 
-	for (auto itBreakpoint = m_listBreakpoint.begin(); itBreakpoint != m_listBreakpoint.end(); itBreakpoint++) {
-		std::map<unsigned int, int>& moduleBreakpoints = itBreakpoint->second, moduleBreakpointsNew;
-		for (auto it = moduleBreakpoints.begin(); it != moduleBreakpoints.end(); it++) {
-			if (!OffsetBreakpointInDB(itBreakpoint->first, it->first, it->second))
+	for (auto iterator_breakpoint = m_listBreakpoint.begin(); iterator_breakpoint != m_listBreakpoint.end(); iterator_breakpoint++) {
+		std::map<unsigned int, int>& list_breakpoint = iterator_breakpoint->second, moduleBreakpointsNew;
+		for (auto it = list_breakpoint.begin(); it != list_breakpoint.end(); it++) {
+			if (!OffsetBreakpointInDB(iterator_breakpoint->first, it->first, it->second))
 				return false;
 			moduleBreakpointsNew.emplace(it->first + it->second, 0);
 		}
-		moduleBreakpoints.clear();
+		list_breakpoint.clear();
 		for (auto it = moduleBreakpointsNew.begin(); it != moduleBreakpointsNew.end(); it++) {
-			moduleBreakpoints.emplace(it->first, it->second);
+			list_breakpoint.emplace(it->first, it->second);
 		}
 	}
 
 	//initialize offsets 
-	for (auto itOffsetpoint = m_listOffsetBreakpoint.begin(); itOffsetpoint != m_listOffsetBreakpoint.end(); itOffsetpoint++) {
-		std::map<unsigned int, int>& moduleOffsets = itOffsetpoint->second;
-		std::map<unsigned int, int> ::iterator it = moduleOffsets.begin(); std::advance(it, moduleOffsets.size() - 1);
-		if (it != moduleOffsets.end()) {
-			InitializeBreakpoints(itOffsetpoint->first, 0, it->first + it->second + 1);
+	for (auto iterator_module_offset = m_listOffsetBreakpoint.begin(); iterator_module_offset != m_listOffsetBreakpoint.end(); iterator_module_offset++) {
+		auto& list_module_offset = iterator_module_offset->second;
+		std::map<unsigned int, int> ::iterator it = list_module_offset.begin(); std::advance(it, list_module_offset.size() - 1);
+		if (it != list_module_offset.end()) {
+			InitializeBreakpoints(iterator_module_offset->first, 0, it->first + it->second + 1);
 		}
 		else {
-			InitializeBreakpoints(itOffsetpoint->first, 0, 1);
+			InitializeBreakpoints(iterator_module_offset->first, 0, 1);
 		}
 	}
 
-	for (auto itBreakpoint = m_listBreakpoint.begin(); itBreakpoint != m_listBreakpoint.end(); itBreakpoint++) {
+	for (auto iterator_breakpoint = m_listBreakpoint.begin(); iterator_breakpoint != m_listBreakpoint.end(); iterator_breakpoint++) {
 		CMemoryWriter commandChannel;
 		commandChannel.w_u16(CommandId_PatchComplete);
-		commandChannel.w_stringZ(itBreakpoint->first);
+		commandChannel.w_stringZ(iterator_breakpoint->first);
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 	}
 
@@ -241,30 +287,31 @@ bool CDebuggerClient::SaveAllBreakpoints()
 bool CDebuggerClient::ToggleBreakpoint(const wxString& strModuleName, unsigned int line)
 {
 	unsigned int startLine = line; int locOffsetPrev = 0, locOffsetCurr = 0;
-	std::map<unsigned int, int>& moduleOffsets = m_listOffsetBreakpoint[strModuleName];
+	std::map<unsigned int, int>& list_module_offset = m_listOffsetBreakpoint[strModuleName];
 
-	for (auto it = moduleOffsets.begin(); it != moduleOffsets.end(); it++) {
+	for (auto it = list_module_offset.begin(); it != list_module_offset.end(); it++) {
 		if (it->second < 0 && (int)it->first < -it->second) { locOffsetPrev = it->second; continue; }
 		locOffsetCurr = it->second;
 		if ((it->first + locOffsetPrev) <= line && (it->first + locOffsetCurr) >= line) { startLine = it->first; break; }
 		locOffsetPrev = it->second;
 	}
-	std::map<unsigned int, int>::iterator itOffset = moduleOffsets.find(startLine);
-	if (itOffset != moduleOffsets.end()) {
+	std::map<unsigned int, int>::iterator itOffset = list_module_offset.find(startLine);
+	if (itOffset != list_module_offset.end()) {
 		if (line != (itOffset->first + itOffset->second)) {
-			wxMessageBox("Cannot set breakpoint in unsaved copy!");
+			wxMessageBox(_("Cannot set breakpoint in unsaved copy!"));
 			return false;
 		}
 	}
 	else {
-		wxMessageBox("Cannot set breakpoint in unsaved copy!"); return false;
+		wxMessageBox(_("Cannot set breakpoint in unsaved copy!"));
+		return false;
 	}
-	std::map<unsigned int, int>& moduleBreakpoints = m_listBreakpoint[strModuleName];
-	std::map<unsigned int, int>::iterator itBreakpoint = moduleBreakpoints.find(itOffset->first);
+	std::map<unsigned int, int>& list_breakpoint = m_listBreakpoint[strModuleName];
+	std::map<unsigned int, int>::iterator iterator_breakpoint = list_breakpoint.find(itOffset->first);
 	unsigned int currLine = itOffset->first; int offset = itOffset->second;
-	if (itBreakpoint == moduleBreakpoints.end()) {
+	if (iterator_breakpoint == list_breakpoint.end()) {
 		if (ToggleBreakpointInDB(strModuleName, currLine)) {
-			moduleBreakpoints.emplace(currLine, offset);
+			list_breakpoint.emplace(currLine, offset);
 			CMemoryWriter commandChannel;
 			commandChannel.w_u16(CommandId_ToggleBreakpoint);
 			commandChannel.w_stringZ(strModuleName);
@@ -283,8 +330,8 @@ bool CDebuggerClient::ToggleBreakpoint(const wxString& strModuleName, unsigned i
 bool CDebuggerClient::RemoveBreakpoint(const wxString& strModuleName, unsigned int line)
 {
 	unsigned int startLine = line; int locOffsetPrev = 0, locOffsetCurr = 0;
-	std::map<unsigned int, int>& moduleOffsets = m_listOffsetBreakpoint[strModuleName];
-	for (auto it = moduleOffsets.begin(); it != moduleOffsets.end(); it++) {
+	std::map<unsigned int, int>& list_module_offset = m_listOffsetBreakpoint[strModuleName];
+	for (auto it = list_module_offset.begin(); it != list_module_offset.end(); it++) {
 		if (it->second < 0 && (int)it->first < -it->second) {
 			locOffsetPrev = it->second; continue;
 		}
@@ -294,13 +341,13 @@ bool CDebuggerClient::RemoveBreakpoint(const wxString& strModuleName, unsigned i
 		}
 		locOffsetPrev = it->second;
 	}
-	std::map<unsigned int, int>::iterator itOffset = moduleOffsets.find(startLine);
-	std::map<unsigned int, int>& moduleBreakpoints = m_listBreakpoint[strModuleName];
-	std::map<unsigned int, int>::iterator itBreakpoint = moduleBreakpoints.find(itOffset->first);
+	std::map<unsigned int, int>::iterator itOffset = list_module_offset.find(startLine);
+	std::map<unsigned int, int>& list_breakpoint = m_listBreakpoint[strModuleName];
+	std::map<unsigned int, int>::iterator iterator_breakpoint = list_breakpoint.find(itOffset->first);
 	unsigned int currLine = itOffset->first;
-	if (itBreakpoint != moduleBreakpoints.end()) {
+	if (iterator_breakpoint != list_breakpoint.end()) {
 		if (RemoveBreakpointInDB(strModuleName, currLine)) {
-			moduleBreakpoints.erase(itBreakpoint);
+			list_breakpoint.erase(iterator_breakpoint);
 			CMemoryWriter commandChannel;
 			commandChannel.w_u16(CommandId_RemoveBreakpoint);
 			commandChannel.w_stringZ(strModuleName);
@@ -432,10 +479,15 @@ void CDebuggerClient::EvaluateAutocomplete(const wxString& strFileName, const wx
 
 std::vector<unsigned int> CDebuggerClient::GetDebugList(const wxString& strModuleName)
 {
+	auto iterator_breakpoint = std::find_if(m_listBreakpoint.begin(), m_listBreakpoint.end(),
+		[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+
+	if (iterator_breakpoint == m_listBreakpoint.end())
+		return std::vector<unsigned int>();
+
 	std::vector<unsigned int> listBreakpoint;
-	if (m_listBreakpoint.find(strModuleName) != m_listBreakpoint.end()) {
-		for (auto& breakpoint : m_listBreakpoint.at(strModuleName)) listBreakpoint.push_back(breakpoint.first + breakpoint.second);
-	}
+	for (auto& breakpoint : iterator_breakpoint->second)
+		listBreakpoint.push_back(breakpoint.first + breakpoint.second);
 	return listBreakpoint;
 }
 
@@ -445,7 +497,7 @@ enum eSocketType {
 	wxID_SOCKET_CLIENT = 1
 };
 
-bool CDebuggerClient::CDebuggerThreadClient::AttachConnection()
+bool CDebuggerClient::CDebuggerClientConnection::AttachConnection()
 {
 	if (m_connectionType != ConnectionType::ConnectionType_Scanner) return false;
 
@@ -458,20 +510,20 @@ bool CDebuggerClient::CDebuggerThreadClient::AttachConnection()
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 
 		// Send the start event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionStart, m_socketClient);
+		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
 	}
 
 	return true;
 }
 
-bool CDebuggerClient::CDebuggerThreadClient::DetachConnection(bool kill)
+bool CDebuggerClient::CDebuggerClientConnection::DetachConnection(bool kill)
 {
 	if (m_connectionType != ConnectionType::ConnectionType_Debugger) return false;
 
 	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 
 		// Send the exit event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
+		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 
 		m_connectionType = ConnectionType::ConnectionType_Scanner;
 
@@ -488,7 +540,7 @@ bool CDebuggerClient::CDebuggerThreadClient::DetachConnection(bool kill)
 	return false;
 }
 
-wxThread::ExitCode CDebuggerClient::CDebuggerThreadClient::Entry()
+wxThread::ExitCode CDebuggerClient::CDebuggerClientConnection::Entry()
 {
 	ExitCode retCode = (ExitCode)0;
 
@@ -502,17 +554,17 @@ wxThread::ExitCode CDebuggerClient::CDebuggerThreadClient::Entry()
 	return retCode;
 }
 
-void CDebuggerClient::CDebuggerThreadClient::OnKill()
+void CDebuggerClient::CDebuggerClientConnection::OnKill()
 {
 	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 		// Send the exit event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
+		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 	}
 
 	if (m_socketClient != nullptr && m_socketClient->IsConnected()) m_socketClient->Close();
 }
 
-void CDebuggerClient::CDebuggerThreadClient::EntryClient()
+void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 {
 	if (m_socketClient != nullptr) m_socketClient->Close();
 
@@ -539,7 +591,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 			unsigned int length = 0;
 
-			while (CDebuggerThreadClient::IsConnected()) {
+			while (CDebuggerClientConnection::IsConnected()) {
 
 				if (m_verifiedConnection) break;
 
@@ -574,10 +626,10 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 				if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the start event message to the UI.
-					debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionStart, m_socketClient);
+					debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
 				}
 
-				while (CDebuggerThreadClient::IsConnected()) {
+				while (CDebuggerClientConnection::IsConnected()) {
 
 					if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
@@ -602,7 +654,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 
 				if (debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the exit event message to the UI.
-					debugClient->CallAfter(&CDebuggerClient::CDebuggerAdapterClient::OnSessionEnd, m_socketClient);
+					debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 				}
 			}
 
@@ -618,7 +670,7 @@ void CDebuggerClient::CDebuggerThreadClient::EntryClient()
 	m_socketClient->Close();
 }
 
-void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned int length)
+void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsigned int length)
 {
 	CMemoryReader commandReader(pointer, length);
 	wxASSERT(debugClient != nullptr);
@@ -703,7 +755,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		data.m_line = commandReader.r_s32();
 
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnEnterLoop, m_socketClient, data
+			&CDebuggerClient::CDebuggerClientAdapter::OnEnterLoop, m_socketClient, data
 		);
 	}
 	else if (commandFromServer == CommandId_LeaveLoop) {
@@ -720,7 +772,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		data.m_line = commandReader.r_s32();
 
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnLeaveLoop, m_socketClient, data
+			&CDebuggerClient::CDebuggerClientAdapter::OnLeaveLoop, m_socketClient, data
 		);
 	}
 	else if (commandFromServer == CommandId_EvalToolTip) {
@@ -737,7 +789,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			data.m_moduleName = strModuleName;
 			data.m_expression = strExpression;
 			debugClient->CallAfter(
-				&CDebuggerClient::CDebuggerAdapterClient::OnSetToolTip, data, resultStr
+				&CDebuggerClient::CDebuggerClientAdapter::OnSetToolTip, data, resultStr
 			);
 		}
 	}
@@ -779,7 +831,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			);
 		}
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnAutoComplete, debugAutocompleteData
+			&CDebuggerClient::CDebuggerClientAdapter::OnAutoComplete, debugAutocompleteData
 		);
 	}
 	else if (commandFromServer == CommandId_SetExpressions) {
@@ -805,7 +857,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			watchData.AddWatch(strExpression, strValue, strType, attributeCount > 0, item);
 		}
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnSetVariable, watchData
+			&CDebuggerClient::CDebuggerClientAdapter::OnSetVariable, watchData
 		);
 	}
 	else if (commandFromServer == CommandId_ExpandExpression) {
@@ -825,7 +877,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			watchData.AddWatch(strName, strValue, strType, attributeChildCount > 0);
 		}
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnSetExpanded, watchData
+			&CDebuggerClient::CDebuggerClientAdapter::OnSetExpanded, watchData
 		);
 	}
 	else if (commandFromServer == CommandId_SetStack) {
@@ -838,7 +890,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 			);
 		}
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnSetStack, stackData
+			&CDebuggerClient::CDebuggerClientAdapter::OnSetStack, stackData
 		);
 	}
 	else if (commandFromServer == CommandId_SetLocalVariables) {
@@ -859,7 +911,7 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		}
 
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnSetLocalVariable, locData
+			&CDebuggerClient::CDebuggerClientAdapter::OnSetLocalVariable, locData
 		);
 	}
 	else if (commandFromServer == CommandId_MessageFromServer) {
@@ -879,14 +931,14 @@ void CDebuggerClient::CDebuggerThreadClient::RecvCommand(void* pointer, unsigned
 		debugData.m_line = currLine;
 
 		debugClient->CallAfter(
-			&CDebuggerClient::CDebuggerAdapterClient::OnMessageFromServer, debugData, strErrorMessage
+			&CDebuggerClient::CDebuggerClientAdapter::OnMessageFromServer, debugData, strErrorMessage
 		);
 	}
 
 	debugClient->RecvCommand(pointer, length);
 }
 
-void CDebuggerClient::CDebuggerThreadClient::SendCommand(void* pointer, unsigned int length)
+void CDebuggerClient::CDebuggerClientConnection::SendCommand(void* pointer, unsigned int length)
 {
 #if _USE_NET_COMPRESSOR == 1
 	BYTE* dest = nullptr; unsigned int dest_sz = 0;
@@ -897,7 +949,7 @@ void CDebuggerClient::CDebuggerThreadClient::SendCommand(void* pointer, unsigned
 	}
 	free(dest);
 #else
-	if (m_socketClient && CDebuggerThreadClient::IsConnected()) {
+	if (m_socketClient && CDebuggerClientConnection::IsConnected()) {
 		m_socketClient->WriteMsg(&length, sizeof(unsigned int));
 		m_socketClient->WriteMsg(pointer, length);
 	}

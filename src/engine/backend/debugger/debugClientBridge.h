@@ -10,6 +10,8 @@
 class BACKEND_API IDebuggerClientBridge {
 public:
 
+	static void SetDebuggerClientBridge(IDebuggerClientBridge* bridge);
+
 	virtual ~IDebuggerClientBridge() {}
 
 	//commands 
@@ -31,5 +33,5 @@ public:
 	virtual void OnSetExpanded(const CWatchWindowData& watchData) = 0;
 };
 
-extern BACKEND_API void SetDebuggerClientBridge(IDebuggerClientBridge *bridge);
+
 #endif

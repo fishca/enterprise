@@ -17,19 +17,19 @@
 #include "backend/appData.h"
 
 ///////////////////////////////////////////////////////////////////////
-CDebuggerServer* CDebuggerServer::sm_debugServer = nullptr;
+CDebuggerServer* CDebuggerServer::ms_debugServer = nullptr;
 ///////////////////////////////////////////////////////////////////////
 
 void CDebuggerServer::Initialize(const int flags)
 {
-	if (sm_debugServer != nullptr) sm_debugServer->Destroy();
-	sm_debugServer = new CDebuggerServer();
+	if (ms_debugServer != nullptr) ms_debugServer->Destroy();
+	ms_debugServer = new CDebuggerServer();
 }
 
 void CDebuggerServer::Destroy()
 {
-	if (sm_debugServer != nullptr) sm_debugServer->ShutdownServer();
-	wxDELETE(sm_debugServer);
+	if (ms_debugServer != nullptr) ms_debugServer->ShutdownServer();
+	wxDELETE(ms_debugServer);
 }
 
 enum eSocketTypes
@@ -90,7 +90,7 @@ bool CDebuggerServer::CreateServer(const wxString& hostName, unsigned short star
 			wxSocketBase* sockClient = m_socketServer->Accept();
 			wxASSERT_MSG(sockClient != nullptr && m_socketThread == nullptr, "client not connected!");
 			if (sockClient != nullptr) {
-				m_socketThread = new CDebuggerThreadServer(this, sockClient);
+				m_socketThread = new CDebuggerServerConnection(this, sockClient);
 				if (m_socketThread->Run() == wxTHREAD_NO_ERROR) {
 					while (m_socketThread != nullptr) {
 						if (!m_socketThread->IsConnected() || m_bUseDebug)
@@ -433,7 +433,7 @@ void CDebuggerServer::OnSocketServerEvent(wxSocketEvent& event)
 		if (m_socketThread == nullptr && !m_waitConnection) {
 			while (!m_socketServer->WaitForAccept(0, waitDebuggerTimeout)) {
 
-				m_socketThread = new CDebuggerThreadServer(this, m_socketServer->Accept(false));
+				m_socketThread = new CDebuggerServerConnection(this, m_socketServer->Accept(false));
 				m_socketThread->SetPriority(wxPRIORITY_MIN);
 
 				if (m_socketThread->Run() == wxTHREAD_NO_ERROR &&
@@ -450,31 +450,31 @@ void CDebuggerServer::OnSocketServerEvent(wxSocketEvent& event)
 
 //////////////////////////////////////////////////////////////////////
 
-void CDebuggerServer::CDebuggerThreadServer::Disconnect()
+void CDebuggerServer::CDebuggerServerConnection::Disconnect()
 {
-	if (CDebuggerThreadServer::IsConnected()) {
+	if (CDebuggerServerConnection::IsConnected()) {
 		if (m_socket != nullptr) {
 			m_socket->Destroy();
 			m_socket = nullptr;
 		}
 	}
-	if (sm_debugServer != nullptr) sm_debugServer->EnableNotify();
+	if (ms_debugServer != nullptr) ms_debugServer->EnableNotify();
 }
 
-CDebuggerServer::CDebuggerThreadServer::CDebuggerThreadServer(CDebuggerServer* server, wxSocketBase* socket) :
+CDebuggerServer::CDebuggerServerConnection::CDebuggerServerConnection(CDebuggerServer* server, wxSocketBase* socket) :
 	wxThread(wxTHREAD_DETACHED), m_socket(socket), m_connectionType(ConnectionType::ConnectionType_Unknown)
 {
 }
 
-CDebuggerServer::CDebuggerThreadServer::~CDebuggerThreadServer()
+CDebuggerServer::CDebuggerServerConnection::~CDebuggerServerConnection()
 {
 	if (m_socket != nullptr) m_socket->Destroy();
 
 	// the thread is being destroyed; make sure not to leave dangling pointers around
-	if (sm_debugServer != nullptr) sm_debugServer->m_socketThread = nullptr;
+	if (ms_debugServer != nullptr) ms_debugServer->m_socketThread = nullptr;
 }
 
-wxThread::ExitCode CDebuggerServer::CDebuggerThreadServer::Entry()
+wxThread::ExitCode CDebuggerServer::CDebuggerServerConnection::Entry()
 {
 #ifdef __WXMSW__
 	HRESULT hr = ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -498,13 +498,13 @@ wxThread::ExitCode CDebuggerServer::CDebuggerThreadServer::Entry()
 	}
 #endif // !_WXMSW
 
-	if (sm_debugServer != nullptr) sm_debugServer->ResetDebugger();
+	if (ms_debugServer != nullptr) ms_debugServer->ResetDebugger();
 	return retCode;
 }
 
-void CDebuggerServer::CDebuggerThreadServer::EntryClient()
+void CDebuggerServer::CDebuggerServerConnection::EntryClient()
 {
-	while (!TestDestroy() && CDebuggerThreadServer::IsConnected()) {
+	while (!TestDestroy() && CDebuggerServerConnection::IsConnected()) {
 		if (m_socket != nullptr && m_socket->WaitForRead(0, waitDebuggerTimeout)) {
 			unsigned int length = 0;
 			m_socket->ReadMsg(&length, sizeof(unsigned int));
@@ -526,11 +526,11 @@ void CDebuggerServer::CDebuggerThreadServer::EntryClient()
 		}
 	}
 
-	if (CDebuggerThreadServer::IsConnected()) m_socket->Close();
+	if (CDebuggerServerConnection::IsConnected()) m_socket->Close();
 	m_connectionType = ConnectionType::ConnectionType_Unknown;
 }
 
-void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned int length)
+void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsigned int length)
 {
 	CMemoryReader commandReader(pointer, length);
 	wxASSERT(debugServer != nullptr);
@@ -538,7 +538,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 
 	if (commandFromClient == CommandId_VerifyConnection) {
 
-		m_connectionType = sm_debugServer->m_waitConnection ?
+		m_connectionType = ms_debugServer->m_waitConnection ?
 			ConnectionType::ConnectionType_Waiter : ConnectionType::ConnectionType_Scanner;
 
 		CMemoryWriter commandChannel_SetConnectionType;
@@ -574,7 +574,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 			wxString strModuleName; commandReader.r_stringZ(strModuleName);
 			for (unsigned int j = 0; j < countBreakPoints; j++) {
 				unsigned int line = commandReader.r_u32(); int offsetLine = commandReader.r_s32();
-				sm_debugServer->m_listBreakpoint[strModuleName][line] = offsetLine;
+				ms_debugServer->m_listBreakpoint[strModuleName][line] = offsetLine;
 			}
 		}
 		unsigned int countOffsetLines = commandReader.r_u32();
@@ -584,15 +584,15 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 			wxString strModuleName; commandReader.r_stringZ(strModuleName);
 			for (unsigned int j = 0; j < countBreakPoints; j++) {
 				unsigned int line = commandReader.r_u32(); int offsetLine = commandReader.r_s32();
-				sm_debugServer->m_listOffsetBreakpoint[strModuleName][line] = offsetLine;
+				ms_debugServer->m_listOffsetBreakpoint[strModuleName][line] = offsetLine;
 			}
 		}
-		sm_debugServer->m_bUseDebug = true;
+		ms_debugServer->m_bUseDebug = true;
 	}
 	else if (commandFromClient == CommandId_ToggleBreakpoint) {
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
 		unsigned int line = commandReader.r_u32(); int offset = commandReader.r_s32();
-		std::map<unsigned int, int>& moduleBreakpoints = sm_debugServer->m_listBreakpoint[strModuleName];
+		std::map<unsigned int, int>& moduleBreakpoints = ms_debugServer->m_listBreakpoint[strModuleName];
 		std::map<unsigned int, int>::iterator it = moduleBreakpoints.find(line);
 		if (it == moduleBreakpoints.end()) {
 			moduleBreakpoints[line] = offset;
@@ -601,11 +601,11 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 	else if (commandFromClient == CommandId_RemoveBreakpoint) {
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
 		unsigned int line = commandReader.r_u32();
-		std::map<unsigned int, int>& moduleBreakpoints = sm_debugServer->m_listBreakpoint[strModuleName];
+		std::map<unsigned int, int>& moduleBreakpoints = ms_debugServer->m_listBreakpoint[strModuleName];
 		std::map<unsigned int, int>::iterator it = moduleBreakpoints.find(line);
 		if (it != moduleBreakpoints.end()) {
 			moduleBreakpoints.erase(it); if (!moduleBreakpoints.size()) {
-				sm_debugServer->m_listBreakpoint.erase(strModuleName);
+				ms_debugServer->m_listBreakpoint.erase(strModuleName);
 			}
 		}
 	}
@@ -621,7 +621,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 		commandChannel.w_u16(CommandId_SetExpressions);
 		commandChannel.w_u32(1); // first elements 
 
-		if (sm_debugServer->IsDebugLooped()) {
+		if (ms_debugServer->IsDebugLooped()) {
 			CValue vResult;
 			//header 
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -631,7 +631,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 #endif 
 			//variable
 			commandChannel.w_stringZ(strExpression);
-			if (CProcUnit::Evaluate(strExpression, sm_debugServer->m_runContext, vResult, false)) {
+			if (CProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
 				commandChannel.w_stringZ(vResult.GetString());
 				commandChannel.w_stringZ(vResult.GetClassName());
 				//count of elemetns 
@@ -646,7 +646,7 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 			//send expression 
 			SendCommand(commandChannel.pointer(), commandChannel.size());
 			//set expression in map 
-			sm_debugServer->m_listExpression.insert_or_assign(id, strExpression);
+			ms_debugServer->m_listExpression.insert_or_assign(id, strExpression);
 		}
 		else {
 			//header 
@@ -664,20 +664,20 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 			//send expression 
 			SendCommand(commandChannel.pointer(), commandChannel.size());
 			//set expression in map 
-			sm_debugServer->m_listExpression.insert_or_assign(id, strExpression);
+			ms_debugServer->m_listExpression.insert_or_assign(id, strExpression);
 		}
 	}
 	else if (commandFromClient == CommandId_ExpandExpression) {
 		wxString strExpression;
 		commandReader.r_stringZ(strExpression);
-		if (sm_debugServer->IsDebugLooped()) {
+		if (ms_debugServer->IsDebugLooped()) {
 			CValue vResult;
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 			unsigned long long id = commandReader.r_u64();
 #else 
 			unsigned int id = commandReader.r_u32();
 #endif
-			if (CProcUnit::Evaluate(strExpression, sm_debugServer->m_runContext, vResult, false)) {
+			if (CProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
 				CMemoryWriter commandChannel;
 				commandChannel.w_u16(CommandId_ExpandExpression);
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -735,9 +735,9 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 	}
 	else if (commandFromClient == CommandId_RemoveExpression) {
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
-		sm_debugServer->m_listExpression.erase(commandReader.r_u64());
+		ms_debugServer->m_listExpression.erase(commandReader.r_u64());
 #else 
-		sm_debugServer->m_listExpression.erase(commandReader.r_u32());
+		ms_debugServer->m_listExpression.erase(commandReader.r_u32());
 #endif 
 	}
 	else if (commandFromClient == CommandId_EvalToolTip) {
@@ -745,16 +745,16 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 		commandReader.r_stringZ(strFileName);
 		commandReader.r_stringZ(strModuleName);
 		commandReader.r_stringZ(strExpression);
-		if (sm_debugServer->IsDebugLooped()) {
+		if (ms_debugServer->IsDebugLooped()) {
 			CValue vResult;
-			if (CProcUnit::Evaluate(strExpression, sm_debugServer->m_runContext, vResult, false)) {
+			if (CProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
 				CMemoryWriter commandChannel;
 				commandChannel.w_u16(CommandId_EvalToolTip);
 				commandChannel.w_stringZ(strFileName);
 				commandChannel.w_stringZ(strModuleName);
 				commandChannel.w_stringZ(strExpression);
 				commandChannel.w_stringZ(vResult.GetString());
-				if (sm_debugServer->IsDebugLooped()) {
+				if (ms_debugServer->IsDebugLooped()) {
 					SendCommand(commandChannel.pointer(), commandChannel.size());
 				}
 			}
@@ -765,11 +765,11 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 		CRunContext* newRunContext =
 			CProcUnit::GetRunContext(stackLevel);
 		if (newRunContext) {
-			sm_debugServer->m_runContext = newRunContext;
+			ms_debugServer->m_runContext = newRunContext;
 			//send expressions from user 
-			sm_debugServer->SendExpressions();
+			ms_debugServer->SendExpressions();
 			//send local variable
-			sm_debugServer->SendLocalVariables();
+			ms_debugServer->SendLocalVariables();
 		}
 	}
 	else if (commandFromClient == CommandId_EvalAutocomplete) {
@@ -782,9 +782,9 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 		commandReader.r_stringZ(strKeyWord);
 
 		s32 currPos = commandReader.r_s32();
-		if (sm_debugServer->IsDebugLooped()) {
+		if (ms_debugServer->IsDebugLooped()) {
 			CValue vResult;
-			if (CProcUnit::Evaluate(strExpression, sm_debugServer->m_runContext, vResult, false)) {
+			if (CProcUnit::Evaluate(strExpression, ms_debugServer->m_runContext, vResult, false)) {
 
 				CMemoryWriter commandChannel;
 				commandChannel.w_u16(CommandId_EvalAutocomplete);
@@ -819,37 +819,37 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 	else if (commandFromClient == CommandId_PatchInsertLine ||
 		commandFromClient == CommandId_PatchDeleteLine) {
 		wxString strModuleName; commandReader.r_stringZ(strModuleName); unsigned int line = commandReader.r_u32(); int offsetLine = commandReader.r_s32();
-		std::map<unsigned int, int>& moduleBreakpoints = sm_debugServer->m_listBreakpoint[strModuleName];
+		std::map<unsigned int, int>& moduleBreakpoints = ms_debugServer->m_listBreakpoint[strModuleName];
 		for (auto it = moduleBreakpoints.begin(); it != moduleBreakpoints.end(); it++) { if (((it->first + it->second) >= line)) it->second += offsetLine; }
-		std::map<unsigned int, int>& moduleOffsets = sm_debugServer->m_listOffsetBreakpoint[strModuleName];
+		std::map<unsigned int, int>& moduleOffsets = ms_debugServer->m_listOffsetBreakpoint[strModuleName];
 		for (auto it = moduleOffsets.begin(); it != moduleOffsets.end(); it++) { if (((it->first + it->second) >= line)) it->second += offsetLine; }
 	}
 	else if (commandFromClient == CommandId_PatchComplete) {
 	}
 	else if (commandFromClient == CommandId_Continue) {
-		sm_debugServer->m_bDebugStopLine = false;
-		sm_debugServer->m_bDebugLoop = sm_debugServer->m_bDoLoop = false;
+		ms_debugServer->m_bDebugStopLine = false;
+		ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 	}
 	else if (commandFromClient == CommandId_StepInto) {
-		if (sm_debugServer->IsDebugLooped()) {
-			sm_debugServer->m_bDebugStopLine = true;
-			sm_debugServer->m_bDebugLoop = sm_debugServer->m_bDoLoop = false;
+		if (ms_debugServer->IsDebugLooped()) {
+			ms_debugServer->m_bDebugStopLine = true;
+			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 		}
 	}
 	else if (commandFromClient == CommandId_StepOver) {
-		if (sm_debugServer->IsDebugLooped()) {
-			sm_debugServer->m_numCurrentNumberStopContext = CProcUnit::GetCountRunContext();
-			sm_debugServer->m_bDebugLoop = sm_debugServer->m_bDoLoop = false;
+		if (ms_debugServer->IsDebugLooped()) {
+			ms_debugServer->m_numCurrentNumberStopContext = CProcUnit::GetCountRunContext();
+			ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 		}
 	}
 	else if (commandFromClient == CommandId_Pause) {
-		sm_debugServer->m_bDebugStopLine = true;
+		ms_debugServer->m_bDebugStopLine = true;
 	}
 	else if (commandFromClient == CommandId_Detach) {
-		sm_debugServer->m_bUseDebug = sm_debugServer->m_bDebugLoop = sm_debugServer->m_bDoLoop = false;
+		ms_debugServer->m_bUseDebug = ms_debugServer->m_bDebugLoop = ms_debugServer->m_bDoLoop = false;
 		m_connectionType = ConnectionType::ConnectionType_Scanner;
 		if (m_socket != nullptr) m_socket->Close();
-		sm_debugServer->EnableNotify();
+		ms_debugServer->EnableNotify();
 	}
 	else if (commandFromClient == CommandId_Destroy) {
 		if (appData->Disconnect()) {
@@ -861,11 +861,11 @@ void CDebuggerServer::CDebuggerThreadServer::RecvCommand(void* pointer, unsigned
 		}
 	}
 	else if (commandFromClient == CommandId_DeleteAllBreakpoints) {
-		sm_debugServer->m_listBreakpoint.clear();
+		ms_debugServer->m_listBreakpoint.clear();
 	}
 }
 
-void CDebuggerServer::CDebuggerThreadServer::SendCommand(void* pointer, unsigned int length)
+void CDebuggerServer::CDebuggerServerConnection::SendCommand(void* pointer, unsigned int length)
 {
 #if _USE_NET_COMPRESSOR == 1
 	BYTE* dest = nullptr; unsigned int dest_sz = 0;
@@ -876,7 +876,7 @@ void CDebuggerServer::CDebuggerThreadServer::SendCommand(void* pointer, unsigned
 	}
 	free(dest);
 #else
-	if (m_socket && CDebuggerThreadServer::IsConnected()) {
+	if (m_socket && CDebuggerServerConnection::IsConnected()) {
 		m_socket->WriteMsg(&length, sizeof(unsigned int));
 		m_socket->WriteMsg(pointer, length);
 	}

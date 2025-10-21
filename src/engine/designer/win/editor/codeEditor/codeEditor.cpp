@@ -646,9 +646,12 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 				if (event.m_linesAdded != 0) {
 
-					debugClient->PatchBreakpointCollection(moduleObject->GetDocPath(),
-						line + event.m_linesAdded, event.m_linesAdded);
-
+					debugClient->PatchBreakpointCollection(
+						moduleObject->GetDocPath(), 
+						line, 
+						event.m_linesAdded
+					);
+					
 					RefreshBreakpoint();
 				}
 

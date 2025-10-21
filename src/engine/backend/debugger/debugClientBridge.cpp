@@ -1,7 +1,7 @@
 #include "debugClientBridge.h"
 #include "debugClient.h"
 
-void SetDebuggerClientBridge(IDebuggerClientBridge* bridge) {
+void IDebuggerClientBridge::SetDebuggerClientBridge(IDebuggerClientBridge* bridge) {
 	if (debugClient != nullptr) {
 		debugClient->SetBridge(bridge);
 	}

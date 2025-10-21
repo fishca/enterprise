@@ -227,12 +227,12 @@ bool CDocDesignerMDIFrame::Show(bool show)
 
 void CDocDesignerMDIFrame::OnInitializeConfiguration(eConfigType cfg)
 {
-	::SetDebuggerClientBridge(new CDebuggerClientBridge);
+	IDebuggerClientBridge::SetDebuggerClientBridge(new CDebuggerClientBridge);
 }
 
 void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
 {
-	::SetDebuggerClientBridge(nullptr);
+	IDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -38,7 +38,7 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 		}
 	}
 
-	debugClient->SearchDebugger();
+	debugClient->SearchServer();
 	appData->RunApplication(wxT("enterprise"));
 }
 

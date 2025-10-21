@@ -11,32 +11,16 @@
 
 class BACKEND_API CDebuggerClient {
 
-	static CDebuggerClient* sm_debugClient;
-
-	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
-	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions
-
-#if _USE_64_BIT_POINT_IN_DEBUGGER == 1
-	std::map <unsigned long long, wxString> m_listExpression;
-#else 
-	std::map <unsigned int, wxString> m_listExpression;
-#endif  
-
-	bool	m_enterLoop;
-
-protected:
-
-	class CDebuggerAdapterClient : public wxEvtHandler {
-		IDebuggerClientBridge* m_debugBridge;
+	class BACKEND_API CDebuggerClientAdapter : public wxEvtHandler {
 	public:
 
-		CDebuggerAdapterClient() : m_debugBridge(nullptr) {}
+		CDebuggerClientAdapter() : m_debugBridge(nullptr) {}
 		void SetBridge(IDebuggerClientBridge* bridge) {
 			if (m_debugBridge != nullptr)
 				wxDELETE(m_debugBridge);
 			m_debugBridge = bridge;
 		}
-		virtual ~CDebuggerAdapterClient() { wxDELETE(m_debugBridge); }
+		virtual ~CDebuggerClientAdapter() { wxDELETE(m_debugBridge); }
 
 		//commands 
 		void OnSessionStart(wxSocketClient* sock);
@@ -54,10 +38,12 @@ protected:
 
 		void OnSetVariable(const CWatchWindowData& data);
 		void OnSetExpanded(const CWatchWindowData& data);
+
+	private:
+		IDebuggerClientBridge* m_debugBridge;
 	};
 
-	class BACKEND_API CDebuggerThreadClient : public wxThread {
-		friend class CDebuggerClient;
+	class BACKEND_API CDebuggerClientConnection : public wxThread {
 	public:
 
 		bool IsConnected() const {
@@ -81,7 +67,7 @@ protected:
 		bool AttachConnection();
 		bool DetachConnection(bool kill = false);
 
-		CDebuggerClient::CDebuggerThreadClient::CDebuggerThreadClient(CDebuggerClient* client, const wxString& hostName, unsigned short port) :
+		CDebuggerClient::CDebuggerClientConnection::CDebuggerClientConnection(CDebuggerClient* client, const wxString& hostName, unsigned short port) :
 			wxThread(wxTHREAD_DETACHED),
 			m_hostName(hostName),
 			m_port(port),
@@ -91,7 +77,7 @@ protected:
 			if (debugClient != nullptr) debugClient->AppendConnection(this);
 		}
 
-		CDebuggerClient::CDebuggerThreadClient::~CDebuggerThreadClient() {
+		CDebuggerClient::CDebuggerClientConnection::~CDebuggerClientConnection() {
 			if (debugClient != nullptr) debugClient->DeleteConnection(this);
 			if (m_socketClient != nullptr) m_socketClient->Destroy();
 		}
@@ -114,6 +100,7 @@ protected:
 		void SendCommand(void* pointer, unsigned int length);
 
 	private:
+
 		bool			m_verifiedConnection;
 
 		wxString		m_hostName;
@@ -127,16 +114,11 @@ protected:
 		wxString		m_compName;
 
 		ConnectionType	m_connectionType;
+
+		friend class CDebuggerClient;
 	};
 
-	CDebuggerClient() :
-		m_activeSocket(nullptr), m_adapter(new CDebuggerAdapterClient), m_enterLoop(false) {
-	}
-
-	CDebuggerThreadClient* m_activeSocket = nullptr;
-	CDebuggerAdapterClient* m_adapter = nullptr;
-
-	std::vector<CDebuggerThreadClient*>	m_listConnection;
+	CDebuggerClient() : m_activeSocket(nullptr), m_adapter(new CDebuggerClientAdapter), m_enterLoop(false) {}
 
 public:
 
@@ -149,7 +131,7 @@ public:
 		wxDELETE(m_adapter);
 	}
 
-	static CDebuggerClient* Get() { return sm_debugClient; }
+	static CDebuggerClient* Get() { return ms_debugClient; }
 
 	// Force the static appData instance to Init()
 	static bool Initialize();
@@ -157,11 +139,11 @@ public:
 
 public:
 
-	void ConnectToDebugger(const wxString& hostName, unsigned short port);
-	CDebuggerThreadClient* FindConnection(const wxString& hostName, unsigned short port);
-	CDebuggerThreadClient* FindDebugger(const wxString& hostName, unsigned short port);
-	void SearchDebugger(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort);
-	std::vector<CDebuggerThreadClient*>& GetListConnection() { return m_listConnection; }
+	void ConnectToServer(const wxString& hostName, unsigned short port);
+	CDebuggerClientConnection* FindConnection(const wxString& hostName, unsigned short port);
+	CDebuggerClientConnection* FindDebugger(const wxString& hostName, unsigned short port);
+	void SearchServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort);
+	std::vector<CDebuggerClientConnection*>& GetListConnection() { return m_listConnection; }
 
 	//special public function:
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -257,31 +239,25 @@ protected:
 
 	//commands:
 	bool CreateConnection(const wxString& hostName, unsigned short port) {
-		CDebuggerThreadClient* createdConnection = FindConnection(hostName, port);
+		CDebuggerClientConnection* createdConnection = FindConnection(hostName, port);
 		if (createdConnection == nullptr) {
-			createdConnection = new CDebuggerThreadClient(this, hostName, port);
-			//m_listConnection.push_back(createdConnection);
+			createdConnection = new CDebuggerClientConnection(this, hostName, port);
+
 			createdConnection->SetPriority(wxPRIORITY_MIN);
 			return createdConnection->Run() != wxTHREAD_NO_ERROR;
 		}
 		return true;
 	}
 
-	void AppendConnection(CDebuggerThreadClient* client) { m_listConnection.push_back(client); }
+	void AppendConnection(CDebuggerClientConnection* client) { m_listConnection.push_back(client); }
 
-	void DeleteConnection(CDebuggerThreadClient* client) {
-		if (m_activeSocket == client) {
-			m_activeSocket = nullptr;
-		}
-		if (m_listConnection.size() == 0) {
-			m_enterLoop = false;
-		}
-		auto& it = std::find(
-			m_listConnection.begin(), m_listConnection.end(), client
+	void DeleteConnection(CDebuggerClientConnection* client) {
+
+		if (m_activeSocket == client) m_activeSocket = nullptr;
+		m_listConnection.erase(
+			std::remove(m_listConnection.begin(), m_listConnection.end(), client), m_listConnection.end()
 		);
-		if (it != m_listConnection.end()) {
-			m_listConnection.erase(it);
-		}
+		if (m_listConnection.size() == 0) m_enterLoop = false;
 	}
 
 	void RecvCommand(void* pointer, unsigned int length) {}
@@ -295,6 +271,26 @@ protected:
 			}
 		}
 	}
+
+private:
+
+	static CDebuggerClient* ms_debugClient;
+
+	CDebuggerClientConnection* m_activeSocket = nullptr;
+	CDebuggerClientAdapter* m_adapter = nullptr;
+
+	std::vector<CDebuggerClientConnection*>	m_listConnection;
+
+	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
+	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions
+
+#if _USE_64_BIT_POINT_IN_DEBUGGER == 1
+	std::map <unsigned long long, wxString> m_listExpression;
+#else 
+	std::map <unsigned int, wxString> m_listExpression;
+#endif  
+
+	bool	m_enterLoop;
 };
 
 #endif

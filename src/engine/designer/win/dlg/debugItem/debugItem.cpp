@@ -3,7 +3,7 @@
 
 void CDialogDebugItem::RefreshDebugList()
 {
-	debugClient->SearchDebugger();
+	debugClient->SearchServer();
 
 	m_listAvailable.clear(); m_listAttached.clear();
 
@@ -107,7 +107,7 @@ void CDialogDebugItem::OnAttachedItemSelected(wxListEvent &event)
 
 void CDialogDebugItem::OnAvailableItemSelected(wxListEvent &event)
 {
-	debugClient->ConnectToDebugger(
+	debugClient->ConnectToServer(
 		m_listAvailable[event.GetIndex()].second, 
 		m_listAvailable[event.GetIndex()].first
 	);

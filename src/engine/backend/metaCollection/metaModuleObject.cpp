@@ -53,14 +53,16 @@ bool IMetaObjectModule::OnDeleteMetaObject()
 
 bool IMetaObjectModule::OnBeforeRunMetaObject(int flags)
 {
-	wxString moduleData = GetModuleText();
+	wxString strBuffer = GetModuleText();
+	
 	//initialize debugger server
-	unsigned int nNumber = 1 + moduleData.Replace('\n', '\n');
+	const unsigned int total_line = 1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n'));
+
 	if (appData->DesignerMode()) {
-		debugClient->InitializeBreakpoints(GetDocPath(), 0, nNumber);
+		debugClient->InitializeBreakpoints(GetDocPath(), 0, total_line);
 	}
 	else {
-		debugServer->InitializeBreakpoints(GetDocPath(), 0, nNumber);
+		debugServer->InitializeBreakpoints(GetDocPath(), 0, total_line);
 	}
 	
 	return IMetaObject::OnBeforeRunMetaObject(flags);

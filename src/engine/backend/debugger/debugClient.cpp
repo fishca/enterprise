@@ -510,7 +510,7 @@ bool CDebuggerClient::CDebuggerClientConnection::AttachConnection()
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 
 		// Send the start event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
+		ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
 	}
 
 	return true;
@@ -523,7 +523,7 @@ bool CDebuggerClient::CDebuggerClientConnection::DetachConnection(bool kill)
 	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 
 		// Send the exit event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
+		ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 
 		m_connectionType = ConnectionType::ConnectionType_Scanner;
 
@@ -558,7 +558,7 @@ void CDebuggerClient::CDebuggerClientConnection::OnKill()
 {
 	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 		// Send the exit event message to the UI.
-		debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
+		ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 	}
 
 	if (m_socketClient != nullptr && m_socketClient->IsConnected()) m_socketClient->Close();
@@ -626,7 +626,7 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 				if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the start event message to the UI.
-					debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
+					ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
 				}
 
 				while (CDebuggerClientConnection::IsConnected()) {
@@ -652,9 +652,9 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 					if (TestDestroy()) break;
 				}
 
-				if (debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
+				if (ms_debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the exit event message to the UI.
-					debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
+					ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
 				}
 			}
 
@@ -673,7 +673,7 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsigned int length)
 {
 	CMemoryReader commandReader(pointer, length);
-	wxASSERT(debugClient != nullptr);
+	wxASSERT(ms_debugClient != nullptr);
 	u16 commandFromServer = commandReader.r_u16();
 
 	if (commandFromServer == CommandId_VerifyConnection) {
@@ -703,7 +703,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 	}
 	else if (commandFromServer == CommandId_GetArrayBreakpoint) {
 		//send expression 
-		for (auto& expression : debugClient->m_listExpression) {
+		for (auto& expression : ms_debugClient->m_listExpression) {
 			CMemoryWriter commandChannel;
 			commandChannel.w_u16(CommandId_AddExpression);
 			commandChannel.w_stringZ(expression.second);
@@ -717,10 +717,10 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 
 		CMemoryWriter commandChannel;
 		commandChannel.w_u16(CommandId_SetArrayBreakpoint);
-		commandChannel.w_u32(debugClient->m_listBreakpoint.size());
+		commandChannel.w_u32(ms_debugClient->m_listBreakpoint.size());
 
 		//send breakpoints with offsets 
-		for (auto breakpoint : debugClient->m_listBreakpoint) {
+		for (auto breakpoint : ms_debugClient->m_listBreakpoint) {
 			commandChannel.w_u32(breakpoint.second.size());
 			commandChannel.w_stringZ(breakpoint.first);
 			for (auto line : breakpoint.second) {
@@ -729,10 +729,10 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 			}
 		}
 
-		commandChannel.w_u32(debugClient->m_listOffsetBreakpoint.size());
+		commandChannel.w_u32(ms_debugClient->m_listOffsetBreakpoint.size());
 
 		//send line offsets 
-		for (auto offset : debugClient->m_listOffsetBreakpoint) {
+		for (auto offset : ms_debugClient->m_listOffsetBreakpoint) {
 			commandChannel.w_u32(offset.second.size());
 			commandChannel.w_stringZ(offset.first);
 			for (auto line : offset.second) {
@@ -743,8 +743,8 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 	}
 	else if (commandFromServer == CommandId_EnterLoop) {
-		debugClient->m_enterLoop = true;
-		debugClient->m_activeSocket = this;
+		ms_debugClient->m_enterLoop = true;
+		ms_debugClient->m_activeSocket = this;
 
 		wxString strFileName; commandReader.r_stringZ(strFileName);
 		wxString strModuleName; commandReader.r_stringZ(strModuleName);
@@ -754,13 +754,13 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
 
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnEnterLoop, m_socketClient, data
 		);
 	}
 	else if (commandFromServer == CommandId_LeaveLoop) {
-		debugClient->m_enterLoop = false;
-		debugClient->m_activeSocket = nullptr;
+		ms_debugClient->m_enterLoop = false;
+		ms_debugClient->m_activeSocket = nullptr;
 
 		const wxString& strFileName = commandReader.r_stringZ();
 		const wxString& strModuleName = commandReader.r_stringZ();
@@ -771,7 +771,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		data.m_moduleName = strModuleName;
 		data.m_line = commandReader.r_s32();
 
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnLeaveLoop, m_socketClient, data
 		);
 	}
@@ -783,12 +783,12 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		commandReader.r_stringZ(strExpression);
 		commandReader.r_stringZ(resultStr);
 
-		if (debugClient->IsEnterLoop()) {
+		if (ms_debugClient->IsEnterLoop()) {
 			CDebugExpressionData data;
 			data.m_fileName = strFileName;
 			data.m_moduleName = strModuleName;
 			data.m_expression = strExpression;
-			debugClient->CallAfter(
+			ms_debugClient->CallAfter(
 				&CDebuggerClient::CDebuggerClientAdapter::OnSetToolTip, data, resultStr
 			);
 		}
@@ -830,7 +830,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 				}
 			);
 		}
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnAutoComplete, debugAutocompleteData
 		);
 	}
@@ -856,7 +856,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 			unsigned int attributeCount = commandReader.r_u32();
 			watchData.AddWatch(strExpression, strValue, strType, attributeCount > 0, item);
 		}
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnSetVariable, watchData
 		);
 	}
@@ -876,7 +876,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 			unsigned int attributeChildCount = commandReader.r_u32();
 			watchData.AddWatch(strName, strValue, strType, attributeChildCount > 0);
 		}
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnSetExpanded, watchData
 		);
 	}
@@ -889,7 +889,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 				commandReader.r_u32()
 			);
 		}
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnSetStack, stackData
 		);
 	}
@@ -910,7 +910,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 				locData.AddLocalVar(strName, strValue, strType, attributeChildCount > 0);
 		}
 
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnSetLocalVariable, locData
 		);
 	}
@@ -930,12 +930,12 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		debugData.m_moduleName = strDocPath;
 		debugData.m_line = currLine;
 
-		debugClient->CallAfter(
+		ms_debugClient->CallAfter(
 			&CDebuggerClient::CDebuggerClientAdapter::OnMessageFromServer, debugData, strErrorMessage
 		);
 	}
 
-	debugClient->RecvCommand(pointer, length);
+	ms_debugClient->RecvCommand(pointer, length);
 }
 
 void CDebuggerClient::CDebuggerClientConnection::SendCommand(void* pointer, unsigned int length)

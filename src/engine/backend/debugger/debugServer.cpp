@@ -22,13 +22,17 @@ CDebuggerServer* CDebuggerServer::ms_debugServer = nullptr;
 
 void CDebuggerServer::Initialize(const int flags)
 {
-	if (ms_debugServer != nullptr) ms_debugServer->Destroy();
+	if (ms_debugServer != nullptr)
+		ms_debugServer->Destroy();
+
 	ms_debugServer = new CDebuggerServer();
 }
 
 void CDebuggerServer::Destroy()
 {
-	if (ms_debugServer != nullptr) ms_debugServer->ShutdownServer();
+	if (ms_debugServer != nullptr)
+		ms_debugServer->ShutdownServer();
+
 	wxDELETE(ms_debugServer);
 }
 
@@ -47,7 +51,8 @@ m_runContext(nullptr), m_socketServer(nullptr), m_socketThread(nullptr)
 
 CDebuggerServer::~CDebuggerServer()
 {
-	if (m_socketServer != nullptr) m_socketServer->Destroy();
+	if (m_socketServer != nullptr)
+		m_socketServer->Destroy();
 	wxDELETE(m_evtHandler);
 }
 
@@ -816,13 +821,76 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 			}
 		}
 	}
-	else if (commandFromClient == CommandId_PatchInsertLine ||
-		commandFromClient == CommandId_PatchDeleteLine) {
-		wxString strModuleName; commandReader.r_stringZ(strModuleName); unsigned int line = commandReader.r_u32(); int offsetLine = commandReader.r_s32();
-		std::map<unsigned int, int>& moduleBreakpoints = ms_debugServer->m_listBreakpoint[strModuleName];
-		for (auto it = moduleBreakpoints.begin(); it != moduleBreakpoints.end(); it++) { if (((it->first + it->second) >= line)) it->second += offsetLine; }
-		std::map<unsigned int, int>& moduleOffsets = ms_debugServer->m_listOffsetBreakpoint[strModuleName];
-		for (auto it = moduleOffsets.begin(); it != moduleOffsets.end(); it++) { if (((it->first + it->second) >= line)) it->second += offsetLine; }
+	else if (commandFromClient == CommandId_PatchInsertLine || commandFromClient == CommandId_PatchDeleteLine) {
+		
+		///////////////////////////////////////////////////////////////////////////////////
+
+		wxString strModuleName; commandReader.r_stringZ(strModuleName);
+		unsigned int line = commandReader.r_u32(); int line_offset = commandReader.r_s32();
+
+		///////////////////////////////////////////////////////////////////////////////////
+
+		auto iterator_breakpoint = std::find_if(ms_debugServer->m_listBreakpoint.begin(), ms_debugServer->m_listBreakpoint.end(),
+			[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+
+		if (iterator_breakpoint != ms_debugServer->m_listBreakpoint.end()) {
+
+			auto& list_breakpoint = iterator_breakpoint->second;
+			{
+				auto list_breakpoint_iterator = list_breakpoint.begin();
+				while (list_breakpoint_iterator != list_breakpoint.end()) {
+
+					const unsigned int calc_line = list_breakpoint_iterator->first + list_breakpoint_iterator->second;
+
+					if (calc_line > line)
+						list_breakpoint_iterator->second += line_offset;
+
+					list_breakpoint_iterator = std::next(list_breakpoint_iterator);
+
+					while (line_offset > 0 && list_breakpoint_iterator != list_breakpoint.end()) {
+						const unsigned int next_calc_line = list_breakpoint_iterator->first + list_breakpoint_iterator->second;
+						if (calc_line != next_calc_line)
+							break;
+						list_breakpoint_iterator = list_breakpoint.erase(list_breakpoint_iterator);
+					}
+				}
+			}
+		}
+
+		auto iterator_module_offset = std::find_if(ms_debugServer->m_listOffsetBreakpoint.begin(), ms_debugServer->m_listOffsetBreakpoint.end(),
+			[strModuleName](const auto pair) { return stringUtils::CompareString(pair.first, strModuleName); });
+
+		if (iterator_module_offset != ms_debugServer->m_listOffsetBreakpoint.end()) {
+
+			auto& list_module_offset = iterator_module_offset->second;
+			{
+				auto list_module_offset_iterator = list_module_offset.begin();
+				while (list_module_offset_iterator != list_module_offset.end()) {
+
+					const unsigned int calc_line = list_module_offset_iterator->first + list_module_offset_iterator->second;
+
+					if (calc_line > line)
+						list_module_offset_iterator->second += line_offset;
+
+					auto list_module_offset_iterator_start = list_module_offset_iterator;
+					auto list_module_offset_iterator_end = list_module_offset_iterator;
+
+					list_module_offset_iterator = std::next(list_module_offset_iterator);
+
+					while (line_offset > 0 && list_module_offset_iterator != list_module_offset.end()) {
+
+						const unsigned int next_calc_line = list_module_offset_iterator->first + list_module_offset_iterator->second;
+						if (calc_line != next_calc_line)
+							break;
+
+						list_module_offset_iterator->second += line_offset;
+
+						list_module_offset_iterator_end = list_module_offset_iterator;
+						list_module_offset_iterator = std::next(list_module_offset_iterator);
+					}
+				}
+			}
+		}
 	}
 	else if (commandFromClient == CommandId_PatchComplete) {
 	}

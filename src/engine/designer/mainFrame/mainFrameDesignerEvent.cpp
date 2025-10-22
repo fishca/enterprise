@@ -133,7 +133,16 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 
 	client_window->Freeze();
 
-	bool success = m_docManager->CloseDocuments();
+	bool success = true;
+	wxAuiMDIChildFrame* pActiveChild = nullptr;
+	while ((pActiveChild = GetActiveChild()) != nullptr) {
+		if (!pActiveChild->Close()) {
+			// it refused to close, don't close the remaining ones either
+			success = false;
+			break;
+		}
+	}
+
 	success = success && commonMetaData->RoolbackDatabase()
 		&& m_metadataTree->Load();
 

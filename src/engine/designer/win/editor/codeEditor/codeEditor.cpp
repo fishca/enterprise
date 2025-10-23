@@ -18,11 +18,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CCodeEditor::CCodeEditor()
-	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false) {
+	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
+{
 }
 
 CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false)
+	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
 {
 	// initialize styles
 	StyleClearAll();
@@ -147,8 +148,12 @@ void CCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 			ScrollToLine(lineBreakpoint - 1);
 		else if (firstVisibleLine + linesOnScreen < (lineBreakpoint - 1))
 			ScrollToLine(lineBreakpoint - 1);
-
 	}
+
+	if (setBreakLine && lineBreakpoint > 0)
+		m_lineBreakpoint = lineBreakpoint - 1;
+	else
+		m_lineBreakpoint = wxNOT_FOUND;
 
 	//Set standart focus
 	if (lineBreakpoint > 0) CCodeEditor::SetFocus();
@@ -647,11 +652,18 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				if (event.m_linesAdded != 0) {
 
 					debugClient->PatchBreakpointCollection(
-						moduleObject->GetDocPath(), 
-						line, 
+						moduleObject->GetDocPath(),
+						line,
 						event.m_linesAdded
 					);
-					
+
+					if (m_lineBreakpoint != wxNOT_FOUND) {
+						MarkerDeleteAll(CCodeEditor::BreakLine);
+						if (line < m_lineBreakpoint)
+							m_lineBreakpoint += event.m_linesAdded;
+						MarkerAdd(m_lineBreakpoint, CCodeEditor::BreakLine);
+					}
+
 					RefreshBreakpoint();
 				}
 

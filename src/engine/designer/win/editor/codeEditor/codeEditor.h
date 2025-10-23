@@ -390,6 +390,8 @@ private:
 	int  m_bIndentationSize;
 	bool m_bEnableAutoComplete;
 
+	int m_lineBreakpoint;
+
 	std::map<wxString, wxString> m_expressions;
 };
 

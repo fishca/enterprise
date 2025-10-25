@@ -3,82 +3,115 @@
 
 #include "backend/compiler/byteCode.h"
 
-struct CCompileContext;
-
-struct CVariable
-{
-	CVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
-	CVariable(const wxString& strVariableName) : m_strName(strVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
-
-	bool m_bExport;
-	bool m_bContext;
-	bool m_bTempVar;
-	unsigned int m_numVariable;
-	wxString m_strName; // Variable name
-	wxString m_strType; // Value type
-	wxString m_strContextVar; // Context variable name
-	wxString m_strRealName; // Real variable name
-};
-
-struct CParamVariable
-{
-	CParamVariable() : m_bByRef(false) {
-		m_valData.m_numArray = -1;
-		m_valData.m_numIndex = -1;
-	}
-
-	bool m_bByRef;
-	wxString m_strName; // Variable name
-	wxString m_strType; // Value type
-	CParamUnit m_valData; // Default value
-};
-
-//function definition
-struct CFunction
-{
-	CFunction(const wxString& funcName, CCompileContext* compileContext = nullptr) :
-		m_strName(funcName),
-		m_compileContext(compileContext),
-		m_bExport(false),
-		m_bContext(false),
-		m_lVarCount(0), m_nStart(0), m_nFinish(0), m_numLine(0)
-	{
-		m_realRetValue.m_numArray = 0;
-		m_realRetValue.m_numIndex = 0;
-	}
-
-	bool m_bExport, m_bContext;
-
-	wxString m_strRealName; //Function name
-	wxString m_strName; //Function name in uppercase
-	wxString m_strType; //type (in English notation), if it is a typed function
-
-	CCompileContext* m_compileContext;//compilation context
-
-	unsigned int m_lVarCount;// number of local variables
-	unsigned int m_nStart;// starting position in bytecode array
-	unsigned int m_nFinish;//final position in bytecode array
-
-	CParamUnit m_realRetValue;//for storing variable during real call
-
-	//for IntelliSense
-	unsigned int m_numLine; //source line number (for breakpoints)
-
-	wxString m_strShortDescription;//includes the entire line after the Function (Procedure) keyword
-	wxString m_strLongDescription;//includes the entire merged (i.e. without empty lines) comment block before the function (procedure) definition
-	wxString m_strContextVar; //name of the context variable
-
-	std::vector<CParamVariable> m_listParam;
-};
-
-struct CLabel
-{
-	int		 m_numLine = 0;
-	int		 m_numError = 0;
-	wxString m_strName;
-};
-
 struct CCompileContext {
+
+#pragma region __context_unit_h__
+
+	//variable definition
+	struct CVariable
+	{
+		CVariable() : m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
+		CVariable(const wxString& strVariableName) : m_strName(strVariableName), m_bExport(false), m_bContext(false), m_bTempVar(false), m_numVariable(0) {}
+
+		bool m_bExport;
+		bool m_bContext;
+		bool m_bTempVar;
+		unsigned int m_numVariable;
+		wxString m_strName; // Variable name
+		wxString m_strType; // Value type
+		wxString m_strRealName; // Real variable name
+		wxString m_strContext; //name of the context variable
+	};
+
+	//function definition
+	struct CFunction
+	{
+		struct CParamVariable
+		{
+			CParamVariable() : m_bByRef(false) {
+				m_puValue.m_numArray = -1;
+				m_puValue.m_numIndex = -1;
+			}
+
+			bool m_bByRef;
+			wxString m_strName; // Variable name
+			wxString m_strType; // Value type
+			CParamUnit m_puValue; // Default value
+		};
+
+		CFunction(const wxString& strFuncName, CCompileContext* compileContext = nullptr) :
+			m_strName(strFuncName),
+			m_compileContext(compileContext),
+			m_bExport(false),
+			m_bContext(false),
+			m_lVarCount(0), m_nStart(0), m_nFinish(0), m_numLine(0)
+		{
+			//Set current context 
+			if (compileContext != nullptr)
+				m_compileContext->m_functionContext = this;
+		}
+
+		~CFunction()
+		{
+			//Delete the subordinate context (each function has its own list of labels and local variables)
+			if (m_compileContext)
+				delete m_compileContext;
+		}
+
+		bool m_bExport, m_bContext;
+
+		wxString m_strRealName; //Function name
+		wxString m_strName; //Function name in uppercase
+		wxString m_strType; //type (in English notation), if it is a typed function
+		wxString m_strContext; //name of the context variable
+
+		CCompileContext* m_compileContext;//compilation context
+
+		unsigned int m_lVarCount;// number of local variables
+		unsigned int m_nStart;// starting position in bytecode array
+		unsigned int m_nFinish;//final position in bytecode array
+
+		//for IntelliSense
+		unsigned int m_numLine; //source line number (for breakpoints)
+
+		wxString m_strShortDescription;//includes the entire line after the Function (Procedure) keyword
+		wxString m_strLongDescription;//includes the entire merged (i.e. without empty lines) comment block before the function (procedure) definition
+
+		std::vector<CParamVariable> m_listParam;
+	};
+
+	//label definition
+	struct CLabel
+	{
+		int		 m_numLine = 0;
+		int		 m_numError = 0;
+		wxString m_strName;
+	};
+
+#pragma endregion
+
+	CCompileContext(CCompileCode* compileCode) :
+		m_parentContext(nullptr), m_functionContext(nullptr), m_compileModule(compileCode),
+		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
+	}
+
+	CCompileContext(CCompileContext* compileContext) :
+		m_parentContext(compileContext), m_functionContext(nullptr), m_compileModule(nullptr),
+		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
+	}
+
+	~CCompileContext() {}
+
+	//Create new context 
+	CCompileContext* CreateContext(short numReturn)
+	{
+		CCompileContext* compileContext = new CCompileContext(this);
+
+		compileContext->m_numReturn = numReturn;
+		compileContext->m_compileModule = m_compileModule;
+
+		return compileContext;
+	}
 
 	//Setting jump addresses for Continue and Break commands
 	void StartDoList() {
@@ -116,25 +149,23 @@ struct CCompileContext {
 
 	void DoLabels();
 
-	void SetModule(CCompileCode* module) { m_compileModule = module; }
-
 	CParamUnit CreateVariable(const wxString strPrefix = wxT("@temp_"));
 	CParamUnit AddVariable(const wxString& strVarName, const wxString& strType = wxEmptyString, bool bExport = false, bool bContext = false, bool bTempVar = false);
 	CParamUnit GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, bool bContext = false, bool bTempVar = false);
 
-	bool FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool context = false);
-	bool FindFunction(const wxString& funcName, std::shared_ptr<CFunction>& foundedFunc, bool context = false);
+	void PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
+		const wxString& typeVar = wxEmptyString, bool exportVar = true, bool contextVar = true, bool tempVar = false);
+	void PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction,
+		bool hasRetVal = true, int argCount = 0);
 
-	CCompileContext(CCompileContext* parentContext = nullptr) :
-		m_parentContext(parentContext), m_functionContext(nullptr), m_compileModule(nullptr),
-		m_numDoNumber(0), m_numReturn(0), m_numTempVar(0), m_numFindLocalInParent(1) {
-	}
+	bool FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool context = false);
+	bool FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool context = false);
 
 	CCompileCode* m_compileModule;
 	CCompileContext* m_parentContext; //parent context
 
 	//current context 
-	std::shared_ptr<CFunction> m_functionContext;
+	CFunction* m_functionContext;
 
 	//VARIABLES
 	std::map<wxString, std::shared_ptr<CVariable>> m_listVariable;

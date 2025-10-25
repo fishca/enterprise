@@ -37,7 +37,7 @@ namespace stringUtils
 		return result;
 	}
 
-	inline wxString TrimLeft(const wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimLeft(const wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		wxString result(strSource);
 		const size_t pos = result.find_first_not_of(c);
 		if (pos == 0)
@@ -46,7 +46,7 @@ namespace stringUtils
 		return result;
 	}
 
-	inline wxString TrimLeft(wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimLeft(wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		const size_t pos = strSource.find_first_not_of(c);
 		if (pos == 0)
 			return strSource;
@@ -54,7 +54,7 @@ namespace stringUtils
 		return strSource;
 	}
 
-	inline wxString TrimRight(const wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimRight(const wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		wxString result(strSource);
 		const size_t pos = result.find_last_not_of(c) + 1;
 		if (pos == result.Length())
@@ -63,7 +63,7 @@ namespace stringUtils
 		return strSource;
 	}
 
-	inline wxString TrimRight(wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimRight(wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		const size_t pos = strSource.find_last_not_of(c) + 1;
 		if (pos == strSource.Length())
 			return strSource;
@@ -71,14 +71,14 @@ namespace stringUtils
 		return strSource;
 	}
 
-	inline wxString TrimAll(const wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimAll(const wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		wxString result(strSource);
 		(void)TrimLeft(result, c);
 		(void)TrimRight(result, c);
 		return result;
 	}
 
-	inline wxString TrimAll(wxString& strSource, const wxUniChar& c = ' ') {
+	inline wxString TrimAll(wxString& strSource, const wxUniChar& c = wxT(' ')) {
 		(void)TrimLeft(strSource, c);
 		(void)TrimRight(strSource, c);
 		return strSource;
@@ -86,14 +86,22 @@ namespace stringUtils
 
 	inline wxString MakeUpper(const wxString& strSource) {
 		wxString strRet(TrimAll(strSource));
-		(void)strRet.MakeUpper();
+#ifdef wxUSE_UNICODE	
+		std::transform(strRet.begin(), strRet.end(), strRet.begin(), ::towupper);
+#else
+		std::transform(strRet.begin(), strRet.end(), strRet.begin(), ::toupper);
+#endif 
 		return strRet;
 	}
 
 	inline wxString MakeUpper(wxString& strSource) {
 		wxString strRet(strSource);
 		(void)TrimAll(strRet);
-		(void)strRet.MakeUpper();
+#ifdef wxUSE_UNICODE	
+		std::transform(strRet.begin(), strRet.end(), strRet.begin(), ::towupper);
+#else
+		std::transform(strRet.begin(), strRet.end(), strRet.begin(), ::toupper);
+#endif 
 		return strRet;
 	}
 
@@ -139,7 +147,7 @@ namespace stringUtils
 	inline bool IsSpace(const wxUniChar& c) {
 		// In addition to the regular tests, we need to make sure this isn't
 		// an extended ASCII character as well (isspace throws up if it is).
-		return c > 0 && isspace(c);
+		return c > 0 && std::isspace(c);
 	}
 
 	/**
@@ -149,7 +157,7 @@ namespace stringUtils
 	inline bool IsSymbol(const wxUniChar& c) {
 		// In addition to the regular tests, we need to make sure this isn't
 		// an extended ASCII character as well (ispunct throws up if it is).
-		return c > 0 && c != '_' && std::ispunct(c);
+		return c > 0 && c != wxT('_') && std::ispunct(c);
 	}
 
 	/**
@@ -166,7 +174,7 @@ namespace stringUtils
 	* marks except _.
 	*/
 	inline bool IsDigit(const wxUniChar& c) {
-		return c >= '0' && c <= '9';
+		return std::isdigit(c);
 	}
 
 	inline wxString GenerateSynonym(const wxString& strSystemName) {
@@ -177,7 +185,7 @@ namespace stringUtils
 			}
 			else if (c >= 'A' && c <= 'Z' ||
 				(c >= 'À' && c <= 'ß')) {
-				strSynonym += ' ';
+				strSynonym += wxT(' ');
 				strSynonym += wxTolower(c);
 			}
 			else {

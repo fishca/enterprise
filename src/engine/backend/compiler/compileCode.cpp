@@ -24,7 +24,7 @@ static std::array<int, 256> gs_operPriority = { 0 };
 
 CCompileCode::CCompileCode() :
 	CTranslateCode(),
-	m_parent(nullptr), m_rootContext(new CCompileContext),
+	m_parent(nullptr), m_rootContext(new CCompileContext(this)),
 	m_bExpressionOnly(false), m_changedCode(false),
 	m_onlyFunction(false)
 {
@@ -36,7 +36,7 @@ CCompileCode::CCompileCode() :
 
 CCompileCode::CCompileCode(const wxString& strModuleName, const wxString& strDocPath, bool onlyFunction) :
 	CTranslateCode(strModuleName, strDocPath),
-	m_parent(nullptr), m_rootContext(new CCompileContext),
+	m_parent(nullptr), m_rootContext(new CCompileContext(this)),
 	m_bExpressionOnly(false), m_changedCode(false),
 	m_onlyFunction(onlyFunction)
 {
@@ -48,7 +48,7 @@ CCompileCode::CCompileCode(const wxString& strModuleName, const wxString& strDoc
 
 CCompileCode::CCompileCode(const wxString& strFileName) :
 	CTranslateCode(strFileName),
-	m_parent(nullptr), m_rootContext(new CCompileContext),
+	m_parent(nullptr), m_rootContext(new CCompileContext(this)),
 	m_bExpressionOnly(false), m_changedCode(false),
 	m_onlyFunction(false)
 {
@@ -127,6 +127,8 @@ void CCompileCode::PrepareModuleData()
 		m_cByteCode.m_listExternValue.emplace_back(contextValue.second);
 	}
 
+	CCompileContext* mainContext = GetContext();
+
 	for (auto& pair : m_listContextValue) {
 
 		CValue* contextValue = pair.second;
@@ -135,56 +137,16 @@ void CCompileCode::PrepareModuleData()
 
 		// adding variables from context
 		for (unsigned int i = 0; i < contextValue->GetNProps(); i++) {
-
-			const wxString& strPropName = contextValue->GetPropName(i);
-			const wxString& strPropUpperName = stringUtils::MakeUpper(strPropName);
-
 			// determine the number and type of the variable
-			std::shared_ptr <CVariable> contextVariable(new CVariable(strPropName));
-
-			contextVariable->m_strContextVar = pair.first;
-			contextVariable->m_bContext = true;
-			contextVariable->m_bExport = true;
-			contextVariable->m_numVariable = i;
-
-			GetContext()->m_listVariable.insert_or_assign(strPropUpperName, std::move(contextVariable));
+			mainContext->PushVariable(
+				contextValue->GetPropName(i), pair.first, i);
 		}
 
-		CCompileContext* mainContext = GetContext();
-
 		// add methods from context
-		for (long i = 0; i < contextValue->GetNMethods(); i++) {
-
-			const wxString& strMethodName = contextValue->GetMethodName(i);
-			const wxString& strMethodUppperName = stringUtils::MakeUpper(strMethodName);
-
-			CCompileContext* compileContext(new CCompileContext(mainContext));
-			compileContext->SetModule(this);
-
-			if (contextValue->HasRetVal(i)) compileContext->m_numReturn = RETURN_FUNCTION;
-			else compileContext->m_numReturn = RETURN_PROCEDURE;
-
+		for (unsigned int i = 0; i < contextValue->GetNMethods(); i++) {
 			// define the number and type of the function
-			std::shared_ptr<CFunction> contextFunction(new CFunction(strMethodName, compileContext));
-
-			contextFunction->m_nStart = i;
-			contextFunction->m_bContext = true;
-			contextFunction->m_bExport = true;
-			contextFunction->m_strContextVar = pair.first;
-
-			CParamVariable contextVariable;
-			contextVariable.m_valData.m_numArray = DEF_VAR_DEFAULT;
-			contextVariable.m_valData.m_numIndex = DEF_VAR_DEFAULT;
-
-			for (long arg = 0; arg < contextValue->GetNParams(i); arg++) {
-				contextFunction->m_listParam.emplace_back(contextVariable);
-			}
-
-			contextFunction->m_strRealName = strMethodName;
-			contextFunction->m_strShortDescription = contextValue->GetMethodHelper(i);
-
-			// check for typing
-			GetContext()->m_listFunction.insert_or_assign(strMethodUppperName, std::move(contextFunction));
+			mainContext->PushFunction(
+				contextValue->GetMethodName(i), pair.first, contextValue->GetMethodHelper(i), i, contextValue->HasRetVal(i), contextValue->GetNParams(i));
 		}
 	}
 }
@@ -767,7 +729,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 					CBackendException::Error("Recursive call of modules!");
 				}
 			}
-			std::shared_ptr<CVariable> currentVariable = nullptr;
+			std::shared_ptr<CCompileContext::CVariable> currentVariable = nullptr;
 			if (pCurContext->FindVariable(strName, currentVariable)) { // found
 				if (currentVariable->m_bExport ||
 					pCurContext->m_compileModule == this) {
@@ -932,7 +894,7 @@ bool CCompileCode::CompileModule()
 }
 
 // search for function definition in the current module and all parent ones
-bool CCompileCode::GetFunction(const wxString& strName, std::shared_ptr<CFunction>& function, int* pNumFunction)
+bool CCompileCode::GetFunction(const wxString& strName, std::shared_ptr<CCompileContext::CFunction>& function, int* pNumFunction)
 {
 	int numCanUseLocalInParent = m_rootContext->m_numFindLocalInParent - 1;
 	int numFunction = 0;
@@ -965,7 +927,7 @@ bool CCompileCode::PushCallFunction(const std::shared_ptr<CCallFunction>& callFu
 	int numModule = 0;
 
 	// find the definition of the function
-	std::shared_ptr<CFunction> foundedFunc = nullptr;
+	std::shared_ptr<CCompileContext::CFunction> foundedFunc = nullptr;
 
 	if (!GetFunction(callFunction->m_strName, foundedFunc, &numModule)) {
 		m_numCurrentCompile = callFunction->m_numError;
@@ -1033,13 +995,13 @@ bool CCompileCode::PushCallFunction(const std::shared_ptr<CCallFunction>& callFu
 			defaultValue = true;
 		}
 		if (defaultValue) {
-			if (foundedFunc->m_listParam[i].m_valData.m_numArray == DEF_VAR_SKIP) {
+			if (foundedFunc->m_listParam[i].m_puValue.m_numArray == DEF_VAR_SKIP) {
 				m_numCurrentCompile = callFunction->m_numError;
 				SetError(ERROR_FEW_PARAMS);	// too few parameters
 				return false;
 			}
 			code.m_numOper = OPER_SETCONST;	// default values
-			code.m_param1 = foundedFunc->m_listParam[i].m_valData;
+			code.m_param1 = foundedFunc->m_listParam[i].m_puValue;
 		}
 		m_cByteCode.m_listCode.emplace_back(std::move(code));
 	}
@@ -1069,15 +1031,13 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
 	if (IsNextKeyWord(KEY_FUNCTION)) {
 		GETKeyWord(KEY_FUNCTION);
-		functionContext = new CCompileContext(context);	// create a new context in which we will compile the function body
-		functionContext->SetModule(this);
-		functionContext->m_numReturn = RETURN_FUNCTION;
+		// create a new context in which we will compile the function body
+		functionContext = context->CreateContext(RETURN_FUNCTION);
 	}
 	else if (IsNextKeyWord(KEY_PROCEDURE)) {
 		GETKeyWord(KEY_PROCEDURE);
-		functionContext = new CCompileContext(context);	// create a new context in which we will compile the body of the procedure
-		functionContext->SetModule(this);
-		functionContext->m_numReturn = RETURN_PROCEDURE;
+		// create a new context in which we will compile the body of the procedure
+		functionContext = context->CreateContext(RETURN_PROCEDURE);
 	}
 	else {
 		SetError(ERROR_FUNC_DEFINE);
@@ -1110,7 +1070,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 
 	const int errorPlace = m_numCurrentCompile;
 
-	std::shared_ptr<CFunction> createdFunction(new CFunction(strFuncName, functionContext));
+	std::shared_ptr<CCompileContext::CFunction> createdFunction(new CCompileContext::CFunction(strFuncName, functionContext));
 
 	createdFunction->m_strRealName = strFuncRealName;
 	createdFunction->m_strShortDescription = strShortDescription;
@@ -1125,7 +1085,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		const wxString typeVar = IsTypeVar() ?
 			GetTypeVar() : wxEmptyString;
 
-		CParamVariable cVariable;
+		CCompileContext::CFunction::CParamVariable cVariable;
 		if (IsNextKeyWord(KEY_VAL)) {
 			GETKeyWord(KEY_VAL);
 			cVariable.m_bByRef = true;
@@ -1136,7 +1096,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		cVariable.m_strName = strRealName;
 		cVariable.m_strType = typeVar;
 
-		std::shared_ptr<CVariable> foundedVar = nullptr;
+		std::shared_ptr<CCompileContext::CVariable> foundedVar = nullptr;
 
 		// register this variable as local
 		if (functionContext->FindVariable(strRealName, foundedVar)) { // there was an announcement + repeated announcement = error
@@ -1150,7 +1110,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		}
 		else if (IsNextDelimeter('=')) {
 			GETDelimeter('=');
-			cVariable.m_valData = FindConst(GETConstant());
+			cVariable.m_puValue = FindConst(GETConstant());
 		}
 
 		functionContext->AddVariable(strRealName, typeVar);
@@ -1178,7 +1138,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 			}
 		}
 
-		std::shared_ptr<CFunction> foundedFunc = nullptr;
+		std::shared_ptr<CCompileContext::CFunction> foundedFunc = nullptr;
 		if (pCurContext->FindFunction(strFuncName, foundedFunc)) { // found
 			if (foundedFunc != createdFunction && foundedFunc->m_bExport) {
 				m_numCurrentCompile = errorPlace;
@@ -1223,13 +1183,13 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		//add set oper
 		CByteUnit code;
 		AddLineInfo(code);
-		if (createdFunction->m_listParam[i].m_valData.m_numArray == DEF_VAR_CONST) {
+		if (createdFunction->m_listParam[i].m_puValue.m_numArray == DEF_VAR_CONST) {
 			code.m_numOper = OPER_SETCONST;// parameters are being passed
 		}
 		else {
 			code.m_numOper = OPER_SET;// parameters are being passed
 		}
-		code.m_param1 = createdFunction->m_listParam[i].m_valData;
+		code.m_param1 = createdFunction->m_listParam[i].m_puValue;
 		code.m_param2.m_numIndex = createdFunction->m_listParam[i].m_bByRef;
 		m_cByteCode.m_listCode.emplace_back(std::move(code));
 
@@ -1263,8 +1223,6 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 
 	m_cByteCode.m_listCode[lAddres].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
 	m_cByteCode.m_listCode[lAddres].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
-
-	functionContext->m_functionContext = std::move(createdFunction); 
 	return true;
 }
 
@@ -1361,7 +1319,7 @@ bool CCompileCode::CompileBlock(CCompileContext* context)
 					SetError(ERROR_USE_RETURN); // return operator cannot be used outside a procedure or function
 					return false;
 				}
-				
+
 				CByteUnit code;
 				AddLineInfo(code);
 				code.m_numOper = OPER_RET;
@@ -1633,7 +1591,7 @@ bool CCompileCode::CompileGoto(CCompileContext* context)
 {
 	GETKeyWord(KEY_GOTO);
 
-	std::shared_ptr<CLabel> data(new CLabel);
+	std::shared_ptr<CCompileContext::CLabel> data(new CCompileContext::CLabel);
 
 	data->m_strName = GETIdentifier();
 	data->m_numLine = m_cByteCode.m_listCode.size();//remember those transitions that will need to be processed later
@@ -1667,7 +1625,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 	const wxString& strName = stringUtils::MakeUpper(strRealName);
 
 	if (IsNextDelimeter('(')) { // this is a function call
-		std::shared_ptr<CFunction> foundedFunc = nullptr;
+		std::shared_ptr<CCompileContext::CFunction> foundedFunc = nullptr;
 		if (m_rootContext->FindFunction(strName, foundedFunc, true)) {
 			const int numConst = GetConstString(strRealName);
 			std::vector <CParamUnit> listParam;
@@ -1696,12 +1654,13 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 				SetError(ERROR_MANY_PARAMS); // too many parameters
 				return CParamUnit();
 			}
+
 			CByteUnit code;
 			AddLineInfo(code);
 			code.m_numOper = OPER_CALL_M;
 
 			// variable on which the method is called
-			code.m_param2 = context->GetVariable(foundedFunc->m_strContextVar, true, false, true);
+			code.m_param2 = context->GetVariable(foundedFunc->m_strContext, true, false, true);
 			code.m_param3.m_numIndex = numConst;//number of the called method from the list of encountered methods
 			code.m_param3.m_numArray = listParam.size();// number of parameters
 			variable = context->CreateVariable();
@@ -1725,7 +1684,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 		numIsSet = 0;
 	}
 	else { //this is a variable call
-		std::shared_ptr<CVariable> foundedVar = nullptr; numIsSet = 1;
+		std::shared_ptr<CCompileContext::CVariable> foundedVar = nullptr; numIsSet = 1;
 		if (m_rootContext->FindVariable(strRealName, foundedVar, true)) {
 			CByteUnit code;
 			AddLineInfo(code);
@@ -1733,7 +1692,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 			if (IsNextDelimeter('=') && numPrevSet == 1) {
 				GETDelimeter('='); numIsSet = 0;
 				code.m_numOper = OPER_SET_A;
-				code.m_param1 = context->GetVariable(foundedVar->m_strContextVar, true, false, true);//variable for which the attribute is called
+				code.m_param1 = context->GetVariable(foundedVar->m_strContext, true, false, true);//variable for which the attribute is called
 				code.m_param2.m_numIndex = numConst;//number of the called method from the list of encountered attributes and methods
 				code.m_param3 = GetExpression(context);
 				m_cByteCode.m_listCode.emplace_back(std::move(code));
@@ -1741,7 +1700,7 @@ CParamUnit CCompileCode::GetCurrentIdentifier(CCompileContext* context, int& num
 			}
 			else {
 				code.m_numOper = OPER_GET_A;
-				code.m_param2 = context->GetVariable(foundedVar->m_strContextVar, true, false, true);//variable for which the attribute is called
+				code.m_param2 = context->GetVariable(foundedVar->m_strContext, true, false, true);//variable for which the attribute is called
 				code.m_param3.m_numIndex = numConst;//number of the attribute to be called from the list of attributes and methods encountered
 				variable = context->CreateVariable();
 				code.m_param1 = variable;// variable into which the value is returned
@@ -2177,7 +2136,7 @@ CParamUnit CCompileCode::GetCallFunction(CCompileContext* context, const wxStrin
 
 	callFunc->m_numIsSet = numIsSet;
 
-	std::shared_ptr<CFunction> foundedFunc = nullptr;
+	std::shared_ptr<CCompileContext::CFunction> foundedFunc = nullptr;
 	if (m_bExpressionOnly)
 		(void)GetFunction(callFunc->m_strName, foundedFunc);
 	else

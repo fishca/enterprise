@@ -32,25 +32,17 @@ CParamUnit CCompileContext::AddVariable(const wxString& strVarName,
 		return CParamUnit();
 	}
 
-	unsigned int numCountVar = m_listVariable.size();
-	wxString strVarUpperName = stringUtils::MakeUpper(strVarName);
-
-	std::shared_ptr<CVariable> currentVariable(new CVariable);
-
-	currentVariable->m_strName = strVarUpperName;
-	currentVariable->m_strRealName = strVarName;
-	currentVariable->m_bExport = exportVar;
-	currentVariable->m_bContext = contextVar;
-	currentVariable->m_bTempVar = tempVar;
-	currentVariable->m_strType = typeVar;
-	currentVariable->m_numVariable = numCountVar;
-
-	m_listVariable.insert_or_assign(strVarUpperName, std::move(currentVariable));
+	unsigned int numVariable = m_listVariable.size();
+	PushVariable(strVarName, wxEmptyString, numVariable,
+		typeVar, exportVar, contextVar, tempVar);
 
 	CParamUnit variable;
+
+	//determine the number and type of the variable
 	variable.m_numArray = 0;
 	variable.m_strType = typeVar;
-	variable.m_numIndex = numCountVar;
+	variable.m_numIndex = numVariable;
+
 	return variable;
 }
 
@@ -83,11 +75,14 @@ CParamUnit CCompileContext::GetVariable(const wxString& strVarName, bool bFindIn
 					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
 					if (numCanUseLocalInParent > 0 ||
 						currentVariable->m_bExport) {
+
 						CParamUnit variable;
+
 						//determine the variable number
 						variable.m_numArray = numParent;
 						variable.m_numIndex = currentVariable->m_numVariable;
 						variable.m_strType = currentVariable->m_strType;
+
 						return variable;
 					}
 				}
@@ -115,6 +110,57 @@ CParamUnit CCompileContext::GetVariable(const wxString& strVarName, bool bFindIn
 	variable.m_strType = currentVariable->m_strType;
 
 	return variable;
+}
+
+void CCompileContext::PushVariable(const wxString& strVarName, const wxString& strContextVar, unsigned int numVariable,
+	const wxString& typeVar, bool exportVar, bool contextVar, bool tempVar)
+{
+	std::shared_ptr<CVariable> currentVariable(
+		new CVariable(stringUtils::MakeUpper(strVarName))
+	);
+
+	currentVariable->m_strRealName = strVarName;
+	currentVariable->m_bExport = exportVar;
+	currentVariable->m_bContext = contextVar;
+
+	currentVariable->m_strContext = stringUtils::MakeUpper(strContextVar);  //variable for which the attribute is called
+
+	currentVariable->m_bTempVar = tempVar;
+	currentVariable->m_strType = typeVar;
+	currentVariable->m_numVariable = numVariable;
+
+	m_listVariable.insert_or_assign(
+		currentVariable->m_strName, std::move(currentVariable)
+	);
+}
+
+void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& strContextVar, const wxString& strShortDescription, unsigned int numFunction, bool hasRetVal, int argCount)
+{
+	std::shared_ptr<CCompileContext::CFunction> contextFunction(
+		new CFunction(stringUtils::MakeUpper(strFuncName), CreateContext(hasRetVal ? RETURN_FUNCTION : RETURN_PROCEDURE))
+	);
+
+	contextFunction->m_nStart = numFunction;
+	contextFunction->m_bContext = true;
+	contextFunction->m_bExport = true;
+
+	contextFunction->m_strContext = stringUtils::MakeUpper(strContextVar); //variable for which the attribute is called
+
+	if (argCount > 0) contextFunction->m_listParam.reserve(argCount);
+
+	for (long arg = 0; arg < argCount; arg++) {
+		CFunction::CParamVariable contextVariable;
+		contextVariable.m_puValue.m_numArray = DEF_VAR_DEFAULT;
+		contextVariable.m_puValue.m_numIndex = DEF_VAR_DEFAULT;
+		contextFunction->m_listParam.emplace_back(std::move(contextVariable));
+	}
+
+	contextFunction->m_strRealName = strFuncName;
+	contextFunction->m_strShortDescription = strShortDescription;
+
+	m_listFunction.insert_or_assign(
+		contextFunction->m_strName, std::move(contextFunction)
+	);
 }
 
 /**
@@ -154,10 +200,10 @@ bool CCompileContext::FindVariable(const wxString& strVarName, std::shared_ptr<C
  * Returns true - if the variable is found
  */
 
-bool CCompileContext::FindFunction(const wxString& funcName, std::shared_ptr<CFunction>& foundedFunc, bool contextVar)
+bool CCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool contextVar)
 {
 	auto it = std::find_if(m_listFunction.begin(), m_listFunction.end(),
-		[funcName](const auto pair) { return stringUtils::CompareString(funcName, pair.first); });
+		[strFuncName](const auto pair) { return stringUtils::CompareString(strFuncName, pair.first); });
 
 	if (contextVar) {
 		if (it != m_listFunction.end() && it->second) {
@@ -165,7 +211,7 @@ bool CCompileContext::FindFunction(const wxString& funcName, std::shared_ptr<CFu
 			return it->second->m_bContext;
 		}
 
-		if (m_parentContext && m_parentContext->FindFunction(funcName, foundedFunc, contextVar))
+		if (m_parentContext && m_parentContext->FindFunction(strFuncName, foundedFunc, contextVar))
 			return true;
 
 		foundedFunc = nullptr;

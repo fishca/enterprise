@@ -32,7 +32,6 @@ class BACKEND_API CCompileCode : public CTranslateCode {
 	};
 
 	friend class CProcUnit;
-	friend struct CCompileContext;
 
 public:
 
@@ -67,11 +66,7 @@ public:
 public:
 
 	static void InitializeCompileModule();
-
-	CCompileContext* GetContext() {
-		m_rootContext->SetModule(this);
-		return m_rootContext;
-	};
+	CCompileContext* GetContext() const { return m_rootContext; }
 
 private:
 
@@ -146,7 +141,7 @@ protected:
 	CParamUnit FindConst(const CValue& constData);
 
 	bool PushCallFunction(const std::shared_ptr<CCallFunction>& function);
-	bool GetFunction(const wxString& strName, std::shared_ptr<CFunction>& function, int* pNumFunction = nullptr);
+	bool GetFunction(const wxString& strName, std::shared_ptr<CCompileContext::CFunction>& function, int* pNumFunction = nullptr);
 
 	bool IsTypeVar(const wxString& sVariable = wxEmptyString);
 	wxString GetTypeVar(const wxString& sVariable = wxEmptyString);
@@ -156,6 +151,8 @@ protected:
 
 	std::map<wxString, unsigned int> m_listHashConst;
 	std::vector<std::shared_ptr<CCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
+
+	friend struct CCompileContext;
 };
 
 #endif 

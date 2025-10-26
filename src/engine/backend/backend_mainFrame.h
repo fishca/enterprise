@@ -8,7 +8,6 @@
 	IBackendDocMDIFrame::GetDocMDIFrame() \
 
 class BACKEND_API IBackendDocMDIFrame {
-	static IBackendDocMDIFrame* ms_mainFrame;
 protected:
 	IBackendDocMDIFrame();
 public:
@@ -55,14 +54,15 @@ public:
 	virtual void ClearMessage() {}
 
 	virtual void RefreshFrame() = 0;
-	virtual void RaiseFrame();
+	virtual void RaiseFrame() = 0;
 
 	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const { return false; }
 
 public:
-
 	virtual void OnInitializeConfiguration(enum eConfigType cfg) {}
 	virtual void OnDestroyConfiguration(enum eConfigType cfg) {}
+private:
+	static IBackendDocMDIFrame* ms_mainFrame;
 };
 
 #endif

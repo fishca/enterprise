@@ -72,12 +72,12 @@ bool CMetaObjectTableData::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectTableData::OnSaveMetaObject()
+bool CMetaObjectTableData::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyNumberLine)->OnDeleteMetaObject())
+	if (!(*m_propertyNumberLine)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObject::OnSaveMetaObject();
+	return IMetaObject::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectTableData::OnDeleteMetaObject()

@@ -67,7 +67,9 @@ public:
 	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) override;
 
 	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
+
 	virtual void RefreshFrame() override;
+	virtual void RaiseFrame() override;
 
 	virtual wxAuiToolBar* GetMainFrameToolbar() const { return m_mainFrameToolbar; }
 	virtual wxAuiToolBar* GetDocToolbar() const { return m_docToolbar; }
@@ -178,6 +180,8 @@ protected:
 	KeyBinder             m_keyBinder;
 	FontColorSettings     m_fontColorSettings;
 	EditorSettings        m_editorSettings;
+
+	bool m_callRaiseFrame;
 
 	wxAuiToolBar* m_mainFrameToolbar;
 	wxAuiToolBar* m_docToolbar;

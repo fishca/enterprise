@@ -4,8 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "metaModuleObject.h"
-#include "backend/databaseLayer/databaseLayer.h"
-#include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
 
 //***********************************************************************
@@ -22,9 +20,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectManagerModule, CMetaObjectCommonModule);
 //*                           System metaData                           *
 //***********************************************************************
 
-#include "backend/debugger/debugServer.h"
 #include "backend/debugger/debugClient.h"
-#include "backend/metaData.h"
 
 bool IMetaObjectModule::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
@@ -36,14 +32,16 @@ bool IMetaObjectModule::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectModule::OnSaveMetaObject()
+bool IMetaObjectModule::OnSaveMetaObject(int flags)
 {
-	//initialize debugger server
-	if (appData->DesignerMode()) {
-		return debugClient->SaveBreakpoints(GetDocPath());
+	//save debugger client offset
+	if ((flags & saveConfigFlag) != 0 && appData->DesignerMode()) {
+		const wxString& strBuffer = GetModuleText();
+		debugClient->SaveModule(GetDocPath(),
+			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
 	}
 
-	return IMetaObject::OnSaveMetaObject();
+	return IMetaObject::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectModule::OnDeleteMetaObject()
@@ -53,23 +51,22 @@ bool IMetaObjectModule::OnDeleteMetaObject()
 
 bool IMetaObjectModule::OnBeforeRunMetaObject(int flags)
 {
-	wxString strBuffer = GetModuleText();
-	
-	//initialize debugger server
-	const unsigned int total_line = 1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n'));
+	//initialize debugger client
+	if ((flags & loadConfigFlag) == 0 && (flags & newObjectFlag) == 0 && appData->DesignerMode()) {
+		const wxString& strBuffer = GetModuleText();
+		debugClient->InitializeModule(GetDocPath(),
+			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
+	}
 
-	if (appData->DesignerMode()) {
-		debugClient->InitializeBreakpoints(GetDocPath(), 0, total_line);
-	}
-	else {
-		debugServer->InitializeBreakpoints(GetDocPath(), 0, total_line);
-	}
-	
 	return IMetaObject::OnBeforeRunMetaObject(flags);
 }
 
 bool IMetaObjectModule::OnAfterCloseMetaObject()
 {
+	//remove debugger client module unit
+	//if (appData->DesignerMode())
+	//	debugClient->RemoveModule(GetDocPath());
+
 	return IMetaObject::OnAfterCloseMetaObject();
 }
 
@@ -126,6 +123,8 @@ bool CMetaObjectCommonModule::SaveData(CMemoryWriter& writer)
 //*                          common value object                        *
 //***********************************************************************
 
+#include "backend/metaData.h"
+
 bool CMetaObjectCommonModule::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	return IMetaObjectModule::OnCreateMetaObject(metaData, flags);
@@ -136,9 +135,9 @@ bool CMetaObjectCommonModule::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectModule::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectCommonModule::OnSaveMetaObject()
+bool CMetaObjectCommonModule::OnSaveMetaObject(int flags)
 {
-	return IMetaObjectModule::OnSaveMetaObject();
+	return IMetaObjectModule::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectCommonModule::OnDeleteMetaObject()

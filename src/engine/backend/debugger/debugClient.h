@@ -175,10 +175,11 @@ public:
 	void Stop(bool kill);
 
 	//for breakpoints and offsets 
-	void InitializeBreakpoints(const wxString& strModuleName, unsigned int from, unsigned int to);
-	void PatchBreakpointCollection(const wxString& strModuleName, unsigned int line, int offsetLine);
+	void InitializeModule(const wxString& strModuleName, unsigned int line_count);
+	void PatchModule(const wxString& strModuleName, unsigned int line, int line_offset);
+	bool SaveModule(const wxString& strModuleName, unsigned int line_count);
+	void RemoveModule(const wxString& strModuleName);
 
-	bool SaveBreakpoints(const wxString& strModuleName);
 	bool SaveAllBreakpoints();
 
 	bool ToggleBreakpoint(const wxString& strModuleName, unsigned int line);
@@ -230,7 +231,7 @@ protected:
 	static bool CreateBreakpointDatabase();
 
 	//db support 
-	void LoadBreakpointCollection();
+	void LoadBreakpointCollection(const wxString& strModuleName);
 
 	bool ToggleBreakpointInDB(const wxString& strModuleName, unsigned int line);
 	bool RemoveBreakpointInDB(const wxString& strModuleName, unsigned int line);
@@ -273,6 +274,26 @@ protected:
 	}
 
 private:
+
+	int GetLineOffset(const wxString& strModuleName, const int current_line) const {
+
+		auto iterator_module_offset = std::find_if(
+			m_listOffsetBreakpoint.begin(),
+			m_listOffsetBreakpoint.end(),
+			[strModuleName](const auto pair) {
+				return stringUtils::CompareString(pair.first, strModuleName);
+			}
+		);
+
+		if (iterator_module_offset != m_listOffsetBreakpoint.end()) {
+			auto& list_module_offset = iterator_module_offset->second;
+			auto iterator_list_module_offset = list_module_offset.find(current_line - 1);
+			if (iterator_list_module_offset != list_module_offset.end())
+				return current_line + iterator_list_module_offset->second;
+		}
+
+		return current_line;
+	}
 
 	static CDebuggerClient* ms_debugClient;
 

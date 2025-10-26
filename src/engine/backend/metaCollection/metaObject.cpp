@@ -160,16 +160,14 @@ bool IMetaObject::SaveMetaObject(IMetaData* metaData, CMemoryWriter& dataWritter
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
-	if (m_metaData != metaData) {
+	if (m_metaData != metaData)
 		return false;
-	}
 
-	if (!SaveMeta(dataWritter)) {
+	if (!SaveMeta(dataWritter))
 		return false;
-	}
 
 	if (!saveToFile &&
-		!OnSaveMetaObject()) {
+		!OnSaveMetaObject(flags)) {
 		return false;
 	}
 
@@ -178,15 +176,10 @@ bool IMetaObject::SaveMetaObject(IMetaData* metaData, CMemoryWriter& dataWritter
 
 bool IMetaObject::DeleteMetaObject(IMetaData* metaData)
 {
-	if (m_metaData != metaData) {
+	if (m_metaData != metaData)
 		return false;
-	}
 
-	if (!DeleteData()) {
-		return false;
-	}
-
-	return true;
+	return DeleteData();
 }
 
 bool IMetaObject::CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags)

@@ -28,12 +28,3 @@ IBackendDocMDIFrame::~IBackendDocMDIFrame() {
 		ms_mainFrame = nullptr;
 	}
 }
-
-void IBackendDocMDIFrame::RaiseFrame() {
-	wxFrame* const mainFrame = GetFrameHandler();
-	if (mainFrame != nullptr && mainFrame->IsFocusable()) {
-		mainFrame->Iconize(false); // restore the window if minimized
-		mainFrame->SetFocus();     // focus on my window
-		mainFrame->Raise();        // bring window to front
-	}
-}

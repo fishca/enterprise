@@ -75,12 +75,12 @@ bool CMetaObjectConstant::OnLoadMetaObject(IMetaData* metaData)
 	return CMetaObjectAttribute::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectConstant::OnSaveMetaObject()
+bool CMetaObjectConstant::OnSaveMetaObject(int flags)
 {
-	if (!m_propertyModule->GetMetaObject()->OnSaveMetaObject())
+	if (!m_propertyModule->GetMetaObject()->OnSaveMetaObject(flags))
 		return false;
 
-	return CMetaObjectAttribute::OnSaveMetaObject();
+	return CMetaObjectAttribute::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectConstant::OnDeleteMetaObject()

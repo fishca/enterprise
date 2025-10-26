@@ -79,9 +79,8 @@ public:
 		m_output->SetReadOnly(true);
 	};
 
-	virtual void RefreshFrame() {
-		wxFrame::Refresh();
-	};
+	virtual void RaiseFrame() { wxFrame::Raise(); }
+	virtual void RefreshFrame() { wxFrame::Refresh(); }
 
 	void AppendOutput(const wxString& str) const {
 		m_output->SetReadOnly(false);

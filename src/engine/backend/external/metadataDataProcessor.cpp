@@ -19,8 +19,6 @@ m_version(version_oes_last)
 		IMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 	);
 	
-	//m_commonObject->SetReadOnly(!m_metaReadOnly);
-
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
 		m_moduleManager = new CModuleManagerExternalDataProcessor(this, m_commonObject);
 		m_moduleManager->IncrRef();
@@ -304,7 +302,7 @@ bool CMetaDataDataProcessor::SaveToFile(const wxString& strFileName)
 	m_fullPath = strFileName;
 
 	//Save common object
-	if (!SaveCommonMetadata(g_metaExternalDataProcessorCLSID, writterData))
+	if (!SaveCommonMetadata(g_metaExternalDataProcessorCLSID, writterData, saveConfigFlag))
 		return false;
 
 	//Delete common object
@@ -436,7 +434,7 @@ bool CMetaDataDataProcessor::SaveHeader(CMemoryWriter& writterData)
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, bool saveToFile)
+bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags)
 {
 	//Save common object
 	CMemoryWriter writterMemory;
@@ -444,7 +442,7 @@ bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid,
 	CMemoryWriter writterMetaMemory;
 	CMemoryWriter writterDataMemory;
 
-	if (!m_commonObject->SaveMetaObject(m_ownerMeta, writterDataMemory, saveToFile)) {
+	if (!m_commonObject->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
 		return false;
 	}
 
@@ -452,7 +450,7 @@ bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid,
 
 	CMemoryWriter writterChildMemory;
 
-	if (!SaveChildMetadata(clsid, writterChildMemory, m_commonObject, saveToFile))
+	if (!SaveChildMetadata(clsid, writterChildMemory, m_commonObject, flags))
 		return false;
 
 	writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
@@ -462,7 +460,7 @@ bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid,
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* metaParent, bool saveToFile)
+bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* metaParent, int flags)
 {
 	for (auto& obj : metaParent->GetObjects())
 	{
@@ -474,7 +472,7 @@ bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemor
 		CMemoryWriter writterMetaMemory;
 		CMemoryWriter writterDataMemory;
 
-		if (!obj->SaveMetaObject(m_ownerMeta, writterDataMemory, saveToFile)) {
+		if (!obj->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
 			return false;
 		}
 
@@ -482,7 +480,7 @@ bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemor
 
 		CMemoryWriter writterChildMemory;
 
-		if (!SaveChildMetadata(obj->GetClassType(), writterChildMemory, obj, saveToFile)) {
+		if (!SaveChildMetadata(obj->GetClassType(), writterChildMemory, obj, flags)) {
 			return false;
 		}
 

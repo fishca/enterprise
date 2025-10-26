@@ -324,18 +324,18 @@ bool CMetaObjectCatalog::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectCatalog::OnSaveMetaObject()
+bool CMetaObjectCatalog::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeOwner)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeOwner)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectCatalog::OnDeleteMetaObject()

@@ -866,7 +866,6 @@ start_label:
 		}
 		CBackendException::ProcessError(m_pByteCode->m_listCode[lCodeLine], err->what());
 	}
-	//return cRetValue;
 }
 
 //nRunModule parameters:

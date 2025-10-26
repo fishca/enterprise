@@ -304,24 +304,24 @@ bool CMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectDocument::OnSaveMetaObject()
+bool CMetaObjectDocument::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeNumber)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeNumber)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeDate)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDate)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributePosted)->OnSaveMetaObject())
+	if (!(*m_propertyAttributePosted)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectDocument::OnDeleteMetaObject()

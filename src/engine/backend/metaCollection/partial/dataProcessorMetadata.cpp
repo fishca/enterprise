@@ -164,17 +164,17 @@ bool CMetaObjectDataProcessor::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordData::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectDataProcessor::OnSaveMetaObject()
+bool CMetaObjectDataProcessor::OnSaveMetaObject(int flags)
 {
 	if (m_objMode == METAOBJECT_NORMAL) {
-		if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+		if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 			return false;
 	}
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordData::OnSaveMetaObject();
+	return IMetaObjectRecordData::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectDataProcessor::OnDeleteMetaObject()

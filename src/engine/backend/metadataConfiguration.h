@@ -193,7 +193,7 @@ public:
 	virtual bool RunDatabase(int flags = defaultFlag) {
 		if (!CMetaDataConfiguration::RunDatabase(flags))
 			return false;
-		return m_configMetadata->RunDatabase(flags);
+		return m_configMetadata->RunDatabase(flags | loadConfigFlag);
 	}
 
 	virtual bool CloseDatabase(int flags = defaultFlag) {

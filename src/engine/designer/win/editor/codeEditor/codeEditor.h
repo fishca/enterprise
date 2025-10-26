@@ -84,7 +84,7 @@ class CCodeEditor : public wxStyledTextCtrl {
 		{
 		}
 
-		void RecreateFoldLevel() const { m_update_fold = true; }
+		void RecalcFoldLevel() const { m_update_fold = true; }
 		void UpdateFoldLevel() {
 
 			if (m_update_fold) {

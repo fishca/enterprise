@@ -342,7 +342,7 @@ bool CCodeEditor::LoadModule()
 			EmptyUndoBuffer();
 		}
 
-		m_fp.RecreateFoldLevel();
+		m_fp.RecalcFoldLevel();
 		RefreshEditor();
 		return moduleObject != nullptr;
 	}
@@ -651,11 +651,8 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 				if (event.m_linesAdded != 0) {
 
-					debugClient->PatchBreakpointCollection(
-						moduleObject->GetDocPath(),
-						line,
-						event.m_linesAdded
-					);
+					debugClient->PatchModule(
+						moduleObject->GetDocPath(), line, event.m_linesAdded);
 
 					if (m_lineBreakpoint != wxNOT_FOUND) {
 						MarkerDeleteAll(CCodeEditor::BreakLine);
@@ -713,7 +710,7 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 			}
 		}
 
-		m_fp.RecreateFoldLevel();
+		m_fp.RecalcFoldLevel();
 	}
 }
 

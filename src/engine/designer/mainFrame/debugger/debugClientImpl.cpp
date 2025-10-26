@@ -23,10 +23,7 @@ void CDebuggerClientBridge::OnSessionStart(wxSocketClient* sock)
 		}
 	}
 
-	if (mainFrame != nullptr) {
-		mainFrame->Debugger_OnSessionStart();
-		//mainFrame->RefreshFrame(); // Lots of unnecessary updates
-	}
+	if (mainFrame != nullptr) mainFrame->Debugger_OnSessionStart();
 }
 
 void CDebuggerClientBridge::OnSessionEnd(wxSocketClient* sock)
@@ -54,10 +51,7 @@ void CDebuggerClientBridge::OnSessionEnd(wxSocketClient* sock)
 	if (localWindow != nullptr) localWindow->ClearAndCreate();
 	if (stackWindow != nullptr) stackWindow->ClearAndCreate();
 
-	if (mainFrame != nullptr) {
-		mainFrame->Debugger_OnSessionEnd();
-		//mainFrame->RefreshFrame(); // Lots of unnecessary updates
-	}
+	if (mainFrame != nullptr) mainFrame->Debugger_OnSessionEnd();
 }
 
 void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data)
@@ -89,10 +83,7 @@ void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const CDebugLineDa
 		}
 	}
 
-	if (mainFrame != nullptr) {
-		mainFrame->Debugger_OnEnterLoop();
-		//mainFrame->RefreshFrame(); // Lots of unnecessary updates
-	}
+	if (mainFrame != nullptr) mainFrame->Debugger_OnEnterLoop();
 }
 
 void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data)
@@ -134,10 +125,7 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineDa
 	if (localWindow != nullptr) localWindow->ClearAndCreate();
 	if (stackWindow != nullptr) stackWindow->ClearAndCreate();
 
-	if (mainFrame != nullptr) {
-		mainFrame->Debugger_OnLeaveLoop();
-		//mainFrame->RefreshFrame(); // Lots of unnecessary updates
-	}
+	if (mainFrame != nullptr) mainFrame->Debugger_OnLeaveLoop();
 }
 
 void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)

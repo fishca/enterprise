@@ -168,9 +168,9 @@ bool CMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectEnumeration::OnSaveMetaObject()
+bool CMetaObjectEnumeration::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -180,7 +180,7 @@ bool CMetaObjectEnumeration::OnSaveMetaObject()
 	}
 #endif 
 
-	return IMetaObjectRecordDataEnumRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataEnumRef::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectEnumeration::OnDeleteMetaObject()

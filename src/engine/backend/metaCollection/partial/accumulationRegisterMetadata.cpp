@@ -133,15 +133,15 @@ bool CMetaObjectAccumulationRegister::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRegisterData::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectAccumulationRegister::OnSaveMetaObject()
+bool CMetaObjectAccumulationRegister::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeRecordType)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeRecordType)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -151,7 +151,7 @@ bool CMetaObjectAccumulationRegister::OnSaveMetaObject()
 	}
 #endif 
 
-	return IMetaObjectRegisterData::OnSaveMetaObject();
+	return IMetaObjectRegisterData::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectAccumulationRegister::OnDeleteMetaObject()

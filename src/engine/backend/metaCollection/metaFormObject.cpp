@@ -212,9 +212,9 @@ bool CMetaObjectForm::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectForm::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectForm::OnSaveMetaObject()
+bool CMetaObjectForm::OnSaveMetaObject(int flags)
 {
-	return IMetaObjectForm::OnSaveMetaObject();
+	return IMetaObjectForm::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectForm::OnDeleteMetaObject()
@@ -300,7 +300,7 @@ bool CMetaObjectCommonForm::OnAfterRunMetaObject(int flags)
 		IModuleManager* moduleManager = m_metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (moduleManager->AddCompileModule(this, formWrapper::inl::cast_value(IMetaObjectForm::CreateAndBuildForm(this, defaultFormType)))) {
-			return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+			return IMetaObjectModule::OnAfterRunMetaObject(flags);
 		}
 		return false;
 	}

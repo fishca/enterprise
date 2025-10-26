@@ -79,7 +79,6 @@ public:
 	void EnterDebugger(CRunContext* pContext, struct CByteUnit& CurCode, long& nPrevLine);
 	bool IsDebugLooped() const { return m_bDebugLoop; }
 
-	void InitializeBreakpoints(const wxString& strDocPath, unsigned int from, unsigned int to);
 	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int line, const wxString& strErrorMessage);
 
 protected:
@@ -129,8 +128,7 @@ private:
 
 	bool		m_waitConnection;
 
-	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
-	std::map <wxString, std::map<unsigned int, int>> m_listOffsetBreakpoint; //list of changed transitions
+	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points 
 
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
 	std::map <unsigned long long, wxString> m_listExpression;

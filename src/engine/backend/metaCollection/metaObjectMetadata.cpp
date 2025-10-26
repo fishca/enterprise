@@ -68,13 +68,13 @@ bool CMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectConfiguration::OnSaveMetaObject()
+bool CMetaObjectConfiguration::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject()) {
+	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject(flags)) {
 		return false;
 	}
 
-	return IMetaObject::OnSaveMetaObject();
+	return IMetaObject::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectConfiguration::OnDeleteMetaObject()

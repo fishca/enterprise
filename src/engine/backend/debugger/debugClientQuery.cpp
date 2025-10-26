@@ -38,26 +38,27 @@ bool CDebuggerClient::CreateBreakpointDatabase()
 ///////////////////////////////////////////////////////////////////////////////////////
 
 //db support 
-void CDebuggerClient::LoadBreakpointCollection()
+void CDebuggerClient::LoadBreakpointCollection(const wxString& strModuleName)
 {
-	if (m_listBreakpoint.size() > 0) m_listBreakpoint.clear();
-	
-	IDatabaseResultSet* databaseResultSet = db_query->RunQueryWithResults("SELECT * FROM %s", dbg_table);
+	m_listBreakpoint[strModuleName].clear();
+
+	IDatabaseResultSet* databaseResultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE moduleName = '%s'", dbg_table, strModuleName);
 	wxASSERT(databaseResultSet);
 	while (databaseResultSet->Next()) {
-		m_listBreakpoint[databaseResultSet->GetResultString("moduleName")][databaseResultSet->GetResultInt("moduleLine")] = 0;
+		m_listBreakpoint[strModuleName][databaseResultSet->GetResultInt("moduleLine")] = 0;
 	}
+
 	db_query->CloseResultSet(databaseResultSet);
 }
 
-bool CDebuggerClient::ToggleBreakpointInDB(const wxString& moduleName, unsigned int line)
+bool CDebuggerClient::ToggleBreakpointInDB(const wxString& strModuleName, unsigned int line)
 {
 	bool successful = true;
 	IPreparedStatement* preparedStatement = nullptr;	
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-		preparedStatement = db_query->PrepareStatement("INSERT INTO %s(moduleName, moduleLine) VALUES('" + moduleName + "', " + stringUtils::IntToStr(line) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table);
+		preparedStatement = db_query->PrepareStatement("INSERT INTO %s(moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(line) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table);
 	else
-		preparedStatement = db_query->PrepareStatement("UPDATE OR INSERT INTO %s(moduleName, moduleLine) VALUES('" + moduleName + "', " + stringUtils::IntToStr(line) + ") MATCHING (moduleName, moduleLine); ", dbg_table);
+		preparedStatement = db_query->PrepareStatement("UPDATE OR INSERT INTO %s(moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(line) + ") MATCHING (moduleName, moduleLine); ", dbg_table);
 	wxASSERT(preparedStatement);
 	if (preparedStatement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		wxASSERT_MSG(false, "error in ToggleBreakpointInDB"); successful = false;
@@ -66,31 +67,31 @@ bool CDebuggerClient::ToggleBreakpointInDB(const wxString& moduleName, unsigned 
 	return successful;
 }
 
-bool CDebuggerClient::RemoveBreakpointInDB(const wxString& moduleName, unsigned int line)
+bool CDebuggerClient::RemoveBreakpointInDB(const wxString& strModuleName, unsigned int line)
 {
 	bool successful = true;
-	IPreparedStatement* preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i;", dbg_table, moduleName, line);
+	IPreparedStatement* preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i;", dbg_table, strModuleName, line);
 	wxASSERT(preparedStatement);
 	if (preparedStatement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		wxASSERT_MSG(false, "error in RemoveBreakpointInDB"); successful = false;
 	}
-	if (db_query->RunQuery("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i", dbg_table, moduleName, line) == DATABASE_LAYER_QUERY_RESULT_ERROR) {
+	if (db_query->RunQuery("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i", dbg_table, strModuleName, line) == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		wxASSERT_MSG(false, "error in RemoveBreakpointInDB: "); successful = false;
 	}
 	db_query->CloseStatement(preparedStatement);
 	return successful;
 }
 
-bool CDebuggerClient::OffsetBreakpointInDB(const wxString& moduleName, unsigned int lineFrom, int offset)
+bool CDebuggerClient::OffsetBreakpointInDB(const wxString& strModuleName, unsigned int lineFrom, int offset)
 {
 	bool successful = true;
 	IPreparedStatement* preparedStatement = nullptr;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-		preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '" + moduleName + "' AND moduleLine = " + stringUtils::IntToStr(lineFrom) + ";"
-			"INSERT INTO %s(moduleName, moduleLine) VALUES('" + moduleName + "', " + stringUtils::IntToStr(lineFrom + offset) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table, dbg_table);
+		preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '" + strModuleName + "' AND moduleLine = " + stringUtils::IntToStr(lineFrom) + ";"
+			"INSERT INTO %s(moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(lineFrom + offset) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table, dbg_table);
 	else
-		preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '" + moduleName + "' AND moduleLine = " + stringUtils::IntToStr(lineFrom) + ";"
-			"UPDATE OR INSERT INTO %s (moduleName, moduleLine) VALUES('" + moduleName + "', " + stringUtils::IntToStr(lineFrom + offset) + ") MATCHING (moduleName, moduleLine); ", dbg_table, dbg_table);
+		preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '" + strModuleName + "' AND moduleLine = " + stringUtils::IntToStr(lineFrom) + ";"
+			"UPDATE OR INSERT INTO %s (moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(lineFrom + offset) + ") MATCHING (moduleName, moduleLine); ", dbg_table, dbg_table);
 
 	wxASSERT(preparedStatement);
 	if (preparedStatement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {

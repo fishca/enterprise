@@ -86,8 +86,8 @@ protected:
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
 	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
-	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, bool saveToFile = false);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* parentObj, bool saveToFile);
+	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* parentObj, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parentObj);
 

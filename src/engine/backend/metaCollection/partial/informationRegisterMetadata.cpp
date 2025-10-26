@@ -177,12 +177,12 @@ bool CMetaObjectInformationRegister::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRegisterData::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectInformationRegister::OnSaveMetaObject()
+bool CMetaObjectInformationRegister::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyModuleManager)->OnSaveMetaObject())
+	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyModuleObject)->OnSaveMetaObject())
+	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -194,7 +194,7 @@ bool CMetaObjectInformationRegister::OnSaveMetaObject()
 	}
 #endif
 
-	return IMetaObjectRegisterData::OnSaveMetaObject();
+	return IMetaObjectRegisterData::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectInformationRegister::OnDeleteMetaObject()

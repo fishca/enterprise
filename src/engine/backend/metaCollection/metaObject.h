@@ -118,17 +118,21 @@ public:
 //flags metaobject event 
 enum metaObjectFlags {
 
-	defaultFlag = 0x0000,
+	defaultFlag		= 0x0000,
+	onlyLoadFlag	= 0x0001,
 
-	onlyLoadFlag = 0x0001,
-	saveConfigFlag = 0x0002,
-	saveToFileFlag = 0x0004,
-	forceCloseFlag = 0x0008,
-	forceRunFlag = 0x0010,
-	newObjectFlag = 0x0020,
+	loadConfigFlag	= 0x0002,
+	saveConfigFlag	= 0x0004,
 
-	copyObjectFlag = 0x0040,
-	pasteObjectFlag = 0x0080,
+	newObjectFlag	= 0x0008,
+	forceRunFlag	= 0x0010,
+	forceCloseFlag	= 0x0020,
+
+	loadFileFlag	= 0x0040,
+	saveToFileFlag	= 0x0080,
+
+	copyObjectFlag	= 0x0100,
+	pasteObjectFlag	= 0x0200,
 };
 
 //flags metaobject 
@@ -363,7 +367,7 @@ public:
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject() { return true; }
+	virtual bool OnSaveMetaObject(int flags) { return true; }
 	virtual bool OnDeleteMetaObject();
 	virtual bool OnRenameMetaObject(const wxString& sNewName) { return true; }
 

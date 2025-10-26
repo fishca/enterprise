@@ -96,9 +96,9 @@ bool IMetaObjectRecordData::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordData::OnSaveMetaObject()
+bool IMetaObjectRecordData::OnSaveMetaObject(int flags)
 {
-	return IMetaObject::OnSaveMetaObject();
+	return IMetaObject::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRecordData::OnDeleteMetaObject()
@@ -259,12 +259,12 @@ bool IMetaObjectRecordDataRef::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordData::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordDataRef::OnSaveMetaObject()
+bool IMetaObjectRecordDataRef::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeReference)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeReference)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordData::OnSaveMetaObject();
+	return IMetaObjectRecordData::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRecordDataRef::OnDeleteMetaObject()
@@ -411,12 +411,12 @@ bool IMetaObjectRecordDataEnumRef::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordDataRef::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordDataEnumRef::OnSaveMetaObject()
+bool IMetaObjectRecordDataEnumRef::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeOrder)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeOrder)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataRef::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRecordDataEnumRef::OnDeleteMetaObject()
@@ -520,15 +520,15 @@ bool IMetaObjectRecordDataMutableRef::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObjectRecordDataRef::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordDataMutableRef::OnSaveMetaObject()
+bool IMetaObjectRecordDataMutableRef::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeDataVersion)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDataVersion)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeDeletionMark)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDeletionMark)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataRef::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRecordDataMutableRef::OnDeleteMetaObject()
@@ -754,21 +754,21 @@ bool IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(IMetaData* metaData
 	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject()
+bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeCode)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeCode)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeDescription)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeDescription)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeParent)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeParent)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeIsFolder)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeIsFolder)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject();
+	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject()
@@ -964,21 +964,21 @@ bool IMetaObjectRegisterData::OnLoadMetaObject(IMetaData* metaData)
 	return IMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRegisterData::OnSaveMetaObject()
+bool IMetaObjectRegisterData::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributeLineActive)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeLineActive)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributePeriod)->OnSaveMetaObject())
+	if (!(*m_propertyAttributePeriod)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeRecorder)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeRecorder)->OnSaveMetaObject(flags))
 		return false;
 
-	if (!(*m_propertyAttributeLineNumber)->OnSaveMetaObject())
+	if (!(*m_propertyAttributeLineNumber)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObject::OnSaveMetaObject();
+	return IMetaObject::OnSaveMetaObject(flags);
 }
 
 bool IMetaObjectRegisterData::OnDeleteMetaObject()

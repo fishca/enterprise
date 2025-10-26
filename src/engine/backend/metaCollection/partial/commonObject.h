@@ -244,7 +244,7 @@ public:
 
 	//meta events
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 
@@ -398,7 +398,7 @@ public:
 	//meta events
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 
@@ -495,7 +495,7 @@ public:
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 
@@ -545,7 +545,7 @@ public:
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 
@@ -628,7 +628,7 @@ public:
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 
@@ -795,7 +795,7 @@ public:
 	//meta events
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 

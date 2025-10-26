@@ -31,7 +31,7 @@ public:
 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
 	virtual bool OnLoadMetaObject(IMetaData* metaData);
-	virtual bool OnSaveMetaObject();
+	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
 	//module manager is started or exit 

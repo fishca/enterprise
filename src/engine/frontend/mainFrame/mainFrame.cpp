@@ -78,7 +78,7 @@ CDocMDIFrame::CDocMDIFrame(const wxString& title,
 	const wxSize& size,
 	long style,
 	const wxString& strName)
-	: wxDocParentFrameAnyBase(this), m_objectInspector(nullptr)
+	: wxDocParentFrameAnyBase(this), m_objectInspector(nullptr), m_callRaiseFrame(false)
 {
 	Create(title, pos, size, style | wxNO_FULL_REPAINT_ON_RESIZE);
 }
@@ -149,6 +149,18 @@ void CDocMDIFrame::RefreshFrame()
 	Refresh();
 }
 
+void CDocMDIFrame::RaiseFrame()
+{
+	if (!m_callRaiseFrame && CDocMDIFrame::IsFocusable()) {
+		CallAfter([&]() {
+			CDocMDIFrame::Raise();
+			m_callRaiseFrame = false;
+			}
+		);
+		m_callRaiseFrame = true;
+	}
+}
+
 #if wxUSE_MENUS
 void CDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 {
@@ -171,7 +183,7 @@ wxAuiMDIClientWindow* CDocMDIFrame::OnCreateClient()
 	public:
 		wxAuiMDIClientWindowImpl() : wxAuiMDIClientWindow() {}
 		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {}
-	
+
 	protected:
 
 		//A general selection function
@@ -194,6 +206,7 @@ void CDocMDIFrame::Raise()
 	::keybd_event((BYTE)0, 0, 0 /* key press */, 0);
 	::keybd_event((BYTE)0, 0, KEYEVENTF_KEYUP, 0);
 #endif
+
 	wxAuiMDIParentFrame::Raise();
 }
 

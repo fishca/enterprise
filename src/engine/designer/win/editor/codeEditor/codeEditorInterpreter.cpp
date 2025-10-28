@@ -359,7 +359,7 @@ bool CPrecompileCode::PrepareLexem()
 					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
-					
+
 					if (k >= 0) {
 						m_current_lex.m_lexType = KEYWORD;
 						m_current_lex.m_numData = k;
@@ -553,7 +553,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 					m_current_lex.m_valData.SetType(eValueTypes::TYPE_NULL);
 				}
 				else {
-					
+
 					if (k >= 0) {
 						m_current_lex.m_lexType = KEYWORD;
 						m_current_lex.m_numData = k;
@@ -561,7 +561,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 					else {
 						m_current_lex.m_lexType = IDENTIFIER;
 					}
-					
+
 					m_current_lex.m_valData = strOrig;
 				}
 			}
@@ -993,8 +993,8 @@ bool CPrecompileCode::CompileBlock()
 			case KEY_BREAK: GETKeyWord(KEY_BREAK); break;
 
 			case KEY_FUNCTION:
-			case KEY_PROCEDURE: 
-				GetLexem(); 					
+			case KEY_PROCEDURE:
+				GetLexem();
 				break;
 
 			default:
@@ -1385,11 +1385,7 @@ wxString CPrecompileCode::GetTypeVar(const wxString& strType)
 	else {
 		const CLexem& lex = GETLexem();
 		if (CValue::IsRegisterCtor(lex.m_strData, eCtorObjectType::eCtorObjectType_object_primitive)) {
-			wxString strUpper;
-			std::transform(lex.m_strData.begin(), lex.m_strData.end(),
-				strUpper.begin(), ::toupper
-			);
-			return strUpper;
+			return stringUtils::MakeUpper(lex.m_strData);
 		}
 	}
 

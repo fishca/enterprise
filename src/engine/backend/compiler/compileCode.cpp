@@ -1191,9 +1191,12 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 
 		//Set type variable
 		CParamUnit variable;
-		variable.m_strType = createdFunction->m_listParam[i].m_strType;
+		
 		variable.m_numArray = 0;
 		variable.m_numIndex = i;// index matches the number
+
+		variable.m_strType = createdFunction->m_listParam[i].m_strType;
+
 		AddTypeSet(variable);
 	}
 

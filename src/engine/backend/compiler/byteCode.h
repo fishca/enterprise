@@ -9,11 +9,12 @@ class BACKEND_API CCompileCode;
 
 //*******************************************************************************
 
-struct CParamUnit {
-
+struct CParamRunUnit {
 	wxLongLong_t m_numArray = 0;
 	wxLongLong_t m_numIndex = 0;
-	wxString	 m_strName;			//variable name 
+};
+
+struct CParamUnit : CParamRunUnit {
 	wxString	 m_strType;			//variable type in English notation (in case of explicit typing)
 };
 
@@ -25,10 +26,10 @@ struct CByteUnit {
 	unsigned int m_numLine = 0;			//source line number (for breakpoints)
 
 	//parameters for instructions:
-	CParamUnit	 m_param1;
-	CParamUnit	 m_param2;
-	CParamUnit	 m_param3;
-	CParamUnit	 m_param4;			 // - used for optimization
+	CParamRunUnit	 m_param1;
+	CParamRunUnit	 m_param2;
+	CParamRunUnit	 m_param3;
+	CParamRunUnit	 m_param4;			 // - used for optimization
 
 	wxString	 m_strModuleName;	 // module name (since it is possible to include connections from different modules)
 	wxString	 m_strDocPath; 	 	 // unique path to the document

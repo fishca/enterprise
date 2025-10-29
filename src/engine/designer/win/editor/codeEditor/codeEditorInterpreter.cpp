@@ -101,7 +101,12 @@ void CPrecompileCode::PrepareModuleData()
 			//добавляем методы из менеджера
 			for (unsigned int i = 0; i < managerVariable->GetNMethods(); i++) {
 				wxString sMethodName = managerVariable->GetMethodName(i);
-				CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName);
+
+				CPrecompileContext *compileContext = new CPrecompileContext();
+				compileContext->nReturn = managerVariable->HasRetVal(i) ? RETURN_FUNCTION : RETURN_PROCEDURE;
+				compileContext->pModule = this; 
+
+				CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, compileContext);
 				pFunction->strRealName = sMethodName;
 				pFunction->strShortDescription = managerVariable->GetMethodHelper(i);
 				pFunction->nStart = i;

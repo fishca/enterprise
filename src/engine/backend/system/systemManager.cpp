@@ -172,7 +172,7 @@ void CSystemFunction::PrepareNames() const
 	//--- Работа с окнами: 
 	m_methodHelper->AppendFunc("activeWindow", "activeWindow()");
 	//--- Специальные:
-	m_methodHelper->AppendFunc("message", 2, "message(string, statusMessage)");
+	m_methodHelper->AppendProc("message", 2, "message(string, statusMessage)");
 	m_methodHelper->AppendFunc("alert", 1, "alert(string)");
 	m_methodHelper->AppendFunc("question", 2, "question(string, questionMode)");
 	m_methodHelper->AppendFunc("setStatus", 1, "setStatus(string)");
@@ -200,10 +200,10 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc("endJob", 1, "endJob(boolean)");
 	m_methodHelper->AppendFunc("userInterruptProcessing", "userInterruptProcessing()");
 	m_methodHelper->AppendFunc("getCommonForm", 3, "getCommonForm(string, owner, uniqueGuid)");
-	m_methodHelper->AppendFunc("showCommonForm", 3, "showCommonForm(string, owner, uniqueGuid)");
-	m_methodHelper->AppendFunc("beginTransaction", "beginTransaction()");
-	m_methodHelper->AppendFunc("commitTransaction", "commitTransaction()");
-	m_methodHelper->AppendFunc("rollBackTransaction", "rollBackTransaction()");
+	m_methodHelper->AppendProc("showCommonForm", 3, "showCommonForm(string, owner, uniqueGuid)");
+	m_methodHelper->AppendProc("beginTransaction", "beginTransaction()");
+	m_methodHelper->AppendProc("commitTransaction", "commitTransaction()");
+	m_methodHelper->AppendProc("rollBackTransaction", "rollBackTransaction()");
 };
 
 #include "backend/compiler/enumUnit.h"
@@ -345,6 +345,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			pvarRetValue = GetCommonForm(paParams[0]->GetString(),
 				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			return true;
 		case enShowCommonForm:
 			ShowCommonForm(paParams[0]->GetString(),
 				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
@@ -358,7 +359,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 
 //**********************************************************************
 
-wxDateTime CSystemFunction::sm_workDate = wxDateTime::Now();
+wxDateTime CSystemFunction::ms_workDate = wxDateTime::Now();
 
 class wxOESRandModule : public wxModule
 {

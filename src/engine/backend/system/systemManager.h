@@ -12,7 +12,7 @@
 #include "backend/system/systemEnum.h"
 
 class BACKEND_API CSystemFunction : public CValue {
-	static wxDateTime sm_workDate;
+	static wxDateTime ms_workDate;
 public:
 
 	//--- Базовые:

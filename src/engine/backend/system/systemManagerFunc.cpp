@@ -293,10 +293,10 @@ CValue CSystemFunction::CurrentDate()
 }
 
 CValue CSystemFunction::WorkingDate() {
-	sm_workDate.SetHour(0);
-	sm_workDate.SetMinute(0);
-	sm_workDate.SetSecond(0);
-	return sm_workDate;
+	ms_workDate.SetHour(0);
+	ms_workDate.SetMinute(0);
+	ms_workDate.SetSecond(0);
+	return ms_workDate;
 }
 
 CValue CSystemFunction::AddMonth(const CValue& cData, int nMonthAdd)

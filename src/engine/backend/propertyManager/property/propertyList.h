@@ -51,7 +51,7 @@ class BACKEND_API CPropertyList : public IProperty {
 		CPropertyOptionValue(const CPropertyOptionValue& val) : m_valType(val.m_valType), m_cValue(val.m_cValue), m_pValue(val.m_pValue) {}
 		~CPropertyOptionValue() {}
 
-		CValue* GetOptionValue() { 
+		CValue* GetOptionValue() {
 			return (m_valType == eValType::eValType_pointer) ? m_pValue : new CValue(m_cValue.GetValue());
 		}
 	};
@@ -145,6 +145,7 @@ class BACKEND_API CPropertyList : public IProperty {
 
 	class BACKEND_API CPropertyFunctor {
 	public:
+		virtual ~CPropertyFunctor() {}
 		virtual bool Invoke(CPropertyList* property) = 0;
 	};
 

@@ -111,6 +111,7 @@ class BACKEND_API CEventAction : public IEvent {
 
 	class BACKEND_API CEventFunctor {
 	public:
+		virtual ~CEventFunctor() {}
 		virtual bool Invoke(CEventAction* property) = 0;
 	};
 

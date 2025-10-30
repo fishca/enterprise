@@ -181,25 +181,23 @@ int CDesignerApp::OnRun()
 
 void CDesignerApp::OnUnhandledException()
 {
-	//decr socket
-	if (wxSocketBase::IsInitialized())
-		wxSocketBase::Shutdown();
-
-	wxApp::OnUnhandledException();
 }
 
 #include "backend/system/value/valueOLE.h"
 
 void CDesignerApp::OnFatalException()
 {
-	//release all created com-objects
-	CValueOLE::ReleaseComObjects();
-
 	//generate dump
 	wxDebugReport report;
 
 	report.AddCurrentDump();
 	report.AddExceptionDump();
+
+	//release all created com-objects
+	CValueOLE::ReleaseComObjects();
+
+	if (wxSocketBase::IsInitialized())
+		wxSocketBase::Shutdown();
 
 	appDataDestroy();
 
@@ -216,11 +214,15 @@ int CDesignerApp::OnExit()
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
+	mainFrameDestroy();
+
+	bool suñcess_exit = wxApp::OnExit();
+
 	appDataDestroy();
 
 	// Allow clipboard data to persist after close
 	wxTheClipboard->Flush();
 	wxTheClipboard->Close();
 
-	return wxApp::OnExit();
+	return suñcess_exit;
 }

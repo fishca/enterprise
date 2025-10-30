@@ -346,6 +346,48 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
 			return true;
+		}
+	}
+
+	return false;
+}
+
+bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+{
+	if (!appData->DesignerMode()) {
+		switch (lMethodNum)
+		{
+			//--- Специальные:
+		case enMessage:
+			Message(paParams[0]->GetString(),
+				lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<eStatusMessage>() : eStatusMessage::eStatusMessage_Information);
+			return true;
+		case enAlert: Alert(paParams[0]->GetString()); return true;
+		case enSetStatus: SetStatus(paParams[0]->GetString()); return true;
+		case enClearMessage: ClearMessage(); return true;
+		case enSetError: SetError(paParams[0]->GetString()); return true;
+		case enRaise: Raise(paParams[0]->GetString()); return true;
+		case enExecute: Execute(paParams[0]->GetString()); return true;
+		case enRunApp: RunApp(paParams[0]->GetString()); return true;
+		case enSetAppTitle: SetAppTitle(paParams[0]->GetString()); return true;
+		case enEndJob: EndJob(paParams[0]->GetInteger()); return true;
+		case enUserInterruptProcessing: UserInterruptProcessing(); return true;
+		case enShowCommonForm: ShowCommonForm(
+			paParams[0]->GetString(),
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
+			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			return true;
+			//--- Тразакции:
+		case enBeginTransaction: BeginTransaction(); return true;
+		case enCommitTransaction: CommitTransaction(); return true;
+		case enRollBackTransaction: RollBackTransaction(); return true;
+		}
+	}
+	else
+	{
+		switch (lMethodNum)
+		{
+			//--- Специальные:
 		case enShowCommonForm:
 			ShowCommonForm(paParams[0]->GetString(),
 				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,

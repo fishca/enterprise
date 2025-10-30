@@ -1,8 +1,8 @@
-﻿#ifndef __FORM_H__
-#define __FORM_H__
+﻿#ifndef __FORM_VALUE_H__
+#define __FORM_VALUE_H__
 
-#include "control.h"
 #include "frontend/docView/docView.h"
+#include "frontend/visualView/ctrl/control.h"
 
 #define defaultFormId 1
 #define thisForm wxT("thisForm")
@@ -29,8 +29,6 @@ const class_identifier_t g_controlFormCLSID = string_to_clsid("CT_FRME");
 //********************************************************************************************
 //*                                  Visual Document & View                                  *
 //********************************************************************************************
-
-#include "backend/valueInfo.h"
 
 class FRONTEND_API CVisualCommandProcessor : public wxCommandProcessor {
 
@@ -109,12 +107,15 @@ private:
 
 class FRONTEND_API CValueForm : public IBackendValueForm, public IValueFrame, public IModuleDataObject {
 	wxDECLARE_DYNAMIC_CLASS(CValueForm);
+
 private:
+
 	enum {
 		eSystem = eSizerItem + 1,
 		eProcUnit,
 		eAttribute
 	};
+
 protected:
 	CPropertyCategory* m_categoryFrame = IPropertyObject::CreatePropertyCategory(wxT("frame"), _("frame"));
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryFrame, wxT("caption"), _("caption"), wxEmptyString);
@@ -126,10 +127,7 @@ protected:
 public:
 
 	const CUniqueKey& GetFormKey() const { return m_formKey; }
-
-	bool CompareFormKey(const CUniqueKey& formKey) const {
-		return m_formKey == formKey;
-	}
+	bool CompareFormKey(const CUniqueKey& formKey) const { return m_formKey == formKey; }
 
 public:
 
@@ -259,6 +257,9 @@ public:
 	*/
 	virtual bool CanDeleteControl() const { return false; }
 
+	/**
+	* Is editable object?
+	*/
 	virtual bool IsEditable() const;
 
 public:
@@ -297,24 +298,10 @@ public:
 		CMethodHelper* m_methodHelper;
 	};
 
-protected:
-
-	friend class CVisualDocument;
-	friend class CVisualView;
-
-	friend class CValueFormCollectionControl;
-
-	bool CreateDocForm(CMetaDocument* docParent, bool createContext = true);
-	bool CloseDocForm();
-
 public:
 
 	IValueFrame* CreateControl(const wxString& classControl, IValueFrame* control = nullptr);
 	void RemoveControl(IValueFrame* control);
-
-private:
-
-	void ClearRecursive(IValueFrame* control);
 
 public:
 
@@ -348,8 +335,8 @@ public:
 
 public:
 
-	virtual void ActivateForm();
-	virtual void RefreshForm();
+	virtual void ActivateForm() { ActivateDocForm(); }
+	virtual void RefreshForm() { RefreshDocForm(); }
 	virtual void UpdateForm();
 	virtual bool CloseForm(bool force = false);
 	virtual void HelpForm();
@@ -405,11 +392,29 @@ public:
 
 private:
 
-	void OnIdleHandler(wxTimerEvent& event);
+	void ClearRecursive(IValueFrame* control);
 
-protected:
+	//doc event
+	bool CreateDocForm(CMetaDocument* docParent, bool createContext = true);
+	void ActivateDocForm();
+	void ChoiceDocForm(CValue& vSelected);
+	void RefreshDocForm();
+	bool CloseDocForm();
 
-	friend class IValueControl;
+	void OnIdleHandler(wxTimerEvent& event) {
+
+		if (m_procUnit != nullptr) {
+
+			auto iterator = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(),
+				[event](const auto pair) { return pair.second == event.GetEventObject(); }
+			);
+
+			if (iterator != m_idleHandlerArray.end())
+				CallAsEvent(iterator->first);
+		}
+
+		event.Skip();
+	}
 
 	enum
 	{
@@ -437,6 +442,12 @@ protected:
 	std::map<wxString, wxTimer*> m_idleHandlerArray;
 
 	CValuePtr<CValueFormCollectionControl> m_formCollectionControl;
+
+	friend class IValueControl;
+	friend class CValueFormCollectionControl;
+
+	friend class CVisualDocument;
+	friend class CVisualView;
 };
 
 #endif 

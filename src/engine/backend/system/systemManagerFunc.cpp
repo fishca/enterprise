@@ -528,7 +528,7 @@ CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)
 		backend_mainFrame ? backend_mainFrame->GetFrameHandler() : nullptr
 	);
 
-	CValueQuestionReturnCode *retValue = CValue::CreateAndConvertObjectValueRef<CValueQuestionReturnCode>();
+	CValueQuestionReturnCode* retValue = CValue::CreateAndConvertObjectValueRef<CValueQuestionReturnCode>();
 	switch (retCode) {
 	case wxOK:
 		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK);
@@ -917,29 +917,20 @@ void CSystemFunction::UserInterruptProcessing()
 
 CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
-	if (!appData->DesignerMode()) {
-		for (auto& obj : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
-			if (stringUtils::CompareString(strFormName, obj->GetName())) {
-			
-				CMetaObjectCommonForm* creator = obj->ConvertToType<CMetaObjectCommonForm>();
-				wxASSERT(creator);
-				
-				//IBackendValueForm* valueForm = commonForm->GenerateForm(ownerControl, nullptr, unique ? ((CGuid)*unique) : CGuid());
-				//if (valueForm != nullptr) {
-				//	const CValue cValue = valueForm->GetImplValueRef();
-				//	valueForm->InitializeFormModule();
-				//	return cValue;
-				//}
-				
-				return CMetaObjectCommonForm::CreateAndBuildForm(
-					creator,
-					ownerControl, 
-					nullptr, unique ? ((CGuid)*unique) : CGuid()
-				);
-			}
+	for (auto& obj : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+		if (stringUtils::CompareString(strFormName, obj->GetName())) {
+
+			CMetaObjectCommonForm* creator = obj->ConvertToType<CMetaObjectCommonForm>();
+			wxASSERT(creator);
+			return CMetaObjectCommonForm::CreateAndBuildForm(
+				creator,
+				ownerControl,
+				nullptr, unique ? ((CGuid)*unique) : CGuid()
+			);
 		}
-		CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
 	}
+	
+	CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
 	return CValue();
 }
 

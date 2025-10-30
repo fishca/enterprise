@@ -440,6 +440,36 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 		}
 	}
 
+#pragma region __value_ref_guard_h__
+
+	class CValueFormControlGuard {
+	public:
+		CValueFormControlGuard(CValueForm* valueForm) : m_valueForm(valueForm) { valueForm->IncrRef(); }
+		~CValueFormControlGuard() { m_valueForm->DecrRef(); }
+	private:
+		CValueForm* m_valueForm;
+	};
+
+	CValueFormControlGuard enter(this);
+
+#pragma endregion
+
+	if (createContext) {
+
+		CValue bCancel = false;
+
+		//if (!CallAsEvent(wxT("beforeOpen"), bCancel))
+		//	return false;
+		if (m_procUnit)
+		m_procUnit->CallAsProc(wxT("beforeOpen"), bCancel); 
+
+		if (bCancel.GetBoolean())
+			return false;
+
+		if (!CallAsEvent(wxT("onOpen")))
+			return false;
+	}
+
 	CVisualDocument* visualCreatedDoc = createContext ?
 		new CVisualDocument(this) :
 		new CVisualDemoDocument(this);
@@ -454,26 +484,8 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 
 	if (visualCreatedDoc->OnCreate(m_formKey, createContext ? runFlag : demoFlag)) {
 
-		if (createContext) visualCreatedDoc->Modify(m_formModified);
-
-		//set window if is not demonstation
-		if (!appData->DesignerMode() && !visualCreatedDoc->IsVisualDemonstrationDoc()) {
-
-			CValue bCancel = false;
-
-			if (m_procUnit != nullptr) {
-				m_procUnit->CallAsProc(wxT("beforeOpen"), bCancel);
-			}
-
-			if (bCancel.GetBoolean()) {
-				visualCreatedDoc->DeleteAllViews();
-				return false;
-			}
-
-			if (m_procUnit != nullptr) {
-				m_procUnit->CallAsProc(wxT("onOpen"));
-			}
-		}
+		if (createContext)
+			visualCreatedDoc->Modify(m_formModified);
 
 		RefreshForm();
 		return true;
@@ -490,6 +502,32 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 	return false;
 }
 
+void CValueForm::ActivateDocForm()
+{
+	CVisualDocument* const ownerDocForm = GetVisualDocument();
+	if (ownerDocForm != nullptr) {
+		CallAsEvent(wxT("onReOpen"));
+		ownerDocForm->Activate();
+	}
+}
+
+void CValueForm::ChoiceDocForm(CValue& vSelected)
+{
+	CValueForm* ownerForm = m_controlOwner->GetOwnerForm();
+	if (ownerForm != nullptr)
+		ownerForm->CallAsEvent(wxT("choiceProcessing"), vSelected, GetValue());
+	m_controlOwner->ChoiceProcessing(vSelected);
+	if (ownerForm != nullptr)
+		ownerForm->UpdateForm();
+}
+
+void CValueForm::RefreshDocForm()
+{
+	if (!appData->DesignerMode()) {
+		CallAsEvent(wxT("refreshDisplay"));
+	}
+}
+
 bool CValueForm::CloseDocForm()
 {
 	CVisualDocument* const visualDoc = GetVisualDocument();
@@ -500,14 +538,12 @@ bool CValueForm::CloseDocForm()
 	if (!appData->DesignerMode() && !visualDoc->IsVisualDemonstrationDoc()) {
 
 		CValue bCancel = false;
-		if (m_procUnit != nullptr)
-			m_procUnit->CallAsProc(wxT("beforeClose"), bCancel);
+		CallAsEvent(wxT("beforeClose"), bCancel);
 
 		if (bCancel.GetBoolean())
 			return false;
 
-		if (m_procUnit != nullptr)
-			m_procUnit->CallAsProc(wxT("onClose"));
+		CallAsEvent(wxT("onClose"));
 	}
 
 	return true;

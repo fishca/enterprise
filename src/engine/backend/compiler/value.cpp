@@ -106,7 +106,7 @@ CValue::CValue(eValueTypes type, bool readOnly)
 		m_dData = emptyDate;
 		break;
 	case TYPE_STRING:
-		m_sData.clear();
+		m_sData.Clear();
 		break;
 	default:
 		m_pRef = nullptr;
@@ -125,13 +125,6 @@ CValue::CValue (v_parclass cParam) \
 	DEBUG_VALUE_CREATE();\
 }
 
-#define CVALUE_BYTYPE_MOVE(v_parclass, v_type, v_value) \
-CValue::CValue (v_parclass cParam) \
-  : m_typeClass(v_type), v_value(std::move(cParam)), m_refCount(0), m_pRef(nullptr), m_bReadOnly(false) \
-{\
-	DEBUG_VALUE_CREATE();\
-}
-
 CVALUE_BYTYPE(bool, eValueTypes::TYPE_BOOLEAN, m_bData);
 
 CVALUE_BYTYPE(signed int, eValueTypes::TYPE_NUMBER, m_fData);
@@ -144,7 +137,7 @@ CVALUE_BYTYPE(wxLongLong_t, eValueTypes::TYPE_DATE, m_dData);
 CVALUE_BYTYPE(char*, eValueTypes::TYPE_STRING, m_sData);
 CVALUE_BYTYPE(wchar_t*, eValueTypes::TYPE_STRING, m_sData);
 
-CVALUE_BYTYPE_MOVE(const wxString&, eValueTypes::TYPE_STRING, m_sData);
+CVALUE_BYTYPE(const wxString&, eValueTypes::TYPE_STRING, m_sData);
 
 #undef CVALUE_BYTYPE
 #undef CVALUE_BYTYPE_MOVE

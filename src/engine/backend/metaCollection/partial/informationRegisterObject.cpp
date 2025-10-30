@@ -205,8 +205,6 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 
 				if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetValue());
 				else if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
-
-				if (backend_mainFrame != nullptr) backend_mainFrame->RefreshFrame();
 			}
 
 			m_recordSet->Modify(false);
@@ -240,7 +238,6 @@ bool CRecordManagerObjectInformationRegister::DeleteRegister()
 				db_query->Commit();
 
 				if (valueForm != nullptr) valueForm->NotifyDelete(GetValue());
-				if (backend_mainFrame != nullptr) backend_mainFrame->RefreshFrame();
 			}
 
 			m_recordSet->Modify(false);

@@ -140,7 +140,9 @@ public:
 	}
 
 	virtual void PrepareNames() const;
+
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
 
 	//check is empty
 	virtual inline bool IsEmpty() const {

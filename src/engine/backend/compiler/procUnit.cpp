@@ -1046,7 +1046,7 @@ bool CProcUnit::CallAsProc(const wxString& funcName, CValue** ppParams, const lo
 			return true;
 		}
 	}
-	return false; return false;
+	return false;
 }
 
 //Calling a function by name

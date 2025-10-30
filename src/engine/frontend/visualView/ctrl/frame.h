@@ -235,7 +235,7 @@ public:
 			CValue eventCancel = false;
 			try {
 				formProcUnit->CallAsProc(
-					event->GetValue(), //event name
+					eventValue, //event name
 					args...,
 					eventCancel
 				);
@@ -245,7 +245,8 @@ public:
 			}
 			return eventCancel.GetBoolean();
 		}
-		return false;
+		
+		return true;
 	}
 
 	//call current form
@@ -264,7 +265,8 @@ public:
 			}
 			return true;
 		}
-		return false;
+		
+		return true;
 	}
 
 public:

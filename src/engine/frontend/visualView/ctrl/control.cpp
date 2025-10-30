@@ -31,13 +31,7 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 			ownerForm->m_listControl.emplace(this);
 	}
 	else if (!ownerForm && m_formOwner != nullptr) {
-		auto& it = std::find(
-			m_formOwner->m_listControl.begin(),
-			m_formOwner->m_listControl.end(),
-			this
-		);
-		if (it != m_formOwner->m_listControl.end())
-			m_formOwner->m_listControl.erase(it);
+		m_formOwner->m_listControl.erase(this);
 	}
 	m_formOwner = ownerForm;
 }

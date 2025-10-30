@@ -416,8 +416,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 			db_query->Commit();
 
-			if (valueForm != nullptr) valueForm->Modify(false);
-			if (backend_mainFrame != nullptr) backend_mainFrame->RefreshFrame();
+			if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 		}
 	}
 

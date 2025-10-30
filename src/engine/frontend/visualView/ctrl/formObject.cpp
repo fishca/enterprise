@@ -319,10 +319,14 @@ void CValueForm::NotifyCreate(const CValue& vCreated)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
+		
 		ownerForm->m_createdValue = vCreated;
 		ownerForm->m_changedValue = wxEmptyValue;
+
+		ownerForm->UpdateForm();
 	}
 
+	CValueForm::UpdateForm();
 	CValueForm::Modify(false);
 }
 
@@ -332,10 +336,14 @@ void CValueForm::NotifyChange(const CValue& vChanged)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
+		
 		ownerForm->m_createdValue = wxEmptyValue;
 		ownerForm->m_changedValue = vChanged;
+
+		ownerForm->UpdateForm();
 	}
 
+	CValueForm::UpdateForm();
 	CValueForm::Modify(false);
 }
 
@@ -354,12 +362,8 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 
 void CValueForm::NotifyChoice(CValue& vSelected)
 {
-	if (m_controlOwner != nullptr) {
-		CValueForm* ownerForm = m_controlOwner->GetOwnerForm();
-		if (ownerForm != nullptr) ownerForm->CallAsEvent(wxT("choiceProcessing"), vSelected, GetValue());
-		m_controlOwner->ChoiceProcessing(vSelected);
-		if (ownerForm != nullptr) ownerForm->UpdateForm();
-	}
+	if (m_controlOwner != nullptr)
+		ChoiceDocForm(vSelected);
 
 	if (m_closeOnChoice) CValueForm::CloseForm();
 }
@@ -435,29 +439,6 @@ void CValueForm::ShowForm(IBackendMetaDocument* doc, bool createContext)
 
 	if (!createContext || !appData->DesignerMode()) {
 		CreateDocForm(docParent, createContext);
-	}
-}
-
-void CValueForm::ActivateForm()
-{
-	CVisualDocument* const ownerDocForm = GetVisualDocument();
-
-	if (ownerDocForm != nullptr) {
-
-		if (m_procUnit != nullptr) {
-			m_procUnit->CallAsProc(wxT("onReOpen"));
-		}
-
-		ownerDocForm->Activate();
-	}
-}
-
-void CValueForm::RefreshForm()
-{
-	if (!appData->DesignerMode()) {
-		if (m_procUnit != nullptr) {
-			m_procUnit->CallAsProc(wxT("refreshDisplay"));
-		}
 	}
 }
 
@@ -620,16 +601,6 @@ void CValueForm::RemoveControl(IValueFrame* control)
 
 	m_formCollectionControl->PrepareNames();
 }
-
-void CValueForm::OnIdleHandler(wxTimerEvent& event)
-{
-	if (m_procUnit != nullptr) {
-		auto& it = std::find_if(m_idleHandlerArray.begin(), m_idleHandlerArray.end(), [event](std::pair<wxString, wxTimer*> pair) { return pair.second == event.GetEventObject(); });
-		if (it != m_idleHandlerArray.end()) CallAsEvent(it->first);
-	}
-	event.Skip();
-}
-
 
 void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, bool single)
 {

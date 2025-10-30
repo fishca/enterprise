@@ -31,7 +31,7 @@ int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaO
 	}
 	// update 
 	else if (srcAttr != nullptr) {
-		if (!srcAttr->CompareObject(dstAttr)) 
+		if (!srcAttr->CompareObject(dstAttr))
 			s_restructureInfo.AppendInfo(_("Changing attribute ") + srcAttr->GetFullName());
 	}
 	//delete 
@@ -91,7 +91,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 			retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL);", tabularName);
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
-		
+
 		//default attributes
 		for (auto& obj : srcTable->GetGenericAttributes()) {
 			retCode = ProcessAttribute(tabularName,
@@ -115,7 +115,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	else if (srcTable == nullptr) {
 
 		s_restructureInfo.AppendInfo(_("Removed tabular section ") + dstTable->GetFullName());
-		
+
 		retCode = db_query->RunQuery("DROP TABLE %s", tabularName);
 	}
 
@@ -284,7 +284,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 						return false;
 				}
 			}
-			
+
 			//tables current 
 			for (auto& obj : GetObjectTables()) {
 				retCode = ProcessTable(obj->GetTableNameDB(),
@@ -296,7 +296,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		}
 	}
 	else if ((flags & deleteMetaTable) != 0) {
-		
+
 		s_restructureInfo.AppendInfo(_("Removed ") + GetFullName());
 
 		if (db_query->TableExists(tableName)) {
@@ -304,7 +304,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		}
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
-		
+
 		for (auto& obj : GetObjectTables()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
@@ -629,10 +629,10 @@ bool IRecordDataObjectRef::SaveData()
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	if (m_codeGenerator != nullptr) {
-		if (m_listObjectValue[m_codeGenerator->GetMetaID()].IsEmpty()) {
-			m_listObjectValue[m_codeGenerator->GetMetaID()] = m_codeGenerator->GenerateCode();
-		}
+	auto attributeCode = m_metaObject->GetAttributeForCode();
+	if (attributeCode != nullptr && m_listObjectValue[attributeCode->GetMetaID()].IsEmpty()) {
+		m_listObjectValue.insert_or_assign(attributeCode->GetMetaID(),
+			GenerateNextCode(m_metaObject, attributeCode));
 	}
 
 	//check fill attributes 
@@ -826,7 +826,7 @@ bool IRecordManagerObject::ExistData()
 		}
 
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
-		
+
 		if (statement != nullptr) {
 			for (auto& obj : m_metaObject->GetGenericDimensions()) {
 				CValue retValue; m_recordLine->GetValueByMetaID(obj->GetMetaID(), retValue);
@@ -837,13 +837,13 @@ bool IRecordManagerObject::ExistData()
 					position
 				);
 			}
-			
+
 			IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
-			if (resultSet != nullptr) {	
-				success = resultSet->Next();		
+			if (resultSet != nullptr) {
+				success = resultSet->Next();
 				db_query->CloseResultSet(resultSet);
 			}
-		
+
 			db_query->CloseStatement(statement);
 		}
 
@@ -1330,63 +1330,71 @@ bool IRecordSetObject::DeleteData()
 //*                                          Code generator												   *
 //**********************************************************************************************************
 
-CValue IRecordDataObjectRef::CCodeGenerator::GenerateCode() const
+CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* metaObject, IMetaObjectAttribute* attribute)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendException::Error(_("database is not open!"));
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	wxASSERT(m_metaAttribute);
+	wxASSERT(attribute);
 
-	const wxString& tableName = m_metaObject->GetTableNameDB();
-	const wxString& fieldName = m_metaAttribute->GetFieldNameDB();
+	const wxString& tableName = metaObject->GetTableNameDB();
+	const wxString& fieldName = attribute->GetFieldNameDB();
 
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	//IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT %s FROM %s ORDER BY %s FOR UPDATE;",
 	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT %s FROM %s ORDER BY %s;",
-		IMetaObjectAttribute::GetSQLFieldName(m_metaAttribute),
+		IMetaObjectAttribute::GetSQLFieldName(attribute),
 		tableName,
-		IMetaObjectAttribute::GetSQLFieldName(m_metaAttribute)
+		IMetaObjectAttribute::GetSQLFieldName(attribute)
 	);
 
-	const CTypeDescription& typeDesc = m_metaAttribute->GetTypeDesc();
+	const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 
 	if (resultSet == nullptr)
-		return m_metaAttribute->CreateValue();
+		return attribute->CreateValue();
 
-	number_t code = 1; CValue fieldCode;
+	if (attribute->ContainType(eValueTypes::TYPE_NUMBER)) {
 
-	if (m_metaAttribute->ContainType(eValueTypes::TYPE_NUMBER)) {
+		static CValue fieldCode;
+
+		number_t resultCode = 1;
 		while (resultSet->Next()) {
-			IMetaObjectAttribute::GetValueAttribute(m_metaAttribute, fieldCode, resultSet);
-			if (fieldCode.GetNumber() == code) {
-				code++;
-			}
+			IMetaObjectAttribute::GetValueAttribute(attribute, fieldCode, resultSet);
+			if (resultCode == fieldCode.GetNumber()) resultCode++;	
 		}
+
 		db_query->CloseResultSet(resultSet);
-		return code;
+		return resultCode;
 	}
-	else if (m_metaAttribute->ContainType(eValueTypes::TYPE_STRING)) {
-		ttmath::Conv conv;
-		conv.precision = typeDesc.GetLength();
-		conv.leading_zero = true;
-		wxString strCode = code.ToString(conv);
+	else if (attribute->ContainType(eValueTypes::TYPE_STRING)) {
+
+		static CValue fieldCode;
+
+		wxLongLong_t resultCode = 1;
+		wxString strNumber;
+
+		std::stringstream strStreamNumber;
+		strStreamNumber << std::setw(typeDesc.GetLength()) << std::setfill('0') << resultCode;
+		strNumber = strStreamNumber.str();
+
 		while (resultSet->Next()) {
-			IMetaObjectAttribute::GetValueAttribute(m_metaAttribute, fieldCode, resultSet);
-			if (fieldCode.GetString() == strCode) {
-				code++;
-				strCode = code.ToString(conv);
+			IMetaObjectAttribute::GetValueAttribute(attribute, fieldCode, resultSet);
+			if (strNumber == fieldCode.GetString()) {
+				std::stringstream strStreamNumber;
+				strStreamNumber << std::setw(typeDesc.GetLength()) << std::setfill('0') << ++resultCode;
+				strNumber = strStreamNumber.str();
 			}
 		}
+
 		db_query->CloseResultSet(resultSet);
-		return strCode;
+		return strNumber;
 	}
 
 	wxASSERT_MSG(false, "m_metaAttribute->GetClsidList() != eValueTypes::TYPE_NUMBER"
 		"|| m_metaAttribute->GetClsidList() != eValueTypes::TYPE_STRING");
 
-	return code;
+	return wxEmptyValue;
 }

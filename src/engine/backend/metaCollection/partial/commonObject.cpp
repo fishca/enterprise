@@ -1642,40 +1642,25 @@ wxIMPLEMENT_ABSTRACT_CLASS(IRecordDataObjectRef, IRecordDataObject);
 IRecordDataObjectRef::IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid) :
 	IRecordDataObject(objGuid.isValid() ? objGuid : CGuid::newGuid(GUID_TIME_BASED), !objGuid.isValid()),
 	m_metaObject(metaObject),
-	m_reference_impl(nullptr), m_codeGenerator(nullptr),
+	m_reference_impl(nullptr),
 	m_objModified(false)
 {
-	if (m_metaObject != nullptr) {
-		IMetaObjectAttribute* attributeCode = m_metaObject->GetAttributeForCode();
-		if (attributeCode != nullptr) {
-			m_codeGenerator = new CCodeGenerator(
-				m_metaObject, attributeCode
-			);
-		}
-		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
-	}
+	if (m_metaObject != nullptr) 
+		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);	
 }
 
 IRecordDataObjectRef::IRecordDataObjectRef(const IRecordDataObjectRef& src) :
 	IRecordDataObject(src),
 	m_metaObject(src.m_metaObject),
-	m_reference_impl(nullptr), m_codeGenerator(nullptr),
+	m_reference_impl(nullptr),
 	m_objModified(false)
 {
-	if (m_metaObject != nullptr) {
-		IMetaObjectAttribute* attributeCode = m_metaObject->GetAttributeForCode();
-		if (attributeCode != nullptr) {
-			m_codeGenerator = new CCodeGenerator(
-				m_metaObject, attributeCode
-			);
-		}
+	if (m_metaObject != nullptr) 
 		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
-	}
 }
 
 IRecordDataObjectRef::~IRecordDataObjectRef()
 {
-	wxDELETE(m_codeGenerator);
 	wxDELETE(m_reference_impl);
 }
 

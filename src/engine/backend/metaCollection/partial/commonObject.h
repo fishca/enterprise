@@ -1052,18 +1052,8 @@ class BACKEND_API IRecordDataObjectRef : public IRecordDataObject {
 protected:
 
 	// code generator
-	class CCodeGenerator {
-		IMetaObjectRecordDataMutableRef* m_metaObject;
-		IMetaObjectAttribute* m_metaAttribute;
-	public:
-		CValue GenerateCode() const;
-		meta_identifier_t GetMetaID() const {
-			return m_metaAttribute->GetMetaID();
-		}
-		CCodeGenerator(IMetaObjectRecordDataMutableRef* metaObject, IMetaObjectAttribute* attribute) : m_metaObject(metaObject), m_metaAttribute(attribute) {}
-	};
-
-	CCodeGenerator* m_codeGenerator;
+	static CValue GenerateNextCode(
+		IMetaObjectRecordDataMutableRef* metaObject, IMetaObjectAttribute* attribute);
 
 protected:
 	IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid);

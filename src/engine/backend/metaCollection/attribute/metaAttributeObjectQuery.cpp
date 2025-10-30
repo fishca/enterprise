@@ -745,9 +745,9 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 		{
 			IMetaData* metaData = metaAttr->GetMetaData();
 			wxASSERT(metaData);
-			const class_identifier_t& refType = resultSet->GetResultLong(fieldName + "_RTRef");
+			const class_identifier_t& refType = resultSet->GetResultLong(fieldName + wxT("_RTRef"));
 			wxMemoryBuffer bufferData;
-			resultSet->GetResultBlob(fieldName + "_RRRef", bufferData);
+			resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);
 			if (!bufferData.IsEmpty()) {
 				if (createData) {
 					retValue = CReferenceDataObject::CreateFromPtr(
@@ -781,23 +781,23 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	eFieldTypes fieldType =
-		static_cast<eFieldTypes>(resultSet->GetResultInt(fieldName + "_TYPE"));
+		static_cast<eFieldTypes>(resultSet->GetResultInt(fieldName + wxT("_TYPE")));
 
 	switch (fieldType)
 	{
 		case eFieldTypes_Boolean:
-			return IMetaObjectAttribute::GetValueAttribute(fieldName + "_B", eFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
+			return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_B"), eFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
 		case eFieldTypes_Number:
-			return IMetaObjectAttribute::GetValueAttribute(fieldName + "_N", eFieldTypes_Number, metaAttr, retValue, resultSet, createData);
+			return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_N"), eFieldTypes_Number, metaAttr, retValue, resultSet, createData);
 		case eFieldTypes_Date:
-			return IMetaObjectAttribute::GetValueAttribute(fieldName + "_D", eFieldTypes_Date, metaAttr, retValue, resultSet, createData);
+			return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_D"), eFieldTypes_Date, metaAttr, retValue, resultSet, createData);
 		case eFieldTypes_String:
-			return IMetaObjectAttribute::GetValueAttribute(fieldName + "_S", eFieldTypes_String, metaAttr, retValue, resultSet, createData);
+			return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_S"), eFieldTypes_String, metaAttr, retValue, resultSet, createData);
 		case eFieldTypes_Null:
 			retValue = eValueTypes::TYPE_NULL;
 			return true;
 		case eFieldTypes_Enum:
-			return IMetaObjectAttribute::GetValueAttribute(fieldName + "_E", eFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
+			return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_E"), eFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
 		case eFieldTypes_Reference:
 			return IMetaObjectAttribute::GetValueAttribute(fieldName, eFieldTypes_Reference, metaAttr, retValue, resultSet, createData);
 		default:

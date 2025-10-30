@@ -458,10 +458,8 @@ bool CValueForm::CreateDocForm(CMetaDocument* docParent, bool createContext)
 
 		CValue bCancel = false;
 
-		//if (!CallAsEvent(wxT("beforeOpen"), bCancel))
-		//	return false;
-		if (m_procUnit)
-		m_procUnit->CallAsProc(wxT("beforeOpen"), bCancel); 
+		if (!CallAsEvent(wxT("beforeOpen"), bCancel))
+			return false;
 
 		if (bCancel.GetBoolean())
 			return false;

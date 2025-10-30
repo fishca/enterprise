@@ -352,7 +352,9 @@ bool CMysqlPreparedStatementResultSet::IsFieldNull(int nField)
 
 int CMysqlPreparedStatementResultSet::LookupField(const wxString& strField)
 {
-	StringToIntMap::iterator SearchIterator = m_FieldLookupMap.find(strField);
+	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
+		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
+
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
 		wxString msg(_("Field '") + strField + _("' not found in the resultset"));

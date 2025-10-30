@@ -51,7 +51,7 @@ bool CFirebirdResultSet::Next()
 		return false;
 	}
 	else  // Errors!!!
-	{		
+	{
 		wxLogError(_("Error retrieving Next record\n"));
 		InterpretErrorCodes();
 		ThrowDatabaseException();
@@ -239,19 +239,19 @@ wxDateTime CFirebirdResultSet::GetResultDate(int nField)
 		if (nType == SQL_TIMESTAMP)
 		{
 			struct tm timeInTm;
-			m_pInterface->GetIscDecodeTimestamp()((ISC_TIMESTAMP *)pVar->sqldata, &timeInTm);
+			m_pInterface->GetIscDecodeTimestamp()((ISC_TIMESTAMP*)pVar->sqldata, &timeInTm);
 			SetDateTimeFromTm(dateReturn, timeInTm);
 		}
 		else if (nType == SQL_TYPE_DATE)
 		{
 			struct tm timeInTm;
-			m_pInterface->GetIscDecodeSqlDate()((ISC_DATE *)pVar->sqldata, &timeInTm);
+			m_pInterface->GetIscDecodeSqlDate()((ISC_DATE*)pVar->sqldata, &timeInTm);
 			SetDateTimeFromTm(dateReturn, timeInTm);
 		}
 		else if (nType == SQL_TYPE_TIME)
 		{
 			struct tm timeInTm;
-			m_pInterface->GetIscDecodeSqlTime()((ISC_TIME *)pVar->sqldata, &timeInTm);
+			m_pInterface->GetIscDecodeSqlTime()((ISC_TIME*)pVar->sqldata, &timeInTm);
 			SetDateTimeFromTm(dateReturn, timeInTm);
 		}
 		else
@@ -290,25 +290,25 @@ double CFirebirdResultSet::GetResultDouble(int nField)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_FLOAT)
 		{
-			dblReturn = *(float *)(pVar->sqldata);
+			dblReturn = *(float*)(pVar->sqldata);
 		}
 		else if (nType == SQL_DOUBLE)
 		{
-			dblReturn = *(double *)(pVar->sqldata);
+			dblReturn = *(double*)(pVar->sqldata);
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = *(long *)(pVar->sqldata);
+			dblReturn = *(long*)(pVar->sqldata);
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else if (nType == SQL_INT64)
 		{
-			dblReturn = *(ISC_INT64 *)(pVar->sqldata);
+			dblReturn = *(ISC_INT64*)(pVar->sqldata);
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else if (nType == SQL_SHORT)
 		{
-			dblReturn = *(short *)(pVar->sqldata);
+			dblReturn = *(short*)(pVar->sqldata);
 			for (int i = 0; i < -pVar->sqlscale; dblReturn /= 10, i++);
 		}
 		else
@@ -342,15 +342,15 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_FLOAT)
 		{
-			dblReturn = *(float *)(pVar->sqldata);
+			dblReturn = *(float*)(pVar->sqldata);
 		}
 		else if (nType == SQL_DOUBLE)
 		{
-			dblReturn = *(double *)(pVar->sqldata);
+			dblReturn = *(double*)(pVar->sqldata);
 		}
 		else if (nType == SQL_LONG)
 		{
-			dblReturn = *(long *)(pVar->sqldata);
+			dblReturn = *(long*)(pVar->sqldata);
 			for (int i = 0; i < -pVar->sqlscale; i++) dblReturn /= 10;
 		}
 		else if (nType == SQL_INT64)
@@ -358,7 +358,7 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 			ttmath::Int<TTMATH_BITS(64)> int64val;
 			memcpy(&int64val, pVar->sqldata, sizeof(int64val));
 			dblReturn.FromInt(int64val);
-			for (int i = 0; i < -pVar->sqlscale; i++) 
+			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}
 		else if (nType == SQL_INT128)
@@ -366,12 +366,12 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 			ttmath::Int<TTMATH_BITS(128)> int128val;
 			memcpy(&int128val, pVar->sqldata, sizeof(int128val));
 			dblReturn.FromInt(int128val);
-			for (int i = 0; i < -pVar->sqlscale; i++) 
+			for (int i = 0; i < -pVar->sqlscale; i++)
 				dblReturn /= 10;
 		}
 		else if (nType == SQL_SHORT)
 		{
-			dblReturn = *(short *)(pVar->sqldata);
+			dblReturn = *(short*)(pVar->sqldata);
 			for (int i = 0; i < -pVar->sqlscale; i++) dblReturn /= 10;
 		}
 		else
@@ -409,7 +409,7 @@ void* CFirebirdResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 		short nType = pVar->sqltype & ~1;
 		if (nType == SQL_BLOB)
 		{
-			ISC_QUAD blobId = *(ISC_QUAD *)pVar->sqldata;
+			ISC_QUAD blobId = *(ISC_QUAD*)pVar->sqldata;
 			isc_blob_handle pBlob = NULL;
 			char szSegment[128];
 			unsigned short nSegmentLength;
@@ -607,9 +607,9 @@ void CFirebirdResultSet::PopulateFieldLookupMap()
 
 int CFirebirdResultSet::LookupField(const wxString& strField)
 {
-	wxString strUpperCaseCopy = strField;
-	strUpperCaseCopy.MakeUpper();
-	StringToIntMap::iterator SearchIterator = m_FieldLookupMap.find(strUpperCaseCopy);
+	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
+		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
+
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
 		wxString msg(_("Field '") + strField + _("' not found in the resultset"));

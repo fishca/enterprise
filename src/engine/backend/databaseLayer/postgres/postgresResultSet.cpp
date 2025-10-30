@@ -259,9 +259,9 @@ bool CPostgresResultSet::IsFieldNull(int nField)
 
 int CPostgresResultSet::LookupField(const wxString& strField)
 {
-	wxString strLocalCopy(strField);
-	strLocalCopy.MakeUpper();
-	StringToIntMap::iterator SearchIterator = m_FieldLookupMap.find(strLocalCopy);
+	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
+		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
+
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
 		wxString msg(_("Field '") + strField + _("' not found in the resultset"));

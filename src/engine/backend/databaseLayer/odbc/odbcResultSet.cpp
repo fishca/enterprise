@@ -509,7 +509,9 @@ void* COdbcResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 
 int COdbcResultSet::LookupField(const wxString& strField)
 {
-	StringToIntMap::iterator SearchIterator = m_FieldLookupMap.find(strField.Upper());
+	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
+		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
+
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
 		wxString msg(_("Field '") + strField + _("' not found in the resultset"));

@@ -353,8 +353,11 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
+		
 		ownerForm->m_createdValue = wxEmptyValue;
 		ownerForm->m_changedValue = wxEmptyValue;
+
+		ownerForm->UpdateForm();
 	}
 
 	CValueForm::CloseForm(true);
@@ -362,10 +365,10 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 
 void CValueForm::NotifyChoice(CValue& vSelected)
 {
-	if (m_controlOwner != nullptr)
-		ChoiceDocForm(vSelected);
+	ChoiceDocForm(vSelected);
 
-	if (m_closeOnChoice) CValueForm::CloseForm();
+	if (m_closeOnChoice) 
+		CValueForm::CloseForm();
 }
 
 #include "backend/system/systemManager.h"

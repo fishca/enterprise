@@ -511,12 +511,14 @@ void CValueForm::ActivateDocForm()
 
 void CValueForm::ChoiceDocForm(CValue& vSelected)
 {
-	CValueForm* ownerForm = m_controlOwner->GetOwnerForm();
-	if (ownerForm != nullptr)
-		ownerForm->CallAsEvent(wxT("choiceProcessing"), vSelected, GetValue());
-	m_controlOwner->ChoiceProcessing(vSelected);
-	if (ownerForm != nullptr)
-		ownerForm->UpdateForm();
+	if (m_controlOwner != nullptr) {
+		CValueForm* ownerForm = m_controlOwner->GetOwnerForm();
+		if (ownerForm != nullptr)
+			ownerForm->CallAsEvent(wxT("choiceProcessing"), vSelected, GetValue());
+		m_controlOwner->ChoiceProcessing(vSelected);
+		if (ownerForm != nullptr)
+			ownerForm->UpdateForm();
+	}
 }
 
 void CValueForm::RefreshDocForm()

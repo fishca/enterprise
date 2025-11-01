@@ -7,26 +7,26 @@
 #include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-IMetaDataConfiguration* IMetaDataConfiguration::s_instance = nullptr;
+IMetaDataConfiguration* IMetaDataConfiguration::ms_instance = nullptr;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool IMetaDataConfiguration::Initialize(eRunMode mode, const int flags)
 {
-	if (s_instance == nullptr) {
+	if (ms_instance == nullptr) {
 
 		switch (mode)
 		{
 		case eLAUNCHER_MODE: break;
 		case eDESIGNER_MODE:
-			s_instance = new CMetaDataConfigurationStorage();
+			ms_instance = new CMetaDataConfigurationStorage();
 			break;
 		default:
-			s_instance = new CMetaDataConfiguration();
+			ms_instance = new CMetaDataConfiguration();
 			break;
 		}
 
-		return s_instance != nullptr ?
-			s_instance->OnInitialize(flags) : false;
+		return ms_instance != nullptr ?
+			ms_instance->OnInitialize(flags) : false;
 	}
 
 	return false;
@@ -34,10 +34,10 @@ bool IMetaDataConfiguration::Initialize(eRunMode mode, const int flags)
 
 bool IMetaDataConfiguration::Destroy()
 {
-	if (s_instance != nullptr) {
-		s_instance->OnDestroy();
+	if (ms_instance != nullptr) {
+		ms_instance->OnDestroy();
 	}
-	wxDELETE(s_instance);
+	wxDELETE(ms_instance);
 	return true;
 }
 

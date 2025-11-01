@@ -39,7 +39,7 @@ wxString CApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
 	const wxDateTime& startedDate = m_listSession[idx].m_startedDate;
-	return startedDate.Format("%d.%m.%Y %H:%M:%S");
+	return startedDate.Format(wxT("%d.%m.%Y %H:%M:%S"));
 }
 
 wxString CApplicationDataSessionArray::GetApplication(unsigned int idx) const {
@@ -212,12 +212,12 @@ bool CApplicationData::Connect(const wxString& user, const wxString& password, c
 		return false;
 	if (!metaDataCreate(m_runMode, flags))
 		return false;
-	m_created_metadata = true; 
+	m_created_metadata = true;
 	if (!StartSession(user, password))
 		return false;  //start session	 
 	m_run_metadata = commonMetaData->RunDatabase();
-	return m_connected_to_db && 
-		m_created_metadata && 
+	return m_connected_to_db &&
+		m_created_metadata &&
 		m_run_metadata;
 }
 
@@ -234,15 +234,17 @@ bool CApplicationData::Disconnect()
 				return false;
 			m_connected_to_db = false;
 		}
-		
+
 		metaDataDestroy();
 		m_created_metadata = false;
 	}
-	
+
 	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+#include "backend/debugger/debugClient.h"
+
 #pragma region execute 
 long CApplicationData::RunApplication(const wxString& strAppName, bool searchDebug) const
 {
@@ -250,28 +252,43 @@ long CApplicationData::RunApplication(const wxString& strAppName, bool searchDeb
 
 	if (m_strFile.IsEmpty()) {
 		if (!m_strServer.IsEmpty())
-			executeCmd += " /srv " + m_strServer;
+			executeCmd += wxT(" /srv ") + m_strServer;
 		if (!m_strPort.IsEmpty())
-			executeCmd += " /p " + m_strPort;
+			executeCmd += wxT(" /p ") + m_strPort;
 		if (!m_strDatabase.IsEmpty())
-			executeCmd += " /db " + m_strDatabase;
+			executeCmd += wxT(" /db ") + m_strDatabase;
 		if (!m_strUser.IsEmpty())
-			executeCmd += " /usr " + m_strUser;
+			executeCmd += wxT(" /usr ") + m_strUser;
 		if (!m_strPassword.IsEmpty())
-			executeCmd += " /pwd " + m_strPassword;
+			executeCmd += wxT(" /pwd ") + m_strPassword;
 	}
 	else {
-		executeCmd += " /file " + m_strFile;
+		executeCmd += wxT(" /file ") + m_strFile;
 	}
 
 	if (searchDebug)
-		executeCmd += " /debug";
+		executeCmd += wxT(" /debug");
 	if (!m_strUserIB.IsEmpty())
-		executeCmd += " /ib_usr " + m_strUserIB;
+		executeCmd += wxT(" /ib_usr ") + m_strUserIB;
 	if (!m_strPasswordIB.IsEmpty())
-		executeCmd += " /ib_pwd " + m_strPasswordIB;
+		executeCmd += wxT(" /ib_pwd ") + m_strPasswordIB;
 
-	return wxExecute(executeCmd);
+	const long execute = wxExecute(executeCmd);
+
+	if (searchDebug) {
+
+		debugClient->SearchServer(true);
+
+		while (debugClient != nullptr) {
+
+			if (debugClient->GetConnectionSuccess())
+				break;
+
+			wxMilliSleep(5);
+		}
+	}
+
+	return execute;
 }
 
 long CApplicationData::RunApplication(const wxString& strAppName, const wxString& user, const wxString& password, bool searchDebug) const
@@ -281,28 +298,44 @@ long CApplicationData::RunApplication(const wxString& strAppName, const wxString
 	if (m_strFile.IsEmpty()) {
 
 		if (!m_strServer.IsEmpty())
-			executeCmd += " /srv " + m_strServer;
+			executeCmd += wxT(" /srv ") + m_strServer;
 		if (!m_strPort.IsEmpty())
-			executeCmd += " /p " + m_strPort;
+			executeCmd += wxT(" /p ") + m_strPort;
 		if (!m_strDatabase.IsEmpty())
-			executeCmd += " /db " + m_strDatabase;
+			executeCmd += wxT(" /db ") + m_strDatabase;
 		if (!m_strUser.IsEmpty())
-			executeCmd += " /usr " + m_strUser;
+			executeCmd += wxT(" /usr ") + m_strUser;
 		if (!m_strPassword.IsEmpty())
-			executeCmd += " /pwd " + m_strPassword;
+			executeCmd += wxT(" /pwd ") + m_strPassword;
 	}
 	else {
-		executeCmd += " /file " + m_strFile;
+		executeCmd += wxT(" /file ") + m_strFile;
 	}
 
 	if (searchDebug)
-		executeCmd += " /debug";
-	if (!user.IsEmpty())
-		executeCmd += " /ib_usr " + user;
-	if (!password.IsEmpty())
-		executeCmd += " /ib_pwd " + password;
+		executeCmd += wxT(" /debug");
 
-	return wxExecute(executeCmd);
+	if (!user.IsEmpty())
+		executeCmd += wxT(" /ib_usr ") + user;
+	if (!password.IsEmpty())
+		executeCmd += wxT(" /ib_pwd ") + password;
+
+	const long execute = wxExecute(executeCmd);
+
+	if (searchDebug) {
+
+		debugClient->SearchServer(true);
+
+		while (debugClient != nullptr) {
+
+			if (debugClient->GetConnectionSuccess())
+				break;
+
+			wxMilliSleep(5);
+		}
+	}
+
+	return execute;
 }
 #pragma endregion
 ///////////////////////////////////////////////////////////////////////////////
@@ -313,6 +346,7 @@ wxString CApplicationData::ComputeMd5(const wxString& userPassword) const
 {
 	if (userPassword.Length() > 0)
 		return wxMD5::ComputeMd5(userPassword);
+
 	return wxEmptyString;
 }
 

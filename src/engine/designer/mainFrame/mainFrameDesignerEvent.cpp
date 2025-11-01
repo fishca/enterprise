@@ -38,7 +38,6 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 		}
 	}
 
-	debugClient->SearchServer();
 	appData->RunApplication(wxT("enterprise"));
 }
 
@@ -189,7 +188,7 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 		return;
 	}
 
-	// stage one - update database  
+	// stage two - update database  
 	if (canSave && commonMetaData->OnBeforeSaveDatabase(saveConfigFlag)) {
 
 		bool roolback = false, success = true;

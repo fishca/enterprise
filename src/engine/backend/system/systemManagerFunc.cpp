@@ -1,4 +1,9 @@
-﻿#include "systemManager.h"
+﻿////////////////////////////////////////////////////////////////////////////
+//	Author		: Maxim Kornienko
+//	Description : system objects 
+////////////////////////////////////////////////////////////////////////////
+
+#include "systemManager.h"
 
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metaCollection/metaFormObject.h"
@@ -123,10 +128,10 @@ CValue CSystemFunction::Min(CValue** paParams, const long lSizeArray)
 CValue CSystemFunction::Sqrt(const CValue& cValue)
 {
 	number_t fNumber = cValue.GetNumber();
-	if (fNumber.Sqrt() == 0) {
+	if (fNumber.Sqrt() == 0)
 		return fNumber;
-	}
-	CSystemFunction::Raise("Incorrect argument value for built-in function (Sqrt)");
+
+	CSystemFunction::Raise(_("Incorrect argument value for built-in function (Sqrt)"));
 	return CValue();
 }
 
@@ -487,20 +492,23 @@ IBackendValueForm* CSystemFunction::ActiveWindow()
 //--- Специальные:
 void CSystemFunction::Message(const wxString& strMessage, eStatusMessage status)
 {
-	if (CBackendException::IsEvalMode()) {
+	if (CBackendException::IsEvalMode())
 		return;
-	}
 
-	if (backend_mainFrame != nullptr) {
+	if (!wxIsMainThread())
+		return;
+
+	if (backend_mainFrame != nullptr)
 		backend_mainFrame->Message(strMessage, status);
-	}
 }
 
 void CSystemFunction::Alert(const wxString& strMessage) //Предупреждение
 {
-	if (CBackendException::IsEvalMode()) {
+	if (CBackendException::IsEvalMode())
 		return;
-	}
+
+	if (!wxIsMainThread())
+		return;
 
 	if (backend_mainFrame != nullptr) {
 		wxMessageBox(strMessage, _("Warning"), wxICON_WARNING, backend_mainFrame->GetFrameHandler());
@@ -555,6 +563,9 @@ void CSystemFunction::SetStatus(const wxString& sStatus)
 	if (CBackendException::IsEvalMode())
 		return;
 
+	if (!wxIsMainThread())
+		return;
+
 	if (backend_mainFrame != nullptr) {
 		backend_mainFrame->SetStatusText(sStatus);
 	}
@@ -565,15 +576,21 @@ void CSystemFunction::ClearMessage()
 	if (CBackendException::IsEvalMode())
 		return;
 
-	if (backend_mainFrame != nullptr) {
+	if (!wxIsMainThread())
+		return;
+
+	if (backend_mainFrame != nullptr)
 		backend_mainFrame->ClearMessage();
-	}
 }
 
 void CSystemFunction::SetError(const wxString& strError)
 {
 	if (CBackendException::IsEvalMode())
 		return;
+
+	if (!wxIsMainThread())
+		return;
+
 	CBackendException::Error(strError);
 }
 
@@ -581,6 +598,10 @@ void CSystemFunction::Raise(const wxString& strError)
 {
 	if (CBackendException::IsEvalMode())
 		return;
+
+	if (!wxIsMainThread())
+		return;
+
 	CProcUnit::Raise(); CBackendException::Error(strError);
 }
 
@@ -588,6 +609,7 @@ wxString CSystemFunction::ErrorDescription()
 {
 	if (CBackendException::IsEvalMode())
 		return wxEmptyString;
+
 	return CBackendException::GetLastError();
 }
 
@@ -881,17 +903,12 @@ bool CSystemFunction::ExclusiveMode() {
 }
 
 wxString CSystemFunction::GeneralLanguage() {
-	return "en_US";
+	return wxT("en_US");
 }
-
-////////////////////////////////////////////////////////////////////////////
-//	Author		: Maxim Kornienko
-//	Description : system objects 
-////////////////////////////////////////////////////////////////////////////
 
 #include "backend/metaData.h"
 
-void CSystemFunction::EndJob(bool force)//ЗавершитьРаботуСистемы
+void CSystemFunction::EndJob(bool force) //ЗавершитьРаботуСистемы
 {
 	if (force) {
 		appDataDestroy();
@@ -929,7 +946,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 			);
 		}
 	}
-	
+
 	CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
 	return CValue();
 }

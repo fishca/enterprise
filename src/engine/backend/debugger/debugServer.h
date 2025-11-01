@@ -33,24 +33,43 @@ class BACKEND_API CDebuggerServer {
 				error == wxSOCKET_WOULDBLOCK;
 		}
 
+		void WaitConnection();
 		void Disconnect();
 
 		ConnectionType GetConnectionType() const { return m_connectionType; }
 
-		CDebuggerServerConnection(CDebuggerServer* server, wxSocketBase* socket);
+		CDebuggerServerConnection(const wxString& hostName, unsigned short startPort);
 		virtual ~CDebuggerServerConnection();
 
 		// entry point for the thread - called by Run() and executes in the context
 		// of this thread.
 		virtual ExitCode Entry() override;
-		virtual void EntryClient();
+
+		// This one is called by Kill() before killing the thread and is executed
+		// in the context of the thread that called Kill().
+		virtual void OnKill() override;
 
 	protected:
+
+		void EntryClient();
+
 		void RecvCommand(void* pointer, unsigned int length);
 		void SendCommand(void* pointer, unsigned int length);
+
 	private:
+
+		bool		m_waitConnection;
+
 		ConnectionType m_connectionType;
+
+		wxString m_strHostName;
+		unsigned short m_numHostPort;
+
+		bool m_acceptConnection;
+
+		wxSocketServer* m_socketServer;
 		wxSocketBase* m_socket;
+
 		friend class CDebuggerServer;
 	};
 
@@ -65,43 +84,41 @@ public:
 	static void Initialize(const int flags);
 	static void Destroy();
 
-	bool EnableDebugging() const {
-		if (m_socketServer == nullptr)
-			return false;
-		return true;
+	bool EnableDebugging() const { return m_socketConnectionThread != nullptr; }
+
+	bool AllowDebugging() const {
+		return m_socketConnectionThread != nullptr ?
+			!m_socketConnectionThread->m_waitConnection : true;
 	}
 
-	bool AllowDebugging() const { return !m_waitConnection; }
+	bool IsDestroySignal() const { return m_bDebugDestroy; }
 
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
 
-	void EnterDebugger(CRunContext* pContext, struct CByteUnit& CurCode, long& nPrevLine);
-	bool IsDebugLooped() const { return m_bDebugLoop; }
+	void EnterDebugger(CRunContext* runContext, const struct CByteUnit& byteCode, long& numPrevLine);
+	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int numLine, const wxString& strErrorMessage);
 
-	void SendErrorToClient(const wxString& strFileName, const wxString& strDocPath, unsigned int line, const wxString& strErrorMessage);
+	bool IsDebugLooped() const { return m_bDebugLoop; }
 
 protected:
 
-	void EnableNotify() {
-		if (m_waitConnection) {
-			if (m_socketServer != nullptr)
-				m_socketServer->Notify(true);
-			m_waitConnection = false;
-		}
-		ResetDebugger();
+	void SetConnectSocket(CDebuggerServerConnection* socketConnectionThread) {
+		m_socketConnectionThread = socketConnectionThread;
 	}
 
 	void ResetDebugger() {
+
 		m_runContext = nullptr;
 		m_bUseDebug = m_bDebugLoop = false;
+
 		ClearCollectionBreakpoint();
 	}
 
 	void ClearCollectionBreakpoint();
 
 	//main loop
-	inline void DoDebugLoop(const wxString& filePath, const wxString& module, int nLine, CRunContext* pSetRunContext);
+	inline void DoDebugLoop(const wxString& strDocPath, const wxString& strModuleName, int numLine, CRunContext* runContext);
 
 	//special functions:
 	inline void SendExpressions();
@@ -112,9 +129,6 @@ protected:
 	void RecvCommand(void* pointer, unsigned int length);
 	void SendCommand(void* pointer, unsigned int length);
 
-	//events:
-	void OnSocketServerEvent(wxSocketEvent& event);
-
 private:
 
 	static CDebuggerServer* ms_debugServer;
@@ -124,9 +138,9 @@ private:
 	bool		m_bDebugLoop;
 	bool		m_bDebugStopLine;
 
-	unsigned int m_numCurrentNumberStopContext;
+	bool		m_bDebugDestroy;
 
-	bool		m_waitConnection;
+	unsigned int m_numCurrentNumberStopContext;
 
 	std::map<wxString, std::vector<unsigned int>> m_listBreakpoint; //list of points 
 
@@ -136,13 +150,10 @@ private:
 	std::map <unsigned int, wxString> m_listExpression;
 #endif 
 
-	wxCriticalSection m_clearBreakpointsCS;
-
+	CDebuggerServerConnection* m_socketConnectionThread;
 	CRunContext* m_runContext;
-	wxSocketServer* m_socketServer;
-	wxEvtHandler* m_evtHandler;
 
-	CDebuggerServerConnection* m_socketThread;
+	wxCriticalSection m_clearBreakpointsCS;
 
 	friend class CBackendException;
 };

@@ -189,7 +189,8 @@ CApplicationData::CApplicationDataSessionUpdater::CApplicationDataSessionUpdater
 	wxThread(wxTHREAD_JOINABLE),
 	m_session_db(application->m_db != nullptr ? application->m_db->Clone() : nullptr),
 	m_session(session),
-	m_sessionCreated(false), m_sessionStarted(false)
+	m_sessionCreated(false), m_sessionStarted(false),
+	m_sessionUpdaterLoop(false)
 {
 	wxThread::SetPriority(wxPRIORITY_MIN);
 }
@@ -202,14 +203,17 @@ bool CApplicationData::CApplicationDataSessionUpdater::InitSessionUpdater()
 	if (wxThread::Run() != wxThreadError::wxTHREAD_NO_ERROR)
 		return false;
 
-	while (!m_sessionCreated)
-	{
-		if (!wxThread::IsRunning())
+	m_sessionUpdaterLoop = true;
+
+	while (m_sessionUpdaterLoop) {
+		
+		if (m_sessionCreated)
 			break;
 
 		wxMilliSleep(50);
 	}
 
+	m_sessionUpdaterLoop = false;
 	return m_sessionCreated;
 }
 

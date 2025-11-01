@@ -501,15 +501,17 @@ start_label:
 
 	try { //slower by 2-3% for each nested module
 		while (lCodeLine < lFinish) {
+
 			if (!CBackendException::IsEvalMode()) {
 				pContext->m_lCurLine = lCodeLine;
 				m_currentRunModule = this;
 			}
 
 			//enter in debugger
-			if (debugServer != nullptr && !CBackendException::IsEvalMode()) {
+			if (debugServer != nullptr && debugServer->IsDestroySignal())
+				break;
+			else if (debugServer != nullptr && !CBackendException::IsEvalMode())
 				debugServer->EnterDebugger(pContext, curCode, lPrevLine);
-			}
 
 			switch (curCode.m_numOper)
 			{

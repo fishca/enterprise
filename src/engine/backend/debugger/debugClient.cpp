@@ -15,6 +15,12 @@
 CDebuggerClient* CDebuggerClient::ms_debugClient = nullptr;
 ///////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////
+wxCriticalSection CDebuggerClient::ms_criticalSectionConnection1;
+wxCriticalSection CDebuggerClient::ms_criticalSectionConnection2;
+wxCriticalSection CDebuggerClient::ms_criticalSectionConnection3;
+///////////////////////////////////////////////////////////////////////
+
 bool CDebuggerClient::Initialize()
 {
 	if (!CDebuggerClient::TableAlreadyCreated()) {
@@ -25,65 +31,12 @@ bool CDebuggerClient::Initialize()
 		ms_debugClient->Destroy();
 
 	ms_debugClient = new CDebuggerClient();
-
-	unsigned int debugOffsetPort = 0;
-	while (debugOffsetPort < diapasonDebuggerPort) {
-		ms_debugClient->CreateConnection(
-			defaultHost,
-			defaultDebuggerPort + debugOffsetPort
-		);
-		debugOffsetPort++;
-	}
-
 	return true;
 }
 
 void CDebuggerClient::Destroy()
 {
 	wxDELETE(ms_debugClient);
-}
-
-void CDebuggerClient::ConnectToServer(const wxString& hostName, unsigned short port)
-{
-	CDebuggerClientConnection* foundedConnection = FindConnection(hostName, port);
-	if (foundedConnection != nullptr) {
-		foundedConnection->AttachConnection();
-	}
-}
-
-CDebuggerClient::CDebuggerClientConnection* CDebuggerClient::FindConnection(const wxString& hostName, unsigned short port)
-{
-	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerClientConnection* client) {
-		return client->m_hostName == hostName && client->m_port == port;
-		}
-	);
-
-	if (foundedConnection != m_listConnection.end()) {
-		return *foundedConnection;
-	}
-
-	return nullptr;
-}
-
-CDebuggerClient::CDebuggerClientConnection* CDebuggerClient::FindDebugger(const wxString& hostName, unsigned short port)
-{
-	auto foundedConnection = std::find_if(m_listConnection.begin(), m_listConnection.end(), [hostName, port](CDebuggerClientConnection* client) {
-		return client->m_hostName == hostName && client->m_port == port && client->GetConnectionType() == ConnectionType::ConnectionType_Debugger;
-		});
-
-	if (foundedConnection != m_listConnection.end()) {
-		return *foundedConnection;
-	}
-
-	return nullptr;
-}
-
-void CDebuggerClient::SearchServer(const wxString& hostName, unsigned short startPort)
-{
-	for (unsigned short currentPort = startPort; currentPort < startPort + diapasonDebuggerPort; currentPort++) {
-		CDebuggerClientConnection* sockDebugger = FindConnection(hostName, currentPort);
-		if (sockDebugger && !sockDebugger->m_verifiedConnection) { sockDebugger->AttachConnection(); break; }
-	}
 }
 
 //special functions:
@@ -118,7 +71,7 @@ void CDebuggerClient::Pause()
 void CDebuggerClient::Stop(bool kill)
 {
 	for (auto connection : m_listConnection) {
-		if (connection->IsConnected()) connection->DetachConnection(kill);
+		connection->DetachConnection(kill);
 	}
 }
 
@@ -533,11 +486,9 @@ enum eSocketType {
 	wxID_SOCKET_CLIENT = 1
 };
 
-bool CDebuggerClient::CDebuggerClientConnection::AttachConnection()
+void CDebuggerClient::CDebuggerClientConnection::AttachConnection()
 {
-	if (m_connectionType != ConnectionType::ConnectionType_Scanner) return false;
-
-	if (m_verifiedConnection) {
+	if (m_verifiedConnection && m_connectionType == ConnectionType::ConnectionType_Scanner) {
 
 		m_connectionType = ConnectionType::ConnectionType_Debugger;
 
@@ -548,14 +499,10 @@ bool CDebuggerClient::CDebuggerClientConnection::AttachConnection()
 		// Send the start event message to the UI.
 		ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
 	}
-
-	return true;
 }
 
-bool CDebuggerClient::CDebuggerClientConnection::DetachConnection(bool kill)
+void CDebuggerClient::CDebuggerClientConnection::DetachConnection(bool kill)
 {
-	if (m_connectionType != ConnectionType::ConnectionType_Debugger) return false;
-
 	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 
 		// Send the exit event message to the UI.
@@ -567,13 +514,11 @@ bool CDebuggerClient::CDebuggerClientConnection::DetachConnection(bool kill)
 		commandChannel.w_u16(kill ? CommandId_Destroy : CommandId_Detach);
 		SendCommand(commandChannel.pointer(), commandChannel.size());
 
-		if (m_socketClient != nullptr) m_socketClient->Close();
+		if (m_socketClient != nullptr)
+			m_socketClient->Close();
+
 		m_verifiedConnection = false;
-
-		return true;
 	}
-
-	return false;
 }
 
 wxThread::ExitCode CDebuggerClient::CDebuggerClientConnection::Entry()
@@ -592,17 +537,25 @@ wxThread::ExitCode CDebuggerClient::CDebuggerClientConnection::Entry()
 
 void CDebuggerClient::CDebuggerClientConnection::OnKill()
 {
-	if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
+	if (ms_debugClient != nullptr && m_connectionType == ConnectionType::ConnectionType_Debugger) {
+
 		// Send the exit event message to the UI.
 		ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd, m_socketClient);
+
+		// Delete connection 
+		ms_debugClient->DeleteConnection(this);
 	}
 
-	if (m_socketClient != nullptr && m_socketClient->IsConnected()) m_socketClient->Close();
+	if (m_socketClient != nullptr)
+		m_socketClient->Destroy();
+
+	m_socketClient = nullptr;
 }
 
 void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 {
-	if (m_socketClient != nullptr) m_socketClient->Close();
+	if (m_socketClient != nullptr)
+		m_socketClient->Destroy();
 
 	wxIPV4address addr;
 	addr.Hostname(m_hostName);
@@ -611,7 +564,13 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 	// set the appropriate flags for the socket
 	m_socketClient = new wxSocketClient(wxSOCKET_BLOCK | wxSOCKET_WAITALL);
 
+	// step wait connect  
+	m_number_connection_attempts = 0;
+
 	while (!TestDestroy()) {
+
+		if (m_number_connection_attempts > numberOfConnectionAttempts)
+			break;
 
 		bool connected = m_socketClient->Connect(addr, false);
 		if (!connected && m_socketClient->Wait())
@@ -660,6 +619,8 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 			if (m_verifiedConnection) {
 
+				ms_debugClient->m_connectionSuccess = true; 
+
 				if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the start event message to the UI.
 					ms_debugClient->CallAfter(&CDebuggerClient::CDebuggerClientAdapter::OnSessionStart, m_socketClient);
@@ -694,8 +655,13 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 				}
 			}
 
-			wxMilliSleep(waitDebuggerTimeout);
+			if (m_socketClient != nullptr)
+				m_socketClient->Close();
+
+			m_number_connection_attempts = 0;
 		}
+
+		if (!connected) m_number_connection_attempts++;
 
 		if (m_connectionType != ConnectionType::ConnectionType_Unknown)
 			m_connectionType = ConnectionType::ConnectionType_Scanner;
@@ -703,7 +669,10 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 		m_verifiedConnection = false;
 	}
 
-	m_socketClient->Close();
+	if (m_socketClient != nullptr)
+		m_socketClient->Destroy();
+
+	m_socketClient = nullptr;
 }
 
 void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsigned int length)
@@ -786,6 +755,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		);
 	}
 	else if (commandFromServer == CommandId_LeaveLoop) {
+		
 		ms_debugClient->m_enterLoop = false;
 		ms_debugClient->m_activeSocket = nullptr;
 
@@ -877,7 +847,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 			commandReader.r_stringZ(strType);
 
 			//set space 
-			strValue.Replace('\n', ' ');
+			strValue.Replace(wxT('\n'), wxT(' '));
 
 			//refresh child elements 
 			unsigned int attributeCount = commandReader.r_u32();

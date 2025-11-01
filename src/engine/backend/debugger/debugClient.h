@@ -46,6 +46,10 @@ class BACKEND_API CDebuggerClient {
 	class BACKEND_API CDebuggerClientConnection : public wxThread {
 	public:
 
+		bool IsVerifiedConnection() const {
+			return m_verifiedConnection && IsConnected();
+		}
+
 		bool IsConnected() const {
 			if (m_socketClient == nullptr)
 				return false;
@@ -64,8 +68,10 @@ class BACKEND_API CDebuggerClient {
 		wxString GetComputerName() const { return m_compName; }
 		wxString GetUserName() const { return m_userName; }
 
-		bool AttachConnection();
-		bool DetachConnection(bool kill = false);
+		ConnectionType GetConnectionType() const { return m_connectionType; }
+
+		void AttachConnection();
+		void DetachConnection(bool kill = false);
 
 		CDebuggerClient::CDebuggerClientConnection::CDebuggerClientConnection(CDebuggerClient* client, const wxString& hostName, unsigned short port) :
 			wxThread(wxTHREAD_DETACHED),
@@ -73,24 +79,31 @@ class BACKEND_API CDebuggerClient {
 			m_port(port),
 			m_verifiedConnection(false),
 			m_connectionType(ConnectionType::ConnectionType_Scanner),
+			m_number_connection_attempts(0),
 			m_socketClient(nullptr) {
-			if (debugClient != nullptr) debugClient->AppendConnection(this);
+
+			if (debugClient != nullptr)
+				debugClient->AppendConnection(this);
+
+			wxThread::SetPriority(wxPRIORITY_MIN);
 		}
 
 		CDebuggerClient::CDebuggerClientConnection::~CDebuggerClientConnection() {
-			if (debugClient != nullptr) debugClient->DeleteConnection(this);
-			if (m_socketClient != nullptr) m_socketClient->Destroy();
-		}
 
-		// This one is called by Kill() before killing the thread and is executed
-		// in the context of the thread that called Kill().
-		virtual void OnKill() override;
+			if (debugClient != nullptr)
+				debugClient->DeleteConnection(this);
+
+			if (m_socketClient != nullptr)
+				m_socketClient->Destroy();
+		}
 
 		// entry point for the thread - called by Run() and executes in the context
 		// of this thread.
 		virtual ExitCode Entry();
 
-		virtual ConnectionType GetConnectionType() const { return m_connectionType; }
+		// This one is called by Kill() before killing the thread and is executed
+		// in the context of the thread that called Kill().
+		virtual void OnKill() override;
 
 	protected:
 
@@ -113,12 +126,19 @@ class BACKEND_API CDebuggerClient {
 		wxString		m_userName;
 		wxString		m_compName;
 
+		unsigned short  m_number_connection_attempts;
+
 		ConnectionType	m_connectionType;
 
 		friend class CDebuggerClient;
 	};
 
-	CDebuggerClient() : m_activeSocket(nullptr), m_adapter(new CDebuggerClientAdapter), m_enterLoop(false) {}
+	CDebuggerClient() :
+		m_activeSocket(nullptr),
+		m_adapter(new CDebuggerClientAdapter),
+		m_enterLoop(false), m_connectionSuccess(false)
+	{
+	}
 
 public:
 
@@ -139,11 +159,63 @@ public:
 
 public:
 
-	void ConnectToServer(const wxString& hostName, unsigned short port);
-	CDebuggerClientConnection* FindConnection(const wxString& hostName, unsigned short port);
-	CDebuggerClientConnection* FindDebugger(const wxString& hostName, unsigned short port);
-	void SearchServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort);
-	std::vector<CDebuggerClientConnection*>& GetListConnection() { return m_listConnection; }
+	void SearchServer(bool run_debug_server = false,
+		const wxString& hostName = defaultHost,
+		unsigned short startPort = defaultDebuggerPort, unsigned short endPort = defaultDebuggerPort + diapasonDebuggerPort)
+	{
+		if (run_debug_server)
+			m_connectionSuccess = false;
+
+		for (unsigned short port = startPort; port < endPort; port++) {
+
+			auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
+				[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+			);
+
+			if (iterator == m_listConnection.end()) {
+
+				CDebuggerClientConnection* createdConnection = new CDebuggerClientConnection(this, hostName, port);
+
+				if (createdConnection->Run() == wxTHREAD_NO_ERROR) {
+					
+					//if (run_debug_server)
+					//	break;
+					
+					continue;
+				}
+
+				createdConnection->Delete();
+			}
+		}
+	}
+
+	void AttachConnection(const wxString& hostName, unsigned short port) const {
+
+		auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
+			[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+		);
+
+		if (iterator != m_listConnection.end()) (*iterator)->AttachConnection();
+	}
+
+	void DetachConnection(const wxString& hostName, unsigned short port, bool kill = false) {
+
+		auto iterator = std::find_if(m_listConnection.begin(), m_listConnection.end(),
+			[hostName, port](CDebuggerClientConnection* client) { return client->m_hostName == hostName && client->m_port == port; }
+		);
+
+		if (iterator != m_listConnection.end()) (*iterator)->DetachConnection(kill);
+	}
+
+	const std::vector<CDebuggerClientConnection*>& GetListConnection() {
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
+		return m_listConnection;
+	}
+
+	const unsigned int GetCountConnection() const {
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
+		return m_listConnection.size();
+	}
 
 	//special public function:
 #if _USE_64_BIT_POINT_IN_DEBUGGER == 1
@@ -187,9 +259,14 @@ public:
 	void RemoveAllBreakpoint();
 
 	bool HasConnections() const {
+
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
+
 		for (auto connection : m_listConnection) {
-			if (connection->GetConnectionType() == ConnectionType::ConnectionType_Debugger) return connection->IsConnected();
+			if (ConnectionType::ConnectionType_Debugger == connection->GetConnectionType())
+				return connection->IsConnected();
 		}
+
 		return false;
 	}
 
@@ -225,6 +302,16 @@ public:
 		}
 	}
 
+	void SetConnectionSuccess(bool started) {
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection3);
+		m_connectionSuccess = started;
+	}
+
+	bool GetConnectionSuccess() const {
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection3);
+		return m_connectionSuccess;
+	}
+
 protected:
 
 	static bool TableAlreadyCreated();
@@ -239,21 +326,13 @@ protected:
 	bool RemoveAllBreakpointInDB();
 
 	//commands:
-	bool CreateConnection(const wxString& hostName, unsigned short port) {
-		CDebuggerClientConnection* createdConnection = FindConnection(hostName, port);
-		if (createdConnection == nullptr) {
-			createdConnection = new CDebuggerClientConnection(this, hostName, port);
-
-			createdConnection->SetPriority(wxPRIORITY_MIN);
-			return createdConnection->Run() != wxTHREAD_NO_ERROR;
-		}
-		return true;
+	void AppendConnection(CDebuggerClientConnection* client) {
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
+		m_listConnection.push_back(client);
 	}
 
-	void AppendConnection(CDebuggerClientConnection* client) { m_listConnection.push_back(client); }
-
 	void DeleteConnection(CDebuggerClientConnection* client) {
-
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection1);
 		if (m_activeSocket == client) m_activeSocket = nullptr;
 		m_listConnection.erase(
 			std::remove(m_listConnection.begin(), m_listConnection.end(), client), m_listConnection.end()
@@ -276,6 +355,8 @@ protected:
 private:
 
 	int GetLineOffset(const wxString& strModuleName, const int current_line) const {
+
+		wxCriticalSectionLocker enter(ms_criticalSectionConnection2);
 
 		auto iterator_module_offset = std::find_if(
 			m_listOffsetBreakpoint.begin(),
@@ -300,6 +381,10 @@ private:
 	CDebuggerClientConnection* m_activeSocket = nullptr;
 	CDebuggerClientAdapter* m_adapter = nullptr;
 
+	static wxCriticalSection ms_criticalSectionConnection1;
+	static wxCriticalSection ms_criticalSectionConnection2;
+	static wxCriticalSection ms_criticalSectionConnection3;
+
 	std::vector<CDebuggerClientConnection*>	m_listConnection;
 
 	std::map <wxString, std::map<unsigned int, int>> m_listBreakpoint; //list of points 
@@ -311,7 +396,7 @@ private:
 	std::map <unsigned int, wxString> m_listExpression;
 #endif  
 
-	bool	m_enterLoop;
+	bool	m_enterLoop, m_connectionSuccess;
 };
 
 #endif

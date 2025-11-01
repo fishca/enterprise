@@ -17,13 +17,6 @@ enum eConfigType {
 };
 
 class BACKEND_API IMetaDataConfiguration : public IMetaData {
-	static IMetaDataConfiguration* s_instance;
-public:
-
-	virtual bool OnBeforeSaveDatabase(int flags) { return false; }
-	virtual bool OnSaveDatabase(int flags) { return false; }
-	virtual bool OnAfterSaveDatabase(bool roolback, int flags) { return false; }
-
 public:
 
 	IMetaDataConfiguration() : IMetaData() {}
@@ -57,7 +50,10 @@ public:
 	//get config type 
 	virtual eConfigType GetConfigType() const = 0;
 
-protected:
+	//special save 
+	virtual bool OnBeforeSaveDatabase(int flags) { return false; }
+	virtual bool OnSaveDatabase(int flags) { return false; }
+	virtual bool OnAfterSaveDatabase(bool roolback, int flags) { return false; }
 
 protected:
 
@@ -66,10 +62,16 @@ protected:
 
 public:
 
-	static IMetaDataConfiguration* Get() { wxASSERT(s_instance); return s_instance; }
+	static IMetaDataConfiguration* Get() {
+		wxASSERT(ms_instance); 
+		return ms_instance; 
+	}
 
 	static bool Initialize(enum eRunMode mode, const int flag);
 	static bool Destroy();
+
+private:
+	static IMetaDataConfiguration* ms_instance;
 };
 
 class BACKEND_API CMetaDataConfigurationFile : public IMetaDataConfiguration {
@@ -170,11 +172,6 @@ protected:
 };
 
 class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {	
-	CMetaDataConfiguration* m_configMetadata;
-public:
-	virtual bool OnBeforeSaveDatabase(int flags);
-	virtual bool OnSaveDatabase(int flags);
-	virtual bool OnAfterSaveDatabase(bool roolback, int flags);
 public:
 
 	CMetaDataConfigurationStorage();
@@ -222,6 +219,11 @@ public:
 
 	////////////////////////////////////////////////////////////////
 
+	//special save 
+	virtual bool OnBeforeSaveDatabase(int flags);
+	virtual bool OnSaveDatabase(int flags);
+	virtual bool OnAfterSaveDatabase(bool roolback, int flags);
+
 protected:
 
 	virtual bool OnInitialize(const int flag);
@@ -237,6 +239,9 @@ protected:
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteMetadata(const class_identifier_t& clsid);
 	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parentObj);
+
+private:
+	CMetaDataConfiguration* m_configMetadata;
 };
 
 #define sign_metadata 0x1236F362122FE

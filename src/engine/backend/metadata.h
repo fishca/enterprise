@@ -10,8 +10,6 @@ class BACKEND_API IMetaValueTypeCtor;
 ///////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API IMetaData {
-	IBackendMetadataTree* m_metaTree;
-private:
 	void DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const;
 	//Get metaobjects 
 	void DoGetMetaObject(std::vector<IMetaObject*>& metaObjects, const IMetaObject* top) const;
@@ -176,6 +174,9 @@ protected:
 
 	//custom types
 	std::set<IMetaValueTypeCtor*> m_factoryCtors;
+
+private:
+	IBackendMetadataTree* m_metaTree;
 };
 
 #endif 

@@ -3,8 +3,6 @@
 
 void CDialogDebugItem::RefreshDebugList()
 {
-	debugClient->SearchServer();
-
 	m_listAvailable.clear(); m_listAttached.clear();
 
 	m_availableList->ClearAll();
@@ -12,43 +10,56 @@ void CDialogDebugItem::RefreshDebugList()
 	m_availableList->AppendColumn(_("Computer"), wxLIST_FORMAT_LEFT, 150);
 	m_availableList->AppendColumn(_("Port"), wxLIST_FORMAT_LEFT, 50);
 
-	for (auto connection : debugClient->GetListConnection()) {
-		if (connection->GetConnectionType() != ConnectionType::ConnectionType_Scanner)
-			continue;
-		if (!connection->IsConnected())
-			continue;
-		long index = m_availableList->InsertItem(m_availableList->GetItemCount(), connection->GetUserName());
-		m_availableList->SetItem(index, 0, connection->GetUserName());
-		m_availableList->SetItem(index, 1, connection->GetComputerName());
-		m_availableList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
-
-		m_listAvailable.emplace_back(
-			std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
-		);
-	}
-
 	m_attachedList->ClearAll();
 	m_attachedList->AppendColumn(_("User"), wxLIST_FORMAT_LEFT, 250);
 	m_attachedList->AppendColumn(_("Computer"), wxLIST_FORMAT_LEFT, 150);
 	m_attachedList->AppendColumn(_("Port"), wxLIST_FORMAT_LEFT, 50);
 
-	for (auto connection : debugClient->GetListConnection()) {
-		if (connection->GetConnectionType() != ConnectionType::ConnectionType_Debugger)
-			continue;
-		if (!connection->IsConnected())
-			continue;
-		long index = m_attachedList->InsertItem(m_attachedList->GetItemCount(), connection->GetUserName());
-		m_attachedList->SetItem(index, 0, connection->GetUserName());
-		m_attachedList->SetItem(index, 1, connection->GetComputerName());
-		m_attachedList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
+	if (debugClient != nullptr) {
 
-		m_listAttached.emplace_back(
-			std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
-		);
+		debugClient->SearchServer();
+
+		for (auto connection : debugClient->GetListConnection()) {
+			
+			if (connection->GetConnectionType() != ConnectionType::ConnectionType_Scanner)
+				continue;
+			
+			if (!connection->IsVerifiedConnection())
+				continue;
+			
+			const long index = m_availableList->InsertItem(m_availableList->GetItemCount(), connection->GetUserName());
+			
+			m_availableList->SetItem(index, 0, connection->GetUserName());
+			m_availableList->SetItem(index, 1, connection->GetComputerName());
+			m_availableList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
+
+			m_listAvailable.emplace_back(
+				std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
+			);
+		}
+
+		for (auto connection : debugClient->GetListConnection()) {
+			
+			if (connection->GetConnectionType() != ConnectionType::ConnectionType_Debugger)
+				continue;
+			
+			if (!connection->IsVerifiedConnection())
+				continue;
+			
+			const long index = m_attachedList->InsertItem(m_attachedList->GetItemCount(), connection->GetUserName());
+			
+			m_attachedList->SetItem(index, 0, connection->GetUserName());
+			m_attachedList->SetItem(index, 1, connection->GetComputerName());
+			m_attachedList->SetItem(index, 2, stringUtils::IntToStr(connection->GetPort()));
+
+			m_listAttached.emplace_back(
+				std::pair<unsigned short, wxString>(connection->GetPort(), connection->GetHostName())
+			);
+		}
 	}
 }
 
-CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) 
+CDialogDebugItem::CDialogDebugItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
 	: wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -84,35 +95,37 @@ CDialogDebugItem::~CDialogDebugItem()
 	m_attachedList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAttachedItemSelected, this);
 	m_availableList->Unbind(wxEVT_LIST_ITEM_ACTIVATED, &CDialogDebugItem::OnAvailableItemSelected, this);
 
-	if (m_connectionScanner->IsRunning()) {
+	if (m_connectionScanner->IsRunning()) 
 		m_connectionScanner->Stop();
-	}
-	
+
 	m_connectionScanner->Unbind(wxEVT_TIMER, &CDialogDebugItem::OnIdleHandler, this);
-	delete m_connectionScanner;
+	wxDELETE(m_connectionScanner);
 }
 
-void CDialogDebugItem::OnAttachedItemSelected(wxListEvent &event)
+void CDialogDebugItem::OnAttachedItemSelected(wxListEvent& event)
 {
-	auto foundedConnection =
-		debugClient->FindDebugger(m_listAttached[event.GetIndex()].second, m_listAttached[event.GetIndex()].first);
+	if (debugClient != nullptr) {
+		
+		debugClient->DetachConnection(
+			m_listAttached[event.GetIndex()].second,
+			m_listAttached[event.GetIndex()].first
+		);
 
-	if (foundedConnection != nullptr) {
-		foundedConnection->DetachConnection();
+		m_attachedList->DeleteItem(event.GetIndex());
+		m_listAttached.erase(m_listAttached.begin() + event.GetIndex());
 	}
-
-	m_attachedList->DeleteItem(event.GetIndex());
-	m_listAttached.erase(m_listAttached.begin() + event.GetIndex());
 }
 
-void CDialogDebugItem::OnAvailableItemSelected(wxListEvent &event)
+void CDialogDebugItem::OnAvailableItemSelected(wxListEvent& event)
 {
-	debugClient->ConnectToServer(
-		m_listAvailable[event.GetIndex()].second, 
-		m_listAvailable[event.GetIndex()].first
-	);
+	if (debugClient != nullptr) {
+		
+		debugClient->AttachConnection(
+			m_listAvailable[event.GetIndex()].second,
+			m_listAvailable[event.GetIndex()].first
+		);
 
-	m_availableList->DeleteItem(event.GetIndex());
-	m_listAvailable.erase(m_listAvailable.begin() + event.GetIndex());
+		m_availableList->DeleteItem(event.GetIndex());
+		m_listAvailable.erase(m_listAvailable.begin() + event.GetIndex());
+	}
 }
-

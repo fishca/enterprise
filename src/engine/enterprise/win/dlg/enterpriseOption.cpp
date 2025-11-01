@@ -5,8 +5,8 @@
 
 void CDialogEnterpriseOption::FillOption()
 {
+	m_enableDebugger->SetValue(debugServer->EnableDebugging());
 	m_enableDebugger->Enable(debugServer->AllowDebugging());
-	m_enableDebugger->SetValue(debugServer->EnableDebugging()); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@ CDialogEnterpriseOption::CDialogEnterpriseOption(wxWindow* parent, wxWindowID id
 		wxAUI_NB_SCROLL_BUTTONS
 	);
 
-	m_mainNotebook->SetArtProvider(new wxAuiLunaTabArt()); 
+	m_mainNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	m_generalPanel = new wxPanel(m_mainNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 	m_mainNotebook->AddPage(m_generalPanel, _("General"), false, wxNullBitmap);
 	m_systemPanel = new wxPanel(m_mainNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
@@ -32,7 +32,7 @@ CDialogEnterpriseOption::CDialogEnterpriseOption(wxWindow* parent, wxWindowID id
 	m_enableDebugger = new wxCheckBox(m_systemPanel, wxID_ANY, _("Debugging in the current session"), wxDefaultPosition, wxDefaultSize, 0);
 	m_enableDebugger->Bind(wxEVT_CHECKBOX, &CDialogEnterpriseOption::OnEnableDebugger, this);
 
-	m_mainNotebook->SetSelection(2); 
+	m_mainNotebook->SetSelection(2);
 
 	this->SetSizer(mainSizer);
 	this->Layout();
@@ -41,16 +41,12 @@ CDialogEnterpriseOption::CDialogEnterpriseOption(wxWindow* parent, wxWindowID id
 	FillOption();
 }
 
-void CDialogEnterpriseOption::OnEnableDebugger(wxCommandEvent &event)
+void CDialogEnterpriseOption::OnEnableDebugger(wxCommandEvent& event)
 {
-	bool enableDebugger = m_enableDebugger->GetValue();
-
-	if (enableDebugger) {
+	if (m_enableDebugger->GetValue())
 		debugServer->CreateServer();
-	}
-	else {
+	else
 		debugServer->ShutdownServer();
-	}
-	
+
 	event.Skip();
 }

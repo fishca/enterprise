@@ -87,7 +87,22 @@ class BACKEND_API CApplicationData {
 		void StartSessionUpdater();
 		const CApplicationDataSessionArray GetSessionArray() const;
 	protected:
+		
 		virtual ExitCode Entry();
+
+		// This one is called by Delete() before actually deleting the thread and
+		// is executed in the context of the thread that called Delete().
+		virtual void OnDelete() { m_sessionUpdaterLoop = false; }
+
+		// This one is called by Kill() before killing the thread and is executed
+		// in the context of the thread that called Kill().
+		virtual void OnKill() { m_sessionUpdaterLoop = false; }
+
+		// called when the thread exits - in the context of this thread
+		//
+		// NB: this function will not be called if the thread is Kill()ed
+		virtual void OnExit() { m_sessionUpdaterLoop = false; }
+
 	private:
 
 		void Job_ClearLostSession();
@@ -98,6 +113,8 @@ class BACKEND_API CApplicationData {
 		bool VerifySessionUpdater() const;
 
 		bool m_sessionCreated, m_sessionStarted;
+		bool m_sessionUpdaterLoop; 
+
 		CApplicationDataSessionArray m_sessionArray;
 		std::shared_ptr<IDatabaseLayer> m_session_db;
 		const CGuid m_session;
@@ -213,7 +230,7 @@ private:
 	wxString m_strUser;
 	wxString m_strPassword;
 
-	bool m_exclusiveMode; //Монопольный режим
+	bool m_exclusiveMode = false; //Монопольный режим
 };
 
 ///////////////////////////////////////////////////////////////////////////////

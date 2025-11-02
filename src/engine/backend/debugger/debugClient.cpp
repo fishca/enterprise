@@ -546,6 +546,8 @@ void CDebuggerClient::CDebuggerClientConnection::OnKill()
 		ms_debugClient->DeleteConnection(this);
 	}
 
+	m_number_connection_attempts = -1;
+
 	if (m_socketClient != nullptr)
 		m_socketClient->Destroy();
 
@@ -569,8 +571,10 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 	while (!TestDestroy()) {
 
-		if (m_number_connection_attempts > numberOfConnectionAttempts)
+		if (m_number_connection_attempts > numberOfConnectionAttempts) {
+			m_number_connection_attempts = -1;
 			break;
+		}
 
 		bool connected = m_socketClient->Connect(addr, false);
 		if (!connected && m_socketClient->Wait())
@@ -619,7 +623,7 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 			if (m_verifiedConnection) {
 
-				ms_debugClient->m_connectionSuccess = true; 
+				ms_debugClient->m_connectionSuccess = true;
 
 				if (m_connectionType == ConnectionType::ConnectionType_Debugger) {
 					// Send the start event message to the UI.
@@ -628,9 +632,9 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 				while (CDebuggerClientConnection::IsConnected()) {
 
-					if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
+					if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 						m_socketClient->ReadMsg(&length, sizeof(unsigned int));
-						if (m_socketClient && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
+						if (m_socketClient != nullptr && m_socketClient->WaitForRead(0, waitDebuggerTimeout)) {
 							wxMemoryBuffer bufferData(length);
 							m_socketClient->ReadMsg(bufferData.GetData(), length);
 							if (m_connectionType == ConnectionType::ConnectionType_Debugger && length > 0) {
@@ -668,6 +672,8 @@ void CDebuggerClient::CDebuggerClientConnection::EntryClient()
 
 		m_verifiedConnection = false;
 	}
+
+	m_number_connection_attempts = -1;
 
 	if (m_socketClient != nullptr)
 		m_socketClient->Destroy();
@@ -755,7 +761,7 @@ void CDebuggerClient::CDebuggerClientConnection::RecvCommand(void* pointer, unsi
 		);
 	}
 	else if (commandFromServer == CommandId_LeaveLoop) {
-		
+
 		ms_debugClient->m_enterLoop = false;
 		ms_debugClient->m_activeSocket = nullptr;
 

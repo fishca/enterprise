@@ -77,9 +77,9 @@ class BACKEND_API CDebuggerClient {
 			wxThread(wxTHREAD_DETACHED),
 			m_hostName(hostName),
 			m_port(port),
-			m_verifiedConnection(false),
+			m_verifiedConnection(false), 
 			m_connectionType(ConnectionType::ConnectionType_Scanner),
-			m_number_connection_attempts(0),
+			m_number_connection_attempts(-1),
 			m_socketClient(nullptr) {
 
 			if (debugClient != nullptr)
@@ -107,6 +107,14 @@ class BACKEND_API CDebuggerClient {
 
 	protected:
 
+		bool ResetConnectionCounter() {
+
+			if (m_number_connection_attempts != wxNOT_FOUND)
+				m_number_connection_attempts = 0;
+
+			return m_number_connection_attempts != wxNOT_FOUND;
+		}
+
 		void EntryClient();
 
 		void RecvCommand(void* pointer, unsigned int length);
@@ -126,10 +134,9 @@ class BACKEND_API CDebuggerClient {
 		wxString		m_userName;
 		wxString		m_compName;
 
-		unsigned short  m_number_connection_attempts;
+		std::atomic<short> m_number_connection_attempts;
 
 		ConnectionType	m_connectionType;
-
 		friend class CDebuggerClient;
 	};
 
@@ -175,16 +182,25 @@ public:
 			if (iterator == m_listConnection.end()) {
 
 				CDebuggerClientConnection* createdConnection = new CDebuggerClientConnection(this, hostName, port);
-
 				if (createdConnection->Run() == wxTHREAD_NO_ERROR) {
-					
 					//if (run_debug_server)
 					//	break;
-					
 					continue;
 				}
-
 				createdConnection->Delete();
+			}
+			else {
+
+				bool create_new_connection = !(*iterator)->ResetConnectionCounter();
+				if (create_new_connection) {
+					CDebuggerClientConnection* createdConnection = new CDebuggerClientConnection(this, hostName, port);
+					if (createdConnection->Run() == wxTHREAD_NO_ERROR) {
+						//if (run_debug_server)
+						//	break;
+						continue;
+					}
+					createdConnection->Delete();
+				}
 			}
 		}
 	}

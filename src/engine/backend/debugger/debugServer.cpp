@@ -110,7 +110,7 @@ void CDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& st
 
 	m_numCurrentNumberStopContext = 0;
 
-	if (m_socketConnectionThread != nullptr && m_socketConnectionThread->IsConnected()) {
+	if (m_socketConnectionThread != nullptr && ConnectionType::ConnectionType_Debugger == m_socketConnectionThread->GetConnectionType()) {
 
 		CMemoryWriter commandChannelEnterLoop;
 
@@ -153,11 +153,7 @@ void CDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& st
 
 	CValueOLE::ReleaseStreamForDispatch();
 
-	//activate main frame 
-	if (backend_mainFrame != nullptr)
-		backend_mainFrame->RaiseFrame();
-
-	if (m_socketConnectionThread != nullptr && m_socketConnectionThread->IsConnected()) {
+	if (m_socketConnectionThread != nullptr && ConnectionType::ConnectionType_Debugger == m_socketConnectionThread->GetConnectionType()) {
 
 		CMemoryWriter commandChannelLeaveLoop;
 
@@ -168,6 +164,10 @@ void CDebuggerServer::DoDebugLoop(const wxString& strDocPath, const wxString& st
 
 		SendCommand(commandChannelLeaveLoop.pointer(), commandChannelLeaveLoop.size());
 	}
+
+	//activate main frame 
+	if (backend_mainFrame != nullptr)
+		backend_mainFrame->RaiseFrame();
 
 	m_runContext = nullptr;
 }

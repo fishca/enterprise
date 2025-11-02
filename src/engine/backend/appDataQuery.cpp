@@ -206,7 +206,7 @@ bool CApplicationData::CApplicationDataSessionUpdater::InitSessionUpdater()
 	m_sessionUpdaterLoop = true;
 
 	while (m_sessionUpdaterLoop) {
-		
+
 		if (m_sessionCreated)
 			break;
 
@@ -350,7 +350,8 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 bool CApplicationData::TableAlreadyCreated()
 {
 	return db_query->TableExists(user_table) &&
-		db_query->TableExists(session_table);
+		db_query->TableExists(session_table) &&
+		db_query->TableExists(sequence_table);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -384,7 +385,7 @@ void CApplicationData::CreateTableSession()
 {
 	if (!db_query->TableExists(session_table)) {
 
-		db_query->RunQuery(wxT("CREATE TABLE %s ("
+		db_query->RunQuery(wxT("create table %s ("
 			"session              VARCHAR(36) NOT NULL PRIMARY KEY,"
 			"userName             VARCHAR(64) NOT NULL,"
 			"application	   INTEGER  NOT NULL,"
@@ -426,6 +427,31 @@ void CApplicationData::CreateTableSession()
 			db_query->RunQuery(
 				wxT("create index session_index_3 on %s (lastActive);"),
 				session_table
+			);
+		}
+	}
+}
+
+void CApplicationData::CreateTableSequence()
+{
+	if (!db_query->TableExists(sequence_table)) {
+
+		db_query->RunQuery(wxT("create table %s ("
+			"meta_guid         VARCHAR(36)   NOT NULL PRIMARY KEY,"
+			"prefix			   VARCHAR(128)  NOT NULL PRIMARY KEY,"
+			"number            INTEGER       NOT NULL);"),
+			sequence_table);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+			db_query->RunQuery(
+				wxT("create index if not exists sequence_index on %s (meta_guid, prefix, number);"),
+				sequence_table
+			);
+		}
+		else {
+			db_query->RunQuery(
+				wxT("create index sequence_index on %s (meta_guid, prefix, number);"),
+				sequence_table
 			);
 		}
 	}

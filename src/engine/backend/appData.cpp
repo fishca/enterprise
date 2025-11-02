@@ -118,6 +118,7 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDir
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
 				CApplicationData::CreateTableUser();
+				CApplicationData::CreateTableSequence();
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {
@@ -161,6 +162,7 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strSer
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
 				CApplicationData::CreateTableUser();
+				CApplicationData::CreateTableSequence();
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {

@@ -201,6 +201,7 @@ private:
 	static bool TableAlreadyCreated();
 	static void CreateTableUser();
 	static void CreateTableSession();
+	static void CreateTableSequence();
 	static void CreateTableEvent();
 private:
 	static CApplicationData* s_instance;
@@ -236,6 +237,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 #define user_table		wxT("sys_user")
 #define session_table	wxT("sys_session")
+#define sequence_table	wxT("sys_sequence")
 #define event_table		wxT("sys_event")
 ///////////////////////////////////////////////////////////////////////////////
 

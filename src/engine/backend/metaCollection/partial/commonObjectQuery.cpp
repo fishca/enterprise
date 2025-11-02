@@ -200,7 +200,6 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 						obj, nullptr);
 				}
 			}
-
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {
@@ -1339,57 +1338,72 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 
 	wxASSERT(attribute);
 
-	const wxString& tableName = metaObject->GetTableNameDB();
-	const wxString& fieldName = attribute->GetFieldNameDB();
-
-	IMetaData* metaData = metaObject->GetMetaData();
-	wxASSERT(metaData);
-
-	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT %s FROM %s ORDER BY %s;",
-		IMetaObjectAttribute::GetSQLFieldName(attribute),
-		tableName,
-		IMetaObjectAttribute::GetSQLFieldName(attribute)
-	);
+	number_t resultCode = 1;
 
 	const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 
-	if (resultSet == nullptr)
-		return attribute->CreateValue();
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 
-	if (attribute->ContainType(eValueTypes::TYPE_NUMBER)) {
+		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
+			wxT("SELECT number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
+			sequence_table,
+			metaObject->GetDocPath(),
+			wxEmptyString
+		);
 
-		static CValue fieldCode;
+		if (resultSet == nullptr)
+			return attribute->CreateValue();
 
-		number_t resultCode = 1;
-		while (resultSet->Next()) {
-			IMetaObjectAttribute::GetValueAttribute(attribute, fieldCode, resultSet);
-			if (resultCode == fieldCode.GetNumber()) resultCode++;	
-		}
+		if (resultSet->Next())
+			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
+
+		db_query->RunQuery(
+			wxT("INSERT INTO %s (meta_guid, prefix, number) ON CONFLICT(meta_guid, prefix) DO UPDATE SET meta_guid = excluded.meta_guid AND prefix = excluded.prefix;"),
+			sequence_table,
+			metaObject->GetDocPath(),
+			wxEmptyString, //prefix
+			resultCode.ToString()
+		);
 
 		db_query->CloseResultSet(resultSet);
+	}
+	else {
+
+		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
+			wxT("SELECT number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
+			sequence_table,
+			metaObject->GetDocPath(),
+			wxEmptyString
+		);
+
+		if (resultSet == nullptr)
+			return attribute->CreateValue();
+
+		if (resultSet->Next())
+			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
+
+		db_query->RunQuery(
+			wxT("UPDATE OR INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) MATCHING (meta_guid, prefix);"),
+			sequence_table,
+			metaObject->GetDocPath(),
+			wxEmptyString, //prefix
+			resultCode.ToString()
+		);
+
+		db_query->CloseResultSet(resultSet);
+	}
+
+	if (attribute->ContainType(eValueTypes::TYPE_NUMBER)) {
 		return resultCode;
 	}
 	else if (attribute->ContainType(eValueTypes::TYPE_STRING)) {
 
-		static CValue fieldCode;
-
-		wxLongLong_t resultCode = 1;
 		wxString strNumber;
 
 		std::stringstream strStreamNumber;
 		strStreamNumber << std::setw(typeDesc.GetLength()) << std::setfill('0') << resultCode;
 		strNumber = strStreamNumber.str();
 
-		while (resultSet->Next()) {
-			IMetaObjectAttribute::GetValueAttribute(attribute, fieldCode, resultSet);
-			if (strNumber == fieldCode.GetString()) {
-				std::stringstream strStreamNumber;
-				strStreamNumber << std::setw(typeDesc.GetLength()) << std::setfill('0') << ++resultCode;
-				strNumber = strStreamNumber.str();
-			}
-		}
-
-		db_query->CloseResultSet(resultSet);
 		return strNumber;
 	}
 

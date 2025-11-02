@@ -410,10 +410,18 @@ void CFirebirdDatabaseLayer::BeginTransaction()
 		fbNextNode->prev = m_fbNode;
 		fbNextNode->m_pTransaction = 0L;
 
+		//ISOLATION_READ_UNCOMMITTED = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_rec_version],
+		//ISOLATION_READ_COMMITED = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version],
+		//ISOLATION_REPEATABLE_READ = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_concurrency],
+		//ISOLATION_SERIALIZABLE = [isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_consistency],
+		//ISOLATION_READ_COMMITED_READ_ONLY = [isc_tpb_version3, isc_tpb_read, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version];
+
+		static std::string isc_tpb = { isc_tpb_version3, isc_tpb_write, isc_tpb_wait, isc_tpb_read_committed, isc_tpb_no_rec_version };
+
 		isc_db_handle pDatabase = (isc_db_handle)m_pDatabase;
 		isc_tr_handle pTransaction = (isc_tr_handle)fbNextNode->m_pTransaction;
 
-		int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction, 1, &pDatabase, 0, NULL);
+		int nReturn = m_pInterface->GetIscStartTransaction()(*(ISC_STATUS_ARRAY*)m_pStatus, &pTransaction, 1, &pDatabase, isc_tpb.size(), isc_tpb.c_str());
 
 		m_pDatabase = pDatabase;
 		fbNextNode->m_pTransaction = pTransaction;

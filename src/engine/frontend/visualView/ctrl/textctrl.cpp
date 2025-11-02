@@ -135,7 +135,7 @@ wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		}
 	}
 	else {
-		m_selValue = ITypeControlFactory::CreateValue();
+		m_selValue = ITypeControlFactory::AdjustValue(m_selValue);
 	}
 
 	return textEditor;
@@ -159,9 +159,9 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 			}
 		}
-		
+
 		textEditor->SetLabel(GetControlCaption());
-		
+
 		if (!appData->DesignerMode()) {
 			textEditor->SetValue(m_selValue.GetString());
 		}
@@ -249,10 +249,10 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 
 	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(GetWxObject());
 	if (textEditor != nullptr) {
-	
+
 		textEditor->SetValue(m_selValue.GetString());
-		
-		if (m_selValue.IsEmpty()) 
+
+		if (m_selValue.IsEmpty())
 			textEditor->SetInsertionPoint(wxNOT_FOUND);
 		else textEditor->SetInsertionPointEnd();
 	}

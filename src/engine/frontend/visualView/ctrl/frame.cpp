@@ -14,8 +14,8 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
 //*************************************************************************
 
 IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
-m_methodHelper(new CMethodHelper()), 
-m_valEventContainer(CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this)), 
+m_methodHelper(new CMethodHelper()),
+m_valEventContainer(CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this)),
 m_controlId(0), m_controlGuid(CGuid::newGuid())
 {
 }
@@ -30,19 +30,19 @@ wxString IValueFrame::GetClassName() const
 	const class_identifier_t& clsid = GetClassType();
 	if (clsid == 0)
 		return _("Not founded in wxClassInfo!");
-	
+
 	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
-	if (typeCtor != nullptr) 
-		return typeCtor->GetClassName();	
+	if (typeCtor != nullptr)
+		return typeCtor->GetClassName();
 	return _("Not founded in wxClassInfo!");
 }
 
 wxString IValueFrame::GetObjectTypeName() const
 {
-	IControlTypeCtor* typeCtor = 
-		static_cast<IControlTypeCtor *>(CValue::GetAvailableCtor(GetClassInfo()));
-	
-	if (typeCtor != nullptr) 
+	IControlTypeCtor* typeCtor =
+		static_cast<IControlTypeCtor*>(CValue::GetAvailableCtor(GetClassInfo()));
+
+	if (typeCtor != nullptr)
 		return typeCtor->GetTypeControlName();
 	return _("Not founded in wxClassInfo!");
 }
@@ -284,7 +284,7 @@ wxObject* IValueFrame::GetWxObject() const
 			return visualHost->GetWxObject((IValueFrame*)this);
 
 		}
-		else if (g_visualHostContext != nullptr) {  		
+		else if (g_visualHostContext != nullptr) {
 
 			//if run designer form search in own visualHost 
 			const IVisualHost* visualHost =
@@ -353,33 +353,34 @@ bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		return false;
 
 	CVisualDocument* visualDoc = ownerForm->GetVisualDocument();
-	if (visualDoc == nullptr)
-		return false;
+	if (visualDoc != nullptr) {
 
-	CVisualHost* visualView = visualDoc->GetFirstView() ?
-		visualDoc->GetFirstView()->GetVisualHost() : nullptr;
+		CVisualHost* visualView = visualDoc->GetFirstView() ?
+			visualDoc->GetFirstView()->GetVisualHost() : nullptr;
 
-	if (visualView == nullptr)
-		return false;
+		if (visualView == nullptr)
+			return false;
 
-	wxObject* wxobject = visualView->GetWxObject(this);
+		wxObject* wxobject = visualView->GetWxObject(this);
 
-	if (wxobject != nullptr) {
-		wxWindow* wxparent = nullptr;
-		Update(wxobject, visualView);
-		IValueFrame* nextParent = GetParent();
-		while (wxparent == nullptr && nextParent != nullptr) {
-			if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
-				wxObject* wxobject = visualView->GetWxObject(nextParent);
-				wxparent = dynamic_cast<wxWindow*>(wxobject);
-				break;
+		if (wxobject != nullptr) {
+			wxWindow* wxparent = nullptr;
+			Update(wxobject, visualView);
+			IValueFrame* nextParent = GetParent();
+			while (wxparent == nullptr && nextParent != nullptr) {
+				if (nextParent->GetComponentType() == COMPONENT_TYPE_WINDOW) {
+					wxObject* wxobject = visualView->GetWxObject(nextParent);
+					wxparent = dynamic_cast<wxWindow*>(wxobject);
+					break;
+				}
+				nextParent = nextParent->GetParent();
 			}
-			nextParent = nextParent->GetParent();
+			if (wxparent == nullptr) wxparent = visualView->GetBackgroundWindow();
+			OnUpdated(wxobject, wxparent, visualView);
+			if (wxparent != nullptr) wxparent->Layout();
 		}
-		if (wxparent == nullptr) wxparent = visualView->GetBackgroundWindow();
-		OnUpdated(wxobject, wxparent, visualView);
-		if (wxparent != nullptr) wxparent->Layout();
 	}
+
 	return true;
 }
 

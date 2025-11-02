@@ -118,7 +118,6 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 				}
 				else if (vt == eValueTypes::TYPE_STRING) {
 					return CSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
-
 				}
 			}
 			

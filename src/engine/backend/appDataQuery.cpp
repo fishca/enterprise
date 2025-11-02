@@ -438,7 +438,7 @@ void CApplicationData::CreateTableSequence()
 
 		db_query->RunQuery(wxT("create table %s ("
 			"meta_guid         VARCHAR(36)   NOT NULL PRIMARY KEY,"
-			"prefix			   VARCHAR(128)  NOT NULL PRIMARY KEY,"
+			"prefix			   VARCHAR(24)   NOT NULL UNIQUE,"
 			"number            INTEGER       NOT NULL);"),
 			sequence_table);
 

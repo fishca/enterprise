@@ -279,13 +279,18 @@ long CApplicationData::RunApplication(const wxString& strAppName, bool searchDeb
 
 	if (searchDebug) {
 
-		debugClient->SearchServer(true);
+		unsigned short num_attempts = 0;
 
+		debugClient->SearchServer(true);
 		while (debugClient != nullptr) {
 
 			if (debugClient->GetConnectionSuccess())
 				break;
 
+			if (num_attempts > 300)
+				break;
+
+			num_attempts++;
 			wxMilliSleep(5);
 		}
 	}
@@ -326,13 +331,18 @@ long CApplicationData::RunApplication(const wxString& strAppName, const wxString
 
 	if (searchDebug) {
 
-		debugClient->SearchServer(true);
+		unsigned short num_attempts = 0;
 
+		debugClient->SearchServer(true);
 		while (debugClient != nullptr) {
 
 			if (debugClient->GetConnectionSuccess())
 				break;
 
+			if (num_attempts > 300)
+				break;
+
+			num_attempts++;
 			wxMilliSleep(5);
 		}
 	}

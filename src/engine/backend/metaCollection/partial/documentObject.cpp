@@ -215,7 +215,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 		else if (db_query == nullptr)
 			CBackendException::Error(_("database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode()) 
 		{
 			if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
 				CValue deletionMark = false;
@@ -228,99 +228,102 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 				}
 			}
 
-			IBackendValueForm* const valueForm = GetForm();
-
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
-
+				IBackendValueForm* const valueForm = GetForm();
 				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel, CValue::CreateEnumObject<CValueEnumDocumentWriteMode>(writeMode), CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
+					db_query_active_transaction.BeginTransaction();
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel, CValue::CreateEnumObject<CValueEnumDocumentWriteMode>(writeMode), CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
 
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+
+						CMetaObjectDocument* dataRef = nullptr;
+						if (m_metaObject->ConvertToValue(dataRef)) {
+							CMetaObjectAttributeDefault* metaPosted = dataRef->GetDocumentPosted();
+							wxASSERT(metaPosted);
+							if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting)
+								m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), true);
+							else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting)
+								m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), false);
+						}
 					}
 
+					bool newObject = CRecordDataObjectDocument::IsNewObject();
+
+					//set current date if empty 
 					CMetaObjectDocument* dataRef = nullptr;
-					if (m_metaObject->ConvertToValue(dataRef)) {
-						CMetaObjectAttributeDefault* metaPosted = dataRef->GetDocumentPosted();
-						wxASSERT(metaPosted);
-						if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting)
-							m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), true);
-						else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting)
-							m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), false);
+					if (newObject && m_metaObject->ConvertToValue(dataRef)) {
+						const CValue& docDate = GetValueByMetaID(*dataRef->GetDocumentDate());
+						if (docDate.IsEmpty()) {
+							SetValueByMetaID(*dataRef->GetDocumentDate(), CSystemFunction::CurrentDate());
+						}
 					}
-				}
 
-				bool newObject = CRecordDataObjectDocument::IsNewObject();
-
-				//set current date if empty 
-				CMetaObjectDocument* dataRef = nullptr;
-				if (newObject && m_metaObject->ConvertToValue(dataRef)) {
-					const CValue& docDate = GetValueByMetaID(*dataRef->GetDocumentDate());
-					if (docDate.IsEmpty()) {
-						SetValueByMetaID(*dataRef->GetDocumentDate(), CSystemFunction::CurrentDate());
-					}
-				}
-
-				if (!CRecordDataObjectDocument::SaveData()) {
-					db_query->RollBack();
-					CSystemFunction::Raise(_("failed to write object in db!"));
-					return false;
-				}
-
-				if (newObject) {
-					m_registerRecords->CreateRecordSet();
-				}
-
-				if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("Posting"), cancel, CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
-					if (cancel.GetBoolean()) {
-						db_query->RollBack();
+					if (!CRecordDataObjectDocument::SaveData()) {
+						db_query_active_transaction.RollBackTransaction();
 						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 
-					if (!m_registerRecords->WriteRecordSet()) {
-						db_query->RollBack();
-						CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
+					if (newObject) {
+						m_registerRecords->CreateRecordSet();
 					}
+
+					if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("Posting"), cancel, CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+
+						if (!m_registerRecords->WriteRecordSet()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+					}
+					else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting) {
+
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("UndoPosting"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+
+						if (!m_registerRecords->DeleteRecordSet()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+					}
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+					}
+
+					db_query_active_transaction.CommitTransaction();
+
+					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
+					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
 				}
-				else if (writeMode == eDocumentWriteMode::eDocumentWriteMode_UndoPosting) {
-
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("UndoPosting"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
-					}
-
-					if (!m_registerRecords->DeleteRecordSet()) {
-						db_query->RollBack();
-						CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
-					}
-				}
-				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack();
-						CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
-					}
-				}
-
-				db_query->Commit();
-
-				if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
-				else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
+				
+				m_objModified = false;
 			}
-
-			m_objModified = false;
 		}
 	}
 
@@ -336,42 +339,45 @@ bool CRecordDataObjectDocument::DeleteObject()
 		else if (db_query == nullptr)
 			CBackendException::Error(_("database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode()) 
 		{
-			IBackendValueForm* const valueForm = GetForm();
-
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
-
+				IBackendValueForm* const valueForm = GetForm();
 				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack();
+					db_query_active_transaction.BeginTransaction();
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to delete object in db!"));
+							return false;
+						}
+					}
+
+					if (!DeleteData()) {
+						db_query_active_transaction.RollBackTransaction();
 						CSystemFunction::Raise(_("failed to delete object in db!"));
 						return false;
 					}
-				}
 
-				if (!DeleteData()) {
-					db_query->RollBack();
-					CSystemFunction::Raise(_("failed to delete object in db!"));
-					return false;
-				}
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
 
-				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack();
-						CSystemFunction::Raise(_("failed to delete object in db!"));
-						return false;
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to delete object in db!"));
+							return false;
+						}
 					}
+
+					db_query_active_transaction.CommitTransaction();
+
+					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
+
 				}
-
-				db_query->Commit();
-
-				if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 			}
 		}
 	}

@@ -883,6 +883,43 @@ public:
 //*                                      Object                                              *
 //********************************************************************************************
 
+#pragma region __transaction_guard_h__
+
+template <typename db_type = class BACKEND_API IDatabaseLayer>
+struct CTransactionGuard
+{
+	CTransactionGuard() : m_db(CApplicationData::GetDatabaseLayer()), m_active_transaction(false) {}
+	CTransactionGuard(std::shared_ptr<db_type>& db) : m_db(db), m_active_transaction(false) {}
+	~CTransactionGuard() { RollBackTransaction(); }
+
+	/// Begin a transaction
+	void BeginTransaction() {
+		if (!m_active_transaction && m_db != nullptr)
+			m_db->BeginTransaction();
+		m_active_transaction = true;
+	}
+
+	/// Commit the current transaction
+	void CommitTransaction() {
+		if (m_active_transaction && m_db != nullptr)
+			m_db->Commit();
+		m_active_transaction = false;
+	}
+
+	/// Rollback the current transaction
+	void RollBackTransaction() {
+		if (m_active_transaction && m_db != nullptr)
+			m_db->RollBack();
+		m_active_transaction = false;
+	}
+
+private:
+	bool m_active_transaction;
+	std::shared_ptr<db_type> m_db;
+};
+
+#pragma endregion 
+
 #pragma region objects 
 //Object with metaobject 
 class BACKEND_API IRecordDataObject : public CValue, public IActionDataObject,

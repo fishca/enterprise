@@ -17,21 +17,24 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 
 		if (!CBackendException::IsEvalMode())
 		{
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
+				db_query_active_transaction.BeginTransaction();
 
 				{
 					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
-					db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+					db_query_active_transaction.RollBackTransaction();
+					CSystemFunction::Raise(_("failed to write object in db!"));
 					return false;
 				}
 
@@ -39,12 +42,13 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query->Commit();
+				db_query_active_transaction.CommitTransaction();
 			}
 
 			m_objModified = false;
@@ -65,21 +69,24 @@ bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
 
 		if (!CBackendException::IsEvalMode())
 		{
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
+				db_query_active_transaction.BeginTransaction();
 
 				{
 					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
 
 					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
-					db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+					db_query_active_transaction.RollBackTransaction();
+					CSystemFunction::Raise(_("failed to write object in db!"));
 					return false;
 				}
 
@@ -87,12 +94,13 @@ bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
 					CValue cancel = false;
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 				}
 
-				db_query->Commit();
+				db_query_active_transaction.CommitTransaction();
 			}
 
 			m_objModified = false;
@@ -154,12 +162,12 @@ bool CRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, CValu
 {
 	switch (lPropNum)
 	{
-		case prop::eThisObject:
-			pvarPropVal = this;
-			return true;
-		case prop::eFilter:
-			pvarPropVal = m_recordSetKeyValue;
-			return true;
+	case prop::eThisObject:
+		pvarPropVal = this;
+		return true;
+	case prop::eFilter:
+		pvarPropVal = m_recordSetKeyValue;
+		return true;
 	}
 
 	return false;
@@ -169,39 +177,39 @@ bool CRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CVa
 {
 	switch (lMethodNum)
 	{
-		case func::eAdd:
-			pvarRetValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
-			return true;
-		case func::eCount:
-			pvarRetValue = (unsigned int)GetRowCount();
-			return true;
-		case func::eClear:
-			IValueTable::Clear();
-			return true;
-		case func::eLoad:
-			LoadDataFromTable(paParams[0]->ConvertToType<IValueTable>());
-			return true;
-		case func::eUnload:
-			pvarRetValue = SaveDataToTable();
-			return true;
-		case func::eWriteRecordSet:
-			WriteRecordSet(
-				lSizeArray > 0 ?
-				paParams[0]->GetBoolean() : true
-			);
-			return true;
-		case func::eModifiedRecordSet:
-			pvarRetValue = m_objModified;
-			return true;
-		case func::eReadRecordSet:
-			Read();
-			return true;
-		case func::eSelectedRecordSet:
-			pvarRetValue = Selected();
-			return true;
-		case func::eGetMetadataRecordSet:
-			pvarRetValue = GetMetaObject();
-			return true;
+	case func::eAdd:
+		pvarRetValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		return true;
+	case func::eCount:
+		pvarRetValue = (unsigned int)GetRowCount();
+		return true;
+	case func::eClear:
+		IValueTable::Clear();
+		return true;
+	case func::eLoad:
+		LoadDataFromTable(paParams[0]->ConvertToType<IValueTable>());
+		return true;
+	case func::eUnload:
+		pvarRetValue = SaveDataToTable();
+		return true;
+	case func::eWriteRecordSet:
+		WriteRecordSet(
+			lSizeArray > 0 ?
+			paParams[0]->GetBoolean() : true
+		);
+		return true;
+	case func::eModifiedRecordSet:
+		pvarRetValue = m_objModified;
+		return true;
+	case func::eReadRecordSet:
+		Read();
+		return true;
+	case func::eSelectedRecordSet:
+		pvarRetValue = Selected();
+		return true;
+	case func::eGetMetadataRecordSet:
+		pvarRetValue = GetMetaObject();
+		return true;
 	}
 
 	return false;

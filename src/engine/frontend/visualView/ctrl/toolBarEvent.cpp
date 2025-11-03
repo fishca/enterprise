@@ -27,7 +27,7 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 {
 	const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
-		
+
 		IValueFrame* parentToolControl = FindControlByID(event.GetId());
 		if (parentToolControl != nullptr) {
 
@@ -51,14 +51,14 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 							GetOwnerForm()
 						);
 					}
-					catch (const CBackendException* err) {
-						wxMessageBox(err->what(), m_formOwner->GetCaption());
+					catch (...)
+					{
 					}
 				}
 				else if (strAction.Length() > 0) {
 					CallAsEvent(strAction, parentToolControl->GetValue());
 				}
-			
+
 			}
 
 			if (g_visualHostContext != nullptr) {

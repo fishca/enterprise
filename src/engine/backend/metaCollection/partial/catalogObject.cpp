@@ -105,9 +105,9 @@ void CRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBacke
 IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
-	
+
 	if (foundedForm == nullptr) {
-		
+
 		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
 			m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup,
@@ -119,7 +119,7 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFor
 		createdForm->CloseOnOwnerClose(false);
 		return createdForm;
 	}
-	
+
 	return foundedForm;
 }
 #pragma endregion
@@ -139,46 +139,50 @@ bool CRecordDataObjectCatalog::WriteObject()
 		else if (db_query == nullptr)
 			CBackendException::Error(_("database is not open!"));
 
-		if (!CBackendException::IsEvalMode())
+		if (!CBackendException::IsEvalMode()) 
 		{
-			IBackendValueForm* const valueForm = GetForm();
-
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
-
+				IBackendValueForm* const valueForm = GetForm();
 				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					db_query_active_transaction.BeginTransaction();
 
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
+					}
+
+					bool newObject = CRecordDataObjectCatalog::IsNewObject();
+
+					if (!SaveData()) {
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
-				}
 
-				bool newObject = CRecordDataObjectCatalog::IsNewObject();
-
-				if (!SaveData()) {
-					db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
-					return false;
-				}
-
-				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to write object in db!"));
-						return false;
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to write object in db!"));
+							return false;
+						}
 					}
-				}
 
-				db_query->Commit();
-				
-				if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
-				else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
+					db_query_active_transaction.CommitTransaction();
+
+					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
+					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
+				}
+				m_objModified = false;
 			}
-
-			m_objModified = false;
 		}
 	}
 
@@ -196,34 +200,42 @@ bool CRecordDataObjectCatalog::DeleteObject()
 
 		if (!CBackendException::IsEvalMode())
 		{
-			IBackendValueForm* const valueForm = GetForm();
-
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				db_query->BeginTransaction();
-
+				IBackendValueForm* const valueForm = GetForm();
 				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to delete object in db!")); return false;
+					db_query_active_transaction.BeginTransaction();
+
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to delete object in db!"));
+							return false;
+						}
 					}
-				}
 
-				if (!DeleteData()) {
-					db_query->RollBack(); CSystemFunction::Raise(_("failed to delete object in db!")); return false;
-				}
-
-				{
-					CValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
-					if (cancel.GetBoolean()) {
-						db_query->RollBack(); CSystemFunction::Raise(_("failed to delete object in db!")); return false;
+					if (!DeleteData()) {
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to delete object in db!")); 
+						return false;
 					}
+
+					{
+						CValue cancel = false;
+						m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
+						if (cancel.GetBoolean()) {
+							db_query_active_transaction.RollBackTransaction();
+							CSystemFunction::Raise(_("failed to delete object in db!")); 
+							return false;
+						}
+					}
+
+					db_query_active_transaction.CommitTransaction();
+
+					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 				}
-
-				db_query->Commit();
-
-				if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 			}
 		}
 	}

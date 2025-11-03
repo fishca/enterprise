@@ -330,93 +330,100 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 		if (db_query->TableExists(tableName)) {
 
-			IBackendValueForm* const valueForm = GetForm();
-
-			db_query->BeginTransaction();
+			CTransactionGuard db_query_active_transaction = db_query;
 			{
-				CValue cancel = false;
+				IBackendValueForm* const valueForm = GetForm();
 
-				m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+				db_query_active_transaction.BeginTransaction();
+				{
+					CValue cancel = false;
 
-				if (cancel.GetBoolean()) {
-					db_query->RollBack(); CSystemFunction::Raise("failed to write object in db!"); return false;
+					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+
+					if (cancel.GetBoolean()) {
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise("failed to write object in db!"); 
+						return false;
+					}
 				}
-			}
 
-			m_constValue = m_metaObject->AdjustValue(cValue);
+				m_constValue = m_metaObject->AdjustValue(cValue);
 
-			//check fill attributes 
-			bool fillCheck = true;
+				//check fill attributes 
+				bool fillCheck = true;
 
-			if (m_metaObject->FillCheck()) {
-				if (m_constValue.IsEmpty()) {
-					wxString fillError =
-						wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
-					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
-					fillCheck = false;
+				if (m_metaObject->FillCheck()) {
+					if (m_constValue.IsEmpty()) {
+						wxString fillError =
+							wxString::Format(_("""%s"" is a required field"), m_metaObject->GetSynonym());
+						CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
+						fillCheck = false;
+					}
 				}
-			}
 
-			if (!fillCheck) {
-				m_constValue = constValue;
-				return false;
-			}
-
-			wxString sqlText = "";
-
-			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
-				sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-				for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
-					sqlText += "?,";
+				if (!fillCheck) {
+					m_constValue = constValue;
+					return false;
 				}
-				sqlText += "'6')";
-				sqlText += " ON CONFLICT (RECORD_KEY) ";
-				sqlText += " DO UPDATE SET " + IMetaObjectAttribute::GetExcluteSQLFieldName(m_metaObject) + ";";
-			}
-			else {
-				sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-				for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
-					sqlText += "?,";
+
+				wxString sqlText = "";
+
+				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+					sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+					for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
+						sqlText += "?,";
+					}
+					sqlText += "'6')";
+					sqlText += " ON CONFLICT (RECORD_KEY) ";
+					sqlText += " DO UPDATE SET " + IMetaObjectAttribute::GetExcluteSQLFieldName(m_metaObject) + ";";
 				}
-				sqlText += "'6') MATCHING(RECORD_KEY);";
-			}
-
-			IPreparedStatement* statement =
-				db_query->PrepareStatement(sqlText, tableName, IMetaObjectAttribute::GetSQLFieldName(m_metaObject));
-
-			if (statement == nullptr) {
-				m_constValue = constValue;
-				return false;
-			}
-
-			int position = 1;
-
-			IMetaObjectAttribute::SetValueAttribute(
-				m_metaObject,
-				m_constValue,
-				statement,
-				position
-			);
-
-			bool hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
-			db_query->CloseStatement(statement);
-
-			if (hasError) {
-				m_constValue = constValue;
-				db_query->RollBack(); CSystemFunction::Raise("failed to write object in db!"); return false;
-			}
-
-			{
-				CValue cancel = false;
-				m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
-				if (cancel.GetBoolean()) {
-					db_query->RollBack(); CSystemFunction::Raise("failed to write object in db!"); return false;
+				else {
+					sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+					for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
+						sqlText += "?,";
+					}
+					sqlText += "'6') MATCHING(RECORD_KEY);";
 				}
+
+				IPreparedStatement* statement =
+					db_query->PrepareStatement(sqlText, tableName, IMetaObjectAttribute::GetSQLFieldName(m_metaObject));
+
+				if (statement == nullptr) {
+					m_constValue = constValue;
+					return false;
+				}
+
+				int position = 1;
+
+				IMetaObjectAttribute::SetValueAttribute(
+					m_metaObject,
+					m_constValue,
+					statement,
+					position
+				);
+
+				bool hasError = statement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR;
+				db_query->CloseStatement(statement);
+
+				if (hasError) {
+					m_constValue = constValue;
+					db_query_active_transaction.RollBackTransaction();
+					CSystemFunction::Raise("failed to write object in db!"); return false;
+				}
+
+				{
+					CValue cancel = false;
+					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					if (cancel.GetBoolean()) {
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise("failed to write object in db!"); return false;
+					}
+				}
+
+				db_query_active_transaction.CommitTransaction();
+
+				if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 			}
-
-			db_query->Commit();
-
-			if (valueForm != nullptr) valueForm->NotifyChange(GetValue());
 		}
 	}
 

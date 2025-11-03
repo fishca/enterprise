@@ -102,7 +102,7 @@ public:
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(wxNullGuid) {
 
 		m_attributeSource = new wxVariantDataAttributeSource(prop, id);
-		m_attributeSource->IncRef();
+		//m_attributeSource->IncRef(); // always one 
 
 		m_dataSource = GetGuidByID(id);
 	}
@@ -111,7 +111,7 @@ public:
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(id) {
 
 		m_attributeSource = new wxVariantDataAttributeSource(prop, fillTypeDesc ? GetIdByGuid(id) : wxNOT_FOUND);
-		m_attributeSource->IncRef();
+		//m_attributeSource->IncRef(); // always one 
 
 		//m_dataSource = GetSourceGuid();
 	}
@@ -120,14 +120,14 @@ public:
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(wxNullGuid) {
 
 		m_attributeSource = new wxVariantDataAttributeSource(prop, typeDesc);
-		m_attributeSource->IncRef();
+		//m_attributeSource->IncRef(); // always one 
 	}
 
 	wxVariantDataSource(const wxVariantDataSource& srcData) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(srcData.m_ownerProperty), m_dataSource(srcData.m_dataSource) {
 
 		m_attributeSource = new wxVariantDataAttributeSource(*srcData.m_attributeSource);
-		m_attributeSource->IncRef();
+		//m_attributeSource->IncRef(); // always one 
 	}
 
 	virtual ~wxVariantDataSource() { m_attributeSource->DecRef(); }

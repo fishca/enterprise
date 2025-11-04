@@ -212,11 +212,11 @@ bool CApplicationData::Connect(const wxString& user, const wxString& password, c
 {
 	if (m_created_metadata)
 		return false;
-	if (!metaDataCreate(m_runMode, flags))
-		return false;
-	m_created_metadata = true;
 	if (!StartSession(user, password))
 		return false;  //start session	 
+	if (!metaDataCreate(m_runMode, flags))
+		return false;	
+	m_created_metadata = true;
 	m_run_metadata = commonMetaData->RunDatabase();
 	return m_connected_to_db &&
 		m_created_metadata &&

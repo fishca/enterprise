@@ -241,23 +241,28 @@ void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
 
 bool CDocDesignerMDIFrame::AllowRun() const
 {
-	return commonMetaData->StartMainModule();
+	return commonMetaData != nullptr ? 
+		commonMetaData->StartMainModule() : false;
 }
 
 bool CDocDesignerMDIFrame::AllowClose() const
 {
-	bool allowClose = true;
-	if (IsModified()) {
-		const int answer = wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
-		if (answer == wxYES) {
-			allowClose = commonMetaData->SaveDatabase();
-		}
-		else if (answer == wxCANCEL) {
-			allowClose = false;
-		}
-		else {
-			allowClose = true;
-		}
+	if (commonMetaData != nullptr) {	
+		bool allowClose = true;	
+		if (IsModified()) {
+			const int answer = wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
+			if (answer == wxYES) {
+				allowClose = commonMetaData->SaveDatabase();
+			}
+			else if (answer == wxCANCEL) {
+				allowClose = false;
+			}
+			else {
+				allowClose = true;
+			}
+		}	
+		return allowClose && commonMetaData->ExitMainModule();
 	}
-	return allowClose && commonMetaData->ExitMainModule();
+
+	return true;
 }

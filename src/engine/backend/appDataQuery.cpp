@@ -545,6 +545,9 @@ bool CApplicationData::StartSession(const wxString& userName, const wxString& us
 
 	bool succes = true;
 
+	if (!m_sessionUpdater->InitSessionUpdater())
+		return false;
+
 	if (!AuthenticationAndSetUser(userName, userPassword)) {
 
 		succes = false;
@@ -554,9 +557,6 @@ bool CApplicationData::StartSession(const wxString& userName, const wxString& us
 			succes = true;
 		}
 	}
-
-	if (!m_sessionUpdater->InitSessionUpdater())
-		return false;
 
 	if (succes)
 		m_sessionUpdater->StartSessionUpdater();

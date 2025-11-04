@@ -1105,7 +1105,7 @@ std::vector<CMetaObjectGrid*> IMetaObjectRegisterData::GetObjectTemplates() cons
 IMetaObjectAttribute* IMetaObjectRegisterData::FindProp(const meta_identifier_t& id) const
 {
 	for (auto metaObject : m_listMetaObject) {
-		if ((metaObject->GetClassType() == g_metaDefaultAttributeCLSID || metaObject->GetClassType() == g_metaAttributeCLSID || metaObject->GetClassType() == g_metaDimensionCLSID || metaObject->GetClassType() == g_metaResourceCLSID) && metaObject->GetMetaID() == id)  {
+		if ((metaObject->GetClassType() == g_metaDefaultAttributeCLSID || metaObject->GetClassType() == g_metaAttributeCLSID || metaObject->GetClassType() == g_metaDimensionCLSID || metaObject->GetClassType() == g_metaResourceCLSID) && metaObject->GetMetaID() == id) {
 			return metaObject->ConvertToType<IMetaObjectAttribute>();
 		}
 	}
@@ -1645,8 +1645,8 @@ IRecordDataObjectRef::IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* meta
 	m_reference_impl(nullptr),
 	m_objModified(false)
 {
-	if (m_metaObject != nullptr) 
-		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);	
+	if (m_metaObject != nullptr)
+		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
 }
 
 IRecordDataObjectRef::IRecordDataObjectRef(const IRecordDataObjectRef& src) :
@@ -1655,7 +1655,7 @@ IRecordDataObjectRef::IRecordDataObjectRef(const IRecordDataObjectRef& src) :
 	m_reference_impl(nullptr),
 	m_objModified(false)
 {
-	if (m_metaObject != nullptr) 
+	if (m_metaObject != nullptr)
 		m_reference_impl = new reference_t(m_metaObject->GetMetaID(), m_objGuid);
 }
 
@@ -2618,7 +2618,6 @@ IValueTable* IRecordSetObject::SaveDataToTable() const
 	}
 
 	return valueTable;
-	return valueTable;
 }
 
 bool IRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
@@ -2636,12 +2635,15 @@ bool IRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_i
 
 bool IRecordSetObject::GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
-	IMetaObjectAttribute* metaAttribute = m_metaObject->FindProp(id);
-	wxASSERT(metaAttribute);
 	if (appData->DesignerMode()) {
-		pvarMetaVal = metaAttribute->CreateValue();
-		return true;
+		IMetaObjectAttribute* metaAttribute = m_metaObject->FindProp(id);
+		if (metaAttribute != nullptr) {
+			pvarMetaVal = metaAttribute->CreateValue();
+			return true;
+		}
+		return false;
 	}
+
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 	if (node == nullptr)
 		return false;

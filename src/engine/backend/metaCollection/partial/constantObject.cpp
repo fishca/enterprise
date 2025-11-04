@@ -22,10 +22,10 @@ CRecordDataObjectConstant* CMetaObjectConstant::CreateObjectValue()
 
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
-			return m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectConstant>(this);
+			return CValue::CreateAndPrepareValueRef<CRecordDataObjectConstant>(this);
 	}
 	else {
-		pDataRef = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectConstant>(this);
+		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectConstant>(this);
 	}
 
 	return pDataRef;

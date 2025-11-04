@@ -85,10 +85,10 @@ ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* meta
 	{
 	case eFormObject: return CreateObjectValue(); break;
 	case eFormList:
-		return m_metaData->CreateAndConvertObjectValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm());
+		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm());
 		break;
 	case eFormSelect:
-		return m_metaData->CreateAndConvertObjectValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm(), true);
+		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm(), true);
 		break;
 	}
 
@@ -104,10 +104,10 @@ IRecordDataObjectRef* CMetaObjectDocument::CreateObjectRefValue(const CGuid& obj
 	CRecordDataObjectDocument* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
-			return m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectDocument>(this, objGuid);
+			return CValue::CreateAndPrepareValueRef<CRecordDataObjectDocument>(this, objGuid);
 	}
 	else {
-		pDataRef = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectDocument>(this, objGuid);
+		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectDocument>(this, objGuid);
 	}
 
 	return pDataRef;
@@ -129,7 +129,7 @@ IBackendValueForm* CMetaObjectDocument::GetListForm(const wxString& strFormName,
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectDocument::eFormList,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormList),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormList),
 		formGuid
 	);
 }
@@ -139,7 +139,7 @@ IBackendValueForm* CMetaObjectDocument::GetSelectForm(const wxString& strFormNam
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectDocument::eFormSelect,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormSelect, true),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormSelect, true),
 		formGuid
 	);
 }

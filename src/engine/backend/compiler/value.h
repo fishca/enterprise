@@ -416,6 +416,16 @@ public:
 public:
 
 	//runtime support:
+	template<typename T, typename... Args>
+	static T* CreateAndPrepareValueRef(Args&&... args) {
+		auto ptr = static_cast<T*>(malloc(sizeof(T)));
+		T* created_value = ::new (ptr) T(std::forward<Args>(args)...);
+		if (created_value == nullptr)
+			return nullptr;
+		created_value->PrepareNames();
+		return created_value;
+	}
+
 	template<typename T>
 	static CValue CreateObject(CValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef<T>(paParams, lSizeArray);
@@ -471,14 +481,8 @@ public:
 	template<typename T, typename... Args>
 	static T* CreateAndConvertObjectValueRef(Args&&... args) {
 		const class_identifier_t& clsid = CValue::GetTypeIDByRef(CLASSINFO(T));
-		if (CValue::IsRegisterCtor(clsid)) {
-			auto ptr = static_cast<T*>(malloc(sizeof(T)));
-			T* created_value = ::new (ptr) T(std::forward<Args>(args)...);
-			if (created_value == nullptr)
-				return nullptr;
-			created_value->PrepareNames();
-			return created_value;
-		}
+		if (CValue::IsRegisterCtor(clsid))
+			return CreateAndPrepareValueRef<T>(args...);
 		wxASSERT_MSG(false, "CreateAndConvertObjectValueRef ret null!");
 		return nullptr;
 	}

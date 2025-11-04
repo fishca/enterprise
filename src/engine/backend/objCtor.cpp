@@ -12,7 +12,7 @@ wxClassInfo* CMetaValueRefTypeCtor::GetClassInfo() const
 
 CValue* CMetaValueRefTypeCtor::CreateObject() const
 {
-	return new CReferenceDataObject(m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CReferenceDataObject>(m_metaObject);
 }
 
 //list class 
@@ -33,13 +33,15 @@ CValue* CMetaValueListRefTypeCtor::CreateObject() const
 {
 	IMetaObjectRecordDataFolderMutableRef* folderRef = nullptr;
 	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
+	
 	if (m_metaObject->ConvertToValue(folderRef)) {
-		return new CTreeDataObjectFolderRef(folderRef);
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(folderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
-		return new CListDataObjectEnumRef(enumRef);
+		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(enumRef);
 	}
-	return new CListDataObjectRef((IMetaObjectRecordDataMutableRef *)m_metaObject);
+	
+	return CValue::CreateAndPrepareValueRef<CListDataObjectRef>((IMetaObjectRecordDataMutableRef *)m_metaObject);
 }
 
 wxClassInfo* CMetaValueListRegisterTypeCtor::GetClassInfo() const
@@ -49,7 +51,7 @@ wxClassInfo* CMetaValueListRegisterTypeCtor::GetClassInfo() const
 
 CValue* CMetaValueListRegisterTypeCtor::CreateObject() const
 {
-	return new CListRegisterObject(m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CListRegisterObject>(m_metaObject);
 }
 
 //object class

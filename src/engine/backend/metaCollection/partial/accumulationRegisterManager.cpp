@@ -110,7 +110,7 @@ bool CAccumulationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pva
 		pvarRetValue = m_metaObject->CreateRecordSetObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordKeyObject>(m_metaObject);
 		return true;
 	case eBalance: pvarRetValue = lSizeArray > 1 ?
 		CAccumulationRegisterManager::Balance(*paParams[0], *paParams[1]) : CAccumulationRegisterManager::Balance(*paParams[0]);
@@ -119,7 +119,7 @@ bool CAccumulationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pva
 		CAccumulationRegisterManager::Turnovers(*paParams[0], paParams[1], paParams[2]) : CAccumulationRegisterManager::Turnovers(*paParams[0], *paParams[1]);
 		return true;
 	case eSelect:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CSelectorRegisterObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{

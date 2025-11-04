@@ -16,7 +16,7 @@ CMetaObjectInformationRegister::CMetaObjectInformationRegister() : IMetaObjectRe
 m_metaRecordManager(new CMetaObjectRecordManager())
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel"});
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 }
 
@@ -61,7 +61,7 @@ IBackendValueForm* CMetaObjectInformationRegister::GetListForm(const wxString& s
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectInformationRegister::eFormList,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, CMetaObjectInformationRegister::eFormList),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, CMetaObjectInformationRegister::eFormList),
 		formGuid
 	);
 }
@@ -90,7 +90,7 @@ bool CMetaObjectInformationRegister::GetFormList(CPropertyList* prop)
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
 	}
-	return true; 
+	return true;
 }
 
 //***************************************************************************
@@ -391,10 +391,10 @@ ISourceDataObject* CMetaObjectInformationRegister::CreateSourceObject(IMetaObjec
 {
 	switch (metaObject->GetTypeForm())
 	{
-	case eFormRecord: 
+	case eFormRecord:
 		return CreateRecordManagerObjectValue();
-	case eFormList: 
-		return m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
+	case eFormList:
+		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
 	}
 
 	return nullptr;
@@ -408,12 +408,12 @@ IRecordSetObject* CMetaObjectInformationRegister::CreateRecordSetObjectRegValue(
 	if (appData->DesignerMode()) {
 		IRecordSetObject* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-			return m_metaData->CreateAndConvertObjectValueRef<CRecordSetObjectInformationRegister>(this, uniqueKey);
+			return CValue::CreateAndPrepareValueRef<CRecordSetObjectInformationRegister>(this, uniqueKey);
 		}
 		return pDataRef;
 	}
 
-	return m_metaData->CreateAndConvertObjectValueRef<CRecordSetObjectInformationRegister>(this, uniqueKey);
+	return CValue::CreateAndPrepareValueRef<CRecordSetObjectInformationRegister>(this, uniqueKey);
 }
 
 IRecordManagerObject* CMetaObjectInformationRegister::CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey)
@@ -424,11 +424,11 @@ IRecordManagerObject* CMetaObjectInformationRegister::CreateRecordManagerObjectR
 	if (appData->DesignerMode()) {
 		IRecordManagerObject* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_metaRecordManager, pDataRef)) {
-			return m_metaData->CreateAndConvertObjectValueRef<CRecordManagerObjectInformationRegister>(this, uniqueKey);
+			return CValue::CreateAndPrepareValueRef<CRecordManagerObjectInformationRegister>(this, uniqueKey);
 		}
 		return pDataRef;
 	}
-	return m_metaData->CreateAndConvertObjectValueRef<CRecordManagerObjectInformationRegister>(this, uniqueKey);
+	return CValue::CreateAndPrepareValueRef<CRecordManagerObjectInformationRegister>(this, uniqueKey);
 }
 
 //***********************************************************************

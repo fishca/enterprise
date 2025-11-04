@@ -36,7 +36,7 @@ wxDataViewItem CValueTable::FindRowValue(IValueModelReturnLine* retLine) const
 }
 
 CValueTable::CValueTable() : IValueTable(),
-m_tableColumnCollection(CValue::CreateAndConvertObjectValueRef<CValueTableColumnCollection>(this))
+m_tableColumnCollection(CValue::CreateAndPrepareValueRef<CValueTableColumnCollection>(this))
 {
 }
 
@@ -137,7 +137,7 @@ bool CValueTable::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 		CBackendException::Error("Array index out of bounds");
 		return false;
 	}
-	pvarValue = CValue::CreateAndConvertObjectValueRef<CValueTableReturnLine>(this, GetItem(index));
+	pvarValue = CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(index));
 	return true;
 }
 

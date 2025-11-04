@@ -273,7 +273,7 @@ public:
 	virtual void SetDeletionMark(bool deletionMark = true);
 private:
 	CValuePtr<CRecorderRegisterDocument> m_registerRecords;
-	friend class IMetaData;
+	friend class CValue;
 };
 
 #endif

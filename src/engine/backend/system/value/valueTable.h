@@ -90,7 +90,8 @@ public:
 				node->SetValue(max_id + 1, CValueTypeDescription::AdjustValue(typeData));
 			}
 
-			return m_listColumnInfo.emplace_back(new CValueTableColumnInfo(max_id + 1, colName, typeData, caption, width));
+			return m_listColumnInfo.emplace_back(
+				CValue::CreateAndPrepareValueRef<CValueTableColumnInfo>(max_id + 1, colName, typeData, caption, width));
 		}
 
 		const CTypeDescription GetColumnType(unsigned int col) const {
@@ -152,13 +153,10 @@ public:
 		CValueTable* m_ownerTable;
 		std::vector<CValuePtr<CValueTableColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
-
 	};
 
 	class CValueTableReturnLine : public IValueModelReturnLine {
 		wxDECLARE_DYNAMIC_CLASS(CValueTableReturnLine);
-	public:
-		CValueTable* m_ownerTable;
 	public:
 
 		CValueTableReturnLine(CValueTable* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
@@ -177,6 +175,7 @@ public:
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
 	private:
+		CValueTable* m_ownerTable;
 		CMethodHelper* m_methodHelper;
 	};
 
@@ -192,7 +191,7 @@ public:
 	virtual CValueTableReturnLine* GetRowAt(const long& line) {
 		if (line > GetRowCount())
 			return nullptr;
-		return CValue::CreateAndConvertObjectValueRef<CValueTableReturnLine>(this, GetItem(line));
+		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(line));
 	}
 
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
@@ -259,7 +258,7 @@ public:
 	void EditRow();
 	void DeleteRow();
 
-	CValueTable* Clone() { return CValue::CreateAndConvertObjectValueRef<CValueTable>(*this); }
+	CValueTable* Clone() { return CValue::CreateAndPrepareValueRef<CValueTable>(*this); }
 	unsigned int Count() { return GetRowCount(); }
 	void Clear();
 
@@ -278,12 +277,12 @@ public:
 	//Working with iterators
 	virtual bool HasIterator() const override { return true; }
 	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndConvertObjectValueRef <CValueTableReturnLine>(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, wxDataViewItem(nullptr));
 	}
 	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())
 			return CValue();
-		return CValue::CreateAndConvertObjectValueRef <CValueTableReturnLine>(this, GetItem(idx));
+		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(idx));
 	}
 
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }

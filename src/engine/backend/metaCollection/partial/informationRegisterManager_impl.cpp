@@ -18,7 +18,7 @@ CValue CInformationRegisterManager::Get(const CValue& cFilter)
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
@@ -90,7 +90,7 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
@@ -167,7 +167,7 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueStructure* retTable = CValue::CreateAndConvertObjectValueRef<CValueStructure>();
+	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		retTable->SetAt(obj->GetName(), CValue());
 	}
@@ -346,7 +346,7 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueStructure* retTable = CValue::CreateAndConvertObjectValueRef<CValueStructure>();
+	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
 		retTable->SetAt(obj->GetName(), CValue());
 	}
@@ -525,7 +525,7 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {
@@ -715,7 +715,7 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto& obj : m_metaObject->GetGenericAttributes()) {

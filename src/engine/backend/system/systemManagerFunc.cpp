@@ -518,7 +518,7 @@ void CSystemFunction::Alert(const wxString& strMessage) //Предупрежде
 CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)//Вопрос
 {
 	if (CBackendException::IsEvalMode()) {
-		return CValue::CreateAndConvertObjectValueRef<CValueQuestionReturnCode>();
+		return CValue::CreateAndPrepareValueRef<CValueQuestionReturnCode>();
 	}
 
 	int wndStyle = 0;
@@ -536,7 +536,7 @@ CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)
 		backend_mainFrame ? backend_mainFrame->GetFrameHandler() : nullptr
 	);
 
-	CValueQuestionReturnCode* retValue = CValue::CreateAndConvertObjectValueRef<CValueQuestionReturnCode>();
+	CValueQuestionReturnCode* retValue = CValue::CreateAndPrepareValueRef<CValueQuestionReturnCode>();
 	switch (retCode) {
 	case wxOK:
 		retValue->InitializeEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK);
@@ -841,12 +841,12 @@ CValue CSystemFunction::Type(const CValue& cTypeName)
 	if (!commonMetaData->IsRegisterCtor(typeName)) {
 		Raise(wxString::Format(_("Type not found '%s'"), typeName));
 	}
-	return CValue::CreateAndConvertObjectValueRef<CValueType>(typeName);
+	return CValue::CreateAndPrepareValueRef<CValueType>(typeName);
 }
 
 CValue CSystemFunction::TypeOf(const CValue& cData)
 {
-	return CValue::CreateAndConvertObjectValueRef<CValueType>(cData);
+	return CValue::CreateAndPrepareValueRef<CValueType>(cData);
 }
 
 int CSystemFunction::Rand()

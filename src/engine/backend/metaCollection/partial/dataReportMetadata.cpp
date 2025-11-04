@@ -57,7 +57,7 @@ IRecordDataObjectExt* CMetaObjectReport::CreateObjectExtValue()
 	if (appData->DesignerMode()) {
 		if (m_objMode == METAOBJECT_NORMAL) {
 			if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-				CRecordDataObjectReport* createdObj = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectReport>(this);
+				CRecordDataObjectReport* createdObj = CValue::CreateAndPrepareValueRef<CRecordDataObjectReport>(this);
 				if (!createdObj->InitializeObject()) {
 					wxDELETE(createdObj);
 					return nullptr;
@@ -71,7 +71,7 @@ IRecordDataObjectExt* CMetaObjectReport::CreateObjectExtValue()
 	}
 	else {
 		if (m_objMode == METAOBJECT_NORMAL) {
-			pDataRef = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectReport>(this);
+			pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectReport>(this);
 			if (!pDataRef->InitializeObject()) {
 				wxDELETE(pDataRef);
 				return nullptr;

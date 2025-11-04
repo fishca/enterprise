@@ -1115,7 +1115,7 @@ IMetaObjectAttribute* IMetaObjectRegisterData::FindProp(const meta_identifier_t&
 
 CRecordKeyObject* IMetaObjectRegisterData::CreateRecordKeyObjectValue()
 {
-	return m_metaData->CreateAndConvertObjectValueRef<CRecordKeyObject>(this);
+	return CValue::CreateAndPrepareValueRef<CRecordKeyObject>(this);
 }
 
 IRecordSetObject* IMetaObjectRegisterData::CreateRecordSetObjectValue(bool needInitialize)
@@ -1895,7 +1895,7 @@ void IRecordDataObjectRef::PrepareEmptyObject()
 	for (auto& obj : m_metaObject->GetObjectTables()) {
 		if (obj->IsDeleted())
 			continue;
-		m_listObjectValue.insert_or_assign(obj->GetMetaID(), m_metaObject->GetMetaData()->CreateAndConvertObjectValueRef<CTabularSectionDataObjectRef>(this, obj));
+		m_listObjectValue.insert_or_assign(obj->GetMetaID(), CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj));
 	}
 	m_objModified = true;
 }
@@ -1922,7 +1922,7 @@ void IRecordDataObjectRef::PrepareEmptyObject(const IRecordDataObjectRef* source
 	for (auto& obj : m_metaObject->GetObjectTables()) {
 		if (obj->IsDeleted())
 			continue;
-		CTabularSectionDataObjectRef* tableSection = m_metaObject->GetMetaData()->CreateAndConvertObjectValueRef<CTabularSectionDataObjectRef>(this, obj);
+		CTabularSectionDataObjectRef* tableSection = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj);
 		if (tableSection->LoadDataFromTable(source->GetTableByMetaID(obj->GetMetaID())))
 			m_listObjectValue.insert_or_assign(obj->GetMetaID(), tableSection);
 		else
@@ -2084,7 +2084,7 @@ void IRecordDataObjectFolderRef::PrepareEmptyObject()
 		if (m_objMode == eObjectMode::OBJECT_ITEM) {
 			if (tableUse == eItemMode::eItemMode_Item ||
 				tableUse == eItemMode::eItemMode_Folder_Item) {
-				m_listObjectValue.insert_or_assign(obj->GetMetaID(), m_metaObject->GetMetaData()->CreateAndConvertObjectValueRef<CTabularSectionDataObjectRef>(this, obj));
+				m_listObjectValue.insert_or_assign(obj->GetMetaID(), CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj));
 			}
 			else {
 				m_listObjectValue.insert_or_assign(obj->GetMetaID(), eValueTypes::TYPE_NULL);
@@ -2093,7 +2093,7 @@ void IRecordDataObjectFolderRef::PrepareEmptyObject()
 		else {
 			if (tableUse == eItemMode::eItemMode_Folder ||
 				tableUse == eItemMode::eItemMode_Folder_Item) {
-				m_listObjectValue.insert_or_assign(obj->GetMetaID(), m_metaObject->GetMetaData()->CreateAndConvertObjectValueRef<CTabularSectionDataObjectRef>(this, obj));
+				m_listObjectValue.insert_or_assign(obj->GetMetaID(), CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj));
 			}
 			else {
 				m_listObjectValue.insert_or_assign(obj->GetMetaID(), eValueTypes::TYPE_NULL);
@@ -2136,7 +2136,7 @@ void IRecordDataObjectFolderRef::PrepareEmptyObject(const IRecordDataObjectRef* 
 		CMetaObjectTableData* metaTable = nullptr; eItemMode tableUse = eItemMode::eItemMode_Folder_Item;
 		if (obj->ConvertToValue(metaTable))
 			tableUse = metaTable->GetTableUse();
-		CTabularSectionDataObjectRef* tableSection = m_metaObject->GetMetaData()->CreateAndConvertObjectValueRef <CTabularSectionDataObjectRef>(this, obj);
+		CTabularSectionDataObjectRef* tableSection = CValue::CreateAndPrepareValueRef <CTabularSectionDataObjectRef>(this, obj);
 		if (tableSection->LoadDataFromTable(source->GetTableByMetaID(obj->GetMetaID())))
 			m_listObjectValue.insert_or_assign(obj->GetMetaID(), tableSection);
 		else
@@ -2381,7 +2381,7 @@ void IRecordManagerObject::PrepareEmptyObject(const IRecordManagerObject* source
 	m_recordLine = nullptr;
 
 	if (source == nullptr) {
-		m_recordLine = new IRecordSetObject::CRecordSetObjectRegisterReturnLine(
+		m_recordLine = CValue::CreateAndPrepareValueRef<IRecordSetObject::CRecordSetObjectRegisterReturnLine>(
 			m_recordSet,
 			m_recordSet->GetItem(
 				m_recordSet->AppendRow()
@@ -2499,14 +2499,14 @@ IRecordSetObject* IRecordSetObject::CopyRegisterValue()
 ///////////////////////////////////////////////////////////////////////////////////
 
 IRecordSetObject::IRecordSetObject(IMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : IValueTable(),
-m_recordColumnCollection(new CRecordSetObjectRegisterColumnCollection(this)), m_recordSetKeyValue(new CRecordSetObjectRegisterKeyValue(this)),
+m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
 m_methodHelper(new CMethodHelper())
 {
 }
 
 IRecordSetObject::IRecordSetObject(const IRecordSetObject& source) : IValueTable(),
-m_recordColumnCollection(new CRecordSetObjectRegisterColumnCollection(this)), m_recordSetKeyValue(new CRecordSetObjectRegisterKeyValue(this)),
+m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModified(true), m_selected(false),
 m_methodHelper(new CMethodHelper())
 {
@@ -2529,7 +2529,7 @@ bool IRecordSetObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 		CBackendException::Error("Array index out of bounds");
 		return false;
 	}
-	pvarValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(index));
+	pvarValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(index));
 	return true;
 }
 
@@ -2673,7 +2673,7 @@ IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CRecordSetObjectRegi
 
 	for (auto& obj : metaObject->GetGenericAttributes()) {
 		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
-			CValue::CreateAndConvertObjectValueRef<CValueRecordSetRegisterColumnInfo>(obj));
+			CValue::CreateAndPrepareValueRef<CValueRecordSetRegisterColumnInfo>(obj));
 	}
 }
 
@@ -2868,7 +2868,7 @@ bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::GetPropVal(const long l
 {
 	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
 	if (id != wxNOT_FOUND) {
-		pvarPropVal = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterKeyDescriptionValue>(m_recordSet, id);
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterKeyDescriptionValue>(m_recordSet, id);
 		return true;
 	}
 	return false;

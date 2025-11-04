@@ -381,7 +381,7 @@ bool CRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CVal
 	switch (lMethodNum)
 	{
 	case recordSet::enAdd:
-		pvarRetValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case recordSet::enCount:
 		pvarRetValue = (unsigned int)GetRowCount();

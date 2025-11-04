@@ -165,7 +165,7 @@ bool CValueContainer::Property(const CValue& varKeyValue, CValue& cValueFound)
 
 CValue CValueContainer::GetIteratorEmpty()
 {
-	return CValue::CreateAndConvertObjectValueRef<CValueReturnContainer>();
+	return CValue::CreateAndPrepareValueRef<CValueReturnContainer>();
 }
 
 CValue CValueContainer::GetIteratorAt(unsigned int idx)
@@ -174,7 +174,7 @@ CValue CValueContainer::GetIteratorAt(unsigned int idx)
 		return CValue();
 	auto structurePos = m_containerValues.begin();
 	std::advance(structurePos, idx);
-	return CValue::CreateAndConvertObjectValueRef<CValueReturnContainer>(structurePos->first, structurePos->second);
+	return CValue::CreateAndPrepareValueRef<CValueReturnContainer>(structurePos->first, structurePos->second);
 }
 
 bool CValueContainer::SetAt(const CValue& varKeyValue, const CValue& varValue)

@@ -178,7 +178,7 @@ bool CRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CVa
 	switch (lMethodNum)
 	{
 	case func::eAdd:
-		pvarRetValue = CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case func::eCount:
 		pvarRetValue = (unsigned int)GetRowCount();

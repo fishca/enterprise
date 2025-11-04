@@ -69,7 +69,7 @@ bool CSelectorDataObject::Read()
 				obj, m_listObjectValue[obj->GetMetaID()], resultSet);
 		}
 		for (auto& obj : m_metaObject->GetObjectTables()) {
-			CTabularSectionDataObjectRef* tabularSection = CValue::CreateAndConvertObjectValueRef<CTabularSectionDataObjectRef>(this, obj);
+			CTabularSectionDataObjectRef* tabularSection = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj);
 			if (!tabularSection->LoadData(m_objGuid))
 				isLoaded = false;
 			m_listObjectValue.insert_or_assign(obj->GetMetaID(), tabularSection);

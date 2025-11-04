@@ -264,7 +264,7 @@ bool ITabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 
 IValueTable* ITabularSectionDataObject::SaveDataToTable() const
 {
-	CValueTable* valueTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* valueTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	IValueModelColumnCollection* colData = valueTable->GetColumnCollection();
 	for (unsigned int idx = 0; idx < m_recordColumnCollection->GetColumnCount() - 1; idx++) {
 		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnInfo(idx);
@@ -406,7 +406,7 @@ ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSe
 		if (metaTable->IsNumberLine(obj->GetMetaID()))
 			continue;
 		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
-			CValue::CreateAndConvertObjectValueRef<CValueTabularSectionColumnInfo>(obj)
+			CValue::CreateAndPrepareValueRef<CValueTabularSectionColumnInfo>(obj)
 		);
 	}
 }

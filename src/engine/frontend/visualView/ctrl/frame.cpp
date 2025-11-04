@@ -15,7 +15,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueFrame, CValue);
 
 IValueFrame::IValueFrame() : CValue(eValueTypes::TYPE_VALUE),
 m_methodHelper(new CMethodHelper()),
-m_valEventContainer(CValue::CreateAndConvertObjectValueRef<CValueEventContainer>(this)),
+m_valEventContainer(CValue::CreateAndPrepareValueRef<CValueEventContainer>(this)),
 m_controlId(0), m_controlGuid(CGuid::newGuid())
 {
 }

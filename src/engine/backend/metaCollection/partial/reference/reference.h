@@ -154,8 +154,7 @@ public:
 	virtual wxString GetString() const;
 	virtual wxString GetClassName() const;
 
-	friend class CMetaValueRefTypeCtor;
-	friend class IRecordDataObjectRef;
+	friend class CValue;
 
 private:
 

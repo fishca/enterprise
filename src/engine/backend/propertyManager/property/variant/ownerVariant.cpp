@@ -26,7 +26,7 @@ wxString wxVariantDataOwner::MakeString() const
 
 CValue wxVariantDataOwner::GetDataValue() const
 {
-    CValueArray* valueArr = CValue::CreateAndConvertObjectValueRef<CValueArray>();
+    CValueArray* valueArr = CValue::CreateAndPrepareValueRef<CValueArray>();
     const IMetaData* metaData = m_ownerProperty->GetMetaData();
     if (metaData != nullptr) {
         for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) { valueArr->Add(metaData->GetMetaObject(m_metaDesc.GetByIdx(idx))); }

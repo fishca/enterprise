@@ -56,7 +56,7 @@ IRecordDataObjectExt* CMetaObjectDataProcessor::CreateObjectExtValue()
 	if (appData->DesignerMode()) {
 		if (m_objMode == METAOBJECT_NORMAL) {
 			if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
-				return m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectDataProcessor>(this);
+				return CValue::CreateAndPrepareValueRef<CRecordDataObjectDataProcessor>(this);
 		}
 		else {
 			return dynamic_cast<IRecordDataObjectExt*>(moduleManager->GetObjectValue());
@@ -64,7 +64,7 @@ IRecordDataObjectExt* CMetaObjectDataProcessor::CreateObjectExtValue()
 	}
 	else {
 		if (m_objMode == METAOBJECT_NORMAL) {
-			pDataRef = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectDataProcessor>(this);
+			pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectDataProcessor>(this);
 		}
 		else {
 			return dynamic_cast<IRecordDataObjectExt*>(moduleManager->GetObjectValue());

@@ -18,7 +18,7 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto dimension : m_metaObject->GetObjectDimensions()) {
@@ -189,7 +189,7 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	CValueTable* retTable = CValue::CreateAndConvertObjectValueRef<CValueTable>();
+	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto dimension : m_metaObject->GetObjectDimensions()) {

@@ -44,7 +44,7 @@ CValue IValueFrame::CValueEventContainer::GetIteratorAt(unsigned int idx)
 
 	IEvent* event = m_controlEvent->GetEvent(idx);
 	if (event == nullptr) return CValue();
-	//return CValue::CreateAndConvertObjectValueRef<CValueEvent>(event->GetValue());
+	//return CValue::CreateAndPrepareValueRef<CValueEvent>(event->GetValue());
 
 	CValue retEvent;
 	event->GetDataValue(retEvent);
@@ -81,7 +81,7 @@ bool IValueFrame::CValueEventContainer::GetAt(const CValue& varKeyValue, CValue&
 	//wxString eventValue = event->GetValue();
 	//if (eventValue.IsEmpty())
 	//	return false;
-	//pvarValue = CValue::CreateAndConvertObjectValueRef<CValueEvent>(eventValue);
+	//pvarValue = CValue::CreateAndPrepareValueRef<CValueEvent>(eventValue);
 	//return true;
 	return event->GetDataValue(pvarValue);
 }
@@ -93,7 +93,7 @@ bool IValueFrame::CValueEventContainer::Property(const CValue& varKeyValue, CVal
 		IEvent* event = m_controlEvent->GetEvent(idx);
 		if (event == nullptr) continue;
 		if (stringUtils::CompareString(key, event->GetName())) {
-			//cValueFound = CValue::CreateAndConvertObjectValueRef<CValueEvent>(event->GetName());
+			//cValueFound = CValue::CreateAndPrepareValueRef<CValueEvent>(event->GetName());
 			//return true;
 			return event->GetDataValue(cValueFound);
 		}
@@ -149,7 +149,7 @@ bool IValueFrame::CValueEventContainer::GetPropVal(const long lPropNum, CValue& 
 
 	const wxString& eventValue = event->GetValue();
 	if (eventValue.IsEmpty()) return true;
-	//pvarPropVal = CValue::CreateAndConvertObjectValueRef<CValueEvent>(eventValue);
+	//pvarPropVal = CValue::CreateAndPrepareValueRef<CValueEvent>(eventValue);
 	return event->GetDataValue(pvarPropVal);
 }
 

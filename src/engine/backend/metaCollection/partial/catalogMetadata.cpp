@@ -74,11 +74,11 @@ ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaO
 	case eFormGroup:
 		return CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 	case eFormList:
-		return m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
 	case eFormSelect:
-		return m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
 	case eFormFolderSelect:
-		return m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true);
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true);
 	}
 
 	return nullptr;
@@ -93,11 +93,11 @@ IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode
 	CRecordDataObjectCatalog* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-			return m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectCatalog>(this, guid, mode);
+			return CValue::CreateAndPrepareValueRef<CRecordDataObjectCatalog>(this, guid, mode);
 		}
 	}
 	else {
-		pDataRef = m_metaData->CreateAndConvertObjectValueRef<CRecordDataObjectCatalog>(this, guid, mode);
+		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectCatalog>(this, guid, mode);
 	}
 
 	return pDataRef;
@@ -129,7 +129,7 @@ IBackendValueForm* CMetaObjectCatalog::GetListForm(const wxString& strFormName, 
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectCatalog::eFormList,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormList, CTreeDataObjectFolderRef::LIST_ITEM_FOLDER),
+		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormList, CTreeDataObjectFolderRef::LIST_ITEM_FOLDER),
 		formGuid
 	);
 }
@@ -139,7 +139,7 @@ IBackendValueForm* CMetaObjectCatalog::GetSelectForm(const wxString& strFormName
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectCatalog::eFormSelect,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_ITEM, true),
+		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_ITEM, true),
 		formGuid
 	);
 }
@@ -149,7 +149,7 @@ IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFo
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectCatalog::eFormSelect,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true),
+		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true),
 		formGuid
 	);
 }

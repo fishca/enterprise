@@ -42,7 +42,7 @@ IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& 
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectAccumulationRegister::eFormList,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, CMetaObjectAccumulationRegister::eFormList),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, CMetaObjectAccumulationRegister::eFormList),
 		formGuid
 	);
 }
@@ -321,7 +321,7 @@ ISourceDataObject* CMetaObjectAccumulationRegister::CreateSourceObject(IMetaObje
 	switch (metaObject->GetTypeForm())
 	{
 	case eFormList:
-		return 	m_metaData->CreateAndConvertObjectValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
+		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
 	}
 
 	return nullptr;
@@ -334,11 +334,11 @@ IRecordSetObject* CMetaObjectAccumulationRegister::CreateRecordSetObjectRegValue
 	if (appData->DesignerMode()) {
 		IRecordSetObject* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-			return 	m_metaData->CreateAndConvertObjectValueRef<CRecordSetObjectAccumulationRegister>(this, uniqueKey);
+			return CValue::CreateAndPrepareValueRef<CRecordSetObjectAccumulationRegister>(this, uniqueKey);
 		}
 		return pDataRef;
 	}
-	return 	m_metaData->CreateAndConvertObjectValueRef<CRecordSetObjectAccumulationRegister>(this, uniqueKey);
+	return CValue::CreateAndPrepareValueRef<CRecordSetObjectAccumulationRegister>(this, uniqueKey);
 }
 
 //***********************************************************************

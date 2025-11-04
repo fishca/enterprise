@@ -262,9 +262,9 @@ CValue CValueTypeDescription::AdjustValue(const CValue& varValue) const
 
 CValue CValueTypeDescription::Types() const
 {
-	CValueArray* arr = CValue::CreateAndConvertObjectValueRef<CValueArray>();
+	CValueArray* arr = CValue::CreateAndPrepareValueRef<CValueArray>();
 	for (auto clsid : m_typeDesc.m_listTypeClass)
-		arr->Add(CValue::CreateAndConvertObjectValueRef<CValueType>(clsid));
+		arr->Add(CValue::CreateAndPrepareValueRef<CValueType>(clsid));
 	return arr;
 }
 

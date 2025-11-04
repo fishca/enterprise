@@ -154,7 +154,7 @@ IBackendValueForm* CDocMDIFrame::CreateNewForm(const IMetaObjectForm* creator, I
 {
 	IControlFrame* ownerControl = dynamic_cast<IControlFrame*>(backendControl);
 	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));
-	return CValue::CreateAndConvertObjectValueRef<CValueForm>(creator, ownerControl, srcObject, formGuid);
+	return CValue::CreateAndPrepareValueRef<CValueForm>(creator, ownerControl, srcObject, formGuid);
 }
 
 CUniqueKey CDocMDIFrame::CreateFormUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formGuid)

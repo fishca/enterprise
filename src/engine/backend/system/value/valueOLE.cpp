@@ -363,7 +363,7 @@ CValue CValueOLE::FromVariantArray(SAFEARRAY* psa) const
 		aDims[i].cElements = nMax;//-nMin+1;
 	}
 
-	CValue cRet = CValue::CreateAndConvertObjectValueRef<CValueArray>();
+	CValue cRet = CValue::CreateAndPrepareValueRef<CValueArray>();
 	AddFromArray(cRet, aPos, psa, aDims, nDim - 1);
 
 	delete[]aPos;

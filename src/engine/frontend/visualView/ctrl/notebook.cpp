@@ -142,7 +142,7 @@ bool CValueNotebook::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CVa
 	{
 	case enPages:
 	{
-		CValueStructure* structurePage = CValue::CreateAndConvertObjectValueRef<CValueStructure>(true);
+		CValueStructure* structurePage = CValue::CreateAndPrepareValueRef<CValueStructure>(true);
 		for (unsigned int i = 0; i < GetChildCount(); i++) {
 			CValueNotebookPage* notebookPage = dynamic_cast<CValueNotebookPage*>(GetChild(i));
 			if (notebookPage) {

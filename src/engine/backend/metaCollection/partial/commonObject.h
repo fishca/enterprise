@@ -1287,7 +1287,7 @@ public:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return CValue::CreateAndConvertObjectValueRef<CRecordSetObjectRegisterReturnLine>(this, line);
+		return CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, line);
 	}
 
 	class CRecordSetObjectRegisterColumnCollection : public IValueTable::IValueModelColumnCollection {
@@ -1534,13 +1534,13 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual CValue GetIteratorEmpty() override {
-		return new CRecordSetObjectRegisterReturnLine(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, wxDataViewItem(nullptr));
 	}
 
 	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())
-			return CValue();
-		return new CRecordSetObjectRegisterReturnLine(this, GetItem(idx));
+			return wxEmptyValue;
+		return CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(idx));
 	}
 
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }

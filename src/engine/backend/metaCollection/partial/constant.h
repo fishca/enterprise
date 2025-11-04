@@ -95,6 +95,7 @@ protected:
 		eValue
 	};
 protected:
+
 	//override copy constructor
 	CRecordDataObjectConstant(CMetaObjectConstant* metaObject);
 	CRecordDataObjectConstant(const CRecordDataObjectConstant& source);
@@ -182,11 +183,12 @@ public:
 	virtual operator CValue() const { return this; }
 
 protected:
+
 	CMethodHelper* m_methodHelper;
 	CMetaObjectConstant* m_metaObject;
 	CValue m_constValue;
 
-	friend class IMetaData;
+	friend class CValue;
 };
 
 #endif

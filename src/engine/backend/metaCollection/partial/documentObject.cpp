@@ -410,7 +410,7 @@ void CRecordDataObjectDocument::PrepareNames() const
 	m_methodHelper->AppendFunc("isNew", "isNew()");
 	m_methodHelper->AppendFunc("copy", "copy()");
 	m_methodHelper->AppendFunc("fill", 1, "fill(object)");
-	m_methodHelper->AppendFunc("write", "write()");
+	m_methodHelper->AppendFunc("write", 2, "write(writeMode, postingMode)");
 	m_methodHelper->AppendFunc("delete", "delete()");
 	m_methodHelper->AppendFunc("modified", "modified()");
 	m_methodHelper->AppendFunc("getFormObject", 2, "getFormObject(string, owner)");

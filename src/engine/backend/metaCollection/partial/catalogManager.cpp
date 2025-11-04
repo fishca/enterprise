@@ -110,7 +110,7 @@ bool CCatalogManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		pvarRetValue = m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 		return true;
 	case eSelect:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CSelectorDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorDataObject>(m_metaObject);
 		return true;
 	case eFindByCode:
 		pvarRetValue = FindByCode(*paParams[0]);

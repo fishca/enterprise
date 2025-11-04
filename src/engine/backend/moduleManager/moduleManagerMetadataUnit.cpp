@@ -63,7 +63,7 @@ bool IModuleManager::CMetadataUnit::SetPropVal(const long lPropNum, const CValue
 
 bool IModuleManager::CMetadataUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal)//attribute value
 {
-	CValueStructure* valStruct = CValue::CreateAndConvertObjectValueRef<CValueStructure>();
+	CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	switch (lPropNum)
 	{
 	case enCommonModules: {

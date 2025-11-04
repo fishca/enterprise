@@ -30,7 +30,7 @@ public:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return new CTabularSectionDataObjectReturnLine(this, line);
+		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, line);
 	}
 
 	virtual bool HasDefaultCompare() const override { return false; }
@@ -115,7 +115,7 @@ public:
 			//PrepareNames(); 
 			return m_methodHelper;
 		}
-	
+
 		virtual void PrepareNames() const;
 
 		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
@@ -154,7 +154,7 @@ public:
 
 	ITabularSectionDataObject(IValueDataObject* objectValue, CMetaObjectTableData* tableObject, bool readOnly = false) :
 		m_objectValue(objectValue), m_metaTable(tableObject),
-		m_recordColumnCollection(new CTabularSectionDataObjectColumnCollection(this)),
+		m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectColumnCollection>(this)),
 		m_methodHelper(new CMethodHelper()), m_readOnly(readOnly) {
 	}
 
@@ -198,7 +198,7 @@ public:
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
-	
+
 	virtual void PrepareNames() const;                             // this method is automatically called to initialize attribute and method names
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);       // method call
 
@@ -215,13 +215,13 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual CValue GetIteratorEmpty() override {
-		return new CTabularSectionDataObjectReturnLine(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, wxDataViewItem(nullptr));
 	}
 
 	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())
-			return CValue();
-		return new CTabularSectionDataObjectReturnLine(this, GetItem(idx));
+			return wxEmptyValue;
+		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(idx));
 	}
 
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }

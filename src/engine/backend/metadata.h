@@ -76,16 +76,12 @@ public:
 	}
 	template<typename T, typename... Args>
 	inline T* CreateAndConvertObjectValueRef(Args&&... args) const {
-		auto ptr = static_cast<T*>(malloc(sizeof(T)));
-		T* created_value = ::new (ptr) T(std::forward<Args>(args)...);
-		if (created_value == nullptr)
-			return nullptr;
+		T* created_value = CValue::CreateAndPrepareValueRef<T>(args...);
 		if (!IsRegisterCtor(created_value->GetClassType())) {
 			wxDELETE(created_value);
 			wxASSERT_MSG(false, "CreateAndConvertObjectValueRef ret null!");
 			return nullptr;
 		}
-		created_value->PrepareNames();
 		return created_value;
 	}
 

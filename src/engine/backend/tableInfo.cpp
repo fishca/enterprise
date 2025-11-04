@@ -151,7 +151,7 @@ bool IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::GetPropVal
 			pvarPropVal = GetColumnName();
 			return true;
 		case enColumnTypes:
-			pvarPropVal = CValue::CreateAndConvertObjectValueRef<CValueTypeDescription>(GetColumnType());
+			pvarPropVal = CValue::CreateAndPrepareValueRef<CValueTypeDescription>(GetColumnType());
 			return true;
 		case enColumnCaption:
 			pvarPropVal = GetColumnCaption();

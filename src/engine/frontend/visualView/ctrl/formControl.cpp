@@ -29,7 +29,7 @@ CValueForm::CValueFormCollectionControl::~CValueFormCollectionControl()
 
 CValue CValueForm::CValueFormCollectionControl::GetIteratorEmpty()
 {
-	return CValue::CreateAndConvertObjectValueRef<CValueContainer::CValueReturnContainer>();
+	return CValue::CreateAndPrepareValueRef<CValueContainer::CValueReturnContainer>();
 }
 
 CValue CValueForm::CValueFormCollectionControl::GetIteratorAt(unsigned int idx)
@@ -40,7 +40,7 @@ CValue CValueForm::CValueFormCollectionControl::GetIteratorAt(unsigned int idx)
 	auto structurePos = m_formOwner->m_listControl.begin();
 	std::advance(structurePos, idx);
 
-	return CValue::CreateAndConvertObjectValueRef<CValueContainer::CValueReturnContainer>(
+	return CValue::CreateAndPrepareValueRef<CValueContainer::CValueReturnContainer>(
 		(*structurePos)->GetControlName(),
 		CValue(*structurePos)
 	);

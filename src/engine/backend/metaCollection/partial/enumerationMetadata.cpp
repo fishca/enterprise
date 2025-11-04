@@ -69,7 +69,7 @@ IBackendValueForm* CMetaObjectEnumeration::GetListForm(const wxString& strFormNa
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectEnumeration::eFormList,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormList),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormList),
 		formGuid
 	);
 }
@@ -79,7 +79,7 @@ IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& strForm
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		CMetaObjectEnumeration::eFormSelect,
-		ownerControl, m_metaData->CreateAndConvertObjectValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormSelect, true),
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormSelect, true),
 		formGuid
 	);
 }

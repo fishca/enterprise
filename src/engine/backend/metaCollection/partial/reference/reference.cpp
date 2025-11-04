@@ -361,7 +361,7 @@ bool CReferenceDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValu
 		pvarRetValue = GetObject();
 		return true;
 	case enGetGuid:
-		pvarRetValue = CValue::CreateAndConvertObjectValueRef<CValueGuid>(m_objGuid);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueGuid>(m_objGuid);
 		return true;
 	}
 

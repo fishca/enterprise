@@ -190,7 +190,7 @@ public:
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 protected:
-	friend class IMetaData;
+	friend class CValue;
 	friend class CMetaObjectInformationRegister;
 };
 
@@ -241,7 +241,7 @@ public:
 	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
 
 protected:
-	friend class IMetaData;
+	friend class CValue;
 	friend class CMetaObjectInformationRegister;
 };
 

@@ -74,7 +74,7 @@ void CDocumentManager::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("createElement", "createElement()");
+	m_methodHelper->AppendFunc("createDocument", "createDocument()");
 	m_methodHelper->AppendFunc("select", "select()");
 	m_methodHelper->AppendFunc("findByNumber", 2, "findByNumber(string, date)");
 	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
@@ -104,7 +104,7 @@ bool CDocumentManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, C
 		pvarRetValue = m_metaObject->CreateObjectValue();
 		return true;
 	case eSelect:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CSelectorDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorDataObject>(m_metaObject);
 		return true;
 	case eFindByNumber:
 	{
@@ -146,7 +146,7 @@ bool CDocumentManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, C
 	wxASSERT(moduleManager);
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr) 
+	if (pRefData != nullptr)
 		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	return false;
 }

@@ -15,7 +15,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 CValueForm::CValueForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
 	ISourceDataObject* srcObject, const CUniqueKey& formGuid) : IValueFrame(), IModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
-	m_formCollectionControl(CValue::CreateAndConvertObjectValueRef<CValueFormCollectionControl>(this)),
+	m_formCollectionControl(CValue::CreateAndPrepareValueRef<CValueFormCollectionControl>(this)),
 	m_formType(defaultFormType), m_closeOnChoice(true), m_closeOnOwnerClose(true), m_formModified(false)
 {
 	//init default params
@@ -296,7 +296,7 @@ bool CValueForm::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 			pvarPropVal = dynamic_cast<CValue*>(m_controlOwner);
 			return true;
 		case eUniqueKey:
-			pvarPropVal = CValue::CreateAndConvertObjectValueRef<CValueGuid>(m_formKey);
+			pvarPropVal = CValue::CreateAndPrepareValueRef<CValueGuid>(m_formKey);
 			return true;
 		case eCloseOnChoice:
 			pvarPropVal = m_closeOnChoice;

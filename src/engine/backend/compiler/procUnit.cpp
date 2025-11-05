@@ -230,9 +230,9 @@ inline void CompareValueGT(CValue& cValue1, const CValue& cValue2, const CValue&
 
 inline void CompareValueGE(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)
 {
-	CHECK_READONLY(CompareValueGT);
+	CHECK_READONLY(CompareValueGE);
 	cValue1.m_typeClass = eValueTypes::TYPE_BOOLEAN;
-	cValue1.m_bData = cValue2.CompareValueGT(cValue3);
+	cValue1.m_bData = cValue2.CompareValueGE(cValue3);
 }
 
 inline void CompareValueLS(CValue& cValue1, const CValue& cValue2, const CValue& cValue3)

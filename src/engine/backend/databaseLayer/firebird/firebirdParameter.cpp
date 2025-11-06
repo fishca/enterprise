@@ -173,11 +173,21 @@ CFirebirdParameter::CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* 
 {
 	m_pInterface = pInterface;
 	m_pParameter = pVar;
+	
+	int nType = (m_pParameter->sqltype & ~1);
 
-	// Just copy the data into the memory buffer for now.  We'll move the data over to the blob in the call to ResetBlob
-	void* pBuffer = m_BufferValue.GetWriteBuf(nDataLength);
-	memcpy(pBuffer, pData, nDataLength);
-	m_nBufferLength = nDataLength;
+	if (nType == SQL_BLOB) {
+		// Just copy the data into the memory buffer for now.  We'll move the data over to the blob in the call to ResetBlob
+		void* pBuffer = m_BufferValue.GetWriteBuf(nDataLength);
+		memcpy(pBuffer, pData, nDataLength);
+		m_nBufferLength = nDataLength;
+	}
+	else if (nType == SQL_TEXT) {
+		memcpy(m_pParameter->sqldata, pData, nDataLength);
+	}
+
+	m_nNullFlag = 0;
+	m_pParameter->sqlind = &m_nNullFlag; // NULL indicator
 }
 
 bool CFirebirdParameter::ResetBlob(isc_db_handle database, isc_tr_handle transaction)

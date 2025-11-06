@@ -437,6 +437,12 @@ void* CFirebirdResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 			tempBufferExactSize.SetBufSize(bufferSize);
 			buffer = tempBufferExactSize;
 		}
+		else if (nType == SQL_TEXT)
+		{
+			wxMemoryBuffer tempBuffer(pVar->sqllen);
+			tempBuffer.AppendData(pVar->sqldata, pVar->sqllen);		
+			buffer = tempBuffer;
+		}
 		else
 		{
 			// Incompatible field type

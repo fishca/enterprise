@@ -89,6 +89,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 			retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL);", tabularName);
 		else
 			retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL);", tabularName);
+
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return retCode;
 
@@ -97,6 +98,11 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 			retCode = ProcessAttribute(tabularName,
 				obj, nullptr);
 		}
+
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return retCode;
+
+		retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tabularName, tabularName);
 	}
 	// update 
 	else if (srcTable != nullptr) {
@@ -142,11 +148,6 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 
-			retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
-
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-
 			for (auto& obj : GetDefaultAttributes()) {
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
@@ -188,6 +189,11 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 				retCode = ProcessTable(obj->GetTableNameDB(),
 					obj, nullptr);
 			}
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
 		}
 		else if ((flags & repairMetaTable) != 0) {
 
@@ -461,6 +467,33 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 				return false;
 			retCode = ProcessAttribute(tableName,
 				obj, nullptr);
+		}
+
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
+
+		wxString queryText;
+		if (HasRecorder()) {
+			CMetaObjectAttributeDefault* attributeRecorder = GetRegisterRecorder();
+			wxASSERT(attributeRecorder);
+			queryText += IMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
+			CMetaObjectAttributeDefault* attributeNumberLine = GetRegisterLineNumber();
+			wxASSERT(attributeNumberLine);
+			queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
+		}
+		else {
+			bool firstMatching = true;
+			for (auto& obj : GetGenericDimensions()) {
+				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+				if (firstMatching) {
+					firstMatching = false;
+				}
+			}
+		}
+
+		if (!queryText.IsEmpty()) {
+			retCode = db_query->RunQuery(
+				wxT("CREATE INDEX %s_INDEX ON %s (") + queryText + wxT(");"), tableName, tableName);
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {

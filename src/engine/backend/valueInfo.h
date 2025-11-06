@@ -5,13 +5,14 @@
 
 //reference data
 struct reference_t {
-	meta_identifier_t m_id; // id of metaData 
+
+	reference_t(const meta_identifier_t& id, const guid_t& guid) : m_id(id), m_guid(guid) {}
+
 	guid_t m_guid;
-public:
-	reference_t(const meta_identifier_t& id, const guid_t& guid) :
-		m_id(id), m_guid(guid) {
-	}
+	meta_identifier_t m_id; // id of metadata 
 };
+
+#define reference_size_t int(sizeof(reference_t))
 
 ///////////////////
 

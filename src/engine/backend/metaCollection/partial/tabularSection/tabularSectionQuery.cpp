@@ -105,7 +105,6 @@ bool CTabularSectionDataObjectRef::SaveData()
 			break;
 		int position = 2;
 		statement->SetParamString(1, m_objectValue->GetGuid());
-		statement->SetParamBlob(2, reference_impl, sizeof(reference_t));
 		for (auto& obj : m_metaTable->GetObjectAttributes()) {
 			if (!m_metaTable->IsNumberLine(obj->GetMetaID())) {
 				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));

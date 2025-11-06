@@ -384,19 +384,19 @@ public:
 	template <typename enumType> inline enumType ConvertToEnumType() const {
 		class IEnumerationValue<enumType>* enumValue =
 			CastValue<class IEnumerationValue<enumType>>(this);
-		return enumValue->GetEnumValue();
+		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType> inline enumType ConvertToEnumValue() {
 		class IEnumerationVariant<enumType>* enumValue =
 			CastValue<class IEnumerationVariant<enumType>>(this);
-		return enumValue->GetEnumValue();
+		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType > inline enumType ConvertToEnumValue() const {
 		const class IEnumerationVariant<enumType>* enumValue =
 			CastValue<class IEnumerationVariant<enumType>>(this);
-		return enumValue->GetEnumValue();
+		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	//convert to value

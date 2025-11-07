@@ -30,7 +30,7 @@ bool CDialogSelectDataType::ShowModal(class_identifier_t& clsid)
 
 #define ICON_SIZE 16
 
-CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, std::set<class_identifier_t>& clsids) :
+CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::set<class_identifier_t>& clsids) :
 	wxDialog(CDocMDIFrame::GetFrame(), wxID_ANY, _("Select data type"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);

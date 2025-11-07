@@ -120,7 +120,7 @@ public:
 		return *it;
 	}
 
-	std::set<class_identifier_t> GetClsidList() const { return m_listTypeClass; }
+	const std::set<class_identifier_t>& GetClsidList() const { return m_listTypeClass; }
 
 	//get special data number 
 	unsigned char GetPrecision() const { return m_typeData.GetPrecision(); }
@@ -353,9 +353,9 @@ public:
 	//////////////////////////////////////////////////
 
 	CTypeDescription() {}
-	CTypeDescription(const class_identifier_t& clsid) : m_listTypeClass({clsid}) {}
-	CTypeDescription(const class_identifier_t& clsid, const CTypeData& descr) : m_listTypeClass({clsid}), m_typeData(descr) {}
-	CTypeDescription(const class_identifier_t& clsid, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass({clsid}), m_typeData(qNumber, qDate, qString) {}
+	CTypeDescription(const class_identifier_t& clsid) : m_listTypeClass({ clsid }) {}
+	CTypeDescription(const class_identifier_t& clsid, const CTypeData& descr) : m_listTypeClass({ clsid }), m_typeData(descr) {}
+	CTypeDescription(const class_identifier_t& clsid, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass({ clsid }), m_typeData(qNumber, qDate, qString) {}
 	CTypeDescription(const std::set<class_identifier_t>& clsids) : m_listTypeClass(clsids) {}
 	CTypeDescription(const std::set<class_identifier_t>& clsids, const CTypeData& descr) : m_listTypeClass(clsids), m_typeData(descr) {}
 	CTypeDescription(const std::set<class_identifier_t>& clsids, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass(clsids), m_typeData(qNumber, qDate, qString) {}
@@ -483,7 +483,7 @@ struct CMetaDescription {
 	std::set<meta_identifier_t> m_listMetaClass;
 public:
 	CMetaDescription() {}
-	CMetaDescription(const meta_identifier_t& id) : m_listMetaClass({id}) {}
+	CMetaDescription(const meta_identifier_t& id) : m_listMetaClass({ id }) {}
 	CMetaDescription(const std::set<meta_identifier_t>& id) : m_listMetaClass(id) {}
 public:
 

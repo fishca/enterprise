@@ -67,20 +67,26 @@ void wxVariantDataAttribute::DoSetFromMetaId(const meta_identifier_t& id)
 
 void wxVariantDataAttribute::DoSetFromTypeId(const CTypeDescription& td)
 {
-	m_typeDesc = td; 
+	m_typeDesc = td;
 	RefreshTypeDesc();
 }
 
 void wxVariantDataAttribute::DoRefreshTypeDesc()
-{ 
+{
 	if (m_ownerProperty != nullptr) {
+
 		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
-		std::set<class_identifier_t> clear_list;
-		for (auto clsid : m_typeDesc.GetClsidList()) {
-			if (!metaData->IsRegisterCtor(clsid)) clear_list.insert(clsid);
+
+		for (const auto& clsid : m_typeDesc.GetClsidList()) {
+
+			if (!metaData->IsRegisterCtor(clsid))
+				m_typeDesc.ClearMetaType(clsid);
+
+			if (m_typeDesc.GetClsidCount() == 0)
+				break;
 		}
-		for (auto clsid : clear_list) { m_typeDesc.ClearMetaType(clsid); }
+
 		if (!m_typeDesc.IsOk()) SetDefaultMetaType();
 	}
 }

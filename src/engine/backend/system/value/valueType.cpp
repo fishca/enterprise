@@ -79,8 +79,8 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 	if (!typeDescription.IsOk())
 		return varValue;
 
-	auto& it = std::find(typeDescription.m_listTypeClass.begin(), typeDescription.m_listTypeClass.end(), varValue.GetClassType());
-	if (it != typeDescription.m_listTypeClass.end()) {
+	auto iterator = std::find(typeDescription.m_listTypeClass.begin(), typeDescription.m_listTypeClass.end(), varValue.GetClassType());
+	if (iterator != typeDescription.m_listTypeClass.end()) {
 		eValueTypes vt = CValue::GetVTByID(varValue.GetClassType());
 		if (vt < eValueTypes::TYPE_REFFER) {
 			if (vt == eValueTypes::TYPE_NUMBER) {

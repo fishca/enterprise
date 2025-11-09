@@ -97,10 +97,7 @@ wxString ITabularSectionDataObject::GetString() const
 
 bool ITabularSectionDataObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
-	if (m_readOnly)
-		return false;
-
-	if (m_metaTable->IsNumberLine(id))
+	if (m_readOnly || m_metaTable->IsNumberLine(id))
 		return false;
 
 	if (!appData->DesignerMode()) {
@@ -125,16 +122,17 @@ bool ITabularSectionDataObject::GetValueByMetaID(const wxDataViewItem& item, con
 		return true;
 	}
 
-	IMetaObjectAttribute* metaAttribute = m_metaTable->FindProp(id);
-	wxASSERT(metaAttribute);
-	if (metaAttribute == nullptr) return false;
 	if (appData->DesignerMode()) {
+		IMetaObjectAttribute* metaAttribute = m_metaTable->FindProp(id);
+		wxASSERT(metaAttribute);
 		pvarMetaVal = metaAttribute->CreateValue();
 		return true;
 	}
+	
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 	if (node != nullptr)
 		return node->GetValue(id, pvarMetaVal);
+	
 	return false;
 }
 

@@ -1104,13 +1104,13 @@ std::vector<CMetaObjectGrid*> IMetaObjectRegisterData::GetObjectTemplates() cons
 
 IMetaObjectAttribute* IMetaObjectRegisterData::FindProp(const meta_identifier_t& id) const
 {
-	for (auto metaObject : m_listMetaObject) {
-		if ((metaObject->GetClassType() == g_metaDefaultAttributeCLSID || metaObject->GetClassType() == g_metaAttributeCLSID || metaObject->GetClassType() == g_metaDimensionCLSID || metaObject->GetClassType() == g_metaResourceCLSID) && metaObject->GetMetaID() == id) {
-			return metaObject->ConvertToType<IMetaObjectAttribute>();
-		}
-	}
+	if (m_metaData == nullptr)
+		return nullptr;
 
-	return nullptr;
+	IMetaObjectAttribute* founded = nullptr;
+	m_metaData->GetMetaObject(founded, id,
+		const_cast<IMetaObjectRegisterData*>(this));
+	return founded;
 }
 
 CRecordKeyObject* IMetaObjectRegisterData::CreateRecordKeyObjectValue()
@@ -2622,14 +2622,18 @@ IValueTable* IRecordSetObject::SaveDataToTable() const
 
 bool IRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
-	if (node != nullptr) {
-		IMetaObjectAttribute* metaAttribute = m_metaObject->FindGenericAttribute(id);
-		wxASSERT(metaAttribute);
-		return node->SetValue(
-			id, metaAttribute->AdjustValue(varMetaVal), true
-		);
+	if (!appData->DesignerMode()) {
+		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		if (node != nullptr) {
+			IMetaObjectAttribute* metaAttribute = m_metaObject->FindProp(id);
+			if (metaAttribute != nullptr) {
+				return node->SetValue(
+					id, metaAttribute->AdjustValue(varMetaVal), true
+				);
+			}
+		}
 	}
+
 	return false;
 }
 

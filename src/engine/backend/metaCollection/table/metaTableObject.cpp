@@ -150,17 +150,13 @@ std::vector<IMetaObjectAttribute*> CMetaObjectTableData::GetObjectAttributes() c
 
 IMetaObjectAttribute* CMetaObjectTableData::FindProp(const meta_identifier_t& id) const
 {
-	for (auto metaObject : m_listMetaObject) {
-		if (metaObject->GetClassType() == g_metaAttributeCLSID && metaObject->GetMetaID() == id) {
-			return metaObject->ConvertToType<IMetaObjectAttribute>();
-		}
-	}
+	if (m_metaData == nullptr)
+		return nullptr;
 
-	if ((*m_propertyNumberLine)->GetMetaID() == id) {
-		return m_propertyNumberLine->GetMetaObject();
-	}
-
-	return nullptr;
+	IMetaObjectAttribute* founded = nullptr;
+	m_metaData->GetMetaObject(founded, id,
+		const_cast<CMetaObjectTableData*>(this));
+	return founded;
 }
 
 //***********************************************************************

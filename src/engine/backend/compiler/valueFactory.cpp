@@ -175,9 +175,9 @@ wxString CValue::GetNameObjectFromVT(eValueTypes valueType, bool upper)
 {
 	if (valueType > eValueTypes::TYPE_REFFER)
 		return wxEmptyString;
-	for (auto& typeCtor : *s_factoryCtors) {	
+	for (auto& typeCtor : *s_factoryCtors) {
 		const IPrimitiveTypeCtor* simpleSingleObject = dynamic_cast<IPrimitiveTypeCtor*>(typeCtor);
-		if (simpleSingleObject != nullptr && 
+		if (simpleSingleObject != nullptr &&
 			valueType == simpleSingleObject->GetValueType()) {
 			return upper ? typeCtor->GetClassName().Upper() :
 				typeCtor->GetClassName();
@@ -188,32 +188,37 @@ wxString CValue::GetNameObjectFromVT(eValueTypes valueType, bool upper)
 
 eValueTypes CValue::GetVTByID(const class_identifier_t& clsid)
 {
-	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(clsid);
+	if (clsid == g_valueUndefinedCLSID)
+		return eValueTypes::TYPE_EMPTY;
+	else if (clsid == g_valueBooleanCLSID)
+		return eValueTypes::TYPE_BOOLEAN;
+	else if (clsid == g_valueNumberCLSID)
+		return eValueTypes::TYPE_NUMBER;
+	else if (clsid == g_valueDateCLSID)
+		return eValueTypes::TYPE_DATE;
+	else if (clsid == g_valueStringCLSID)
+		return eValueTypes::TYPE_STRING;
+	else if (clsid == g_valueNullCLSID)
+		return eValueTypes::TYPE_NULL;
 
-	if (typeCtor != nullptr) {
-		const IPrimitiveTypeCtor* typePrimitiveCtor = dynamic_cast<const IPrimitiveTypeCtor*>(typeCtor);
-		if (typePrimitiveCtor == nullptr) return eValueTypes::TYPE_EMPTY;
-		return typePrimitiveCtor->GetValueType();
-	}
 	return eValueTypes::TYPE_EMPTY;
 }
 
 class_identifier_t CValue::GetIDByVT(const eValueTypes& valueType)
 {
-	auto it = std::find_if(s_factoryCtors->begin(), s_factoryCtors->end(), [valueType](IAbstractTypeCtor* typeCtor) {
-		IPrimitiveTypeCtor* simpleSingleObject = dynamic_cast<IPrimitiveTypeCtor*>(typeCtor);
-		if (simpleSingleObject) {
-			return valueType == simpleSingleObject->GetValueType();
-		}
-		return simpleSingleObject ?
-			simpleSingleObject->GetValueType() == eValueTypes::TYPE_EMPTY : false;
-		}
-	);
-	if (it != s_factoryCtors->end()) {
-		IAbstractTypeCtor* typeCtor(*it);
-		wxASSERT(typeCtor);
-		return typeCtor->GetClassType();
-	}
+	if (valueType == eValueTypes::TYPE_EMPTY)
+		return g_valueUndefinedCLSID;
+	else if (valueType == eValueTypes::TYPE_BOOLEAN)
+		return g_valueBooleanCLSID;
+	else if (valueType == eValueTypes::TYPE_NUMBER)
+		return g_valueNumberCLSID;
+	else if (valueType == eValueTypes::TYPE_DATE)
+		return g_valueDateCLSID;
+	else if (valueType == eValueTypes::TYPE_STRING)
+		return g_valueStringCLSID;
+	else if (valueType == eValueTypes::TYPE_NULL)
+		return g_valueNullCLSID;
+
 	return 0;
 }
 

@@ -208,6 +208,13 @@ eValueTypes CValue::GetVTByID(const class_identifier_t& clsid)
 	else if (clsid == g_valueNullCLSID)
 		return eValueTypes::TYPE_NULL;
 
+	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(clsid);
+
+	if (typeCtor != nullptr && typeCtor->GetObjectTypeCtor() == eCtorObjectType_object_enum)
+		return eValueTypes::TYPE_ENUM;
+	else if (typeCtor != nullptr)
+		return eValueTypes::TYPE_VALUE;
+
 	return eValueTypes::TYPE_EMPTY;
 }
 

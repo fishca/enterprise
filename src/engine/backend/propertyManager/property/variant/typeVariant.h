@@ -77,6 +77,7 @@ public:
 protected:
 
 	const IBackendTypeConfigFactory* m_ownerProperty = nullptr;
+	unsigned int m_object_version = 0;
 	CTypeDescription m_typeDesc;
 };
 

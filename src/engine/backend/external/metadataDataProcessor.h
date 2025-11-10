@@ -58,6 +58,12 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
+	//factory version 
+	virtual unsigned int GetFactoryCountChanges() const {
+		return m_factoryCtorCountChanges +
+			commonMetaData != nullptr ? commonMetaData->GetFactoryCountChanges() : 0;
+	}
+
 	//metaData 
 	virtual bool LoadDatabase();
 	virtual bool SaveDatabase();

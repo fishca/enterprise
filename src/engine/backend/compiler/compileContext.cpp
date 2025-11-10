@@ -123,7 +123,7 @@ void CCompileContext::PushVariable(const wxString& strVarName, const wxString& s
 	currentVariable->m_bExport = exportVar;
 	currentVariable->m_bContext = contextVar;
 
-	currentVariable->m_strContext = stringUtils::MakeUpper(strContextVar);  //variable for which the attribute is called
+	currentVariable->m_strContext = strContextVar;  //variable for which the attribute is called
 
 	currentVariable->m_bTempVar = tempVar;
 	currentVariable->m_strType = typeVar;
@@ -144,7 +144,7 @@ void CCompileContext::PushFunction(const wxString& strFuncName, const wxString& 
 	contextFunction->m_bContext = true;
 	contextFunction->m_bExport = true;
 
-	contextFunction->m_strContext = stringUtils::MakeUpper(strContextVar); //variable for which the attribute is called
+	contextFunction->m_strContext = strContextVar; //variable for which the attribute is called
 
 	if (argCount > 0) contextFunction->m_listParam.reserve(argCount);
 

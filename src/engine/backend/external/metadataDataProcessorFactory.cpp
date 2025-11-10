@@ -1,9 +1,7 @@
 #include "metadataDataProcessor.h"
-#include "backend/appData.h"
 
 #include "backend/objCtor.h"
 #include "backend/metadataConfiguration.h"
-
 
 CValue* CMetaDataDataProcessor::CreateObjectRef(const class_identifier_t& clsid, CValue** paParams, const long lSizeArray) const
 {
@@ -109,7 +107,7 @@ IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const IMetaObject* metaV
 			metaValue == typeCtor->GetMetaObject();
 		}
 	);
-	
+
 	if (it != m_factoryCtors.end()) return *it;
 	return commonMetaData->GetTypeCtor(metaValue, refType);
 }
@@ -120,7 +118,7 @@ IAbstractTypeCtor* CMetaDataDataProcessor::GetAvailableCtor(const wxString& clas
 		return stringUtils::CompareString(className, typeCtor->GetClassName());
 		}
 	);
-	if (it != m_factoryCtors.end())  return *it;
+	if (it != m_factoryCtors.end()) return *it;
 	return commonMetaData->GetAvailableCtor(className);
 }
 
@@ -129,7 +127,7 @@ IAbstractTypeCtor* CMetaDataDataProcessor::GetAvailableCtor(const class_identifi
 	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IMetaValueTypeCtor* typeCtor) {
 		return clsid == typeCtor->GetClassType(); }
 	);
-	if (it != m_factoryCtors.end())  return *it;
+	if (it != m_factoryCtors.end()) return *it;
 	return commonMetaData->GetAvailableCtor(clsid);
 }
 

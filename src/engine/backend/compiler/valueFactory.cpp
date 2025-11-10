@@ -7,6 +7,7 @@
 #include "backend/backend_exception.h"
 
 static std::set<IAbstractTypeCtor*>* s_factoryCtors = nullptr;
+static std::atomic<unsigned int> s_factoryCtorCountChanges = 0;
 
 //*******************************************************************************
 //*                      Support dynamic object                                 *
@@ -57,6 +58,8 @@ void CValue::RegisterCtor(IAbstractTypeCtor* typeCtor)
 		wxLogDebug("* Register class '%s' with clsid '%s:%llu' ", typeCtor->GetClassName(), clsid_to_string(typeCtor->GetClassType()), typeCtor->GetClassType());
 #endif
 
+		s_factoryCtorCountChanges++;
+
 		typeCtor->CallEvent(eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register);
 		s_factoryCtors->emplace(typeCtor);
 	}
@@ -73,6 +76,8 @@ void CValue::UnRegisterCtor(IAbstractTypeCtor*& typeCtor)
 #endif
 		s_factoryCtors->erase(typeCtor);
 		wxDELETE(typeCtor);
+
+		s_factoryCtorCountChanges++;
 	}
 	else {
 		CBackendException::Error("Object '%s' is not exist", typeCtor->GetClassName());
@@ -93,6 +98,8 @@ void CValue::UnRegisterCtor(const wxString& className)
 #endif
 		s_factoryCtors->erase(typeCtor);
 		wxDELETE(typeCtor);
+
+		s_factoryCtorCountChanges++;
 	}
 	else {
 		CBackendException::Error("Object '%s' is not exist", className);
@@ -266,3 +273,12 @@ std::vector<IAbstractTypeCtor*> CValue::GetListCtorsByType(eCtorObjectType objec
 	);
 	return retVector;
 }
+
+//*******************************************************************************
+
+unsigned int CValue::GetFactoryCountChanges()
+{
+	return s_factoryCtorCountChanges;
+}
+
+//*******************************************************************************

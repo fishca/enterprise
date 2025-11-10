@@ -78,13 +78,19 @@ void wxVariantDataAttribute::DoRefreshTypeDesc()
 		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 
-		for (const auto& clsid : m_typeDesc.GetClsidList()) {
+		const unsigned int object_version = metaData->GetFactoryCountChanges();
+		if (object_version != m_object_version) {
 
-			if (!metaData->IsRegisterCtor(clsid))
-				m_typeDesc.ClearMetaType(clsid);
+			for (const auto& clsid : m_typeDesc.GetClsidList()) {
 
-			if (m_typeDesc.GetClsidCount() == 0)
-				break;
+				if (!metaData->IsRegisterCtor(clsid))
+					m_typeDesc.ClearMetaType(clsid);
+
+				if (m_typeDesc.GetClsidCount() == 0)
+					break;
+			}
+
+			m_object_version = object_version;
 		}
 
 		if (!m_typeDesc.IsOk()) SetDefaultMetaType();

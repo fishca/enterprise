@@ -1372,6 +1372,12 @@ public:
 		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal); //setting attribute
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
+		//Get ref class 
+		virtual class_identifier_t GetClassType() const;
+
+		virtual wxString GetClassName() const;
+		virtual wxString GetString() const;
+
 		friend class IRecordSetObject;
 	private:
 		IRecordSetObject* m_ownerTable;

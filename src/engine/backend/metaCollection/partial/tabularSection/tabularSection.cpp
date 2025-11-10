@@ -505,4 +505,3 @@ void ITabularSectionDataObject::PrepareNames() const
 
 SYSTEM_TYPE_REGISTER(ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection, "tabularSectionColumn", string_to_clsid("VL_TSCL"));
 SYSTEM_TYPE_REGISTER(ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo, "tabularSectionColumnInfo", string_to_clsid("VL_CI"));
-SYSTEM_TYPE_REGISTER(ITabularSectionDataObject::CTabularSectionDataObjectReturnLine, "tabularSectionRow", string_to_clsid("VL_TBCR"));

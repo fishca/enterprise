@@ -12,6 +12,7 @@ enum eCtorMetaType {
 	eCtorMetaType_TabularSection,
 	eCtorMetaType_TabularSection_String,
 	eCtorMetaType_RecordSet,
+	eCtorMetaType_RecordSet_String,
 	eCtorMetaType_RecordKey,
 	eCtorMetaType_RecordManager
 };
@@ -33,6 +34,8 @@ enum eCtorMetaType {
 #define prefixRecordKey		wxT("RecordKey.")
 #define prefixRecordManager wxT("RecordManager.")
 #define prefixRecordSet		wxT("RecordSet.")
+
+#define prefixRecordSetStr	wxT("RecordSetString.")
 
 class IMetaValueTypeCtor : public IAbstractTypeCtor {
 public:
@@ -437,5 +440,34 @@ protected:
 	m_metaData->RegisterCtor(new CMetaValueRecordSetTypeCtor(this))
 #define unregisterRecordSet()\
 	m_metaData->UnRegisterCtor(generate_class_name(prefixRecordSet))
+
+//record set string class
+class CMetaValueRecordSetStringTypeCtor : public IMetaValueTypeCtor {
+	class_identifier_t m_classType;
+public:
+
+	CMetaValueRecordSetStringTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+		m_classType = string_to_clsid(wxT("P_") +
+			stringUtils::IntToStr(m_metaObject->GetMetaID()));
+	}
+
+	virtual wxString GetClassName() const {
+		return m_metaObject->GetClassName() + prefixRecordSetStr + m_metaObject->GetName();
+	}
+
+	virtual class_identifier_t GetClassType() const { return m_classType; }
+	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
+	virtual CValue* CreateObject() const { return nullptr; }
+	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_RecordSet_String; }
+
+protected:
+	IMetaObjectRegisterData* m_metaObject;
+};
+
+#define registerRecordSet_String()\
+	m_metaData->RegisterCtor(new CMetaValueRecordSetStringTypeCtor(this))
+#define unregisterRecordSet_String()\
+	m_metaData->UnRegisterCtor(generate_class_name(prefixRecordSetStr))
 
 #endif 

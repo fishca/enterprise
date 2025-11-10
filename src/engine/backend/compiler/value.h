@@ -534,6 +534,9 @@ public:
 	static void OnRegisterObject(const wxString& className, IAbstractTypeCtor* typeCtor) {}
 	static void OnUnRegisterObject(const wxString& className) {}
 
+	//factory version 
+	static unsigned int GetFactoryCountChanges();
+
 public:
 
 	//special copy & move function
@@ -757,6 +760,7 @@ public:
 #pragma endregion
 
 private:
+
 	unsigned int m_refCount;
 };
 #include "backend/value_ptr.h"

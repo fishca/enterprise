@@ -1,4 +1,4 @@
-#include "backend/metaData.h"
+#include "backend/metadataConfiguration.h"
 #include "backend/metaCollection/partial/dataReport.h"
 #include "backend/moduleManager/moduleManagerExt.h"
 
@@ -54,6 +54,12 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType() const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
+
+	//factory version 
+	virtual unsigned int GetFactoryCountChanges() const {
+		return m_factoryCtorCountChanges +
+			commonMetaData != nullptr ? commonMetaData->GetFactoryCountChanges() : 0;
+	}
 
 	//metaData 
 	virtual bool LoadDatabase();

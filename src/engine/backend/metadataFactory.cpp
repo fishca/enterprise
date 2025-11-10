@@ -1,6 +1,5 @@
 #include "metaData.h"
 #include "backend/objCtor.h"
-#include "backend/appData.h"
 
 CValue* IMetaData::CreateObjectRef(const class_identifier_t& clsid, CValue** paParams, const long lSizeArray) const
 {
@@ -48,6 +47,8 @@ void IMetaData::RegisterCtor(IMetaValueTypeCtor* typeCtor)
 
 		typeCtor->CallEvent(eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register);
 		m_factoryCtors.emplace(typeCtor);
+
+		m_factoryCtorCountChanges++;
 	}
 }
 
@@ -62,6 +63,8 @@ void IMetaData::UnRegisterCtor(IMetaValueTypeCtor*& typeCtor)
 #endif
 		m_factoryCtors.erase(typeCtor);
 		wxDELETE(typeCtor);
+
+		m_factoryCtorCountChanges++;
 	}
 	else {
 		CBackendException::Error("Object '%s' is not exist", typeCtor->GetClassName());
@@ -80,6 +83,8 @@ void IMetaData::UnRegisterCtor(const wxString& className)
 #endif
 		m_factoryCtors.erase(typeCtor);
 		wxDELETE(typeCtor);
+
+		m_factoryCtorCountChanges++;
 	}
 	else {
 		CBackendException::Error("Object '%s' is not exist", className);

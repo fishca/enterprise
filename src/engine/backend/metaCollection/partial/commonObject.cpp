@@ -1016,6 +1016,8 @@ bool IMetaObjectRegisterData::OnBeforeRunMetaObject(int flags)
 	registerRegList();
 	registerRecordKey();
 	registerRecordSet();
+	registerRecordSet_String();
+
 	registerRecordManager();
 
 	return IMetaObject::OnBeforeRunMetaObject(flags);
@@ -1039,6 +1041,8 @@ bool IMetaObjectRegisterData::OnAfterCloseMetaObject()
 	unregisterRegList();
 	unregisterRecordKey();
 	unregisterRecordSet();
+	unregisterRecordSet_String();
+	
 	unregisterRecordManager();
 
 	return IMetaObject::OnAfterCloseMetaObject();
@@ -2865,6 +2869,41 @@ bool IRecordSetObject::CRecordSetObjectRegisterReturnLine::GetPropVal(const long
 
 ////////////////////////////////////////////////////////////////////////////
 
+class_identifier_t IRecordSetObject::CRecordSetObjectRegisterReturnLine::GetClassType() const
+{
+	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	IMetaData* metaData = metaTable->GetMetaData();
+	wxASSERT(metaData);
+	IMetaValueTypeCtor* clsFactory =
+		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_RecordSet_String);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassType();
+}
+
+wxString IRecordSetObject::CRecordSetObjectRegisterReturnLine::GetClassName() const
+{
+	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	IMetaData* metaData = metaTable->GetMetaData();
+	wxASSERT(metaData);
+	IMetaValueTypeCtor* clsFactory =
+		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_RecordSet_String);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
+wxString IRecordSetObject::CRecordSetObjectRegisterReturnLine::GetString() const
+{
+	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	IMetaData* metaData = metaTable->GetMetaData();
+	wxASSERT(metaData);
+	IMetaValueTypeCtor* clsFactory =
+		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_RecordSet_String);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
@@ -3020,7 +3059,6 @@ bool IRecordSetObject::CRecordSetObjectRegisterKeyValue::CRecordSetObjectRegiste
 
 SYSTEM_TYPE_REGISTER(IRecordSetObject::CRecordSetObjectRegisterColumnCollection, "recordSetRegisterColumn", string_to_clsid("VL_RSCL"));
 SYSTEM_TYPE_REGISTER(IRecordSetObject::CRecordSetObjectRegisterColumnCollection::CValueRecordSetRegisterColumnInfo, "recordSetRegisterColumnInfo", string_to_clsid("VL_RSCI"));
-SYSTEM_TYPE_REGISTER(IRecordSetObject::CRecordSetObjectRegisterReturnLine, "recordSetRegisterRow", string_to_clsid("VL_RSCR"));
 
 SYSTEM_TYPE_REGISTER(IRecordSetObject::CRecordSetObjectRegisterKeyValue, "recordSetRegisterKey", string_to_clsid("VL_RSCK"));
 SYSTEM_TYPE_REGISTER(IRecordSetObject::CRecordSetObjectRegisterKeyValue::CRecordSetObjectRegisterKeyDescriptionValue, "recordSetRegisterKeyDescription", string_to_clsid("VL_RDVL"));

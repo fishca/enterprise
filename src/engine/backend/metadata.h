@@ -113,6 +113,11 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
+	//factory version 
+	virtual unsigned int GetFactoryCountChanges() const {
+		return m_factoryCtorCountChanges + CValue::GetFactoryCountChanges();
+	}
+
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag) = 0;
 	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
@@ -170,6 +175,7 @@ protected:
 
 	//custom types
 	std::set<IMetaValueTypeCtor*> m_factoryCtors;
+	std::atomic<unsigned int> m_factoryCtorCountChanges = 0;
 
 private:
 	IBackendMetadataTree* m_metaTree;

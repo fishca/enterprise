@@ -85,6 +85,19 @@ void CRecordDataObjectDocument::CRecorderRegisterDocument::ClearRecordSet()
 	m_records.clear();
 }
 
+void CRecordDataObjectDocument::CRecorderRegisterDocument::RefreshRecordSet()
+{
+	for (auto& pair : m_records) {
+		IRecordSetObject* record = pair.second;
+		wxASSERT(record);
+		
+		IMetaObjectRegisterData *obj = record->GetMetaObject(); 
+		wxASSERT(obj);
+		IBackendValueForm* backendFrame = IBackendValueForm::FindFormBySourceUniqueKey(obj->GetGuid());
+		if (backendFrame != nullptr) backendFrame->UpdateForm();
+	}
+}
+
 CRecordDataObjectDocument::CRecorderRegisterDocument::CRecorderRegisterDocument(CRecordDataObjectDocument* currentDoc) :
 	CValue(eValueTypes::TYPE_VALUE), m_document(currentDoc), m_methodHelper(new CMethodHelper())
 {
@@ -215,7 +228,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 		else if (db_query == nullptr)
 			CBackendException::Error(_("database is not open!"));
 
-		if (!CBackendException::IsEvalMode()) 
+		if (!CBackendException::IsEvalMode())
 		{
 			if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
 				CValue deletionMark = false;
@@ -235,7 +248,10 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 					db_query_active_transaction.BeginTransaction();
 					{
 						CValue cancel = false;
-						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel, CValue::CreateEnumObject<CValueEnumDocumentWriteMode>(writeMode), CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
+						m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel,
+							CValue::CreateEnumObject<CValueEnumDocumentWriteMode>(writeMode),
+							CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode)
+						);
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
@@ -254,7 +270,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						}
 					}
 
-					bool newObject = CRecordDataObjectDocument::IsNewObject();
+					const bool newObject = CRecordDataObjectDocument::IsNewObject();
 
 					//set current date if empty 
 					CMetaObjectDocument* dataRef = nullptr;
@@ -276,8 +292,12 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 					}
 
 					if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
+
 						CValue cancel = false;
-						m_procUnit->CallAsProc(wxT("Posting"), cancel, CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode));
+						m_procUnit->CallAsProc(wxT("Posting"), cancel,
+							CValue::CreateEnumObject<CValueEnumDocumentPostingMode>(postingMode)
+						);
+
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
@@ -320,8 +340,10 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 
 					if (newObject && valueForm != nullptr) valueForm->NotifyCreate(GetReference());
 					else if (valueForm != nullptr) valueForm->NotifyChange(GetReference());
+
+					m_registerRecords->RefreshRecordSet();
 				}
-				
+
 				m_objModified = false;
 			}
 		}
@@ -339,7 +361,7 @@ bool CRecordDataObjectDocument::DeleteObject()
 		else if (db_query == nullptr)
 			CBackendException::Error(_("database is not open!"));
 
-		if (!CBackendException::IsEvalMode()) 
+		if (!CBackendException::IsEvalMode())
 		{
 			CTransactionGuard db_query_active_transaction = db_query;
 			{

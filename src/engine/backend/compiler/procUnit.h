@@ -89,13 +89,13 @@ public:
 	long FindProcedure(const wxString& strMethodName, bool bError = false, int bExportOnly = 0) const;
 
 	template <typename ...Types>
-	inline void CallAsProc(const wxString& funcName, Types&... args) {
+	inline void CallAsProc(const wxString& funcName, Types&&... args) {
 		CValue* ppParams[] = { &args..., nullptr };
 		CallAsProc(funcName, ppParams, (const long)sizeof ...(args));
 	}
 
 	template <typename ...Types>
-	inline void CallAsFunc(const wxString& funcName, CValue& pvarRetValue, Types&... args) {
+	inline void CallAsFunc(const wxString& funcName, CValue& pvarRetValue, Types&&... args) {
 		CValue* ppParams[] = { &args..., nullptr };
 		CallAsFunc(funcName, pvarRetValue, ppParams, (const long)sizeof ...(args));
 	}

@@ -71,10 +71,6 @@ protected:
 
 	template <typename valType>
 	class CEnumerationVariant : public IEnumerationVariant<valType> {
-		wxString m_name;
-		wxString m_description;
-		class_identifier_t m_clsid;
-		valType m_value;
 	public:
 
 		CEnumerationVariant(const valType& v, const class_identifier_t& clsid) : IEnumerationVariant(), m_value(v), m_clsid(clsid) {}
@@ -139,6 +135,12 @@ protected:
 		//type conversion
 		virtual wxString GetString() const override { return m_name; }
 		virtual number_t GetNumber() const override { return m_value; }
+
+	private:
+		wxString m_name;
+		wxString m_description;
+		class_identifier_t m_clsid;
+		valType m_value;
 	};
 
 	virtual wxString GetEnumName(const valT& v) const { return m_listEnumData.at(v); }
@@ -210,7 +212,18 @@ public:
 	virtual void CreateEnumeration() = 0;
 
 	CEnumerationVariant<valT>* CreateEnumVariantValue(const valT& v) const {
-		return new CEnumerationVariant(v, CValue::GetClassType());
+
+		CEnumerationVariant<valT>* enumValue = new CEnumerationVariant<valT>(v, CValue::GetClassType());
+		if (enumValue != nullptr) {
+			enumValue->CreateEnumeration(
+				GetEnumName(v),
+				GetEnumDescription(v),
+				v
+			);
+			return enumValue;
+		}
+
+		return nullptr;
 	}
 
 	//initialize enumeration 

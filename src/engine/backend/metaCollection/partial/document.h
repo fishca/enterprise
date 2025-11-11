@@ -166,6 +166,8 @@ public:
 		bool DeleteRecordSet();
 		void ClearRecordSet();
 
+		void RefreshRecordSet();
+
 		CRecorderRegisterDocument(CRecordDataObjectDocument* currentDoc = nullptr);
 		virtual ~CRecorderRegisterDocument();
 

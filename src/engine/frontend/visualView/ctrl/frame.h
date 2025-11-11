@@ -226,7 +226,7 @@ public:
 
 	// call current event
 	template <typename ...Types>
-	bool CallAsEvent(const IEvent* event, Types&... args) {
+	bool CallAsEvent(const IEvent* event, Types&&... args) {
 		if (event == nullptr)
 			return false;
 		const wxString& eventValue = event->GetValue();
@@ -251,7 +251,7 @@ public:
 
 	//call current form
 	template <typename ...Types>
-	bool CallAsEvent(const wxString& functionName, Types&... args) {
+	bool CallAsEvent(const wxString& functionName, Types&&... args) {
 		CProcUnit* formProcUnit = GetFormProcUnit();
 		if (formProcUnit != nullptr && !functionName.IsEmpty()) {
 			try {

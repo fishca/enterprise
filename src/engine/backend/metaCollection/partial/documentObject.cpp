@@ -378,9 +378,9 @@ bool CRecordDataObjectDocument::DeleteObject()
 						}
 					}
 
-					if (!DeleteData()) {
+					if (!m_registerRecords->DeleteRecordSet()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to delete object in db!"));
+						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
 					}
 
@@ -395,10 +395,17 @@ bool CRecordDataObjectDocument::DeleteObject()
 						}
 					}
 
+					if (!DeleteData()) {
+						db_query_active_transaction.RollBackTransaction();
+						CSystemFunction::Raise(_("failed to delete object in db!"));
+						return false;
+					}
+
 					db_query_active_transaction.CommitTransaction();
 
 					if (valueForm != nullptr) valueForm->NotifyDelete(GetReference());
 
+					m_registerRecords->RefreshRecordSet();
 				}
 			}
 		}

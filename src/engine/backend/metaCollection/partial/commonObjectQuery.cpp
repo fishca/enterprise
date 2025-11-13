@@ -1391,7 +1391,7 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
 
 		db_query->RunQuery(
-			wxT("INSERT INTO %s (meta_guid, prefix, number) ON CONFLICT(meta_guid, prefix) DO UPDATE SET meta_guid = excluded.meta_guid AND prefix = excluded.prefix;"),
+			wxT("INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) ON CONFLICT(meta_guid, prefix) DO UPDATE SET meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
 			sequence_table,
 			metaObject->GetDocPath(),
 			wxEmptyString, //prefix

@@ -436,21 +436,23 @@ void CApplicationData::CreateTableSequence()
 {
 	if (!db_query->TableExists(sequence_table)) {
 
-		db_query->RunQuery(wxT("create table %s ("
-			"meta_guid         VARCHAR(36)   NOT NULL PRIMARY KEY,"
+		db_query->RunQuery(wxT("create table %s ("	
+			"meta_guid         VARCHAR(36)   NOT NULL,"
 			"prefix			   VARCHAR(24)   NOT NULL,"
-			"number            INTEGER       NOT NULL);"),
+			"number            INTEGER       NOT NULL,"		
+			"primary key (meta_guid, prefix));"),
+			
 			sequence_table);
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 			db_query->RunQuery(
-				wxT("create index if not exists sequence_index on %s (meta_guid, prefix, number);"),
+				wxT("create index if not exists sequence_index on %s (meta_guid, prefix);"),
 				sequence_table
 			);
 		}
 		else {
 			db_query->RunQuery(
-				wxT("create index sequence_index on %s (meta_guid, prefix, number);"),
+				wxT("create index sequence_index on %s (meta_guid, prefix);"),
 				sequence_table
 			);
 		}

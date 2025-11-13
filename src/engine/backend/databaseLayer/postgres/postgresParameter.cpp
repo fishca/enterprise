@@ -12,12 +12,12 @@ CPostgresParameter::CPostgresParameter(const wxString& strValue) : m_nParameterT
 
 CPostgresParameter::CPostgresParameter(int nValue) : m_nParameterType(CPostgresParameter::PARAM_INT)
 {
-	m_strValue = wxString::Format(_("%d"), nValue);
+	m_strValue = wxString::Format(wxT("%d"), nValue);
 }
 
 CPostgresParameter::CPostgresParameter(double dblValue) : m_nParameterType(CPostgresParameter::PARAM_DOUBLE)
 {
-	m_strValue = wxString::Format(_("%f"), dblValue);
+	m_strValue = wxString::Format(wxT("%f"), dblValue);
 }
 
 CPostgresParameter::CPostgresParameter(const number_t &dblValue) : m_nParameterType(CPostgresParameter::PARAM_NUMBER)
@@ -27,12 +27,12 @@ CPostgresParameter::CPostgresParameter(const number_t &dblValue) : m_nParameterT
 
 CPostgresParameter::CPostgresParameter(bool bValue) : m_nParameterType(CPostgresParameter::PARAM_BOOL)
 {
-	m_strValue = wxString::Format(_("%d"), bValue);
+	m_strValue = wxString::Format(wxT("%d"), bValue);
 }
 
 CPostgresParameter::CPostgresParameter(const wxDateTime& dateValue) : m_nParameterType(CPostgresParameter::PARAM_DATETIME)
 {
-	m_strDateValue = dateValue.Format(_("%Y-%m-%d %H:%M:%S"));
+	m_strDateValue = dateValue.Format(wxT("%Y-%m-%d %H:%M:%S"));
 	m_nBufferLength = m_strDateValue.Length();
 }
 
@@ -64,17 +64,14 @@ const void* CPostgresParameter::GetDataPtr()
 		pReturn = m_CharBufferValue;
 		break;
 	case CPostgresParameter::PARAM_INT:
-		//pReturn = &m_nValue;
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
 	case CPostgresParameter::PARAM_DOUBLE:
-		//pReturn = &m_dblValue;
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
 	case CPostgresParameter::PARAM_NUMBER:
-		//pReturn = &m_dblValue;
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
@@ -83,7 +80,6 @@ const void* CPostgresParameter::GetDataPtr()
 		pReturn = m_CharBufferValue;
 		break;
 	case CPostgresParameter::PARAM_BOOL:
-		//pReturn = &m_bValue;
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
@@ -97,6 +93,7 @@ const void* CPostgresParameter::GetDataPtr()
 		pReturn = nullptr;
 		break;
 	};
+	
 	return pReturn;
 }
 

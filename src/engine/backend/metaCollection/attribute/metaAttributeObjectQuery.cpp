@@ -291,7 +291,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return retCode;
 
-			retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RRRef %s;", tableName, fieldName, db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL ? wxString::Format(wxT("BIT(%i)"), reference_size_t) : wxString::Format(wxT("BINARY(%i)"), reference_size_t));
+			retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RRRef %s;", tableName, fieldName, db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL ? wxT("BYTEA") : wxString::Format(wxT("BINARY(%i)"), reference_size_t));
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return retCode;
 		}
@@ -420,7 +420,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RTRef %s;", tableName, fieldName, "BIGINT");
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
-				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RRRef %s;", tableName, fieldName, db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL ? wxString::Format(wxT("BIT(%i)"), reference_size_t) : wxString::Format(wxT("BINARY(%i)"), reference_size_t));
+				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RRRef %s;", tableName, fieldName, db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL ? wxT("BYTEA") : wxString::Format(wxT("BINARY(%i)"), reference_size_t));
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
 			}

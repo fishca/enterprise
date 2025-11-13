@@ -53,18 +53,17 @@ public:
 	bool IsBinary();
 
 private:
+	
 	int m_nParameterType;
 
 	// A union would probably be better here
 	wxString m_strValue;
-	int m_nValue;
-	double m_dblValue;
+	
 	wxString m_strDateValue;
-	bool m_bValue;
 	wxMemoryBuffer m_BufferValue;
 	wxCharBuffer m_CharBufferValue;
+	
 	long m_nBufferLength;
-
 };
 
 

@@ -60,20 +60,30 @@ int CPostgresPreparedStatementWrapper::GetParameterCount()
 {
 	int nParameterCount = 0;
 	bool bInStringLiteral = false;
+
 	unsigned int len = m_strSQL.length();
+
+#ifndef _WXSTRING_COMPARE_STRING_
+	const auto& stl_strSQL = m_strSQL.ToStdWstring();
+#endif // !_WXSTRING_COMPARE_STRING_
+
 	for (unsigned int i = 0; i < len; i++)
 	{
-		wxChar character = m_strSQL[i];
-		if ('\'' == character)
-		{
+#ifndef _WXSTRING_COMPARE_STRING_
+		const auto& c = stl_strSQL.at(i);
+#else
+		const auto& c = m_strSQL.at(i);
+#endif
+
+		if (wxT('\'') == c) {
 			// Signify that we are inside a string literal inside the SQL
 			bInStringLiteral = !bInStringLiteral;
 		}
-		else if (('?' == character) && !bInStringLiteral)
-		{
+		else if ((wxT('?') == c) && !bInStringLiteral) {
 			nParameterCount++;
 		}
 	}
+
 	return nParameterCount;
 }
 
@@ -103,7 +113,7 @@ int CPostgresPreparedStatementWrapper::DoRunQuery()
 		}
 		m_pInterface->GetPQclear()(pResult);
 	}
-	
+
 	delete[]paramValues;
 	delete[]paramLengths;
 	delete[]paramFormats;

@@ -35,17 +35,17 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer()
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
 
 #endif
 
-	m_strServer = _("");  // assume embedded database in this case
-	m_strUser = _("sysdba");
-	m_strPassword = _("masterkey");
-	m_strDatabase = _("");
+	m_strServer = wxT("");  // assume embedded database in this case
+	m_strUser = wxT("sysdba");
+	m_strPassword = wxT("masterkey");
+	m_strDatabase = wxT("");
 	m_strRole = wxEmptyString;
 }
 
@@ -66,16 +66,16 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase)
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
 
 #endif
 
-	m_strServer = _("");  // assume embedded database in this case
-	m_strUser = _("sysdba");
-	m_strPassword = _("masterkey");
+	m_strServer = wxT("");  // assume embedded database in this case
+	m_strUser = wxT("sysdba");
+	m_strPassword = wxT("masterkey");
 	m_strRole = wxEmptyString;
 
 	Open(strDatabase);
@@ -97,13 +97,13 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase, cons
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
 #endif
 
-	m_strServer = _("");  // assume embedded database in this case
+	m_strServer = wxT("");  // assume embedded database in this case
 	m_strUser = strUser;
 	m_strPassword = strPassword;
 	m_strRole = wxEmptyString;
@@ -127,7 +127,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -157,7 +157,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -186,7 +186,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading Firebird library"));
+		SetErrorMessage(_("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -254,7 +254,7 @@ bool CFirebirdDatabaseLayer::Open()
 		strDatabaseUrl = m_strDatabase; // Embedded database, just supply the file name
 	}
 	else {
-		strDatabaseUrl = m_strServer + _(":") + m_strDatabase;
+		strDatabaseUrl = m_strServer + wxT(":") + m_strDatabase;
 	}
 
 	wxCharBuffer urlBuffer = ConvertToUnicodeStream(strDatabaseUrl);
@@ -841,7 +841,7 @@ bool CFirebirdDatabaseLayer::TableExists(const wxString& table)
 	{
 #endif
 		wxString tableUpperCase = table.Upper();
-		wxString query = _("SELECT COUNT(*) FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NULL AND RDB$RELATION_NAME=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NULL AND RDB$RELATION_NAME=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -907,7 +907,7 @@ bool CFirebirdDatabaseLayer::ViewExists(const wxString& view)
 	{
 #endif
 		wxString viewUpperCase = view.Upper();
-		wxString query = _("SELECT COUNT(*) FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NOT NULL AND RDB$RELATION_NAME=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NOT NULL AND RDB$RELATION_NAME=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -968,7 +968,7 @@ wxArrayString CFirebirdDatabaseLayer::GetTables()
 	try
 	{
 #endif
-		wxString query = _("SELECT RDB$RELATION_NAME FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NULL");
+		wxString query = wxT("SELECT RDB$RELATION_NAME FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NULL");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -1007,7 +1007,7 @@ wxArrayString CFirebirdDatabaseLayer::GetViews()
 	try
 	{
 #endif
-		wxString query = _("SELECT RDB$RELATION_NAME FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NOT NULL");
+		wxString query = wxT("SELECT RDB$RELATION_NAME FROM RDB$RELATIONS WHERE RDB$SYSTEM_FLAG=0 AND RDB$VIEW_BLR IS NOT NULL");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -1051,7 +1051,7 @@ wxArrayString CFirebirdDatabaseLayer::GetColumns(const wxString& table)
 	{
 #endif
 		wxString tableUpperCase = table.Upper();
-		wxString query = _("SELECT RDB$FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME=?;");
+		wxString query = wxT("SELECT RDB$FIELD_NAME FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -1118,14 +1118,14 @@ wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* 
 		long* pVector = (long*)status;
 		pInterface->GetFbInterpret()(szError, 512, (const ISC_STATUS**)&pVector);
 
-		strReturn = wxString::Format(_("%s\n"), szError);
+		strReturn = wxString::Format(wxT("%s\n"), szError);
 		while (pInterface->GetFbInterpret()(szError, 512, (const ISC_STATUS**)&pVector))
 		{
-			strReturn += wxString::Format(_("%s\n"), szError);
+			strReturn += wxString::Format(wxT("%s\n"), szError);
 		}
 
 		pInterface->GetIscSqlInterprete()(nCode, szError, sizeof(szError));
-		strReturn += wxString::Format(_("%s\n"), szError);
+		strReturn += wxString::Format(wxT("%s\n"), szError);
 	}
 	else
 	{

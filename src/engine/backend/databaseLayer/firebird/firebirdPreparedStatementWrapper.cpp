@@ -306,7 +306,7 @@ bool CFirebirdPreparedStatementWrapper::IsSelectQuery()
 	wxString strLocalCopy = m_strSQL;
 	strLocalCopy.Trim(false);
 	strLocalCopy.MakeUpper();
-	return strLocalCopy.StartsWith(_("SELECT "));
+	return strLocalCopy.StartsWith(wxT("SELECT "));
 }
 
 void CFirebirdPreparedStatementWrapper::InterpretErrorCodes()

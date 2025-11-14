@@ -259,7 +259,7 @@ wxString CPostgresPreparedStatement::TranslateSQL(const wxString& strOriginalSQL
 	for (unsigned int i = 0; i < len; i++)
 	{
 		wxChar character = strOriginalSQL[i];
-		if ('\'' == character)
+		if (wxT('\'') == character)
 		{
 			// Signify that we are inside a string literal inside the SQL
 			bInStringLiteral = !bInStringLiteral;
@@ -278,7 +278,7 @@ wxString CPostgresPreparedStatement::TranslateSQL(const wxString& strOriginalSQL
 				else
 				{
 					// Replace the question mark with a prepared statement placeholder
-					strReturn += wxString::Format(_("$%d"), nParameterIndex);
+					strReturn += wxString::Format(wxT("$%d"), nParameterIndex);
 					nParameterIndex++;
 				}
 			}

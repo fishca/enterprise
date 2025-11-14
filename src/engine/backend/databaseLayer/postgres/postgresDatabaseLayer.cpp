@@ -15,16 +15,16 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer()
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
 #endif
-	m_strServer = _("localhost");
-	m_strUser = _("postgres");
-	m_strPassword = _("");
-	m_strDatabase = _("postgres");
-	m_strPort = _("5432");
+	m_strServer = wxT("localhost");
+	m_strUser = wxT("postgres");
+	m_strPassword = wxT("");
+	m_strDatabase = wxT("postgres");
+	m_strPort = wxT("5432");
 }
 
 CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
@@ -35,15 +35,15 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
 #endif
-	m_strServer = _("localhost");
-	m_strUser = _("postgres");
-	m_strPassword = _("");
-	m_strPort = _("5432");
+	m_strServer = wxT("localhost");
+	m_strUser = wxT("postgres");
+	m_strPassword = wxT("");
+	m_strPort = wxT("5432");
 
 	Open(strDatabase);
 }
@@ -56,15 +56,15 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
 #endif
 	m_strServer = strServer;
-	m_strUser = _("postgres");
-	m_strPassword = _("");
-	m_strPort = _("5432");
+	m_strUser = wxT("postgres");
+	m_strPassword = wxT("");
+	m_strPort = wxT("5432");
 
 	Open(strDatabase);
 }
@@ -77,15 +77,15 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase, cons
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
 #endif
-	m_strServer = _("localhost");
+	m_strServer = wxT("localhost");
 	m_strUser = strUser;
 	m_strPassword = strPassword;
-	m_strPort = _("5432");
+	m_strPort = wxT("5432");
 
 	Open(strDatabase);
 }
@@ -98,7 +98,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -106,7 +106,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	m_strServer = strServer;
 	m_strUser = strUser;
 	m_strPassword = strPassword;
-	m_strPort = _("5432");
+	m_strPort = wxT("5432");
 
 	Open(strDatabase);
 }
@@ -119,7 +119,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -140,7 +140,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(wxT("Error loading PostgreSQL library"));
+		SetErrorMessage(_("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -182,25 +182,25 @@ bool CPostgresDatabaseLayer::Open()
 	wxCharBuffer portCharBuffer;
 	const char* pPort = nullptr;
 
-	if (m_strServer != _("localhost") && m_strServer != _(""))
+	if (m_strServer != wxT("localhost") && m_strServer != wxT(""))
 	{
 		serverCharBuffer = ConvertToUnicodeStream(m_strServer);
 		pHost = serverCharBuffer;
 	}
 
-	if (m_strUser != _(""))
+	if (m_strUser != wxT(""))
 	{
 		userCharBuffer = ConvertToUnicodeStream(m_strUser);
 		pUser = userCharBuffer;
 	}
 
-	if (m_strPassword != _(""))
+	if (m_strPassword != wxT(""))
 	{
 		passwordCharBuffer = ConvertToUnicodeStream(m_strPassword);
 		pPassword = passwordCharBuffer;
 	}
 
-	if (m_strPort != _(""))
+	if (m_strPort != wxT(""))
 	{
 		portCharBuffer = ConvertToUnicodeStream(m_strPort);
 		pPort = portCharBuffer;
@@ -221,14 +221,14 @@ bool CPostgresDatabaseLayer::Open()
 		SetEncoding(&conv);
 	}
 
-	if (m_strDatabase != _("") && !DatabaseExists(m_strDatabase)) {
+	if (m_strDatabase != wxT("") && !DatabaseExists(m_strDatabase)) {
 		bool result = DoRunQuery("CREATE DATABASE " + m_strDatabase, false) != DATABASE_LAYER_QUERY_RESULT_ERROR;
 		if (!result)
 			return false;
 		DoRunQuery("GRANT ALL PRIVILEGES ON DATABASE " + m_strDatabase + " to " + m_strUser, false);
 	}
 
-	if (m_strDatabase != _(""))
+	if (m_strDatabase != wxT(""))
 	{
 		databaseBuffer = ConvertToUnicodeStream(m_strDatabase);
 		pDatabase = databaseBuffer;
@@ -274,20 +274,20 @@ bool CPostgresDatabaseLayer::Open(const wxString& strDatabase)
 bool CPostgresDatabaseLayer::Open(const wxString& strServer, const wxString& strDatabase)
 {
 	m_strServer = strServer;
-	m_strUser = _("");
-	m_strPassword = _("");
+	m_strUser = wxT("");
+	m_strPassword = wxT("");
 	m_strDatabase = strDatabase;
-	m_strPort = _("");
+	m_strPort = wxT("");
 	return Open();
 }
 
 bool CPostgresDatabaseLayer::Open(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
-	m_strServer = _("localhost");
+	m_strServer = wxT("localhost");
 	m_strUser = strUser;
 	m_strPassword = strPassword;
 	m_strDatabase = strDatabase;
-	m_strPort = _("");
+	m_strPort = wxT("");
 	return Open();
 }
 
@@ -297,7 +297,7 @@ bool CPostgresDatabaseLayer::Open(const wxString& strServer, const wxString& str
 	m_strUser = strUser;
 	m_strPassword = strPassword;
 	m_strDatabase = strDatabase;
-	m_strPort = _("");
+	m_strPort = wxT("");
 	return Open();
 }
 
@@ -338,19 +338,19 @@ bool CPostgresDatabaseLayer::IsOpen()
 // transaction support
 void CPostgresDatabaseLayer::BeginTransaction()
 {
-	DoRunQuery(_("BEGIN"), false);
+	DoRunQuery(wxT("BEGIN"), false);
 	m_transaction_is_active = true;
 }
 
 void CPostgresDatabaseLayer::Commit()
 {
-	DoRunQuery(_("COMMIT"), false);
+	DoRunQuery(wxT("COMMIT"), false);
 	m_transaction_is_active = false;
 }
 
 void CPostgresDatabaseLayer::RollBack()
 {
-	DoRunQuery(_("ROLLBACK"), false);
+	DoRunQuery(wxT("ROLLBACK"), false);
 	m_transaction_is_active = false; 
 }
 
@@ -432,7 +432,7 @@ bool CPostgresDatabaseLayer::DatabaseExists(const wxString& database)
 	try
 	{
 #endif
-		wxString query = _("SELECT COUNT(*) FROM pg_catalog.pg_database WHERE datname=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM pg_catalog.pg_database WHERE datname=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement != nullptr) {
 			pStatement->SetParamString(1, database.Lower());
@@ -493,7 +493,7 @@ bool CPostgresDatabaseLayer::TableExists(const wxString& table)
 	try
 	{
 #endif
-		wxString query = _("SELECT COUNT(*) FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_name=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_name=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement != nullptr) {
 			pStatement->SetParamString(1, table.Lower());
@@ -554,7 +554,7 @@ bool CPostgresDatabaseLayer::ViewExists(const wxString& view)
 	try
 	{
 #endif
-		wxString query = _("SELECT COUNT(*) FROM information_schema.tables WHERE table_type='VIEW' AND table_name=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM information_schema.tables WHERE table_type='VIEW' AND table_name=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement) {
 			pStatement->SetParamString(1, view.Lower());
@@ -611,7 +611,7 @@ wxArrayString CPostgresDatabaseLayer::GetTables()
 	try
 	{
 #endif
-		wxString query = _("SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';");
+		wxString query = wxT("SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -650,7 +650,7 @@ wxArrayString CPostgresDatabaseLayer::GetViews()
 	try
 	{
 #endif
-		wxString query = _("SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' AND table_schema='public';");
+		wxString query = wxT("SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' AND table_schema='public';");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -694,7 +694,7 @@ wxArrayString CPostgresDatabaseLayer::GetColumns(const wxString& table)
 	try
 	{
 #endif
-		wxString query = _("SELECT column_name FROM information_schema.columns WHERE table_name=? ORDER BY ordinal_position;");
+		wxString query = wxT("SELECT column_name FROM information_schema.columns WHERE table_name=? ORDER BY ordinal_position;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{

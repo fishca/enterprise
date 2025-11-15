@@ -444,7 +444,10 @@ bool CRecordManagerObjectInformationRegister::CallAsFunc(const long lMethodNum, 
 		pvarRetValue = m_recordSet->Selected();
 		return true;
 	case recordManager::enGetFormRecord:
-		pvarRetValue = GetFormValue();
+		pvarRetValue = GetFormValue(
+			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
+		);
 		return true;
 	case recordManager::enGetMetadataRecordManager:
 		pvarRetValue = m_metaObject;

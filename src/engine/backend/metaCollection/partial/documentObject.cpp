@@ -577,8 +577,8 @@ bool CRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& pvarRe
 		return true;
 	case Func::eGetFormObject:
 		pvarRetValue = GetFormValue(
-			paParams[0]->GetString(),
-			paParams[1]->ConvertToType<IBackendControlFrame>()
+			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
+			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
 		return true;
 	case Func::eGetMetadata:

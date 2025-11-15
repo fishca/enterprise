@@ -270,8 +270,6 @@ bool CMetaObjectDocument::SaveData(CMemoryWriter& dataWritter)
 //*                           read & save events                        *
 //***********************************************************************
 
-#include "backend/appData.h"
-
 bool CMetaObjectDocument::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))

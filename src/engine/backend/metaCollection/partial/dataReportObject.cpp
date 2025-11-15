@@ -4,17 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "dataReport.h"
-#include "backend/metaData.h"
-
-#include "backend/appData.h"
-#include "reference/reference.h"
-#include "backend/databaseLayer/databaseLayer.h"
-#include "backend/system/systemManager.h"
-
-#include "backend/metaCollection/partial/tabularSection/tabularSection.h"
-
-#include "backend/fileSystem/fs.h"
-
 
 //*********************************************************************************************
 //*                                  ObjectCatalogValue                                       *

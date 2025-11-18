@@ -575,7 +575,6 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 		SendCommand(commandChannel_VerifyConnection.pointer(), commandChannel_VerifyConnection.size());
 	}
 	else if (commandFromClient == CommandId_SetConnectionType) {
-
 		m_connectionType = static_cast<ConnectionType>(commandReader.r_u16());
 		if (m_connectionType == ConnectionType::ConnectionType_Unknown)
 			CDebuggerServerConnection::Disconnect();
@@ -856,17 +855,14 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 			ms_debugServer->m_bDebugLoop =
 			ms_debugServer->m_bDoLoop = false;
 
+		CDebuggerServerConnection::Disconnect();
 		ms_debugServer->m_bDebugDestroy = true;
 
 #ifdef __WXMSW__
 		::CoUninitialize();
 #endif // !_WXMSW		
 
-		if (m_socket != nullptr)
-			m_socket->Destroy();
-
-		m_socket = nullptr;
-		wxTheApp->Exit();
+		wxTheApp->CallAfter([]() { wxTheApp->Exit(); });
 	}
 	else if (commandFromClient == CommandId_DeleteAllBreakpoints) {
 		ms_debugServer->m_listBreakpoint.clear();

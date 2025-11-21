@@ -214,8 +214,8 @@ bool CVisualView::OnClose(bool deleteWindow)
 	//	Activate(false);
 
 	if (deleteWindow) {
-		m_viewFrame->Destroy();
-		m_viewFrame = nullptr;
+		GetFrame()->Destroy();
+		SetFrame(nullptr);
 	}
 
 	return CMetaView::OnClose(deleteWindow);

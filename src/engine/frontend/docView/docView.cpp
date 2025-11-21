@@ -248,9 +248,11 @@ bool CMetaDocument::DeleteAllViews()
 	const wxList::iterator end = m_documentViews.end();
 	for (wxList::iterator i = m_documentViews.begin(); i != end; ++i)
 	{
-		wxView* view = (wxView*)*i;
-		if (!view->Close())
-			return false;
+		wxView* view = (wxView*)*i;		
+		if (!view->Close(false))
+			return false;	
+		
+		view->Activate(false);
 	}
 
 	// all views agreed to close, now do close them
@@ -273,7 +275,7 @@ bool CMetaDocument::DeleteAllViews()
 			// this always deletes the node implicitly and if this is the last
 			// view also deletes this object itself (also implicitly, great),
 			// so we can't test for m_documentViews.empty() after calling this!
-
+			
 			delete view;
 
 			if (isLastOne)

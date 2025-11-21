@@ -214,10 +214,8 @@ protected:
 
 		if (m_docManager != nullptr) {
 
-			wxView* const view = m_docManager->GetCurrentView();
-			wxDocument* doc = view ? view->GetDocument() : nullptr;
-
-			if (doc == nullptr) {
+			wxView* view = m_docManager->GetCurrentView();
+			if (view == nullptr || view == GetView() || view->GetFrame() == nullptr) {
 
 				const int page_idx = pClientWindow->GetPageIndex(this);
 
@@ -256,11 +254,13 @@ protected:
 					}
 				}
 
+				view = nullptr;
+
 				if (new_active != nullptr) {
 					for (auto current_doc : m_docManager->GetDocumentsVector()) {
 						for (auto current_view : current_doc->GetViewsVector()) {
 							if (new_active == current_view->GetFrame()) {
-								doc = current_doc;
+								view = current_view;
 								break;
 							}
 						}
@@ -268,9 +268,9 @@ protected:
 				}
 			}
 
-			if (doc != nullptr) {
-				wxWindow* docWindow = doc->GetDocumentWindow();
-				if (docWindow != nullptr) docWindow->Raise();	
+			if (view != nullptr) {
+				wxWindow* frameWindow = view->GetFrame();
+				if (frameWindow != nullptr) frameWindow->Raise();
 			}
 		}
 

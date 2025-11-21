@@ -183,6 +183,9 @@ void CMetadataTree::CMetadataTreeWnd::OnEndDrag(wxTreeEvent& event) {
 	wxTreeItemId itemSrc = m_draggedItem, itemDst = event.GetItem();
 	m_draggedItem = (wxTreeItemId)0l;
 
+	if (!m_ownerTree->IsEditable())
+		return;
+
 	// ensure that itemDst is not itemSrc or a child of itemSrc
 	IMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
 

@@ -59,8 +59,8 @@ private:
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
 					if (item != nullptr) {
-						IMetaObject* metaParent = GetMetaObject(parentItem);
-						if (metaParent != nullptr) return metaParent;
+						IMetaObject* parent = GetMetaObject(parentItem);
+						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeWnd->GetItemParent(parentItem);
 				}
@@ -171,7 +171,7 @@ protected:
 private:
 
 	wxTreeItemId AppendRootItem(const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
-		IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeWnd->GetImageList();
 		wxASSERT(imageList);
@@ -185,7 +185,7 @@ private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
 		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
-		IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeWnd->GetImageList();
 		wxASSERT(imageList);
@@ -223,7 +223,7 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* metaParent, bool runObject = true);
+	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject = true);
 	IMetaObject* CreateItem(bool showValue = true);
 
 	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item);

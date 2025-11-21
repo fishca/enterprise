@@ -160,7 +160,7 @@ void IMetaDataTree::EditModule(const wxString& fullName, int lineNumber, bool se
 
 	IMetaObject* metaObject = metaData->FindByName(fullName);
 
-	if (metaObject == nullptr)
+	if (metaObject == nullptr || metaObject->IsDeleted())
 		return;
 
 	if (m_bReadOnly)
@@ -189,9 +189,9 @@ void CMetadataTree::ActivateItem(const wxTreeItemId& item)
 	OpenFormMDI(currObject);
 }
 
-IMetaObject* CMetadataTree::NewItem(const class_identifier_t& clsid, IMetaObject* metaParent, bool runObject)
+IMetaObject* CMetadataTree::NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject)
 {
-	return m_metaData->CreateMetaObject(clsid, metaParent, runObject);
+	return m_metaData->CreateMetaObject(clsid, parent, runObject);
 }
 
 IMetaObject* CMetadataTree::CreateItem(bool showValue)
@@ -250,10 +250,10 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 		CMetaObjectTableData* metaItemRecord = dynamic_cast<CMetaObjectTableData*>(metaItem);
 		wxASSERT(metaItemRecord);
 
-		for (auto attribute : metaItemRecord->GetObjectAttributes()) {
+		for (auto attribute : metaItemRecord->GetAttributeArrayObject()) {
 			if (attribute->IsDeleted())
 				continue;
-			if (attribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 			AppendItem(createdItem, attribute);
 		}
@@ -778,26 +778,26 @@ void CMetadataTree::AddCatalogItem(IMetaObject* metaObject, const wxTreeItemId& 
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//список табличных частей 
 	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
-	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+	for (auto metaTable : metaObjectValue->GetTableArrayObject()) {
 
 		if (metaTable->IsDeleted())
 			continue;
@@ -810,27 +810,27 @@ void CMetadataTree::AddCatalogItem(IMetaObject* metaObject, const wxTreeItemId& 
 
 		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
 
-		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+		for (auto attribute : metaTable->GetAttributeArrayObject()) {
 
-			if (metaAttribute->IsDeleted())
+			if (attribute->IsDeleted())
 				continue;
 
-			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 
-			//const wxString strName = metaAttribute->GetName();
+			//const wxString strName = attribute->GetName();
 
 			//if (!m_strSearch.IsEmpty()
 			//	&& strName.Find(m_strSearch) < 0)
 			//	continue;
 
-			AppendItem(hItem, metaAttribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -846,7 +846,7 @@ void CMetadataTree::AddCatalogItem(IMetaObject* metaObject, const wxTreeItemId& 
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -869,26 +869,26 @@ void CMetadataTree::AddDocumentItem(IMetaObject* metaObject, const wxTreeItemId&
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//список табличных частей 
 	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
-	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+	for (auto metaTable : metaObjectValue->GetTableArrayObject()) {
 
 		if (metaTable->IsDeleted())
 			continue;
@@ -900,27 +900,27 @@ void CMetadataTree::AddDocumentItem(IMetaObject* metaObject, const wxTreeItemId&
 		//	continue;
 
 		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
-		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+		for (auto attribute : metaTable->GetAttributeArrayObject()) {
 
-			if (metaAttribute->IsDeleted())
+			if (attribute->IsDeleted())
 				continue;
 
-			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 
-			//const wxString strName = metaAttribute->GetName();
+			//const wxString strName = attribute->GetName();
 
 			//if (!m_strSearch.IsEmpty()
 			//	&& strName.Find(m_strSearch) < 0)
 			//	continue;
 
-			AppendItem(hItem, metaAttribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -936,7 +936,7 @@ void CMetadataTree::AddDocumentItem(IMetaObject* metaObject, const wxTreeItemId&
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -959,7 +959,7 @@ void CMetadataTree::AddEnumerationItem(IMetaObject* metaObject, const wxTreeItem
 	//Enumerations
 	wxTreeItemId hEnums = AppendGroupItem(hParentID, g_metaEnumCLSID, objectEnumerationsName);
 
-	for (auto metaEnumerations : metaObjectValue->GetObjectEnums()) {
+	for (auto metaEnumerations : metaObjectValue->GetEnumObjectArray()) {
 
 		if (metaEnumerations->IsDeleted())
 			continue;
@@ -975,7 +975,7 @@ void CMetadataTree::AddEnumerationItem(IMetaObject* metaObject, const wxTreeItem
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -991,7 +991,7 @@ void CMetadataTree::AddEnumerationItem(IMetaObject* metaObject, const wxTreeItem
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -1013,26 +1013,26 @@ void CMetadataTree::AddDataProcessorItem(IMetaObject* metaObject, const wxTreeIt
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//список табличных частей 
 	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
-	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+	for (auto metaTable : metaObjectValue->GetTableArrayObject()) {
 
 		if (metaTable->IsDeleted())
 			continue;
@@ -1044,27 +1044,27 @@ void CMetadataTree::AddDataProcessorItem(IMetaObject* metaObject, const wxTreeIt
 		//	continue;
 
 		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
-		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+		for (auto attribute : metaTable->GetAttributeArrayObject()) {
 
-			if (metaAttribute->IsDeleted())
+			if (attribute->IsDeleted())
 				continue;
 
-			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 
-			//const wxString strName = metaAttribute->GetName();
+			//const wxString strName = attribute->GetName();
 
 			//if (!m_strSearch.IsEmpty()
 			//	&& strName.Find(m_strSearch) < 0)
 			//	continue;
 
-			AppendItem(hItem, metaAttribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -1080,7 +1080,7 @@ void CMetadataTree::AddDataProcessorItem(IMetaObject* metaObject, const wxTreeIt
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -1102,26 +1102,26 @@ void CMetadataTree::AddReportItem(IMetaObject* metaObject, const wxTreeItemId& h
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//список табличных частей 
 	const wxTreeItemId& hTables = AppendGroupItem(hParentID, g_metaTableCLSID, objectTablesName);
-	for (auto metaTable : metaObjectValue->GetObjectTables()) {
+	for (auto metaTable : metaObjectValue->GetTableArrayObject()) {
 		if (metaTable->IsDeleted())
 			continue;
 
@@ -1132,27 +1132,27 @@ void CMetadataTree::AddReportItem(IMetaObject* metaObject, const wxTreeItemId& h
 		//	continue;
 
 		const wxTreeItemId& hItem = AppendGroupItem(hTables, g_metaAttributeCLSID, metaTable);
-		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
+		for (auto attribute : metaTable->GetAttributeArrayObject()) {
 
-			if (metaAttribute->IsDeleted())
+			if (attribute->IsDeleted())
 				continue;
 
-			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 
-			//const wxString strName = metaAttribute->GetName();
+			//const wxString strName = attribute->GetName();
 
 			//if (!m_strSearch.IsEmpty()
 			//	&& strName.Find(m_strSearch) < 0)
 			//	continue;
 
-			AppendItem(hItem, metaAttribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -1168,7 +1168,7 @@ void CMetadataTree::AddReportItem(IMetaObject* metaObject, const wxTreeItemId& h
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -1190,12 +1190,12 @@ void CMetadataTree::AddInformationRegisterItem(IMetaObject* metaObject, const wx
 
 	//Список измерений 
 	const wxTreeItemId& hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
-	for (auto metaDimension : metaObjectValue->GetObjectDimensions()) {
+	for (auto metaDimension : metaObjectValue->GetDimentionArrayObject()) {
 
 		if (metaDimension->IsDeleted())
 			continue;
 
-		if (metaDimension->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (metaDimension->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
 		//const wxString strName = metaDimension->GetName();
@@ -1209,12 +1209,12 @@ void CMetadataTree::AddInformationRegisterItem(IMetaObject* metaObject, const wx
 
 	//Список ресурсов 
 	const wxTreeItemId& hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
-	for (auto metaResource : metaObjectValue->GetObjectResources()) {
+	for (auto metaResource : metaObjectValue->GetResourceArrayObject()) {
 
 		if (metaResource->IsDeleted())
 			continue;
 
-		if (metaResource->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (metaResource->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
 		//const wxString strName = metaResource->GetName();
@@ -1228,26 +1228,26 @@ void CMetadataTree::AddInformationRegisterItem(IMetaObject* metaObject, const wx
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -1263,7 +1263,7 @@ void CMetadataTree::AddInformationRegisterItem(IMetaObject* metaObject, const wx
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;
@@ -1285,12 +1285,12 @@ void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const w
 
 	//Список измерений 
 	const wxTreeItemId& hDimentions = AppendGroupItem(hParentID, g_metaDimensionCLSID, objectDimensionsName);
-	for (auto metaDimension : metaObjectValue->GetObjectDimensions()) {
+	for (auto metaDimension : metaObjectValue->GetDimentionArrayObject()) {
 
 		if (metaDimension->IsDeleted())
 			continue;
 
-		if (metaDimension->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (metaDimension->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
 		//const wxString strName = metaDimension->GetName();
@@ -1304,12 +1304,12 @@ void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const w
 
 	//Список ресурсов 
 	const wxTreeItemId& hResources = AppendGroupItem(hParentID, g_metaResourceCLSID, objectResourcesName);
-	for (auto metaResource : metaObjectValue->GetObjectResources()) {
+	for (auto metaResource : metaObjectValue->GetResourceArrayObject()) {
 
 		if (metaResource->IsDeleted())
 			continue;
 
-		if (metaResource->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (metaResource->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
 		//const wxString strName = metaResource->GetName();
@@ -1323,26 +1323,26 @@ void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const w
 
 	//Список аттрибутов 	
 	const wxTreeItemId& hAttributes = AppendGroupItem(hParentID, g_metaAttributeCLSID, objectAttributesName);
-	for (auto metaAttribute : metaObjectValue->GetObjectAttributes()) {
+	for (auto attribute : metaObjectValue->GetAttributeArrayObject()) {
 
-		if (metaAttribute->IsDeleted())
+		if (attribute->IsDeleted())
 			continue;
 
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
 
-		//const wxString strName = metaAttribute->GetName();
+		//const wxString strName = attribute->GetName();
 
 		//if (!m_strSearch.IsEmpty()
 		//	&& strName.Find(m_strSearch) < 0)
 		//	continue;
 
-		AppendItem(hAttributes, metaAttribute);
+		AppendItem(hAttributes, attribute);
 	}
 
 	//Формы
 	const wxTreeItemId& hForm = AppendGroupItem(hParentID, g_metaFormCLSID, objectFormsName);
-	for (auto metaForm : metaObjectValue->GetObjectForms()) {
+	for (auto metaForm : metaObjectValue->GetFormArrayObject()) {
 
 		if (metaForm->IsDeleted())
 			continue;
@@ -1358,7 +1358,7 @@ void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const w
 
 	//Таблицы
 	const wxTreeItemId& hTemplates = AppendGroupItem(hParentID, g_metaTemplateCLSID, objectTemplatesName);
-	for (auto metaTemplate : metaObjectValue->GetObjectTemplates()) {
+	for (auto metaTemplate : metaObjectValue->GetTemplateArrayObject()) {
 
 		if (metaTemplate->IsDeleted())
 			continue;

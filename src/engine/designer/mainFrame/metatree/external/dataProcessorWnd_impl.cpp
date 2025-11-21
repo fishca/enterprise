@@ -29,9 +29,9 @@ void CDataProcessorTree::ActivateItem(const wxTreeItemId& item)
 	OpenFormMDI(currObject);
 }
 
-IMetaObject* CDataProcessorTree::NewItem(const class_identifier_t& clsid, IMetaObject* metaParent, bool runObject)
+IMetaObject* CDataProcessorTree::NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject)
 {
-	return m_metaData->CreateMetaObject(clsid, metaParent, runObject);
+	return m_metaData->CreateMetaObject(clsid, parent, runObject);
 }
 
 IMetaObject* CDataProcessorTree::CreateItem(bool showValue)
@@ -76,10 +76,10 @@ wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeIte
 		CMetaObjectTableData* metaItemRecord = dynamic_cast<CMetaObjectTableData*>(metaItem);
 		wxASSERT(metaItemRecord);
 
-		for (auto attribute : metaItemRecord->GetObjectAttributes()) {
+		for (auto attribute : metaItemRecord->GetAttributeArrayObject()) {
 			if (attribute->IsDeleted())
 				continue;
-			if (attribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 			AppendItem(createdItem, attribute);
 		}
@@ -398,7 +398,7 @@ void CDataProcessorTree::UpdateChoiceSelection()
 
 	int defSelection = 0;
 
-	for (auto metaForm : commonMetadata->GetObjectForms()) {
+	for (auto metaForm : commonMetadata->GetFormArrayObject()) {
 		if (CMetaObjectDataProcessor::eFormDataProcessor != metaForm->GetTypeForm())
 			continue;
 		int selection_id = m_defaultFormValue->Append(metaForm->GetName(), reinterpret_cast<void*>(metaForm->GetMetaID()));
@@ -495,37 +495,37 @@ void CDataProcessorTree::FillData()
 	m_defaultFormValue->AppendString(_("<not selected>"));
 
 	//Список аттрибутов 
-	for (auto metaAttribute : commonMetadata->GetObjectAttributes()) {
-		if (metaAttribute->IsDeleted())
+	for (auto attribute : commonMetadata->GetAttributeArrayObject()) {
+		if (attribute->IsDeleted())
 			continue;
-		if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeATTRIBUTES, metaAttribute);
+		const wxTreeItemId& hItem = AppendItem(m_treeATTRIBUTES, attribute);
 	}
 
 	//Список табличных частей 
-	for (auto metaTable : commonMetadata->GetObjectTables()) {
+	for (auto metaTable : commonMetadata->GetTableArrayObject()) {
 		if (metaTable->IsDeleted())
 			continue;
 		const wxTreeItemId& hItem = AppendGroupItem(m_treeTABLES, g_metaAttributeCLSID, metaTable);
-		for (auto metaAttribute : metaTable->GetObjectAttributes()) {
-			if (metaAttribute->IsDeleted())
+		for (auto attribute : metaTable->GetAttributeArrayObject()) {
+			if (attribute->IsDeleted())
 				continue;
-			if (metaAttribute->GetClassType() == g_metaDefaultAttributeCLSID)
+			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
-			wxTreeItemId hItemNew = AppendItem(hItem, metaAttribute);
+			wxTreeItemId hItemNew = AppendItem(hItem, attribute);
 		}
 	}
 
 	//Формы
-	for (auto metaForm : commonMetadata->GetObjectForms()) {
+	for (auto metaForm : commonMetadata->GetFormArrayObject()) {
 		if (metaForm->IsDeleted())
 			continue;
 		const wxTreeItemId& hItem = AppendItem(m_treeFORM, metaForm);
 	}
 
 	//Таблицы
-	for (auto metaTemplates : commonMetadata->GetObjectTemplates()) {
+	for (auto metaTemplates : commonMetadata->GetTemplateArrayObject()) {
 		if (metaTemplates->IsDeleted())
 			continue;
 		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, metaTemplates);

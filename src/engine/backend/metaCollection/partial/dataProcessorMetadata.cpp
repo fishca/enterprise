@@ -21,7 +21,7 @@ CMetaObjectDataProcessor::~CMetaObjectDataProcessor()
 {
 }
 
-IMetaObjectForm* CMetaObjectDataProcessor::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectDataProcessor::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormDataProcessor && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());

@@ -27,7 +27,7 @@ CMetaObjectEnumeration::~CMetaObjectEnumeration()
 {
 }
 
-IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());

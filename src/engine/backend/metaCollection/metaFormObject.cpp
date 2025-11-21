@@ -62,7 +62,7 @@ IBackendValueForm* IMetaObjectForm::CreateAndBuildForm(const IMetaObjectForm* cr
 		}
 	}
 	else {
-		result = IBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
+		result = IBackendValueForm::CreateNewForm(nullptr, ownerControl, srcObject, formGuid);
 		result->BuildForm(form_id);
 	}
 

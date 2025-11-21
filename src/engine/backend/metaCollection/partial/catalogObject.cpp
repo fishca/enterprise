@@ -159,8 +159,20 @@ bool CRecordDataObjectCatalog::WriteObject()
 					}
 
 					bool newObject = CRecordDataObjectCatalog::IsNewObject();
+					bool generateUniqueIdentifier = false;
+					
+					if (newObject) {
+						CValue prefix = "", standartProcessing = true;
+						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
+						if (standartProcessing.GetBoolean()) {
+							generateUniqueIdentifier = 
+								CRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
+						}
+					}
 
 					if (!SaveData()) {
+						if (newObject && generateUniqueIdentifier)
+							CRecordDataObjectCatalog::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
 						CSystemFunction::Raise(_("failed to write object in db!"));
 						return false;
@@ -170,6 +182,8 @@ bool CRecordDataObjectCatalog::WriteObject()
 						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
+							if (newObject && generateUniqueIdentifier)
+								CRecordDataObjectCatalog::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
 							return false;

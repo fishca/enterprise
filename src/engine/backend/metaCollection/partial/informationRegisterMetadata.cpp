@@ -25,7 +25,7 @@ CMetaObjectInformationRegister::~CMetaObjectInformationRegister()
 	wxDELETE(m_metaRecordManager);
 }
 
-IMetaObjectForm* CMetaObjectInformationRegister::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectInformationRegister::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormRecord && m_propertyDefFormRecord->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormRecord->GetValueAsInteger());

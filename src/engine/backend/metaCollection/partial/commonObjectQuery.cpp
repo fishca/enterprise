@@ -229,7 +229,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 						return false;
 				}
 			}
-		
+
 			//attributes current
 			for (const auto object : GetPredefinedAttributeArrayObject()) {
 				if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
@@ -251,7 +251,7 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 						return false;
 				}
 			}
-			
+
 			//attributes current
 			for (const auto object : GetAttributeArrayObject()) {
 				retCode = ProcessAttribute(tableName,
@@ -663,12 +663,6 @@ bool IRecordDataObjectRef::SaveData()
 	else if (db_query == nullptr)
 		CBackendException::Error(_("database is not open!"));
 
-	auto attributeCode = m_metaObject->GetAttributeForCode();
-	if (attributeCode != nullptr && m_listObjectValue[attributeCode->GetMetaID()].IsEmpty()) {
-		m_listObjectValue.insert_or_assign(attributeCode->GetMetaID(),
-			GenerateNextCode(m_metaObject, attributeCode));
-	}
-
 	//check fill attributes 
 	bool fillCheck = true;
 	wxASSERT(m_metaObject);
@@ -780,6 +774,31 @@ bool IRecordDataObjectRef::DeleteData()
 	}
 	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objGuid.str() + "';");
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool IRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
+{
+	const auto object = m_metaObject->GetAttributeForCode();
+	if (object != nullptr && m_listObjectValue[object->GetMetaID()].IsEmpty()) {
+		m_listObjectValue.insert_or_assign(object->GetMetaID(),
+			GenerateNextIdentifier(object, strPrefix));
+		return true;
+	}
+
+	return false;
+}
+
+bool IRecordDataObjectRef::ResetUniqueIdentifier()
+{
+	const auto object = m_metaObject->GetAttributeForCode();
+	if (object != nullptr && !m_listObjectValue[object->GetMetaID()].IsEmpty()) {
+		m_listObjectValue.insert_or_assign(object->GetMetaID(), object->CreateValue());
+		return true;
+	}
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1368,7 +1387,7 @@ bool IRecordSetObject::DeleteData()
 //*                                          Code generator												   *
 //**********************************************************************************************************
 
-CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* metaObject, IMetaObjectAttribute* attribute)
+CValue IRecordDataObjectRef::GenerateNextIdentifier(IMetaObjectAttribute* attribute, const wxString& strPrefix)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendException::Error(_("database is not open!"));
@@ -1386,8 +1405,8 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
 			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
 			sequence_table,
-			metaObject->GetDocPath(),
-			wxEmptyString
+			m_metaObject->GetDocPath(),
+			strPrefix
 		);
 
 		if (resultSet == nullptr)
@@ -1399,8 +1418,8 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 		db_query->RunQuery(
 			wxT("INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) ON CONFLICT(meta_guid, prefix) DO UPDATE SET meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
 			sequence_table,
-			metaObject->GetDocPath(),
-			wxEmptyString, //prefix
+			m_metaObject->GetDocPath(),
+			strPrefix, //prefix
 			resultCode.ToString()
 		);
 
@@ -1411,8 +1430,8 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
 			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
 			sequence_table,
-			metaObject->GetDocPath(),
-			wxEmptyString
+			m_metaObject->GetDocPath(),
+			strPrefix
 		);
 
 		if (resultSet == nullptr)
@@ -1424,8 +1443,8 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 		db_query->RunQuery(
 			wxT("UPDATE OR INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) MATCHING (meta_guid, prefix);"),
 			sequence_table,
-			metaObject->GetDocPath(),
-			wxEmptyString, //prefix
+			m_metaObject->GetDocPath(),
+			strPrefix, //prefix
 			resultCode.ToString()
 		);
 
@@ -1440,9 +1459,16 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 		wxString strNumber;
 
 		std::stringstream strStreamNumber;
-		strStreamNumber << std::setw(typeDesc.GetLength()) << std::setfill('0') << resultCode;
-		strNumber = strStreamNumber.str();
+		if (strPrefix.Length() < typeDesc.GetLength()) {
+			strStreamNumber << strPrefix <<
+				std::setw(typeDesc.GetLength() - strPrefix.Length()) << std::setfill('0') << resultCode;
+		}
+		else {
+			strStreamNumber <<
+				std::setw(strPrefix.Length()) << std::setfill('0') << resultCode;
+		}
 
+		strNumber = strStreamNumber.str();
 		return strNumber;
 	}
 

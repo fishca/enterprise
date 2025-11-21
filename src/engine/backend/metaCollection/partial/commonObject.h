@@ -202,7 +202,7 @@ public:
 	virtual CFormTypeList GetFormType() const = 0;
 
 	//Get metaObject by def id
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) { return nullptr; }
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const { return nullptr; }
 
 	//create form with data 
 	virtual IBackendValueForm* CreateObjectForm(IMetaObjectForm* metaForm) {
@@ -347,9 +347,6 @@ public:
 
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject() = 0;
-
-	//Get metaObject by def id
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) = 0;
 
 	//get default form 
 	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); }
@@ -1178,8 +1175,8 @@ class BACKEND_API IRecordDataObjectRef : public IRecordDataObject {
 protected:
 
 	// code generator
-	static CValue GenerateNextCode(
-		IMetaObjectRecordDataMutableRef* metaObject, IMetaObjectAttribute* attribute);
+	CValue GenerateNextIdentifier(
+		IMetaObjectAttribute* attribute, const wxString &strPrefix);
 
 protected:
 	IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid);
@@ -1257,10 +1254,16 @@ public:
 public:
 	virtual void SetDeletionMark(bool deletionMark = true);
 protected:
+
 	virtual bool ReadData();
 	virtual bool ReadData(const CGuid& srcGuid);
 	virtual bool SaveData();
 	virtual bool DeleteData();
+
+	//code/number generator 
+	virtual bool GenerateUniqueIdentifier(const wxString& strPrefix);
+	virtual bool ResetUniqueIdentifier();
+
 protected:
 	virtual void PrepareEmptyObject();
 	virtual void PrepareEmptyObject(const IRecordDataObjectRef* source);

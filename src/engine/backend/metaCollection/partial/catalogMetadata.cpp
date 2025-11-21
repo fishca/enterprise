@@ -28,6 +28,8 @@ CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataFolderMutableRef
 
 	(*m_propertyModuleObject)->SetDefaultProcedure("filling", eContentHelper::eProcedureHelper, { "source", "standartProcessing" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onCopy", eContentHelper::eProcedureHelper, { "source" });
+
+	(*m_propertyModuleObject)->SetDefaultProcedure("setNewCode", eContentHelper::eProcedureHelper, { "prefix", "standartProcessing" });
 }
 
 CMetaObjectCatalog::~CMetaObjectCatalog()
@@ -35,7 +37,7 @@ CMetaObjectCatalog::~CMetaObjectCatalog()
 	//wxDELETE((*m_propertyAttributeOwner));
 }
 
-IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormObject && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());

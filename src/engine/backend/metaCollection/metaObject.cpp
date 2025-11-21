@@ -40,11 +40,11 @@ IBackendMetadataTree* IMetaObject::GetMetaDataTree() const
 bool IMetaObject::BuildNewName()
 {
 	bool foundedName = false;
-	for (auto& obj : m_metaData->GetMetaObject(GetClassType())) {
-		if (obj->GetParent() != GetParent())
+	for (const auto object : m_metaData->GetMetaObject(GetClassType())) {
+		if (object->GetParent() != GetParent())
 			continue;
-		if (obj != this &&
-			stringUtils::CompareString(GetName(), obj->GetName())) {
+		if (object != this &&
+			stringUtils::CompareString(GetName(), object->GetName())) {
 			foundedName = true;
 			break;
 		}
@@ -219,8 +219,6 @@ bool IMetaObject::OnLoadMetaObject(IMetaData* metaData)
 
 bool IMetaObject::OnDeleteMetaObject()
 {
-	if (GetParent())
-		GetParent()->RemoveChild(this);
 	return true;
 }
 
@@ -260,16 +258,15 @@ bool IMetaObject::Init(CValue** paParams, const long lSizeArray)
 	if (lSizeArray < 1)
 		return false;
 
-	IMetaObject* metaParent = nullptr;
-	if (paParams[0]->ConvertToValue(metaParent)) {
+	IMetaObject* parent = nullptr;
+	if (paParams[0]->ConvertToValue(parent)) {
 		const class_identifier_t& clsid = GetClassType();
-		if (metaParent != nullptr) {
-			SetParent(metaParent);
-			metaParent->AddChild(this);
+		if (parent != nullptr) {
+			SetParent(parent);
+			parent->AddChild(this);
 		}
-		//SetReadOnly(metaParent != nullptr ? metaParent->IsEditable() : true);
-		return metaParent != nullptr ?
-			metaParent->AppendChild(this) : true;
+		return parent != nullptr ?
+			parent->FilterChild(clsid) : true;
 	}
 
 	return false;
@@ -302,13 +299,13 @@ bool IMetaObject::CompareObject(IMetaObject* compareObject) const
 			if (compareObject2 == nullptr)
 				return false;
 
-			//for (auto& obj : compareObject1->m_listMetaObject) {
+			//for (const auto object : compareObject1->m_listMetaObject) {
 
-			//	if (obj->IsDeleted())
+			//	if (object->IsDeleted())
 			//		continue;
 			//	
-			//	if (!CompareObject(obj,
-			//		compareObject2->FindByName(obj->GetDocPath())))
+			//	if (!CompareObject(object,
+			//		compareObject2->FindByName(object->GetDocPath())))
 			//		return false;
 			//}
 
@@ -389,16 +386,17 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 
 			CMemoryWriter writterChildMemory;
 
-			for (auto& obj : copyObject->m_listMetaObject) {
+			for (const auto object : copyObject->m_children) {
 
-				if (obj->IsDeleted())
+				if (!copyObject->FilterChild(object->GetClassType()))
 					continue;
-
+				if (object->IsDeleted())
+					continue;
 				CMemoryWriter writterMemory;
-				if (!CopyObject(obj, writterMemory))
+				if (!CopyObject(object, writterMemory))
 					return false;
 
-				writterChildMemory.w_chunk(obj->GetClassType(), writterMemory.pointer(), writterMemory.size());
+				writterChildMemory.w_chunk(object->GetClassType(), writterMemory.pointer(), writterMemory.size());
 			}
 
 			writer.w_chunk(childBlock, writterChildMemory.pointer(), writterChildMemory.size());
@@ -521,26 +519,17 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 	return CControlMemoryReader::PasteAndRunObject(this, reader);
 }
 
-bool IMetaObject::ChangeChildPosition(IMetaObject* obj, unsigned int pos)
+bool IMetaObject::ChangeChildPosition(IMetaObject* object, unsigned int pos)
 {
-	unsigned int obj_pos = GetChildPosition(obj);
-	if (obj_pos == GetChildCount() || pos >= GetChildCount())
-		return false;
-	if (pos == obj_pos)
-		return true;
-	auto dst = std::find(m_listMetaObject.begin(), m_listMetaObject.end(), GetChild(pos));
-	auto src = std::find(m_listMetaObject.begin(), m_listMetaObject.end(), obj);
-	std::swap(*dst, *src);
-	m_metaData->Modify(true);
-	return IPropertyObjectHelper::ChangeChildPosition(obj, pos);
+	return IPropertyObjectHelper::ChangeChildPosition(object, pos);
 }
 
 wxString IMetaObject::GetModuleName() const
 {
-	IMetaObject* metaParent = GetParent();
-	//wxASSERT(metaParent);
-	if (metaParent != nullptr) {
-		return metaParent->GetName() + wxT(": ") + GetName();
+	IMetaObject* parent = GetParent();
+	//wxASSERT(parent);
+	if (parent != nullptr) {
+		return parent->GetName() + wxT(": ") + GetName();
 	}
 	return GetName();
 }
@@ -549,20 +538,20 @@ wxString IMetaObject::GetFullName() const
 {
 	wxString strFullName;
 
-	IMetaObject* metaParent = GetParent();
+	IMetaObject* parent = GetParent();
 
-	if (metaParent != nullptr && g_metaModuleCLSID != GetClassType() && g_metaManagerCLSID != GetClassType())
+	if (parent != nullptr && g_metaModuleCLSID != GetClassType() && g_metaManagerCLSID != GetClassType())
 		strFullName = strFullName + GetClassName() + '.' + GetName();
 	else
 		strFullName = GetName();
 
-	while (metaParent != nullptr) {
-		if (g_metaCommonMetadataCLSID != metaParent->GetClassType()) {
-			strFullName = metaParent->GetClassName() + '.' +
-				metaParent->GetName() + '.' +
+	while (parent != nullptr) {
+		if (g_metaCommonMetadataCLSID != parent->GetClassType()) {
+			strFullName = parent->GetClassName() + '.' +
+				parent->GetName() + '.' +
 				strFullName;
 		}
-		metaParent = metaParent->GetParent();
+		parent = parent->GetParent();
 	}
 
 	return strFullName;
@@ -582,16 +571,16 @@ wxString IMetaObject::GetDocPath() const
 
 IMetaObject* IMetaObject::FindByName(const class_identifier_t& clsid, const wxString& strDocPath) const
 {
-	for (auto& obj : m_listMetaObject) {
-		if (strDocPath == obj->GetDocPath()) return obj;
+	for (const auto object : m_children) {
+		if (strDocPath == object->GetDocPath()) return object;
 	}
 	return nullptr;
 }
 
 IMetaObject* IMetaObject::FindByName(const wxString& strDocPath) const
 {
-	for (auto& obj : m_listMetaObject) {
-		if (strDocPath == obj->GetDocPath()) return obj;
+	for (const auto object : m_children) {
+		if (strDocPath == object->GetDocPath()) return object;
 	}
 	return nullptr;
 }

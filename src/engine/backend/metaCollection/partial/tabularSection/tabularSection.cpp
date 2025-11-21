@@ -50,18 +50,17 @@ bool ITabularSectionDataObject::GetAt(const CValue& varKeyValue, CValue& pvarVal
 		CBackendException::Error("Array index out of bounds");
 		return false;
 	}
-	IMetaData* metaData = m_metaTable->GetMetaData();
-	wxASSERT(metaData);
-	pvarValue = metaData->CreateAndConvertObjectValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(index));
+
+	pvarValue = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(index));
 	return true;
 }
 
 class_identifier_t ITabularSectionDataObject::GetClassType() const
 {
-	IMetaData* metaData = m_metaTable->GetMetaData();
+	const IMetaData* metaData = m_metaTable->GetMetaData();
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
-		IMetaValueTypeCtor* clsFactory =
+		const IMetaValueTypeCtor* clsFactory =
 			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassType();
@@ -71,10 +70,10 @@ class_identifier_t ITabularSectionDataObject::GetClassType() const
 
 wxString ITabularSectionDataObject::GetClassName() const
 {
-	IMetaData* metaData = m_metaTable->GetMetaData();
+	const IMetaData* metaData = m_metaTable->GetMetaData();
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
-		IMetaValueTypeCtor* clsFactory =
+		const IMetaValueTypeCtor* clsFactory =
 			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
@@ -85,9 +84,9 @@ wxString ITabularSectionDataObject::GetClassName() const
 wxString ITabularSectionDataObject::GetString() const
 {
 	if (m_metaTable->IsAllowed()) {
-		IMetaData* metaData = m_metaTable->GetMetaData();
+		const IMetaData* metaData = m_metaTable->GetMetaData();
 		wxASSERT(metaData);
-		IMetaValueTypeCtor* clsFactory =
+		const IMetaValueTypeCtor* clsFactory =
 			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
@@ -103,11 +102,11 @@ bool ITabularSectionDataObject::SetValueByMetaID(const wxDataViewItem& item, con
 	if (!appData->DesignerMode()) {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node != nullptr) {
-			IMetaObjectAttribute* metaAttribute = m_metaTable->FindProp(id);
-			wxASSERT(metaAttribute);
-			if (metaAttribute == nullptr) return false;
+			const IMetaObjectAttribute* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
+			wxASSERT(attribute);
+			if (attribute == nullptr) return false;
 			return node->SetValue(
-				id, metaAttribute->AdjustValue(varMetaVal), true
+				id, attribute->AdjustValue(varMetaVal), true
 			);
 		}
 	}
@@ -123,16 +122,16 @@ bool ITabularSectionDataObject::GetValueByMetaID(const wxDataViewItem& item, con
 	}
 
 	if (appData->DesignerMode()) {
-		IMetaObjectAttribute* metaAttribute = m_metaTable->FindProp(id);
-		wxASSERT(metaAttribute);
-		pvarMetaVal = metaAttribute->CreateValue();
+		const IMetaObjectAttribute* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
+		wxASSERT(attribute);
+		pvarMetaVal = attribute->CreateValue();
 		return true;
 	}
-	
+
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 	if (node != nullptr)
 		return node->GetValue(id, pvarMetaVal);
-	
+
 	return false;
 }
 
@@ -141,13 +140,12 @@ bool ITabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRe
 	const long lMethodAlias = m_methodHelper->GetMethodAlias(lMethodNum);
 	if (lMethodAlias != eTabularSection)
 		return false;
-	IMetaData* metaData = m_metaTable->GetMetaData();
-	wxASSERT(metaData);
+
 	const long lMethodData = m_methodHelper->GetMethodData(lMethodNum);
 	switch (lMethodData)
 	{
 	case enAddValue:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case enFind: {
 		const wxDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
@@ -327,12 +325,20 @@ ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::~CTabularSection
 void ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	for (auto& obj : m_ownerTable->m_metaTable->GetObjectAttributes()) {
+
+	//set object name 
+	wxString objectName;
+
+	for (const auto object : m_ownerTable->m_metaTable->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
+			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
-			!m_ownerTable->m_metaTable->IsNumberLine(obj->GetMetaID()),
-			obj->GetMetaID()
+			!m_ownerTable->m_metaTable->IsNumberLine(object->GetMetaID()),
+			object->GetMetaID()
 		);
 	}
 }
@@ -350,9 +356,9 @@ bool ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetPropVal(
 class_identifier_t ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetClassType() const
 {
 	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	IMetaData* metaData = metaTable->GetMetaData();
+	const IMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -361,9 +367,9 @@ class_identifier_t ITabularSectionDataObject::CTabularSectionDataObjectReturnLin
 wxString ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetClassName() const
 {
 	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	IMetaData* metaData = metaTable->GetMetaData();
+	const IMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -372,9 +378,9 @@ wxString ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetClas
 wxString ITabularSectionDataObject::CTabularSectionDataObjectReturnLine::GetString() const
 {
 	const IMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	IMetaData* metaData = metaTable->GetMetaData();
+	const IMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -400,11 +406,11 @@ ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CTabularSe
 {
 	CMetaObjectTableData* metaTable = m_ownerTable->GetMetaObject();
 	wxASSERT(metaTable);
-	for (auto& obj : metaTable->GetObjectAttributes()) {
-		if (metaTable->IsNumberLine(obj->GetMetaID()))
+	for (const auto object : metaTable->GetGenericAttributeArrayObject()) {
+		if (metaTable->IsNumberLine(object->GetMetaID()))
 			continue;
-		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
-			CValue::CreateAndPrepareValueRef<CValueTabularSectionColumnInfo>(obj)
+		m_listColumnInfo.insert_or_assign(object->GetMetaID(),
+			CValue::CreateAndPrepareValueRef<CValueTabularSectionColumnInfo>(object)
 		);
 	}
 }
@@ -443,8 +449,8 @@ ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CValueTabu
 {
 }
 
-ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo::CValueTabularSectionColumnInfo(IMetaObjectAttribute* metaAttribute) :
-	IValueModelColumnInfo(), m_metaAttribute(metaAttribute)
+ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo::CValueTabularSectionColumnInfo(IMetaObjectAttribute* attribute) :
+	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
@@ -455,9 +461,9 @@ ITabularSectionDataObject::CTabularSectionDataObjectColumnCollection::CValueTabu
 long ITabularSectionDataObject::AppendRow(unsigned int before)
 {
 	wxValueTableRow* rowData = new wxValueTableRow();
-	for (auto& obj : m_metaTable->GetObjectAttributes()) {
-		if (!m_metaTable->IsNumberLine(obj->GetMetaID()))
-			rowData->AppendTableValue(obj->GetMetaID(), obj->CreateValue());
+	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+		if (!m_metaTable->IsNumberLine(object->GetMetaID()))
+			rowData->AppendTableValue(object->GetMetaID(), object->CreateValue());
 	}
 
 	if (before > 0)

@@ -21,7 +21,7 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto dimension : m_metaObject->GetObjectDimensions()) {
+	for (auto dimension : m_metaObject->GetDimentionArrayObject()) {
 		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				dimension->GetName(),
@@ -30,11 +30,11 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 			);
 	}
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
 		colCollection->AddColumn(
-			obj->GetName() + "_Balance",
-			obj->GetTypeDesc(),
-			obj->GetSynonym() + " " + _("Balance")
+			object->GetName() + "_Balance",
+			object->GetTypeDesc(),
+			object->GetSynonym() + " " + _("Balance")
 		);
 	}
 
@@ -42,11 +42,11 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -57,9 +57,9 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 
 		wxString sqlQuery = " SELECT "; bool firstSelect = true;
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 
-			IMetaObjectAttribute::sqlField_t sqlDimension = IMetaObjectAttribute::GetSQLFieldData(obj);
+			IMetaObjectAttribute::sqlField_t sqlDimension = IMetaObjectAttribute::GetSQLFieldData(object);
 
 			sqlQuery += (firstSelect ? "" : ",") + sqlDimension.m_fieldTypeName;
 
@@ -76,9 +76,9 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 			firstSelect = false;
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
 
-			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += (firstSelect ? "" : ",") + sqlResource.m_fieldTypeName;
 			sqlQuery += "," + sqlResource.m_types[0].m_field.m_fieldName + "_Balance_";
 			firstSelect = false;
@@ -86,17 +86,17 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 
 		sqlQuery += " FROM ( SELECT "; firstSelect = true;
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += (firstSelect ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += (firstSelect ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 			firstSelect = false;
 		}
 
 		IMetaObjectAttribute::sqlField_t sqlColRecordType =
 			IMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterRecordType());
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
 
-			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += (firstSelect ? "" : ",") + sqlResource.m_fieldTypeName + ", ";
 			sqlQuery += " CAST(SUM(CASE WHEN " + sqlColRecordType.m_types[0].m_field.m_fieldName + " = 0.0"
 				" THEN - " + sqlResource.m_types[0].m_field.m_fieldName + " "
@@ -113,23 +113,23 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 
 		sqlQuery += " GROUP BY "; bool firstGroupBy = true;
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += (firstGroupBy ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += (firstGroupBy ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 			firstGroupBy = false;
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += (firstGroupBy ? "" : ",") + sqlResource.m_fieldTypeName;
 			firstGroupBy = false;
 		}
 
 		sqlQuery += " HAVING "; bool firstHaving = true;
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
 			wxString orCase = (!firstHaving ? "OR (" : "");
 			wxString orCaseEnd = (!firstHaving ? ")" : "");
-			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+			IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += orCase + " CAST(SUM(CASE WHEN " + sqlColRecordType.m_types[0].m_field.m_fieldName + " = 0.0"
 				" THEN - " + sqlResource.m_types[0].m_field.m_fieldName + ""
 				" ELSE   " + sqlResource.m_types[0].m_field.m_fieldName + " END"
@@ -162,15 +162,15 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 		while (resultSet->Next()) {
 			CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue retVal;
-				if (IMetaObjectAttribute::GetValueAttribute(obj, retVal, resultSet))
-					retLine->SetAt(obj->GetName(), retVal);
+				if (IMetaObjectAttribute::GetValueAttribute(object, retVal, resultSet))
+					retLine->SetAt(object->GetName(), retVal);
 			}
-			for (auto& obj : m_metaObject->GetObjectResources()) {
+			for (const auto object : m_metaObject->GetResourceArrayObject()) {
 				CValue retVal;
-				if (IMetaObjectAttribute::GetValueAttribute(obj->GetFieldNameDB() + "_N_Balance_", IMetaObjectAttribute::eFieldTypes_Number, obj, retVal, resultSet))
-					retLine->SetAt(obj->GetName() + "_Balance", retVal);
+				if (IMetaObjectAttribute::GetValueAttribute(object->GetFieldNameDB() + "_N_Balance_", IMetaObjectAttribute::eFieldTypes_Number, object, retVal, resultSet))
+					retLine->SetAt(object->GetName() + "_Balance", retVal);
 			}
 			wxDELETE(retLine);
 		}
@@ -192,7 +192,7 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto dimension : m_metaObject->GetObjectDimensions()) {
+	for (auto dimension : m_metaObject->GetDimentionArrayObject()) {
 		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				dimension->GetName(),
@@ -200,33 +200,33 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 				dimension->GetSynonym()
 			);
 	}
-	for (auto& obj : m_metaObject->GetObjectResources()) {
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
 		colCollection->AddColumn(
-			obj->GetName() + wxT("_Turnover"),
-			obj->GetTypeDesc(),
-			obj->GetSynonym() + " " + _("Turnover")
+			object->GetName() + wxT("_Turnover"),
+			object->GetTypeDesc(),
+			object->GetSynonym() + " " + _("Turnover")
 		);
 		if (m_metaObject->GetRegisterType() == eRegisterType::eBalances) {
 			colCollection->AddColumn(
-				obj->GetName() + wxT("_Receipt"),
-				obj->GetTypeDesc(),
-				obj->GetSynonym() + " " + _("Receipt")
+				object->GetName() + wxT("_Receipt"),
+				object->GetTypeDesc(),
+				object->GetSynonym() + " " + _("Receipt")
 			);
 			colCollection->AddColumn(
-				obj->GetName() + wxT("_Expense"),
-				obj->GetTypeDesc(),
-				obj->GetSynonym() + " " + _("Expense")
+				object->GetName() + wxT("_Expense"),
+				object->GetTypeDesc(),
+				object->GetSynonym() + " " + _("Expense")
 			);
 		}
 	}
 
 	CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 	if (cFilter.ConvertToValue(valFilter)) {
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 			CValue vSelValue;
-			if (valFilter->Property(obj->GetName(), vSelValue)) {
+			if (valFilter->Property(object->GetName(), vSelValue)) {
 				selFilter.insert_or_assign(
-					obj, vSelValue
+					object, vSelValue
 				);
 			}
 		}
@@ -237,9 +237,9 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 
 	wxString sqlQuery = " SELECT "; bool firstSelect = true;
 
-	for (auto& obj : m_metaObject->GetObjectDimensions()) {
+	for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 
-		IMetaObjectAttribute::sqlField_t sqlDimension = IMetaObjectAttribute::GetSQLFieldData(obj);
+		IMetaObjectAttribute::sqlField_t sqlDimension = IMetaObjectAttribute::GetSQLFieldData(object);
 
 		sqlQuery += (firstSelect ? "" : ",") + sqlDimension.m_fieldTypeName;
 
@@ -256,9 +256,9 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 		firstSelect = false;
 	}
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
 
-		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 		sqlQuery += (firstSelect ? "" : ",") + sqlResource.m_fieldTypeName;
 		sqlQuery += "," + sqlResource.m_types[0].m_field.m_fieldName + "_Turnover_";
 
@@ -272,17 +272,17 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 
 	sqlQuery += " FROM ( SELECT "; firstSelect = true;
 
-	for (auto& obj : m_metaObject->GetObjectDimensions()) {
-		sqlQuery += (firstSelect ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+	for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+		sqlQuery += (firstSelect ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 		firstSelect = false;
 	}
 
 	IMetaObjectAttribute::sqlField_t sqlColRecordType =
 		IMetaObjectAttribute::GetSQLFieldData(m_metaObject->GetRegisterRecordType());
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
 
-		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 		sqlQuery += (firstSelect ? "" : ",") + sqlResource.m_fieldTypeName + ", ";
 
 		if (m_metaObject->GetRegisterType() == eRegisterType::eBalances) {
@@ -315,23 +315,23 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 
 	sqlQuery += " GROUP BY "; bool firstGroupBy = true;
 
-	for (auto& obj : m_metaObject->GetObjectDimensions()) {
-		sqlQuery += (firstGroupBy ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+	for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+		sqlQuery += (firstGroupBy ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 		firstGroupBy = false;
 	}
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
-		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
+		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 		sqlQuery += (firstGroupBy ? "" : ",") + sqlResource.m_fieldTypeName;
 		firstGroupBy = false;
 	}
 
 	sqlQuery += " HAVING "; bool firstHaving = true;
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
 		wxString orCase = (!firstHaving ? "OR (" : "");
 		wxString orCaseEnd = (!firstHaving ? ")" : "");
-		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(obj);
+		IMetaObjectAttribute::sqlField_t sqlResource = IMetaObjectAttribute::GetSQLFieldData(object);
 		if (m_metaObject->GetRegisterType() == eRegisterType::eBalances) {
 			sqlQuery += orCase + " CAST(SUM(CASE WHEN " + sqlColRecordType.m_types[0].m_field.m_fieldName + " = 0.0"
 				" THEN	 " + sqlResource.m_types[0].m_field.m_fieldName + ""
@@ -379,23 +379,23 @@ CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, con
 
 		CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 		wxASSERT(retLine);
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 			CValue retValue;
-			if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-				retLine->SetAt(obj->GetName(), retValue);
+			if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+				retLine->SetAt(object->GetName(), retValue);
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
 			CValue retValue;
-			if (IMetaObjectAttribute::GetValueAttribute(obj->GetFieldNameDB() + "_N_Turnover_", IMetaObjectAttribute::eFieldTypes_Number, obj, retValue, resultSet))
-				retLine->SetAt(obj->GetName() + "_Turnover", retValue);
+			if (IMetaObjectAttribute::GetValueAttribute(object->GetFieldNameDB() + "_N_Turnover_", IMetaObjectAttribute::eFieldTypes_Number, object, retValue, resultSet))
+				retLine->SetAt(object->GetName() + "_Turnover", retValue);
 			if (m_metaObject->GetRegisterType() == eRegisterType::eBalances) {
 				CValue retValue1;
-				if (IMetaObjectAttribute::GetValueAttribute(obj->GetFieldNameDB() + "_N_Receipt_", IMetaObjectAttribute::eFieldTypes_Number, obj, retValue1, resultSet))
-					retLine->SetAt(obj->GetName() + "_Receipt", retValue1);
+				if (IMetaObjectAttribute::GetValueAttribute(object->GetFieldNameDB() + "_N_Receipt_", IMetaObjectAttribute::eFieldTypes_Number, object, retValue1, resultSet))
+					retLine->SetAt(object->GetName() + "_Receipt", retValue1);
 				CValue retValue2;
-				if (IMetaObjectAttribute::GetValueAttribute(obj->GetFieldNameDB() + "_N_Expense_", IMetaObjectAttribute::eFieldTypes_Number, obj, retValue2, resultSet))
-					retLine->SetAt(obj->GetName() + "_Expense", retValue2);
+				if (IMetaObjectAttribute::GetValueAttribute(object->GetFieldNameDB() + "_N_Expense_", IMetaObjectAttribute::eFieldTypes_Number, object, retValue2, resultSet))
+					retLine->SetAt(object->GetName() + "_Expense", retValue2);
 			}
 		}
 		wxDELETE(retLine);

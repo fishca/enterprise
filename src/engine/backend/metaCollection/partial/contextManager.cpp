@@ -65,10 +65,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enConstants:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaConstantCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaConstantCLSID)) {
 			CMetaObjectConstant* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CConstantManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CConstantManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -77,10 +77,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enCatalogs:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaCatalogCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaCatalogCLSID)) {
 			CMetaObjectCatalog* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CCatalogManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CCatalogManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -89,10 +89,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enDocuments:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaDocumentCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaDocumentCLSID)) {
 			CMetaObjectDocument* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CDocumentManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CDocumentManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -101,10 +101,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enEnumerations:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaEnumerationCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaEnumerationCLSID)) {
 			CMetaObjectEnumeration* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CEnumerationManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CEnumerationManager>(dataRef));
 
 			}
 		}
@@ -114,10 +114,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enDataProcessors:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaDataProcessorCLSID)) {
 			CMetaObjectDataProcessor* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CDataProcessorManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CDataProcessorManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -129,10 +129,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enReports:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaReportCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaReportCLSID)) {
 			CMetaObjectReport* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CReportManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CReportManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -144,10 +144,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enInformationRegisters:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
 			CMetaObjectInformationRegister* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CInformationRegisterManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CInformationRegisterManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;
@@ -156,10 +156,10 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	case enAccumulationRegisters:
 	{
 		CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
-		for (auto& obj : m_metaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+		for (const auto object : m_metaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
 			CMetaObjectAccumulationRegister* dataRef = nullptr;
-			if (obj->ConvertToValue(dataRef)) {
-				valStruct->Insert(obj->GetName(), CValue::CreateAndPrepareValueRef<CAccumulationRegisterManager>(dataRef));
+			if (object->ConvertToValue(dataRef)) {
+				valStruct->Insert(object->GetName(), CValue::CreateAndPrepareValueRef<CAccumulationRegisterManager>(dataRef));
 			}
 		}
 		pvarPropVal = valStruct;

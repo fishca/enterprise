@@ -80,6 +80,13 @@ private:
 
 public:
 
+	void SetControlName(const wxString& controlName) { SetControlNameAsString(controlName); }
+	wxString GetControlName() const {
+		wxString result;
+		GetControlNameAsString(result);
+		return result;
+	}
+
 	IValueFrame();
 	virtual ~IValueFrame();
 
@@ -114,19 +121,22 @@ public:
 
 	virtual form_identifier_t GetControlID() const { return m_controlId; }
 
-	virtual void SetControlName(const wxString& controlName) {};
-	virtual wxString GetControlName() const = 0;
+	/**
+	* Support control name
+	*/
 
+	virtual bool GetControlNameAsString(wxString& result) const {
+		result = GetObjectTypeName();
+		return true;
+	}
+
+	virtual bool SetControlNameAsString(const wxString& result) const {
+		return false;
+	}
+
+	// get control caption
 	virtual wxString GetControlCaption() const {
 		return stringUtils::GenerateSynonym(GetClassName());
-	}
-
-	void ResetGuid() {
-		//	wxASSERT(m_controlGuid.isValid()); m_controlGuid.reset();
-	}
-
-	void GenerateGuid() {
-		//	wxASSERT(!m_controlGuid.isValid()); m_controlGuid = wxNewUniqueGuid;
 	}
 
 	virtual CGuid GetControlGuid() const { return m_controlGuid; }
@@ -245,7 +255,7 @@ public:
 			}
 			return eventCancel.GetBoolean();
 		}
-		
+
 		return true;
 	}
 
@@ -265,7 +275,7 @@ public:
 			}
 			return true;
 		}
-		
+
 		return true;
 	}
 

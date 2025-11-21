@@ -68,12 +68,10 @@ public:
 	virtual wxClassInfo* GetClassInfo() const = 0;
 	virtual class_identifier_t GetClassType() const = 0;
 
-	virtual wxIcon GetClassIcon() const {
-		return wxNullIcon;
-	}
+	virtual wxIcon GetClassIcon() const { return wxNullIcon; }
 
 	virtual eCtorObjectType GetObjectTypeCtor() const = 0;
-	virtual void CallEvent(eCtorObjectTypeEvent event) {};
+	virtual void CallEvent(eCtorObjectTypeEvent event) {}
 	virtual CValue* CreateObject() const = 0;
 };
 
@@ -85,17 +83,9 @@ public:
 
 	virtual ~IValueTypeCtor() {}
 
-	virtual wxString GetClassName() const {
-		return m_className;
-	}
-
-	virtual wxClassInfo* GetClassInfo() const {
-		return m_classInfo;
-	}
-
-	virtual class_identifier_t GetClassType() const {
-		return m_clsid;
-	}
+	virtual wxString GetClassName() const { return m_className; }
+	virtual wxClassInfo* GetClassInfo() const { return m_classInfo; }
+	virtual class_identifier_t GetClassType() const { return m_clsid; }
 
 	IValueTypeCtor(const wxString& className, wxClassInfo* classInfo, const class_identifier_t& clsid)
 		: m_className(className), m_classInfo(classInfo), m_clsid(clsid) {
@@ -127,18 +117,9 @@ public:
 		IPrimitiveTypeCtor(className, CLASSINFO(T), clsid), m_valType(valType) {
 	}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual eValueTypes GetValueType() const {
-		return m_valType;
-	}
-
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_primitive;
-	}
-
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual eValueTypes GetValueType() const { return m_valType; }
+	virtual eCtorObjectType GetObjectTypeCtor() const { return eCtorObjectType::eCtorObjectType_object_primitive; }
 	virtual void CallEvent(eCtorObjectTypeEvent event) {
 		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
@@ -146,9 +127,7 @@ public:
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual CValue* CreateObject() const {
-		return new T(m_valType);
-	}
+	virtual CValue* CreateObject() const { return new T(m_valType); }
 };
 
 #define PRIMITIVE_TYPE_REGISTER(class_info, class_name, class_type, clsid)\
@@ -164,14 +143,8 @@ public:
 		IValueTypeCtor(className, CLASSINFO(T), clsid) {
 	}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_value;
-	}
-
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual eCtorObjectType GetObjectTypeCtor() const { return eCtorObjectType::eCtorObjectType_object_value; }
 	virtual void CallEvent(eCtorObjectTypeEvent event) {
 		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
@@ -179,9 +152,7 @@ public:
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual CValue* CreateObject() const {
-		return new T();
-	}
+	virtual CValue* CreateObject() const { return new T(); }
 };
 
 #define VALUE_TYPE_REGISTER(class_info, class_name, clsid)\
@@ -197,14 +168,8 @@ public:
 		IValueTypeCtor(className, CLASSINFO(T), clsid) {
 	}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_system;
-	}
-
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual eCtorObjectType GetObjectTypeCtor() const { return eCtorObjectType::eCtorObjectType_object_system; }
 	virtual void CallEvent(eCtorObjectTypeEvent event) {
 		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
@@ -212,9 +177,7 @@ public:
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual CValue* CreateObject() const {
-		return nullptr;
-	}
+	virtual CValue* CreateObject() const { return nullptr; }
 };
 
 #define SYSTEM_TYPE_REGISTER(class_info, class_name, clsid)\
@@ -229,18 +192,9 @@ public:
 		IPrimitiveTypeCtor(className, CLASSINFO(T), clsid) {
 	}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual eValueTypes GetValueType() const {
-		return eValueTypes::TYPE_ENUM;
-	};
-
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_enum;
-	};
-
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual eValueTypes GetValueType() const { return eValueTypes::TYPE_ENUM; }
+	virtual eCtorObjectType GetObjectTypeCtor() const { return eCtorObjectType::eCtorObjectType_object_enum; }
 	virtual void CallEvent(eCtorObjectTypeEvent event) {
 		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
@@ -249,7 +203,7 @@ public:
 	}
 
 	virtual CValue* CreateObject() const {
-		T *_ptr = new T();
+		T* _ptr = new T();
 		_ptr->CreateEnumeration();
 		return _ptr;
 	};
@@ -266,18 +220,9 @@ public:
 		IPrimitiveTypeCtor(className, CLASSINFO(T), clsid) {
 	}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual eValueTypes GetValueType() const {
-		return eValueTypes::TYPE_VALUE;
-	};
-
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_context;
-	};
-
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual eValueTypes GetValueType() const { return eValueTypes::TYPE_VALUE; }
+	virtual eCtorObjectType GetObjectTypeCtor() const { return eCtorObjectType::eCtorObjectType_object_context; }
 	virtual void CallEvent(eCtorObjectTypeEvent event) {
 		switch (event)
 		{
@@ -293,9 +238,7 @@ public:
 		}
 	}
 
-	virtual CValue* CreateObject() const {
-		return m_innerObject;
-	};
+	virtual CValue* CreateObject() const { return m_innerObject; }
 };
 
 #define CONTEXT_TYPE_REGISTER(class_info, class_name, clsid)\

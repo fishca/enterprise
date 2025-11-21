@@ -135,10 +135,10 @@ private:
 	std::vector<CFormTypeItem> m_listTypeForm;
 };
 
-#include "backend/metaCollection/metaSource.h"
+#include "backend/metaCollection/metaObjectComposite.h"
 
 class BACKEND_API IMetaObjectGenericData
-	: public IMetaObjectSourceData, public IBackendCommandData {
+	: public IMetaObjectCompositeData, public IBackendCommandData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectGenericData);
 public:
 	friend class IMetaData;
@@ -158,23 +158,41 @@ public:
 		return eSelectorDataType::eSelectorDataType_reference;
 	}
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributes() const = 0;
+#pragma region __array_h__
 
-	virtual std::vector<CMetaObjectForm*> GetGenericForms() const = 0;
-	virtual std::vector<CMetaObjectGrid*> GetObjectTemplates() const = 0;
+	//form
+	std::vector<IMetaObjectForm*> GetFormArrayObject(
+		std::vector<IMetaObjectForm*>& array = std::vector<IMetaObjectForm*>()) const {
+		FillArrayObjectByFilter<IMetaObjectForm>(array, { g_metaFormCLSID });
+		return array;
+	}
 
-	//find attributes, tables etc 
-	virtual IMetaObjectAttribute* FindGenericAttributeByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetGenericAttributes()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
+	//grid
+	std::vector<IMetaObjectGrid*> GetTemplateArrayObject(
+		std::vector<IMetaObjectGrid*> array = std::vector<IMetaObjectGrid*>()) const {
+		FillArrayObjectByFilter<IMetaObjectGrid>(array, { g_metaTemplateCLSID });
+		return array;
+	}
+
+#pragma endregion
+#pragma region __filter_h__
+
+	//form
+	template <typename _T1>
+	IMetaObjectForm* FindFormObjectByFilter(const _T1& id, const form_identifier_t& form_id = wxNOT_FOUND) const {
+		IMetaObjectForm* founded = FindObjectByFilter<IMetaObjectForm>(id, { g_metaCommonFormCLSID, g_metaFormCLSID });
+		if (founded != nullptr && form_id == founded->GetTypeForm() || form_id == wxNOT_FOUND)
+			return founded;
 		return nullptr;
 	}
 
-	//find in current metaObject
-	virtual IMetaObjectAttribute* FindGenericAttribute(const meta_identifier_t& id) const;
+	//grid
+	template <typename _T1>
+	IMetaObjectGrid* FindGridObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectGrid>(id, { g_metaCommonTemplateCLSID, g_metaTemplateCLSID });
+	}
+
+#pragma endregion 
 
 	//form events 
 	virtual void OnCreateFormObject(IMetaObjectForm* metaForm) {}
@@ -212,6 +230,11 @@ public:
 #pragma endregion
 
 protected:
+
+	virtual bool FillArrayObjectByPredefined(
+		std::vector<IMetaObjectAttribute*>& array) const {
+		return false;
+	}
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject) { return nullptr; }
@@ -251,74 +274,82 @@ public:
 	virtual bool OnBeforeRunMetaObject(int flags);
 	virtual bool OnAfterCloseMetaObject();
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributes() const { return GetObjectAttributes(); }
+#pragma region __generic_h__
 
-	virtual std::vector<CMetaObjectForm*> GetGenericForms() const { return GetObjectForms(); }
+	//attribute
+	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		return array;
+	}
+#pragma endregion
 
-	//get default attributes
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const { return std::vector<IMetaObjectAttribute*>(); }
+#pragma region __array_h__
 
-	//get attributes, form etc.. 
-	virtual std::vector<IMetaObjectAttribute*> GetObjectAttributes() const;
-	virtual std::vector<CMetaObjectTableData*> GetObjectTables() const;
-	virtual std::vector<CMetaObjectForm*> GetObjectForms() const;
-	virtual std::vector<CMetaObjectGrid*> GetObjectTemplates() const;
-
-	//find attributes, tables etc 
-	virtual IMetaObjectAttribute* FindDefAttributeById(const meta_identifier_t& id) const {
-		for (auto& obj : GetDefaultAttributes()) {
-			if (id == obj->GetMetaID())
-				return obj;
-		}
-		return nullptr;
+	//any attribute 
+	std::vector<IMetaObjectAttribute*> GetAnyAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindDefAttributeByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetDefaultAttributes()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//attribute
+	std::vector<IMetaObjectAttribute*> GetAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindAttributeById(const meta_identifier_t& id) const {
-		for (auto& obj : GetObjectAttributes()) {
-			if (id == obj->GetMetaID())
-				return obj;
-		}
-		return nullptr;
+	//table
+	std::vector<CMetaObjectTableData*> GetTableArrayObject(
+		std::vector<CMetaObjectTableData*>& array = std::vector<CMetaObjectTableData*>()) const {
+		FillArrayObjectByFilter<CMetaObjectTableData>(array, { g_metaTableCLSID });
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindAttributeByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectAttributes()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//predefined 
+	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		return array;
 	}
 
-	virtual CMetaObjectTableData* FindTableById(const meta_identifier_t& id) const {
-		for (auto& obj : GetObjectTables()) {
-			if (id == obj->GetMetaID())
-				return obj;
-		}
-		return nullptr;
+#pragma endregion
+#pragma region __filter_h__
+
+	//any attribute 
+	template <typename _T1>
+	IMetaObjectAttribute* FindAnyAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaAttributeCLSID, g_metaPredefinedAttributeCLSID });
 	}
 
-	virtual CMetaObjectTableData* FindTableByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectTables()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//attribute 
+	template <typename _T1>
+	IMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaAttributeCLSID });
 	}
+
+	//table
+	template <typename _T1>
+	CMetaObjectTableData* FindTableObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectTableData>(id, { g_metaTableCLSID });
+	}
+
+	//predefined 
+	template <typename _T1>
+	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
+	}
+
+#pragma endregion 
 
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject() = 0;
 
 	//Get metaObject by def id
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) = 0;
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) = 0;
 
 	//get default form 
 	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); }
@@ -349,10 +380,10 @@ protected:
 	//external or default dataProcessor
 	int m_objMode;
 public:
+
 	//get object mode 
-	int GetObjectMode() const {
-		return m_objMode;
-	}
+	int GetObjectMode() const { return m_objMode; }
+
 	//ctor
 	IMetaObjectRecordDataExt(int objMode = METAOBJECT_NORMAL);
 
@@ -377,7 +408,7 @@ protected:
 	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("presentation"));
 	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("quick choice"), false);
 
-	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
+	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 
 protected:
 	//ctor
@@ -385,7 +416,7 @@ protected:
 	virtual ~IMetaObjectRecordDataRef();
 public:
 
-	virtual CMetaObjectAttributeDefault* GetDataReference() const { return m_propertyAttributeReference->GetMetaObject(); }
+	virtual CMetaObjectAttributePredefined* GetDataReference() const { return m_propertyAttributeReference->GetMetaObject(); }
 	virtual bool IsDataReference(const meta_identifier_t& id) const { return id == (*m_propertyAttributeReference)->GetMetaID(); }
 
 	virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
@@ -419,32 +450,43 @@ public:
 	virtual bool ProcessChoice(IBackendControlFrame* ownerValue,
 		const wxString& strFormName = wxEmptyString, eSelectMode selMode = eSelectMode::eSelectMode_Items);
 
-	//find attributes, tables etc 
-	virtual CMetaObjectEnum* FindEnumByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectEnums()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+#pragma region __generic_h__
+
+	//searched 
+	virtual std::vector<IMetaObjectAttribute*> GetSearchedAttributeObjectArray(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectBySearched(array);
+		return array;
 	}
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributes() const;
-	virtual std::vector<CMetaObjectForm*> GetGenericForms() const { return GetObjectForms(); }
+#pragma endregion 
+#pragma region __array_h__
+
+	//enum
+	std::vector<CMetaObjectEnum*> GetEnumObjectArray(
+		std::vector<CMetaObjectEnum*>& array = std::vector<CMetaObjectEnum*>()) const {
+		FillArrayObjectByFilter<CMetaObjectEnum>(array, { g_metaEnumCLSID });
+		return array;
+	}
+
+#pragma endregion
+#pragma region __filter_h__
+
+	//enum
+	template <typename _T1>
+	CMetaObjectEnum* FindEnumObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectEnum>(id, { g_metaEnumCLSID });
+	}
+
+#pragma endregion 
 
 	//get attribute code 
 	virtual IMetaObjectAttribute* GetAttributeForCode() const { return nullptr; }
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const = 0;
-	//other objects
-	virtual std::vector<CMetaObjectEnum*> GetObjectEnums() const;
-	//searched attributes 
-	virtual std::vector<IMetaObjectAttribute*> GetSearchedAttributes() const = 0;
-
 	//get default form 
 	virtual IBackendValueForm* GetDefaultCommandForm() { return GetListForm(); }
 
+	//find object value
 	virtual class CReferenceDataObject* FindObjectValue(const CGuid& guid); //find by guid and ret reference 
 
 #pragma region _form_builder_h_
@@ -471,6 +513,13 @@ public:
 	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
 	int ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum);
 	int ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable);
+
+protected:
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+		return true;
+	}
 };
 
 //metaObject with reference - for enumeration
@@ -479,7 +528,7 @@ class BACKEND_API IMetaObjectRecordDataEnumRef : public IMetaObjectRecordDataRef
 private:
 
 	//default attributes 
-	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
 
 protected:
 
@@ -489,7 +538,7 @@ protected:
 
 public:
 
-	CMetaObjectAttributeDefault* GetDataOrder() const { return m_propertyAttributeOrder->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataOrder() const { return m_propertyAttributeOrder->GetMetaObject(); }
 	bool IsDataOrder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeOrder)->GetMetaID(); }
 
 	//events: 
@@ -523,8 +572,8 @@ private:
 protected:
 
 	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("list generation"));
-	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
 
 protected:
 	//ctor
@@ -534,10 +583,10 @@ public:
 
 	CMetaDescription& GetGenerationDescription() const { return m_propertyGeneration->GetValueAsMetaDesc(); }
 
-	CMetaObjectAttributeDefault* GetDataVersion() const { return m_propertyAttributeDataVersion->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataVersion() const { return m_propertyAttributeDataVersion->GetMetaObject(); }
 	bool IsDataVersion(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDataVersion)->GetMetaID(); }
 
-	CMetaObjectAttributeDefault* GetDataDeletionMark() const { return m_propertyAttributeDeletionMark->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataDeletionMark() const { return m_propertyAttributeDeletionMark->GetMetaObject(); }
 	bool IsDataDeletionMark(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDeletionMark)->GetMetaID(); }
 
 	virtual bool HasQuickChoice() const { return false; }
@@ -590,23 +639,23 @@ class BACKEND_API IMetaObjectRecordDataFolderMutableRef : public IMetaObjectReco
 protected:
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
-	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 
 public:
 
-	CMetaObjectAttributeDefault* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
 	virtual bool IsDataCode(const meta_identifier_t& id) const { return id == (*m_propertyAttributeCode)->GetMetaID(); }
 
-	CMetaObjectAttributeDefault* GetDataDescription() const { return m_propertyAttributeDescription->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataDescription() const { return m_propertyAttributeDescription->GetMetaObject(); }
 	virtual bool IsDataDescription(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDescription)->GetMetaID(); }
 
-	CMetaObjectAttributeDefault* GetDataParent() const { return m_propertyAttributeParent->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataParent() const { return m_propertyAttributeParent->GetMetaObject(); }
 	virtual bool IsDataParent(const meta_identifier_t& id) const { return id == (*m_propertyAttributeParent)->GetMetaID(); }
 
-	CMetaObjectAttributeDefault* GetDataIsFolder() const { return m_propertyAttributeIsFolder->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDataIsFolder() const { return m_propertyAttributeIsFolder->GetMetaObject(); }
 	virtual bool IsDataFolder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeIsFolder)->GetMetaID(); }
 
 	virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
@@ -675,10 +724,10 @@ class BACKEND_API IMetaObjectRegisterData :
 protected:
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
-	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
-	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
-	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
+	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
 
 private:
 	CRole* m_roleRead = IMetaObject::CreateRole("read", _("read"));
@@ -688,71 +737,107 @@ protected:
 	virtual ~IMetaObjectRegisterData();
 public:
 
-	CMetaObjectAttributeDefault* GetRegisterActive() const { return m_propertyAttributeLineActive->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetRegisterActive() const { return m_propertyAttributeLineActive->GetMetaObject(); }
 	bool IsRegisterActive(const meta_identifier_t& id) const { return id == (*m_propertyAttributeLineActive)->GetMetaID(); }
-	CMetaObjectAttributeDefault* GetRegisterPeriod() const { return m_propertyAttributePeriod->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetRegisterPeriod() const { return m_propertyAttributePeriod->GetMetaObject(); }
 	bool IsRegisterPeriod(const meta_identifier_t& id) const { return id == (*m_propertyAttributePeriod)->GetMetaID(); }
-	CMetaObjectAttributeDefault* GetRegisterRecorder() const { return m_propertyAttributeRecorder->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetRegisterRecorder() const { return m_propertyAttributeRecorder->GetMetaObject(); }
 	bool IsRegisterRecorder(const meta_identifier_t& id) const { return id == (*m_propertyAttributeRecorder)->GetMetaID(); }
-	CMetaObjectAttributeDefault* GetRegisterLineNumber() const { return m_propertyAttributeLineNumber->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetRegisterLineNumber() const { return m_propertyAttributeLineNumber->GetMetaObject(); }
 	bool IsRegisterLineNumber(const meta_identifier_t& id) const { return id == (*m_propertyAttributeLineNumber)->GetMetaID(); }
 
 	///////////////////////////////////////////////////////////////////
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributes() const;
-	virtual std::vector<CMetaObjectForm*> GetGenericForms() const { return GetObjectForms(); }
+#pragma region __generic_h__
 
-	//get default attributes
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const = 0;
-
-	//get attributes, form etc.. 
-	virtual std::vector<IMetaObjectAttribute*> GetObjectDimensions() const;
-	virtual std::vector<IMetaObjectAttribute*> GetObjectResources() const;
-	virtual std::vector<IMetaObjectAttribute*> GetObjectAttributes() const;
-
-	//get dimension keys 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericDimensions() const = 0;
-
-	virtual std::vector<CMetaObjectForm*> GetObjectForms() const;
-	virtual std::vector<CMetaObjectGrid*> GetObjectTemplates() const;
-
-	//find attributes, tables etc 
-	virtual IMetaObjectAttribute* FindDefAttributeByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetDefaultAttributes()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//attribute 
+	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaDimensionCLSID, g_metaResourceCLSID, g_metaAttributeCLSID });
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindDimensionByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectDimensions()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//dimention  
+	virtual std::vector<IMetaObjectAttribute*> GetGenericDimentionArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByDimention(array);
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindResourceByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectResources()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
+#pragma endregion
+#pragma region __array_h__
 
-		return nullptr;
+	//any attribute 
+	std::vector<IMetaObjectAttribute*> GetAnyAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaDimensionCLSID, g_metaResourceCLSID, g_metaAttributeCLSID });
+		return array;
 	}
 
-	virtual IMetaObjectAttribute* FindAttributeByGuid(const wxString& strDocPath) const {
-		for (auto& obj : GetObjectAttributes()) {
-			if (strDocPath == obj->GetDocPath())
-				return obj;
-		}
-		return nullptr;
+	//dimension
+	std::vector<CMetaObjectDimension*> GetDimentionArrayObject(
+		std::vector<CMetaObjectDimension*>& array = std::vector<CMetaObjectDimension*>()) const {
+		FillArrayObjectByFilter<CMetaObjectDimension>(array, { g_metaDimensionCLSID });
+		return array;
 	}
 
-	//find in current metaObject
-	virtual IMetaObjectAttribute* FindProp(const meta_identifier_t& id) const;
+	//resource
+	std::vector<CMetaObjectResource*> GetResourceArrayObject(
+		std::vector<CMetaObjectResource*>& array = std::vector<CMetaObjectResource*>()) const {
+		FillArrayObjectByFilter<CMetaObjectResource>(array, { g_metaResourceCLSID });
+		return array;
+	}
+
+	//attribute 
+	std::vector<IMetaObjectAttribute*> GetAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		return array;
+	}
+
+	//predefined 
+	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
+		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+		FillArrayObjectByPredefined(array);
+		return array;
+	}
+
+#pragma endregion
+#pragma region __filter_h__
+
+	//any attribute 
+	template <typename _T1>
+	IMetaObjectAttribute* FindAnyAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaDimensionCLSID, g_metaResourceCLSID, g_metaAttributeCLSID, g_metaPredefinedAttributeCLSID });
+	}
+
+	//dimension
+	template <typename _T1>
+	CMetaObjectDimension* FindDimensionObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectDimension>(id, { g_metaDimensionCLSID });
+	}
+
+	//resource
+	template <typename _T1>
+	CMetaObjectResource* FindResourceObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectResource>(id, { g_metaResourceCLSID });
+	}
+
+	//attribute
+	template <typename _T1>
+	IMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectResource>(id, { g_metaAttributeCLSID });
+	}
+
+	//predefined 
+	template <typename _T1>
+	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
+	}
+
+#pragma endregion 
 
 	//has record manager 
 	virtual bool HasRecordManager() const { return false; }
@@ -778,9 +863,6 @@ public:
 	//get module object in compose object 
 	virtual CMetaObjectModule* GetModuleObject() const { return nullptr; }
 	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
-
-	//Get metaObject by def id
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) = 0;
 
 	virtual bool FilterChild(const class_identifier_t& clsid) const {
 		if (
@@ -824,6 +906,13 @@ public:
 protected:
 
 	bool UpdateCurrentRecords(const wxString& tableName, IMetaObjectRegisterData* dst);
+
+	///////////////////////////////////////////////////////////////////
+
+	virtual bool FillArrayObjectByDimention(
+		std::vector<IMetaObjectAttribute*>& array) const {
+		return false;
+	}
 
 	///////////////////////////////////////////////////////////////////
 
@@ -1299,7 +1388,7 @@ public:
 		public:
 
 			CValueRecordSetRegisterColumnInfo();
-			CValueRecordSetRegisterColumnInfo(IMetaObjectAttribute* metaAttribute);
+			CValueRecordSetRegisterColumnInfo(IMetaObjectAttribute* attribute);
 			virtual ~CValueRecordSetRegisterColumnInfo();
 
 			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
@@ -1336,7 +1425,7 @@ public:
 		virtual unsigned int GetColumnCount() const {
 			IMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
-			const auto& obj = metaTable->GetGenericAttributes();
+			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
 		}
 
@@ -1452,10 +1541,18 @@ public:
 	virtual void CreateEmptyKey();
 	virtual bool InitializeObject(const IRecordSetObject* source = nullptr, bool newRecord = false);
 
-	bool FindKeyValue(const meta_identifier_t& id) const;
-	void SetKeyValue(const meta_identifier_t& id, const CValue& cValue);
-	CValue GetKeyValue(const meta_identifier_t& id) const;
-	void EraseKeyValue(const meta_identifier_t& id);
+	bool FindKeyValue(const meta_identifier_t& id) const { return m_keyValues.find(id) != m_keyValues.end(); }
+	template <typename value>
+	void SetKeyValue(const meta_identifier_t& id, value&& cValue) {
+		const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(id);
+		wxASSERT(attribute);
+		m_keyValues.insert_or_assign(
+			id, attribute != nullptr ? attribute->AdjustValue(cValue) : cValue
+		);
+	}
+
+	const CValue& GetKeyValue(const meta_identifier_t& id) const { return m_keyValues.at(id); }
+	void EraseKeyValue(const meta_identifier_t& id) { m_keyValues.erase(id); }
 
 	//copy new object
 	virtual IRecordSetObject* CopyRegisterValue();
@@ -1487,7 +1584,7 @@ public:
 
 #pragma region _tabular_data_
 	//get metaData from object 
-	virtual IMetaObjectSourceData* GetSourceMetaObject() const { return GetMetaObject(); }
+	virtual IMetaObjectCompositeData* GetSourceMetaObject() const { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const { return GetClassType(); }

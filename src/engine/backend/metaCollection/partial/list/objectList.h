@@ -19,7 +19,7 @@ private:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) override {
 		if (!line.IsOk())
 			return nullptr;
-		return new CDataObjectListReturnLine(this, line);
+		return CValue::CreateAndPrepareValueRef<CDataObjectListReturnLine>(this, line);
 	}
 
 public:
@@ -49,7 +49,7 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectListColumnInfo();
-			CDataObjectListColumnInfo(IMetaObjectAttribute* metaAttribute);
+			CDataObjectListColumnInfo(IMetaObjectAttribute* attribute);
 			virtual ~CDataObjectListColumnInfo();
 
 		private:
@@ -79,7 +79,7 @@ public:
 		virtual unsigned int GetColumnCount() const {
 			IMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
-			const auto& obj = metaTable->GetGenericAttributes();
+			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
 		}
 
@@ -511,7 +511,7 @@ private:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return new CDataObjectTreeReturnLine(this, line);
+		return CValue::CreateAndPrepareValueRef<CDataObjectTreeReturnLine>(this, line);
 	}
 
 public:
@@ -529,7 +529,7 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectTreeColumnInfo();
-			CDataObjectTreeColumnInfo(IMetaObjectAttribute* metaAttribute);
+			CDataObjectTreeColumnInfo(IMetaObjectAttribute* attribute);
 			virtual ~CDataObjectTreeColumnInfo();
 
 		private:
@@ -559,7 +559,7 @@ public:
 		virtual unsigned int GetColumnCount() const {
 			IMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
-			const auto& obj = metaTable->GetGenericAttributes();
+			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
 		}
 

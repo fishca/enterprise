@@ -44,7 +44,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual IMetaObjectSourceData* GetSourceMetaObject() const;
+	virtual IMetaObjectCompositeData* GetSourceMetaObject() const;
 	//get ref class 
 	virtual class_identifier_t GetSourceClassType() const;
 	//Get presentation 

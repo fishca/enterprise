@@ -17,7 +17,7 @@ ISelectorObject::~ISelectorObject()
 
 class_identifier_t ISelectorObject::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -25,7 +25,7 @@ class_identifier_t ISelectorObject::GetClassType() const
 
 wxString ISelectorObject::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -33,7 +33,7 @@ wxString ISelectorObject::GetClassName() const
 
 wxString ISelectorObject::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -156,12 +156,33 @@ void CSelectorDataObject::PrepareNames() const
 	m_methodHelper->AppendFunc("reset", "reset()");
 	m_methodHelper->AppendFunc("getObject", "getObject()");
 
-	for (auto& obj : m_metaObject->GetObjectAttributes()) {
-		m_methodHelper->AppendProp(obj->GetName(), true, false, obj->GetMetaID());
+	//set object name 
+	wxString objectName;
+
+	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
+			continue;
+		m_methodHelper->AppendProp(
+			objectName,
+			true,
+			false,
+			object->GetMetaID()
+		);
 	}
 
-	for (auto obj : m_metaObject->GetObjectTables()) {
-		m_methodHelper->AppendProp(obj->GetName(), true, false, obj->GetMetaID());
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
+			continue;
+		m_methodHelper->AppendProp(
+			objectName,
+			true,
+			false,
+			object->GetMetaID()
+		);
 	}
 
 	m_methodHelper->AppendProp(wxT("reference"), m_metaObject->GetMetaID());
@@ -216,12 +237,19 @@ void CSelectorRegisterObject::PrepareNames() const
 		m_methodHelper->AppendFunc("getRecordManager", "getRecordManager()");
 	}
 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
+	//set object name 
+	wxString objectName;
+
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
+			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
 			false,
-			obj->GetMetaID()
+			object->GetMetaID()
 		);
 	}
 }

@@ -39,7 +39,7 @@ struct CQualifierString {
 
 struct CTypeDescription {
 
-	std::set<class_identifier_t> m_listTypeClass;
+	std::vector<class_identifier_t> m_listTypeClass;
 
 	struct CTypeData {
 		CQualifierNumber m_number;
@@ -120,7 +120,7 @@ public:
 		return *it;
 	}
 
-	const std::set<class_identifier_t>& GetClsidList() const { return m_listTypeClass; }
+	const std::vector<class_identifier_t>& GetClsidList() const { return m_listTypeClass; }
 
 	//get special data number 
 	unsigned char GetPrecision() const { return m_typeData.GetPrecision(); }
@@ -157,112 +157,112 @@ public:
 		AppendMetaType(clsid, descr);
 	}
 
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids) {
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array) {
 		ClearMetaType();
-		AppendMetaType(clsids);
+		AppendMetaType(array);
 	}
 
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids, const CTypeDescription::CTypeData& descr) {
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CTypeDescription::CTypeData& descr) {
 		ClearMetaType();
-		AppendMetaType(clsids, descr.m_number, descr.m_date, descr.m_string);
+		AppendMetaType(array, descr.m_number, descr.m_date, descr.m_string);
 	}
 
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids,
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array,
 		const CQualifierNumber& qNumber, const CQualifierDate& qDate, CQualifierString& qString) {
 		ClearMetaType();
-		AppendMetaType(clsids, qNumber, qDate, qString);
+		AppendMetaType(array, qNumber, qDate, qString);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void AppendMetaType(const eValueTypes& valType) {
-		if (valType == eValueTypes::TYPE_NUMBER) {
-			m_typeData.SetNumber(10, 0);
-		}
-		if (valType == eValueTypes::TYPE_DATE) {
-			m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
-		}
-		if (valType == eValueTypes::TYPE_STRING) {
-			m_typeData.SetString(10);
-		}
-		m_listTypeClass.insert(
-			CValue::GetIDByVT(valType)
-		);
+
+		if (valType == eValueTypes::TYPE_NUMBER) m_typeData.SetNumber(10, 0);
+		if (valType == eValueTypes::TYPE_DATE) m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
+		if (valType == eValueTypes::TYPE_STRING) m_typeData.SetString(10);
+
+		const class_identifier_t clsid = CValue::GetIDByVT(valType);
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+		if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
 	}
 
 	void AppendMetaType(const class_identifier_t& clsid) {
-		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) {
-			m_typeData.SetNumber(10, 0);
-		}
-		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_DATE)) {
-			m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
-		}
-		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_STRING)) {
-			m_typeData.SetString(10);
-		}
-		m_listTypeClass.insert(clsid);
+
+		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) m_typeData.SetNumber(10, 0);
+		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_DATE)) m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
+		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_STRING)) m_typeData.SetString(10);
+
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+		if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
 	}
 
 	void AppendMetaType(const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr) {
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) {
 			m_typeData.SetNumber(descr.GetPrecision(), descr.GetScale(), descr.IsNonNegative());
 		}
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_DATE)) {
 			m_typeData.SetDate(descr.GetDateFraction());
 		}
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_STRING)) {
 			m_typeData.SetString(descr.GetLength(), descr.GetAllowedLength());
 		}
-		m_listTypeClass.insert(clsid);
+
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+		if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
 	}
 
-	void AppendMetaType(const std::set<class_identifier_t>& clsids) {
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) != clsids.end()) {
-			m_typeData.SetNumber(10, 0);
-		}
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_DATE)) != clsids.end()) {
-			m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
-		}
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_STRING)) != clsids.end()) {
-			m_typeData.SetString(10);
-		}
-		for (auto clsid : clsids) {
-			m_listTypeClass.insert(clsid);
-		}
-	}
+	void AppendMetaType(const std::vector<class_identifier_t>& array) {
 
-	void AppendMetaType(const std::set<class_identifier_t>& clsids, const CTypeDescription::CTypeData& descr) {
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) != clsids.end()) {
-			m_typeData.SetNumber(descr.GetPrecision(), descr.GetScale(), descr.IsNonNegative());
-		}
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_DATE)) != clsids.end()) {
-			m_typeData.SetDate(descr.GetDateFraction());
-		}
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_STRING)) != clsids.end()) {
-			m_typeData.SetString(descr.GetLength(), descr.GetAllowedLength());
-		}
-		for (auto clsid : clsids) {
-			m_listTypeClass.insert(clsid);
+		auto iterator_number = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+		if (iterator_number != array.end()) m_typeData.SetNumber(10, 0);
+		auto iterator_date = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_DATE));
+		if (iterator_date != array.end()) m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
+		auto iterator_string = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+		if (iterator_string != array.end()) m_typeData.SetString(10);
+
+		for (auto clsid : array) {
+			auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+			if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
 		}
 	}
 
-	void AppendMetaType(const std::set<class_identifier_t>& clsids,
+	void AppendMetaType(const std::vector<class_identifier_t>& array, const CTypeDescription::CTypeData& descr) {
+
+		auto iterator_number = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+		if (iterator_number != array.end()) m_typeData.SetNumber(descr.GetPrecision(), descr.GetScale(), descr.IsNonNegative());
+		auto iterator_date = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_DATE));
+		if (iterator_date != array.end()) m_typeData.SetDate(descr.GetDateFraction());
+		auto iterator_string = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+		if (iterator_string != array.end()) m_typeData.SetString(descr.GetLength(), descr.GetAllowedLength());
+
+		for (auto clsid : array) {
+			auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+			if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
+		}
+	}
+
+	void AppendMetaType(const std::vector<class_identifier_t>& array,
 		const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) {
-		if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) != clsids.end()) {
-			m_typeData.SetNumber(qNumber.m_precision, qNumber.m_scale);
-		}
-		else if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_DATE)) != clsids.end()) {
-			m_typeData.SetDate(qDate.m_dateTime);
-		}
-		else if (clsids.find(CValue::GetIDByVT(eValueTypes::TYPE_STRING)) != clsids.end()) {
-			m_typeData.SetString(qString.m_length);
-		}
-		for (auto clsid : clsids) {
-			m_listTypeClass.insert(clsid);
+
+		auto iterator_number = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+		if (iterator_number != array.end()) m_typeData.SetNumber(qNumber.m_precision, qNumber.m_scale);
+		auto iterator_date = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_DATE));
+		if (iterator_date != array.end()) m_typeData.SetDate(qDate.m_dateTime);
+		auto iterator_string = std::find(array.begin(), array.end(), CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+		if (iterator_string != array.end()) m_typeData.SetString(qString.m_length);
+
+		for (auto clsid : array) {
+			auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+			if (iterator == m_listTypeClass.end()) m_listTypeClass.emplace_back(clsid);
 		}
 	}
 
-	void AppendMetaType(const CTypeDescription& typeDesc) { AppendMetaType(typeDesc.m_listTypeClass, typeDesc.m_typeData); }
+	void AppendMetaType(const CTypeDescription& typeDesc) {
+		AppendMetaType(typeDesc.m_listTypeClass, typeDesc.m_typeData);
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -276,20 +276,28 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void ClearMetaType(const class_identifier_t& clsid) {
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) {
 			m_typeData.SetNumber(10, 0);
 		}
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_DATE)) {
 			m_typeData.SetDate(eDateFractions::eDateFractions_DateTime);
 		}
+
 		if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_STRING)) {
 			m_typeData.SetString(10);
 		}
-		m_listTypeClass.erase(clsid);
+
+		m_listTypeClass.erase(
+			std::remove(m_listTypeClass.begin(), m_listTypeClass.end(), clsid),
+			m_listTypeClass.end());
 	}
 
-	void ClearMetaType(const std::set<class_identifier_t>& clsids) {
-		for (auto clsid : clsids) {
+	void ClearMetaType(const std::vector<class_identifier_t>& array) {
+
+		for (const auto clsid : array) {
+
 			if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_NUMBER)) {
 				m_typeData.SetNumber(10, 0);
 			}
@@ -299,7 +307,10 @@ public:
 			if (clsid == CValue::GetIDByVT(eValueTypes::TYPE_STRING)) {
 				m_typeData.SetString(10);
 			}
-			m_listTypeClass.erase(clsid);
+
+			m_listTypeClass.erase(
+				std::remove(m_listTypeClass.begin(), m_listTypeClass.end(), clsid),
+				m_listTypeClass.end());
 		}
 	}
 
@@ -311,23 +322,26 @@ public:
 	//////////////////////////////////////////////////
 
 	void SetNumber(unsigned char precision, unsigned char scale, bool nonNegative = false) {
-		auto& it = m_listTypeClass.find(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
-		if (it == m_listTypeClass.end())
-			m_listTypeClass.insert(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(),
+			CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+		if (iterator == m_listTypeClass.end())
+			m_listTypeClass.emplace_back(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
 		m_typeData.SetNumber(precision, scale, nonNegative);
 	}
 
 	void SetDate(eDateFractions dateTime) {
-		auto& it = m_listTypeClass.find(CValue::GetIDByVT(eValueTypes::TYPE_DATE));
-		if (it == m_listTypeClass.end())
-			m_listTypeClass.insert(CValue::GetIDByVT(eValueTypes::TYPE_DATE));
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(),
+			CValue::GetIDByVT(eValueTypes::TYPE_DATE));
+		if (iterator == m_listTypeClass.end())
+			m_listTypeClass.emplace_back(CValue::GetIDByVT(eValueTypes::TYPE_DATE));
 		m_typeData.SetDate(dateTime);
 	}
 
 	void SetString(unsigned short length, eAllowedLength allowedLength = eAllowedLength::eAllowedLength_Variable) {
-		auto& it = m_listTypeClass.find(CValue::GetIDByVT(eValueTypes::TYPE_STRING));
-		if (it == m_listTypeClass.end())
-			m_listTypeClass.insert(CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(),
+			CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+		if (iterator == m_listTypeClass.end())
+			m_listTypeClass.emplace_back(CValue::GetIDByVT(eValueTypes::TYPE_STRING));
 		m_typeData.SetString(length, allowedLength);
 	}
 
@@ -339,11 +353,9 @@ public:
 	//////////////////////////////////////////////////
 
 	class_identifier_t GetByIdx(unsigned int idx) const {
-		if (m_listTypeClass.size() == 0)
+		if (idx > m_listTypeClass.size())
 			return wxNOT_FOUND;
-		auto itStart = m_listTypeClass.begin();
-		std::advance(itStart, idx);
-		return *itStart;
+		return m_listTypeClass[idx];
 	}
 
 	//////////////////////////////////////////////////
@@ -356,30 +368,27 @@ public:
 	CTypeDescription(const class_identifier_t& clsid) : m_listTypeClass({ clsid }) {}
 	CTypeDescription(const class_identifier_t& clsid, const CTypeData& descr) : m_listTypeClass({ clsid }), m_typeData(descr) {}
 	CTypeDescription(const class_identifier_t& clsid, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass({ clsid }), m_typeData(qNumber, qDate, qString) {}
-	CTypeDescription(const std::set<class_identifier_t>& clsids) : m_listTypeClass(clsids) {}
-	CTypeDescription(const std::set<class_identifier_t>& clsids, const CTypeData& descr) : m_listTypeClass(clsids), m_typeData(descr) {}
-	CTypeDescription(const std::set<class_identifier_t>& clsids, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass(clsids), m_typeData(qNumber, qDate, qString) {}
+	CTypeDescription(const std::vector<class_identifier_t>& array) : m_listTypeClass(array) {}
+	CTypeDescription(const std::vector<class_identifier_t>& array, const CTypeData& descr) : m_listTypeClass(array), m_typeData(descr) {}
+	CTypeDescription(const std::vector<class_identifier_t>& array, const CQualifierNumber& qNumber, const CQualifierDate& qDate, const CQualifierString& qString) : m_listTypeClass(array), m_typeData(qNumber, qDate, qString) {}
 
 	bool ContainType(const eValueTypes& valType) const {
 		if (valType == eValueTypes::TYPE_ENUM) {
 			for (auto clsid : m_listTypeClass) {
 				if (CValue::IsRegisterCtor(clsid)) {
-					IPrimitiveTypeCtor* typeCtor =
-						dynamic_cast<IPrimitiveTypeCtor*>(CValue::GetAvailableCtor(clsid));
-					if (typeCtor != nullptr) {
-						if (typeCtor->GetValueType() == eValueTypes::TYPE_ENUM) {
-							return true;
-						}
-					}
+					if (CValue::GetVTByID(clsid) == eValueTypes::TYPE_ENUM)
+						return true;
 				}
 			}
 			return false;
 		}
-		return m_listTypeClass.find(CValue::GetIDByVT(valType)) != m_listTypeClass.end();
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), CValue::GetIDByVT(valType));
+		return iterator != m_listTypeClass.end();
 	}
 
 	bool ContainType(const class_identifier_t& clsid) const {
-		return m_listTypeClass.find(clsid) != m_listTypeClass.end();
+		auto iterator = std::find(m_listTypeClass.begin(), m_listTypeClass.end(), clsid);
+		return iterator != m_listTypeClass.end();
 	}
 
 	bool EqualType(const class_identifier_t& clsid, const CTypeDescription& rhs) const {
@@ -480,11 +489,11 @@ public:
 };
 
 struct CMetaDescription {
-	std::set<meta_identifier_t> m_listMetaClass;
+	std::vector<meta_identifier_t> m_listMetaClass;
 public:
 	CMetaDescription() {}
 	CMetaDescription(const meta_identifier_t& id) : m_listMetaClass({ id }) {}
-	CMetaDescription(const std::set<meta_identifier_t>& id) : m_listMetaClass(id) {}
+	CMetaDescription(const std::vector<meta_identifier_t>& array) : m_listMetaClass(array) {}
 public:
 
 	bool IsOk() const { return m_listMetaClass.size() > 0; }
@@ -499,18 +508,19 @@ public:
 		AppendMetaType(typeDesc.m_listMetaClass);
 	}
 
-	void AppendMetaType(const meta_identifier_t& id) { m_listMetaClass.insert(id); }
-	void AppendMetaType(const std::set<meta_identifier_t>& list) { for (auto& id : list) m_listMetaClass.insert(id); }
+	void AppendMetaType(const meta_identifier_t& id) { m_listMetaClass.emplace_back(id); }
+	void AppendMetaType(const std::vector<meta_identifier_t>& array) { for (auto& id : array) m_listMetaClass.emplace_back(id); }
 
 	void ClearMetaType() { m_listMetaClass.clear(); }
-	bool ContainMetaType(const meta_identifier_t& id) const { return m_listMetaClass.find(id) != m_listMetaClass.end(); }
+	bool ContainMetaType(const meta_identifier_t& id) const {
+		auto iterator = std::find(m_listMetaClass.begin(), m_listMetaClass.end(), id);
+		return iterator != m_listMetaClass.end();
+	}
 
 	meta_identifier_t GetByIdx(unsigned int idx) const {
-		if (m_listMetaClass.size() == 0)
+		if (idx > m_listMetaClass.size())
 			return wxNOT_FOUND;
-		auto itStart = m_listMetaClass.begin();
-		std::advance(itStart, idx);
-		return *itStart;
+		return m_listMetaClass[idx];
 	}
 
 	unsigned int GetTypeCount() const { return m_listMetaClass.size(); }

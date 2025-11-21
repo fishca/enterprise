@@ -38,8 +38,8 @@ private:
 
 protected:
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("record set module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("record set module")));
+	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("defaultForms"), _("default forms"));
 	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("default record"), &CMetaObjectInformationRegister::GetFormRecord, wxNOT_FOUND);
@@ -92,12 +92,6 @@ public:
 	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
 	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
 
-	//get default attributes
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const;
-
-	//get dimension keys 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericDimensions() const;
-
 	//has record manager 
 	virtual bool HasRecordManager() const { return GetWriteRegisterMode() == eWriteRegisterMode::eIndependent; }
 
@@ -110,7 +104,7 @@ public:
 	virtual CMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//create associate value 
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
 #pragma region _form_builder_h_
 	//support form 
@@ -131,6 +125,44 @@ public:
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
+
+	//get default attributes
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+		
+		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+			array.emplace_back(m_propertyAttributeLineActive->GetMetaObject());
+		}
+		
+		if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
+			GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+			array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
+		}
+		
+		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
+			array.emplace_back(m_propertyAttributeRecorder->GetMetaObject());
+			array.emplace_back(m_propertyAttributeLineNumber->GetMetaObject());
+		}
+		
+		return true;
+	}
+
+	//get dimension keys 
+	virtual bool FillArrayObjectByDimention(
+		std::vector<IMetaObjectAttribute*>& array) const {
+
+		if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
+			
+			if (GetPeriodicity() != ePeriodicity::eNonPeriodic) {
+				array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
+			}
+
+			FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaDimensionCLSID });
+		}
+		else {
+			array = { m_propertyAttributeRecorder->GetMetaObject() };
+		}
+		return true;
+	}
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);

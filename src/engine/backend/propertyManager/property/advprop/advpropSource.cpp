@@ -182,46 +182,46 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 
 				const CSourceExplorer& srcExplorer = srcObject->GetSourceExplorer();
 				wxTreeItemSourceData* srcItemData = nullptr;
-				if (typeFactory->FilterSource(srcExplorer, srcExplorer.GetMetaIDSource())) {
+				if (typeFactory->FilterSource(srcExplorer, srcExplorer.GetSourceId())) {
 					if (srcExplorer.IsSelect()) {
 						srcItemData = new wxTreeItemSourceData(
-							srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetTypeIDSource()) + wxT(")"), srcExplorer.GetMetaIDSource(), srcExplorer.IsTableSection()
+							srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetClsidList()) + wxT(")"), srcExplorer.GetSourceId(), srcExplorer.IsTableSection()
 						);
 					}
 				}
 				wxTreeItemId rootItem = nullptr;
 				if (srcExplorer.IsTableSection()) {
-					rootItem = tc->AddRoot(srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetTypeIDSource()) + wxT(")"), icon_table, icon_table, srcItemData);
+					rootItem = tc->AddRoot(srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetClsidList()) + wxT(")"), icon_table, icon_table, srcItemData);
 				}
 				else {
-					rootItem = tc->AddRoot(srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetTypeIDSource()) + wxT(")"), icon_attribute, icon_attribute, srcItemData);
+					rootItem = tc->AddRoot(srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetClsidList()) + wxT(")"), icon_attribute, icon_attribute, srcItemData);
 				}
 
 				if (allow_create) {
 
-					if (srcExplorer.GetMetaIDSource() == dataSource) {
+					if (srcExplorer.GetSourceId() == dataSource) {
 						tc->SelectItem(rootItem);
 					}
 					for (unsigned int idx = 0; idx < srcExplorer.GetHelperCount(); idx++) {
 						const CSourceExplorer& srcNextExplorer = srcExplorer.GetHelper(idx);
 						wxTreeItemSourceData* itemData = nullptr;
-						if (typeFactory->FilterSource(srcNextExplorer, srcExplorer.GetMetaIDSource())) {
+						if (typeFactory->FilterSource(srcNextExplorer, srcExplorer.GetSourceId())) {
 							if (srcNextExplorer.IsSelect()) {
 								itemData = new wxTreeItemSourceData(
-									srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetTypeIDSource()) + wxT(")"),
-									srcNextExplorer.GetMetaIDSource(),
+									srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetClsidList()) + wxT(")"),
+									srcNextExplorer.GetSourceId(),
 									srcNextExplorer.IsTableSection()
 								);
 							}
 						}
 						wxTreeItemId newItem = nullptr;
 						if (srcNextExplorer.IsTableSection()) {
-							newItem = tc->AppendItem(rootItem, srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetTypeIDSource()) + wxT(")"), icon_table, icon_table, itemData);
+							newItem = tc->AppendItem(rootItem, srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetClsidList()) + wxT(")"), icon_table, icon_table, itemData);
 						}
 						else {
-							newItem = tc->AppendItem(rootItem, srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetTypeIDSource()) + wxT(")"), icon_attribute, icon_attribute, itemData);
+							newItem = tc->AppendItem(rootItem, srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetClsidList()) + wxT(")"), icon_attribute, icon_attribute, itemData);
 						}
-						if (srcNextExplorer.GetMetaIDSource() == dataSource) {
+						if (srcNextExplorer.GetSourceId() == dataSource) {
 							tc->SelectItem(newItem);
 						}
 						bool needDelete = itemData == nullptr;
@@ -230,17 +230,17 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 							for (unsigned int i = 0; i < srcNextExplorer.GetHelperCount(); i++) {
 								CSourceExplorer srcColExplorer = srcNextExplorer.GetHelper(i);
 								wxTreeItemSourceData* itemTableData = nullptr;
-								if (typeFactory->FilterSource(srcColExplorer, srcNextExplorer.GetMetaIDSource())) {
+								if (typeFactory->FilterSource(srcColExplorer, srcNextExplorer.GetSourceId())) {
 									itemTableData = new wxTreeItemSourceData(
-										srcColExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcColExplorer.GetTypeIDSource()) + wxT(")"),
-										srcColExplorer.GetMetaIDSource(),
+										srcColExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcColExplorer.GetClsidList()) + wxT(")"),
+										srcColExplorer.GetSourceId(),
 										srcColExplorer.IsTableSection()
 									);
-									wxTreeItemId nextItem = tc->AppendItem(newItem, srcColExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcColExplorer.GetTypeIDSource()) + wxT(")"), icon_attribute, icon_attribute, itemTableData);
-									if (srcColExplorer.GetMetaIDSource() == dataSource) {
+									wxTreeItemId nextItem = tc->AppendItem(newItem, srcColExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcColExplorer.GetClsidList()) + wxT(")"), icon_attribute, icon_attribute, itemTableData);
+									if (srcColExplorer.GetSourceId() == dataSource) {
 										tc->SelectItem(nextItem);
 									}
-									needDelete = !typeFactory->FilterSource(srcNextExplorer, srcNextExplorer.GetMetaIDSource());
+									needDelete = !typeFactory->FilterSource(srcNextExplorer, srcNextExplorer.GetSourceId());
 								}
 							}
 						}
@@ -337,20 +337,20 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 
 			if (typeCtor != nullptr) {
-				const IMetaObjectSourceData* metaObject = nullptr;
+				const IMetaObjectCompositeData* metaObject = nullptr;
 				if (typeCtor->ConvertToMetaValue(metaObject)) {
 					wxTreeItemSourceData* srcItemData = new wxTreeItemSourceData(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), wxNOT_FOUND, true);
 					const wxTreeItemId& rootItem = tc->AddRoot(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), icon_table, icon_table, srcItemData);
-					for (auto& obj : metaObject->GetGenericAttributes()) {
-						if (!obj->IsAllowed())
+					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+						if (!object->IsAllowed())
 							continue;
 						wxTreeItemSourceData* itemData = itemData = new wxTreeItemSourceData(
-							obj->GetName() + wxT(" (") + MakeTypeString(metaData, obj->GetTypeDesc()) + wxT(")"),
-							obj->GetMetaID(),
+							object->GetName() + wxT(" (") + MakeTypeString(metaData, object->GetTypeDesc()) + wxT(")"),
+							object->GetMetaID(),
 							false
 						);
-						const wxTreeItemId& newItem = tc->AppendItem(rootItem, obj->GetName() + wxT(" (") + MakeTypeString(metaData, obj->GetTypeDesc()) + wxT(")"), icon_attribute, icon_attribute, itemData);
-						if (dataSource == obj->GetMetaID()) tc->SelectItem(newItem);
+						const wxTreeItemId& newItem = tc->AppendItem(rootItem, object->GetName() + wxT(" (") + MakeTypeString(metaData, object->GetTypeDesc()) + wxT(")"), icon_attribute, icon_attribute, itemData);
+						if (dataSource == object->GetMetaID()) tc->SelectItem(newItem);
 					}
 				}
 			}

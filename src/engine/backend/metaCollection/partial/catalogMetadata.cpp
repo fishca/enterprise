@@ -21,7 +21,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCatalog, IMetaObjectRecordDataFolderMutable
 CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataFolderMutableRef()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel"});
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
@@ -35,31 +35,22 @@ CMetaObjectCatalog::~CMetaObjectCatalog()
 	//wxDELETE((*m_propertyAttributeOwner));
 }
 
-CMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id)
 {
-	if (id == eFormObject
-		&& m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormObject->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	if (id == eFormObject && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
 	}
-	else if (id == eFormList
-		&& m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormList->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	else if (id == eFormFolder && m_propertyDefFormFolder->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormFolder->GetValueAsInteger());
 	}
-	else if (id == eFormSelect
-		&& m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormSelect->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	else if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
+	}
+	else if (id == eFormSelect && m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormSelect->GetValueAsInteger());
+	}
+	else if (id == eFormFolderSelect && m_propertyDefFormFolderSelect->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormFolderSelect->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -71,7 +62,7 @@ ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaO
 	{
 	case eFormObject:
 		return CreateObjectValue(eObjectMode::OBJECT_ITEM);
-	case eFormGroup:
+	case eFormFolder:
 		return CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 	case eFormList:
 		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
@@ -107,9 +98,9 @@ IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode
 IBackendValueForm* CMetaObjectCatalog::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
 	return IMetaObjectGenericData::CreateAndBuildForm(
-		strFormName, 
-		CMetaObjectCatalog::eFormObject, 
-		ownerControl, CreateObjectValue(eObjectMode::OBJECT_ITEM), 
+		strFormName,
+		CMetaObjectCatalog::eFormObject,
+		ownerControl, CreateObjectValue(eObjectMode::OBJECT_ITEM),
 		formGuid
 	);
 }
@@ -118,7 +109,7 @@ IBackendValueForm* CMetaObjectCatalog::GetFolderForm(const wxString& strFormName
 {
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormGroup,
+		CMetaObjectCatalog::eFormFolder,
 		ownerControl, CreateObjectValue(eObjectMode::OBJECT_FOLDER),
 		formGuid
 	);
@@ -155,10 +146,10 @@ IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFo
 }
 #pragma endregion
 
-bool CMetaObjectCatalog::GetFormObject(CPropertyList*prop)
+bool CMetaObjectCatalog::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -170,9 +161,9 @@ bool CMetaObjectCatalog::GetFormObject(CPropertyList*prop)
 bool CMetaObjectCatalog::GetFormFolder(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
-		if (eFormGroup == formObject->GetTypeForm()) {
+		if (eFormFolder == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
 	}
@@ -182,7 +173,7 @@ bool CMetaObjectCatalog::GetFormFolder(CPropertyList* prop)
 bool CMetaObjectCatalog::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -194,7 +185,7 @@ bool CMetaObjectCatalog::GetFormList(CPropertyList* prop)
 bool CMetaObjectCatalog::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -206,7 +197,7 @@ bool CMetaObjectCatalog::GetFormSelect(CPropertyList* prop)
 bool CMetaObjectCatalog::GetFormFolderSelect(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormFolderSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -221,32 +212,6 @@ wxString CMetaObjectCatalog::GetDataPresentation(const IValueDataObject* objValu
 	if (objValue->GetValueByMetaID((*m_propertyAttributeDescription)->GetMetaID(), vDescription))
 		return vDescription.GetString();
 	return wxEmptyString;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectCatalog::GetDefaultAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-
-	attributes.push_back(m_propertyAttributeCode->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDescription->GetMetaObject());
-	attributes.push_back(m_propertyAttributeOwner->GetMetaObject());
-	attributes.push_back(m_propertyAttributeParent->GetMetaObject());
-	attributes.push_back(m_propertyAttributeIsFolder->GetMetaObject());
-	
-	attributes.push_back(m_propertyAttributeReference->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDeletionMark->GetMetaObject());
-
-	return attributes;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectCatalog::GetSearchedAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-
-	attributes.push_back(m_propertyAttributeCode->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDescription->GetMetaObject());
-
-	return attributes;
 }
 
 //***************************************************************************
@@ -386,7 +351,7 @@ bool CMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 	if (!IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(flags))
 		return false;
 
-	IMetaValueTypeCtor* typeCtor =
+	const IMetaValueTypeCtor* typeCtor =
 		m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_Reference);
 
 	if (typeCtor != nullptr && !(*m_propertyAttributeParent)->ContainType(typeCtor->GetClassType())) {
@@ -409,6 +374,23 @@ bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
+
+	const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); CTypeDescription typeDesc;
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		const IMetaObject* catalog = m_metaData->GetMetaObject(metaDesc.GetByIdx(idx));
+		if (catalog != nullptr) {
+			const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
+			wxASSERT(so);
+			typeDesc.AppendMetaType(so->GetClassType());
+		}
+	}
+	
+	(*m_propertyAttributeOwner)->SetDefaultMetaType(typeDesc);
+
+	if ((*m_propertyAttributeOwner)->GetClsidCount() > 0)
+		(*m_propertyAttributeOwner)->ClearFlag(metaDisableFlag);
+	else 
+		(*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
 
 	if (appData->DesignerMode()) {
 
@@ -434,6 +416,16 @@ bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
 
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
+
+	const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc();
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		const IMetaObject* catalog = m_metaData->GetMetaObject(metaDesc.GetByIdx(idx));
+		if (catalog != nullptr) {
+			const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
+			wxASSERT(so);
+			(*m_propertyAttributeOwner)->GetTypeDesc().ClearMetaType(so->GetClassType());
+		}
+	}
 
 	if (appData->DesignerMode()) {
 
@@ -473,7 +465,7 @@ void CMetaObjectCatalog::OnCreateFormObject(IMetaObjectForm* metaForm)
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormGroup
+	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolder
 		&& m_propertyDefFormFolder->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormFolder->SetValue(metaForm->GetMetaID());
@@ -502,7 +494,7 @@ void CMetaObjectCatalog::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormGroup
+	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolder
 		&& m_propertyDefFormFolder->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormFolder->SetValue(metaForm->GetMetaID());

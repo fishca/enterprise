@@ -30,7 +30,7 @@ bool IRecordSetObject::SetValueByRow(const wxVariant& variant,
 
 	IMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
-	IMetaObjectAttribute* metaObjectAttribute = metaObject->FindGenericAttribute(col);
+	IMetaObjectAttribute* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
 	wxASSERT(metaObject);
 	CValue newValue = metaObjectAttribute->CreateValue();
 	if (strData.Length() > 0) {

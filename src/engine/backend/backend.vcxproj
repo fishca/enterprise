@@ -131,7 +131,7 @@
     <ClInclude Include="metaCollection\dimension\metaDimensionObject.h" />
     <ClInclude Include="metaCollection\enumeration\metaEnumObject.h" />
     <ClInclude Include="metaCollection\metaInterfaceObject.h" />
-    <ClInclude Include="metaCollection\metaSource.h" />
+    <ClInclude Include="metaCollection\metaObjectComposite.h" />
     <ClInclude Include="metaCollection\metaFormObject.h" />
     <ClInclude Include="metaCollection\metaGridObject.h" />
     <ClInclude Include="metaCollection\metaModuleObject.h" />
@@ -362,7 +362,7 @@
     <ClCompile Include="metaCollection\metaRoleObject.cpp" />
     <ClCompile Include="metaCollection\metaRoleObjectMenu.cpp" />
     <ClCompile Include="metaCollection\metaRoleObject_res.cpp" />
-    <ClCompile Include="metaCollection\metaSource.cpp" />
+    <ClCompile Include="metaCollection\metaObjectComposite.cpp" />
     <ClCompile Include="metaCollection\partial\accumulationRegisterEnum.cpp" />
     <ClCompile Include="metaCollection\partial\accumulationRegisterManager.cpp" />
     <ClCompile Include="metaCollection\partial\accumulationRegisterManager_impl.cpp" />

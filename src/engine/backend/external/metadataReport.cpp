@@ -54,9 +54,6 @@ m_version(version_oes_last)
 			m_commonObject->SetParent(commonMetaObject);
 			commonMetaObject->AddChild(m_commonObject);
 		}
-		if (commonMetaObject != nullptr) {
-			commonMetaObject->AppendChild(m_commonObject);
-		}
 	}
 
 	m_commonObject->IncrRef();
@@ -105,17 +102,20 @@ bool CMetaDataReport::ClearDatabase()
 	return true;
 }
 
-bool CMetaDataReport::ClearChildMetadata(IMetaObject* metaParent)
+bool CMetaDataReport::ClearChildMetadata(IMetaObject* parent)
 {
-	for (auto& obj : metaParent->GetObjects()) {
-		if (!obj->IsDeleted() && !obj->OnDeleteMetaObject())
+	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+		auto child = parent->GetChild(idx);
+		if (!parent->FilterChild(child->GetClassType()))
+			continue;
+		if (!child->IsDeleted() && !child->OnDeleteMetaObject())
 			return false;
-		if (!ClearChildMetadata(obj))
+		if (!ClearChildMetadata(child))
 			return false;
 	}
 
-	if (metaParent != m_commonObject) {
-		metaParent->DecrRef();
+	if (parent != m_commonObject) {
+		parent->DecrRef();
 	}
 
 	return true;
@@ -177,16 +177,19 @@ bool CMetaDataReport::RunDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataReport::RunChildMetadata(IMetaObject* metaParent, int flags, bool before)
+bool CMetaDataReport::RunChildMetadata(IMetaObject* parent, int flags, bool before)
 {
-	for (auto& obj : metaParent->GetObjects()) {
-		if (obj->IsDeleted())
+	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+		auto child = parent->GetChild(idx);
+		if (!parent->FilterChild(child->GetClassType()))
 			continue;
-		if (before && !obj->OnBeforeRunMetaObject(flags))
+		if (child->IsDeleted())
+			continue;
+		if (before && !child->OnBeforeRunMetaObject(flags))
 			return false;
-		if (!before && !obj->OnAfterRunMetaObject(flags))
+		if (!before && !child->OnAfterRunMetaObject(flags))
 			return false;
-		if (!RunChildMetadata(obj, flags, before))
+		if (!RunChildMetadata(child, flags, before))
 			return false;
 	}
 	return true;
@@ -212,16 +215,19 @@ bool CMetaDataReport::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataReport::CloseChildMetadata(IMetaObject* metaParent, int flags, bool before)
+bool CMetaDataReport::CloseChildMetadata(IMetaObject* parent, int flags, bool before)
 {
-	for (auto& obj : metaParent->GetObjects()) {
-		if (obj->IsDeleted())
+	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+		auto child = parent->GetChild(idx);
+		if (!parent->FilterChild(child->GetClassType()))
 			continue;
-		if (before && !obj->OnBeforeCloseMetaObject())
+		if (child->IsDeleted())
+			continue;
+		if (before && !child->OnBeforeCloseMetaObject())
 			return false;
-		if (!before && !obj->OnAfterCloseMetaObject())
+		if (!before && !child->OnAfterCloseMetaObject())
 			return false;
-		if (!CloseChildMetadata(obj, flags, before))
+		if (!CloseChildMetadata(child, flags, before))
 			return false;
 	}
 
@@ -374,7 +380,7 @@ bool CMetaDataReport::LoadCommonMetadata(const class_identifier_t& clsid, CMemor
 	return true;
 }
 
-bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* metaParent)
+bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* parent)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -399,7 +405,7 @@ bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader
 			wxASSERT(clsid != 0);
 
 			IMetaObject* newMetaObject = nullptr;
-			CValue* ppParams[] = { metaParent };
+			CValue* ppParams[] = { parent };
 			try {
 				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
@@ -468,19 +474,19 @@ bool CMetaDataReport::SaveCommonMetadata(const class_identifier_t& clsid, CMemor
 	return true;
 }
 
-bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* metaParent, int flags)
+bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* parent, int flags)
 {
-	for (auto& obj : metaParent->GetObjects())
-	{
-		CMemoryWriter writterMemory;
-
-		if (obj->IsDeleted())
+	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+		
+		auto child = parent->GetChild(idx);
+		if (!parent->FilterChild(child->GetClassType()))
 			continue;
-
+		CMemoryWriter writterMemory;
+		if (child->IsDeleted())
+			continue;
 		CMemoryWriter writterMetaMemory;
 		CMemoryWriter writterDataMemory;
-
-		if (!obj->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
+		if (!child->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
 			return false;
 		}
 
@@ -488,14 +494,14 @@ bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter
 
 		CMemoryWriter writterChildMemory;
 
-		if (!SaveChildMetadata(obj->GetClassType(), writterChildMemory, obj, flags)) {
+		if (!SaveChildMetadata(child->GetClassType(), writterChildMemory, child, flags)) {
 			return false;
 		}
 
 		writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
-		writterMemory.w_chunk(obj->GetMetaID(), writterMetaMemory.pointer(), writterMetaMemory.size());
+		writterMemory.w_chunk(child->GetMetaID(), writterMetaMemory.pointer(), writterMetaMemory.size());
 
-		writterData.w_chunk(obj->GetClassType(), writterMemory.pointer(), writterMemory.size());
+		writterData.w_chunk(child->GetClassType(), writterMemory.pointer(), writterMemory.size());
 	}
 
 	return true;
@@ -506,19 +512,22 @@ bool CMetaDataReport::DeleteCommonMetadata(const class_identifier_t& clsid)
 	return DeleteChildMetadata(clsid, m_commonObject);
 }
 
-bool CMetaDataReport::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* metaParent)
+bool CMetaDataReport::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parent)
 {
-	for (auto& obj : metaParent->GetObjects()) {
-		if (obj->IsDeleted()) {
-			if (!obj->DeleteMetaObject(m_ownerMeta))
+	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+		auto child = parent->GetChild(idx);
+		if (!parent->FilterChild(child->GetClassType()))
+			continue;
+		if (child->IsDeleted()) {
+			if (!child->DeleteMetaObject(m_ownerMeta))
 				return false;
-			if (!DeleteChildMetadata(obj->GetClassType(), obj))
+			if (!DeleteChildMetadata(child->GetClassType(), child))
 				return false;
-			metaParent->RemoveChild(obj);
-			obj->DecrRef();
+			parent->RemoveChild(child);
+			child->DecrRef();
 		}
 		else {
-			if (!DeleteChildMetadata(obj->GetClassType(), obj))
+			if (!DeleteChildMetadata(child->GetClassType(), child))
 				return false;
 		}
 	}

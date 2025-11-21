@@ -544,14 +544,14 @@ start_label:
 				break;
 			case OPER_FOR:
 				if (variable1.m_typeClass != eValueTypes::TYPE_NUMBER)
-					CBackendException::Error("Only variables with type can be used to organize the loop \"number\"");
+					CBackendException::Error(_("Only variables with type can be used to organize the loop \"number\""));
 				if (variable1.m_fData == variable2.m_fData)
 					lCodeLine = index3 - 1;
 				break;
 			case OPER_FOREACH:
 			{
 				if (!variable2.HasIterator())
-					CBackendException::Error("Undefined value iterator");
+					CBackendException::Error(_("Undefined value iterator"));
 				if (g_valueIterator != variable3.GetClassType())
 					CopyValue(variable3, CValue(new CValueIterator(variable2)));
 				CValueIterator* iterator = variable3.ConvertToType<CValueIterator>();
@@ -604,7 +604,7 @@ start_label:
 				const wxString& strPropName = m_pByteCode->m_listConst[index2].m_sData;
 				const long lPropNum = variable1.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable1, strPropName);
-				if (!variable1.IsPropWritable(lPropNum)) CBackendException::Error("Object field not writable (%s)", strPropName);
+				if (!variable1.IsPropWritable(lPropNum)) CBackendException::Error(_("Object field not writable (%s)"), strPropName);
 				variable1.SetPropVal(lPropNum, GetValue(variable3));
 			} break;
 			case OPER_GET_A://get attribute
@@ -614,7 +614,7 @@ start_label:
 				const wxString& strPropName = m_pByteCode->m_listConst[index3].m_sData;
 				const long lPropNum = variable2.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable2, strPropName);
-				if (!variable2.IsPropReadable(lPropNum)) CBackendException::Error("Object field not readable (%s)", strPropName);
+				if (!variable2.IsPropReadable(lPropNum)) CBackendException::Error(_("Object field not readable (%s)"), strPropName);
 				CValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
 				if (result && vRet.m_typeClass == eValueTypes::TYPE_REFFER)
 					*pRetValue = vRet;
@@ -635,7 +635,7 @@ start_label:
 					lMethodNum = index4;
 #ifdef DEBUG
 					lMethodNum = pVariable2->FindMethod(funcName);
-					if (lMethodNum != index4) CBackendException::Error("Error value %d must %d (It is recommended to turn off method optimization)", index4, lMethodNum);
+					if (lMethodNum != index4) CBackendException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
 #endif
 				}
 				else {//there were no calls
@@ -758,8 +758,8 @@ start_label:
 				//NUMBER
 			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
 			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
-			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
-			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error("Divide by zero"); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
+			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
+			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
 			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
 			case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
 			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
@@ -794,8 +794,8 @@ start_label:
 				//DATE
 			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
 			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
-			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
-			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error("Divide by zero"); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
+			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
+			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
 			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
 			case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
 			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;

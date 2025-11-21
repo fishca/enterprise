@@ -595,7 +595,7 @@ void CCodeEditor::LoadCallTip()
 
 		if (stringUtils::CompareString(strKeyWord, wxT("new"))) {
 			if (CValue::IsRegisterCtor(strExpression)) {
-				IAbstractTypeCtor* objectValueAbstract =
+				const IAbstractTypeCtor* objectValueAbstract =
 					CValue::GetAvailableCtor(strExpression);
 				CValue* newObject = objectValueAbstract->CreateObject();
 				CValue::CMethodHelper* methodHelper = newObject->GetPMethods();
@@ -735,8 +735,8 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 		IMetaData* metaData = metaObject->GetMetaData();
 		wxASSERT(metaData);
 
-		for (auto& obj : metaData->GetMetaObject(g_metaCommonFormCLSID))
-			m_ac.Append(eContentType::eVariable, obj->GetName(), wxEmptyString);
+		for (const auto object : metaData->GetMetaObject(g_metaCommonFormCLSID))
+			m_ac.Append(eContentType::eVariable, object->GetName(), wxEmptyString);
 	}
 }
 

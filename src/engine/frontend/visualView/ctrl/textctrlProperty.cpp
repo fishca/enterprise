@@ -19,7 +19,7 @@ void CValueTextCtrl::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* 
 			pg->HideProperty(pgProperty, true);
 		}
 		else {
-			IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
+			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
 				if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
 					pg->HideProperty(pgProperty, true);

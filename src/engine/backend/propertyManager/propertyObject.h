@@ -353,9 +353,6 @@ public:
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue) { return true; }
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
-	//paste property from data
-	virtual void OnPropertyPasted(IProperty* property) {}
-
 	/**
 	* IEvent events
 	*/
@@ -390,13 +387,16 @@ private:
 template <typename T>
 class IPropertyObjectHelper : public IPropertyObject {
 	void RemovePropertyObject(const IPropertyObject* obj) {
-		std::vector< T* >::iterator it = m_children.begin();
+		std::vector< propertyType* >::iterator it = m_children.begin();
 		while (it != m_children.end() && *it != obj) it++;
 		if (it != m_children.end()) m_children.erase(it);
 	}
 protected:
 	IPropertyObjectHelper() : m_parent(nullptr) {}
 public:
+
+	using propertyType = typename T;
+	using vectorType = typename std::vector<propertyType*>;
 
 	virtual ~IPropertyObjectHelper() {
 		// remove the reference in the parent
@@ -408,10 +408,10 @@ public:
 	virtual IPropertyObjectHelper* GetOwner() const { return GetParent(); }
 
 	// Gets the parent object
-	T* GetParent() const { return m_parent; }
+	propertyType* GetParent() const { return m_parent; }
 
 	/// Links the object to a parent
-	void SetParent(T* parent) { m_parent = parent; }
+	void SetParent(propertyType* parent) { m_parent = parent; }
 
 	/**
 	* Devuelve la posicion del hijo o GetParentPosition() en caso de no encontrarlo
@@ -431,9 +431,9 @@ public:
 	*
 	* Será útil para encontrar el widget padre.
 	*/
-	T* FindNearAncestor(const wxString& type) const {
-		T* result = nullptr;
-		T* parent = GetParent();
+	propertyType* FindNearAncestor(const wxString& type) const {
+		propertyType* result = nullptr;
+		propertyType* parent = GetParent();
 		if (parent != nullptr) {
 			if (stringUtils::CompareString(parent->GetObjectTypeName(), type))
 				result = parent;
@@ -444,9 +444,9 @@ public:
 		return result;
 	}
 
-	T* FindNearAncestorByBaseClass(const wxString& type) const {
-		T* result = nullptr;
-		T* parent = GetParent();
+	propertyType* FindNearAncestorByBaseClass(const wxString& type) const {
+		propertyType* result = nullptr;
+		propertyType* parent = GetParent();
 		if (parent != nullptr) {
 			if (stringUtils::CompareString(parent->GetObjectTypeName(), type))
 				result = parent;
@@ -464,12 +464,12 @@ public:
 	*
 	* @return true si se añadió el hijo con éxito y false en caso contrario.
 	*/
-	bool AddChild(T* obj) {
+	bool AddChild(propertyType* obj) {
 		m_children.emplace_back(obj);
 		return true;
 	}
 
-	bool AddChild(unsigned int idx, T* obj) {
+	bool AddChild(unsigned int idx, propertyType* obj) {
 		m_children.emplace(m_children.begin() + idx, obj);
 		return true;
 	}
@@ -477,14 +477,14 @@ public:
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
 	*/
-	unsigned int GetChildPosition(T* obj) const {
+	unsigned int GetChildPosition(propertyType* obj) const {
 		unsigned int pos = 0;
 		while (pos < GetChildCount() && m_children[pos] != obj)
 			pos++;
 		return pos;
 	}
 
-	bool ChangeChildPosition(T* obj, unsigned int pos) {
+	bool ChangeChildPosition(propertyType* obj, unsigned int pos) {
 
 		unsigned int obj_pos = GetChildPosition(obj);
 
@@ -503,7 +503,7 @@ public:
 	/**
 	* Elimina un hijo del objeto.
 	*/
-	void RemoveChild(T* obj) { RemovePropertyObject(obj); }
+	void RemoveChild(propertyType* obj) { RemovePropertyObject(obj); }
 	void RemoveChild(unsigned int idx) {
 		assert(idx < m_children.size());
 		m_children.erase(m_children.begin() + idx);
@@ -514,7 +514,7 @@ public:
 	/**
 	* Obtiene un hijo del objeto.
 	*/
-	T* GetChild(unsigned int idx) const {
+	propertyType* GetChild(unsigned int idx) const {
 		assert(idx < m_children.size());
 		return m_children[idx];
 	}
@@ -534,7 +534,7 @@ public:
 			found = true;
 		}
 		else {
-			T* parent = GetParent();
+			propertyType* parent = GetParent();
 			while (parent != nullptr) {
 				found = parent->IsSubclassOf(className);
 				if (found)
@@ -555,12 +555,10 @@ public:
 		m_children.clear();
 	}
 
-	using propertyObject = typename T;
-
 protected:
 
-	T* m_parent = nullptr;
-	std::vector<T*> m_children;
+	propertyType* m_parent = nullptr;
+	vectorType m_children;
 };
 
 #include "backend/compiler/value.h"

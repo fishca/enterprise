@@ -27,7 +27,7 @@ CMetaObjectCommonModule* CEnumerationManager::GetModuleManager() const { return 
 
 class_identifier_t CEnumerationManager::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -35,7 +35,7 @@ class_identifier_t CEnumerationManager::GetClassType() const
 
 wxString CEnumerationManager::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -43,7 +43,7 @@ wxString CEnumerationManager::GetClassName() const
 
 wxString CEnumerationManager::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -68,13 +68,16 @@ void CEnumerationManager::PrepareNames() const
 	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
 
 	//fill custom attributes 
-	for (auto& obj : m_metaObject->GetObjects(g_metaEnumCLSID)) {
-		if (obj->IsDeleted())
+	for (unsigned int idx = 0; idx < m_metaObject->GetChildCount(); idx++) {
+		auto child = m_metaObject->GetChild(idx);
+		if (g_metaEnumCLSID != child->GetClassType())
+			continue;
+		if (child->IsDeleted())
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			child->GetName(),
 			true, false,
-			obj->GetMetaID(),
+			child->GetMetaID(),
 			wxNOT_FOUND
 		);
 	}
@@ -97,7 +100,7 @@ bool CEnumerationManager::SetPropVal(const long lPropNum, CValue& cValue) {
 
 bool CEnumerationManager::GetPropVal(const long lPropNum, CValue& pvarPropVal) {
 	pvarPropVal = CReferenceDataObject::Create(m_metaObject,
-		m_metaObject->GetObjectEnums()[lPropNum]->GetGuid()
+		m_metaObject->GetEnumObjectArray()[lPropNum]->GetGuid()
 	);
 	return true;
 }
@@ -115,7 +118,7 @@ bool CEnumerationManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 		pvarRetValue = m_metaObject->GetGenericForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 			guidVal ? ((CGuid)*guidVal) : CGuid());
-		return true; 
+		return true;
 	}
 	case eGetListForm:
 	{

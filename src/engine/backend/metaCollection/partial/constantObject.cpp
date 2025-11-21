@@ -102,9 +102,9 @@ IBackendValueForm* CRecordDataObjectConstant::GetForm() const
 
 class_identifier_t CRecordDataObjectConstant::GetClassType() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -112,9 +112,9 @@ class_identifier_t CRecordDataObjectConstant::GetClassType() const
 
 wxString CRecordDataObjectConstant::GetClassName() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -122,9 +122,9 @@ wxString CRecordDataObjectConstant::GetClassName() const
 
 wxString CRecordDataObjectConstant::GetString() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();

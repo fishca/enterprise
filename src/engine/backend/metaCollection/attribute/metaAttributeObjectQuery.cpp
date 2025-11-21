@@ -45,7 +45,7 @@ wxString IMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& clsid)
 	return wxEmptyString;
 }
 
-unsigned short IMetaObjectAttribute::GetSQLFieldCount(IMetaObjectAttribute* metaAttr)
+unsigned short IMetaObjectAttribute::GetSQLFieldCount(const IMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); unsigned short sqlField = 1;
 
@@ -71,7 +71,7 @@ unsigned short IMetaObjectAttribute::GetSQLFieldCount(IMetaObjectAttribute* meta
 	return sqlField;
 }
 
-wxString IMetaObjectAttribute::GetSQLFieldName(IMetaObjectAttribute* metaAttr, const wxString& aggr)
+wxString IMetaObjectAttribute::GetSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& aggr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -117,7 +117,7 @@ wxString IMetaObjectAttribute::GetSQLFieldName(IMetaObjectAttribute* metaAttr, c
 		+ sqlField;
 }
 
-wxString IMetaObjectAttribute::GetCompositeSQLFieldName(IMetaObjectAttribute* metaAttr, const wxString& cmp)
+wxString IMetaObjectAttribute::GetCompositeSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& cmp)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -157,7 +157,7 @@ wxString IMetaObjectAttribute::GetCompositeSQLFieldName(IMetaObjectAttribute* me
 		+ sqlField;
 }
 
-wxString IMetaObjectAttribute::GetExcluteSQLFieldName(IMetaObjectAttribute* metaAttr)
+wxString IMetaObjectAttribute::GetExcluteSQLFieldName(const IMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -197,7 +197,7 @@ wxString IMetaObjectAttribute::GetExcluteSQLFieldName(IMetaObjectAttribute* meta
 		+ sqlField;
 }
 
-IMetaObjectAttribute::sqlField_t IMetaObjectAttribute::GetSQLFieldData(IMetaObjectAttribute* metaAttr)
+IMetaObjectAttribute::sqlField_t IMetaObjectAttribute::GetSQLFieldData(const IMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); sqlField_t sqlData(fieldName + "_TYPE");
 
@@ -279,7 +279,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_E %s DEFAULT 0;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 				break;
 			default:
-				IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+				const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 				wxASSERT(typeCtor);
 				if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					createReference = true;
@@ -323,7 +323,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 						retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_E %s DEFAULT 0;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
 					default:
-						IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 						wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							createdRef.insert(clsid);
@@ -368,7 +368,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 							retCode = db_query->RunQuery("ALTER TABLE %s ALTER COLUMN %s_E TYPE %s;", tableName, fieldName, srcAttr->GetSQLTypeObject(clsid));
 						break;
 					default:
-						IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 						wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							currentRef.insert(clsid);
@@ -408,7 +408,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 						retCode = db_query->RunQuery("UPDATE %s SET %s_TYPE = 0 WHERE %s_TYPE = %i;", tableName, fieldName, fieldName, (int)eFieldTypes::eFieldTypes_Enum);
 						break;
 					default:
-						IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 						wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							removedRef.insert(clsid);
@@ -416,7 +416,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 					}
 				}
 			}
-			if (createdRef.size() > 0 && currentRef.size() == 0) {
+			if (createdRef.size() > 0 && currentRef.size() == 0 && removedRef.size() == 0) {
 				retCode = db_query->RunQuery("ALTER TABLE %s ADD %s_RTRef %s;", tableName, fieldName, "BIGINT");
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return retCode;
@@ -481,7 +481,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 					return retCode;
 				break;
 			default:
-				IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+				const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 				wxASSERT(typeCtor);
 				if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					removeReference = true;
@@ -502,7 +502,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 	return retCode;
 }
 
-void IMetaObjectAttribute::SetValueAttribute(IMetaObjectAttribute* metaAttr,
+void IMetaObjectAttribute::SetValueAttribute(const IMetaObjectAttribute* metaAttr,
 	const CValue& cValue, IPreparedStatement* statement, int& position)
 {
 	//write type & data
@@ -672,10 +672,10 @@ void IMetaObjectAttribute::SetValueAttribute(IMetaObjectAttribute* metaAttr,
 		const class_identifier_t& clsid = cValue.GetClassType();
 		wxASSERT(clsid > 0);
 
-		IMetaData* metaData = metaAttr->GetMetaData();
+		const IMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
 
-		IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
+		const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 		wxASSERT(typeCtor);
 
 		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference) {
@@ -720,11 +720,11 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 		return true;
 	case eFieldTypes_Enum:
 	{
-		IMetaData* metaData = metaAttr->GetMetaData();
+		const IMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
 
 		const CValue& defValue = metaAttr->CreateValue();
-		IAbstractTypeCtor* so = metaData->GetAvailableCtor(defValue.GetClassType());
+		const IAbstractTypeCtor* so = metaData->GetAvailableCtor(defValue.GetClassType());
 		wxASSERT(so);
 
 		CValue enumVariant(resultSet->GetResultInt(fieldName));
@@ -764,7 +764,7 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 			return true;
 		}
 		else if (refType > 0) {
-			IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(refType);
+			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(refType);
 			wxASSERT(typeCtor);
 			IMetaObject* metaObject = typeCtor->GetMetaObject();
 			wxASSERT(metaObject);

@@ -18,7 +18,7 @@ CValue* IBackendTypeFactory::CreateValueRef() const
 	if (typeDesc.GetClsidCount() == 1) {
 		const class_identifier_t& clsid = typeDesc.GetFirstClsid();
 		if (CValue::IsRegisterCtor(clsid)) {
-			IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
+			const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
 			if (so->GetObjectTypeCtor() == eCtorObjectType::eCtorObjectType_object_enum) {
 				try {
 					std::shared_ptr<IEnumerationWrapper> enumVal(
@@ -72,7 +72,7 @@ CValue* IBackendTypeConfigFactory::CreateValueRef() const
 	wxASSERT(metaData);
 	const CTypeDescription& typeDesc = GetTypeDesc();
 	if (typeDesc.GetClsidCount() == 1) {
-		IMetaValueTypeCtor* so = metaData->GetTypeCtor(typeDesc.GetFirstClsid());
+		const IMetaValueTypeCtor* so = metaData->GetTypeCtor(typeDesc.GetFirstClsid());
 		if (so != nullptr) {
 			try {
 				return metaData->CreateObjectRef(so->GetClassType());

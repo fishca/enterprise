@@ -23,14 +23,10 @@ CMetaObjectAccumulationRegister::~CMetaObjectAccumulationRegister()
 	//wxDELETE((*m_propertyAttributeRecordType));
 }
 
-CMetaObjectForm* CMetaObjectAccumulationRegister::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectAccumulationRegister::GetDefaultFormByID(const form_identifier_t& id)
 {
 	if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormList->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -53,13 +49,13 @@ IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& 
 bool CMetaObjectAccumulationRegister::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
 		}
 	}
-	return true; 
+	return true;
 }
 
 //***************************************************************************
@@ -294,26 +290,6 @@ void CMetaObjectAccumulationRegister::OnRemoveMetaForm(IMetaObjectForm* metaForm
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectAccumulationRegister::GetDefaultAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_propertyAttributeLineActive->GetMetaObject());
-	if (GetRegisterType() == eRegisterType::eBalances) {
-		attributes.push_back(m_propertyAttributeRecordType->GetMetaObject());
-	}
-	attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
-	attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
-	attributes.push_back(m_propertyAttributeLineNumber->GetMetaObject());
-	return attributes;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectAccumulationRegister::GetGenericDimensions() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
-	return attributes;
 }
 
 ISourceDataObject* CMetaObjectAccumulationRegister::CreateSourceObject(IMetaObjectForm* metaObject)

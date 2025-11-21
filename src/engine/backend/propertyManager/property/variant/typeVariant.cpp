@@ -7,7 +7,7 @@ wxString wxVariantDataAttribute::MakeString() const
 	if (m_ownerProperty != nullptr) {
 		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
-		for (auto clsid : m_typeDesc.GetClsidList()) {
+		for (const auto clsid : m_typeDesc.GetClsidList()) {
 			if (metaData->IsRegisterCtor(clsid) && strDescr.IsEmpty()) {
 				strDescr = metaData->GetNameObjectFromID(clsid);
 			}
@@ -49,9 +49,9 @@ void wxVariantDataAttribute::DoSetFromMetaId(const meta_identifier_t& id)
 		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 
-		IMetaObjectAttribute* metaAttribute = nullptr;
-		if (metaData->GetMetaObject(metaAttribute, id) && metaAttribute->IsAllowed()) {
-			m_typeDesc.SetDefaultMetaType(metaAttribute->GetTypeDesc());
+		IMetaObjectAttribute* attribute = nullptr;
+		if (metaData->GetMetaObject(attribute, id) && attribute->IsAllowed()) {
+			m_typeDesc.SetDefaultMetaType(attribute->GetTypeDesc());
 			return;
 		}
 
@@ -81,7 +81,7 @@ void wxVariantDataAttribute::DoRefreshTypeDesc()
 		const unsigned int object_version = metaData->GetFactoryCountChanges();
 		if (object_version != m_object_version) {
 
-			for (const auto& clsid : m_typeDesc.GetClsidList()) {
+			for (const auto clsid : m_typeDesc.GetClsidList()) {
 
 				if (!metaData->IsRegisterCtor(clsid))
 					m_typeDesc.ClearMetaType(clsid);

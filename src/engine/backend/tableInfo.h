@@ -661,28 +661,15 @@ public:
 			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues) {
 		}
 
+		/////////////////////////////////////////////////////////////////////////////
+
 		template <class varType>
-		inline void AppendTableValue(const meta_identifier_t& id, varType& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline void AppendTableValue(const meta_identifier_t& id, CValue& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline void AppendTableValue(const meta_identifier_t& id, const CValue& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline CValue& AppendTableValue(const meta_identifier_t& id) {
-			return m_nodeValues[id];
-		}
+		inline void AppendTableValue(const meta_identifier_t& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
+		inline CValue& AppendTableValue(const meta_identifier_t& id) { return m_nodeValues[id]; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		const valueArray_t& GetTableValues() const {
-			return m_nodeValues;
-		}
+		const valueArray_t& GetTableValues() const { return m_nodeValues; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
@@ -1113,34 +1100,19 @@ public:
 			}
 		}
 
+		/////////////////////////////////////////////////////////////////////////////
+
 		template <class varType>
-		inline void AppendTableValue(const meta_identifier_t& id, varType& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline void AppendTableValue(const meta_identifier_t& id, CValue& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline void AppendTableValue(const meta_identifier_t& id, const CValue& variant) {
-			m_nodeValues.insert_or_assign(id, variant);
-		}
-
-		inline CValue& AppendTableValue(const meta_identifier_t& id) {
-			return m_nodeValues[id];
-		}
+		inline void AppendTableValue(const meta_identifier_t& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
+		inline CValue& AppendTableValue(const meta_identifier_t& id) { return m_nodeValues[id]; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		const valueArray_t& GetTableValues() const {
-			return m_nodeValues;
-		}
+		const valueArray_t& GetTableValues() const { return m_nodeValues; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		bool IsContainer() const {
-			return m_children.size() > 0;
-		}
+		bool IsContainer() const { return m_children.size() > 0; }
 
 		void SetParent(wxValueTreeNode* parent) {
 			if (m_parent)

@@ -90,13 +90,8 @@ public:
 		return COMPONENT_TYPE_SIZERITEM;
 	}
 
-	//get metaData
+	//get metadata
 	virtual IMetaData* GetMetaData() const override;
-
-	/**
-	* Support form
-	*/
-	virtual wxString GetControlName() const { return GetObjectTypeName(); }
 
 	virtual CValueForm* GetOwnerForm() const { return m_formOwner; }
 	virtual void SetOwnerForm(CValueForm* ownerForm) { m_formOwner = ownerForm; }

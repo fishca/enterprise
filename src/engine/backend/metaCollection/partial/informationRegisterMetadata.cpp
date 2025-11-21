@@ -25,21 +25,13 @@ CMetaObjectInformationRegister::~CMetaObjectInformationRegister()
 	wxDELETE(m_metaRecordManager);
 }
 
-CMetaObjectForm* CMetaObjectInformationRegister::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectInformationRegister::GetDefaultFormByID(const form_identifier_t& id)
 {
 	if (id == eFormRecord && m_propertyDefFormRecord->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormRecord->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+		return FindFormObjectByFilter(m_propertyDefFormRecord->GetValueAsInteger());
 	}
 	else if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormList->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -72,7 +64,7 @@ IBackendValueForm* CMetaObjectInformationRegister::GetListForm(const wxString& s
 bool CMetaObjectInformationRegister::GetFormRecord(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormRecord == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -84,7 +76,7 @@ bool CMetaObjectInformationRegister::GetFormRecord(CPropertyList* prop)
 bool CMetaObjectInformationRegister::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -99,13 +91,7 @@ bool CMetaObjectInformationRegister::GetFormList(CPropertyList* prop)
 
 IBackendValueForm* CMetaObjectInformationRegister::GetRecordForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	CMetaObjectForm* defList = nullptr;
-
-	for (auto metaForm : GetObjectForms()) {
-		if (id == metaForm->GetMetaID()) {
-			defList = metaForm; break;
-		}
-	}
+	const IMetaObjectForm* defList = FindFormObjectByFilter(id);
 
 	return GetListForm(defList ? defList->GetName() : wxEmptyString,
 		ownerControl, formGuid
@@ -345,46 +331,6 @@ void CMetaObjectInformationRegister::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectInformationRegister::GetDefaultAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-
-	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_propertyAttributeLineActive->GetMetaObject());
-	}
-
-	if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
-		GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
-	}
-
-	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
-		attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
-		attributes.push_back(m_propertyAttributeLineNumber->GetMetaObject());
-	}
-
-	return attributes;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectInformationRegister::GetGenericDimensions() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-
-	if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
-		if (GetPeriodicity() != ePeriodicity::eNonPeriodic) {
-			attributes.push_back(m_propertyAttributePeriod->GetMetaObject());
-		}
-		for (auto& obj : GetObjectDimensions()) {
-			attributes.push_back(obj);
-		}
-	}
-	else {
-		attributes.push_back(m_propertyAttributeRecorder->GetMetaObject());
-	}
-
-	return attributes;
 }
 
 ISourceDataObject* CMetaObjectInformationRegister::CreateSourceObject(IMetaObjectForm* metaObject)

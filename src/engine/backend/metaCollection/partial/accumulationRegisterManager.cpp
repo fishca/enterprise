@@ -28,7 +28,7 @@ CMetaObjectCommonModule* CAccumulationRegisterManager::GetModuleManager() const 
 
 class_identifier_t CAccumulationRegisterManager::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -36,7 +36,7 @@ class_identifier_t CAccumulationRegisterManager::GetClassType() const
 
 wxString CAccumulationRegisterManager::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -44,7 +44,7 @@ wxString CAccumulationRegisterManager::GetClassName() const
 
 wxString CAccumulationRegisterManager::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -68,17 +68,6 @@ void CAccumulationRegisterManager::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-
-	//fill custom attributes 
-	for (auto& obj : m_metaObject->GetObjects(g_metaEnumCLSID)) {
-		if (obj->IsDeleted())
-			continue;
-		m_methodHelper->AppendProp(
-			obj->GetName(),
-			obj->GetMetaID()
-		);
-	}
-
 	m_methodHelper->AppendFunc("createRecordSet", "createRecordSet()");
 	m_methodHelper->AppendFunc("createRecordKey", "createRecordKey()");
 	m_methodHelper->AppendFunc("balance", 2, "balance(period, filter...)");

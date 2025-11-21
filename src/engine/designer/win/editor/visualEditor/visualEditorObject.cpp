@@ -228,7 +228,6 @@ void InsertObjectCmd::GenerateId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() == 0) {
-			object->GenerateGuid();
 			object->GenerateNewID();
 		}
 		};
@@ -243,7 +242,6 @@ void InsertObjectCmd::ResetId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() != 0) {
-			object->ResetGuid();
 			object->SetControlID(0);
 		}
 		};
@@ -323,7 +321,6 @@ void RemoveObjectCmd::GenerateId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() == 0) {
-			object->GenerateGuid();
 			object->GenerateNewID();
 		}
 		};
@@ -338,7 +335,6 @@ void RemoveObjectCmd::ResetId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() != 0) {
-			object->ResetGuid();
 			object->SetControlID(0);
 		}
 		};
@@ -545,7 +541,6 @@ void CutObjectCmd::GenerateId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() == 0) {
-			object->GenerateGuid();
 			object->GenerateNewID();
 		}
 		};
@@ -560,7 +555,6 @@ void CutObjectCmd::ResetId()
 			reset(object->GetChild(idx));
 		}
 		if (object->GetControlID() != 0) {
-			object->ResetGuid();
 			object->SetControlID(0);
 		}
 		};

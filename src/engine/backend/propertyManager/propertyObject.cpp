@@ -35,10 +35,7 @@ void IEvent::InitEvent(CPropertyCategory* cat, const wxVariant& value)
 
 bool IProperty::PasteData(CMemoryReader& reader)
 {
-	if (!LoadData(reader))
-		return false;
-	m_owner->OnPropertyPasted(this);
-	return true;
+	return LoadData(reader);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

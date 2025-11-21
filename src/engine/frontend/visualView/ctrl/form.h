@@ -232,16 +232,15 @@ public:
 
 	IMetaObjectGenericData* GetMetaObject() const;
 
-	/**
-	* Support form
-	*/
-	virtual wxString GetControlName() const { return GetObjectTypeName(); }
+	// get control caption
 	virtual wxString GetControlCaption() const;
-
-	virtual CValueForm* GetOwnerForm() const { return const_cast<CValueForm*>(this); }
 
 	CValue GetCreatedValue() const { return m_createdValue; }
 	CValue GetChangedValue() const { return m_changedValue; }
+
+	virtual CValueForm* GetOwnerForm() const {
+		return const_cast<CValueForm*>(this);
+	}
 
 	IValueFrame* GetOwnerControl() const {
 		return dynamic_cast<IValueFrame*>(m_controlOwner);

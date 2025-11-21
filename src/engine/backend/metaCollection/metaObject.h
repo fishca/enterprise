@@ -37,7 +37,7 @@ const class_identifier_t g_metaDimensionCLSID = string_to_clsid("MD_DMNT");
 const class_identifier_t g_metaResourceCLSID = string_to_clsid("MD_RESS");
 
 //SPECIAL OBJECTS
-const class_identifier_t g_metaDefaultAttributeCLSID = string_to_clsid("MD_DATT");
+const class_identifier_t g_metaPredefinedAttributeCLSID = string_to_clsid("MD_DATT");
 
 //MAIN OBJECTS
 const class_identifier_t g_metaConstantCLSID = string_to_clsid("MD_CONS");
@@ -118,21 +118,21 @@ public:
 //flags metaobject event 
 enum metaObjectFlags {
 
-	defaultFlag		= 0x0000,
-	onlyLoadFlag	= 0x0001,
+	defaultFlag = 0x0000,
+	onlyLoadFlag = 0x0001,
 
-	loadConfigFlag	= 0x0002,
-	saveConfigFlag	= 0x0004,
+	loadConfigFlag = 0x0002,
+	saveConfigFlag = 0x0004,
 
-	newObjectFlag	= 0x0008,
-	forceRunFlag	= 0x0010,
-	forceCloseFlag	= 0x0020,
+	newObjectFlag = 0x0008,
+	forceRunFlag = 0x0010,
+	forceCloseFlag = 0x0020,
 
-	loadFileFlag	= 0x0040,
-	saveToFileFlag	= 0x0080,
+	loadFileFlag = 0x0040,
+	saveToFileFlag = 0x0080,
 
-	copyObjectFlag	= 0x0100,
-	pasteObjectFlag	= 0x0200,
+	copyObjectFlag = 0x0100,
+	pasteObjectFlag = 0x0200,
 };
 
 //flags metaobject 
@@ -150,7 +150,7 @@ enum metaObjectFlags {
 #define repairMetaTable  0x0008000
 
 class BACKEND_API IMetaObject :
-	
+
 	public CValue,
 
 	public IPropertyObjectHelper<IMetaObject>,
@@ -169,6 +169,12 @@ protected:
 
 public:
 
+	// get object name as string 
+	bool GetObjectNameAsString(wxString& result) const { 
+		return m_propertyName->GetVariantAsString(result); 
+	}
+
+	//system attributes 
 	meta_identifier_t GetMetaID() const { return m_metaId; }
 	void SetMetaID(const meta_identifier_t& id) { m_metaId = id; }
 
@@ -293,42 +299,13 @@ public:
 	wxString GetModuleName() const;
 	wxString GetDocPath() const;
 
-	//create in this metaObject 
-	bool AppendChild(IMetaObject* child) {
-		if (!FilterChild(child->GetClassType()))
-			return false;
-		m_listMetaObject.push_back(child);
-		return true;
-	}
-
-	void RemoveChild(IMetaObject* child) {
-		auto it = std::find(m_listMetaObject.begin(), m_listMetaObject.end(), child);
-		if (it != m_listMetaObject.end())
-			m_listMetaObject.erase(it);
-	}
-
-	virtual bool FilterChild(const class_identifier_t& clsid) const {
-		return false;
-	}
+	//filter children element
+	virtual bool FilterChild(const class_identifier_t& clsid) const { return false; }
 
 	//process choice 
 	virtual bool ProcessChoice(IBackendControlFrame* ownerValue,
 		const wxString& strFormName, enum eSelectMode selMode) {
 		return true;
-	}
-
-	std::vector<IMetaObject*> GetObjects() const {
-		return m_listMetaObject;
-	}
-
-	std::vector<IMetaObject*> GetObjects(const class_identifier_t& clsid) const {
-		std::vector<IMetaObject*> metaObjects;
-		for (auto& obj : m_listMetaObject) {
-			if (clsid == obj->GetClassType()) {
-				metaObjects.push_back(obj);
-			}
-		}
-		return metaObjects;
 	}
 
 	IMetaObject* FindByName(const wxString& strDocPath) const;
@@ -427,65 +404,6 @@ protected:
 
 protected:
 
-	template<typename retType, typename convType = retType>
-	class CMetaVector {
-		std::vector<retType*> m_listObject;
-	public:
-		//////////////////////////////////////////////////////////////////////////
-		CMetaVector(const IMetaObject* metaItem, const class_identifier_t& clsid) {
-			m_listObject.reserve(metaItem->m_listMetaObject.size());
-			std::transform(
-				metaItem->m_listMetaObject.begin(),
-				metaItem->m_listMetaObject.end(),
-				std::back_inserter(m_listObject),
-				[](auto const& obj)
-				{
-					return dynamic_cast<convType*>(obj);
-				}
-			);
-			m_listObject.erase(
-				std::remove_if(m_listObject.begin(), m_listObject.end(), [clsid](auto const& obj)
-					{
-						if (obj != nullptr) return clsid != obj->GetClassType(); return obj == nullptr;
-					}), m_listObject.end()
-						);
-		}
-		CMetaVector(const std::vector<IMetaObject*>& listObject) {
-			m_listObject.reserve(listObject.size());
-			std::transform(
-				std::begin(listObject),
-				std::end(listObject),
-				std::back_inserter(m_listObject),
-				[](auto const& obj)
-				{
-					return dynamic_cast<convType*>(obj);
-				}
-			);
-			m_listObject.erase(
-				std::remove_if(m_listObject.begin(), m_listObject.end(), [](auto const& obj) { return obj == nullptr; }), m_listObject.end()
-			);
-		}
-		//////////////////////////////////////////////////////////////////////////
-		CMetaVector(const CMetaVector& src) :
-			m_listObject(std::move(src.m_listObject)) {
-		}
-		//////////////////////////////////////////////////////////////////////////
-		auto begin() { return m_listObject.begin(); }
-		auto end() { return m_listObject.end(); }
-		auto cbegin() const { return m_listObject.cbegin(); }
-		auto cend() const { returnm_listObject.cend(); }
-		//////////////////////////////////////////////////////////////////////////
-		std::vector<retType*> GetVector() {
-			return m_listObject;
-		}
-		//////////////////////////////////////////////////////////////////////////
-		operator std::vector<retType*>() {
-			return m_listObject;
-		}
-	};
-
-protected:
-
 	template<typename T, typename... Args>
 	T* CreateMetaObjectAndSetParent(Args&&... args) {
 		T* createdObject = CValue::CreateAndConvertObjectValueRef<T>(args...);
@@ -513,7 +431,6 @@ protected:
 	CGuid m_metaGuid;
 
 	IMetaData* m_metaData;
-	std::vector<IMetaObject*> m_listMetaObject;
 	CMethodHelper* m_methodHelper;
 };
 

@@ -28,20 +28,20 @@ bool CReferenceDataObject::ReadData(bool createData)
 		bool readRef = false;
 		if (resultSet->Next()) {			
 			//load attributes 
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
-				if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
 					IMetaObjectAttribute::GetValueAttribute(
-						obj,
-						m_listObjectValue[obj->GetMetaID()],
+						object,
+						m_listObjectValue[object->GetMetaID()],
 						resultSet,
 						createData
 					);
 				}
 			}
 			// table is collection values 
-			//for (auto& obj : m_metaObject->GetObjectTables()) {
-			//	m_listObjectValue.insert_or_assign(obj->GetMetaID(), 
-			//		m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, obj, true));
+			//for (const auto object : m_metaObject->GetTableArrayObject()) {
+			//	m_listObjectValue.insert_or_assign(object->GetMetaID(), 
+			//		m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, object, true));
 			//}
 
 			readRef = true;
@@ -71,10 +71,10 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 					return false;
 				if (resultSet->Next()) {
 					//load other attributes 
-					for (auto& obj : m_metaObject->GetGenericAttributes()) {
-						if (m_metaObject->IsDataReference(obj->GetMetaID()))
+					for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+						if (m_metaObject->IsDataReference(object->GetMetaID()))
 							continue;
-						IMetaObjectAttribute::GetValueAttribute(obj, m_listObjectValue[obj->GetMetaID()], resultSet);
+						IMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 					}
 				}
 				db_query->CloseResultSet(resultSet);
@@ -91,8 +91,8 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 			bool allow = false;
 			CObjectComparatorValue* comparator = new CObjectComparatorValue(metaObject, guid);
 			if (comparator->ReadValues()) {
-				for (auto& obj : metaObject->GetSearchedAttributes()) {
-					const wxString& fieldCompare = comparator->m_listObjectValue[obj->GetMetaID()].GetString();
+				for (const auto object : metaObject->GetSearchedAttributeObjectArray()) {
+					const wxString& fieldCompare = comparator->m_listObjectValue[object->GetMetaID()].GetString();
 					if (fieldCompare.Contains(findData)) {
 						allow = true; break;
 					}

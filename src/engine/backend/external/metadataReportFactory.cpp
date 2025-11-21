@@ -10,7 +10,6 @@ CValue* CMetaDataReport::CreateObjectRef(const class_identifier_t& clsid, CValue
 		}
 	);
 
-
 	if (it != m_factoryCtors.end()) {
 		IAbstractTypeCtor* typeCtor(*it);
 		wxASSERT(typeCtor);
@@ -25,7 +24,7 @@ CValue* CMetaDataReport::CreateObjectRef(const class_identifier_t& clsid, CValue
 
 		if (!succes) {
 			wxDELETE(newObject);
-			CBackendException::Error("Error initializing object '%s'", typeCtor->GetClassName());
+			CBackendException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 		}
 		newObject->PrepareNames();
 		return newObject;

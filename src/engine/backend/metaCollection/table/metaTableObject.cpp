@@ -6,7 +6,7 @@
 #include "metaTableObject.h"
 #include "backend/metaData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectTableData, IMetaObjectSourceData)
+wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectTableData, IMetaObjectCompositeData)
 
 //***********************************************************************
 //*                         Attributes                                  * 
@@ -17,7 +17,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectTableData, IMetaObjectSourceData)
 
 CTypeDescription CMetaObjectTableData::GetTypeDesc() const
 {
-	IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_TabularSection);
+	const IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_TabularSection);
 	wxASSERT(typeCtor);
 	if (typeCtor != nullptr) return CTypeDescription(typeCtor->GetClassType());
 	return CTypeDescription();
@@ -25,7 +25,7 @@ CTypeDescription CMetaObjectTableData::GetTypeDesc() const
 
 ////////////////////////////////////////////////////////////////////////////
 
-CMetaObjectTableData::CMetaObjectTableData() : IMetaObjectSourceData()
+CMetaObjectTableData::CMetaObjectTableData() : IMetaObjectCompositeData()
 {
 }
 
@@ -113,7 +113,8 @@ bool CMetaObjectTableData::OnBeforeRunMetaObject(int flags)
 
 bool CMetaObjectTableData::OnAfterRunMetaObject(int flags)
 {
-	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) OnReloadMetaObject();
+	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) 
+		OnReloadMetaObject();
 	return IMetaObject::OnAfterRunMetaObject(flags);
 }
 
@@ -128,35 +129,6 @@ bool CMetaObjectTableData::OnAfterCloseMetaObject()
 		unregisterTabularSection_String();
 	}
 	return IMetaObject::OnAfterCloseMetaObject();
-}
-
-//***********************************************************************
-//*                           System metaData                           *
-//***********************************************************************
-
-std::vector<IMetaObjectAttribute*> CMetaObjectTableData::GetObjectAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> tableAttributes;
-	tableAttributes.push_back(m_propertyNumberLine->GetMetaObject());
-	for (auto metaObject : m_listMetaObject) {
-		if (metaObject->GetClassType() == g_metaAttributeCLSID) {
-			tableAttributes.push_back(
-				dynamic_cast<IMetaObjectAttribute*>(metaObject)
-			);
-		}
-	}
-	return tableAttributes;
-}
-
-IMetaObjectAttribute* CMetaObjectTableData::FindProp(const meta_identifier_t& id) const
-{
-	if (m_metaData == nullptr)
-		return nullptr;
-
-	IMetaObjectAttribute* founded = nullptr;
-	m_metaData->GetMetaObject(founded, id,
-		const_cast<CMetaObjectTableData*>(this));
-	return founded;
 }
 
 //***********************************************************************

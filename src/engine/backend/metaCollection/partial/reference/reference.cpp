@@ -26,19 +26,19 @@ void CReferenceDataObject::PrepareRef(bool createData)
 
 	if (CReferenceDataObject::IsEmpty()) {
 		//attrbutes can refValue 
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
-			if (obj->IsDeleted()) 
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			if (object->IsDeleted())
 				continue;
-			if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
-				m_listObjectValue.insert_or_assign(obj->GetMetaID(), obj->CreateValue());
+			if (!m_metaObject->IsDataReference(object->GetMetaID())) {
+				m_listObjectValue.insert_or_assign(object->GetMetaID(), object->CreateValue());
 			}
 		}
 		// table is collection values 
-		for (auto& obj : m_metaObject->GetObjectTables()) {
-			if (obj->IsDeleted())
+		for (const auto object : m_metaObject->GetTableArrayObject()) {
+			if (object->IsDeleted())
 				continue;
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(),
-				m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, obj));
+			m_listObjectValue.insert_or_assign(object->GetMetaID(),
+				m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, object));
 		}
 	}
 	else if (CReferenceDataObject::ReadData(createData)) {
@@ -147,25 +147,27 @@ CReferenceDataObject* CReferenceDataObject::CreateFromResultSet(IDatabaseResultS
 	CReferenceDataObject* refData = new CReferenceDataObject(metaObject, refGuid);
 
 	//load attributes 
-	for (auto& obj : metaObject->GetGenericAttributes()) {		
-		if (obj->IsDeleted())
-			continue;	
-		if (metaObject->IsDataReference(obj->GetMetaID()))
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (metaObject->IsDataReference(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::GetValueAttribute(
-			obj,
-			refData->m_listObjectValue[obj->GetMetaID()],
+			object,
+			refData->m_listObjectValue[object->GetMetaID()],
 			rs,
 			false
 		);
 	}
 
 	// table is collection values 
-	for (auto& obj : metaObject->GetObjectTables()) {
-		if (obj->IsDeleted())
+	for (const auto object : metaObject->GetTableArrayObject()) {
+		if (object->IsDeleted())
 			continue;
-		refData->m_listObjectValue.insert_or_assign(obj->GetMetaID(),
-			metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(refData, obj, true));
+		refData->m_listObjectValue.insert_or_assign(
+			object->GetMetaID(),
+			CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(refData, object, true)
+		);
 	}
 
 	refData->m_foundedRef = true;
@@ -225,7 +227,7 @@ IRecordDataObjectRef* CReferenceDataObject::GetObject() const
 
 class_identifier_t CReferenceDataObject::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -236,7 +238,7 @@ wxString CReferenceDataObject::GetString() const
 	if (m_newObject)
 		return wxEmptyString;
 	else if (!m_foundedRef)
-		return wxString::Format("%s <%i:%s>", _("not found"), m_metaObject->GetMetaID(), m_objGuid.str());
+		return wxString::Format("%s <%i:%s>", _("Not found"), m_metaObject->GetMetaID(), m_objGuid.str());
 
 	wxASSERT(m_metaObject);
 	return m_metaObject->GetDataPresentation(this);
@@ -244,7 +246,7 @@ wxString CReferenceDataObject::GetString() const
 
 wxString CReferenceDataObject::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -268,40 +270,46 @@ void CReferenceDataObject::PrepareNames() const
 	IMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		m_methodHelper->AppendFunc("isEmpty", "IsEmpty()");
-		m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
-		m_methodHelper->AppendFunc("getObject", "getObject()");
-		m_methodHelper->AppendFunc("getGuid", "getGuid()");
+		m_methodHelper->AppendFunc(wxT("isEmpty"), wxT("IsEmpty()"));
+		m_methodHelper->AppendFunc(wxT("getMetadata"), wxT("getMetadata()"));
+		m_methodHelper->AppendFunc(wxT("getObject"), wxT("getObject()"));
+		m_methodHelper->AppendFunc(wxT("getGuid"), wxT("getGuid()"));
+
+		wxString objectName;
 
 		//fill custom attributes 
-		for (auto& obj : metaObject->GetGenericAttributes()) {
-			if (obj->IsDeleted())
+		for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+			if (object->IsDeleted())
+				continue;
+			if (!object->GetObjectNameAsString(objectName))
 				continue;
 			m_methodHelper->AppendProp(
-				obj->GetName(),
+				objectName,
 				true,
 				false,
-				obj->GetMetaID(),
+				object->GetMetaID(),
 				eProperty
 			);
 		}
 
 		//fill custom tables 
-		for (auto& obj : metaObject->GetObjectTables()) {
-			if (obj->IsDeleted())
+		for (const auto object : metaObject->GetTableArrayObject()) {
+			if (object->IsDeleted())
+				continue;
+			if (!object->GetObjectNameAsString(objectName))
 				continue;
 			m_methodHelper->AppendProp(
-				obj->GetName(),
+				objectName,
 				true,
 				false,
-				obj->GetMetaID(),
+				object->GetMetaID(),
 				eTable
 			);
 		}
 	}
 	else {
-		m_methodHelper->AppendFunc("isEmpty", "IsEmpty()");
-		m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
+		m_methodHelper->AppendFunc(wxT("isEmpty"), wxT("IsEmpty()"));
+		m_methodHelper->AppendFunc(wxT("getMetadata"), wxT("getMetadata()"));
 	}
 }
 
@@ -318,9 +326,9 @@ bool CReferenceDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	if (!m_metaObject->IsDataReference(id)) {
 		if (lPropAlias == eTable && !GetValueByMetaID(id, pvarPropVal)) {
 			m_listObjectValue.insert_or_assign(id,
-				GetMetaObjectRef()->GetMetaData()->CreateObjectValueRef<CTabularSectionDataObjectRef>(this, m_metaObject->FindTableById(id), !m_newObject)
+				CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, m_metaObject->FindTableObjectByFilter(id), !m_newObject)
 			);
-		}	
+		}
 		if (lPropAlias == eTable && GetValueByMetaID(id, pvarPropVal)) {
 			CTabularSectionDataObjectRef* tabularSection = nullptr;
 			if (pvarPropVal.ConvertToValue(tabularSection)) {

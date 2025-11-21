@@ -33,7 +33,7 @@ void CRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet()
 		IMetaObjectRegisterData* metaObject = nullptr;
 		if (!metaData->GetMetaObject(metaObject, metaDesc.GetByIdx(idx)) || !metaObject->IsAllowed())
 			continue;
-		CMetaObjectAttributeDefault* registerRecord = metaObject->GetRegisterRecorder();
+		CMetaObjectAttributePredefined* registerRecord = metaObject->GetRegisterRecorder();
 		wxASSERT(registerRecord);
 
 		CValuePtr<IRecordSetObject> recordSet(metaObject->CreateRecordSetObjectValue());
@@ -90,10 +90,10 @@ void CRecordDataObjectDocument::CRecorderRegisterDocument::RefreshRecordSet()
 	for (auto& pair : m_records) {
 		IRecordSetObject* record = pair.second;
 		wxASSERT(record);
-		
-		IMetaObjectRegisterData *obj = record->GetMetaObject(); 
-		wxASSERT(obj);
-		IBackendValueForm* backendFrame = IBackendValueForm::FindFormBySourceUniqueKey(obj->GetGuid());
+
+		IMetaObjectRegisterData* object = record->GetMetaObject();
+		wxASSERT(object);
+		IBackendValueForm* backendFrame = IBackendValueForm::FindFormBySourceUniqueKey(object->GetGuid());
 		if (backendFrame != nullptr) backendFrame->UpdateForm();
 	}
 }
@@ -163,12 +163,12 @@ CSourceExplorer CRecordDataObjectDocument::GetSourceExplorer() const
 		srcHelper.AppendSource(metaRef->GetDocumentDate());
 	}
 
-	for (auto& obj : m_metaObject->GetObjectAttributes()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
-	for (auto& obj : m_metaObject->GetObjectTables()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
 	return srcHelper;
@@ -232,7 +232,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 		{
 			if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
 				CValue deletionMark = false;
-				CMetaObjectAttributeDefault* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
+				CMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
 				wxASSERT(attributeDeletionMark);
 				IRecordDataObjectRef::GetValueByMetaID(*attributeDeletionMark, deletionMark);
 				if (deletionMark.GetBoolean()) {
@@ -261,7 +261,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 
 						CMetaObjectDocument* dataRef = nullptr;
 						if (m_metaObject->ConvertToValue(dataRef)) {
-							CMetaObjectAttributeDefault* metaPosted = dataRef->GetDocumentPosted();
+							CMetaObjectAttributePredefined* metaPosted = dataRef->GetDocumentPosted();
 							wxASSERT(metaPosted);
 							if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting)
 								m_listObjectValue.insert_or_assign(metaPosted->GetMetaID(), true);
@@ -448,28 +448,35 @@ void CRecordDataObjectDocument::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("thisObject"), true, false, eThisObject, eSystem);
 	m_methodHelper->AppendProp(wxT("registerRecords"), true, false, eRegisterRecords, eSystem);
 
+	//set object name 
+	wxString objectName;
+
 	//fill custom attributes 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (obj->IsDeleted())
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
-			!m_metaObject->IsDataReference(obj->GetMetaID()),
-			obj->GetMetaID(),
+			!m_metaObject->IsDataReference(object->GetMetaID()),
+			object->GetMetaID(),
 			eProperty
 		);
 	}
 
 	//fill custom tables 
-	for (auto& obj : m_metaObject->GetObjectTables()) {
-		if (obj->IsDeleted())
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
 			false,
-			obj->GetMetaID(),
+			object->GetMetaID(),
 			eTable
 		);
 	}

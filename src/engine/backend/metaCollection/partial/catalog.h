@@ -22,14 +22,14 @@ private:
 		eFormObject = 1,
 		eFormList,
 		eFormSelect,
-		eFormGroup,
+		eFormFolder,
 		eFormFolderSelect
 	};
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
 		formList.AppendItem(wxT("formObject"), _("Form object"), eFormObject);
-		formList.AppendItem(wxT("formFolder"), _("Form group"), eFormGroup);
+		formList.AppendItem(wxT("formFolder"), _("Form group"), eFormFolder);
 		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
 		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
 		formList.AppendItem(wxT("formGroupSelect"), _("Form group select"), eFormFolderSelect);
@@ -38,8 +38,8 @@ private:
 
 protected:
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("object module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("object module")));
+	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("defaultForms"), _("default forms"));
 
@@ -52,9 +52,9 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("listOwner"), _("list owner"));
 
-	//default attributes 
-	//CMetaObjectAttributeDefault* m_attributeOwner = IMetaObjectSourceData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item);
-	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
+	//default array 
+	//CMetaObjectAttributePredefined* m_attributeOwner = IMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item);
+	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
 private:
 	bool GetFormObject(CPropertyList* prop);
@@ -64,7 +64,7 @@ private:
 	bool GetFormFolderSelect(CPropertyList* prop);
 public:
 
-	CMetaObjectAttributeDefault* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
 
 	//default constructor 
 	CMetaObjectCatalog();
@@ -99,14 +99,8 @@ public:
 		return m_propertyAttributeCode->GetMetaObject();
 	}
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const override;
-
-	//searched attributes 
-	virtual std::vector<IMetaObjectAttribute*> GetSearchedAttributes() const override;
-
 	//create associate value 
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
 #pragma region _form_builder_h_
 	//support form 
@@ -131,10 +125,34 @@ public:
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-	//paste property from data
-	virtual void OnPropertyPasted(IProperty* property);
-
 protected:
+
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+		
+		array = {
+			m_propertyAttributeCode->GetMetaObject(),
+			m_propertyAttributeDescription->GetMetaObject(),
+			m_propertyAttributeOwner->GetMetaObject(),
+			m_propertyAttributeParent->GetMetaObject(),
+			m_propertyAttributeIsFolder->GetMetaObject(),
+			m_propertyAttributeReference->GetMetaObject(),
+			m_propertyAttributeDeletionMark->GetMetaObject(),
+		};
+		
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+		
+		array = {
+			m_propertyAttributeCode->GetMetaObject(),
+			m_propertyAttributeDescription->GetMetaObject(),
+		};
+		
+		return true;
+	}
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);

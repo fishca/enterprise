@@ -56,7 +56,7 @@ void CInterfaceEditor::OnCheckItem(wxTreeEvent& event)
 
 void CInterfaceEditor::InitInterface()
 {
-	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
+	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
 	wxASSERT(typeCtor);
 
 	wxImageList* imageList = m_interfaceCtrl->GetImageList();

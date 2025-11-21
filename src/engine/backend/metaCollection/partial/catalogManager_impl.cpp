@@ -20,7 +20,7 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 		if (!cParam.IsEmpty()) {
 			const wxString& tableName = m_metaObject->GetTableNameDB();
 			if (db_query->TableExists(tableName)) {
-				CMetaObjectAttributeDefault* attributeCode = m_metaObject->GetDataCode();
+				CMetaObjectAttributePredefined* attributeCode = m_metaObject->GetDataCode();
 				wxASSERT(attributeCode);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
@@ -59,7 +59,7 @@ CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) c
 		if (!cParam.IsEmpty()) {
 			const wxString tableName = m_metaObject->GetTableNameDB();
 			if (db_query->TableExists(tableName)) {
-				CMetaObjectAttributeDefault* attributeDescription = m_metaObject->GetDataDescription();
+				CMetaObjectAttributePredefined* attributeDescription = m_metaObject->GetDataDescription();
 				wxASSERT(attributeDescription);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)

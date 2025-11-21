@@ -313,7 +313,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 			virtual bool HasQuickChoice() const {
 				CValue selValue; GetControlValue(selValue);
-				IAbstractTypeCtor* so = commonMetaData->GetAvailableCtor(selValue.GetClassType());
+				const IAbstractTypeCtor* so = commonMetaData->GetAvailableCtor(selValue.GetClassType());
 				if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_primitive) {
 					return true;
 				}
@@ -321,7 +321,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 					return true;
 				}
 				else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
-					IMetaValueTypeCtor* meta_so = dynamic_cast<IMetaValueTypeCtor*>(so);
+					const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
 					if (meta_so != nullptr) {
 						IMetaObjectRecordDataRef* metaObject = dynamic_cast<IMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 						if (metaObject != nullptr)
@@ -353,7 +353,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				}
 				const class_identifier_t& clsid = filterData.m_filterValue.GetClassType();
 				if (!ITypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
-					IMetaValueTypeCtor* singleValue = commonMetaData->GetTypeCtor(clsid);
+					const IMetaValueTypeCtor* singleValue = commonMetaData->GetTypeCtor(clsid);
 					if (singleValue != nullptr) {
 						IMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);

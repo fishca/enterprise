@@ -28,7 +28,7 @@ CMetaObjectCommonModule* CInformationRegisterManager::GetModuleManager() const {
 
 class_identifier_t CInformationRegisterManager::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -36,7 +36,7 @@ class_identifier_t CInformationRegisterManager::GetClassType() const
 
 wxString CInformationRegisterManager::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -44,7 +44,7 @@ wxString CInformationRegisterManager::GetClassName() const
 
 wxString CInformationRegisterManager::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -73,17 +73,6 @@ void CInformationRegisterManager::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-
-	//fill custom attributes 
-	for (auto& obj : m_metaObject->GetObjects(g_metaEnumCLSID)) {
-		if (obj->IsDeleted())
-			continue;
-		m_methodHelper->AppendProp(
-			obj->GetName(),
-			obj->GetMetaID()
-		);
-	}
-
 	m_methodHelper->AppendFunc("createRecordSet", "createRecordSet()");
 	m_methodHelper->AppendFunc("createRecordManager", "createRecordManager()");
 	m_methodHelper->AppendFunc("createRecordKey", "createRecordKey()");
@@ -122,7 +111,7 @@ bool CInformationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pvar
 		pvarRetValue = m_metaObject->CreateRecordManagerObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordKeyObject>(m_metaObject);
 		return true;
 	case eGet:
 		pvarRetValue = lSizeArray > 1 ?
@@ -151,7 +140,7 @@ bool CInformationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pvar
 			: CInformationRegisterManager::SliceLast(*paParams[0]);
 		return true;
 	case eSelect:
-		pvarRetValue = metaData->CreateAndConvertObjectValueRef<CSelectorRegisterObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{

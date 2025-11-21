@@ -21,15 +21,10 @@ CMetaObjectDataProcessor::~CMetaObjectDataProcessor()
 {
 }
 
-CMetaObjectForm* CMetaObjectDataProcessor::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectDataProcessor::GetDefaultFormByID(const form_identifier_t& id)
 {
-	if (id == eFormDataProcessor
-		&& m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormObject->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	if (id == eFormDataProcessor && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -90,7 +85,7 @@ IBackendValueForm* CMetaObjectDataProcessor::GetObjectForm(const wxString& strFo
 bool CMetaObjectDataProcessor::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormDataProcessor == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);

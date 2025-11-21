@@ -25,14 +25,14 @@ bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 
 			if (metaObjectValue != nullptr) {
 				IMetaObject* metaobject =
-					metaObjectValue->FindMetaObjectByID(m_propertySource->GetValueAsSource());
+					metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource());
 
-				IMetaObjectAttribute* metaAttribute = wxDynamicCast(
+				IMetaObjectAttribute* attribute = wxDynamicCast(
 					metaobject, IMetaObjectAttribute
 				);
-				if (metaAttribute != nullptr) {
+				if (attribute != nullptr) {
 
-					IMetaValueTypeCtor* so = metaData->GetTypeCtor(metaAttribute->GetFirstClsid());
+					const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 					if (so != nullptr) {
 						metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
 					}
@@ -45,14 +45,14 @@ bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 			}
 		}
 		else {
-			IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
+			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
 				metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
 			}
 		}
 
 		if (metaObjectRefValue != nullptr) {
-			for (auto form : metaObjectRefValue->GetObjectForms()) {
+			for (auto form : metaObjectRefValue->GetFormArrayObject()) {
 				property->AppendItem(
 					form->GetSynonym(),
 					form->GetMetaID(),

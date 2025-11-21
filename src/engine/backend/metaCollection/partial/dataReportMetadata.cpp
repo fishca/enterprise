@@ -22,15 +22,10 @@ CMetaObjectReport::~CMetaObjectReport()
 {
 }
 
-CMetaObjectForm* CMetaObjectReport::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectReport::GetDefaultFormByID(const form_identifier_t& id)
 {
-	if (id == eFormReport
-		&& m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormObject->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	if (id == eFormReport && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -101,7 +96,7 @@ bool CMetaObjectReport::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormReport == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);

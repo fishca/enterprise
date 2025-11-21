@@ -934,17 +934,21 @@ void CSystemFunction::UserInterruptProcessing()
 
 CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
 {
-	for (auto& obj : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
-		if (stringUtils::CompareString(strFormName, obj->GetName())) {
+	if (!strFormName.IsEmpty()) {
 
-			CMetaObjectCommonForm* creator = obj->ConvertToType<CMetaObjectCommonForm>();
-			wxASSERT(creator);
-			return CMetaObjectCommonForm::CreateAndBuildForm(
-				creator,
-				ownerControl,
-				nullptr, unique ? ((CGuid)*unique) : CGuid()
-			);
+		for (const auto object : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+			if (stringUtils::CompareString(strFormName, object->GetName())) {
+
+				CMetaObjectCommonForm* creator = object->ConvertToType<CMetaObjectCommonForm>();
+				wxASSERT(creator);
+				return CMetaObjectCommonForm::CreateAndBuildForm(
+					creator,
+					ownerControl,
+					nullptr, unique ? ((CGuid)*unique) : CGuid()
+				);
+			}
 		}
+
 	}
 
 	CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");

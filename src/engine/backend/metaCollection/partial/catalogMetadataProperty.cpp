@@ -19,7 +19,7 @@ void CMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVariant&
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 			const IMetaObject* catalog = m_metaData->GetMetaObject(metaDesc.GetByIdx(idx));
 			if (catalog != nullptr) {
-				IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
+				const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
 				wxASSERT(so);
 				typeDesc.AppendMetaType(so->GetClassType());
 			}
@@ -31,25 +31,4 @@ void CMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVariant&
 	else (*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
 	
 	IMetaObjectRecordDataMutableRef::OnPropertyChanged(property, oldValue, newValue);
-}
-
-void CMetaObjectCatalog::OnPropertyPasted(IProperty* property)
-{
-	if (m_propertyOwner == property) {
-		const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); CTypeDescription typeDesc;
-		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-			const IMetaObject* catalog = m_metaData->GetMetaObject(metaDesc.GetByIdx(idx));
-			if (catalog != nullptr) {
-				IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
-				wxASSERT(so);
-				typeDesc.AppendMetaType(so->GetClassType());
-			}
-		}
-		(*m_propertyAttributeOwner)->SetDefaultMetaType(typeDesc);
-	}
-
-	if ((*m_propertyAttributeOwner)->GetClsidCount() > 0) (*m_propertyAttributeOwner)->ClearFlag(metaDisableFlag);
-	else (*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
-
-	IMetaObjectRecordDataMutableRef::OnPropertyPasted(property);
 }

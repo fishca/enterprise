@@ -96,7 +96,7 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 
 void CRoleEditor::InitRole()
 {
-	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
+	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
 	wxASSERT(typeCtor);
 
 	wxImageList* imageList = m_roleCtrl->GetImageList();

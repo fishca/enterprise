@@ -27,23 +27,13 @@ CMetaObjectEnumeration::~CMetaObjectEnumeration()
 {
 }
 
-CMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id)
 {
-	if (id == eFormList
-		&& m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormList->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
 	}
-	else if (id == eFormSelect
-		&& m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormSelect->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	else if (id == eFormSelect && m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormSelect->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -88,7 +78,7 @@ IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& strForm
 bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -100,7 +90,7 @@ bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
 bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -111,7 +101,7 @@ bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
 
 wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
 {
-	for (auto obj : GetObjectEnums()) {
+	for (auto obj : GetEnumObjectArray()) {
 		if (objValue->GetGuid() == obj->GetGuid()) {
 			return obj->GetSynonym();
 		}
@@ -174,7 +164,7 @@ bool CMetaObjectEnumeration::OnSaveMetaObject(int flags)
 		return false;
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
-	if (GetObjectEnums().size() == 0) {
+	if (GetEnumObjectArray().size() == 0) {
 		s_restructureInfo.AppendError(_("! Doesn't have any enumeration ") + GetFullName());
 		return false;
 	}
@@ -258,18 +248,6 @@ void CMetaObjectEnumeration::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectEnumeration::GetDefaultAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-	attributes.push_back(m_propertyAttributeReference->GetMetaObject());
-	return attributes;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectEnumeration::GetSearchedAttributes() const
-{
-	return std::vector<IMetaObjectAttribute*>();
 }
 
 //***********************************************************************

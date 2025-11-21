@@ -393,7 +393,7 @@
     <ClInclude Include="metaCollection\partial\tabularSection\tabularSection.h">
       <Filter>metaCollection\partial\tabularSection</Filter>
     </ClInclude>
-    <ClInclude Include="metaCollection\metaSource.h">
+    <ClInclude Include="metaCollection\metaObjectComposite.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
     <ClInclude Include="moduleManager\moduleManagerExt.h">
@@ -1270,7 +1270,7 @@
     <ClCompile Include="propertyManager\property\eventControl.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
-    <ClCompile Include="metaCollection\metaSource.cpp">
+    <ClCompile Include="metaCollection\metaObjectComposite.cpp">
       <Filter>metaCollection</Filter>
     </ClCompile>
     <ClCompile Include="tableInfo.cpp" />

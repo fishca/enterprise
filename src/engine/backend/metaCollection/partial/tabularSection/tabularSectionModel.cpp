@@ -77,12 +77,12 @@ void ITabularSectionDataObject::CopyValue()
 	if (node == nullptr)
 		return;
 	wxValueTableRow* rowData = new wxValueTableRow();
-	for (auto& obj : m_metaTable->GetObjectAttributes()) {
-		if (!m_metaTable->IsNumberLine(obj->GetMetaID())) {
-			rowData->AppendTableValue(obj->GetMetaID(), node->GetTableValue(obj->GetMetaID()));
+	for (const auto object : m_metaTable->GetAttributeArrayObject()) {
+		if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
+			rowData->AppendTableValue(object->GetMetaID(), node->GetTableValue(object->GetMetaID()));
 		}
 		else {
-			rowData->AppendTableValue(obj->GetMetaID(), CValue());
+			rowData->AppendTableValue(object->GetMetaID(), CValue());
 		}
 	}
 	long currentLine = GetRow(currentItem);

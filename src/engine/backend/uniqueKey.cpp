@@ -86,13 +86,13 @@ CUniquePairKey::CUniquePairKey(IMetaObjectRegisterData* metaObject) : CUniqueKey
 	m_metaObject = metaObject;
 	m_keyValues = {};
 
-	if (metaObject != nullptr) {
-		for (auto& obj : metaObject->GetGenericDimensions()) {
-			m_keyValues.insert_or_assign(
-				obj->GetMetaID(),
-				obj->CreateValue()
-			);
-		}
+	if (metaObject == nullptr) 
+		return;
+
+	for (const auto object : metaObject->GetGenericDimentionArrayObject()) {
+		m_keyValues.insert_or_assign(
+			object->GetMetaID(), object->CreateValue()
+		);
 	}
 }
 
@@ -102,15 +102,15 @@ CUniquePairKey::CUniquePairKey(IMetaObjectRegisterData* metaObject, const valueA
 	m_metaObject = metaObject;
 	m_keyValues = {};
 
-	if (metaObject != nullptr) {
-		for (auto& obj : metaObject->GetGenericDimensions()) {
-			auto& it = keyValues.find(obj->GetMetaID());
-			if (it != keyValues.end()) {
-				m_keyValues.insert_or_assign(
-					obj->GetMetaID(),
-					keyValues.at(obj->GetMetaID())
-				);
-			}
+	if (metaObject == nullptr) 
+		return;
+
+	for (const auto object : metaObject->GetGenericDimentionArrayObject()) {
+		auto iterator = keyValues.find(object->GetMetaID());
+		if (iterator != keyValues.end()) {
+			m_keyValues.insert_or_assign(
+				object->GetMetaID(), keyValues.at(object->GetMetaID())
+			);
 		}
 	}
 }

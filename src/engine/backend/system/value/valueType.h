@@ -115,8 +115,8 @@ public:
 
 	CValueTypeDescription(const CTypeDescription& typeDescription);
 
-	CValueTypeDescription(const std::set<class_identifier_t>& clsid);
-	CValueTypeDescription(const std::set<class_identifier_t>& clsid,
+	CValueTypeDescription(const std::vector<class_identifier_t>& array);
+	CValueTypeDescription(const std::vector<class_identifier_t>& array,
 		CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString);
 
 	virtual ~CValueTypeDescription();
@@ -128,7 +128,7 @@ public:
 
 	operator CTypeDescription() const { return GetTypeDesc(); }
 
-	std::set<class_identifier_t> GetClsidList() { return m_typeDesc.m_listTypeClass; }
+	const std::vector<class_identifier_t>& GetClsidList() { return m_typeDesc.GetClsidList(); }
 	const CTypeDescription& GetTypeDesc() const { return m_typeDesc; }
 
 public:

@@ -22,20 +22,20 @@ void CSelectorDataObject::Reset()
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
 	}
-	for (auto& obj : m_metaObject->GetObjectAttributes()) {
+	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
 		if (!appData->DesignerMode()) {
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(), eValueTypes::TYPE_NULL);
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), eValueTypes::TYPE_NULL);
 		}
 		else {
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(), obj->CreateValue());
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), object->CreateValue());
 		}
 	}
-	for (auto& obj : m_metaObject->GetObjectTables()) {
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
 		if (!appData->DesignerMode()) {
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(), eValueTypes::TYPE_NULL);
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), eValueTypes::TYPE_NULL);
 		}
 		else {
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(), new CTabularSectionDataObjectRef(this, obj));
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), new CTabularSectionDataObjectRef(this, object));
 		}
 	}
 }
@@ -62,17 +62,17 @@ bool CSelectorDataObject::Read()
 		m_listObjectValue.insert_or_assign(m_metaObject->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, m_objGuid));
 
 		//load attributes 
-		for (auto& obj : m_metaObject->GetObjectAttributes()) {
-			if (m_metaObject->IsDataReference(obj->GetMetaID()))
+		for (const auto object : m_metaObject->GetAttributeArrayObject()) {
+			if (m_metaObject->IsDataReference(object->GetMetaID()))
 				continue;
 			IMetaObjectAttribute::GetValueAttribute(
-				obj, m_listObjectValue[obj->GetMetaID()], resultSet);
+				object, m_listObjectValue[object->GetMetaID()], resultSet);
 		}
-		for (auto& obj : m_metaObject->GetObjectTables()) {
-			CTabularSectionDataObjectRef* tabularSection = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, obj);
+		for (const auto object : m_metaObject->GetTableArrayObject()) {
+			CTabularSectionDataObjectRef* tabularSection = CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, object);
 			if (!tabularSection->LoadData(m_objGuid))
 				isLoaded = false;
-			m_listObjectValue.insert_or_assign(obj->GetMetaID(), tabularSection);
+			m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
 		}
 
 		isLoaded = true;
@@ -94,16 +94,16 @@ void CSelectorRegisterObject::Reset()
 		while (resultSet->Next()) {
 			valueArray_t keyRow;
 			if (m_metaObject->HasRecorder()) {
-				CMetaObjectAttributeDefault* attributeRecorder = m_metaObject->GetRegisterRecorder();
+				CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
 				IMetaObjectAttribute::GetValueAttribute(attributeRecorder, keyRow[attributeRecorder->GetMetaID()], resultSet);
-				CMetaObjectAttributeDefault* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+				CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 				wxASSERT(attributeNumberLine);
 				IMetaObjectAttribute::GetValueAttribute(attributeNumberLine, keyRow[attributeNumberLine->GetMetaID()], resultSet);
 			}
 			else {
-				for (auto& obj : m_metaObject->GetGenericDimensions()) {
-					IMetaObjectAttribute::GetValueAttribute(obj, keyRow[obj->GetMetaID()], resultSet);
+				for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+					IMetaObjectAttribute::GetValueAttribute(object, keyRow[object->GetMetaID()], resultSet);
 				}
 			}
 			m_currentValues.push_back(keyRow);
@@ -126,12 +126,12 @@ bool CSelectorRegisterObject::Read()
 
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 		queryText = "SELECT * FROM " + m_metaObject->GetTableNameDB() + " LIMIT 1"; bool firstWhere = true;
-		for (auto& obj : m_metaObject->GetGenericDimensions()) {
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			if (firstWhere) {
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -139,12 +139,12 @@ bool CSelectorRegisterObject::Read()
 	}
 	else {
 		queryText = "SELECT FIRST 1 * FROM " + m_metaObject->GetTableNameDB(); bool firstWhere = true;
-		for (auto& obj : m_metaObject->GetGenericDimensions()) {
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			if (firstWhere) {
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -157,10 +157,10 @@ bool CSelectorRegisterObject::Read()
 	if (statement == nullptr)
 		return false;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_keyValues.at(obj->GetMetaID()),
+			object,
+			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -172,10 +172,10 @@ bool CSelectorRegisterObject::Read()
 		isLoaded = true;
 		//load attributes 
 		valueArray_t keyTable, rowTable;
-		for (auto& obj : m_metaObject->GetGenericDimensions())
-			IMetaObjectAttribute::GetValueAttribute(obj, keyTable[obj->GetMetaID()], resultSet);
-		for (auto& obj : m_metaObject->GetGenericAttributes())
-			IMetaObjectAttribute::GetValueAttribute(obj, rowTable[obj->GetMetaID()], resultSet);
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject())
+			IMetaObjectAttribute::GetValueAttribute(object, keyTable[object->GetMetaID()], resultSet);
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject())
+			IMetaObjectAttribute::GetValueAttribute(object, rowTable[object->GetMetaID()], resultSet);
 		m_listObjectValue.insert_or_assign(keyTable, rowTable);
 	}
 	db_query->CloseResultSet(resultSet);

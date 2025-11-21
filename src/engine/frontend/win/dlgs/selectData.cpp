@@ -6,7 +6,7 @@
 bool CDialogSelectDataType::ShowModal(class_identifier_t& clsid)
 {
 	if (m_listData->GetItemCount() == 0) {
-		return false; 
+		return false;
 	}
 	else if (m_listData->GetItemCount() == 1) {
 		long lSelectedItem = m_listData->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
@@ -30,7 +30,7 @@ bool CDialogSelectDataType::ShowModal(class_identifier_t& clsid)
 
 #define ICON_SIZE 16
 
-CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::set<class_identifier_t>& clsids) :
+CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::vector<class_identifier_t>& array) :
 	wxDialog(CDocMDIFrame::GetFrame(), wxID_ANY, _("Select data type"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -45,9 +45,9 @@ CDialogSelectDataType::CDialogSelectDataType(IMetaData* metaData, const std::set
 		new wxImageList(ICON_SIZE, ICON_SIZE), wxIMAGE_LIST_SMALL
 	);
 
-	for (auto clsid : clsids) {
+	for (const auto clsid : array) {
 		if (metaData->IsRegisterCtor(clsid)) {
-			IAbstractTypeCtor* typeCtor = metaData->GetAvailableCtor(clsid);
+			const IAbstractTypeCtor* typeCtor = metaData->GetAvailableCtor(clsid);
 			wxASSERT(typeCtor);
 			wxImageList* imageList = m_listData->GetImageList(wxIMAGE_LIST_SMALL);
 			long lSelectedItem = m_listData->InsertItem(m_listData->GetItemCount(), typeCtor->GetClassName(), imageList->Add(typeCtor->GetClassIcon()));

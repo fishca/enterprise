@@ -35,8 +35,8 @@ private:
 
 protected:
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("object module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("object module")));
+	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("defaultForms"), _("default forms"));
 
@@ -47,13 +47,13 @@ protected:
 	CPropertyRecord* m_propertyRegisterRecord = IPropertyObject::CreateProperty<CPropertyRecord>(m_categoryData, wxT("listRegisterRecord"), _("list register record"));
 
 	//create default attributes
-	//CMetaObjectAttributeDefault* m_attributeNumber = IMetaObjectSourceData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true);
-	//CMetaObjectAttributeDefault* m_attributeDate = IMetaObjectSourceData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
-	//CMetaObjectAttributeDefault* m_attributePosted = IMetaObjectSourceData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString);
+	//CMetaObjectAttributePredefined* m_attributeNumber = IMetaObjectCompositeData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true);
+	//CMetaObjectAttributePredefined* m_attributeDate = IMetaObjectCompositeData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true);
+	//CMetaObjectAttributePredefined* m_attributePosted = IMetaObjectCompositeData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString);
 
-	CPropertyInnerAttribute<>* m_propertyAttributeNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true));
-	CPropertyInnerAttribute<>* m_propertyAttributeDate = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
-	CPropertyInnerAttribute<>* m_propertyAttributePosted = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectSourceData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeDate = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePosted = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString));
 
 private:
 	bool GetFormObject(CPropertyList* prop);
@@ -63,9 +63,9 @@ public:
 
 	CMetaDescription& GetRecordDescription() const { return m_propertyRegisterRecord->GetValueAsMetaDesc(); }
 
-	CMetaObjectAttributeDefault* GetDocumentNumber() const { return m_propertyAttributeNumber->GetMetaObject(); }
-	CMetaObjectAttributeDefault* GetDocumentDate() const { return m_propertyAttributeDate->GetMetaObject(); }
-	CMetaObjectAttributeDefault* GetDocumentPosted() const { return m_propertyAttributePosted->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDocumentNumber() const { return m_propertyAttributeNumber->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDocumentDate() const { return m_propertyAttributeDate->GetMetaObject(); }
+	CMetaObjectAttributePredefined* GetDocumentPosted() const { return m_propertyAttributePosted->GetMetaObject(); }
 
 	//default constructor 
 	CMetaObjectDocument();
@@ -81,9 +81,6 @@ public:
 	virtual void OnPropertyCreated(IProperty* property);
 	virtual bool OnPropertyChanging(IProperty* property, const wxVariant& newValue);
 	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
-
-	//paste property from data
-	virtual void OnPropertyPasted(IProperty* property);
 
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
@@ -108,14 +105,8 @@ public:
 	//get attribute code 
 	virtual IMetaObjectAttribute* GetAttributeForCode() const { return m_propertyAttributeNumber->GetMetaObject(); }
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const override;
-
-	//searched attributes 
-	virtual std::vector<IMetaObjectAttribute*> GetSearchedAttributes() const override;
-
 	//create associate value 
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
 #pragma region _form_builder_h_
 	//support form 
@@ -135,6 +126,32 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 protected:
+
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+
+		array = {
+			m_propertyAttributeNumber->GetMetaObject(),
+			m_propertyAttributeDate->GetMetaObject(),
+			m_propertyAttributePosted->GetMetaObject(),
+			m_propertyAttributeReference->GetMetaObject(),
+			m_propertyAttributeDeletionMark->GetMetaObject()
+		};
+
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+
+		array = {
+			m_propertyAttributeNumber->GetMetaObject(),
+			m_propertyAttributeDate->GetMetaObject()
+		};
+
+		return true;
+	}
+
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);

@@ -38,45 +38,45 @@ CSourceExplorer CRecordDataObjectCatalog::GetSourceExplorer() const
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		srcHelper.AppendSource(metaRef->GetDataCode(), false);
 		srcHelper.AppendSource(metaRef->GetDataDescription());
-		CMetaObjectAttributeDefault* defOwner = metaRef->GetCatalogOwner();
+		CMetaObjectAttributePredefined* defOwner = metaRef->GetCatalogOwner();
 		if (defOwner != nullptr && defOwner->GetClsidCount() > 0) {
 			srcHelper.AppendSource(metaRef->GetCatalogOwner());
 		}
 		srcHelper.AppendSource(metaRef->GetDataParent());
 	}
 
-	for (auto& obj : m_metaObject->GetObjectAttributes()) {
-		eItemMode attrUse = obj->GetItemMode();
+	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
+		eItemMode attrUse = object->GetItemMode();
 		if (m_objMode == eObjectMode::OBJECT_ITEM) {
 			if (attrUse == eItemMode::eItemMode_Item
 				|| attrUse == eItemMode::eItemMode_Folder_Item) {
-				if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
-					srcHelper.AppendSource(obj);
+				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
+					srcHelper.AppendSource(object);
 				}
 			}
 		}
 		else {
 			if (attrUse == eItemMode::eItemMode_Folder ||
 				attrUse == eItemMode::eItemMode_Folder_Item) {
-				if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
-					srcHelper.AppendSource(obj);
+				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
+					srcHelper.AppendSource(object);
 				}
 			}
 		}
 	}
 
-	for (auto& obj : m_metaObject->GetObjectTables()) {
-		eItemMode tableUse = obj->GetTableUse();
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
+		eItemMode tableUse = object->GetTableUse();
 		if (m_objMode == eObjectMode::OBJECT_ITEM) {
 			if (tableUse == eItemMode::eItemMode_Item
 				|| tableUse == eItemMode::eItemMode_Folder_Item) {
-				srcHelper.AppendSource(obj);
+				srcHelper.AppendSource(object);
 			}
 		}
 		else {
 			if (tableUse == eItemMode::eItemMode_Folder ||
 				tableUse == eItemMode::eItemMode_Folder_Item) {
-				srcHelper.AppendSource(obj);
+				srcHelper.AppendSource(object);
 			}
 		}
 	}
@@ -110,7 +110,7 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFor
 
 		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormGroup,
+			m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormFolder,
 			ownerControl,
 			this,
 			m_objGuid
@@ -273,28 +273,35 @@ void CRecordDataObjectCatalog::PrepareNames() const
 
 	m_methodHelper->AppendProp(wxT("thisObject"), true, false, eThisObject, eSystem);
 
+	//set object name
+	wxString objectName;
+
 	//fill custom attributes 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (obj->IsDeleted())
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
-			!m_metaObject->IsDataReference(obj->GetMetaID()),
-			obj->GetMetaID(),
+			!m_metaObject->IsDataReference(object->GetMetaID()),
+			object->GetMetaID(),
 			eProperty
 		);
 	}
 
 	//fill custom tables 
-	for (auto& obj : m_metaObject->GetObjectTables()) {
-		if (obj->IsDeleted())
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
+			objectName,
 			true,
 			false,
-			obj->GetMetaID(),
+			object->GetMetaID(),
 			eTable
 		);
 	}

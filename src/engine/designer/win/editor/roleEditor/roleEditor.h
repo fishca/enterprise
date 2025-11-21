@@ -55,7 +55,7 @@ private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
 		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
-		IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);

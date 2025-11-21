@@ -23,7 +23,7 @@ class_identifier_t CConstantManager::GetClassType() const
 {
 	IMetaData *metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor *clsFactory =
+	const IMetaValueTypeCtor *clsFactory =
 		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -33,7 +33,7 @@ wxString CConstantManager::GetClassName() const
 {
 	IMetaData *metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor *clsFactory =
+	const IMetaValueTypeCtor *clsFactory =
 		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -43,7 +43,7 @@ wxString CConstantManager::GetString() const
 {
 	IMetaData *metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
-	IMetaValueTypeCtor *clsFactory =
+	const IMetaValueTypeCtor *clsFactory =
 		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();

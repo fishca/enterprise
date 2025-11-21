@@ -139,7 +139,8 @@ bool CModuleManagerExternalDataProcessor::StartMainModule(bool force)
 
 	IMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
-	IMetaObjectForm* defFormObject = commonObject->GetDefaultFormByID(
+	IMetaObjectForm* defFormObject = commonObject->GetDefaultFormByID
+	(
 		CMetaObjectDataProcessor::eFormDataProcessor
 	);
 

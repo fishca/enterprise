@@ -25,7 +25,7 @@ CMetaObjectCommonModule* CDataProcessorManager::GetModuleManager() const { retur
 
 class_identifier_t CDataProcessorManager::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -33,7 +33,7 @@ class_identifier_t CDataProcessorManager::GetClassType() const
 
 wxString CDataProcessorManager::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -41,7 +41,7 @@ wxString CDataProcessorManager::GetClassName() const
 
 wxString CDataProcessorManager::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();

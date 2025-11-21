@@ -45,7 +45,7 @@ bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
 	wxWindowID id = control_id;
 
 	for (auto controlClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
-		IControlTypeCtor* objectSingle = dynamic_cast<IControlTypeCtor*>(controlClass);
+		const IControlTypeCtor* objectSingle = dynamic_cast<const IControlTypeCtor*>(controlClass);
 		wxASSERT(objectSingle);
 		if (!objectSingle->IsControlSystem()) {
 			wxBitmap controlImage = objectSingle->GetClassIcon();
@@ -138,7 +138,7 @@ void CFormEditView::OnDraw(wxDC* WXUNUSED(dc))
 bool CFormEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
-
+	 
 	if (deleteWindow) {
 		GetFrame()->Destroy();
 		SetFrame(nullptr);

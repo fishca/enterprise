@@ -94,9 +94,9 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 			return retCode;
 
 		//default attributes
-		for (auto& obj : srcTable->GetGenericAttributes()) {
+		for (const auto object : srcTable->GetGenericAttributeArrayObject()) {
 			retCode = ProcessAttribute(tabularName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -109,9 +109,9 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 
 		if (!srcTable->CompareObject(dstTable)) s_restructureInfo.AppendInfo(_("Changing tabular section ") + srcTable->GetFullName());
 
-		for (auto& obj : srcTable->GetGenericAttributes()) {
+		for (const auto object : srcTable->GetGenericAttributeArrayObject()) {
 			retCode = ProcessAttribute(tabularName,
-				obj, dstTable->FindAttributeByGuid(obj->GetDocPath())
+				object, dstTable->FindAnyAttributeObjectByFilter(object->GetGuid())
 			);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return retCode;
@@ -148,23 +148,23 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 
-			for (auto& obj : GetDefaultAttributes()) {
+			for (const auto object : GetPredefinedAttributeArrayObject()) {
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
-				if (IMetaObjectRecordDataRef::IsDataReference(obj->GetMetaID()))
+				if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 					continue;
 				retCode = ProcessAttribute(tableName,
-					obj, nullptr);
+					object, nullptr);
 			}
 
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 
-			for (auto& obj : GetObjectAttributes()) {
+			for (const auto object : GetAttributeArrayObject()) {
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 				retCode = ProcessAttribute(tableName,
-					obj, nullptr);
+					object, nullptr);
 			}
 
 			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
@@ -172,22 +172,22 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 
-				for (auto& obj : GetObjectEnums()) {
+				for (const auto object : GetEnumObjectArray()) {
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 					retCode = ProcessEnumeration(tableName,
-						obj, nullptr);
+						object, nullptr);
 				}
 			}
 
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 
-			for (auto& obj : GetObjectTables()) {
+			for (const auto object : GetTableArrayObject()) {
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
-				retCode = ProcessTable(obj->GetTableNameDB(),
-					obj, nullptr);
+				retCode = ProcessTable(object->GetTableNameDB(),
+					object, nullptr);
 			}
 
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -199,11 +199,11 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
 				retCode = 1;
-				for (auto& obj : GetObjectEnums()) {
+				for (const auto object : GetEnumObjectArray()) {
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 					retCode = ProcessEnumeration(tableName,
-						obj, nullptr);
+						object, nullptr);
 				}
 			}
 		}
@@ -218,82 +218,84 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 				s_restructureInfo.AppendInfo(_("Changed ") + GetFullName());
 
 			//attributes from dst 
-			for (auto& obj : dstValue->GetDefaultAttributes()) {
+			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindDefAttributeByGuid(obj->GetDocPath());
-				if (dstValue->IsDataReference(obj->GetMetaID()))
+					IMetaObjectRecordDataRef::FindPredefinedAttributeObjectByFilter(object->GetGuid());
+				if (dstValue->IsDataReference(object->GetMetaID()))
 					continue;
 				if (foundedMeta == nullptr) {
-					retCode = ProcessAttribute(tableName, nullptr, obj);
+					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
+		
 			//attributes current
-			for (auto& obj : GetDefaultAttributes()) {
-				if (IMetaObjectRecordDataRef::IsDataReference(obj->GetMetaID()))
+			for (const auto object : GetPredefinedAttributeArrayObject()) {
+				if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 					continue;
 				retCode = ProcessAttribute(tableName,
-					obj, dstValue->FindDefAttributeByGuid(obj->GetDocPath())
+					object, dstValue->FindPredefinedAttributeObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//attributes from dst 
-			for (auto& obj : dstValue->GetObjectAttributes()) {
+			for (const auto object : dstValue->GetAttributeArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindAttributeByGuid(obj->GetDocPath());
+					IMetaObjectRecordDataRef::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessAttribute(tableName, nullptr, obj);
+					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
+			
 			//attributes current
-			for (auto& obj : GetObjectAttributes()) {
+			for (const auto object : GetAttributeArrayObject()) {
 				retCode = ProcessAttribute(tableName,
-					obj, dstValue->FindAttributeByGuid(obj->GetDocPath())
+					object, dstValue->FindAttributeObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//enums from dst 
-			for (auto& obj : dstValue->GetObjectEnums()) {
+			for (const auto object : dstValue->GetEnumObjectArray()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindEnumByGuid(obj->GetDocPath());
+					IMetaObjectRecordDataRef::FindEnumObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessEnumeration(tableName,
-						nullptr, obj);
+						nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 			//enums current
-			for (auto& obj : GetObjectEnums()) {
+			for (const auto object : GetEnumObjectArray()) {
 				retCode = ProcessEnumeration(tableName,
-					obj, dstValue->FindEnumByGuid(obj->GetDocPath())
+					object, dstValue->FindEnumObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//tables from dst 
-			for (auto& obj : dstValue->GetObjectTables()) {
+			for (const auto object : dstValue->GetTableArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindTableByGuid(obj->GetDocPath());
+					IMetaObjectRecordDataRef::FindTableObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessTable(obj->GetTableNameDB(), nullptr, obj);
+					retCode = ProcessTable(object->GetTableNameDB(), nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//tables current 
-			for (auto& obj : GetObjectTables()) {
-				retCode = ProcessTable(obj->GetTableNameDB(),
-					obj, dstValue->FindTableByGuid(obj->GetDocPath())
+			for (const auto object : GetTableArrayObject()) {
+				retCode = ProcessTable(object->GetTableNameDB(),
+					object, dstValue->FindTableObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
@@ -310,10 +312,10 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectTables()) {
+		for (const auto object : GetTableArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
-			const wxString& tabularName = obj->GetTableNameDB();
+			const wxString& tabularName = object->GetTableNameDB();
 			if (db_query->TableExists(tabularName)) {
 				retCode = db_query->RunQuery("DROP TABLE %s", tabularName);
 			}
@@ -398,7 +400,7 @@ int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, IMetaOb
 bool IMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IMetaObjectRegisterData* dst)
 {
 	if (HasRecorder()) {
-		CMetaObjectAttributeDefault* metaRec = dst->GetRegisterRecorder();
+		CMetaObjectAttributePredefined* metaRec = dst->GetRegisterRecorder();
 		if (metaRec == nullptr)
 			return false;
 		const CTypeDescription& typeDesc = metaRec->GetTypeDesc();
@@ -432,41 +434,41 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 		else
 			retCode = db_query->RunQuery("CREATE TABLE %s (rowData BLOB);", tableName);
 
-		for (auto& obj : GetDefaultAttributes()) {
+		for (const auto object : GetPredefinedAttributeArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessAttribute(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectDimensions()) {
+		for (const auto object : GetDimentionArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessDimension(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectResources()) {
+		for (const auto object : GetResourceArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessResource(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectAttributes()) {
+		for (const auto object : GetAttributeArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessAttribute(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -474,17 +476,17 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 		wxString queryText;
 		if (HasRecorder()) {
-			CMetaObjectAttributeDefault* attributeRecorder = GetRegisterRecorder();
+			CMetaObjectAttributePredefined* attributeRecorder = GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
 			queryText += IMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CMetaObjectAttributeDefault* attributeNumberLine = GetRegisterLineNumber();
+			CMetaObjectAttributePredefined* attributeNumberLine = GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
 			queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
 		}
 		else {
 			bool firstMatching = true;
-			for (auto& obj : GetGenericDimensions()) {
-				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+			for (const auto object : GetGenericDimentionArrayObject()) {
+				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -506,83 +508,83 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 				return false;
 
 			if (!dstValue->CompareObject(this))
-				s_restructureInfo.AppendInfo(_("Changed register") + GetFullName());
+				s_restructureInfo.AppendInfo(_("Changed register ") + GetFullName());
 
 			//attributes from dst 
-			for (auto& obj : dstValue->GetDefaultAttributes()) {
+			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindDefAttributeByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindPredefinedAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessAttribute(tableName, nullptr, obj);
+					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//attributes current
-			for (auto& obj : GetDefaultAttributes()) {
+			for (const auto object : GetPredefinedAttributeArrayObject()) {
 				retCode = ProcessAttribute(tableName,
-					obj, dstValue->FindDefAttributeByGuid(obj->GetDocPath())
+					object, dstValue->FindPredefinedAttributeObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//dimensions from dst 
-			for (auto& obj : dstValue->GetObjectDimensions()) {
+			for (const auto object : dstValue->GetDimentionArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindDimensionByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessDimension(tableName, nullptr, obj);
+					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//dimensions current
-			for (auto& obj : GetObjectDimensions()) {
+			for (const auto object : GetDimentionArrayObject()) {
 				retCode = ProcessDimension(tableName,
-					obj, dstValue->FindDimensionByGuid(obj->GetDocPath())
+					object, dstValue->FindDimensionObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//resources from dst 
-			for (auto& obj : dstValue->GetObjectResources()) {
+			for (const auto object : dstValue->GetResourceArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindResourceByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessResource(tableName, nullptr, obj);
+					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//resources current
-			for (auto& obj : GetObjectResources()) {
+			for (const auto object : GetResourceArrayObject()) {
 				retCode = ProcessResource(tableName,
-					obj, dstValue->FindResourceByGuid(obj->GetDocPath())
+					object, dstValue->FindResourceObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//attributes from dst 
-			for (auto& obj : dstValue->GetObjectAttributes()) {
+			for (const auto object : dstValue->GetAttributeArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindAttributeByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessAttribute(tableName, nullptr, obj);
+					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//attributes current
-			for (auto& obj : GetObjectAttributes()) {
+			for (const auto object : GetAttributeArrayObject()) {
 				retCode = ProcessAttribute(tableName,
-					obj, dstValue->FindAttributeByGuid(obj->GetDocPath())
+					object, dstValue->FindAttributeObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
@@ -591,7 +593,7 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 	}
 	else if ((flags & deleteMetaTable) != 0) {
 
-		s_restructureInfo.AppendInfo(_("Remove register") + GetFullName());
+		s_restructureInfo.AppendInfo(_("Remove register ") + GetFullName());
 
 		retCode = db_query->RunQuery("DROP TABLE %s", tableName);
 	}
@@ -637,15 +639,15 @@ bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 		if (resultSet->Next()) {
 			succes = true;
 			//load other attributes 
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
-				if (!m_metaObject->IsDataReference(obj->GetMetaID())) {
-					IMetaObjectAttribute::GetValueAttribute(obj, m_listObjectValue[obj->GetMetaID()], resultSet);
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
+					IMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 				}
 			}
-			for (auto& obj : m_metaObject->GetObjectTables()) {
-				CTabularSectionDataObjectRef* tabularSection = new CTabularSectionDataObjectRef(this, obj);
+			for (const auto object : m_metaObject->GetTableArrayObject()) {
+				CTabularSectionDataObjectRef* tabularSection = new CTabularSectionDataObjectRef(this, object);
 				if (!tabularSection->LoadData(srcGuid)) succes = false;
-				m_listObjectValue.insert_or_assign(obj->GetMetaID(), tabularSection);
+				m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
 			}
 		}
 		db_query->CloseResultSet(resultSet);
@@ -670,11 +672,11 @@ bool IRecordDataObjectRef::SaveData()
 	//check fill attributes 
 	bool fillCheck = true;
 	wxASSERT(m_metaObject);
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (obj->FillCheck()) {
-			if (m_listObjectValue[obj->GetMetaID()].IsEmpty()) {
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (object->FillCheck()) {
+			if (m_listObjectValue[object->GetMetaID()].IsEmpty()) {
 				wxString fillError =
-					wxString::Format(_("""%s"" is a required field"), obj->GetSynonym());
+					wxString::Format(_("""%s"" is a required field"), object->GetSynonym());
 				CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
 				fillCheck = false;
 			}
@@ -690,16 +692,16 @@ bool IRecordDataObjectRef::SaveData()
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "INSERT INTO " + tableName + " (";
 	queryText += "uuid";
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (m_metaObject->IsDataReference(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(obj);
+		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (m_metaObject->IsDataReference(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(obj);
+		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
@@ -715,12 +717,12 @@ bool IRecordDataObjectRef::SaveData()
 
 	int position = 2;
 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (m_metaObject->IsDataReference(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_listObjectValue.at(obj->GetMetaID()),
+			object,
+			m_listObjectValue.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -733,15 +735,15 @@ bool IRecordDataObjectRef::SaveData()
 
 	//table parts
 	if (!hasError) {
-		for (auto& obj : m_metaObject->GetObjectTables()) {
+		for (const auto object : m_metaObject->GetTableArrayObject()) {
 			ITabularSectionDataObject* tabularSection = nullptr;
-			if (m_listObjectValue[obj->GetMetaID()].ConvertToValue(tabularSection)) {
+			if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 				if (!tabularSection->SaveData()) {
 					hasError = true;
 					break;
 				}
 			}
-			else if (m_listObjectValue[obj->GetMetaID()].GetType() != TYPE_NULL) {
+			else if (m_listObjectValue[object->GetMetaID()].GetType() != TYPE_NULL) {
 				hasError = true;
 				break;
 			}
@@ -766,13 +768,13 @@ bool IRecordDataObjectRef::DeleteData()
 		return true;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	//table parts
-	for (auto& obj : m_metaObject->GetObjectTables()) {
+	for (const auto object : m_metaObject->GetTableArrayObject()) {
 		ITabularSectionDataObject* tabularSection = nullptr;
-		if (m_listObjectValue[obj->GetMetaID()].ConvertToValue(tabularSection)) {
+		if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 			if (!tabularSection->DeleteData())
 				return false;
 		}
-		else if (m_listObjectValue[obj->GetMetaID()].GetType() != TYPE_NULL)
+		else if (m_listObjectValue[object->GetMetaID()].GetType() != TYPE_NULL)
 			return false;
 
 	}
@@ -820,7 +822,7 @@ void IRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 		return;
 
 	if (m_metaObject != nullptr) {
-		CMetaObjectAttributeDefault* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
+		CMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
 		wxASSERT(attributeDeletionMark);
 		IRecordDataObjectRef::SetValueByMetaID(*attributeDeletionMark, deletionMark);
 	}
@@ -846,12 +848,12 @@ bool IRecordManagerObject::ExistData()
 		wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 		wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
-		for (auto& obj : m_metaObject->GetGenericDimensions()) {
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			if (firstWhere) {
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -860,10 +862,10 @@ bool IRecordManagerObject::ExistData()
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 
 		if (statement != nullptr) {
-			for (auto& obj : m_metaObject->GetGenericDimensions()) {
-				CValue retValue; m_recordLine->GetValueByMetaID(obj->GetMetaID(), retValue);
+			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+				CValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
+					object,
 					retValue,
 					statement,
 					position
@@ -915,15 +917,19 @@ bool IRecordManagerObject::SaveData(bool replace)
 		&& !DeleteData())
 		return false;
 
-	if (ExistData())
+	if (ExistData()) {
+		wxString fillError =
+			wxString::Format(_("This entry already exists. It is not possible to write a new value!"));
+		CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
 		return false;
+	}
 
 	m_recordSet->m_keyValues.clear();
 	wxASSERT(m_recordLine);
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		CValue retValue; m_recordLine->GetValueByMetaID(obj->GetMetaID(), retValue);
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		CValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
 		m_recordSet->m_keyValues.insert_or_assign(
-			obj->GetMetaID(), retValue
+			object->GetMetaID(), retValue
 		);
 	}
 	if (m_recordSet->WriteRecordSet(replace, false)) {
@@ -954,14 +960,14 @@ bool IRecordSetObject::ExistData()
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -971,12 +977,12 @@ bool IRecordSetObject::ExistData()
 	if (statement == nullptr)
 		return false;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_keyValues.at(obj->GetMetaID()),
+			object,
+			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -1003,14 +1009,14 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1020,12 +1026,12 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 	if (statement == nullptr)
 		return false;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_keyValues.at(obj->GetMetaID()),
+			object,
+			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -1059,14 +1065,14 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!key.FindKey(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!key.FindKey(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1074,12 +1080,12 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!key.FindKey(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!key.FindKey(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			key.GetKey(obj->GetMetaID()),
+			object,
+			key.GetKey(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -1089,11 +1095,11 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 		return false;
 	while (resultSet->Next()) {
 		wxValueTableRow* rowData = new wxValueTableRow();
-		for (auto& obj : m_metaObject->GetGenericDimensions()) {
-			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
-			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 		m_selected = true;
@@ -1117,14 +1123,14 @@ bool IRecordSetObject::ReadData()
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1132,12 +1138,12 @@ bool IRecordSetObject::ReadData()
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_keyValues.at(obj->GetMetaID()),
+			object,
+			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -1147,11 +1153,11 @@ bool IRecordSetObject::ReadData()
 		return false;
 	while (resultSet->Next()) {
 		wxValueTableRow* rowData = new wxValueTableRow();
-		for (auto& obj : m_metaObject->GetGenericDimensions()) {
-			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
-			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet);
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 		m_selected = true;
@@ -1173,13 +1179,13 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	//check fill attributes 
 	bool fillCheck = true; long currLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
-			if (obj->FillCheck()) {
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			if (object->FillCheck()) {
 				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				if (node->IsEmptyValue(obj->GetMetaID())) {
+				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
-						wxString::Format(_("The %s is required on line %i of the %s"), obj->GetSynonym(), currLine, m_metaObject->GetSynonym());
+						wxString::Format(_("The %s is required on line %i of the %s"), object->GetSynonym(), currLine, m_metaObject->GetSynonym());
 					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
 					fillCheck = false;
 				}
@@ -1216,15 +1222,15 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	else {
 		queryText = "UPDATE OR INSERT INTO " + tableName + " (";
 	}
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		queryText += (firstUpdate ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		queryText += (firstUpdate ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 		if (firstUpdate) {
 			firstUpdate = false;
 		}
 	}
 	queryText += ") VALUES ("; bool firstInsert = true;
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(obj);
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += (firstInsert ? "?" : ",?");
 			if (firstInsert) {
@@ -1239,18 +1245,18 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	else {
 		queryText += ") MATCHING (";
 		if (m_metaObject->HasRecorder()) {
-			CMetaObjectAttributeDefault* attributeRecorder = m_metaObject->GetRegisterRecorder();
+			CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
 			queryText += IMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CMetaObjectAttributeDefault* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+			CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
 			queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
 		}
 		else
 		{
 			bool firstMatching = true;
-			for (auto& obj : m_metaObject->GetGenericDimensions()) {
-				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(obj);
+			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -1269,19 +1275,19 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 		if (hasError)
 			break;
 		int position = 1;
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
-			auto foundedKey = m_keyValues.find(obj->GetMetaID());
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+			auto foundedKey = m_keyValues.find(object->GetMetaID());
 			if (foundedKey != m_keyValues.end()) {
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
+					object,
 					foundedKey->second,
 					statement,
 					position
 				);
 			}
-			else if (m_metaObject->IsRegisterLineNumber(obj->GetMetaID())) {
+			else if (m_metaObject->IsRegisterLineNumber(object->GetMetaID())) {
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
+					object,
 					numberLine++,
 					statement,
 					position
@@ -1291,8 +1297,8 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 				wxValueTableRow* node = GetViewData< wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
-					node->GetTableValue(obj->GetMetaID()),
+					object,
+					node->GetTableValue(object->GetMetaID()),
 					statement,
 					position
 				);
@@ -1324,14 +1330,14 @@ bool IRecordSetObject::DeleteData()
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(obj);
+			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1342,12 +1348,12 @@ bool IRecordSetObject::DeleteData()
 	if (statement == nullptr)
 		return false;
 
-	for (auto& obj : m_metaObject->GetGenericDimensions()) {
-		if (!IRecordSetObject::FindKeyValue(obj->GetMetaID()))
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
+		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(
-			obj,
-			m_keyValues.at(obj->GetMetaID()),
+			object,
+			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
@@ -1378,7 +1384,7 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
+			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
 			sequence_table,
 			metaObject->GetDocPath(),
 			wxEmptyString
@@ -1403,7 +1409,7 @@ CValue IRecordDataObjectRef::GenerateNextCode(IMetaObjectRecordDataMutableRef* m
 	else {
 
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
+			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
 			sequence_table,
 			metaObject->GetDocPath(),
 			wxEmptyString

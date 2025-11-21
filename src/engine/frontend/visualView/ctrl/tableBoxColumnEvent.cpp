@@ -100,7 +100,7 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 		if (selValue.GetType() == eValueTypes::TYPE_EMPTY) {
 			const class_identifier_t& clsid = GetDataType();
 			if (clsid != 0) {
-				IMetaData* metaData = GetMetaData();
+				const IMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
 				if (metaData->IsRegisterCtor(clsid)) {
 					SetControlValue(
@@ -118,9 +118,9 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 			wxASSERT(columnRenderer);
 			const class_identifier_t& clsid = selValue.GetClassType();
 			if (!ITypeControlFactory::QuickChoice(this, clsid, columnRenderer->GetEditorCtrl())) {
-				IMetaData* metaData = GetMetaData();
+				const IMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
-				IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
+				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
 				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
 					IMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {

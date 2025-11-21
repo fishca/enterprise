@@ -3,8 +3,8 @@
 
 inline wxString GetClassType(const wxString& className)
 {
-	IControlTypeCtor* objectSingle =
-		dynamic_cast<IControlTypeCtor*>(CValue::GetAvailableCtor(className));
+	const IControlTypeCtor* objectSingle =
+		dynamic_cast<const IControlTypeCtor*>(CValue::GetAvailableCtor(className));
 	wxASSERT(objectSingle);
 	return objectSingle->GetTypeControlName();
 }
@@ -77,7 +77,7 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 		// Save the original name for use later.
 		static wxString GetOriginalName(const IValueFrame* control) {
 
-			wxString originalName = control->GetControlName();
+			wxString originalName; control->GetControlNameAsString(originalName);
 			if (!originalName.IsEmpty()) {
 				size_t length = originalName.length();
 				while (length >= 0 && stringUtils::IsDigit(originalName[--length]));
@@ -107,12 +107,13 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 
 			if (object->GetComponentType() != COMPONENT_TYPE_SIZERITEM) {
 				// comprobamos si hay conflicto
-				unsigned int index = 0; bool founded_name = false;
+				unsigned int index = 0; bool founded_name = false; wxString controlName;
 				do {
 					for (auto& valueControl : top->m_listControl) {
 						if (0 == valueControl->GetControlID()) continue;
 						if (object == valueControl) continue;
-						if (stringUtils::CompareString(generateName, valueControl->GetControlName())) {
+						if (!valueControl->GetControlNameAsString(controlName)) continue;
+						if (stringUtils::CompareString(generateName, controlName)) {
 							founded_name = true;
 							break;
 						}

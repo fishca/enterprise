@@ -20,25 +20,25 @@ bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 			const IMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 			if (metaObjectValue != nullptr) {
-				IMetaObjectAttribute* metaAttribute = wxDynamicCast(
-					metaObjectValue->FindMetaObjectByID(m_propertySource->GetValueAsSource()), IMetaObjectAttribute
+				IMetaObjectAttribute* attribute = wxDynamicCast(
+					metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IMetaObjectAttribute
 				);
-				wxASSERT(metaAttribute);
-				IMetaValueTypeCtor* so = metaData->GetTypeCtor(metaAttribute->GetFirstClsid());
+				wxASSERT(attribute);
+				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 				if (so != nullptr) {
 					metaObject = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
 				}
 			}
 		}
 		else {
-			IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
+			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
 				metaObject = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
 			}
 		}
 
 		if (metaObject != nullptr) {
-			for (auto form : metaObject->GetObjectForms()) {
+			for (auto form : metaObject->GetFormArrayObject()) {
 				property->AppendItem(
 					form->GetSynonym(),
 					form->GetMetaID(),

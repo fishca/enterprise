@@ -19,21 +19,21 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(IMetaDataCo
 		retCode = ProcessAttribute(tableName,
 			m_propertyAttributePeriod->GetMetaObject(), nullptr);
 
-		for (auto& obj : GetObjectDimensions()) {
+		for (const auto object : GetDimentionArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessDimension(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectResources()) {
+		for (const auto object : GetResourceArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessResource(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {
@@ -44,40 +44,40 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateBalancesTableDB(IMetaDataCo
 			if (!UpdateCurrentRecords(tableName, dstValue))
 				return false;
 			//dimensions from dst 
-			for (auto& obj : dstValue->GetObjectDimensions()) {
+			for (const auto object : dstValue->GetDimentionArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindDimensionByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessDimension(tableName, nullptr, obj);
+					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//dimensions current
-			for (auto& obj : GetObjectDimensions()) {
+			for (const auto object : GetDimentionArrayObject()) {
 				retCode = ProcessDimension(tableName,
-					obj, dstValue->FindDimensionByGuid(obj->GetDocPath())
+					object, dstValue->FindDimensionObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//resources from dst 
-			for (auto& obj : dstValue->GetObjectResources()) {
+			for (const auto object : dstValue->GetResourceArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindResourceByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessResource(tableName, nullptr, obj);
+					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//resources current
-			for (auto& obj : GetObjectResources()) {
+			for (const auto object : GetResourceArrayObject()) {
 				retCode = ProcessResource(tableName,
-					obj, dstValue->FindResourceByGuid(obj->GetDocPath())
+					object, dstValue->FindResourceObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
@@ -110,21 +110,21 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(IMetaDataCo
 		retCode = ProcessAttribute(tableName,
 			m_propertyAttributePeriod->GetMetaObject(), nullptr);
 
-		for (auto& obj : GetObjectDimensions()) {
+		for (const auto object : GetDimentionArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessDimension(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 
-		for (auto& obj : GetObjectResources()) {
+		for (const auto object : GetResourceArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
 			retCode = ProcessResource(tableName,
-				obj, nullptr);
+				object, nullptr);
 		}
 	}
 	else if ((flags & updateMetaTable) != 0) {
@@ -135,40 +135,40 @@ bool CMetaObjectAccumulationRegister::CreateAndUpdateTurnoverTableDB(IMetaDataCo
 			if (!UpdateCurrentRecords(tableName, dstValue))
 				return false;
 			//dimensions from dst 
-			for (auto& obj : dstValue->GetObjectDimensions()) {
+			for (const auto object : dstValue->GetDimentionArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindDimensionByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessDimension(tableName, nullptr, obj);
+					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//dimensions current
-			for (auto& obj : GetObjectDimensions()) {
+			for (const auto object : GetDimentionArrayObject()) {
 				retCode = ProcessDimension(tableName,
-					obj, dstValue->FindDimensionByGuid(obj->GetDocPath())
+					object, dstValue->FindDimensionObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
 			}
 
 			//resources from dst 
-			for (auto& obj : dstValue->GetObjectResources()) {
+			for (const auto object : dstValue->GetResourceArrayObject()) {
 				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindResourceByGuid(obj->GetDocPath());
+					IMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
-					retCode = ProcessResource(tableName, nullptr, obj);
+					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
 			}
 
 			//resources current
-			for (auto& obj : GetObjectResources()) {
+			for (const auto object : GetResourceArrayObject()) {
 				retCode = ProcessResource(tableName,
-					obj, dstValue->FindResourceByGuid(obj->GetDocPath())
+					object, dstValue->FindResourceObjectByFilter(object->GetGuid())
 				);
 				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 					return false;
@@ -258,13 +258,13 @@ bool CRecordSetObjectAccumulationRegister::SaveVirtualTable()
 	if (!m_metaObject->ConvertToValue(metaObject))
 		return false;
 
-	CMetaObjectAttributeDefault* attributePeriod = metaObject->GetRegisterPeriod();
+	CMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
 	wxASSERT(attributePeriod);
 
 	wxString tableName = metaObject->GetRegisterTableNameDB(); bool firstUpdate = true;
 	wxString queryText = "UPDATE OR INSERT INTO " + tableName + "(" + IMetaObjectAttribute::GetSQLFieldName(attributePeriod);
 
-	for (auto& obj : metaObject->GetObjectDimensions()) {
+	for (const auto object : metaObject->GetDimentionArrayObject()) {
 		queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attribute);
 	}
 
@@ -278,7 +278,7 @@ bool CRecordSetObjectAccumulationRegister::SaveVirtualTable()
 		}
 	}
 
-	for (auto& obj : metaObject->GetObjectDimensions()) {
+	for (const auto object : metaObject->GetDimentionArrayObject()) {
 		for (unsigned int i = 0; i < IMetaObjectAttribute::GetSQLFieldCount(attribute); i++) {
 			queryText += ",?";
 		}
@@ -286,7 +286,7 @@ bool CRecordSetObjectAccumulationRegister::SaveVirtualTable()
 
 	queryText += ") MATCHING ( " + IMetaObjectAttribute::GetSQLFieldName(attributePeriod);
 
-	for (auto& obj : metaObject->GetObjectDimensions()) {
+	for (const auto object : metaObject->GetDimentionArrayObject()) {
 		queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attribute);
 	}
 
@@ -313,7 +313,7 @@ bool CRecordSetObjectAccumulationRegister::SaveVirtualTable()
 			position
 		);
 
-		for (auto& obj : metaObject->GetObjectDimensions()) {
+		for (const auto object : metaObject->GetDimentionArrayObject()) {
 			auto foundedKey = m_keyValues.find(attribute->GetMetaID());
 			if (foundedKey != m_keyValues.end()) {
 				IMetaObjectAttribute::SetValueAttribute(
@@ -348,13 +348,13 @@ bool CRecordSetObjectAccumulationRegister::DeleteVirtualTable()
 	if (!m_metaObject->ConvertToValue(metaObject))
 		return false;
 
-	CMetaObjectAttributeDefault* attributePeriod = metaObject->GetRegisterPeriod();
+	CMetaObjectAttributePredefined* attributePeriod = metaObject->GetRegisterPeriod();
 	wxASSERT(attributePeriod);
 
 	wxString tableName = metaObject->GetRegisterTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
 
-	for (auto& obj : metaObject->GetObjectDimensions()) {
+	for (const auto object : metaObject->GetDimentionArrayObject()) {
 		if (!IRecordSetObject::FindKeyValue(attribute->GetMetaID()))
 			continue;
 		if (firstWhere) {
@@ -372,7 +372,7 @@ bool CRecordSetObjectAccumulationRegister::DeleteVirtualTable()
 	if (statement == nullptr)
 		return false;
 
-	for (auto& obj : metaObject->GetGenericDimensions()) {
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		if (!IRecordSetObject::FindKeyValue(attribute->GetMetaID()))
 			continue;
 		IMetaObjectAttribute::SetValueAttribute(

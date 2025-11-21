@@ -30,7 +30,7 @@ public:
 CMetaObjectDocument::CMetaObjectDocument() : IMetaObjectRecordDataMutableRef()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, {"cancel", "writeMode", "postingMode"});
+	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel", "writeMode", "postingMode" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleObject)->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
@@ -49,31 +49,16 @@ CMetaObjectDocument::~CMetaObjectDocument()
 	//wxDELETE((*m_propertyAttributePosted));
 }
 
-CMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t& id)
+IMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t& id)
 {
-	if (id == eFormObject
-		&& m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormObject->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	if (id == eFormObject && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
 	}
-	else if (id == eFormList
-		&& m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormList->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	else if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
 	}
-	else if (id == eFormSelect
-		&& m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
-		for (auto& obj : GetObjectForms()) {
-			if (m_propertyDefFormSelect->GetValueAsInteger() == obj->GetMetaID()) {
-				return obj;
-			}
-		}
+	else if (id == eFormSelect && m_propertyDefFormSelect->GetValueAsInteger() != wxNOT_FOUND) {
+		return FindFormObjectByFilter(m_propertyDefFormSelect->GetValueAsInteger());
 	}
 
 	return nullptr;
@@ -149,7 +134,7 @@ bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -162,7 +147,7 @@ bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -175,7 +160,7 @@ bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
 {
 	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 
-	for (auto formObject : GetObjectForms()) {
+	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
 			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
@@ -194,29 +179,6 @@ wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objVal
 	return GetSynonym() << wxT(" ") << vNumber.GetString() << wxT(" ") << vDate.GetString();
 }
 
-std::vector<IMetaObjectAttribute*> CMetaObjectDocument::GetDefaultAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-	
-	attributes.push_back(m_propertyAttributeNumber->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDate->GetMetaObject());
-	attributes.push_back(m_propertyAttributePosted->GetMetaObject());
-	attributes.push_back(m_propertyAttributeReference->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDeletionMark->GetMetaObject());
-	
-	return attributes;
-}
-
-std::vector<IMetaObjectAttribute*> CMetaObjectDocument::GetSearchedAttributes() const
-{
-	std::vector<IMetaObjectAttribute*> attributes;
-
-	attributes.push_back(m_propertyAttributeNumber->GetMetaObject());
-	attributes.push_back(m_propertyAttributeDate->GetMetaObject());
-
-	return attributes;
-}
-
 //***************************************************************************
 //*                       Save & load metaData                              *
 //***************************************************************************
@@ -227,7 +189,7 @@ bool CMetaObjectDocument::LoadData(CMemoryReader& dataReader)
 	(*m_propertyAttributeNumber)->LoadMeta(dataReader);
 	(*m_propertyAttributeDate)->LoadMeta(dataReader);
 	(*m_propertyAttributePosted)->LoadMeta(dataReader);
-	
+
 	//load object module
 	(*m_propertyModuleObject)->LoadMeta(dataReader);
 	(*m_propertyModuleManager)->LoadMeta(dataReader);
@@ -388,7 +350,6 @@ bool CMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	registerSelection();
-
 	return IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(flags);
 }
 
@@ -411,6 +372,16 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
+
+	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		IMetaObjectRegisterData* registerData = nullptr;
+		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
+			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
+			wxASSERT(infoRecorder);
+			infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
+		}
+	}
 
 	if (appData->DesignerMode()) {
 
@@ -444,6 +415,16 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
+	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		IMetaObjectRegisterData* registerData = nullptr;
+		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
+			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
+			wxASSERT(infoRecorder);
+			infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
+		}
+	}
+
 	if (appData->DesignerMode()) {
 
 		if (IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()) {
@@ -472,16 +453,6 @@ bool CMetaObjectDocument::OnAfterCloseMetaObject()
 
 	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
-
-	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
-	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		IMetaObjectRegisterData* registerData = nullptr;
-		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
-			CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
-			wxASSERT(infoRecorder);
-			infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
-		}
-	}
 
 	unregisterSelection();
 

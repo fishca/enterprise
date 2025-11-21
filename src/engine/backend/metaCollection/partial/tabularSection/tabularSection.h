@@ -62,7 +62,7 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CValueTabularSectionColumnInfo();
-			CValueTabularSectionColumnInfo(IMetaObjectAttribute* metaAttribute);
+			CValueTabularSectionColumnInfo(IMetaObjectAttribute* attribute);
 			virtual ~CValueTabularSectionColumnInfo();
 
 		private:
@@ -139,7 +139,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual IMetaObjectSourceData* GetSourceMetaObject() const { return m_metaTable; }
+	virtual IMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const { return GetClassType(); }

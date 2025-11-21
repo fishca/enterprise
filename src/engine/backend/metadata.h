@@ -125,8 +125,8 @@ public:
 	//metaobject
 	IMetaObject* CreateMetaObject(const class_identifier_t& clsid, IMetaObject* parentMetaObj, bool runObject = true);
 
-	bool RenameMetaObject(IMetaObject* obj, const wxString& newName);
-	void RemoveMetaObject(IMetaObject* obj, IMetaObject* objParent = nullptr);
+	bool RenameMetaObject(IMetaObject* object, const wxString& newName);
+	void RemoveMetaObject(IMetaObject* object, IMetaObject* objParent = nullptr);
 
 	//Get metaobjects 
 	virtual std::vector<IMetaObject*> GetMetaObject(const IMetaObject* top = nullptr) const;
@@ -160,7 +160,7 @@ public:
 	virtual meta_identifier_t GenerateNewID() const;
 
 	//Generate new name
-	virtual wxString GetNewName(const class_identifier_t& clsid, IMetaObject* metaParent, const wxString& sPrefix = wxEmptyString, bool forConstructor = false);
+	virtual wxString GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& sPrefix = wxEmptyString, bool forConstructor = false);
 
 protected:
 
@@ -174,7 +174,7 @@ protected:
 	};
 
 	//custom types
-	std::set<IMetaValueTypeCtor*> m_factoryCtors;
+	std::vector<IMetaValueTypeCtor*> m_factoryCtors;
 	std::atomic<unsigned int> m_factoryCtorCountChanges = 0;
 
 private:

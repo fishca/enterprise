@@ -18,7 +18,7 @@ class CMetaObjectEnumeration : public IMetaObjectRecordDataEnumRef {
 	};
 
 	virtual CFormTypeList GetFormType() const override {
-		CFormTypeList formList; 
+		CFormTypeList formList;
 		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
 		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
 		return formList;
@@ -26,11 +26,11 @@ class CMetaObjectEnumeration : public IMetaObjectRecordDataEnumRef {
 
 protected:
 
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectSourceData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
+	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("defaultForms"), _("default forms"));
 	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("default list"), &CMetaObjectEnumeration::GetFormList, wxNOT_FOUND);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect") , _("default select"), &CMetaObjectEnumeration::GetFormSelect, wxNOT_FOUND);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("default select"), &CMetaObjectEnumeration::GetFormSelect, wxNOT_FOUND);
 
 private:
 	bool GetFormList(CPropertyList* prop);
@@ -70,14 +70,8 @@ public:
 	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
 	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
 
-	//override base objects 
-	virtual std::vector<IMetaObjectAttribute*> GetDefaultAttributes() const override;
-
-	//searched attributes 
-	virtual std::vector<IMetaObjectAttribute*> GetSearchedAttributes() const override;
-
 	//create associate value 
-	virtual CMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
+	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id);
 
 #pragma region _form_builder_h_
 	//support form 
@@ -98,6 +92,17 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 protected:
+
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+		array = { m_propertyAttributeReference->GetMetaObject() };
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+		return true;
+	}
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);

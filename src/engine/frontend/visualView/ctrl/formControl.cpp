@@ -95,9 +95,15 @@ void CValueForm::CValueFormCollectionControl::PrepareNames() const
 	m_methodHelper->AppendFunc("property", 2, "property(key, valueFound)");
 	m_methodHelper->AppendFunc("count", "count()");
 
+	wxString controlName;
+
 	for (auto control : m_formOwner->m_listControl) {
+		
+		if (!control->GetControlNameAsString(controlName))
+			continue;
+		
 		m_methodHelper->AppendProp(
-			control->GetControlName(),
+			controlName,
 			true,
 			false,
 			control->GetControlID()

@@ -30,28 +30,28 @@ void CValueTableBox::OnPropertyChanged(IProperty* property, const wxVariant& old
 
 		if (answer == wxYES) {
 
-			IMetaData* metaData = GetMetaData();
+			const IMetaData* metaData = GetMetaData();
 
 			while (GetChildCount() != 0) {
 				g_visualHostContext->CutControl(GetChild(0), true);
 			}
 
 			const class_identifier_t& clsid = CValueTableBox::GetFirstClsid();
-			IMetaValueTypeCtor* typeCtor =
+			const IMetaValueTypeCtor* typeCtor =
 				metaData->GetTypeCtor(clsid);
 			if (typeCtor != nullptr) {
-				IMetaObjectSourceData* metaObject =
-					dynamic_cast<IMetaObjectSourceData*>(typeCtor->GetMetaObject());
+				IMetaObjectCompositeData* metaObject =
+					dynamic_cast<IMetaObjectCompositeData*>(typeCtor->GetMetaObject());
 				if (metaObject != nullptr) {
-					for (auto& obj : metaObject->GetGenericAttributes()) {
+					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 						CValueTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(
 								m_formOwner->CreateControl(wxT("tableboxColumn"), this), CValueTableBoxColumn
 							);
 						wxASSERT(tableBoxColumn);
-						tableBoxColumn->SetControlName(GetControlName() + wxT("_") + obj->GetName());
-						tableBoxColumn->SetCaption(obj->GetSynonym());
-						tableBoxColumn->SetSource(obj->GetMetaID());
+						tableBoxColumn->SetControlName(GetControlName() + wxT("_") + object->GetName());
+						tableBoxColumn->SetCaption(object->GetSynonym());
+						tableBoxColumn->SetSource(object->GetMetaID());
 						tableBoxColumn->SetVisibleColumn(true);
 						g_visualHostContext->InsertControl(tableBoxColumn, this);
 					}

@@ -16,8 +16,6 @@
 
 #include "backend/appData.h"
 
-
-
 //**************************************************************************************************
 //*                                          IMetaData											   *
 //**************************************************************************************************
@@ -45,11 +43,11 @@ void IMetaData::DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const
 	}
 }
 
-IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaObject* metaParent, bool runObject)
+IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaObject* parent, bool runObject)
 {
 	wxASSERT(clsid != 0);
 
-	CValue* ppParams[] = { metaParent };
+	CValue* ppParams[] = { parent };
 	IMetaObject* newMetaObject = nullptr;
 
 	try {
@@ -63,7 +61,7 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 	if (newMetaObject != nullptr) {
 
 		newMetaObject->SetName(
-			GetNewName(clsid, metaParent, newMetaObject->GetClassName())
+			GetNewName(clsid, parent, newMetaObject->GetClassName())
 		);
 
 		//always create meta object
@@ -71,8 +69,8 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 
 		//first initialization
 		if (!success || !newMetaObject->OnLoadMetaObject(this)) {
-			if (metaParent != nullptr) {
-				metaParent->RemoveChild(newMetaObject);
+			if (parent != nullptr) {
+				parent->RemoveChild(newMetaObject);
 			}
 			wxDELETE(newMetaObject);
 			return nullptr;
@@ -80,8 +78,8 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 
 		//and running initialization
 		if (runObject && (!success || !newMetaObject->OnBeforeRunMetaObject(newObjectFlag))) {
-			if (metaParent != nullptr) {
-				metaParent->RemoveChild(newMetaObject);
+			if (parent != nullptr) {
+				parent->RemoveChild(newMetaObject);
 			}
 			wxDELETE(newMetaObject);
 			return nullptr;
@@ -90,8 +88,8 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 		Modify(true);
 
 		if (runObject && (!success || !newMetaObject->OnAfterRunMetaObject(newObjectFlag))) {
-			if (metaParent != nullptr) {
-				metaParent->RemoveChild(newMetaObject);
+			if (parent != nullptr) {
+				parent->RemoveChild(newMetaObject);
 			}
 			wxDELETE(newMetaObject);
 			return nullptr;
@@ -101,7 +99,7 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 	return newMetaObject;
 }
 
-wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* metaParent, const wxString& prefix, bool forConstructor)
+wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& prefix, bool forConstructor)
 {
 	unsigned int countRec = forConstructor ?
 		0 : 1;
@@ -110,18 +108,24 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* met
 		prefix : wxT("newItem");
 
 	wxString newName = forConstructor ?
-		wxString::Format("%s", currPrefix) :
-		wxString::Format("%s%d", currPrefix, countRec);
+		wxString::Format(wxT("%s"), currPrefix) :
+		wxString::Format(wxT("%s%d"), currPrefix, countRec);
 
 	while (forConstructor ||
 		countRec > 0) {
 		bool foundedName = false;
 
-		if (metaParent) {
-			for (auto& obj : metaParent->GetObjects(clsid)) {
-				if (obj->IsDeleted())
+		if (parent != nullptr) {
+
+			for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+				auto child = parent->GetChild(idx);
+				if (clsid != child->GetClassType())
 					continue;
-				if (newName == obj->GetName()) {
+				if (!parent->FilterChild(child->GetClassType()))
+					continue;
+				if (child->IsDeleted())
+					continue;
+				if (newName == child->GetName()) {
 					foundedName = true; break;
 				}
 			}
@@ -130,7 +134,7 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* met
 		if (!foundedName)
 			break;
 
-		newName = wxString::Format("%s%d", currPrefix, ++countRec);
+		newName = wxString::Format(wxT("%s%d"), currPrefix, ++countRec);
 	}
 
 	return newName;
@@ -231,11 +235,11 @@ bool IMetaData::RenameMetaObject(IMetaObject* metaObject, const wxString& newNam
 {
 	bool foundedName = false;
 
-	for (auto& obj : GetMetaObject(metaObject->GetClassType())) {
-		if (obj->GetParent() != metaObject->GetParent())
+	for (auto& child : GetMetaObject(metaObject->GetClassType())) {
+		if (child->GetParent() != metaObject->GetParent())
 			continue;
-		if (obj != metaObject &&
-			stringUtils::CompareString(newName, obj->GetName())) {
+		if (child != metaObject &&
+			stringUtils::CompareString(newName, child->GetName())) {
 			foundedName = true;
 			break;
 		}
@@ -249,17 +253,19 @@ bool IMetaData::RenameMetaObject(IMetaObject* metaObject, const wxString& newNam
 	return false;
 }
 
-void IMetaData::RemoveMetaObject(IMetaObject* metaObject, IMetaObject* parent)
+void IMetaData::RemoveMetaObject(IMetaObject* object, IMetaObject* parent)
 {
-	IMetaObject* objParent = parent ?
-		parent : metaObject->GetParent();
-
-	if (metaObject->OnAfterCloseMetaObject()) {
-		if (metaObject->OnDeleteMetaObject()) {
-			metaObject->MarkAsDeleted();
-			for (auto& obj : metaObject->GetObjects()) RemoveMetaObject(obj, metaObject);
+	if (object->OnAfterCloseMetaObject()) {
+		if (object->OnDeleteMetaObject()) {
+			object->MarkAsDeleted();
+			for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
+				auto child = object->GetChild(idx);
+				if (!object->FilterChild(child->GetClassType()))
+					continue;
+				RemoveMetaObject(child, object);
+			}
 		}
-		metaObject->OnReloadMetaObject();
+		object->OnReloadMetaObject();
 		Modify(true);
 	}
 }

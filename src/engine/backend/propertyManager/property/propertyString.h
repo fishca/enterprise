@@ -7,13 +7,19 @@
 class BACKEND_API IPropertyString : public IProperty {
 public:
 
-	wxString GetValueAsString() const {
-		return m_propValue;
+	bool GetVariantAsString(wxString& result) const {
+		if (!m_propValue.IsNull())
+			return m_propValue.GetData()->Write(result);
+		return false;
 	}
 
-	void SetValue(const wxString& strValue) {
-		m_propValue = strValue;
+	wxString GetValueAsString() const {
+		wxString result;
+		GetVariantAsString(result);
+		return result;
 	}
+	
+	void SetValue(const wxString& strValue) { m_propValue = strValue; }
 
 	IPropertyString(CPropertyCategory* cat, const wxString& name,
 		const wxString& value) : IProperty(cat, name, value)

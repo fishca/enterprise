@@ -62,11 +62,7 @@ protected:
 
 public:
 
-	static IMetaDataConfiguration* Get() {
-		wxASSERT(ms_instance); 
-		return ms_instance; 
-	}
-
+	static IMetaDataConfiguration* Get() { return ms_instance; }
 	static bool Initialize(enum eRunMode mode, const int flag);
 	static bool Destroy();
 
@@ -171,7 +167,7 @@ protected:
 	bool m_configNew;
 };
 
-class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {	
+class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {
 public:
 
 	CMetaDataConfigurationStorage();

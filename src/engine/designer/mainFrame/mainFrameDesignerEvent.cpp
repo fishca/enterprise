@@ -229,7 +229,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 			if (m_metadataTree->Load()) {
 				if (commonMetaData->IsModified()) {
 					if (wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-						commonMetaData->SaveDatabase(saveConfigFlag);
+						OnUpdateConfiguration(event);
 					}
 				}
 				objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());

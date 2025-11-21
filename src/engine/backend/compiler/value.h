@@ -519,6 +519,7 @@ public:
 	static bool CompareObjectName(const wxString& className, eValueTypes valueType) {
 		return stringUtils::CompareString(className, GetNameObjectFromVT(valueType));
 	}
+	
 	static wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false);
 	static wxString GetNameObjectFromVT(eValueTypes valueType, bool upper = false);
 	static eValueTypes GetVTByID(const class_identifier_t& clsid);

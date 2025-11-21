@@ -29,10 +29,10 @@ bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createDat
 		return false;
 	while (resultSet->Next()) {
 		wxValueTableRow* rowData = new wxValueTableRow();
-		for (auto& obj : m_metaTable->GetObjectAttributes()) {
-			if (m_metaTable->IsNumberLine(obj->GetMetaID()))
+		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
-			IMetaObjectAttribute::GetValueAttribute(obj, rowData->AppendTableValue(obj->GetMetaID()), resultSet, createData);
+			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 
@@ -53,13 +53,13 @@ bool CTabularSectionDataObjectRef::SaveData()
 	//check fill attributes 
 	bool fillCheck = true; long currLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
-		for (auto& obj : m_metaTable->GetObjectAttributes()) {
-			if (obj->FillCheck()) {
+		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+			if (object->FillCheck()) {
 				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				if (node->IsEmptyValue(obj->GetMetaID())) {
+				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
-						wxString::Format(_("The %s is required on line %i of the %s list"), obj->GetSynonym(), currLine, m_metaTable->GetSynonym());
+						wxString::Format(_("The %s is required on line %i of the %s list"), object->GetSynonym(), currLine, m_metaTable->GetSynonym());
 					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
 					fillCheck = false;
 				}
@@ -74,7 +74,7 @@ bool CTabularSectionDataObjectRef::SaveData()
 	if (!CTabularSectionDataObjectRef::DeleteData())
 		return false;
 
-	CMetaObjectAttributeDefault* numLine = m_metaTable->GetNumberLine();
+	CMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
 	wxASSERT(numLine);
 	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
@@ -83,12 +83,12 @@ bool CTabularSectionDataObjectRef::SaveData()
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	wxString queryText = "INSERT INTO " + tableName + " (";
 	queryText += "uuid";
-	for (auto& obj : m_metaTable->GetObjectAttributes()) {
-		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(obj);
+	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
-	for (auto& obj : m_metaTable->GetObjectAttributes()) {
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(obj);
+	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
@@ -105,20 +105,20 @@ bool CTabularSectionDataObjectRef::SaveData()
 			break;
 		int position = 2;
 		statement->SetParamString(1, m_objectValue->GetGuid());
-		for (auto& obj : m_metaTable->GetObjectAttributes()) {
-			if (!m_metaTable->IsNumberLine(obj->GetMetaID())) {
+		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
+			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
-					node->GetTableValue(obj->GetMetaID()),
+					object,
+					node->GetTableValue(object->GetMetaID()),
 					statement,
 					position
 				);
 			}
 			else {
 				IMetaObjectAttribute::SetValueAttribute(
-					obj,
+					object,
 					numberLine++,
 					statement,
 					position

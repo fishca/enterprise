@@ -129,16 +129,16 @@ CSourceExplorer CRecordManagerObjectInformationRegister::GetSourceExplorer() con
 		}
 	}
 
-	for (auto& obj : m_metaObject->GetObjectDimensions()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
-	for (auto& obj : m_metaObject->GetObjectResources()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetResourceArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
-	for (auto& obj : m_metaObject->GetObjectAttributes()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetAttributeArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
 	return srcHelper;
@@ -326,13 +326,18 @@ void CRecordManagerObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc("getFormRecord", 3, "getFormRecord(string, owner, guid)");
 	m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
 
-	//fill custom obj 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (obj->IsDeleted())
+	//set object name 
+	wxString objectName;
+
+	//fill custom object 
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (object->IsDeleted())
+			continue;
+		if (!object->GetObjectNameAsString(objectName))
 			continue;
 		m_methodHelper->AppendProp(
-			obj->GetName(),
-			obj->GetMetaID()
+			objectName,
+			object->GetMetaID()
 		);
 	}
 }

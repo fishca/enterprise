@@ -15,9 +15,9 @@ public:
 	void SetDefaultMetaType(const class_identifier_t& clsid) { GetTypeDesc().SetDefaultMetaType(clsid); }
 	void SetDefaultMetaType(const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(clsid); }
 	
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids) { GetTypeDesc().SetDefaultMetaType(clsids); }
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(clsids, descr); }
-	void SetDefaultMetaType(const std::set<class_identifier_t>& clsids, const CQualifierNumber& qNumber, const CQualifierDate& qDate, CQualifierString& qString) { GetTypeDesc().SetDefaultMetaType(clsids, qNumber, qDate, qString); }
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array) { GetTypeDesc().SetDefaultMetaType(array); }
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(array, descr); }
+	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CQualifierNumber& qNumber, const CQualifierDate& qDate, CQualifierString& qString) { GetTypeDesc().SetDefaultMetaType(array, qNumber, qDate, qString); }
 
 	void SetDefaultMetaType(const CTypeDescription& typeDesc) { GetTypeDesc().SetDefaultMetaType(typeDesc); }
 

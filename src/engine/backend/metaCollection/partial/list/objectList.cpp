@@ -21,14 +21,14 @@ IListDataObject::IListDataObject(IMetaObjectGenericData* metaObject, const form_
 	m_recordColumnCollection(new CDataObjectListColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
-	for (auto& obj : metaObject->GetGenericAttributes()) {
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_filterRow.AppendFilter(
-			obj->GetMetaID(),
-			obj->GetName(),
-			obj->GetSynonym(),
+			object->GetMetaID(),
+			object->GetName(),
+			object->GetSynonym(),
 			eComparisonType_Equal,
-			obj->GetTypeDesc(),
-			obj->CreateValue(),
+			object->GetTypeDesc(),
+			object->CreateValue(),
 			false
 		);
 	}
@@ -46,13 +46,13 @@ ITreeDataObject::ITreeDataObject(IMetaObjectGenericData* metaObject, const form_
 	m_recordColumnCollection(new CDataObjectTreeColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
-	for (auto& obj : metaObject->GetGenericAttributes()) {
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_filterRow.AppendFilter(
-			obj->GetMetaID(),
-			obj->GetName(),
-			obj->GetSynonym(),
-			obj->GetTypeDesc(),
-			obj->CreateValue()
+			object->GetMetaID(),
+			object->GetName(),
+			object->GetSynonym(),
+			object->GetTypeDesc(),
+			object->CreateValue()
 		);
 	}
 }
@@ -78,8 +78,8 @@ IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollectio
 {
 	wxASSERT(metaObject);
 
-	for (auto& obj : metaObject->GetGenericAttributes()) {
-		m_listColumnInfo.insert_or_assign(obj->GetMetaID(), new CDataObjectListColumnInfo(obj));
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+		m_listColumnInfo.insert_or_assign(object->GetMetaID(), new CDataObjectListColumnInfo(object));
 	}
 }
 
@@ -121,9 +121,9 @@ ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollectio
 {
 	wxASSERT(metaObject);
 
-	for (auto& obj : metaObject->GetGenericAttributes()) {
-		m_listColumnInfo.insert_or_assign(obj->GetMetaID(),
-			new CDataObjectTreeColumnInfo(obj));
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+		m_listColumnInfo.insert_or_assign(object->GetMetaID(),
+			new CDataObjectTreeColumnInfo(object));
 	}
 }
 
@@ -162,8 +162,8 @@ IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::CDa
 {
 }
 
-IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo(IMetaObjectAttribute* metaAttribute) :
-	IValueModelColumnInfo(), m_metaAttribute(metaAttribute)
+IListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo(IMetaObjectAttribute* attribute) :
+	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
@@ -178,8 +178,8 @@ ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDa
 {
 }
 
-ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo(IMetaObjectAttribute* metaAttribute) :
-	IValueModelColumnInfo(), m_metaAttribute(metaAttribute)
+ITreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo(IMetaObjectAttribute* attribute) :
+	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
@@ -208,10 +208,10 @@ void IListDataObject::CDataObjectListReturnLine::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	IMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
-	for (auto& obj : metaObject->GetGenericAttributes()) {
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
-			obj->GetName(),
-			obj->GetMetaID()
+			object->GetName(),
+			object->GetMetaID()
 		);
 	}
 }
@@ -250,10 +250,10 @@ void ITreeDataObject::CDataObjectTreeReturnLine::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	IMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
-	for (auto& obj : metaObject->GetGenericAttributes()) {
+	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
-			obj->GetName(),
-			obj->GetMetaID()
+			object->GetName(),
+			object->GetMetaID()
 		);
 	}
 }
@@ -348,7 +348,7 @@ void CListDataObjectEnumRef::ChooseValue(IBackendValueForm* srcForm)
 
 class_identifier_t CListDataObjectEnumRef::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -356,7 +356,7 @@ class_identifier_t CListDataObjectEnumRef::GetClassType() const
 
 wxString CListDataObjectEnumRef::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -364,7 +364,7 @@ wxString CListDataObjectEnumRef::GetClassName() const
 
 wxString CListDataObjectEnumRef::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -412,13 +412,13 @@ CSourceExplorer CListDataObjectRef::GetSourceExplorer() const
 		true, true
 	);
 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (m_metaObject->IsDataReference(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
-		else if (m_metaObject->IsDataDeletionMark(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
+		else if (m_metaObject->IsDataDeletionMark(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
 		else
-			srcHelper.AppendSource(obj, true, true);
+			srcHelper.AppendSource(object, true, true);
 	}
 
 	return srcHelper;
@@ -526,7 +526,7 @@ void CListDataObjectRef::ChooseValue(IBackendValueForm* srcForm)
 
 class_identifier_t CListDataObjectRef::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -534,7 +534,7 @@ class_identifier_t CListDataObjectRef::GetClassType() const
 
 wxString CListDataObjectRef::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -542,7 +542,7 @@ wxString CListDataObjectRef::GetClassName() const
 
 wxString CListDataObjectRef::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -627,17 +627,17 @@ CSourceExplorer CTreeDataObjectFolderRef::GetSourceExplorer() const
 		true, true
 	);
 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		if (m_metaObject->IsDataReference(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
-		else if (m_metaObject->IsDataDeletionMark(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
-		else if (m_metaObject->IsDataParent(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
-		else if (m_metaObject->IsDataFolder(obj->GetMetaID()))
-			srcHelper.AppendSource(obj, true, false);
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		if (m_metaObject->IsDataReference(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
+		else if (m_metaObject->IsDataDeletionMark(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
+		else if (m_metaObject->IsDataParent(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
+		else if (m_metaObject->IsDataFolder(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
 		else
-			srcHelper.AppendSource(obj, true, true);
+			srcHelper.AppendSource(object, true, true);
 	}
 
 	return srcHelper;
@@ -792,7 +792,7 @@ void CTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
 
 class_identifier_t CTreeDataObjectFolderRef::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -800,7 +800,7 @@ class_identifier_t CTreeDataObjectFolderRef::GetClassType() const
 
 wxString CTreeDataObjectFolderRef::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -808,7 +808,7 @@ wxString CTreeDataObjectFolderRef::GetClassName() const
 
 wxString CTreeDataObjectFolderRef::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -861,7 +861,7 @@ CListRegisterObject::CListRegisterObject(IMetaObjectRegisterData* metaObject, co
 		IListDataObject::AppendSort(metaObject->GetRegisterPeriod());
 	}
 
-	for (auto& dimension : m_metaObject->GetGenericDimensions()) {
+	for (auto& dimension : m_metaObject->GetGenericDimentionArrayObject()) {
 		IListDataObject::AppendSort(dimension, true, true, true);
 	}
 }
@@ -873,8 +873,8 @@ CSourceExplorer CListRegisterObject::GetSourceExplorer() const
 		true, true
 	);
 
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		srcHelper.AppendSource(obj);
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		srcHelper.AppendSource(object);
 	}
 
 	return srcHelper;
@@ -923,7 +923,7 @@ void CListRegisterObject::EditValue()
 			recordManager->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
 		else {
-			CMetaObjectAttributeDefault* recorder = m_metaObject->GetRegisterRecorder();
+			CMetaObjectAttributePredefined* recorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(recorder);
 			CValue recorderVal = node->GetTableValue(recorder->GetMetaID());
 			recorderVal.ShowValue();
@@ -950,7 +950,7 @@ void CListRegisterObject::DeleteValue()
 
 class_identifier_t CListRegisterObject::GetClassType() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
@@ -958,7 +958,7 @@ class_identifier_t CListRegisterObject::GetClassType() const
 
 wxString CListRegisterObject::GetClassName() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -966,7 +966,7 @@ wxString CListRegisterObject::GetClassName() const
 
 wxString CListRegisterObject::GetString() const
 {
-	IMetaValueTypeCtor* clsFactory =
+	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
@@ -1054,7 +1054,7 @@ bool CListRegisterObject::CallAsProc(const long lMethodNum, CValue** paParams, c
 }
 
 //****************************************************************************
-//*                              Override obj                          *
+//*                              Override object                          *
 //****************************************************************************
 
 enum

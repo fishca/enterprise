@@ -18,8 +18,8 @@ CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, cons
 	
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		if (db_query->TableExists(tableName)) {
-			CMetaObjectAttributeDefault* attributeNumber = m_metaObject->GetDocumentNumber();
-			CMetaObjectAttributeDefault* attributeDate = m_metaObject->GetDocumentDate();
+			CMetaObjectAttributePredefined* attributeNumber = m_metaObject->GetDocumentNumber();
+			CMetaObjectAttributePredefined* attributeDate = m_metaObject->GetDocumentDate();
 			wxASSERT(attributeNumber && attributeDate);
 			wxString sqlQuery = "";
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {

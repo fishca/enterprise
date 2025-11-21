@@ -24,7 +24,7 @@ void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 			pg->HideProperty(pgProperty, true);
 		}
 		else {
-			IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
+			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
 				IMetaObjectRecordDataFolderMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)

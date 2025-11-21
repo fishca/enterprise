@@ -77,7 +77,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 
             wxImageList* imageList = tc->GetImageList();
             wxASSERT(imageList);
-            IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
+            const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
             int groupIcon = imageList->Add(so->GetClassIcon());
             const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
                 groupIcon, groupIcon);

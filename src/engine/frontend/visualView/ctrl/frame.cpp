@@ -31,7 +31,7 @@ wxString IValueFrame::GetClassName() const
 	if (clsid == 0)
 		return _("Not founded in wxClassInfo!");
 
-	IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 	if (typeCtor != nullptr)
 		return typeCtor->GetClassName();
 	return _("Not founded in wxClassInfo!");
@@ -39,8 +39,8 @@ wxString IValueFrame::GetClassName() const
 
 wxString IValueFrame::GetObjectTypeName() const
 {
-	IControlTypeCtor* typeCtor =
-		static_cast<IControlTypeCtor*>(CValue::GetAvailableCtor(GetClassInfo()));
+	const IControlTypeCtor* typeCtor =
+		static_cast<const IControlTypeCtor*>(CValue::GetAvailableCtor(GetClassInfo()));
 
 	if (typeCtor != nullptr)
 		return typeCtor->GetTypeControlName();
@@ -119,11 +119,9 @@ bool IValueFrame::Init(CValue** paParams, const long lSizeArray)
 			controlParent->AddChild(this);
 			SetParent(controlParent);
 		}
-		//SetReadOnly(ownerForm ? ownerForm->IsEditable() : true);
 		SetOwnerForm(ownerForm);
 		ownerForm->ResolveNameConflict(this);
 		if (paParams[2]->GetBoolean()) {
-			GenerateGuid();
 			GenerateNewID();
 		}
 		return true;
@@ -223,12 +221,12 @@ bool IValueFrame::HasQuickChoice() const {
 	if (metaData == nullptr)
 		return false;
 	CValue selValue; GetControlValue(selValue);
-	IAbstractTypeCtor* so = metaData->GetAvailableCtor(selValue.GetClassType());
+	const IAbstractTypeCtor* so = metaData->GetAvailableCtor(selValue.GetClassType());
 	if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_primitive) {
 		return true;
 	}
 	else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
-		IMetaValueTypeCtor* meta_so = dynamic_cast<IMetaValueTypeCtor*>(so);
+		const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
 		if (meta_so != nullptr) {
 			IMetaObjectRecordDataRef* metaObject = dynamic_cast<IMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 			if (metaObject != nullptr)

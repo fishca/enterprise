@@ -70,7 +70,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				);
 
 			mainTableBox->SetControlName(sourceExplorer.GetSourceName());
-			mainTableBox->SetSource(sourceExplorer.GetMetaIDSource());
+			mainTableBox->SetSource(sourceExplorer.GetSourceId());
 		}
 
 		for (unsigned int idx = 0; idx < sourceExplorer.GetHelperCount(); idx++) {
@@ -84,7 +84,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 					);
 				tableBoxColumn->SetControlName(mainTableBox->GetControlName() + wxT("_") + nextSourceExplorer.GetSourceName());
 				tableBoxColumn->SetVisibleColumn(nextSourceExplorer.IsVisible() || sourceExplorer.GetHelperCount() == 1);
-				tableBoxColumn->SetSource(nextSourceExplorer.GetMetaIDSource());
+				tableBoxColumn->SetSource(nextSourceExplorer.GetSourceId());
 			}
 			else
 			{
@@ -105,7 +105,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 						);
 
 					tableBox->SetControlName(nextSourceExplorer.GetSourceName());
-					tableBox->SetSource(nextSourceExplorer.GetMetaIDSource());
+					tableBox->SetSource(nextSourceExplorer.GetSourceId());
 
 					toolBar->SetActionSrc(tableBox->GetControlID());
 
@@ -143,12 +143,12 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 						//tableBoxColumn->SetCaption(colSourceExplorer.GetSourceSynonym());
 						tableBoxColumn->SetVisibleColumn(colSourceExplorer.IsVisible()
 							|| nextSourceExplorer.GetHelperCount() == 1);
-						tableBoxColumn->SetSource(colSourceExplorer.GetMetaIDSource());
+						tableBoxColumn->SetSource(colSourceExplorer.GetSourceId());
 					}
 				}
 				else {
 					if (nextSourceExplorer.ContainType(eValueTypes::TYPE_BOOLEAN)
-						&& nextSourceExplorer.GetTypeIDSource().size() == 1) {
+						&& nextSourceExplorer.GetClsidList().size() == 1) {
 						CValueCheckbox* checkbox =
 							wxDynamicCast(
 								CValueForm::CreateControl(wxT("checkbox")), CValueCheckbox
@@ -157,7 +157,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 						//checkbox->SetCaption(nextSourceExplorer.GetSourceSynonym());
 						checkbox->EnableWindow(nextSourceExplorer.IsEnabled());
 						checkbox->VisibleWindow(nextSourceExplorer.IsVisible());
-						checkbox->SetSource(nextSourceExplorer.GetMetaIDSource());
+						checkbox->SetSource(nextSourceExplorer.GetSourceId());
 					}
 					else {
 
@@ -166,7 +166,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 							//!nextSourceExplorer.ContainType(eValueTypes::TYPE_DATE) &&
 							!nextSourceExplorer.ContainType(eValueTypes::TYPE_STRING);
 
-						if (nextSourceExplorer.GetTypeIDSource().size() != 1)
+						if (nextSourceExplorer.GetClsidList().size() != 1)
 							selButton = true;
 
 						CValueTextCtrl* textCtrl =
@@ -177,7 +177,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 						//textCtrl->SetCaption(nextSourceExplorer.GetSourceSynonym());
 						textCtrl->EnableWindow(nextSourceExplorer.IsEnabled());
 						textCtrl->VisibleWindow(nextSourceExplorer.IsVisible());
-						textCtrl->SetSource(nextSourceExplorer.GetMetaIDSource());
+						textCtrl->SetSource(nextSourceExplorer.GetSourceId());
 
 						textCtrl->SetSelectButton(selButton);
 						textCtrl->SetOpenButton(false);

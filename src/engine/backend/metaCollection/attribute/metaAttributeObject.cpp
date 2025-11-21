@@ -11,7 +11,7 @@
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectAttribute, IMetaObject);
 
 wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectAttribute, IMetaObjectAttribute);
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectAttributeDefault, IMetaObjectAttribute);
+wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectAttributePredefined, IMetaObjectAttribute);
 
 //***********************************************************************
 //*                         Attributes                                  * 
@@ -37,7 +37,7 @@ bool IMetaObjectAttribute::EqualType(const class_identifier_t& clsid, const CTyp
 bool IMetaObjectAttribute::ContainMetaType(eCtorMetaType type) const
 {
 	for (auto& clsid : GetTypeDesc().GetClsidList()) {
-		IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(clsid);
+		const IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(clsid);
 		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == type)
 			return true;
 	}
@@ -59,7 +59,7 @@ eSelectMode CMetaObjectAttribute::GetSelectMode() const
 {
 	if (GetTypeDesc().GetClsidCount() > 1)
 		return eSelectMode::eSelectMode_Items;
-	IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
+	const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
 	if (so != nullptr) {
 		IMetaObjectRecordDataFolderMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(so->GetMetaObject());
 		if (so->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference && metaObject != nullptr)
@@ -158,7 +158,7 @@ bool CMetaObjectAttribute::SaveData(CMemoryWriter& writer)
 	return true;
 }
 
-bool CMetaObjectAttributeDefault::LoadData(CMemoryReader& reader)
+bool CMetaObjectAttributePredefined::LoadData(CMemoryReader& reader)
 {
 	if (!CTypeDescriptionMemory::LoadData(reader, m_typeDesc))
 		return false;
@@ -167,7 +167,7 @@ bool CMetaObjectAttributeDefault::LoadData(CMemoryReader& reader)
 	return true;
 }
 
-bool CMetaObjectAttributeDefault::SaveData(CMemoryWriter& writer)
+bool CMetaObjectAttributePredefined::SaveData(CMemoryWriter& writer)
 {
 	if (!CTypeDescriptionMemory::SaveData(writer, m_typeDesc))
 		return false;
@@ -181,4 +181,4 @@ bool CMetaObjectAttributeDefault::SaveData(CMemoryWriter& writer)
 //***********************************************************************
 
 METADATA_TYPE_REGISTER(CMetaObjectAttribute, "attribute", g_metaAttributeCLSID);
-METADATA_TYPE_REGISTER(CMetaObjectAttributeDefault, "defaultAttribute", g_metaDefaultAttributeCLSID);
+METADATA_TYPE_REGISTER(CMetaObjectAttributePredefined, "predefinedAttribute", g_metaPredefinedAttributeCLSID);

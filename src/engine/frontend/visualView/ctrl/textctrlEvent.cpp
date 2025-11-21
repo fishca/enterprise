@@ -100,9 +100,9 @@ void CValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 			const class_identifier_t& clsid = selValue.GetClassType();
 			wxWindow* textCtrl = wxDynamicCast(GetWxObject(), wxWindow);
 			if (!ITypeControlFactory::QuickChoice(this, clsid, textCtrl)) {
-				IMetaData* metaData = GetMetaData();
+				const IMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
-				IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
+				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
 				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
 					IMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {								

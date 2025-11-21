@@ -12,12 +12,17 @@ public:
 	IValueControl();
 	virtual ~IValueControl();
 
-	virtual void SetControlName(const wxString& controlName) {
-		m_propertyName->SetValue(controlName);
+	/**
+	* Support control name
+	*/
+
+	virtual bool GetControlNameAsString(wxString& result) const {
+		return m_propertyName->GetVariantAsString(result);
 	}
 
-	virtual wxString GetControlName() const {
-		return m_propertyName->GetValueAsString();
+	virtual bool SetControlNameAsString(const wxString& result) const { 
+		m_propertyName->SetValue(result); 
+		return true; 
 	}
 
 	/**
@@ -29,7 +34,7 @@ public:
 	/**
 	* Support form
 	*/
-	virtual CValueForm* GetOwnerForm() const { 
+	virtual CValueForm* GetOwnerForm() const {
 		return m_formOwner;
 	}
 
@@ -37,10 +42,10 @@ public:
 
 	// allow getting value in control
 	virtual bool HasValueInControl() const { return false; }
-	
+
 	/*
 	* Get/set value in control
-	*/	
+	*/
 	virtual bool SetControlValue(const CValue& varControlVal = CValue()) { return false; }
 	virtual bool GetControlValue(CValue& pvarControlVal) const {
 		return false;
@@ -52,8 +57,8 @@ public:
 	/**
 	* Can delete object
 	*/
-	virtual bool CanDeleteControl() const { 
-		return true; 
+	virtual bool CanDeleteControl() const {
+		return true;
 	}
 
 	//runtime 

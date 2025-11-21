@@ -21,18 +21,18 @@ CValue CInformationRegisterManager::Get(const CValue& cFilter)
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colCollection->AddColumn(obj->GetName(), obj->GetTypeDesc(), obj->GetSynonym());
-		colInfo->SetColumnID(obj->GetMetaID());
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colCollection->AddColumn(object->GetName(), object->GetTypeDesc(), object->GetSynonym());
+		colInfo->SetColumnID(object->GetMetaID());
 	}
 
 	CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 	if (cFilter.ConvertToValue(valFilter)) {
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 			CValue vSelValue;
-			if (valFilter->Property(obj->GetName(), vSelValue)) {
+			if (valFilter->Property(object->GetName(), vSelValue)) {
 				selFilter.insert_or_assign(
-					obj, vSelValue
+					object, vSelValue
 				);
 			}
 		}
@@ -69,10 +69,10 @@ CValue CInformationRegisterManager::Get(const CValue& cFilter)
 	while (resultSet->Next()) {
 		CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 		wxASSERT(retLine);
-		for (auto& obj : m_metaObject->GetGenericAttributes()) {
+		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			CValue retValue;
-			if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-				retLine->SetValueByMetaID(obj->GetMetaID(), retValue);
+			if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+				retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 		}
 		wxDELETE(retLine);
 	}
@@ -93,25 +93,25 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
-				obj->GetName(),
-				obj->GetTypeDesc(),
-				obj->GetSynonym()
+				object->GetName(),
+				object->GetTypeDesc(),
+				object->GetSynonym()
 			);
-		colInfo->SetColumnID(obj->GetMetaID());
+		colInfo->SetColumnID(object->GetMetaID());
 	}
 
 	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -145,10 +145,10 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 		while (resultSet->Next()) {
 			CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				CValue retValue;
-				if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-					retLine->SetValueByMetaID(obj->GetMetaID(), retValue);
+				if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+					retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 			}
 			wxDELETE(retLine);
 		}
@@ -168,19 +168,19 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 		CBackendException::Error(_("database is not open!"));
 
 	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		retTable->SetAt(obj->GetName(), CValue());
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		retTable->SetAt(object->GetName(), CValue());
 	}
 
 	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -201,8 +201,8 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -215,8 +215,8 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -231,22 +231,22 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 
 		sqlQuery += " FROM (SELECT ";
 		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
 		sqlQuery += " WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
 		sqlQuery += " AND " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -264,8 +264,8 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -278,8 +278,8 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -325,10 +325,10 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 			return retTable;
 
 		if (resultSet->Next()) {
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				CValue retValue; 
-				if(IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-					retTable->SetAt(obj->GetName(), retValue);
+				if(IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+					retTable->SetAt(object->GetName(), retValue);
 			}
 		}
 
@@ -347,19 +347,19 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 		CBackendException::Error(_("database is not open!"));
 
 	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
-		retTable->SetAt(obj->GetName(), CValue());
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+		retTable->SetAt(object->GetName(), CValue());
 	}
 
 	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -380,8 +380,8 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -394,8 +394,8 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -410,22 +410,22 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 
 		sqlQuery += " FROM (SELECT ";
 		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
 		sqlQuery += " WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
 		sqlQuery += " AND " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -443,8 +443,8 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -457,8 +457,8 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -504,10 +504,10 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 			return retTable;
 
 		if (resultSet->Next()) {
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				CValue retValue;
-				if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-					retTable->SetAt(obj->GetName(), retValue);
+				if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+					retTable->SetAt(object->GetName(), retValue);
 			}
 		}
 
@@ -528,25 +528,25 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
-				obj->GetName(),
-				obj->GetTypeDesc(),
-				obj->GetSynonym()
+				object->GetName(),
+				object->GetTypeDesc(),
+				object->GetSynonym()
 			);
-		colInfo->SetColumnID(obj->GetMetaID());
+		colInfo->SetColumnID(object->GetMetaID());
 	}
 
 	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -567,8 +567,8 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -581,8 +581,8 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -597,22 +597,22 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 
 		sqlQuery += " FROM (SELECT ";
 		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MIN");
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
 		sqlQuery += " WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
 		sqlQuery += " AND " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), ">=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -630,8 +630,8 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -644,8 +644,8 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -693,10 +693,10 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 		while (resultSet->Next()) {
 			CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				CValue retValue;
-				if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-					retLine->SetValueByMetaID(obj->GetMetaID(), retValue);
+				if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+					retLine->SetValueByMetaID(object->GetMetaID(), retValue);
 			}
 			wxDELETE(retLine);
 		}
@@ -718,25 +718,25 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
-	for (auto& obj : m_metaObject->GetGenericAttributes()) {
+	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		CValueTable::IValueModelColumnCollection::IValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
-				obj->GetName(),
-				obj->GetTypeDesc(),
-				obj->GetSynonym()
+				object->GetName(),
+				object->GetTypeDesc(),
+				object->GetSynonym()
 			);
-		colInfo->SetColumnID(obj->GetMetaID());
+		colInfo->SetColumnID(object->GetMetaID());
 	}
 
 	if (m_metaObject->GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 		m_metaObject->GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		CValueStructure* valFilter = nullptr; std::map<IMetaObjectAttribute*, CValue> selFilter;
 		if (cFilter.ConvertToValue(valFilter)) {
-			for (auto& obj : m_metaObject->GetObjectDimensions()) {
+			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				CValue vSelValue;
-				if (valFilter->Property(obj->GetName(), vSelValue)) {
+				if (valFilter->Property(object->GetName(), vSelValue)) {
 					selFilter.insert_or_assign(
-						obj, vSelValue
+						object, vSelValue
 					);
 				}
 			}
@@ -757,8 +757,8 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += ", T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -771,8 +771,8 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " , T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -787,22 +787,22 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 
 		sqlQuery += " FROM (SELECT ";
 		sqlQuery += IMetaObjectAttribute::GetSQLFieldName(m_metaObject->GetRegisterPeriod(), "MAX");
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += " FROM " + m_metaObject->GetTableNameDB();
 		sqlQuery += " WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterActive());
 		sqlQuery += " AND " + IMetaObjectAttribute::GetCompositeSQLFieldName(m_metaObject->GetRegisterPeriod(), "<=");
 		sqlQuery += " GROUP BY ";
 		sqlQuery += sqlCol.m_fieldTypeName;
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			sqlQuery += "," + IMetaObjectAttribute::GetSQLFieldName(object);
 		}
 		sqlQuery += ") AS T1 "
 			"INNER JOIN " + m_metaObject->GetTableNameDB() + " AS T2 "
@@ -820,8 +820,8 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectDimensions()) {
-			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlDim = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlDim.m_fieldTypeName + " = T2." + sqlDim.m_fieldTypeName;
 			for (auto dataType : sqlDim.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -834,8 +834,8 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 			}
 		}
 
-		for (auto& obj : m_metaObject->GetObjectResources()) {
-			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(obj);
+		for (const auto object : m_metaObject->GetResourceArrayObject()) {
+			IMetaObjectAttribute::sqlField_t sqlRes = IMetaObjectAttribute::GetSQLFieldData(object);
 			sqlQuery += " AND T1." + sqlRes.m_fieldTypeName + " = T2." + sqlRes.m_fieldTypeName;
 			for (auto dataType : sqlRes.m_types) {
 				if (dataType.m_type != IMetaObjectAttribute::eFieldTypes::eFieldTypes_Reference) {
@@ -883,10 +883,10 @@ CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValu
 		while (resultSet->Next()) {
 			CValueTable::CValueTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
-			for (auto& obj : m_metaObject->GetGenericAttributes()) {
+			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				CValue retValue;
-				if (IMetaObjectAttribute::GetValueAttribute(obj, retValue, resultSet))
-					retTable->SetAt(obj->GetName(), retValue);
+				if (IMetaObjectAttribute::GetValueAttribute(object, retValue, resultSet))
+					retTable->SetAt(object->GetName(), retValue);
 			}
 			wxDELETE(retLine);
 		}

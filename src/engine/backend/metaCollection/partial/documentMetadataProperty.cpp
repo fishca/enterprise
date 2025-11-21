@@ -26,7 +26,7 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
             if (new_metaDesc.ContainMetaType(old_metaDesc.GetByIdx(idx))) continue;
             IMetaObjectRegisterData* registerData = nullptr;
             if (m_metaData->GetMetaObject(registerData, old_metaDesc.GetByIdx(idx))) {
-                CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
+                CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
                 wxASSERT(infoRecorder);
                 infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
             }
@@ -35,7 +35,7 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
             if (old_metaDesc.ContainMetaType(new_metaDesc.GetByIdx(idx))) continue;
             IMetaObjectRegisterData* registerData = nullptr;
             if (m_metaData->GetMetaObject(registerData, new_metaDesc.GetByIdx(idx))) {
-                CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
+                CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
                 wxASSERT(infoRecorder);
                 infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
             }
@@ -43,21 +43,4 @@ void CMetaObjectDocument::OnPropertyChanged(IProperty* property, const wxVariant
     }
 
     if (CMetaObjectDocument::OnReloadMetaObject()) IMetaObject::OnPropertyChanged(property, oldValue, newValue);
-}
-
-void CMetaObjectDocument::OnPropertyPasted(IProperty* property)
-{
-    if (m_propertyRegisterRecord == property) {
-        const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc(property->GetValue());
-        for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-            IMetaObjectRegisterData* registerData = nullptr;
-            if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
-                CMetaObjectAttributeDefault* infoRecorder = registerData->GetRegisterRecorder();
-                wxASSERT(infoRecorder);
-                infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
-            }
-        }
-    }
-
-    IMetaObjectRecordDataMutableRef::OnPropertyPasted(property);
 }

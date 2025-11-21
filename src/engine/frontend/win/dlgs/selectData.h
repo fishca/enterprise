@@ -25,7 +25,7 @@ class CDialogSelectDataType : public wxDialog {
 	std::map<long, class_identifier_t> m_listTypeClass;
 public:
 	bool ShowModal(class_identifier_t& clsid);
-	CDialogSelectDataType(IMetaData* metaData, const std::set<class_identifier_t>& clsids);
+	CDialogSelectDataType(IMetaData* metaData, const std::vector<class_identifier_t>& array);
 	virtual ~CDialogSelectDataType();
 
 protected:

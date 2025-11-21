@@ -101,9 +101,9 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 	}
 
 	if (typeDescription.GetClsidCount() == 1) {
-		
+
 		if (metaData != nullptr ? metaData->IsRegisterCtor(typeDescription.GetFirstClsid()) : commonMetaData->IsRegisterCtor(typeDescription.GetFirstClsid())) {
-			
+
 			eValueTypes vt = CValue::GetVTByID(typeDescription.GetFirstClsid());
 			if (vt < eValueTypes::TYPE_REFFER) {
 				if (vt == eValueTypes::TYPE_NUMBER) {
@@ -120,7 +120,7 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 					return CSystemFunction::Left(varValue, typeDescription.m_typeData.m_string.m_length);
 				}
 			}
-			
+
 			if (metaData != nullptr)
 				return metaData->CreateObject(
 					typeDescription.GetFirstClsid()
@@ -158,13 +158,13 @@ CValueTypeDescription::CValueTypeDescription(const CTypeDescription& typeDescrip
 {
 }
 
-CValueTypeDescription::CValueTypeDescription(const std::set<class_identifier_t>& clsid) :
-	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(clsid), m_methodHelper(new CMethodHelper())
+CValueTypeDescription::CValueTypeDescription(const std::vector<class_identifier_t>& array) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(array), m_methodHelper(new CMethodHelper())
 {
 }
 
-CValueTypeDescription::CValueTypeDescription(const std::set<class_identifier_t>& clsids, CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString) :
-	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(clsids, (qNumber ? *qNumber : CQualifierNumber()), (qDate ? *qDate : CQualifierDate()), (qString ? *qString : CQualifierString())), m_methodHelper(new CMethodHelper())
+CValueTypeDescription::CValueTypeDescription(const std::vector<class_identifier_t>& array, CValueQualifierNumber* qNumber, CValueQualifierDate* qDate, CValueQualifierString* qString) :
+	CValue(eValueTypes::TYPE_VALUE, true), m_typeDesc(array, (qNumber ? *qNumber : CQualifierNumber()), (qDate ? *qDate : CQualifierDate()), (qString ? *qString : CQualifierString())), m_methodHelper(new CMethodHelper())
 {
 }
 
@@ -190,7 +190,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 			CValueQualifierString* qString = nullptr;
 			if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 				m_typeDesc.m_typeData.m_string = *qString;
-			m_typeDesc.m_listTypeClass.insert(
+			m_typeDesc.m_listTypeClass.emplace_back(
 				commonMetaData->GetIDObjectFromString(classType)
 			);
 			return true;
@@ -212,7 +212,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 			CValue retValue; valArray->GetAt(i, retValue);
 			CValueType* valType = CastValue<CValueType>(retValue);
 			wxASSERT(valType);
-			m_typeDesc.m_listTypeClass.insert(
+			m_typeDesc.m_listTypeClass.emplace_back(
 				valType->GetOwnerTypeClass()
 			);
 		}
@@ -233,7 +233,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 		CValueQualifierString* qString = nullptr;
 		if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 			m_typeDesc.m_typeData.m_string = *qString;
-		m_typeDesc.m_listTypeClass.insert(
+		m_typeDesc.m_listTypeClass.emplace_back(
 			valType->GetOwnerTypeClass()
 		);
 		return true;

@@ -123,11 +123,15 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
-		for (auto& obj : commonObject->GetObjects()) {
+		for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
+
+			auto child = commonObject->GetChild(idx);
+			if (!commonObject->FilterChild(child->GetClassType()))
+				continue;
 			IMetaObject* foundedMeta =
-				m_commonObject->FindByName(obj->GetDocPath());
+				m_commonObject->FindByName(child->GetDocPath());
 			if (foundedMeta == nullptr) {
-				bool ret = obj->DeleteMetaTable(this);
+				bool ret = child->DeleteMetaTable(this);
 				if (!ret) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 					db_query->RollBack(); return false;
@@ -169,17 +173,21 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			}
 		}
 
-		for (auto& obj : m_commonObject->GetObjects()) {
+		for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
+
+			auto child = m_commonObject->GetChild(idx);
+			if (!m_commonObject->FilterChild(child->GetClassType()))
+				continue;
 			IMetaObject* foundedMeta =
-				commonObject->FindByName(obj->GetDocPath());
-			wxASSERT(obj);
+				commonObject->FindByName(child->GetDocPath());
+			wxASSERT(child);
 			bool ret = true;
 
 			if (foundedMeta == nullptr) {
-				ret = obj->CreateMetaTable(m_configMetadata);
+				ret = child->CreateMetaTable(m_configMetadata);
 			}
 			else {
-				ret = obj->UpdateMetaTable(m_configMetadata, foundedMeta);
+				ret = child->UpdateMetaTable(m_configMetadata, foundedMeta);
 			}
 
 			if (!ret) {
@@ -290,13 +298,15 @@ bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags
 
 				IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 				wxASSERT(commonObject);
-				for (auto& obj : m_commonObject->GetObjects()) {
-
+				for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
+					auto child = m_commonObject->GetChild(idx);
+					if (!m_commonObject->FilterChild(child->GetClassType()))
+						continue;
 					IMetaObject* foundedMeta =
-						commonObject->FindByName(obj->GetDocPath());
-					wxASSERT(obj);
+						commonObject->FindByName(child->GetDocPath());
+					wxASSERT(child);
 					if (foundedMeta == nullptr) {
-						bool ret = obj->CreateMetaTable(m_configMetadata, repairMetaTable);
+						bool ret = child->CreateMetaTable(m_configMetadata, repairMetaTable);
 						if (!ret) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 							db_query->RollBack(); return false;
@@ -312,7 +322,6 @@ bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) db_query->BeginTransaction();
 #endif 
-
 			if (!m_configMetadata->LoadDatabase(onlyLoadFlag)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack();

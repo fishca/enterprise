@@ -42,41 +42,6 @@ int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaO
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRecordDataRef::ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum)
-{
-	int retCode = 1;
-
-	//is null - create
-	if (dstEnum == nullptr) {
-
-		s_restructureInfo.AppendInfo(_("Create enumeration ") + srcEnum->GetFullName());
-
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
-		else
-			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
-	}
-	// update 
-	else if (srcEnum != nullptr) {
-
-		if (!srcEnum->CompareObject(dstEnum)) s_restructureInfo.AppendInfo(_("Changing enumeration ") + srcEnum->GetFullName());
-
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
-		else
-			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
-	}
-	//delete 
-	else if (srcEnum == nullptr) {
-
-		s_restructureInfo.AppendInfo(_("Removed enumeration ") + dstEnum->GetFullName());
-
-		retCode = db_query->RunQuery("DELETE FROM %s WHERE uuid = '%s' ;", tableName, dstEnum->GetGuid().str());
-	}
-
-	return retCode;
-}
-
 int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable)
 {
 	int retCode = 1;
@@ -107,7 +72,8 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	// update 
 	else if (srcTable != nullptr) {
 
-		if (!srcTable->CompareObject(dstTable)) s_restructureInfo.AppendInfo(_("Changing tabular section ") + srcTable->GetFullName());
+		if (!srcTable->CompareObject(dstTable)) 
+			s_restructureInfo.AppendInfo(_("Changing tabular section ") + srcTable->GetFullName());
 
 		for (const auto object : srcTable->GetGenericAttributeArrayObject()) {
 			retCode = ProcessAttribute(tabularName,
@@ -128,85 +94,56 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	return retCode;
 }
 
-#include <fstream>
-
 bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
-	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
+	if ((flags & createMetaTable) != 0) {
 
-		if ((flags & createMetaTable) != 0) {
+		s_restructureInfo.AppendInfo(_("Create ") + GetFullName());
 
-			s_restructureInfo.AppendInfo(_("Create ") + GetFullName());
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL PRIMARY KEY);", tableName);
+		else
+			retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL PRIMARY KEY);", tableName);
 
-			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-				retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL PRIMARY KEY);", tableName);
-			else
-				retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL PRIMARY KEY);", tableName);
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
 
+		for (const auto object : GetPredefinedAttributeArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
-
-			for (const auto object : GetPredefinedAttributeArrayObject()) {
-				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-					return false;
-				if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
-					continue;
-				retCode = ProcessAttribute(tableName,
-					object, nullptr);
-			}
-
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-
-			for (const auto object : GetAttributeArrayObject()) {
-				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-					return false;
-				retCode = ProcessAttribute(tableName,
-					object, nullptr);
-			}
-
-			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
-
-				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-					return false;
-
-				for (const auto object : GetEnumObjectArray()) {
-					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-						return false;
-					retCode = ProcessEnumeration(tableName,
-						object, nullptr);
-				}
-			}
-
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-
-			for (const auto object : GetTableArrayObject()) {
-				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-					return false;
-				retCode = ProcessTable(object->GetTableNameDB(),
-					object, nullptr);
-			}
-
-			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-				return false;
-
-			retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
+			if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
+				continue;
+			retCode = ProcessAttribute(tableName,
+				object, nullptr);
 		}
-		else if ((flags & repairMetaTable) != 0) {
 
-			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
-				retCode = 1;
-				for (const auto object : GetEnumObjectArray()) {
-					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-						return false;
-					retCode = ProcessEnumeration(tableName,
-						object, nullptr);
-				}
-			}
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
+
+		for (const auto object : GetAttributeArrayObject()) {
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+			retCode = ProcessAttribute(tableName,
+				object, nullptr);
 		}
+
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
+
+		for (const auto object : GetTableArrayObject()) {
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+			retCode = ProcessTable(object->GetTableNameDB(),
+				object, nullptr);
+		}
+
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
+
+		retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
+
 	}
 	else if ((flags & updateMetaTable) != 0) {
 
@@ -261,26 +198,6 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 					return false;
 			}
 
-			//enums from dst 
-			for (const auto object : dstValue->GetEnumObjectArray()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindEnumObjectByFilter(object->GetGuid());
-				if (foundedMeta == nullptr) {
-					retCode = ProcessEnumeration(tableName,
-						nullptr, object);
-					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-						return false;
-				}
-			}
-			//enums current
-			for (const auto object : GetEnumObjectArray()) {
-				retCode = ProcessEnumeration(tableName,
-					object, dstValue->FindEnumObjectByFilter(object->GetGuid())
-				);
-				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
-					return false;
-			}
-
 			//tables from dst 
 			for (const auto object : dstValue->GetTableArrayObject()) {
 				IMetaObject* foundedMeta =
@@ -320,6 +237,142 @@ bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 				retCode = db_query->RunQuery("DROP TABLE %s", tabularName);
 			}
 		}
+	}
+
+	if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+		return false;
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum)
+{
+	int retCode = 1;
+
+	//is null - create
+	if (dstEnum == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Create enumeration ") + srcEnum->GetFullName());
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
+		else
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
+	}
+	// update 
+	else if (srcEnum != nullptr) {
+
+		if (!srcEnum->CompareObject(dstEnum)) 
+			s_restructureInfo.AppendInfo(_("Changing enumeration ") + srcEnum->GetFullName());
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcEnum->GetGuid().str());
+		else
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcEnum->GetGuid().str());
+	}
+	//delete 
+	else if (srcEnum == nullptr) {
+
+		s_restructureInfo.AppendInfo(_("Removed enumeration ") + dstEnum->GetFullName());
+
+		retCode = db_query->RunQuery("DELETE FROM %s WHERE uuid = '%s' ;", tableName, dstEnum->GetGuid().str());
+	}
+
+	return retCode;
+}
+
+
+bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+{
+	const wxString& tableName = GetTableNameDB(); int retCode = 1;
+
+	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
+
+		if ((flags & createMetaTable) != 0) {
+
+			s_restructureInfo.AppendInfo(_("Create ") + GetFullName());
+
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+				retCode = db_query->RunQuery("CREATE TABLE %s (uuid uuid NOT NULL PRIMARY KEY);", tableName);
+			else
+				retCode = db_query->RunQuery("CREATE TABLE %s (uuid VARCHAR(36) NOT NULL PRIMARY KEY);", tableName);
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+
+				for (const auto object : GetEnumObjectArray()) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessEnumeration(tableName,
+						object, nullptr);
+				}
+			}
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+
+			retCode = db_query->RunQuery("CREATE INDEX %s_INDEX ON %s (uuid);", tableName, tableName);
+		}
+		else if ((flags & repairMetaTable) != 0) {
+
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+				retCode = 1;
+				for (const auto object : GetEnumObjectArray()) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessEnumeration(tableName,
+						object, nullptr);
+				}
+			}
+		}
+	}
+	else if ((flags & updateMetaTable) != 0) {
+
+		//if src is null then delete
+		IMetaObjectRecordDataEnumRef* dstValue = nullptr;
+		if (srcMetaObject->ConvertToValue(dstValue)) {
+
+			if (!dstValue->CompareObject(this))
+				s_restructureInfo.AppendInfo(_("Changed ") + GetFullName());
+
+			//enums from dst 
+			for (const auto object : dstValue->GetEnumObjectArray()) {
+				IMetaObject* foundedMeta =
+					IMetaObjectRecordDataEnumRef::FindEnumObjectByFilter(object->GetGuid());
+				if (foundedMeta == nullptr) {
+					retCode = ProcessEnumeration(tableName,
+						nullptr, object);
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+				}
+			}
+			//enums current
+			for (const auto object : GetEnumObjectArray()) {
+				retCode = ProcessEnumeration(tableName,
+					object, dstValue->FindEnumObjectByFilter(object->GetGuid())
+				);
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+			}
+		}
+	}
+	else if ((flags & deleteMetaTable) != 0) {
+
+		s_restructureInfo.AppendInfo(_("Removed ") + GetFullName());
+
+		if (db_query->TableExists(tableName)) {
+			retCode = db_query->RunQuery("DROP TABLE %s", tableName);
+		}
+
+		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+			return false;
 	}
 
 	if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)

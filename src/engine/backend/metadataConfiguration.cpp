@@ -663,7 +663,7 @@ bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMem
 		auto child = m_commonObject->GetChild(idx);
 		if (!m_commonObject->FilterChild(child->GetClassType()))
 			continue;
-		if (saveToFile && child->IsDeleted())
+		if (child->IsDeleted())
 			continue;
 		CMemoryWriter writterMemory;
 		CMemoryWriter writterMetaMemory;
@@ -693,7 +693,7 @@ bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&,
 		auto child = parent->GetChild(idx);
 		if (!parent->FilterChild(child->GetClassType()))
 			continue;
-		if (saveToFile && child->IsDeleted())
+		if (child->IsDeleted())
 			continue;
 		CMemoryWriter writterMemory;
 		CMemoryWriter writterMetaMemory;

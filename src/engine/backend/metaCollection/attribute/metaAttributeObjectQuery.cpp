@@ -324,7 +324,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 						break;
 					default:
 						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
-						wxASSERT(typeCtor);
+						//wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							createdRef.insert(clsid);
 						}
@@ -369,7 +369,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 						break;
 					default:
 						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
-						wxASSERT(typeCtor);
+						//wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							currentRef.insert(clsid);
 						}
@@ -409,7 +409,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 						break;
 					default:
 						const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
-						wxASSERT(typeCtor);
+						//wxASSERT(typeCtor);
 						if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							removedRef.insert(clsid);
 						}
@@ -482,13 +482,14 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 				break;
 			default:
 				const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
-				wxASSERT(typeCtor);
+				//wxASSERT(typeCtor);
 				if (typeCtor != nullptr && eCtorMetaType::eCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					removeReference = true;
 				}
 				break;
 			}
 		}
+		
 		if (removeReference) {
 			retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_RTRef;", tableName, fieldName);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)

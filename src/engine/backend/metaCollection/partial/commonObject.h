@@ -457,25 +457,6 @@ public:
 	}
 
 #pragma endregion 
-#pragma region __array_h__
-
-	//enum
-	std::vector<CMetaObjectEnum*> GetEnumObjectArray(
-		std::vector<CMetaObjectEnum*>& array = std::vector<CMetaObjectEnum*>()) const {
-		FillArrayObjectByFilter<CMetaObjectEnum>(array, { g_metaEnumCLSID });
-		return array;
-	}
-
-#pragma endregion
-#pragma region __filter_h__
-
-	//enum
-	template <typename _T1>
-	CMetaObjectEnum* FindEnumObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<CMetaObjectEnum>(id, { g_metaEnumCLSID });
-	}
-
-#pragma endregion 
 
 	//get attribute code 
 	virtual IMetaObjectAttribute* GetAttributeForCode() const { return nullptr; }
@@ -498,6 +479,13 @@ public:
 	//special functions for DB 
 	virtual wxString GetTableNameDB() const;
 
+protected:
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+		return true;
+	}
+
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
 
@@ -508,15 +496,7 @@ public:
 
 	//process default query
 	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum);
 	int ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable);
-
-protected:
-
-	//searched array 
-	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
-		return true;
-	}
 };
 
 //metaObject with reference - for enumeration
@@ -551,11 +531,37 @@ public:
 	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
+#pragma region __array_h__
+
+	//enum
+	std::vector<CMetaObjectEnum*> GetEnumObjectArray(
+		std::vector<CMetaObjectEnum*>& array = std::vector<CMetaObjectEnum*>()) const {
+		FillArrayObjectByFilter<CMetaObjectEnum>(array, { g_metaEnumCLSID });
+		return array;
+	}
+
+#pragma endregion
+#pragma region __filter_h__
+
+	//enum
+	template <typename _T1>
+	CMetaObjectEnum* FindEnumObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectEnum>(id, { g_metaEnumCLSID });
+	}
+
+#pragma endregion 
+
 protected:
+
+	//create and update table 
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+	//process default query
+	int ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum);
 };
 
 //metaObject with reference and deletion mark 
@@ -892,14 +898,6 @@ public:
 	//special functions for DB 
 	virtual wxString GetTableNameDB() const;
 
-	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
-
-	//process default query
-	int ProcessDimension(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessResource(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-
 protected:
 
 	bool UpdateCurrentRecords(const wxString& tableName, IMetaObjectRegisterData* dst);
@@ -915,6 +913,14 @@ protected:
 
 	virtual IRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey) = 0;
 	virtual IRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey) { return nullptr; }
+
+	//create and update table 
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+
+	//process default query
+	int ProcessDimension(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
+	int ProcessResource(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
+	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);

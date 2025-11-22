@@ -953,7 +953,7 @@ void CMetadataTree::AddDocumentItem(IMetaObject* metaObject, const wxTreeItemId&
 
 void CMetadataTree::AddEnumerationItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	IMetaObjectRecordDataRef* metaObjectValue = metaObject->ConvertToType <IMetaObjectRecordDataRef>();
+	IMetaObjectRecordDataEnumRef* metaObjectValue = metaObject->ConvertToType <IMetaObjectRecordDataEnumRef>();
 	wxASSERT(metaObjectValue);
 
 	//Enumerations

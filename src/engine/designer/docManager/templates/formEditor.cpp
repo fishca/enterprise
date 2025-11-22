@@ -121,7 +121,7 @@ wxMenuBar* CFormEditView::CreateMenuBar() const
 
 void CFormEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
-	CMetaView::OnActivateView(activate, activeView, deactiveView);
+	if (activate) m_visualNotebook->ActivateEditor();
 }
 
 void CFormEditView::OnUpdate(wxView* sender, wxObject* hint)
@@ -261,7 +261,7 @@ bool CFormDocument::OnCloseDocument()
 			return false;
 	}
 
-	objectInspector->SelectObject((IPropertyObject*)m_metaObject);
+	objectInspector->SelectObject(m_metaObject);
 	return CMetaDocument::OnCloseDocument();
 }
 

@@ -9,7 +9,8 @@ void CMetadataTree::CMetadataTreeWnd::OnLeftDClick(wxMouseEvent& event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
-		SelectItem(curItem); m_ownerTree->ActivateItem(curItem);
+		SelectItem(curItem);
+		m_ownerTree->ActivateItem(curItem);
 	}
 	//event.Skip();
 }
@@ -23,10 +24,8 @@ void CMetadataTree::CMetadataTreeWnd::OnLeftUp(wxMouseEvent& event)
 
 void CMetadataTree::CMetadataTreeWnd::OnLeftDown(wxMouseEvent& event)
 {
-	//const wxTreeItemId &curItem = HitTest(event.GetPosition());
-	//if (curItem.IsOk()) {
-	//	SelectItem(curItem);
-	//}
+	const wxTreeItemId curItem = HitTest(event.GetPosition());
+	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
@@ -37,10 +36,10 @@ void CMetadataTree::CMetadataTreeWnd::OnRightUp(wxMouseEvent& event)
 	if (curItem.IsOk())
 	{
 		SelectItem(curItem); SetFocus();
-		wxMenu* m_defaultMenu = new wxMenu;
-		m_ownerTree->PrepareContextMenu(m_defaultMenu, curItem);
+		wxMenu* innerMenu = new wxMenu;
+		m_ownerTree->PrepareContextMenu(innerMenu, curItem);
 
-		for (auto def_menu : m_defaultMenu->GetMenuItems())
+		for (auto def_menu : innerMenu->GetMenuItems())
 		{
 			if (
 				def_menu->GetId() == ID_METATREE_NEW
@@ -59,9 +58,9 @@ void CMetadataTree::CMetadataTreeWnd::OnRightUp(wxMouseEvent& event)
 			GetEventHandler()->Bind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnCommandItem, this, def_menu->GetId());
 		}
 
-		PopupMenu(m_defaultMenu, event.GetPosition());
+		PopupMenu(innerMenu, event.GetPosition());
 
-		for (auto def_menu : m_defaultMenu->GetMenuItems())
+		for (auto def_menu : innerMenu->GetMenuItems())
 		{
 			if (
 				def_menu->GetId() == ID_METATREE_NEW
@@ -80,10 +79,11 @@ void CMetadataTree::CMetadataTreeWnd::OnRightUp(wxMouseEvent& event)
 			GetEventHandler()->Unbind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnCommandItem, this, def_menu->GetId());
 		}
 
-		delete m_defaultMenu;
+		delete innerMenu;
 	}
 
-	m_ownerTree->SelectItem(); event.Skip();
+	//m_ownerTree->SelectItem(); event.Skip();
+	event.Skip();
 }
 
 void CMetadataTree::CMetadataTreeWnd::OnRightDown(wxMouseEvent& event)
@@ -93,10 +93,10 @@ void CMetadataTree::CMetadataTreeWnd::OnRightDown(wxMouseEvent& event)
 	if (curItem.IsOk())
 	{
 		SelectItem(curItem); SetFocus();
-		wxMenu* m_defaultMenu = new wxMenu;
-		m_ownerTree->PrepareContextMenu(m_defaultMenu, curItem);
+		wxMenu* innerMenu = new wxMenu;
+		m_ownerTree->PrepareContextMenu(innerMenu, curItem);
 
-		for (auto def_menu : m_defaultMenu->GetMenuItems())
+		for (auto def_menu : innerMenu->GetMenuItems())
 		{
 			if (
 				def_menu->GetId() == ID_METATREE_NEW
@@ -115,9 +115,9 @@ void CMetadataTree::CMetadataTreeWnd::OnRightDown(wxMouseEvent& event)
 			GetEventHandler()->Bind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnCommandItem, this, def_menu->GetId());
 		}
 
-		PopupMenu(m_defaultMenu, event.GetPosition());
+		PopupMenu(innerMenu, event.GetPosition());
 
-		for (auto def_menu : m_defaultMenu->GetMenuItems())
+		for (auto def_menu : innerMenu->GetMenuItems())
 		{
 			if (
 				def_menu->GetId() == ID_METATREE_NEW
@@ -136,10 +136,11 @@ void CMetadataTree::CMetadataTreeWnd::OnRightDown(wxMouseEvent& event)
 			GetEventHandler()->Unbind(wxEVT_MENU, &CMetadataTree::CMetadataTreeWnd::OnCommandItem, this, def_menu->GetId());
 		}
 
-		delete m_defaultMenu;
+		delete innerMenu;
 	}
 
-	m_ownerTree->SelectItem(); event.Skip();
+	//m_ownerTree->SelectItem(); event.Skip();
+	event.Skip();
 }
 
 void CMetadataTree::CMetadataTreeWnd::OnRightDClick(wxMouseEvent& event)
@@ -353,10 +354,9 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 
 			if (metaObject != nullptr) {
 				CMemoryReader reader(data.GetData(), data.GetDataSize());
-				if (metaObject->PasteObject(reader)) {
-					objectInspector->SelectObject(metaObject);
-				}
-				m_ownerTree->FillItem(metaObject, item);
+				if (metaObject->PasteObject(reader))
+					m_ownerTree->FillItem(metaObject, item);
+				objectInspector->SelectObject(metaObject);
 			}
 		}
 
@@ -376,13 +376,12 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 		docManager->ActivateView(m_metaView);
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
-
 		const CAuiDocChildFrame* child =
-			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
-
-		docManager->ActivateView(
-			child ? child->GetView() : docManager->GetAnyUsableView()
-		);
+			static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+		wxView* view = child ? child->GetView() : docManager->GetAnyUsableView();
+		if (view != nullptr && view != docManager->GetCurrentView())
+			view->Activate(true);
+		docManager->ActivateView(view);
 	}
 
 	event.Skip();

@@ -44,21 +44,25 @@ IMetaObject* CDataReportTree::CreateItem(bool showValue)
 		GetMetaIdentifier()
 	);
 
-	if (createdObject == nullptr) return nullptr;
+	if (createdObject != nullptr) {
 
-	if (showValue) { OpenFormMDI(createdObject); }
-	UpdateToolbar(createdObject, FillItem(createdObject, item));
-	
-	for (auto& doc : docManager->GetDocumentsVector()) {
-		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
-		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		IPropertyObject* prev_selected = objectInspector->GetSelectedObject();
+
+		if (showValue) { OpenFormMDI(createdObject); }
+		UpdateToolbar(createdObject, FillItem(createdObject, item, false));
+		for (auto& doc : docManager->GetDocumentsVector()) {
+			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		}
+
+		if (prev_selected == objectInspector->GetSelectedObject())
+			objectInspector->SelectObject(createdObject);
 	}
 
-	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
 }
 
-wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item)
+wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -86,7 +90,9 @@ wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId
 	}
 
 	m_metaTreeWnd->InvalidateBestSize();
+	m_metaTreeWnd->SetEvtHandlerEnabled(select);
 	m_metaTreeWnd->SelectItem(createdItem);
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 	m_metaTreeWnd->Expand(createdItem);
 
 	m_metaTreeWnd->Thaw();
@@ -162,27 +168,26 @@ void CDataReportTree::EraseItem(const wxTreeItemId& item)
 
 void CDataReportTree::SelectItem()
 {
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
+		return;
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	objectInspector->ClearProperty();
 	UpdateToolbar(metaObject, selection);
-	if (objectInspector->IsShownProperty()) {
-		if (metaObject == nullptr) return;
-		objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
-	}
+	objectInspector->SelectObject(metaObject);
 }
 
 void CDataReportTree::PropertyItem()
 {
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
+		return;
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	objectInspector->ClearProperty();
 	UpdateToolbar(metaObject, selection);
-	if (metaObject == nullptr) return;
-	if (!objectInspector->IsShownProperty()) objectInspector->ShowProperty();
-	objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
+	if (!objectInspector->IsShownProperty())
+		objectInspector->ShowProperty();
+	objectInspector->SelectObject(metaObject);
 }
 
 void CDataReportTree::Collapse()
@@ -207,7 +212,6 @@ void CDataReportTree::UpItem()
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
-
 	m_metaTreeWnd->Freeze();
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	const wxTreeItemId& nextItem = m_metaTreeWnd->GetPrevSibling(selection);
@@ -248,7 +252,7 @@ void CDataReportTree::UpItem()
 					tree->SetItemData(nextId, nullptr);
 					nextId = tree->GetNextChild(nextId, coockie);
 				}
-			};
+				};
 
 			swap(tree, nextItem, newId);
 
@@ -306,7 +310,7 @@ void CDataReportTree::DownItem()
 					tree->SetItemData(nextId, nullptr);
 					nextId = tree->GetNextChild(nextId, coockie);
 				}
-			};
+				};
 
 			swap(tree, prevItem, newId);
 

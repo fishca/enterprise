@@ -23,10 +23,8 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftUp(wxMouseEvent &event)
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftDown(wxMouseEvent &event)
 {
-	//wxTreeItemId curItem = HitTest(event.GetPosition());
-	//if (curItem.IsOk()) { 
-	//	SelectItem(curItem); /*m_ownerTree->PropertyItem();*/ 
-	//}
+	const wxTreeItemId curItem = HitTest(event.GetPosition());
+	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
@@ -58,7 +56,9 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightUp(wxMouseEvent &event)
 		}
 		delete defaultMenu;
 	}
-	m_ownerTree->SelectItem(); event.Skip();
+	
+	//m_ownerTree->SelectItem(); event.Skip();
+	event.Skip();
 }
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
@@ -89,7 +89,9 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
 		}
 		delete defaultMenu;
 	}
-	m_ownerTree->SelectItem(); event.Skip();
+
+	//m_ownerTree->SelectItem(); event.Skip();
+	event.Skip();
 }
 
 void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDClick(wxMouseEvent &event)
@@ -230,13 +232,12 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus(wxFocusEvent& event)
 		docManager->ActivateView(m_metaView);
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
-
 		const CAuiDocChildFrame* child =
-			dynamic_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
-		
-		docManager->ActivateView(
-			child ? child->GetView() : docManager->GetAnyUsableView()
-		);
+			static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+		wxView* view = child ? child->GetView() : docManager->GetAnyUsableView();
+		if (view != nullptr && view != docManager->GetCurrentView())
+			view->Activate(true);
+		docManager->ActivateView(view);
 	}
 
 	event.Skip();

@@ -15,6 +15,8 @@ public:
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
 
+	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
+
 	virtual void OnDraw(wxDC* dc) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
 	virtual bool OnClose(bool deleteWindow = true) override;

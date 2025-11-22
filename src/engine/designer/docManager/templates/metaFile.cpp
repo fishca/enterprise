@@ -14,6 +14,11 @@ bool CMetadataView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
+void CMetadataView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate) m_metaTree->Activate();
+}
+
 void CMetadataView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, CMetadataTree draws itself

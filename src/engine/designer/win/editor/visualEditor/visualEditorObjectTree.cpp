@@ -271,6 +271,38 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CVisualEditorObje
 	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_COLLAPSED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
+	m_tcObjects->Bind(wxEVT_LEFT_DOWN,
+		[&](wxMouseEvent& event) { 		
+			const wxTreeItemId& id = m_tcObjects->HitTest(event.GetPosition());
+			if (id.IsOk() && id == m_tcObjects->GetSelection()) {
+				wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
+				if (item_data != nullptr) {
+					IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
+					assert(obj);
+					m_formHandler->SelectObject(obj);
+					m_formHandler->ScrollToObject(obj);
+				}
+			}
+			event.Skip(); 
+		}
+	);
+
+	m_tcObjects->Bind(wxEVT_RIGHT_DOWN,
+		[&](wxMouseEvent& event) { 
+			const wxTreeItemId& id = m_tcObjects->HitTest(event.GetPosition());
+			if (id.IsOk() && id == m_tcObjects->GetSelection()) {
+				wxTreeItemData* item_data = m_tcObjects->GetItemData(id);
+				if (item_data != nullptr) {
+					IValueFrame* obj(((CVisualEditorObjectTreeItemData*)item_data)->GetObject());
+					assert(obj);
+					m_formHandler->SelectObject(obj);
+					m_formHandler->ScrollToObject(obj);
+				}
+			}
+			event.Skip(); 
+		}
+	);
+
 	m_altKeyIsDown = false;
 	m_notifySelecting = false;
 

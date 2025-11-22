@@ -44,21 +44,23 @@ IMetaObject* CDataProcessorTree::CreateItem(bool showValue)
 		GetMetaIdentifier()
 	);
 
-	if (createdObject == nullptr) return nullptr;
+	if (createdObject != nullptr) {
 
-	if (showValue) { OpenFormMDI(createdObject); }
-	UpdateToolbar(createdObject, FillItem(createdObject, item));
-	
-	for (auto& doc : docManager->GetDocumentsVector()) {
-		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
-		//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		IPropertyObject* prev_selected = objectInspector->GetSelectedObject();
+
+		if (showValue) { OpenFormMDI(createdObject); }
+		UpdateToolbar(createdObject, FillItem(createdObject, item, 
+			prev_selected == objectInspector->GetSelectedObject()));
+		for (auto& doc : docManager->GetDocumentsVector()) {
+			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
+			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
+		}
 	}
 
-	objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
 }
 
-wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item)
+wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -86,7 +88,9 @@ wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeIte
 	}
 
 	m_metaTreeWnd->InvalidateBestSize();
+	m_metaTreeWnd->SetEvtHandlerEnabled(select);
 	m_metaTreeWnd->SelectItem(createdItem);
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 	m_metaTreeWnd->Expand(createdItem);
 
 	m_metaTreeWnd->Thaw();
@@ -166,11 +170,7 @@ void CDataProcessorTree::SelectItem()
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
-	objectInspector->ClearProperty();
-	if (objectInspector->IsShownProperty()) {
-		if (metaObject == nullptr) return;
-		objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
-	}
+	objectInspector->SelectObject(metaObject);
 }
 
 void CDataProcessorTree::PropertyItem()
@@ -179,10 +179,9 @@ void CDataProcessorTree::PropertyItem()
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
-	objectInspector->ClearProperty();
-	if (metaObject == nullptr) return;
-	if (!objectInspector->IsShownProperty()) objectInspector->ShowProperty();
-	objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
+	if (!objectInspector->IsShownProperty())
+		objectInspector->ShowProperty();
+	objectInspector->SelectObject(metaObject);
 }
 
 void CDataProcessorTree::Collapse()

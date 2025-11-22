@@ -223,7 +223,7 @@ private:
 	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool rubObject = true);
 	IMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item);
+	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true);
 
 	void EditItem();
 	void RemoveItem();

@@ -32,10 +32,7 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 
 bool CDocMDIFrame::ShowFrame()
 {
-	if (s_instance == nullptr)
-		return false;
-
-	if (!s_instance->IsShown()) {
+	if (s_instance != nullptr && !s_instance->IsShown()) {
 
 		// Get the primary display
 		wxDisplay display;

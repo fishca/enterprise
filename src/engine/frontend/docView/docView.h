@@ -164,7 +164,7 @@ public:
 	virtual bool OnCreate(CMetaDocument* WXUNUSED(doc), long WXUNUSED(flags)) { return true; }
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) {}
 
-	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override {}
+	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint = NULL) {}
 
 	virtual void OnDraw(wxDC* dc) override {}

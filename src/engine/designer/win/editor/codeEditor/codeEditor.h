@@ -297,6 +297,7 @@ public:
 	int GetRealPositionFromPoint(const wxPoint& pt);
 
 	void RefreshEditor();
+	void ActivateEditor();
 
 	void FindText(const wxString& findString, int wxflags);
 

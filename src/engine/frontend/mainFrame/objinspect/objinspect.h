@@ -265,10 +265,11 @@ public:
 
 	// Servicios para los observadores
 	void SelectObject(IPropertyObject* selobj, bool force = true) {
-		//ShowProperty();
+
 		if (IsShownProperty()) {
+			ClearProperty();
 			m_currentSel = selobj;
-			Create(force);
+			Create(force);		
 		}
 	}
 

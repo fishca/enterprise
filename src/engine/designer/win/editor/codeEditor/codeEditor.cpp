@@ -388,6 +388,17 @@ void CCodeEditor::RefreshEditor()
 	CCodeEditor::RefreshBreakpoint();
 }
 
+void CCodeEditor::ActivateEditor()
+{
+	if (m_document != nullptr) {
+		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+		if (moduleObject != nullptr) objectInspector->SelectObject(moduleObject);
+	}
+	
+	CCodeEditor::SetSTCFocus(true);
+	CCodeEditor::SetFocus();
+}
+
 #include <wx/fdrepdlg.h>
 
 void CCodeEditor::FindText(const wxString& findString, int wxflags)

@@ -484,7 +484,7 @@ wxDocument* CMetaDocManager::CreateDocument(const wxString& pathOrig, long flags
 	// at least under Mac (where views are top level windows) it seems to be
 	// necessary to manually activate the new document to bring it to the
 	// forefront -- and it shouldn't hurt doing this under the other platforms
-	docNew->Activate();
+	//docNew->Activate();
 
 	return docNew;
 }

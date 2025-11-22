@@ -208,23 +208,18 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 
 	if (createdObject != nullptr) {
 
+		IPropertyObject* oldSelection = objectInspector->GetSelectedObject();
 		if (showValue) { OpenFormMDI(createdObject); }
-		UpdateToolbar(createdObject, FillItem(createdObject, item));
-
-		for (auto& doc : docManager->GetDocumentsVector()) {
-			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
-			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
-		}
+		UpdateToolbar(createdObject,
+			FillItem(createdObject, item, oldSelection == objectInspector->GetSelectedObject()));
 	}
 
 	Thaw();
 
-	if (createdObject != nullptr) 
-		objectInspector->SelectObject(createdObject, m_metaTreeWnd->GetEventHandler());
 	return createdObject;
 }
 
-wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item)
+wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -260,7 +255,9 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 	}
 
 	m_metaTreeWnd->InvalidateBestSize();
+	m_metaTreeWnd->SetEvtHandlerEnabled(select);
 	m_metaTreeWnd->SelectItem(createdItem);
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 	m_metaTreeWnd->Expand(createdItem);
 
 	m_metaTreeWnd->Thaw();
@@ -331,12 +328,10 @@ void CMetadataTree::SelectItem()
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
-	if (objectInspector->IsShownProperty()) {
-		objectInspector->ClearProperty();
-		if (metaObject == nullptr) return;
-		objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
-	}
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
+		return;
+
+	objectInspector->SelectObject(metaObject);
 }
 
 void CMetadataTree::PropertyItem()
@@ -345,10 +340,13 @@ void CMetadataTree::PropertyItem()
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
-	objectInspector->ClearProperty();
-	if (!objectInspector->IsShownProperty()) objectInspector->ShowProperty();
-	objectInspector->CallAfter(&CObjectInspector::SelectObject, metaObject, m_metaTreeWnd->GetEventHandler());
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
+		return;
+
+	if (!objectInspector->IsShownProperty())
+		objectInspector->ShowProperty();
+
+	objectInspector->SelectObject(metaObject);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1415,6 +1413,12 @@ void CMetadataTree::InitTree()
 	//Set item bold and name
 	m_metaTreeWnd->SetItemText(m_treeMETADATA, _("configuration"));
 	m_metaTreeWnd->SetItemBold(m_treeMETADATA);
+}
+
+void CMetadataTree::Activate()
+{
+	if (m_metaData != nullptr)
+		objectInspector->SelectObject(GetMetaObject(m_metaTreeWnd->GetSelection()));
 }
 
 void CMetadataTree::ClearTree()

@@ -5,6 +5,13 @@
 
 #include "docView.h"
 #include "frontend/mainFrame/mainFrame.h"
+#include "backend/moduleManager/moduleManager.h"
+
+void CMetaView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate)
+		objectInspector->SelectObject(GetDocument() ? GetDocument()->GetMetaObject() : nullptr);
+}
 
 void CMetaView::Activate(bool activate)
 {

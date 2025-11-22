@@ -42,6 +42,11 @@ bool CGridEditView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
+void CGridEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (!activate) objectInspector->SelectObject(GetDocument() ? GetDocument()->GetMetaObject() : nullptr);
+}
+
 void CGridEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxGrid draws itself

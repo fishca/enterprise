@@ -145,23 +145,15 @@ void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue
 	m_visualEditor->ModifyEvent(event, oldValue, newValue);
 }
 
-#include "backend/metaCollection/metaObject.h"
-#include "frontend/mainFrame/mainFrame.h"
+void CVisualEditorNotebook::ActivateEditor()
+{
+	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
+		m_visualEditor->ActivateEditor();
+	else if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) 
+		m_codeEditor->ActivateEditor();
+}
 
 void CVisualEditorNotebook::OnPageChanged(wxAuiNotebookEvent& event) {
-	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
-		m_visualEditor->SetFocus();
-		objectInspector->SelectObject(m_visualEditor->GetSelectedObject());
-	}
-	else if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
-		if (m_visualEditor->m_document != nullptr) {
-			IMetaObject* moduleObject = m_visualEditor->m_document->GetMetaObject();
-			if (moduleObject != nullptr) objectInspector->SelectObject(moduleObject);
-		}
-		m_codeEditor->SetSTCFocus(true);
-		m_codeEditor->SetFocus();
-	}
-
 	m_visualEditor->Activate();
 	event.Skip();
 }

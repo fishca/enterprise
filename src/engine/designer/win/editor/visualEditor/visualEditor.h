@@ -240,7 +240,7 @@ public:
 
 		virtual wxWindow* GetParentBackgroundWindow() const { return m_back; }
 		virtual wxWindow* GetBackgroundWindow() const { return m_back->GetFrameContentPanel(); }
-
+	
 		/////////////////////////////////////////////////////////////////////////////////////////
 
 		void OnResizeBackPanel(wxCommandEvent& event);
@@ -453,6 +453,8 @@ public:
 	bool IsEditable() const { return true; }
 	void SetReadOnly(bool readOnly = true) {}
 
+	void ActivateEditor();
+
 protected:
 
 	// Notifican a cada observador el evento correspondiente
@@ -514,7 +516,9 @@ public:
 	void ScrollToObject(IValueFrame* obj);
 
 	// Servicios para los observadores
-	IValueFrame* GetSelectedObject() const { return m_selObj; }
+	IValueFrame* GetSelectedObject() const { 
+		return m_selObj != nullptr ? m_selObj : m_valueForm; 
+	}
 
 	void RefreshEditor() {
 		if (m_visualEditor != nullptr) {
@@ -768,6 +772,8 @@ public:
 	virtual IVisualHost* GetVisualHost() const { return m_visualEditor->GetVisualEditor(); }
 
 	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const { return new CDesignerWindow::CHighlightPaintHandler(wnd); }
+
+	void ActivateEditor();
 
 protected:
 	//A general selection function

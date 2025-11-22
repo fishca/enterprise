@@ -63,6 +63,11 @@ void CModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	}
 }
 
+void CModuleEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate) m_codeEditor->ActivateEditor();
+}
+
 void CModuleEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself

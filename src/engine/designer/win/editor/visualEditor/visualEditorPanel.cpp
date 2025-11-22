@@ -65,6 +65,13 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 }
 
 #include "frontend/docView/docView.h" 
+#include "frontend/mainFrame/mainFrame.h"
+
+void CVisualEditorNotebook::CVisualEditor::ActivateEditor()
+{
+	objectInspector->SelectObject(GetSelectedObject());
+	SetFocus();
+}
 
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metadataConfiguration.h"
@@ -97,7 +104,6 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	m_visualEditor->Freeze();
 	
 	NotifyEditorLoaded();
-	SelectObject(m_valueForm, true);
 
 	// first create control 
 	m_visualEditor->CreateVisualHost();

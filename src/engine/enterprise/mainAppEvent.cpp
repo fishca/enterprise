@@ -31,20 +31,17 @@ void CEnterpriseApp::OnMouseEvent(wxMouseEvent& event)
 
 void CEnterpriseApp::OnSetFocus(wxFocusEvent& event)
 {
-	wxWindow* windowFocus = dynamic_cast<wxWindow*>(event.GetEventObject());
-	
-	while (windowFocus && !windowFocus->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
-		windowFocus = windowFocus->GetParent();
+	wxWindow* child = dynamic_cast<wxWindow*>(event.GetEventObject());
+	while (child != nullptr && !child->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
+		child = child->GetParent();
 	}
 
-	if (windowFocus != nullptr) {
-		wxAuiNotebook* noteBook = mainFrame->GetNotebook();
-		size_t newSelPos = noteBook->FindPage(windowFocus);
-		if (newSelPos != noteBook->GetSelection())
-			noteBook->SetSelection(newSelPos);
+	if (child != nullptr && mainFrame != nullptr) {
+		wxAuiMDIClientWindow* client = mainFrame->GetClientWindow();
+		const int new_selection = client->FindPage(child);
+		if (new_selection != client->GetSelection())
+			client->SetSelection(new_selection);
 	}
-
-	event.Skip();
 }
 
 int CEnterpriseApp::FilterEvent(wxEvent& event)

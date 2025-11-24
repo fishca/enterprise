@@ -18,7 +18,6 @@ public:
 	virtual bool IsEditable() const = 0;
 	
 	virtual void Modify(bool modify) = 0;
-
 	virtual void EditModule(const wxString& fullName, int lineNumber, bool setRunLine = true) = 0;
 
 	virtual bool OpenFormMDI(IMetaObject* obj) = 0;
@@ -28,9 +27,7 @@ public:
 	virtual IBackendMetaDocument* GetDocument(IMetaObject* obj) const = 0;
 
 	virtual bool RenameMetaObject(IMetaObject* obj, const wxString& sNewName) = 0;
-
 	virtual void CloseMetaObject(IMetaObject* obj) = 0;
-	virtual void OnCloseDocument(IBackendMetaDocument* doc) = 0;
 
 	virtual void UpdateChoiceSelection() {}
 

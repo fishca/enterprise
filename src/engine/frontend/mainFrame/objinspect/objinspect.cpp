@@ -56,16 +56,14 @@ CObjectInspector* CObjectInspector::GetObjectInspector()
 
 #include "frontend/visualView/formdefs.h"
 
-void CObjectInspector::Create(bool force)
+void CObjectInspector::Create(IPropertyObject* object, bool force)
 {
-	IPropertyObject* sel_obj = GetSelectedObject();
-
-	if (sel_obj && (sel_obj != m_currentSel || force)) {
+	if (force || object != m_currentSel) {
 
 		m_pg->Freeze();
-		m_currentSel = sel_obj;
+		m_currentSel = object;
 
-		int pageNumber = m_pg->GetSelectedPage();
+		const int pageNumber = m_pg->GetSelectedPage();
 
 		wxString pageName;
 		if (pageNumber != wxNOT_FOUND) {
@@ -78,41 +76,44 @@ void CObjectInspector::Create(bool force)
 		m_propMap.clear();
 		m_eventMap.clear();
 
-		std::map<wxString, IProperty*> propMap, dummyPropMap;
-		std::map<wxString, IEvent*> eventMap, dummyEventMap;
+		if (object != nullptr) {
 
-		// We create the categories with the properties of the object organized by "classes"
-		CreateCategory(sel_obj->GetClassName(), sel_obj, propMap, false);
+			std::map<wxString, IProperty*> propMap, dummyPropMap;
+			std::map<wxString, IEvent*> eventMap, dummyEventMap;
 
-		IPropertyObject* owner = sel_obj->GetOwner();
+			// We create the categories with the properties of the object organized by "classes"
+			CreateCategory(object->GetClassName(), object, propMap, false);
 
-		if (owner != nullptr) {
-			if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				CreateCategory(sel_obj->GetClassName(), owner, dummyPropMap, false);
+			IPropertyObject* owner = object->GetOwner();
+
+			if (owner != nullptr) {
+				if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+					CreateCategory(object->GetClassName(), owner, dummyPropMap, false);
+				}
 			}
+
+			CreateCategory(object->GetClassName(), object, eventMap, true);
+
+			if (owner != nullptr) {
+				if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+					CreateCategory(object->GetClassName(), owner, dummyEventMap, true);
+				}
+			}
+
+			// Select previously object page, or first page
+			if (m_pg->GetPageCount() > 0)
+			{
+				int pageIndex = m_pg->GetPageByName(pageName);
+				if (wxNOT_FOUND != pageIndex) {
+					m_pg->SelectPage(pageIndex);
+				}
+				else {
+					m_pg->SelectPage(0);
+				}
+			}
+
+			m_currentSel->OnPropertyCreated();
 		}
-
-		CreateCategory(sel_obj->GetClassName(), sel_obj, eventMap, true);
-
-		if (owner != nullptr) {
-			if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-				CreateCategory(sel_obj->GetClassName(), owner, dummyEventMap, true);
-			}
-		}
-
-		// Select previously selected page, or first page
-		if (m_pg->GetPageCount() > 0)
-		{
-			int pageIndex = m_pg->GetPageByName(pageName);
-			if (wxNOT_FOUND != pageIndex) {
-				m_pg->SelectPage(pageIndex);
-			}
-			else {
-				m_pg->SelectPage(0);
-			}
-		}
-
-		m_currentSel->OnPropertyCreated();
 
 		m_pg->Refresh();
 		m_pg->Update();
@@ -163,24 +164,6 @@ void CObjectInspector::ShowProperty()
 		mainFrame->ShowProperty();
 }
 
-void CObjectInspector::ClearProperty()
-{
-	Freeze();
-
-	m_currentSel = nullptr;
-
-	// Clear Property Grid Manager
-	m_pg->Clear();
-
-	m_propMap.clear();
-	m_eventMap.clear();
-
-	m_pg->Refresh();
-	m_pg->Update();
-
-	Thaw();
-}
-
 wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id)
 {
 	int pgStyle;
@@ -206,7 +189,7 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 		descBoxHeight = defaultDescBoxHeight;
 	}
 
-	wxPropertyGridManager* pg = new wxPropertyGridManager(parent, id, wxDefaultPosition, wxDefaultSize, pgStyle);	
+	wxPropertyGridManager* pg = new wxPropertyGridManager(parent, id, wxDefaultPosition, wxDefaultSize, pgStyle);
 	pg->SetExtraStyle(wxPG_EX_NATIVE_DOUBLE_BUFFERING);
 	pg->SetDescBoxHeight(descBoxHeight);
 	pg->SendSizeEvent();
@@ -285,6 +268,9 @@ void CObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
 		m_pg->SetDescription(propPtr->GetLabel(), localized);
 		return;
 	}
+
+	m_pg->SetPropertyHelpString(propPtr, wxEmptyString);
+	m_pg->SetDescription(wxEmptyString, wxEmptyString);
 }
 
 void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)

@@ -102,15 +102,7 @@ bool CMetaDocument::OnCloseDocument()
 		docManager->RemoveDocument(this);
 	}
 
-	if (appData->DesignerMode()) {
-		if (m_metaObject != nullptr) {
-			IMetaData* metaData = m_metaObject->GetMetaData();
-			wxASSERT(metaData);
-			IBackendMetadataTree* metaTree = metaData->GetMetaTree();
-			wxASSERT(metaTree);
-			metaTree->OnCloseDocument(this);
-		}
-	}
+	objectInspector->SelectObject(nullptr);
 
 	// Tell all views that we're about to close
 	NotifyClosing();
@@ -248,10 +240,10 @@ bool CMetaDocument::DeleteAllViews()
 	const wxList::iterator end = m_documentViews.end();
 	for (wxList::iterator i = m_documentViews.begin(); i != end; ++i)
 	{
-		wxView* view = (wxView*)*i;		
+		wxView* view = (wxView*)*i;
 		if (!view->Close(false))
-			return false;	
-		
+			return false;
+
 		view->Activate(false);
 	}
 
@@ -275,7 +267,7 @@ bool CMetaDocument::DeleteAllViews()
 			// this always deletes the node implicitly and if this is the last
 			// view also deletes this object itself (also implicitly, great),
 			// so we can't test for m_documentViews.empty() after calling this!
-			
+
 			delete view;
 
 			if (isLastOne)

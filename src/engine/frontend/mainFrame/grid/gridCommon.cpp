@@ -836,6 +836,13 @@ void CGrid::CalcSection()
 	wxGrid::CalcDimensions();
 }
 
+#include "frontend/mainFrame/objinspect/objinspect.h"
+
+void CGrid::ActivateEditor()
+{
+	objectInspector->SelectObject(m_gridProperty, true);
+}
+
 // ctor and Create() create the grid window, as with the other controls
 CGrid::CGrid() : wxGrid()
 {

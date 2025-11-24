@@ -245,14 +245,42 @@ private:
 	wxPGProperty* GetProperty(IProperty* prop);
 	wxPGProperty* GetEvent(IEvent* event);
 
-	void Create(bool force = false);
+	void Create(IPropertyObject* object, bool force = false);
 
 	bool ModifyProperty(IProperty* prop, const wxVariant& newValue);
 	bool ModifyEvent(IEvent* event, const wxVariant& newValue);
 
 	void RestoreLastSelectedPropItem() {
-		wxPGProperty* p = m_pg->GetPropertyByName(wxT("name"));
-		if (p != nullptr) m_pg->SelectProperty(p, false);
+		
+		wxPGProperty* propPtr = m_pg->GetPropertyByName(wxT("name"));
+		if (propPtr != nullptr) {
+			
+			m_pg->SelectProperty(propPtr, false);
+
+			std::map< wxPGProperty*, IProperty*>::iterator itProperty = m_propMap.find(propPtr);
+			if (itProperty != m_propMap.end()) {
+				IProperty* prop_ptr = itProperty->second;
+				// Update displayed description for the new selection
+				const wxString& helpString = prop_ptr->GetHelp();
+				const wxString& localized = wxGetTranslation(helpString);
+				m_pg->SetPropertyHelpString(propPtr, localized);
+				m_pg->SetDescription(propPtr->GetLabel(), localized);
+				return;
+			}
+
+			std::map< wxPGProperty*, IEvent*>::iterator itEvent = m_eventMap.find(propPtr);
+			if (itEvent != m_eventMap.end()) {
+				IEvent* event_ptr = itEvent->second;
+				// Update displayed description for the new selection
+				const wxString& helpString = event_ptr->GetHelp();
+				const wxString& localized = wxGetTranslation(helpString);
+				m_pg->SetPropertyHelpString(propPtr, localized);
+				m_pg->SetDescription(propPtr->GetLabel(), localized);
+				return;
+			}
+		}
+
+		m_pg->SetDescription(wxEmptyString, wxEmptyString);
 	}
 
 	CObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
@@ -264,21 +292,17 @@ public:
 	wxPropertyGridManager* CreatePropertyGridManager(wxWindow* parent, wxWindowID id);
 
 	// Servicios para los observadores
-	void SelectObject(IPropertyObject* selobj, bool force = true) {
+	void SelectObject(IPropertyObject* selobj, bool force = false) {
 
-		if (IsShownProperty()) {
-			ClearProperty();
-			m_currentSel = selobj;
-			Create(force);		
+		if (IsShownProperty() && (force || m_currentSel != selobj)) {
+			Create(selobj, force);
 		}
 	}
 
 	IPropertyObject* GetSelectedObject() const { return m_currentSel; }
 
 	bool IsShownProperty() const;
-
 	void ShowProperty();
-	void ClearProperty();
 
 	void SavePosition();
 

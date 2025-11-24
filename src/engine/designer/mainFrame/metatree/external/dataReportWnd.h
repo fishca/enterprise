@@ -274,10 +274,10 @@ public:
 	virtual ~CDataReportTree();
 
 	void InitTree();
-
 	bool Load(CMetaDataReport* metaData);
 	bool Save();
 
+	void ActivateTree();
 	void ClearTree();
 };
 

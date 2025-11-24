@@ -147,6 +147,8 @@ protected:
 
 public:
 
+	void ActivateEditor();
+
 	void SendPropertyModify() {
 		wxGrid::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, m_currentCellCoords);
 	}

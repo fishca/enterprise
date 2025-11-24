@@ -13,7 +13,7 @@ void CPropertyObjectGrid::AddSelectedCell(const wxGridBlockCoords& coords, bool 
 
 	m_currentBlocks.push_back(coords);
 
-	objectInspector->SelectObject(this);
+	objectInspector->SelectObject(this, true);
 	m_ownerGrid->ForceRefresh();
 }
 
@@ -35,7 +35,7 @@ void CPropertyObjectGrid::ShowProperty()
 	if (!objectInspector->IsShownProperty())
 		objectInspector->ShowProperty();
 
-	objectInspector->SelectObject(this);
+	objectInspector->SelectObject(this, true);
 }
 
 void CPropertyObjectGrid::OnPropertyCreated(IProperty* property, const wxGridBlockCoords& coords)
@@ -141,9 +141,6 @@ m_ownerGrid(ownerGrid)
 
 CPropertyObjectGrid::~CPropertyObjectGrid()
 {
-	if (objectInspector->GetSelectedObject() == this) {
-		objectInspector->ClearProperty();
-	}
 }
 
 bool CPropertyObjectGrid::IsEditable() const

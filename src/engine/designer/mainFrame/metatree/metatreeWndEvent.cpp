@@ -373,14 +373,26 @@ void CMetadataTree::CMetadataTreeWnd::OnPasteItem(wxCommandEvent& event)
 void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 {
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
+
+		const wxTreeItemId& item = GetSelection();
+		if (m_ownerTree->m_docParent == nullptr && m_metaView != docManager->GetCurrentView()) {
+			objectInspector->SelectObject(
+				m_ownerTree->GetMetaObject(item));
+		}
+
 		docManager->ActivateView(m_metaView);
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+
 		const CAuiDocChildFrame* child =
 			static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+
 		wxView* view = child ? child->GetView() : docManager->GetAnyUsableView();
-		if (view != nullptr && view != docManager->GetCurrentView())
+		if (m_ownerTree->m_docParent == nullptr
+			&& m_metaView == docManager->GetCurrentView()) {
 			view->Activate(true);
+		}
+		
 		docManager->ActivateView(view);
 	}
 

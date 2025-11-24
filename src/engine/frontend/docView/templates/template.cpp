@@ -44,7 +44,7 @@ bool CGridEditView::OnCreate(CMetaDocument* doc, long flags)
 
 void CGridEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
-	if (!activate) objectInspector->SelectObject(GetDocument() ? GetDocument()->GetMetaObject() : nullptr);
+	if (activate) m_gridEditor->ActivateEditor();
 }
 
 void CGridEditView::OnDraw(wxDC* WXUNUSED(dc))

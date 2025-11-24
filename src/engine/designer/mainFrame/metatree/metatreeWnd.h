@@ -32,8 +32,6 @@ public:
 	virtual bool OpenFormMDI(IMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
 
 	virtual bool CloseFormMDI(IMetaObject* metaObject);
-	virtual void OnCloseDocument(IBackendMetaDocument* metaObject);
-
 	virtual CMetaDocument* GetDocument(IMetaObject* metaObject) const;
 
 	virtual void CloseMetaObject(IMetaObject* metaObject) {
@@ -367,10 +365,13 @@ private:
 
 		if (!item.IsOk())
 			return nullptr;
+
 		CTreeDataMetaItem* data =
 			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeWnd->GetItemData(item));
+
 		if (data == nullptr)
 			return nullptr;
+
 		return data->m_metaObject;
 	}
 
@@ -389,13 +390,12 @@ public:
 
 	void InitTree();
 
-	void Activate();
-
 	bool Load(IMetaDataConfiguration* metadata = nullptr);
 	bool Save();
 
-	void Search(const wxString strSearch);
+	void Search(const wxString& strSearch);
 
+	void ActivateTree();
 	void ClearTree();
 };
 

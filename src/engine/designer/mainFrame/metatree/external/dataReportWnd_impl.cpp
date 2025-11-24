@@ -172,7 +172,6 @@ void CDataReportTree::SelectItem()
 		return;
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
-	objectInspector->ClearProperty();
 	UpdateToolbar(metaObject, selection);
 	objectInspector->SelectObject(metaObject);
 }
@@ -183,7 +182,6 @@ void CDataReportTree::PropertyItem()
 		return;
 	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
-	objectInspector->ClearProperty();
 	UpdateToolbar(metaObject, selection);
 	if (!objectInspector->IsShownProperty())
 		objectInspector->ShowProperty();
@@ -454,6 +452,12 @@ void CDataReportTree::InitTree()
 	m_treeTEMPLATES = AppendGroupItem(m_treeREPORTS, g_metaTemplateCLSID, objectTablesName);
 }
 
+void CDataReportTree::ActivateTree()
+{
+	if (m_metaData != nullptr)
+		objectInspector->SelectObject(GetMetaObject(m_metaTreeWnd->GetSelection()));
+}
+
 void CDataReportTree::ClearTree()
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
@@ -464,6 +468,9 @@ void CDataReportTree::ClearTree()
 		}
 	}
 
+	//disable event
+	m_metaTreeWnd->SetEvtHandlerEnabled(false);
+
 	//delete all child item
 	if (m_treeATTRIBUTES.IsOk()) m_metaTreeWnd->DeleteChildren(m_treeATTRIBUTES);
 	if (m_treeTABLES.IsOk()) m_metaTreeWnd->DeleteChildren(m_treeTABLES);
@@ -473,8 +480,11 @@ void CDataReportTree::ClearTree()
 	//delete all items
 	m_metaTreeWnd->DeleteAllItems();
 
-	//Initialize tree
+	//initialize tree
 	InitTree();
+
+	//enable event
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 }
 
 void CDataReportTree::FillData()
@@ -491,6 +501,7 @@ void CDataReportTree::FillData()
 
 	//set default form value 
 	m_defaultFormValue->Clear();
+
 	//append default value 
 	m_defaultFormValue->AppendString(_("<not selected>"));
 

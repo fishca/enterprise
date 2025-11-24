@@ -449,6 +449,12 @@ void CDataProcessorTree::InitTree()
 	m_treeTEMPLATES = AppendGroupItem(m_treeDATAPROCESSORS, g_metaTemplateCLSID, objectTablesName);
 }
 
+void CDataProcessorTree::ActivateTree()
+{
+	if (m_metaData != nullptr)
+		objectInspector->SelectObject(GetMetaObject(m_metaTreeWnd->GetSelection()));
+}
+
 void CDataProcessorTree::ClearTree()
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
@@ -458,6 +464,9 @@ void CDataProcessorTree::ClearTree()
 			doc->DeleteAllViews();
 		}
 	}
+
+	//disable event
+	m_metaTreeWnd->SetEvtHandlerEnabled(false);
 
 	//delete all child item
 	if (m_treeATTRIBUTES.IsOk())
@@ -474,6 +483,9 @@ void CDataProcessorTree::ClearTree()
 
 	//Initialize tree
 	InitTree();
+
+	//enable event
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 }
 
 void CDataProcessorTree::FillData()
@@ -490,6 +502,7 @@ void CDataProcessorTree::FillData()
 
 	//set default form value 
 	m_defaultFormValue->Clear();
+
 	//append default value 
 	m_defaultFormValue->AppendString(_("<not selected>"));
 

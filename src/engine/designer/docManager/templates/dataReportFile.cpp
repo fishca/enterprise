@@ -10,6 +10,11 @@ bool CReportView::OnCreate(CMetaDocument *doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
+void CReportView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate) m_metaTree->ActivateTree();
+}
+
 void CReportView::OnDraw(wxDC *WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself

@@ -16,7 +16,7 @@ bool CMetadataView::OnCreate(CMetaDocument* doc, long flags)
 
 void CMetadataView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
-	if (activate) m_metaTree->Activate();
+	if (activate) m_metaTree->ActivateTree();
 }
 
 void CMetadataView::OnDraw(wxDC* WXUNUSED(dc))

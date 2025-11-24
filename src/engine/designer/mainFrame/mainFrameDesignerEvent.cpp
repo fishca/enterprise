@@ -125,7 +125,7 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 
 void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 {
-	objectInspector->ClearProperty();
+	objectInspector->SelectObject(nullptr);
 
 	wxAuiMDIClientWindow* client_window = GetClientWindow();
 	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
@@ -220,7 +220,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		objectInspector->ClearProperty();
+		objectInspector->SelectObject(nullptr);
 		if (!m_docManager->CloseDocuments())
 			return;
 

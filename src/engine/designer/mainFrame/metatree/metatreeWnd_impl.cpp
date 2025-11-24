@@ -39,12 +39,8 @@
 #define objectEnumerationsName _("enums")
 
 //***********************************************************************
-//*								metaData                                * 
+//*								metadata                                * 
 //***********************************************************************
-
-void IMetaDataTree::OnCloseDocument(IBackendMetaDocument* doc)
-{
-}
 
 #include "frontend/mainFrame/mainFrame.h"
 #include "frontend/win/dlgs/formSelector/formSelector.h"
@@ -1415,7 +1411,7 @@ void CMetadataTree::InitTree()
 	m_metaTreeWnd->SetItemBold(m_treeMETADATA);
 }
 
-void CMetadataTree::Activate()
+void CMetadataTree::ActivateTree()
 {
 	if (m_metaData != nullptr)
 		objectInspector->SelectObject(GetMetaObject(m_metaTreeWnd->GetSelection()));
@@ -1430,6 +1426,9 @@ void CMetadataTree::ClearTree()
 			doc->DeleteAllViews();
 		}
 	}
+
+	//disable event
+	m_metaTreeWnd->SetEvtHandlerEnabled(false);
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -1472,8 +1471,11 @@ void CMetadataTree::ClearTree()
 	//delete all items
 	m_metaTreeWnd->DeleteAllItems();
 
-	//Initialize tree
+	//initialize tree
 	InitTree();
+
+	//enable event 
+	m_metaTreeWnd->SetEvtHandlerEnabled(true);
 }
 
 void CMetadataTree::FillData()
@@ -1784,7 +1786,7 @@ bool CMetadataTree::Save()
 
 /////////////////////////////////////////////////////////////
 
-void CMetadataTree::Search(const wxString strSearch)
+void CMetadataTree::Search(const wxString& strSearch)
 {
 	m_metaTreeWnd->Freeze();
 

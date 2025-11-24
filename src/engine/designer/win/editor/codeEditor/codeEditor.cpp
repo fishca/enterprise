@@ -391,8 +391,12 @@ void CCodeEditor::RefreshEditor()
 void CCodeEditor::ActivateEditor()
 {
 	if (m_document != nullptr) {
-		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
-		if (moduleObject != nullptr) objectInspector->SelectObject(moduleObject);
+	
+		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();	
+		if (moduleObject != nullptr && (moduleObject->GetClassType() == g_metaModuleCLSID || moduleObject->GetClassType() == g_metaManagerCLSID))
+			objectInspector->SelectObject(moduleObject->GetParent());
+		else
+			objectInspector->SelectObject(moduleObject);
 	}
 	
 	CCodeEditor::SetSTCFocus(true);

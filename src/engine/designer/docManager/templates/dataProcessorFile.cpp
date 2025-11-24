@@ -10,6 +10,11 @@ bool CDataProcessorView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
+void CDataProcessorView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate) m_metaTree->ActivateTree();
+}
+
 void CDataProcessorView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself

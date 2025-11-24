@@ -261,7 +261,6 @@ bool CFormDocument::OnCloseDocument()
 			return false;
 	}
 
-	objectInspector->SelectObject(m_metaObject);
 	return CMetaDocument::OnCloseDocument();
 }
 

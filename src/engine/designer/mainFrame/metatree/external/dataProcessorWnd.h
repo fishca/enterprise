@@ -274,12 +274,13 @@ public:
 	CDataProcessorTree() { }
 	CDataProcessorTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
 	virtual ~CDataProcessorTree();
-
+	
 	void InitTree();
 
 	bool Load(CMetaDataDataProcessor* metaData);
 	bool Save();
 
+	void ActivateTree();
 	void ClearTree();
 };
 

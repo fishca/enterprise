@@ -102,7 +102,13 @@ bool CMetaDocument::OnCloseDocument()
 		docManager->RemoveDocument(this);
 	}
 
-	objectInspector->SelectObject(nullptr);
+	IBackendMetadataTree* metatree =
+		m_metaObject != nullptr ? m_metaObject->GetMetaDataTree() : nullptr;
+
+	if (metatree == nullptr)
+		objectInspector->SelectObject(nullptr);
+	else
+		metatree->Activate();
 
 	// Tell all views that we're about to close
 	NotifyClosing();
@@ -209,10 +215,6 @@ bool CMetaDocument::Close()
 			}
 		}
 	}
-
-	//if (documentManager != nullptr && documentParent != nullptr) {
-	//	documentManager->ActivateView(documentParent->GetFirstView());
-	//}
 
 	return OnCloseDocument();
 }

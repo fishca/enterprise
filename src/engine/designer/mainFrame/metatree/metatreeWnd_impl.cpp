@@ -61,6 +61,15 @@ form_identifier_t IMetaDataTree::SelectFormType(CMetaObjectForm* metaObject) con
 	return dlg.ShowModal();
 }
 
+void IMetaDataTree::Activate()
+{
+	if (m_docParent == nullptr) {
+		unsigned int count_doc = 0;
+		for (auto doc : docManager->GetDocumentsVector()) count_doc++;
+		if (count_doc <= 1) SetFocus();
+	}
+}
+
 void IMetaDataTree::Modify(bool modify)
 {
 	if (m_docParent != nullptr) {

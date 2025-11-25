@@ -14,25 +14,23 @@ class IMetaDataTree : public wxPanel,
 	wxDECLARE_ABSTRACT_CLASS(IMetaDataTree);
 public:
 
-	virtual form_identifier_t SelectFormType(CMetaObjectForm* metaObject) const;
-
-	virtual void SetReadOnly(bool readOnly = true) { m_bReadOnly = readOnly; }
-
-	virtual IMetaData* GetMetaData() const = 0;
-
 	IMetaDataTree() : wxPanel(), m_docParent(nullptr), m_bReadOnly(false) {}
 	IMetaDataTree(wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(nullptr), m_bReadOnly(false) {}
 	IMetaDataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_bReadOnly(false) {}
 
-	virtual void Modify(bool modify);
+	virtual form_identifier_t SelectFormType(CMetaObjectForm* metaObject) const;
+	virtual void Activate();
 
-	virtual void SetMetaName(const wxString& strConfigName) {}
+	virtual void SetReadOnly(bool readOnly = true) { m_bReadOnly = readOnly; }
+	virtual bool IsEditable() const { return !m_bReadOnly; }
+
+	virtual void Modify(bool modify);
 
 	virtual bool OpenFormMDI(IMetaObject* metaObject);
 	virtual bool OpenFormMDI(IMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
-
 	virtual bool CloseFormMDI(IMetaObject* metaObject);
 	virtual CMetaDocument* GetDocument(IMetaObject* metaObject) const;
+
 
 	virtual void CloseMetaObject(IMetaObject* metaObject) {
 		CMetaDocument* doc = GetDocument(metaObject);
@@ -41,7 +39,7 @@ public:
 		}
 	}
 
-	virtual bool IsEditable() const { return !m_bReadOnly; }
+	virtual IMetaData* GetMetaData() const = 0;
 
 protected:
 

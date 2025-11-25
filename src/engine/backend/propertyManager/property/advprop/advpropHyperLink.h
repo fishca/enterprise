@@ -29,12 +29,6 @@ public:
 
 protected:
 
-	class wxHyperLinkEvtHandler : public wxEvtHandler {
-	public:
-		void OpenFormMDI(class IMetaObject* metaObject);
-	};
-
-	wxHyperLinkEvtHandler* m_handler = nullptr;
 	IPropertyObject* m_ownerProperty = nullptr;
 };
 

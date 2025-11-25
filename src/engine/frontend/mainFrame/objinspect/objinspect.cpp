@@ -59,7 +59,6 @@ CObjectInspector* CObjectInspector::GetObjectInspector()
 void CObjectInspector::Create(IPropertyObject* object, bool force)
 {
 	if (force || object != m_currentSel) {
-
 		m_pg->Freeze();
 		m_currentSel = object;
 

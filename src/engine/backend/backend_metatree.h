@@ -11,8 +11,9 @@ class BACKEND_API IBackendMetadataTree {
 public:
 
 	virtual ~IBackendMetadataTree() {}
-
+	
 	virtual form_identifier_t SelectFormType(class CMetaObjectForm* metaObject) const = 0;
+	virtual void Activate() = 0;
 
 	virtual void SetReadOnly(bool readOnly = true) = 0;
 	virtual bool IsEditable() const = 0;
@@ -26,7 +27,7 @@ public:
 
 	virtual IBackendMetaDocument* GetDocument(IMetaObject* obj) const = 0;
 
-	virtual bool RenameMetaObject(IMetaObject* obj, const wxString& sNewName) = 0;
+	virtual bool RenameMetaObject(IMetaObject* obj, const wxString& strNewName) = 0;
 	virtual void CloseMetaObject(IMetaObject* obj) = 0;
 
 	virtual void UpdateChoiceSelection() {}

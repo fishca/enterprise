@@ -385,15 +385,23 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
 
-		const CAuiDocChildFrame* child =
-			static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
+		wxWindow* focus_win = event.GetWindow();
+		while (focus_win != nullptr && !focus_win->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
+			focus_win = focus_win->GetParent();
+		}
 
-		wxView* view = child ? child->GetView() : docManager->GetAnyUsableView();
-		if (m_ownerTree->m_docParent == nullptr && 
-			m_metaView != view && 
-			m_metaView == docManager->GetCurrentView()) {			
-			m_metaView->Activate(false);			
-			if (view != nullptr) view->Activate(true);
+		if (focus_win != nullptr) {
+			
+			const CAuiDocChildFrame* focus_child_win =
+				static_cast<CAuiDocChildFrame*>(focus_win);
+
+			wxView* view = focus_child_win ? focus_child_win->GetView() : docManager->GetAnyUsableView();
+			if (m_ownerTree->m_docParent == nullptr &&
+				m_metaView != view &&
+				m_metaView == docManager->GetCurrentView()) {
+				m_metaView->Activate(false);
+				if (view != nullptr) view->Activate(true);
+			}
 		}
 	}
 

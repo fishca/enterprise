@@ -375,12 +375,13 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
 
 		const wxTreeItemId& item = GetSelection();
-		if (m_ownerTree->m_docParent == nullptr && m_metaView != docManager->GetCurrentView()) {
-			objectInspector->SelectObject(
-				m_ownerTree->GetMetaObject(item));
-		}
 
-		docManager->ActivateView(m_metaView);
+		wxView* view = docManager->GetCurrentView();
+		if (m_ownerTree->m_docParent == nullptr && 
+			m_metaView != view) {
+			if (view != nullptr) view->Activate(false);
+			m_metaView->Activate(true);
+		}
 	}
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
 
@@ -388,12 +389,12 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 			static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());
 
 		wxView* view = child ? child->GetView() : docManager->GetAnyUsableView();
-		if (m_ownerTree->m_docParent == nullptr
-			&& m_metaView == docManager->GetCurrentView()) {
-			view->Activate(true);
+		if (m_ownerTree->m_docParent == nullptr && 
+			m_metaView != view && 
+			m_metaView == docManager->GetCurrentView()) {			
+			m_metaView->Activate(false);			
+			if (view != nullptr) view->Activate(true);
 		}
-		
-		docManager->ActivateView(view);
 	}
 
 	event.Skip();

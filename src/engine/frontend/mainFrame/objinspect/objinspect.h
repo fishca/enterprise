@@ -297,6 +297,11 @@ public:
 		if (IsShownProperty() && (force || m_currentSel != selobj)) {
 			Create(selobj, force);
 		}
+
+		if (selobj != nullptr) 
+			wxLogDebug("! <debug> activate property %s", selobj->GetClassName());
+		else 
+			wxLogDebug("! <debug> clear property");
 	}
 
 	IPropertyObject* GetSelectedObject() const { return m_currentSel; }

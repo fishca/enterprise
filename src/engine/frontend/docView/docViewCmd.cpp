@@ -16,11 +16,14 @@ void CMetaView::OnActivateView(bool activate, wxView* activeView, wxView* deacti
 void CMetaView::Activate(bool activate)
 {
 	wxDocManager* docManager = m_viewDocument != nullptr ?
-		m_viewDocument->GetDocumentManager() : nullptr;
+		m_viewDocument->GetDocumentManager() : wxDocManager::GetDocumentManager();
 
 	if (docManager != nullptr && CDocMDIFrame::GetFrame()) {
 		mainFrame->ActivateView(this, activate);
 		OnActivateView(activate, this, docManager->GetCurrentView());
 		docManager->ActivateView(this, activate);
 	}
+
+	if (activate) wxLogDebug("! <debug> activate view %s", CMetaView::GetViewName());
+	else wxLogDebug("! <debug> deactivate view %s", CMetaView::GetViewName());
 }

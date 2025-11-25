@@ -186,12 +186,31 @@ private:
 
 	class CMetadataTreeWnd : public wxTreeCtrl {
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
+
+		class CMatadataTreeView : public CMetaView
+		{
+		public:
+
+			CMatadataTreeView(CMetadataTreeWnd* tree) : m_ownerTree(tree) {}
+			virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
+
+		private:
+			CMetadataTreeWnd* m_ownerTree;
+		};
+
 	private:
 		CMetadataTree* m_ownerTree;
 		CMetaView* m_metaView;
 	private:
 		wxTreeItemId m_draggedItem;
 	public:
+
+		IMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+			if (!item.IsOk()) return nullptr;
+			CTreeDataMetaItem* data = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item));
+			if (data == nullptr) return nullptr;
+			return data->m_metaObject;
+		}
 
 		CMetadataTreeWnd();
 		CMetadataTreeWnd(CMetadataTree* parent);
@@ -362,17 +381,7 @@ private:
 	void FillData();
 
 	IMetaObject* GetMetaObject(const wxTreeItemId& item) const {
-
-		if (!item.IsOk())
-			return nullptr;
-
-		CTreeDataMetaItem* data =
-			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeWnd->GetItemData(item));
-
-		if (data == nullptr)
-			return nullptr;
-
-		return data->m_metaObject;
+		return m_metaTreeWnd->GetMetaObject(item);
 	}
 
 	void UpdateToolbar(IMetaObject* obj, const wxTreeItemId& item);

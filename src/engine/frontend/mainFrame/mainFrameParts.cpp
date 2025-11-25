@@ -70,6 +70,8 @@ void CDocMDIFrame::ActivateView(CMetaView* view, bool activate) {
 			wxFrame* viewFrame = dynamic_cast<wxFrame*>(view->GetFrame());
 			if (viewFrame != nullptr)
 				viewFrame->SetMenuBar(view->CreateMenuBar());
+			else 
+				SetChildMenuBar(nullptr);
 #endif
 			m_docToolbar->Thaw();
 		}

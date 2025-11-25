@@ -16,7 +16,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValue, wxObject);
 //**********************************************************************
 
 #if defined(DEBUG)
-#define DEBUG_VALUE
+//#define DEBUG_VALUE
 #endif
 
 #ifdef DEBUG_VALUE

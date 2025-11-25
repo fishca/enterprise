@@ -38,8 +38,8 @@ void IMetaDataTree::CreateToolBar(wxWindow* parent)
 CMetadataTree::CMetadataTree()
 	: IMetaDataTree(), m_metaData(nullptr)
 {
-	m_metaTreeToolbar	=	nullptr;
-	m_metaTreeWnd		=	nullptr;
+	m_metaTreeToolbar = nullptr;
+	m_metaTreeWnd = nullptr;
 }
 
 CMetadataTree::CMetadataTree(wxWindow* parent, int id)
@@ -194,14 +194,14 @@ EVT_MENU(wxID_PASTE, CMetadataTree::CMetadataTreeWnd::OnPasteItem)
 wxEND_EVENT_TABLE()
 
 CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd()
-	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMetaView)
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMatadataTreeView(this))
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
 CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd(CMetadataTree* parent)
-	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMetaView)
+	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMatadataTreeView(this))
 {
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
@@ -218,10 +218,25 @@ CMetadataTree::CMetadataTreeWnd::CMetadataTreeWnd(CMetadataTree* parent)
 
 CMetadataTree::CMetadataTreeWnd::~CMetadataTreeWnd()
 {
-	if (docManager != nullptr &&
+	if (docManager != nullptr && 
 		m_metaView == docManager->GetAnyUsableView()) {
 		docManager->ActivateView(nullptr);
 	}
 
 	wxDELETE(m_metaView);
 }
+
+/////////////////////////////////////////////////////////////////
+
+#include "frontend/mainFrame/mainFrame.h"
+
+void CMetadataTree::CMetadataTreeWnd::CMatadataTreeView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+{
+	if (activate) {
+		const wxTreeItemId& item = m_ownerTree->GetSelection();
+		objectInspector->SelectObject(
+			item.IsOk() ? m_ownerTree->GetMetaObject(item) : nullptr);
+	}
+}
+
+/////////////////////////////////////////////////////////////////

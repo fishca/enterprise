@@ -27,7 +27,7 @@ public:
 
 public:
 
-	CFormEditView() : CMetaView() {}
+	CFormEditView() : CMetaView(), m_visualNotebook(nullptr) {}
 
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;

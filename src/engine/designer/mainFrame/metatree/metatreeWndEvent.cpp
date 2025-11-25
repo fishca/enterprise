@@ -392,8 +392,8 @@ void CMetadataTree::CMetadataTreeWnd::OnSetFocus(wxFocusEvent& event)
 
 		if (focus_win != nullptr) {
 			
-			const CAuiDocChildFrame* focus_child_win =
-				static_cast<CAuiDocChildFrame*>(focus_win);
+			const CAuiDocChildFrame* focus_child_win = 
+				static_cast<CAuiDocChildFrame *>(mainFrame->GetActiveChild());
 
 			wxView* view = focus_child_win ? focus_child_win->GetView() : docManager->GetAnyUsableView();
 			if (m_ownerTree->m_docParent == nullptr &&

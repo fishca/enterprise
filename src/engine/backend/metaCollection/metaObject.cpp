@@ -521,6 +521,7 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 
 bool IMetaObject::ChangeChildPosition(IMetaObject* object, unsigned int pos)
 {
+	m_metaData->Modify(true);
 	return IPropertyObjectHelper::ChangeChildPosition(object, pos);
 }
 

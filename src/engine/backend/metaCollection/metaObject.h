@@ -170,8 +170,8 @@ protected:
 public:
 
 	// get object name as string 
-	bool GetObjectNameAsString(wxString& result) const { 
-		return m_propertyName->GetVariantAsString(result); 
+	bool GetObjectNameAsString(wxString& result) const {
+		return m_propertyName->GetVariantAsString(result);
 	}
 
 	//system attributes 
@@ -297,7 +297,7 @@ public:
 	wxString GetFullName() const;
 
 	wxString GetModuleName() const;
-	wxString GetDocPath() const;
+	wxString GetDocPath() const { return m_metaGuid.str(); }
 
 	//filter children element
 	virtual bool FilterChild(const class_identifier_t& clsid) const { return false; }
@@ -308,8 +308,16 @@ public:
 		return true;
 	}
 
-	IMetaObject* FindByName(const wxString& strDocPath) const;
-	IMetaObject* FindByName(const class_identifier_t& clsid, const wxString& strDocPath) const;
+	//find child by guid 
+	IMetaObject* FindChildByGuid(const CGuid& guid) const {
+	
+		for (const auto object : m_children) {
+			if (object->CompareGuid(guid))
+				return object;
+		}
+		
+		return nullptr;
+	}
 
 	//methods 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names

@@ -299,16 +299,6 @@ bool IMetaObject::CompareObject(IMetaObject* compareObject) const
 			if (compareObject2 == nullptr)
 				return false;
 
-			//for (const auto object : compareObject1->m_listMetaObject) {
-
-			//	if (object->IsDeleted())
-			//		continue;
-			//	
-			//	if (!CompareObject(object,
-			//		compareObject2->FindByName(object->GetDocPath())))
-			//		return false;
-			//}
-
 			if (compareObject1->GetClassType() != compareObject2->GetClassType())
 				return false;
 
@@ -561,29 +551,6 @@ wxString IMetaObject::GetFullName() const
 wxString IMetaObject::GetFileName() const
 {
 	return m_metaData->GetFileName();
-}
-
-wxString IMetaObject::GetDocPath() const
-{
-	return m_metaGuid.str();
-}
-
-//****************************************************************************
-
-IMetaObject* IMetaObject::FindByName(const class_identifier_t& clsid, const wxString& strDocPath) const
-{
-	for (const auto object : m_children) {
-		if (strDocPath == object->GetDocPath()) return object;
-	}
-	return nullptr;
-}
-
-IMetaObject* IMetaObject::FindByName(const wxString& strDocPath) const
-{
-	for (const auto object : m_children) {
-		if (strDocPath == object->GetDocPath()) return object;
-	}
-	return nullptr;
 }
 
 //****************************************************************************

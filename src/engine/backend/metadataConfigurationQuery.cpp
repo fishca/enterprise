@@ -129,7 +129,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			if (!commonObject->FilterChild(child->GetClassType()))
 				continue;
 			IMetaObject* foundedMeta =
-				m_commonObject->FindByName(child->GetDocPath());
+				m_commonObject->FindChildByGuid(child->GetGuid());
 			if (foundedMeta == nullptr) {
 				bool ret = child->DeleteMetaTable(this);
 				if (!ret) {
@@ -179,7 +179,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			if (!m_commonObject->FilterChild(child->GetClassType()))
 				continue;
 			IMetaObject* foundedMeta =
-				commonObject->FindByName(child->GetDocPath());
+				commonObject->FindChildByGuid(child->GetGuid());
 			wxASSERT(child);
 			bool ret = true;
 
@@ -303,7 +303,7 @@ bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags
 					if (!m_commonObject->FilterChild(child->GetClassType()))
 						continue;
 					IMetaObject* foundedMeta =
-						commonObject->FindByName(child->GetDocPath());
+						commonObject->FindChildByGuid(child->GetGuid());
 					wxASSERT(child);
 					if (foundedMeta == nullptr) {
 						bool ret = child->CreateMetaTable(m_configMetadata, repairMetaTable);

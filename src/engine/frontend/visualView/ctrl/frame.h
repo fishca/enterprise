@@ -409,7 +409,9 @@ public:
 		arr.Add(wxT("font"));
 		arr.Add(wxT("fg"));
 		arr.Add(wxT("bg"));
-		arr.Add(wxT("align"));
+		arr.Add(wxT("align")); 
+		arr.Add(wxT("stretch"));
+		arr.Add(wxT("proportion"));
 		arr.Add(wxT("orient"));
 		arr.Add(wxT("tooltip"));
 		arr.Add(wxT("visible"));

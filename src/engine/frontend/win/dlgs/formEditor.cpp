@@ -288,7 +288,16 @@ void CDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 				for (auto strProperty : IValueFrame::GetAllowedUserProperty()) {
 
 					IProperty* prop = obj->GetProperty(strProperty);
-					if (prop == nullptr) continue;
+					if (prop == nullptr) {
+
+						IValueFrame* parent = obj->GetParent();
+						if (parent != nullptr && parent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+							prop = parent->GetProperty(strProperty);
+						}
+
+						if (prop == nullptr)
+							continue;
+					}
 
 					wxPGProperty* pg = prop->GetPGProperty();
 					propertyGridPage->Append(pg);

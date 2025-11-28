@@ -1606,6 +1606,9 @@
     <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\intl\fbintl_x86.dll">
       <Filter>databaseLayer\firebird\engine\dll\intl</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
@@ -1636,6 +1639,24 @@
     </None>
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked2.xpm">
       <Filter>propertyManager\property\advprop\ctrl\res</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icudt63_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icudt63l.dat">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icuin63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icuin63_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </None>
+    <None Include="databaseLayer\firebird\engine\dll\icuuc63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
     </None>
   </ItemGroup>
 </Project>

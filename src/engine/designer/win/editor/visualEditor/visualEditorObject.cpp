@@ -274,8 +274,12 @@ void InsertObjectCmd::DoExecute()
 	//create control in visual editor
 	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
+	
 	wxASSERT(visualEditor);
 	visualEditor->CreateControl(m_object, nullptr, m_firstCreated);
+
+	CValueForm *valueForm = visualEditor->GetValueForm();
+	if (valueForm != nullptr) valueForm->PrepareNames();
 
 	//select object
 	m_visualData->SelectObject(obj, false, false);
@@ -286,15 +290,18 @@ void InsertObjectCmd::DoRestore()
 	m_visualData->Modify(true);
 
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* m_visualEditor =
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
-	m_visualEditor->RemoveControl(m_object);
+	visualEditor->RemoveControl(m_object);
 
 	m_parent->RemoveChild(m_object);
 	m_object->SetParent(nullptr);
 
 	ResetId();
+
+	CValueForm* valueForm = visualEditor->GetValueForm();
+	if (valueForm != nullptr) valueForm->PrepareNames();
 
 	m_visualData->SelectObject(m_oldSelected);
 }
@@ -355,6 +362,9 @@ void RemoveObjectCmd::RemoveObject()
 	m_object->SetParent(nullptr);
 
 	ResetId();
+
+	CValueForm* valueForm = visualEditor->GetValueForm();
+	if (valueForm != nullptr) valueForm->PrepareNames();
 }
 
 void RemoveObjectCmd::DoExecute()
@@ -407,6 +417,9 @@ void RemoveObjectCmd::DoRestore()
 		m_visualData->GetVisualEditor();
 
 	visualEditor->CreateControl(m_object);
+
+	CValueForm* valueForm = visualEditor->GetValueForm();
+	if (valueForm != nullptr) valueForm->PrepareNames();
 }
 
 //-----------------------------------------------------------------------------

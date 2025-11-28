@@ -135,14 +135,20 @@ public:
 	virtual ~IBackendCellField() {}
 public:
 
-	virtual bool IsOk() const { return !m_propValue.IsNull(); }
 	bool IsEditable() const;
+
+	////////////////////
 
 	IPropertyObject* GetPropertyObject() const { return m_owner; }
 
+	////////////////////
+
 	const wxString& GetName() const { return m_propName; }
+	void GetName(wxString& result) const { result = m_propName; }
 	const wxString& GetLabel() const { return m_propLabel; }
+	void GetLabel(wxString& result) const { result = m_propLabel; }
 	const wxString& GetHelp() const { return m_propHelp; }
+	void GetHelp(wxString& result) const { result = m_propHelp; }
 
 	////////////////////
 
@@ -173,6 +179,7 @@ public:
 
 	////////////////////
 
+	virtual bool IsOk() const { return !m_propValue.IsNull(); }
 	virtual bool IsEmptyProperty() const { return false; }
 
 	//get property for grid 

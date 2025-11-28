@@ -186,8 +186,6 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				}
 			}
 		}
-
-		//if (metaObjectValue != nullptr) SetCaption(metaObjectValue->GetSynonym());
 	}
 	else {
 
@@ -219,8 +217,6 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				CValueForm::CreateControl(wxT("toolSeparator"), mainToolBar);
 			}
 		}
-
-		//SetCaption(m_metaFormObject != nullptr ? m_metaFormObject->GetSynonym() : _("Form"));
 	}
 }
 
@@ -255,9 +251,7 @@ bool CValueForm::InitializeFormModule()
 		wxASSERT(moduleManager);
 
 		IModuleDataObject* sourceObjectValue =
-			dynamic_cast<IModuleDataObject*>(
-				m_sourceObject
-				);
+			dynamic_cast<IModuleDataObject*>(m_sourceObject);
 
 		if (m_compileModule == nullptr) {
 			m_compileModule = new CCompileModule(m_metaFormObject);
@@ -319,7 +313,7 @@ void CValueForm::NotifyCreate(const CValue& vCreated)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
-		
+
 		ownerForm->m_createdValue = vCreated;
 		ownerForm->m_changedValue = wxEmptyValue;
 
@@ -336,7 +330,7 @@ void CValueForm::NotifyChange(const CValue& vChanged)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
-		
+
 		ownerForm->m_createdValue = wxEmptyValue;
 		ownerForm->m_changedValue = vChanged;
 
@@ -353,7 +347,7 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
-		
+
 		ownerForm->m_createdValue = wxEmptyValue;
 		ownerForm->m_changedValue = wxEmptyValue;
 
@@ -367,7 +361,7 @@ void CValueForm::NotifyChoice(CValue& vSelected)
 {
 	ChoiceDocForm(vSelected);
 
-	if (m_closeOnChoice) 
+	if (m_closeOnChoice)
 		CValueForm::CloseForm();
 }
 
@@ -664,8 +658,7 @@ void CValueForm::DetachIdleHandler(const wxString& procedureName)
 void CValueForm::ClearRecursive(IValueFrame* control)
 {
 	for (unsigned int idx = control->GetChildCount(); idx > 0; idx--) {
-		IValueFrame* controlChild =
-			dynamic_cast<IValueFrame*>(control->GetChild(idx - 1));
+		IValueFrame* controlChild = control->GetChild(idx - 1);
 		ClearRecursive(controlChild);
 		if (controlChild != nullptr) {
 			controlChild->DecrRef();

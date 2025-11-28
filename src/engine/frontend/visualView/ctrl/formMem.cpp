@@ -13,8 +13,7 @@ bool CValueForm::LoadForm(const wxMemoryBuffer& formData)
 	if (!readerMetaMemory)
 		return false;
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
-		IValueFrame* controlChild =
-			dynamic_cast<IValueFrame*>(GetChild(idx - 1));
+		IValueFrame* controlChild = GetChild(idx - 1);
 		if (controlChild != nullptr) {
 			RemoveControl(controlChild);
 		}

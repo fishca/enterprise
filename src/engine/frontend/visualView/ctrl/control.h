@@ -17,7 +17,7 @@ public:
 	*/
 
 	virtual bool GetControlNameAsString(wxString& result) const {
-		return m_propertyName->GetVariantAsString(result);
+		return m_propertyName->GetValueAsString(result);
 	}
 
 	virtual bool SetControlNameAsString(const wxString& result) const { 

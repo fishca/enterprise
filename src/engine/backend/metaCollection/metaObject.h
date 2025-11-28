@@ -171,7 +171,7 @@ public:
 
 	// get object name as string 
 	bool GetObjectNameAsString(wxString& result) const {
-		return m_propertyName->GetVariantAsString(result);
+		return m_propertyName->GetValueAsString(result);
 	}
 
 	//system attributes 

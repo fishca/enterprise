@@ -90,15 +90,11 @@ IProperty* IPropertyObject::GetProperty(unsigned int idx) const
 {
 	assert(idx < m_properties.size());
 
-	std::map<wxString, IProperty*>::const_iterator it = m_properties.begin();
-	unsigned int i = 0;
-	while (i < idx && it != m_properties.end()) {
-		i++;
-		it++;
+	if (idx < m_properties.size()) {
+		std::map<wxString, IProperty*>::const_iterator iterator = m_properties.begin();
+		std::advance(iterator, idx);
+		return iterator->second;
 	}
-
-	if (it != m_properties.end())
-		return it->second;
 
 	return nullptr;
 }

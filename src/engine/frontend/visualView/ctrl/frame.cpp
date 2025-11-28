@@ -304,26 +304,31 @@ wxObject* IValueFrame::GetWxObject() const
 void IValueFrame::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	for (unsigned int idx = 0; idx < IPropertyObject::GetPropertyCount(); idx++) {
-		IProperty* property = IPropertyObject::GetProperty(idx);
-		if (property == nullptr)
-			continue;
-		m_methodHelper->AppendProp(property->GetName(), idx, eProperty);
-	}
-	//if we have sizerItem then call him  
-	IValueFrame* sizeritem = GetParent();
-	if (sizeritem != nullptr && sizeritem->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		for (unsigned int idx = 0; idx < sizeritem->GetPropertyCount(); idx++) {
-			IProperty* property = sizeritem->GetProperty(idx);
+	{
+		wxString propertyName;
+		for (unsigned int idx = 0; idx < IPropertyObject::GetPropertyCount(); idx++) {
+			IProperty* property = IPropertyObject::GetProperty(idx);
 			if (property == nullptr)
 				continue;
-			m_methodHelper->AppendProp(property->GetName(), idx, eSizerItem);
+			property->GetName(propertyName);
+			m_methodHelper->AppendProp(propertyName, idx, eProperty);
+		}
+		//if we have sizerItem then call him  
+		IValueFrame* sizeritem = GetParent();
+		if (sizeritem != nullptr && sizeritem->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
+			for (unsigned int idx = 0; idx < sizeritem->GetPropertyCount(); idx++) {
+				IProperty* property = sizeritem->GetProperty(idx);
+				if (property == nullptr)
+					continue;
+				property->GetName(propertyName);
+				m_methodHelper->AppendProp(propertyName, idx, eSizerItem);
+			}
 		}
 	}
+
 	m_methodHelper->AppendProp(wxT("events"), true, false, 0, eEvent);
-	if (m_valEventContainer != nullptr) {
-		m_valEventContainer->PrepareNames();
-	}
+	
+	if (m_valEventContainer != nullptr) m_valEventContainer->PrepareNames();	
 }
 
 bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)

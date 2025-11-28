@@ -7,7 +7,7 @@
 class BACKEND_API IPropertyString : public IProperty {
 public:
 
-	bool GetVariantAsString(wxString& result) const {
+	bool GetValueAsString(wxString& result) const {
 		if (!m_propValue.IsNull())
 			return m_propValue.GetData()->Write(result);
 		return false;
@@ -15,7 +15,7 @@ public:
 
 	wxString GetValueAsString() const {
 		wxString result;
-		GetVariantAsString(result);
+		GetValueAsString(result);
 		return result;
 	}
 	

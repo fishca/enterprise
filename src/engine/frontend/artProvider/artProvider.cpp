@@ -31,6 +31,13 @@
 #include "artProvider/metaData/commonFolder.xpm"
 #include "artProvider/metaData/saveMetadata.xpm"
 
+#include "artProvider/service/message.xpm"
+#include "artProvider/service/variables.xpm"
+#include "artProvider/service/stack.xpm"
+#include "artProvider/service/watch.xpm"
+
+#include "artProvider/service/property.xpm"
+
 // ----------------------------------------------------------------------------
 // wxOESArtProvider class
 // ----------------------------------------------------------------------------
@@ -96,6 +103,14 @@ protected:
 			{ wxART_DOC_TEMPLATE, wxART_SHOW_SECTION, s_showSections_xpm },
 			{ wxART_DOC_TEMPLATE, wxART_BORDER, s_borders_xpm },
 			{ wxART_DOC_TEMPLATE, wxART_DOCK_TABLE , s_dockTable_xpm },
+
+			// ******* wxART_SERVICE *******
+			{ wxART_SERVICE, wxART_MESSAGE, s_message_xpm },
+			{ wxART_SERVICE, wxART_LOCAL_VARIABLE, s_variables_xpm },
+			{ wxART_SERVICE, wxART_STACK, s_stack_xpm },
+			{ wxART_SERVICE, wxART_WATCH, s_watch_xpm },
+
+			{ wxART_SERVICE, wxART_PROPERTY, s_property_xpm },
 
 			// ******* wxART_METATREE *******
 			{ wxART_METATREE, wxART_COMMON_FOLDER, s_commonFolder_xpm },

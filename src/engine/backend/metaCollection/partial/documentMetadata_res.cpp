@@ -1,59 +1,67 @@
 #include "document.h"
+
 /* XPM */
-static const char *s_document_xpm[] = {
+static const char* s_documentGroup_xpm[] = {
 	/* columns rows colors chars-per-pixel */
-	"16 16 5 1",
-	"O c Black",
-	"X c #FFFFFF",
-	". c #808080",
-	"o c #C0C0C0",
-	"  c None",
+	"16 16 8 1",
+	"X c None",
+	"o c #FFFFFF",
+	"@ c #8D9EAB",
+	"# c #98A7B6",
+	"+ c #94A4B3",
+	"  c #788B9C",
+	". c #91A2B0",
+	"O c #8C9DAC",
 	/* pixels */
-	"                ",
-	".........       ",
-	".XXXXXXX..      ",
-	".XXXXXXX.o.     ",
-	".XXXXXXX...O    ",
-	".XOOOOOXXXoO    ",
-	".XXXXXXXXXoO    ",
-	".XOOOOOOOXoO    ",
-	".XXXXXXXXXoO    ",
-	".XOOOOOOOXoO    ",
-	".XXXXXXXXXoO    ",
-	".XOOOOOOOXoO    ",
-	".XXXXXXXXXoO    ",
-	".ooooooooooO    ",
-	".OOOOOOOOOOO    ",
-	"                "
+	"        .XXXXXXX",
+	" oooooo O+XXXXXX",
+	" oooooo X@#XXXXX",
+	" oooo        .XX",
+	" oooo oooooo O+X",
+	" oooo oooooo X@#",
+	" oooo oooooo    ",
+	" oooo ooooooooo ",
+	" oooo oo     oo ",
+	" oooo ooooooooo ",
+	" oooo oo    ooo ",
+	" oooo ooooooooo ",
+	"      oo     oo ",
+	"XXXXX ooooooooo ",
+	"XXXXX ooooooooo ",
+	"XXXXX           "
 };
 
 /* XPM */
-static const char *s_documentGroup_xpm[] = {
+static const char *s_document_xpm[] = {
 	/* columns rows colors chars-per-pixel */
-	"16 16 7 1",
-	"o c #FFFFFF",
-	"O c #FFFF00",
-	"@ c #040404",
-	"+ c #C0C0C0",
-	"X c #808000",
+	"16 16 11 1",
 	"  c None",
-	". c #868686",
+	"o c #FFFFFF",
+	"% c #8B9BA9",
+	"+ c #7D909F",
+	"@ c #F6F7F8",
+	". c #788B9C",
+	"X c #7D8F9F",
+	"& c #7D8FA0",
+	"# c #8E9DAC",
+	"$ c #F4F6F7",
+	"O c #8C9DAB",
 	/* pixels */
-	"                ",
-	"    ..X         ",
-	"   .oooX        ",
-	"  .oO+O+XXXXXXX ",
-	"  .o+O+O+oooooX@",
-	"  .oO+O+O+O+O+X@",
-	" ...........+OX@",
-	" .ooooooooo..+X@",
-	" .o+O+O+O+O+..X@",
-	"  .o+O+O+O+O+.X@",
-	"   .o+O+O+O+O.X@",
-	"   XXXXXXXXXXXX@",
-	"    @@@@@@@@@@@@",
-	"                ",
-	"                ",
+	" ........X      ",
+	" .oooooo.O+     ",
+	" .oooooo.@#X    ",
+	" .oooooo.o$%&   ",
+	" .oooooo.....   ",
+	" .oooooooooo.   ",
+	" .oooooooooo.   ",
+	" .oo......oo.   ",
+	" .oooooooooo.   ",
+	" .oo....oooo.   ",
+	" .oooooooooo.   ",
+	" .oo......oo.   ",
+	" .oooooooooo.   ",
+	" .oooooooooo.   ",
+	" ............   ",
 	"                "
 };
 
@@ -64,5 +72,5 @@ wxIcon CMetaObjectDocument::GetIcon() const
 
 wxIcon CMetaObjectDocument::GetIconGroup()
 {
-	return wxIcon(s_documentGroup_xpm);
+	return wxIcon(s_document_xpm);
 }

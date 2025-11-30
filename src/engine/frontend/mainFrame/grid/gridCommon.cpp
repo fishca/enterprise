@@ -1614,7 +1614,7 @@ void CGrid::OnMouseLeftDClick(wxGridEvent& event)
 	event.Skip();
 }
 
-#include <wx/artprov.h>
+#include "frontend/artProvider/artProvider.h"
 
 void CGrid::OnMouseRightDown(wxGridEvent& event)
 {
@@ -1684,7 +1684,7 @@ void CGrid::OnMouseRightDown(wxGridEvent& event)
 
 	menuPopup.AppendSeparator();
 	item = menuPopup.Append(wxID_PROPERTIES, _("Properties"));
-	item->SetBitmap(wxArtProvider::GetBitmap(wxART_LIST_VIEW, wxART_MENU));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 
 	if (wxGrid::PopupMenu(&menuPopup, event.GetPosition())) {
 		event.Skip();

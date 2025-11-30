@@ -693,7 +693,7 @@ void CMetadataTree::PrepareReplaceMenu(wxMenu* defaultMenu)
 	defaultMenu->AppendSeparator();
 }
 
-#include <wx/artprov.h>
+#include "frontend/artProvider/artProvider.h"
 
 void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
 {
@@ -717,7 +717,7 @@ void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& 
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_LIST_VIEW, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 	}
 	else if (!metaObject && item != m_treeCOMMON) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
@@ -734,7 +734,7 @@ void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& 
 	else if (item == m_treeMETADATA) {
 		defaultMenu->AppendSeparator();
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_LIST_VIEW, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 	}
 }
 

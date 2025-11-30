@@ -6,20 +6,22 @@
 #include "mainFrameEnterprise.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
+#include "frontend/artProvider/artProvider.h"
+
 void CDocEnterpriseMDIFrame::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_mainFrameToolbar->SetToolBitmapSize(wxSize(24, 24));
+	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
 
-	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_FRAME_ICON, wxSize(24, 24)), "New", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(24, 24)), "Open", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(24, 24)), "Save", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(24, 24)), "Save as", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_NEW, _("New"), wxArtProvider::GetBitmap(wxART_NEW, wxART_FRAME_ICON, wxSize(16, 16)), "New", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_OPEN, _("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_FRAME_ICON, wxSize(16, 16)), "Open", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVE, _("Save"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_FRAME_ICON, wxSize(16, 16)), "Save", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_SAVEAS, _("Save as"), wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS, wxART_FRAME_ICON, wxSize(16, 16)), "Save as", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(24, 24)), "Find", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_FIND, _("Find"), wxArtProvider::GetBitmap(wxART_FIND, wxART_FRAME_ICON, wxSize(16, 16)), "Find", wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(24, 24)), "Redo", wxItemKind::wxITEM_NORMAL);
-	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(24, 24)), "Undo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), "Redo", wxItemKind::wxITEM_NORMAL);
+	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), "Undo", wxItemKind::wxITEM_NORMAL);
 
 	m_mainFrameToolbar->Realize();
 
@@ -36,7 +38,7 @@ void CDocEnterpriseMDIFrame::CreateWideGui()
 	m_mgr.AddPane(m_mainFrameToolbar, m_infoDefault);
 
 	m_docToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_docToolbar->SetToolBitmapSize(wxSize(24, 24));
+	m_docToolbar->SetToolBitmapSize(wxSize(16, 16));
 
 	wxAuiPaneInfo m_infoAdditional;
 	m_infoAdditional.Name(wxT("additional"));
@@ -93,7 +95,7 @@ void CDocEnterpriseMDIFrame::CreateBottomPane()
 	auiNotebook->Freeze();
 
 	m_outputWindow = auiNotebook->AddPage(
-		new COutputWindow(this, wxID_ANY), _("Messages"), false, wxArtProvider::GetBitmap(wxART_TIP, wxART_FRAME_ICON, wxSize(16, 16))
+		new COutputWindow(this, wxID_ANY), _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16))
 	);
 
 	auiNotebook->SetNullSelection();

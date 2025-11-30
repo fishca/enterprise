@@ -118,7 +118,7 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
 	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
 	wxMenuItem *menuUpdate = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
-	menuUpdate->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(24, 24)));
+	menuUpdate->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(16, 16)));
 	
 	m_menuConfiguration->AppendSeparator();
 	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuraion"));

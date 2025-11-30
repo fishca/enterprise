@@ -346,7 +346,7 @@ void CDataProcessorTree::CommandItem(unsigned int id)
 	metaObject->ProcessCommand(id);
 }
 
-#include <wx/artprov.h>
+#include "frontend/artProvider/artProvider.h"
 
 void CDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
 {
@@ -365,7 +365,7 @@ void CDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeIte
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_LIST_VIEW, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 	}
 	else if (!metaObject) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));

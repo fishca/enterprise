@@ -100,7 +100,7 @@ static const char *s_enumeration_xpm[] = {
 	/* columns rows colors chars-per-pixel */
 	"16 16 3 1",
 	"  c None",
-	"X c #FFFFFF",
+	"X c #E6DDFF",
 	". c #A955D7",
 	/* pixels */
 	"                ",

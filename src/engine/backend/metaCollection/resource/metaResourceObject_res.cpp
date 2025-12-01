@@ -106,7 +106,7 @@ static const char* s_resource_xpm[] = {
 	/* columns rows colors chars-per-pixel */
 	"16 16 3 1",
 	"  c None",
-	"X c #FFFFFF",
+	"X c #DBF2FF",
 	". c #93C158",
 	/* pixels */
 	"                ",

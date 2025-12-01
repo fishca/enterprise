@@ -1,59 +1,56 @@
 #include "valueTable.h"
 
 /* XPM */
-static const char* s_table_xpm[] = {
+static const char* s_tableGroup_xpm[] = {
 	/* columns rows colors chars-per-pixel */
-	"16 16 6 1",
-	". c Black",
-	"o c #FFFFFF",
-	"O c #808080",
-	"+ c #00FFFF",
-	"X c #0000FF",
+	"16 16 4 1",
 	"  c None",
+	"o c #DBF2FF",
+	". c #4788C7",
+	"X c #98CCFD",
 	/* pixels */
 	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"..............  ",
-	".XXXoXXXXoXXX.  ",
-	".OOOOOOOOOOOO.  ",
-	".oooOoo+oOooo.  ",
-	".OOOOOOOOOOOO.  ",
-	".oooOoo+oOooo.  ",
-	".OOOOOOOOOOOO.  ",
-	".oooOoo+oOooo.  ",
-	"..............  ",
-	"                ",
-	"                ",
+	"................",
+	".XXXX.XXXXXXXXX.",
+	".XXXX.XXXXXXXXX.",
+	".XXXX.XXXXXXXXX.",
+	"................",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	"................",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	"................",
 	"                "
 };
 
 /* XPM */
-static const char* s_tableGroup_xpm[] = {
+static const char* s_table_xpm[] = {
 	/* columns rows colors chars-per-pixel */
-	"16 16 5 1",
-	". c Black",
-	"o c #FFFFFF",
-	"O c #0000FF",
-	"X c #C0C0C0",
+	"16 16 4 1",
 	"  c None",
+	"o c #DBF2FF",
+	". c #4788C7",
+	"X c #98CCFD",
 	/* pixels */
 	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"..............  ",
-	".XXXXXXXXXXXX.  ",
-	".X....X.....X.  ",
-	".X.oooX.OOOOX.  ",
-	".XXXXXX.ooooX.  ",
-	".X....X.ooooX.  ",
-	".X.oooX.ooooX.  ",
-	".XXXXXXXXXXXX.  ",
-	"..............  ",
-	"                ",
-	"                ",
+	"................",
+	".XXXX.XXXXXXXXX.",
+	".XXXX.XXXXXXXXX.",
+	".XXXX.XXXXXXXXX.",
+	"................",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	"................",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	".oooo.ooooooooo.",
+	"................",
 	"                "
 };
 
@@ -64,5 +61,5 @@ wxIcon CValueTable::GetIcon() const
 
 wxIcon CValueTable::GetIconGroup()
 {
-	return wxIcon(s_tableGroup_xpm);
+	return wxIcon(s_table_xpm);
 }

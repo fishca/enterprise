@@ -41,7 +41,7 @@ bool CReferenceDataObject::ReadData(bool createData)
 			// table is collection values 
 			//for (const auto object : m_metaObject->GetTableArrayObject()) {
 			//	m_listObjectValue.insert_or_assign(object->GetMetaID(), 
-			//		m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, object, true));
+			//		CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, object, true));
 			//}
 
 			readRef = true;

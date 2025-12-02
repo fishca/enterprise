@@ -38,7 +38,7 @@ void CReferenceDataObject::PrepareRef(bool createData)
 			if (object->IsDeleted())
 				continue;
 			m_listObjectValue.insert_or_assign(object->GetMetaID(),
-				m_metaObject->GetMetaData()->CreateObjectValue<CTabularSectionDataObjectRef>(this, object));
+				CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, object));
 		}
 	}
 	else if (CReferenceDataObject::ReadData(createData)) {

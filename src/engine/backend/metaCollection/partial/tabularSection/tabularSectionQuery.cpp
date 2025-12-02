@@ -42,6 +42,8 @@ bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createDat
 	return true;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+
 #include "backend/system/systemManager.h"
 
 bool CTabularSectionDataObjectRef::SaveData()
@@ -137,10 +139,7 @@ bool CTabularSectionDataObjectRef::SaveData()
 
 bool CTabularSectionDataObjectRef::DeleteData()
 {
-	if (m_readOnly)
-		return true;
-
-	if (m_objectValue->IsNewObject())
+	if (m_readOnly || m_objectValue->IsNewObject())
 		return true;
 
 	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();

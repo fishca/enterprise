@@ -57,15 +57,17 @@ bool ITabularSectionDataObject::SetValueByRow(const wxVariant& variant,
 		}
 	};
 
+	RefreshTabularSection();
 	return true;
 }
 
 void ITabularSectionDataObject::AddValue(unsigned int before)
 {
 	long row = GetRow(GetSelection());
-	if (row > 0)
-		AppendRow(row);
+	if (row > 0) AppendRow(row);
 	else AppendRow();
+
+	RefreshTabularSection();
 }
 
 void ITabularSectionDataObject::CopyValue()
@@ -92,6 +94,8 @@ void ITabularSectionDataObject::CopyValue()
 	else {
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 	}
+
+	RefreshTabularSection();
 }
 
 void ITabularSectionDataObject::EditValue()
@@ -111,6 +115,8 @@ void ITabularSectionDataObject::EditValue()
 	else {
 		IValueTable::RowValueStartEdit(currentItem);
 	}
+
+	RefreshTabularSection();
 }
 
 void ITabularSectionDataObject::DeleteValue()
@@ -121,6 +127,9 @@ void ITabularSectionDataObject::DeleteValue()
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
+
+	RefreshTabularSection();
+
 	if (!CBackendException::IsEvalMode()) {
 		IValueTable::Remove(node);
 	}
@@ -138,6 +147,8 @@ void CTabularSectionDataObjectRef::CopyValue()
 			foundedForm->Modify(true);
 		}
 	}
+
+	RefreshTabularSection();
 }
 
 void CTabularSectionDataObjectRef::DeleteValue()
@@ -145,11 +156,7 @@ void CTabularSectionDataObjectRef::DeleteValue()
 	ITabularSectionDataObject::DeleteValue();
 
 	if (!CBackendException::IsEvalMode()) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
-			m_objectValue->GetGuid()
-		);
-		if (foundedForm != nullptr) {
-			foundedForm->Modify(true);
-		}
+		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());
+		if (foundedForm != nullptr) foundedForm->Modify(true);
 	}
 }

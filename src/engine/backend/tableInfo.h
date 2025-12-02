@@ -929,6 +929,23 @@ public:
 
 	/////////////////////////////////////////////////////////
 
+	void Show(const wxDataViewItem& item, bool show = true) {
+
+		/* wxDataViewModel:: */ m_modelProvider->ItemDeleted(
+			wxDataViewItem(nullptr), 
+			item
+		);
+
+		if (show) {
+			/* wxDataViewModel:: */ m_modelProvider->ItemAdded(
+				wxDataViewItem(nullptr), 
+				item
+			);
+		}
+	}
+
+	/////////////////////////////////////////////////////////
+
 		// derived classes should override these methods instead of
 	// {Get,Set}Value() and GetAttr() inherited from the base class
 	virtual void GetValueByRow(wxVariant& variant,

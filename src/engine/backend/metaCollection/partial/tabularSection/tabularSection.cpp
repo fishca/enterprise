@@ -188,6 +188,32 @@ bool ITabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRe
 	return false;
 }
 
+void ITabularSectionDataObject::RefreshTabularSection() {
+
+	if (!CBackendException::IsEvalMode()) {
+
+		CValue filterValue;
+		for (long row = 0; row < IValueTable::GetRowCount(); row++) {
+
+			const wxDataViewItem& item = IValueTable::GetItem(row); bool success_compare = true;
+			for (auto filter : m_filterRow.m_filters) {
+
+				if (filter.m_filterUse && GetValueByMetaID(item, filter.m_filterModel, filterValue)) {
+
+					if (filter.m_filterComparison == eComparisonType_Equal)
+						success_compare = success_compare && filter.m_filterValue == filterValue;
+					else if (filter.m_filterComparison == eComparisonType_NotEqual)
+						success_compare = success_compare && filter.m_filterValue != filterValue;
+
+					if (!success_compare) break;
+				}
+			}
+
+			IValueTable::Show(item, success_compare);
+		}
+	}
+}
+
 //////////////////////////////////////////////////////////////////////
 //               CTabularSectionDataObject                          //
 //////////////////////////////////////////////////////////////////////

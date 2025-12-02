@@ -156,6 +156,17 @@ public:
 		m_objectValue(objectValue), m_metaTable(tableObject),
 		m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectColumnCollection>(this)),
 		m_methodHelper(new CMethodHelper()), m_readOnly(readOnly) {
+		for (const auto object : tableObject->GetGenericAttributeArrayObject()) {
+			m_filterRow.AppendFilter(
+				object->GetMetaID(),
+				object->GetName(),
+				object->GetSynonym(),
+				eComparisonType_Equal,
+				object->GetTypeDesc(),
+				object->CreateValue(),
+				false
+			);
+		}
 	}
 
 	virtual ~ITabularSectionDataObject() { wxDELETE(m_methodHelper); }
@@ -227,6 +238,14 @@ public:
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
 
 protected:
+
+	void RefreshTabularSection();
+
+	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr),
+		const int countPerPage = defaultCountPerPage)
+	{
+		RefreshTabularSection();
+	}
 
 	bool m_readOnly;
 

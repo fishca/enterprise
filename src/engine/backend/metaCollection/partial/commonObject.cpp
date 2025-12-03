@@ -2298,7 +2298,7 @@ void IRecordManagerObject::PrepareEmptyObject(const IRecordManagerObject* source
 void IRecordSetObject::CreateEmptyKey()
 {
 	m_keyValues.clear();
-	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (object->IsDeleted())
 			continue;
 		m_keyValues.insert_or_assign(
@@ -2802,7 +2802,7 @@ void CRecordKeyObject::PrepareNames() const
 	wxString objectName;
 
 	//fill custom attributes 
-	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
+	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (object->IsDeleted())
 			continue;
 		if (!object->GetObjectNameAsString(objectName))
@@ -2824,7 +2824,7 @@ void IRecordSetObject::CRecordSetObjectRegisterKeyValue::PrepareNames() const
 	IMetaObjectRegisterData* metaObject = m_recordSet->GetMetaObject();
 	if (metaObject != nullptr) {
 		wxString objectName;
-		for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
+		for (const auto object : metaObject->GetGenericDimentionArrayObject()) {
 			if (object->IsDeleted())
 				continue;
 			if (!object->GetObjectNameAsString(objectName))

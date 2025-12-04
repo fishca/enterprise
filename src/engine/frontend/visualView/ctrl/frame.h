@@ -32,6 +32,9 @@ class FRONTEND_API CVisualHost;
 #include "backend/actionInfo.h"
 #include "backend/moduleInfo.h"
 
+#define wxDefaultStypeFGColour wxColour(0, 120, 215)
+#define wxDefaultStypeBGColour wxColour(240, 240, 240)
+
 #include "backend/fileSystem/fs.h"
 
 class FRONTEND_API CVisualDocument;

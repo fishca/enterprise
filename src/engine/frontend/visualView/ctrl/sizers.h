@@ -176,8 +176,8 @@ protected:
 	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("orient"), wxHORIZONTAL);
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categorySizer, wxT("caption"), _("caption"), wxEmptyString);
 	CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categorySizer, wxT("font"), _("font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
-	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("fg"), _("fg"), _("Sets the foreground colour of the window."), wxColour(0, 120, 215));
-	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("bg"), _("bg"), _("Sets the background colour of the window."), wxColour(240, 240, 240));
+	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("fg"), _("fg"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
+	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("bg"), _("bg"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
 	CPropertyString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("tooltip"), _("tooltip"), _("Attach a tooltip to the window."), wxEmptyString);
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("contextMenu"), _("context menu"), _("Generates event handler for displaying of menu assigned to this widgets as a context menu."));
 	CPropertyString* m_propertyContextHelp = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("contextHelp"), _("context help"), _("Attach context-sensitive help to the window. Note: The Project's &quot;help_provider&quot; property must be set for context-sensitive help to work."), wxEmptyString);

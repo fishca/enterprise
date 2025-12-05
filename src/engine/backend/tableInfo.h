@@ -646,19 +646,24 @@ protected:
 	bool m_refreshModel;
 };
 
-//Поддержка таблиц
+//Table support
 class BACKEND_API IValueTable : public IValueModel {
 	wxDECLARE_ABSTRACT_CLASS(IValueTable);
 public:
 
+	enum
+	{
+		TABLE_NODE_HIDDEN = 0x0001,
+	};
+
 	struct wxValueTableRow : public wxRefCounter {
 
 		wxValueTableRow() :
-			m_valueTable(nullptr), m_nodeValues() {
+			m_valueTable(nullptr), m_nodeValues(), m_nodeFlags(0) {
 		}
 
 		wxValueTableRow(const wxValueTableRow& tableRow) :
-			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues) {
+			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues), m_nodeFlags(0) {
 		}
 
 		/////////////////////////////////////////////////////////////////////////////
@@ -798,11 +803,27 @@ public:
 			return false;
 		}
 
+		// Returns true if property has given flag set.
+		bool HasFlag(long flag) const
+		{
+			return (m_nodeFlags & flag) != 0;
+		}
+
+		// Returns true if property has all given flags set.
+		bool HasFlagsExact(long flags) const
+		{
+			return (m_nodeFlags & flags) == flags;
+		}
+
+		void SetFlag(long flag) { m_nodeFlags |= flag; }
+		void ClearFlag(long flag) { m_nodeFlags &= ~(flag); }
+
 	private:
 		friend class IValueTable;
 	protected:
 		IValueTable* m_valueTable;
 		valueArray_t m_nodeValues;
+		long m_nodeFlags;
 	};
 
 public:
@@ -872,6 +893,9 @@ public:
 			wxDataViewItem(nullptr),
 			wxDataViewItem(child)
 		);
+
+		if (!notify)
+			child->SetFlag(TABLE_NODE_HIDDEN);
 		return m_nodeValues.size() - 1;
 	}
 
@@ -885,6 +909,9 @@ public:
 			wxDataViewItem(nullptr),
 			wxDataViewItem(child)
 		);
+
+		if (!notify)
+			child->SetFlag(TABLE_NODE_HIDDEN);
 		return row + 1;
 	}
 
@@ -931,16 +958,24 @@ public:
 
 	void Show(const wxDataViewItem& item, bool show = true) {
 
-		/* wxDataViewModel:: */ m_modelProvider->ItemDeleted(
-			wxDataViewItem(nullptr), 
-			item
-		);
+		wxValueTableRow* child = GetViewData<wxValueTableRow>(item);
+		if (child != nullptr && show && child->HasFlag(TABLE_NODE_HIDDEN)) {
 
-		if (show) {
 			/* wxDataViewModel:: */ m_modelProvider->ItemAdded(
-				wxDataViewItem(nullptr), 
-				item
+				wxDataViewItem(nullptr),
+				wxDataViewItem(child)
 			);
+
+			child->ClearFlag(TABLE_NODE_HIDDEN);
+		}
+		else if (child != nullptr && !show && !child->HasFlag(TABLE_NODE_HIDDEN)) {
+
+			/* wxDataViewModel:: */ m_modelProvider->ItemDeleted(
+				wxDataViewItem(nullptr),
+				wxDataViewItem(child)
+			);
+
+			child->SetFlag(TABLE_NODE_HIDDEN);
 		}
 	}
 
@@ -1090,7 +1125,7 @@ protected:
 	std::vector< wxValueTableRow*> m_nodeValues;
 };
 
-//Поддержка дерева таблиц 
+//Tree support 
 class BACKEND_API IValueTree : public IValueModel {
 	wxDECLARE_ABSTRACT_CLASS(IValueTable);
 public:

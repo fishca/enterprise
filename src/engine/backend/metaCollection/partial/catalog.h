@@ -129,28 +129,41 @@ protected:
 
 	//predefined array 
 	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
-		
-		array = {
-			m_propertyAttributeCode->GetMetaObject(),
-			m_propertyAttributeDescription->GetMetaObject(),
-			m_propertyAttributeOwner->GetMetaObject(),
-			m_propertyAttributeParent->GetMetaObject(),
-			m_propertyAttributeIsFolder->GetMetaObject(),
-			m_propertyAttributeReference->GetMetaObject(),
-			m_propertyAttributeDeletionMark->GetMetaObject(),
+
+		const CMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
+		if (metaObjectAttributeOwner != nullptr && metaObjectAttributeOwner->GetClsidCount() > 0) {
+			array = {
+				m_propertyAttributeCode->GetMetaObject(),
+				m_propertyAttributeDescription->GetMetaObject(),
+				m_propertyAttributeOwner->GetMetaObject(),
+				m_propertyAttributeParent->GetMetaObject(),
+				m_propertyAttributeIsFolder->GetMetaObject(),
+				m_propertyAttributeReference->GetMetaObject(),
+				m_propertyAttributeDeletionMark->GetMetaObject(),
+			};
+		}
+		else {
+			array = {
+				m_propertyAttributeCode->GetMetaObject(),
+				m_propertyAttributeDescription->GetMetaObject(),
+				m_propertyAttributeParent->GetMetaObject(),
+				m_propertyAttributeIsFolder->GetMetaObject(),
+				m_propertyAttributeReference->GetMetaObject(),
+				m_propertyAttributeDeletionMark->GetMetaObject(),
+			};
 		};
-		
+
 		return true;
 	}
 
 	//searched array 
 	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
-		
+
 		array = {
 			m_propertyAttributeCode->GetMetaObject(),
 			m_propertyAttributeDescription->GetMetaObject(),
 		};
-		
+
 		return true;
 	}
 

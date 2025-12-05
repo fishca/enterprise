@@ -538,7 +538,7 @@ public:
 		if (!wxCompositeWindow::Create(parent, id, pos, size, style))
 			return false;
 
-		if (!m_dvcMode) {
+		if (!m_dvcMode) {	
 			m_label = new wxControlStaticText(this, wxID_ANY, wxEmptyString);
 		}
 
@@ -669,12 +669,16 @@ public:
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
 		if (!m_dvcMode) {
-			if (m_text != nullptr) {
-				m_label->SetBackgroundColour(colour);
+			if (m_label != nullptr && m_parent != nullptr) {
+				m_label->SetBackgroundColour(m_parent->GetBackgroundColour());
 			}
 		}
+		
 		if (m_text != nullptr) m_text->SetBackgroundColour(colour);
 		if (m_winButton != nullptr) m_winButton->SetBackgroundColour(colour);
+
+		if (m_parent != nullptr)
+			return wxWindow::SetBackgroundColour(m_parent->GetBackgroundColour());
 		return wxWindow::SetBackgroundColour(colour);
 	}
 
@@ -691,7 +695,7 @@ public:
 
 	virtual bool SetFont(const wxFont& font) {
 		if (!m_dvcMode) {
-			if (m_text != nullptr) {
+			if (m_label != nullptr) {
 				m_label->SetFont(font);
 			}
 		}

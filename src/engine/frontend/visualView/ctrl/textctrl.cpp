@@ -68,6 +68,8 @@ enum prop {
 CValueTextCtrl::CValueTextCtrl() :
 	IValueWindow(), ITypeControlFactory(), m_textModified(false)
 {
+	//set default params
+	m_propertyBG->SetValue(wxColour(255, 255, 255));
 }
 
 IMetaData* CValueTextCtrl::GetMetaData() const

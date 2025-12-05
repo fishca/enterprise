@@ -113,8 +113,19 @@ public:
 
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
-		m_label->SetBackgroundColour(colour);
-		m_checkBox->SetBackgroundColour(colour);
+		
+		if (m_label != nullptr && m_parent != nullptr) 
+			m_label->SetBackgroundColour(m_parent->GetBackgroundColour());
+		else if (m_label != nullptr)
+			m_label->SetBackgroundColour(colour);
+		
+		if (m_parent != nullptr) 
+			m_checkBox->SetBackgroundColour(m_parent->GetBackgroundColour());
+		else
+			m_checkBox->SetBackgroundColour(colour);
+		
+		if (m_parent != nullptr)
+			return wxCompositeWindow::SetBackgroundColour(m_parent->GetBackgroundColour());	
 		return wxCompositeWindow::SetBackgroundColour(colour);
 	}
 

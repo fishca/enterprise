@@ -1,4 +1,4 @@
-#include "sizers.h"
+#include "sizer.h"
 #include "frontend/visualView/pageWindow.h"
 #include "form.h"
 
@@ -206,7 +206,11 @@ bool CValueSizerItem::LoadData(CMemoryReader& reader)
 	m_propertyProportion->LoadData(reader);
 	//m_propertyFlagBorder->LoadData(reader);
 	
-	
+	m_propertyFlagBorderLeft->LoadData(reader);
+	m_propertyFlagBorderRight->LoadData(reader);
+	m_propertyFlagBorderTop->LoadData(reader);
+	m_propertyFlagBorderBottom->LoadData(reader);
+
 	m_propertyFlagState->LoadData(reader);
 	m_propertyBorder->LoadData(reader);
 
@@ -222,6 +226,11 @@ bool CValueSizerItem::SaveData(CMemoryWriter& writer)
 
 	m_propertyProportion->SaveData(writer);
 	//m_propertyFlagBorder->SaveData(writer);
+
+	m_propertyFlagBorderLeft->SaveData(writer);
+	m_propertyFlagBorderRight->SaveData(writer);
+	m_propertyFlagBorderTop->SaveData(writer);
+	m_propertyFlagBorderBottom->SaveData(writer);
 
 	m_propertyFlagState->SaveData(writer);
 	m_propertyBorder->SaveData(writer);

@@ -1,4 +1,4 @@
-#include "sizers.h"
+#include "sizer.h"
 
 wxIMPLEMENT_ABSTRACT_CLASS(IValueSizer, IValueFrame)
 
@@ -21,8 +21,6 @@ void IValueSizer::UpdateSizer(wxSizer* sizer)
 //**********************************************************************************
 //*                                    Data										   *
 //**********************************************************************************
-
-
 
 bool IValueSizer::LoadData(CMemoryReader& reader)
 {

@@ -1,4 +1,4 @@
-#include "sizers.h"
+#include "sizer.h"
 
 /* XPM */
 static char* s_boxSizer_xpm[] = {

@@ -1,5 +1,5 @@
 
-#include "sizers.h"
+#include "sizer.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueWrapSizer, IValueSizer)
 

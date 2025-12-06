@@ -659,7 +659,7 @@
     <ClCompile Include="visualView\ctrl\radiobutton_res.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\ctrl\sizers.cpp">
+    <ClCompile Include="visualView\ctrl\sizer.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
     <ClCompile Include="visualView\ctrl\slider.cpp">
@@ -1337,7 +1337,7 @@
     <ClInclude Include="visualView\ctrl\notebook.h">
       <Filter>visualView\ctrl</Filter>
     </ClInclude>
-    <ClInclude Include="visualView\ctrl\sizers.h">
+    <ClInclude Include="visualView\ctrl\sizer.h">
       <Filter>visualView\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="visualView\ctrl\tableBox.h">

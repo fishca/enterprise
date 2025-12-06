@@ -92,7 +92,7 @@
     <ClCompile Include="visualView\ctrl\notebook_res.cpp" />
     <ClCompile Include="visualView\ctrl\radiobutton.cpp" />
     <ClCompile Include="visualView\ctrl\radiobutton_res.cpp" />
-    <ClCompile Include="visualView\ctrl\sizers.cpp" />
+    <ClCompile Include="visualView\ctrl\sizer.cpp" />
     <ClCompile Include="visualView\ctrl\slider.cpp" />
     <ClCompile Include="visualView\ctrl\slider_res.cpp" />
     <ClCompile Include="visualView\ctrl\staticboxsizer.cpp" />
@@ -315,7 +315,7 @@
     <ClInclude Include="visualView\ctrl\gridBox.h" />
     <ClInclude Include="visualView\ctrl\htmlBox.h" />
     <ClInclude Include="visualView\ctrl\notebook.h" />
-    <ClInclude Include="visualView\ctrl\sizers.h" />
+    <ClInclude Include="visualView\ctrl\sizer.h" />
     <ClInclude Include="visualView\ctrl\tableBox.h" />
     <ClInclude Include="visualView\ctrl\toolBar.h" />
     <ClInclude Include="visualView\ctrl\typeControl.h" />

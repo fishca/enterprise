@@ -37,12 +37,9 @@ CValueForm::~CValueForm()
 	}
 
 	for (unsigned int idx = GetChildCount(); idx > 0; idx--) {
-		IValueFrame* controlChild =
-			dynamic_cast<IValueFrame*>(GetChild(idx - 1));
+		IValueFrame* controlChild = GetChild(idx - 1);
 		ClearRecursive(controlChild);
-		if (controlChild) {
-			controlChild->DecrRef();
-		}
+		if (controlChild != nullptr) controlChild->DecrRef();
 	}
 
 	if (m_controlOwner != nullptr) m_controlOwner->ControlDecrRef();
@@ -221,7 +218,7 @@ void CValueForm::PrepareNames() const
 			control->GetControlName(),
 			control->GetControlID(),
 			eAttribute
-		);	
+		);
 	}
 
 	m_formCollectionControl->PrepareNames();
@@ -258,8 +255,8 @@ bool CValueForm::SetPropVal(const long lPropNum, const CValue& varPropVal)
 				return id == control->GetControlID();
 			}
 		);
-		if (it != m_listControl.end()) 
-			return (*it)->SetControlValue(varPropVal);	
+		if (it != m_listControl.end())
+			return (*it)->SetControlValue(varPropVal);
 	}
 	return false;
 }

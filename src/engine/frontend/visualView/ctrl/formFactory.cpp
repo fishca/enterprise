@@ -1,5 +1,5 @@
 ﻿#include "form.h"
-#include "frontend/visualView/ctrl/sizers.h"
+#include "frontend/visualView/ctrl/sizer.h"
 
 inline wxString GetClassType(const wxString& className)
 {

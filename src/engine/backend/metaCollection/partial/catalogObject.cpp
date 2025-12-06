@@ -161,7 +161,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 					bool newObject = CRecordDataObjectCatalog::IsNewObject();
 					bool generateUniqueIdentifier = false;
 					
-					if (newObject) {
+					if (!IsSetUniqueIdentifier()) {
 						CValue prefix = "", standartProcessing = true;
 						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
@@ -171,7 +171,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 					}
 
 					if (!SaveData()) {
-						if (newObject && generateUniqueIdentifier)
+						if (generateUniqueIdentifier)
 							CRecordDataObjectCatalog::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
 						CSystemFunction::Raise(_("failed to write object in db!"));
@@ -182,7 +182,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier)
 								CRecordDataObjectCatalog::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));

@@ -274,7 +274,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 					bool newObject = CRecordDataObjectDocument::IsNewObject();
 					bool generateUniqueIdentifier = false;
 
-					if (newObject) {
+					if (!IsSetUniqueIdentifier()) {
 						CValue prefix = "", standartProcessing = true;
 						m_procUnit->CallAsProc(wxT("SetNewNumber"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
@@ -293,7 +293,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 					}
 
 					if (!CRecordDataObjectDocument::SaveData()) {
-						if (newObject && generateUniqueIdentifier)
+						if (generateUniqueIdentifier) 
 							CRecordDataObjectDocument::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
 						CSystemFunction::Raise(_("failed to write object in db!"));
@@ -312,7 +312,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						);
 
 						if (cancel.GetBoolean()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier)
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
@@ -320,7 +320,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						}
 
 						if (!m_registerRecords->WriteRecordSet()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier)
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
@@ -332,7 +332,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("UndoPosting"), cancel);
 						if (cancel.GetBoolean()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
@@ -340,7 +340,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						}
 
 						if (!m_registerRecords->DeleteRecordSet()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));
@@ -351,7 +351,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						CValue cancel = false;
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
-							if (newObject && generateUniqueIdentifier)
+							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CSystemFunction::Raise(_("failed to write object in db!"));

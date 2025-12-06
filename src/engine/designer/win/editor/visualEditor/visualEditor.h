@@ -5,7 +5,7 @@
 #include "win/editor/codeEditor/codeEditor.h"
 
 #include "frontend/visualView/ctrl/form.h"
-#include "frontend/visualView/ctrl/sizers.h"
+#include "frontend/visualView/ctrl/sizer.h"
 #include "frontend/visualView/ctrl/widgets.h"
 
 class CVisualEditorCmd {

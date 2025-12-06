@@ -1182,7 +1182,7 @@ protected:
 
 	// code generator
 	CValue GenerateNextIdentifier(
-		IMetaObjectAttribute* attribute, const wxString &strPrefix);
+		IMetaObjectAttribute* attribute, const wxString& strPrefix);
 
 protected:
 	IRecordDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject, const CGuid& objGuid);
@@ -1267,6 +1267,8 @@ protected:
 	virtual bool DeleteData();
 
 	//code/number generator 
+	virtual bool IsSetUniqueIdentifier() const;
+	
 	virtual bool GenerateUniqueIdentifier(const wxString& strPrefix);
 	virtual bool ResetUniqueIdentifier();
 

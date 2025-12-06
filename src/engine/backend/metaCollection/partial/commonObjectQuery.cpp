@@ -72,7 +72,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	// update 
 	else if (srcTable != nullptr) {
 
-		if (!srcTable->CompareObject(dstTable)) 
+		if (!srcTable->CompareObject(dstTable))
 			s_restructureInfo.AppendInfo(_("Changing tabular section ") + srcTable->GetFullName());
 
 		for (const auto object : srcTable->GetGenericAttributeArrayObject()) {
@@ -264,7 +264,7 @@ int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, 
 	// update 
 	else if (srcEnum != nullptr) {
 
-		if (!srcEnum->CompareObject(dstEnum)) 
+		if (!srcEnum->CompareObject(dstEnum))
 			s_restructureInfo.AppendInfo(_("Changing enumeration ") + srcEnum->GetFullName());
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
@@ -831,26 +831,32 @@ bool IRecordDataObjectRef::DeleteData()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool IRecordDataObjectRef::IsSetUniqueIdentifier() const
+{
+	const auto object = m_metaObject->GetAttributeForCode();
+	if (object != nullptr)
+		return !m_listObjectValue.at(object->GetMetaID()).IsEmpty();
+	return false;
+}
+
 bool IRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
 {
 	const auto object = m_metaObject->GetAttributeForCode();
-	if (object != nullptr && m_listObjectValue[object->GetMetaID()].IsEmpty()) {
+	if (object != nullptr && !IsSetUniqueIdentifier()) {
 		m_listObjectValue.insert_or_assign(object->GetMetaID(),
 			GenerateNextIdentifier(object, strPrefix));
 		return true;
 	}
-
 	return false;
 }
 
 bool IRecordDataObjectRef::ResetUniqueIdentifier()
 {
 	const auto object = m_metaObject->GetAttributeForCode();
-	if (object != nullptr && !m_listObjectValue[object->GetMetaID()].IsEmpty()) {
+	if (object != nullptr && IsSetUniqueIdentifier()) {
 		m_listObjectValue.insert_or_assign(object->GetMetaID(), object->CreateValue());
 		return true;
 	}
-
 	return false;
 }
 

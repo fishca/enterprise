@@ -104,8 +104,15 @@ public:
 	virtual IMetaObject* GetCommonMetaObject() const { return m_commonObject; }
 
 	//start/exit module 
-	virtual bool StartMainModule(bool force = false) { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
-	virtual bool ExitMainModule(bool force = false) { return m_moduleManager ? m_moduleManager->ExitMainModule(force) : false; }
+	virtual bool StartMainModule(bool force = false) {
+		return m_moduleManager != nullptr ?
+			m_moduleManager->StartMainModule() : false;
+	}
+
+	virtual bool ExitMainModule(bool force = false) {
+		return m_moduleManager != nullptr ?
+			m_moduleManager->ExitMainModule(force) : false;
+	}
 
 	//get config type 
 	virtual eConfigType GetConfigType() const { return eConfigType::eConfigType_File; };

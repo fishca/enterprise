@@ -323,17 +323,22 @@ bool CModuleManagerConfiguration::DestroyMainModule()
 //main module - initialize
 bool CModuleManagerConfiguration::StartMainModule(bool force)
 {
-	if (force)
+	if (force) 
 		return true;
 
-	if (!m_initialized)
+	if (!m_initialized) 
 		return false;
 
+	bool result = false; 
 	if (BeforeStart()) {
-		OnStart(); return true;
+		OnStart(); 
+		result = true;
 	}
 
-	return false;
+	if (CApplicationData::IsForceExit())
+		return false;
+	
+	return result;
 }
 
 //main module - destroy
@@ -345,11 +350,15 @@ bool CModuleManagerConfiguration::ExitMainModule(bool force)
 	if (!m_initialized)
 		return false;
 
+	bool result = false;
 	if (BeforeExit()) {
-		OnExit(); /*m_initialized = false;*/ return true;
+		OnExit(); /*m_initialized = false;*/ result = true;
 	}
 
-	return false;
+	if (CApplicationData::IsForceExit())
+		return false;
+	
+	return result;
 }
 
 //**********************************************************************

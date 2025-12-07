@@ -61,9 +61,9 @@ public:
 	wxString GetStartedDate(unsigned int idx) const;
 	wxString GetApplication(unsigned int idx) const;
 
-	void ClearSession() { 
+	void ClearSession() {
 		m_sessionArrayHash = wxNewUniqueGuid;
-		m_listSession.clear(); 
+		m_listSession.clear();
 	}
 
 	eRunMode GetSessionApplication(unsigned int idx) const;
@@ -87,7 +87,7 @@ class BACKEND_API CApplicationData {
 		void StartSessionUpdater();
 		const CApplicationDataSessionArray GetSessionArray() const;
 	protected:
-		
+
 		virtual ExitCode Entry();
 
 		// This one is called by Delete() before actually deleting the thread and
@@ -113,7 +113,7 @@ class BACKEND_API CApplicationData {
 		bool VerifySessionUpdater() const;
 
 		bool m_sessionCreated, m_sessionStarted;
-		bool m_sessionUpdaterLoop; 
+		bool m_sessionUpdaterLoop;
 
 		CApplicationDataSessionArray m_sessionArray;
 		std::shared_ptr<IDatabaseLayer> m_session_db;
@@ -189,6 +189,23 @@ public:
 	}
 #pragma endregion 
 
+	static bool IsForceExit() {
+		wxCriticalSectionLocker enter(m_cs_force_exit);
+		return m_forceExit;
+	}
+
+	static void ForceExit() {
+		wxCriticalSectionLocker enter(m_cs_force_exit);
+		if (!m_forceExit) {
+			wxTheApp->CallAfter(
+				[]() {
+					wxTheApp->Exit();
+				}
+			);
+			m_forceExit = true;
+		}
+	}
+
 private:
 	bool HasAllowedUser() const;
 	bool AuthenticationUser(const wxString& userName, const wxString& md5Password) const;
@@ -212,6 +229,9 @@ private:
 	wxDateTime m_startedDate;
 	wxDateTime m_lastActivity;
 	CGuid m_sessionGuid;
+
+	static bool m_forceExit;
+	static wxCriticalSection m_cs_force_exit;
 
 	std::shared_ptr<IDatabaseLayer> m_db;
 	std::shared_ptr<CApplicationDataSessionUpdater> m_sessionUpdater;

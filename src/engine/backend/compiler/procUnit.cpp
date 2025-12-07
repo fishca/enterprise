@@ -9,6 +9,8 @@
 #include "debugger/debugServer.h"
 #include "system/systemManager.h"
 
+#include "appData.h"
+
 #define curCode	m_pByteCode->m_listCode[lCodeLine]
 
 #define index1	curCode.m_param1.m_numIndex
@@ -507,10 +509,12 @@ start_label:
 				m_currentRunModule = this;
 			}
 
-			//enter in debugger
-			if (debugServer != nullptr && debugServer->IsDestroySignal())
+			//if force exit - terminate 
+			if (CApplicationData::IsForceExit())
 				break;
-			else if (debugServer != nullptr && !CBackendException::IsEvalMode())
+			
+			//enter in debugger
+			if (debugServer != nullptr && !CBackendException::IsEvalMode())
 				debugServer->EnterDebugger(pContext, curCode, lPrevLine);
 
 			switch (curCode.m_numOper)

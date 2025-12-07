@@ -37,7 +37,7 @@ void CDebuggerServer::Destroy()
 }
 
 CDebuggerServer::CDebuggerServer() :
-	m_bUseDebug(false), m_bDoLoop(false), m_bDebugLoop(false), m_bDebugStopLine(false), m_bDebugDestroy(false),
+	m_bUseDebug(false), m_bDoLoop(false), m_bDebugLoop(false), m_bDebugStopLine(false),
 	m_numCurrentNumberStopContext(0),
 	m_runContext(nullptr), m_socketConnectionThread(nullptr)
 {
@@ -856,13 +856,12 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 			ms_debugServer->m_bDoLoop = false;
 
 		CDebuggerServerConnection::Disconnect();
-		ms_debugServer->m_bDebugDestroy = true;
 
 #ifdef __WXMSW__
 		::CoUninitialize();
 #endif // !_WXMSW		
 
-		wxTheApp->CallAfter([]() { wxTheApp->Exit(); });
+		CApplicationData::ForceExit();
 	}
 	else if (commandFromClient == CommandId_DeleteAllBreakpoints) {
 		ms_debugServer->m_listBreakpoint.clear();

@@ -65,6 +65,11 @@ CApplicationData* CApplicationData::s_instance = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool CApplicationData::m_forceExit = false;
+wxCriticalSection CApplicationData::m_cs_force_exit;
+
+///////////////////////////////////////////////////////////////////////////////
+
 CApplicationData::CApplicationData(eRunMode runMode) :
 	m_db(nullptr), m_runMode(runMode),
 	m_sessionGuid(wxNewUniqueGuid),
@@ -215,7 +220,7 @@ bool CApplicationData::Connect(const wxString& user, const wxString& password, c
 	if (!StartSession(user, password))
 		return false;  //start session	 
 	if (!metaDataCreate(m_runMode, flags))
-		return false;	
+		return false;
 	m_created_metadata = true;
 	m_run_metadata = commonMetaData->RunDatabase();
 	return m_connected_to_db &&

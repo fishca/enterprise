@@ -91,8 +91,6 @@ public:
 			!m_socketConnectionThread->m_waitConnection : true;
 	}
 
-	bool IsDestroySignal() const { return m_bDebugDestroy; }
-
 	bool CreateServer(const wxString& hostName = defaultHost, unsigned short startPort = defaultDebuggerPort, bool wait = false);
 	void ShutdownServer();
 
@@ -137,8 +135,6 @@ private:
 	bool		m_bDoLoop;
 	bool		m_bDebugLoop;
 	bool		m_bDebugStopLine;
-
-	bool		m_bDebugDestroy;
 
 	unsigned int m_numCurrentNumberStopContext;
 

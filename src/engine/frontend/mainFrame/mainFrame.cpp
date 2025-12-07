@@ -6,6 +6,9 @@
 #include "mainFrame.h"
 #include "mainFrameChild.h"
 
+//application data
+#include "backend/appData.h"
+
 //common 
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/objinspect/objinspect.h"
@@ -32,7 +35,7 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 
 bool CDocMDIFrame::ShowFrame()
 {
-	if (s_instance != nullptr && !s_instance->IsShown()) {
+	if (s_instance != nullptr && !s_instance->IsShown() && !CApplicationData::IsForceExit()) {
 
 		// Get the primary display
 		wxDisplay display;
@@ -150,7 +153,8 @@ void CDocMDIFrame::RaiseFrame()
 {
 	if (!m_callRaiseFrame && CDocMDIFrame::IsFocusable()) {
 		CallAfter([&]() {
-			CDocMDIFrame::Raise();
+			if (!CApplicationData::IsForceExit())
+				CDocMDIFrame::Raise();
 			m_callRaiseFrame = false;
 			}
 		);

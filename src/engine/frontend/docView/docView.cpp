@@ -54,6 +54,9 @@ CMetaDocument::~CMetaDocument()
 
 bool CMetaDocument::OnCreate(const wxString& path, long flags)
 {
+	if (CApplicationData::IsForceExit())
+		return false;
+
 	wxScopedPtr<CMetaView> view(DoCreateView());
 	if (!view)
 		return false;
@@ -83,13 +86,23 @@ bool CMetaDocument::OnCreate(const wxString& path, long flags)
 
 bool CMetaDocument::OnSaveModified()
 {
-	if (m_metaObject != nullptr) return true;
+	if (CApplicationData::IsForceExit())
+		return true;
+
+	if (m_metaObject != nullptr)
+		return true;
+
 	return wxDocument::OnSaveModified();
 }
 
 bool CMetaDocument::OnSaveDocument(const wxString& filename)
 {
-	if (m_metaObject != nullptr) return true;
+	if (CApplicationData::IsForceExit())
+		return false;
+
+	if (m_metaObject != nullptr)
+		return true;
+	
 	return wxDocument::OnSaveDocument(filename);
 }
 
@@ -125,49 +138,63 @@ bool CMetaDocument::IsModified() const
 
 void CMetaDocument::Modify(bool modify)
 {
-	if (m_metaObject != nullptr) {
-		IMetaData* metaData = m_metaObject->GetMetaData();
-		if (metaData != nullptr) {
-			metaData->Modify(modify);
+	if (!CApplicationData::IsForceExit()) {
+		
+		if (m_metaObject != nullptr) {
+			IMetaData* metaData = m_metaObject->GetMetaData();
+			if (metaData != nullptr) {
+				metaData->Modify(modify);
+			}
 		}
-	}
-	else if (modify != m_documentModified) {
-		m_documentModified = modify;
-		// Allow views to append asterix to the title
-		wxView* view = GetFirstView();
-		if (view) {
-			view->OnChangeFilename();
+		else if (modify != m_documentModified) {
+			m_documentModified = modify;
+			// Allow views to append asterix to the title
+			wxView* view = GetFirstView();
+			if (view) {
+				view->OnChangeFilename();
+			}
 		}
 	}
 }
 
 bool CMetaDocument::Save()
 {
-	if (AlreadySaved())
-		return true;
+	if (!CApplicationData::IsForceExit()) {
 
-	if (m_documentParent != nullptr &&
-		!m_documentParent->Save()) {
-		return false;
+		if (AlreadySaved())
+			return true;
+
+		if (m_documentParent != nullptr &&
+			!m_documentParent->Save()) {
+			return false;
+		}
+
+		if ((m_documentParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
+			if (commonMetaData->SaveDatabase()) return false;
+		}
+
+		if (m_documentFile.IsEmpty() ||
+			!m_savedYet) {
+			return SaveAs();
+		}
+
+		return OnSaveDocument(m_documentFile);
 	}
 
-	if ((m_documentParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
-		if (commonMetaData->SaveDatabase()) return false;
-	}
-
-	if (m_documentFile.IsEmpty() ||
-		!m_savedYet) {
-		return SaveAs();
-	}
-
-	return OnSaveDocument(m_documentFile);
+	return false; 
 }
 
 bool CMetaDocument::SaveAs()
 {
-	if (m_metaObject != nullptr)
-		return true;
-	return wxDocument::SaveAs();
+	if (!CApplicationData::IsForceExit()) {
+	
+		if (m_metaObject != nullptr)
+			return true;
+
+		return wxDocument::SaveAs();
+	}
+
+	return false;
 }
 
 bool CMetaDocument::Close()

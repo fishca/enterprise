@@ -93,25 +93,11 @@ void CCompileCode::InitializeCompileModule()
 void CCompileCode::Reset()
 {
 	m_cByteCode.Reset();
+	
+	if (m_rootContext != nullptr)
+		m_rootContext->Reset();
+	
 	m_listHashConst.clear();
-
-	m_rootContext->m_numDoNumber = 0;
-	m_rootContext->m_numReturn = 0;
-	m_rootContext->m_numTempVar = 0;
-	m_rootContext->m_numFindLocalInParent = 1;
-
-	m_rootContext->m_listContinue.clear();
-	m_rootContext->m_listBreak.clear();
-
-	m_rootContext->m_listLabel.clear();
-	m_rootContext->m_listLabelDef.clear();
-
-	m_rootContext->m_strCurFuncName = wxEmptyString;
-
-	// clear functions & variables 
-	m_rootContext->m_listVariable.clear();
-	m_rootContext->m_listFunction.clear();
-
 	m_listCallFunc.clear();
 }
 
@@ -1191,7 +1177,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 
 		//Set type variable
 		CParamUnit variable;
-		
+
 		variable.m_numArray = 0;
 		variable.m_numIndex = i;// index matches the number
 

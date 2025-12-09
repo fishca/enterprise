@@ -161,6 +161,28 @@ struct CCompileContext {
 	bool FindVariable(const wxString& strVarName, std::shared_ptr<CVariable>& foundedVar, bool context = false);
 	bool FindFunction(const wxString& strFuncName, std::shared_ptr<CFunction>& foundedFunc, bool context = false);
 
+	//Reset compile context
+	void Reset() {
+
+		m_numDoNumber = 0;
+		m_numReturn = 0;
+		m_numTempVar = 0;
+
+		m_numFindLocalInParent = 1;
+
+		m_listContinue.clear();
+		m_listBreak.clear();
+
+		m_listLabel.clear();
+		m_listLabelDef.clear();
+
+		m_strCurFuncName.clear();
+
+		// clear functions & variables 
+		m_listVariable.clear();
+		m_listFunction.clear();
+	}
+
 	CCompileCode* m_compileModule;
 	CCompileContext* m_parentContext; //parent context
 

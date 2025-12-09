@@ -231,11 +231,6 @@ public:
 
 protected:
 
-	virtual bool FillArrayObjectByPredefined(
-		std::vector<IMetaObjectAttribute*>& array) const {
-		return false;
-	}
-
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject) { return nullptr; }
 };
@@ -283,6 +278,7 @@ public:
 		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
 		return array;
 	}
+
 #pragma endregion
 
 #pragma region __array_h__
@@ -309,13 +305,6 @@ public:
 		return array;
 	}
 
-	//predefined 
-	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
-		FillArrayObjectByPredefined(array);
-		return array;
-	}
-
 #pragma endregion
 #pragma region __filter_h__
 
@@ -335,12 +324,6 @@ public:
 	template <typename _T1>
 	CMetaObjectTableData* FindTableObjectByFilter(const _T1& id) const {
 		return FindObjectByFilter<CMetaObjectTableData>(id, { g_metaTableCLSID });
-	}
-
-	//predefined 
-	template <typename _T1>
-	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
 	}
 
 #pragma endregion 
@@ -800,13 +783,6 @@ public:
 		return array;
 	}
 
-	//predefined 
-	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
-		FillArrayObjectByPredefined(array);
-		return array;
-	}
-
 #pragma endregion
 #pragma region __filter_h__
 
@@ -832,12 +808,6 @@ public:
 	template <typename _T1>
 	IMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
 		return FindObjectByFilter<CMetaObjectResource>(id, { g_metaAttributeCLSID });
-	}
-
-	//predefined 
-	template <typename _T1>
-	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
 	}
 
 #pragma endregion 

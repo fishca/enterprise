@@ -82,13 +82,6 @@ public:
 		return array;
 	}
 
-	//predefined 
-	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
-		FillArrayObjectByPredefined(array);
-		return array;
-	}
-
 #pragma endregion 
 #pragma region __filter_h__
 
@@ -102,12 +95,6 @@ public:
 	template <typename _T1>
 	IMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
 		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaAttributeCLSID });
-	}
-
-	//predefined 
-	template <typename _T1>
-	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
 	}
 
 #pragma endregion 

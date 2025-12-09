@@ -23,7 +23,7 @@ wxString IMetaObjectRecordDataRef::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -42,7 +42,7 @@ int IMetaObjectRecordDataRef::ProcessAttribute(const wxString& tableName, IMetaO
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable)
+int IMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable)
 {
 	int retCode = 1;
 	//is null - create
@@ -94,7 +94,7 @@ int IMetaObjectRecordDataRef::ProcessTable(const wxString& tabularName, CMetaObj
 	return retCode;
 }
 
-bool IMetaObjectRecordDataRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
@@ -282,7 +282,6 @@ int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, 
 
 	return retCode;
 }
-
 
 bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
 {

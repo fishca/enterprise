@@ -47,7 +47,7 @@ private:
 };
 #pragma endregion 
 
-#define ICON_SIZE 22
+#define ICON_SIZE 16
 
 void CDialogFormEditor::CreateTree()
 {
@@ -56,10 +56,9 @@ void CDialogFormEditor::CreateTree()
 
 	m_iconList = new wxImageList(ICON_SIZE, ICON_SIZE);
 	for (auto objClass : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
-		wxBitmap controlImage = objClass->GetClassIcon();
-		if (controlImage.IsOk()) {
-			wxBitmap::Rescale(controlImage, wxSize(ICON_SIZE, ICON_SIZE));
-			const int retIndex = m_iconList->Add(controlImage);
+		const wxIcon& controlIcon = objClass->GetClassIcon();
+		if (controlIcon.IsOk()) {
+			const int retIndex = m_iconList->Add(controlIcon);
 			if (retIndex != wxNOT_FOUND) {
 				m_iconIdx.insert(
 					std::map<wxString, int>::value_type(objClass->GetClassName(), retIndex)
@@ -186,7 +185,7 @@ CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 
 	commonSizer->Add(m_mainToolBar, 0, wxEXPAND);
 
-	m_treeControl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE);
+	m_treeControl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxSIMPLE_BORDER | wxTR_TWIST_BUTTONS);
 	controlSizer->Add(m_treeControl, 1, wxALL | wxEXPAND, 5);
 	m_treeControl->SetDoubleBuffered(true);
 

@@ -3,10 +3,10 @@
 /* XPM */
 static char* s_static_line_xpm[] = {
 	/* columns rows colors chars-per-pixel */
-	"16 16 4 1",
+	"16 16 3 1",
 	"  c None",
-	"o c #FFFFFF",
-	"X c #ACA899",
+	"X c #FFFFFF",
+	". c #ACA899",
 	/* pixels */
 	"                ",
 	"                ",
@@ -14,8 +14,8 @@ static char* s_static_line_xpm[] = {
 	"                ",
 	"                ",
 	"                ",
-	" XXXXXXXXXXXXXX ",
-	"  oooooooooooooo",
+	" .............  ",
+	"  XXXXXXXXXXXXX ",
 	"                ",
 	"                ",
 	"                ",

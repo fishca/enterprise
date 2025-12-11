@@ -6,22 +6,22 @@ enum
 	MENU_ADDITEM_SEPARATOR,
 };
 
-void CValueToolbar::PrepareDefaultMenu(wxMenu *m_menu)
+void CValueToolbar::PrepareDefaultMenu(wxMenu* menu)
 {
-	m_menu->Append(MENU_ADDITEM, wxT("Add tool\tInsert"));
-	m_menu->Append(MENU_ADDITEM_SEPARATOR, wxT("Add separator\tInsert"));
-	m_menu->AppendSeparator();
+	menu->Append(MENU_ADDITEM, wxT("Add tool\tInsert"))->SetBitmap(CValueToolBarItem::GetIconGroup());
+	menu->Append(MENU_ADDITEM_SEPARATOR, wxT("Add separator\tInsert"))->SetBitmap(CValueToolBarSeparator::GetIconGroup());
+	menu->AppendSeparator();
 }
 
-void CValueToolbar::ExecuteMenu(IVisualHost *visualHost, int id)
+void CValueToolbar::ExecuteMenu(IVisualHost* visualHost, int id)
 {
 	switch (id)
 	{
-	case MENU_ADDITEM: 
-		this->AddToolItem();	
+	case MENU_ADDITEM:
+		this->AddToolItem();
 		break;
-	case MENU_ADDITEM_SEPARATOR: 
-		this->AddToolSeparator(); 
+	case MENU_ADDITEM_SEPARATOR:
+		this->AddToolSeparator();
 		break;
 	}
 }

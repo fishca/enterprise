@@ -5,13 +5,13 @@ enum
 	MENU_ADDPAGE = 1000
 };
 
-void CValueNotebook::PrepareDefaultMenu(wxMenu *m_menu)
+void CValueNotebook::PrepareDefaultMenu(wxMenu* menu)
 {
-	m_menu->Append(MENU_ADDPAGE, wxT("Add page\tInsert"));
-	m_menu->AppendSeparator();
+	menu->Append(MENU_ADDPAGE, wxT("Add page\tInsert"))->SetBitmap(CValueNotebookPage::GetIconGroup());
+	menu->AppendSeparator();
 }
 
-void CValueNotebook::ExecuteMenu(IVisualHost *visualHost, int id)
+void CValueNotebook::ExecuteMenu(IVisualHost* visualHost, int id)
 {
 	if (id == MENU_ADDPAGE) AddNotebookPage();
 }

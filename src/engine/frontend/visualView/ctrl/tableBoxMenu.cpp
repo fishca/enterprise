@@ -7,7 +7,7 @@ enum
 
 void CValueTableBox::PrepareDefaultMenu(wxMenu *menu)
 {
-	menu->Append(MENU_ADD_COLUMN, _("Add column\tInsert"));
+	menu->Append(MENU_ADD_COLUMN, _("Add column\tInsert"))->SetBitmap(CValueTableBoxColumn::GetIconGroup());
 	menu->AppendSeparator();
 }
 

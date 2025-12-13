@@ -1594,12 +1594,24 @@
     <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x86.dll">
       <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63l.dat" />
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll" />
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x86.dll" />
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x64.dll" />
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x86.dll" />
-    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x64.dll" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63l.dat">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x86.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll">
+      <Filter>databaseLayer\firebird\engine\dll</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">

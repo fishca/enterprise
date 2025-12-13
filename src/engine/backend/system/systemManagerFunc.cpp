@@ -838,7 +838,7 @@ CValue CSystemFunction::Type(const CValue& cTypeName)
 		return CValue();
 	}
 	wxString typeName = cTypeName.GetString();
-	if (!commonMetaData->IsRegisterCtor(typeName)) {
+	if (!activeMetaData->IsRegisterCtor(typeName)) {
 		Raise(wxString::Format(_("Type not found '%s'"), typeName));
 	}
 	return CValue::CreateAndPrepareValueRef<CValueType>(typeName);
@@ -915,7 +915,7 @@ void CSystemFunction::EndJob(bool force) //ЗавершитьРаботуСис�
 		std::exit(EXIT_SUCCESS);
 	}
 	else {
-		IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+		IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 		if (moduleManager->DestroyMainModule()) {
 			appDataDestroy();
 			std::exit(EXIT_SUCCESS);
@@ -936,7 +936,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 {
 	if (!strFormName.IsEmpty()) {
 
-		for (const auto object : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+		for (const auto object : activeMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
 			if (stringUtils::CompareString(strFormName, object->GetName())) {
 
 				CMetaObjectCommonForm* creator = object->ConvertToType<CMetaObjectCommonForm>();

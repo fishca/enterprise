@@ -91,12 +91,12 @@ bool CDocEnterpriseMDIFrame::Show(bool show)
 
 bool CDocEnterpriseMDIFrame::AllowRun() const
 {
-	return commonMetaData->StartMainModule();
+	return activeMetaData->StartMainModule();
 }
 
 bool CDocEnterpriseMDIFrame::AllowClose() const
 {
-	return commonMetaData->ExitMainModule();
+	return activeMetaData->ExitMainModule();
 }
 
 ///////////////////////////////////////////////////////////////////////////

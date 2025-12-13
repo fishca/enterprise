@@ -170,7 +170,7 @@ bool CMetaDocument::Save()
 		}
 
 		if ((m_documentParent == nullptr && m_metaObject != nullptr) && IsChildDocument()) {
-			if (commonMetaData->SaveDatabase()) return false;
+			if (activeMetaData->SaveDatabase()) return false;
 		}
 
 		if (m_documentFile.IsEmpty() ||

@@ -222,7 +222,7 @@ bool CApplicationData::Connect(const wxString& user, const wxString& password, c
 	if (!metaDataCreate(m_runMode, flags))
 		return false;
 	m_created_metadata = true;
-	m_run_metadata = commonMetaData->RunDatabase();
+	m_run_metadata = activeMetaData->RunDatabase();
 	return m_connected_to_db &&
 		m_created_metadata &&
 		m_run_metadata;
@@ -236,8 +236,8 @@ bool CApplicationData::Disconnect()
 			return false;
 
 		if (m_run_metadata) {
-			const bool isConfigOpen = commonMetaData->IsConfigOpen();
-			if (isConfigOpen && !commonMetaData->CloseDatabase(forceCloseFlag))
+			const bool isConfigOpen = activeMetaData->IsConfigOpen();
+			if (isConfigOpen && !activeMetaData->CloseDatabase(forceCloseFlag))
 				return false;
 			m_connected_to_db = false;
 		}

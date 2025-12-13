@@ -61,7 +61,7 @@ bool CMetadataBrowserDocument::OnCreate(const wxString& path, long flags)
 
 bool CMetadataBrowserDocument::OnCloseDocument()
 {
-	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 	return true;
 }
 
@@ -108,7 +108,7 @@ bool CMetadataFileDocument::OnCloseDocument()
 		return false;
 	}
 
-	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 	return true;
 }
 

@@ -61,7 +61,7 @@ public:
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
 		return m_factoryCtorCountChanges +
-			commonMetaData != nullptr ? commonMetaData->GetFactoryCountChanges() : 0;
+			activeMetaData != nullptr ? activeMetaData->GetFactoryCountChanges() : 0;
 	}
 
 	//metaData 

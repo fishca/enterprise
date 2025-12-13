@@ -568,8 +568,8 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 
 		CMemoryWriter commandChannel_VerifyConnection;
 		commandChannel_VerifyConnection.w_u16(CommandId_VerifyConnection);
-		commandChannel_VerifyConnection.w_stringZ(commonMetaData->GetConfigGuid());
-		commandChannel_VerifyConnection.w_stringZ(commonMetaData->GetConfigMD5());
+		commandChannel_VerifyConnection.w_stringZ(activeMetaData->GetConfigGuid());
+		commandChannel_VerifyConnection.w_stringZ(activeMetaData->GetConfigMD5());
 		commandChannel_VerifyConnection.w_stringZ(appData->GetUserName());
 		commandChannel_VerifyConnection.w_stringZ(appData->GetComputerName());
 		SendCommand(commandChannel_VerifyConnection.pointer(), commandChannel_VerifyConnection.size());

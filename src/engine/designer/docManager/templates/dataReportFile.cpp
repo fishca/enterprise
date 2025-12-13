@@ -56,7 +56,7 @@ bool CReportFileDocument::OnCloseDocument()
 		return false;
 	}
 
-	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 	return true;
 }
 

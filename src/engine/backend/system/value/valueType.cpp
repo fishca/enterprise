@@ -27,7 +27,7 @@ CValueType::CValueType(const class_identifier_t& clsid) :
 CValueType::CValueType(const wxString& typeName) :
 	CValue(eValueTypes::TYPE_VALUE, true)
 {
-	m_clsid = commonMetaData->GetIDObjectFromString(typeName);
+	m_clsid = activeMetaData->GetIDObjectFromString(typeName);
 }
 
 CValueType::CValueType(const CValue& cObject) :
@@ -44,7 +44,7 @@ CValueType::CValueType(const CValueType& cType) :
 
 wxString CValueType::GetString() const
 {
-	return commonMetaData->GetNameObjectFromID(m_clsid);
+	return activeMetaData->GetNameObjectFromID(m_clsid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 			);
 		}
 
-		return commonMetaData->CreateObject(
+		return activeMetaData->CreateObject(
 			typeDescription.GetFirstClsid()
 		);
 	}
@@ -102,7 +102,7 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 
 	if (typeDescription.GetClsidCount() == 1) {
 
-		if (metaData != nullptr ? metaData->IsRegisterCtor(typeDescription.GetFirstClsid()) : commonMetaData->IsRegisterCtor(typeDescription.GetFirstClsid())) {
+		if (metaData != nullptr ? metaData->IsRegisterCtor(typeDescription.GetFirstClsid()) : activeMetaData->IsRegisterCtor(typeDescription.GetFirstClsid())) {
 
 			eValueTypes vt = CValue::GetVTByID(typeDescription.GetFirstClsid());
 			if (vt < eValueTypes::TYPE_REFFER) {
@@ -126,7 +126,7 @@ CValue CValueTypeDescription::AdjustValue(const CTypeDescription& typeDescriptio
 					typeDescription.GetFirstClsid()
 				);
 
-			return commonMetaData->CreateObject(
+			return activeMetaData->CreateObject(
 				typeDescription.GetFirstClsid()
 			);
 		}
@@ -180,7 +180,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 
 	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
 		wxString classType = paParams[0]->GetString();
-		if (commonMetaData->IsRegisterCtor(classType)) {
+		if (activeMetaData->IsRegisterCtor(classType)) {
 			CValueQualifierNumber* qNumber = nullptr;
 			if (lSizeArray > 1 && paParams[1]->ConvertToValue(qNumber))
 				m_typeDesc.m_typeData.m_number = *qNumber;
@@ -191,7 +191,7 @@ bool CValueTypeDescription::Init(CValue** paParams, const long lSizeArray)
 			if (lSizeArray > 3 && paParams[3]->ConvertToValue(qString))
 				m_typeDesc.m_typeData.m_string = *qString;
 			m_typeDesc.m_listTypeClass.emplace_back(
-				commonMetaData->GetIDObjectFromString(classType)
+				activeMetaData->GetIDObjectFromString(classType)
 			);
 			return true;
 		}

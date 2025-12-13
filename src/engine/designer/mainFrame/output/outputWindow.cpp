@@ -199,7 +199,7 @@ void COutputWindow::OnDoubleClick(wxMouseEvent& event)
 			auto code = pair.second;
 
 			if (code.m_fileName.IsEmpty()) {
-				IBackendMetadataTree* metaTree = commonMetaData->GetMetaTree();
+				IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 				wxASSERT(metaTree);
 				metaTree->EditModule(code.m_docPath, code.m_currLine, false);
 			}

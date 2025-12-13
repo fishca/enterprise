@@ -29,34 +29,34 @@ CValue* CMetaDataReport::CreateObjectRef(const class_identifier_t& clsid, CValue
 		newObject->PrepareNames();
 		return newObject;
 	}
-	return commonMetaData->CreateObjectRef(clsid, paParams, lSizeArray);
+	return activeMetaData->CreateObjectRef(clsid, paParams, lSizeArray);
 }
 
 bool CMetaDataReport::IsRegisterCtor(const wxString& className) const
 {
 	if (!IMetaData::IsRegisterCtor(className))
-		return commonMetaData->IsRegisterCtor(className);
+		return activeMetaData->IsRegisterCtor(className);
 	return true;
 }
 
 bool CMetaDataReport::IsRegisterCtor(const wxString& className, eCtorObjectType objectType) const
 {
 	if (!IMetaData::IsRegisterCtor(className, objectType))
-		return commonMetaData->IsRegisterCtor(className);
+		return activeMetaData->IsRegisterCtor(className);
 	return true;
 }
 
 bool CMetaDataReport::IsRegisterCtor(const wxString& className, eCtorObjectType objectType, eCtorMetaType refType) const
 {
 	if (!IMetaData::IsRegisterCtor(className, objectType, refType))
-		return commonMetaData->IsRegisterCtor(className, objectType, refType);
+		return activeMetaData->IsRegisterCtor(className, objectType, refType);
 	return true;
 }
 
 bool CMetaDataReport::IsRegisterCtor(const class_identifier_t& clsid) const
 {
 	if (!IMetaData::IsRegisterCtor(clsid))
-		return commonMetaData->IsRegisterCtor(clsid);
+		return activeMetaData->IsRegisterCtor(clsid);
 	return true;
 }
 
@@ -72,7 +72,7 @@ class_identifier_t CMetaDataReport::GetIDObjectFromString(const wxString& classN
 		return typeCtor->GetClassType();
 	}
 
-	return commonMetaData->GetIDObjectFromString(className);
+	return activeMetaData->GetIDObjectFromString(className);
 }
 
 wxString CMetaDataReport::GetNameObjectFromID(const class_identifier_t& clsid, bool upper) const
@@ -87,7 +87,7 @@ wxString CMetaDataReport::GetNameObjectFromID(const class_identifier_t& clsid, b
 		return upper ? typeCtor->GetClassName().Upper() : typeCtor->GetClassName();
 	}
 
-	return commonMetaData->GetNameObjectFromID(clsid, upper);
+	return activeMetaData->GetNameObjectFromID(clsid, upper);
 }
 
 IMetaValueTypeCtor* CMetaDataReport::GetTypeCtor(const class_identifier_t& clsid) const
@@ -96,7 +96,7 @@ IMetaValueTypeCtor* CMetaDataReport::GetTypeCtor(const class_identifier_t& clsid
 		return clsid == typeCtor->GetClassType(); }
 	);
 	if (it != m_factoryCtors.end()) return *it;
-	return commonMetaData->GetTypeCtor(clsid);
+	return activeMetaData->GetTypeCtor(clsid);
 }
 
 IMetaValueTypeCtor* CMetaDataReport::GetTypeCtor(const IMetaObject* metaValue, eCtorMetaType refType) const
@@ -107,7 +107,7 @@ IMetaValueTypeCtor* CMetaDataReport::GetTypeCtor(const IMetaObject* metaValue, e
 		}
 	);
 	if (it != m_factoryCtors.end()) return *it;
-	return commonMetaData->GetTypeCtor(metaValue, refType);
+	return activeMetaData->GetTypeCtor(metaValue, refType);
 }
 
 IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const wxString& className) const
@@ -117,7 +117,7 @@ IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const wxString& className) 
 		}
 	);
 	if (it != m_factoryCtors.end()) return *it;
-	return commonMetaData->GetAvailableCtor(className);
+	return activeMetaData->GetAvailableCtor(className);
 }
 
 IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const class_identifier_t& clsid) const
@@ -126,27 +126,27 @@ IAbstractTypeCtor* CMetaDataReport::GetAvailableCtor(const class_identifier_t& c
 		return clsid == typeCtor->GetClassType(); }
 	);
 	if (it != m_factoryCtors.end()) return *it;
-	return commonMetaData->GetAvailableCtor(clsid);
+	return activeMetaData->GetAvailableCtor(clsid);
 }
 
 std::vector<IMetaValueTypeCtor*> CMetaDataReport::GetListCtorsByType() const
 {
-	return commonMetaData->GetListCtorsByType();
+	return activeMetaData->GetListCtorsByType();
 }
 
 std::vector<IMetaValueTypeCtor*> CMetaDataReport::GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const
 {
-	return commonMetaData->GetListCtorsByType(clsid, refType);
+	return activeMetaData->GetListCtorsByType(clsid, refType);
 }
 
 std::vector<IMetaValueTypeCtor*> CMetaDataReport::GetListCtorsByType(eCtorMetaType refType) const
 {
-	return commonMetaData->GetListCtorsByType(refType);
+	return activeMetaData->GetListCtorsByType(refType);
 }
 
 IMetaObject* CMetaDataReport::GetMetaObject(const meta_identifier_t& id)
 {
 	IMetaObject* metaObject = IMetaData::GetMetaObject(id);
 	if (metaObject != nullptr) return metaObject;
-	return commonMetaData->GetMetaObject(id);
+	return activeMetaData->GetMetaObject(id);
 }

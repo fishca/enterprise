@@ -112,7 +112,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				}
 				else if (col == eModelValue) {
 					const CValue& selValue = m_filter.m_filters[row].m_filterValue;
-					const CValue& newValue = commonMetaData->CreateObject(selValue.GetClassType());
+					const CValue& newValue = activeMetaData->CreateObject(selValue.GetClassType());
 					const wxString& strData = variant.GetString();
 					if (strData.Length() > 0) {
 						std::vector<CValue> listValue;
@@ -313,7 +313,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 			virtual bool HasQuickChoice() const {
 				CValue selValue; GetControlValue(selValue);
-				const IAbstractTypeCtor* so = commonMetaData->GetAvailableCtor(selValue.GetClassType());
+				const IAbstractTypeCtor* so = activeMetaData->GetAvailableCtor(selValue.GetClassType());
 				if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_primitive) {
 					return true;
 				}
@@ -343,22 +343,22 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
 				CTypeDescription& typeDescription = filterData.m_filterTypeDescription;
 				if (filterData.m_filterValue.GetType() == eValueTypes::TYPE_EMPTY) {
-					const class_identifier_t& clsid = ITypeControlFactory::ShowSelectType(commonMetaData,
+					const class_identifier_t& clsid = ITypeControlFactory::ShowSelectType(activeMetaData,
 						filterData.m_filterTypeDescription
 					);
-					if (clsid != 0 && commonMetaData->IsRegisterCtor(clsid)) {
-						filterData.m_filterValue = commonMetaData->CreateObject(clsid);
+					if (clsid != 0 && activeMetaData->IsRegisterCtor(clsid)) {
+						filterData.m_filterValue = activeMetaData->CreateObject(clsid);
 					}
 					return;
 				}
 				const class_identifier_t& clsid = filterData.m_filterValue.GetClassType();
 				if (!ITypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
-					const IMetaValueTypeCtor* singleValue = commonMetaData->GetTypeCtor(clsid);
+					const IMetaValueTypeCtor* singleValue = activeMetaData->GetTypeCtor(clsid);
 					if (singleValue != nullptr) {
 						IMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);
 						eSelectMode selMode = eSelectMode::eSelectMode_Items; IMetaObjectAttribute* attribute = nullptr;
-						if (commonMetaData->GetMetaObject(attribute, filterData.m_filterModel, metaObject))
+						if (activeMetaData->GetMetaObject(attribute, filterData.m_filterModel, metaObject))
 							selMode = attribute->GetSelectMode();
 						metaObject->ProcessChoice(this, wxEmptyString, selMode);
 					}

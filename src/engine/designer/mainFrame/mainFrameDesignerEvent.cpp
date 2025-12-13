@@ -30,9 +30,9 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 		return;
 	}
 
-	if (commonMetaData->IsModified()) {
-		if (wxMessageBox(_("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-			if (!commonMetaData->SaveDatabase(saveConfigFlag)) {
+	if (activeMetaData->IsModified()) {
+		if (wxMessageBox(_("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+			if (!activeMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
 		}
@@ -43,9 +43,9 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 
 void CDocDesignerMDIFrame::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event))
 {
-	if (commonMetaData->IsModified()) {
-		if (wxMessageBox(_("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
-			if (!commonMetaData->SaveDatabase(saveConfigFlag)) {
+	if (activeMetaData->IsModified()) {
+		if (wxMessageBox(_("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+			if (!activeMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
 		}
@@ -70,7 +70,7 @@ void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 
 void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 {
-	IMetaDataConfiguration* configDatabase = commonMetaData->GetConfiguration();
+	IMetaDataConfiguration* configDatabase = activeMetaData->GetConfiguration();
 	wxASSERT(configDatabase);
 
 	for (auto& doc : docManager->GetDocumentsVector()) {
@@ -142,13 +142,13 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 		}
 	}
 
-	success = success && commonMetaData->RoolbackDatabase()
+	success = success && activeMetaData->RoolbackDatabase()
 		&& m_metadataTree->Load();
 
 	client_window->Thaw();
 
 	if (success) {
-		objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+		objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
 	}
 }
@@ -174,7 +174,7 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 	}
 
 	// stage one - save database  
-	if (canSave && !commonMetaData->SaveDatabase()) {
+	if (canSave && !activeMetaData->SaveDatabase()) {
 
 		for (unsigned int idx = 0; idx < s_restructureInfo.GetCount(); idx++) {
 			if (s_restructureInfo.GetType(idx) == ERestructure::restructure_error)
@@ -189,18 +189,18 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 	}
 
 	// stage two - update database  
-	if (canSave && commonMetaData->OnBeforeSaveDatabase(saveConfigFlag)) {
+	if (canSave && activeMetaData->OnBeforeSaveDatabase(saveConfigFlag)) {
 
 		bool roolback = false, success = true;
 
-		if (commonMetaData->OnSaveDatabase(saveConfigFlag)) {
+		if (activeMetaData->OnSaveDatabase(saveConfigFlag)) {
 			roolback = !CDialogApplyChange::ShowApplyChange(s_restructureInfo, this);
 		}
 		else {
 			success = false;
 		}
 
-		success = commonMetaData->OnAfterSaveDatabase(roolback || !success, saveConfigFlag);
+		success = activeMetaData->OnAfterSaveDatabase(roolback || !success, saveConfigFlag);
 
 		if (!success) {
 			wxMessageBox(_("Failed to update database!"),
@@ -225,14 +225,14 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 			return;
 
 		// proceed loading the file chosen by the user;
-		if (commonMetaData->LoadFromFile(openFileDialog.GetPath())) {
+		if (activeMetaData->LoadFromFile(openFileDialog.GetPath())) {
 			if (m_metadataTree->Load()) {
-				if (commonMetaData->IsModified()) {
-					if (wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+				if (activeMetaData->IsModified()) {
+					if (wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
 						OnUpdateConfiguration(event);
 					}
 				}
-				objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+				objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 			}
 		}
 	}
@@ -243,7 +243,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		if (commonMetaData->SaveToFile(saveFileDialog.GetPath())) {
+		if (activeMetaData->SaveToFile(saveFileDialog.GetPath())) {
 			wxMessageBox(_("Successfully unloaded to: ") + saveFileDialog.GetPath());
 		}
 	}

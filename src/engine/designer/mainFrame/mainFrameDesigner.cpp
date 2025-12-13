@@ -65,7 +65,7 @@ void CDocDesignerMDIFrame::Modify(bool modify)
 			s_modified = false;
 		}
 
-		if (!commonMetaData->IsConfigSave()) {
+		if (!activeMetaData->IsConfigSave()) {
 			caption += wxT("<!>");
 		}
 
@@ -79,7 +79,7 @@ void CDocDesignerMDIFrame::Modify(bool modify)
 		s_setModify = true;
 	}
 	else if (modify == false) {
-		s_setModify = commonMetaData->IsConfigSave();
+		s_setModify = activeMetaData->IsConfigSave();
 	}
 }
 
@@ -241,18 +241,18 @@ void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
 
 bool CDocDesignerMDIFrame::AllowRun() const
 {
-	return commonMetaData != nullptr ? 
-		commonMetaData->StartMainModule() : false;
+	return activeMetaData != nullptr ? 
+		activeMetaData->StartMainModule() : false;
 }
 
 bool CDocDesignerMDIFrame::AllowClose() const
 {
-	if (commonMetaData != nullptr) {	
+	if (activeMetaData != nullptr) {	
 		bool allowClose = true;	
 		if (IsModified()) {
-			const int answer = wxMessageBox("Configuration '" + commonMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
+			const int answer = wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
 			if (answer == wxYES) {
-				allowClose = commonMetaData->SaveDatabase();
+				allowClose = activeMetaData->SaveDatabase();
 			}
 			else if (answer == wxCANCEL) {
 				allowClose = false;
@@ -261,7 +261,7 @@ bool CDocDesignerMDIFrame::AllowClose() const
 				allowClose = true;
 			}
 		}	
-		return allowClose && commonMetaData->ExitMainModule();
+		return allowClose && activeMetaData->ExitMainModule();
 	}
 
 	return true;

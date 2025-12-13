@@ -53,37 +53,37 @@ void CDialogFunctionAll::BuildTree()
 	wxASSERT(imageList);
 	wxTreeItemId root = m_treeCtrlElements->AddRoot(wxEmptyString);
 	wxTreeItemId constants = AppendGroupItem(root, g_metaConstantCLSID, _("Constants"));
-	for (auto constant : commonMetaData->GetMetaObject(g_metaConstantCLSID)) {
+	for (auto constant : activeMetaData->GetMetaObject(g_metaConstantCLSID)) {
 		int imageIndex = imageList->Add(constant->GetIcon());
 		m_treeCtrlElements->AppendItem(constants, constant->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(constant));
 	}
 	wxTreeItemId catalogs = AppendGroupItem(root, g_metaCatalogCLSID, _("Catalogs"));
-	for (auto catalog : commonMetaData->GetMetaObject(g_metaCatalogCLSID)) {
+	for (auto catalog : activeMetaData->GetMetaObject(g_metaCatalogCLSID)) {
 		int imageIndex = imageList->Add(catalog->GetIcon());
 		m_treeCtrlElements->AppendItem(catalogs, catalog->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(catalog));
 	}
 	wxTreeItemId documents = AppendGroupItem(root, g_metaDocumentCLSID, _("Documents"));
-	for (auto document : commonMetaData->GetMetaObject(g_metaDocumentCLSID)) {
+	for (auto document : activeMetaData->GetMetaObject(g_metaDocumentCLSID)) {
 		int imageIndex = imageList->Add(document->GetIcon());
 		m_treeCtrlElements->AppendItem(documents, document->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(document));
 	}
 	wxTreeItemId dataProcessors = AppendGroupItem(root, g_metaDataProcessorCLSID, _("Data processors"));
-	for (auto dataProcessor : commonMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : activeMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
 		int imageIndex = imageList->Add(dataProcessor->GetIcon());
 		m_treeCtrlElements->AppendItem(dataProcessors, dataProcessor->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(dataProcessor));
 	}
 	wxTreeItemId reports = AppendGroupItem(root, g_metaReportCLSID, _("Reports"));
-	for (auto report : commonMetaData->GetMetaObject(g_metaReportCLSID)) {
+	for (auto report : activeMetaData->GetMetaObject(g_metaReportCLSID)) {
 		int imageIndex = imageList->Add(report->GetIcon());
 		m_treeCtrlElements->AppendItem(reports, report->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(report));
 	}
 	wxTreeItemId informationRegisters = AppendGroupItem(root, g_metaInformationRegisterCLSID, _("Information registers"));
-	for (auto informationRegister : commonMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : activeMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
 		int imageIndex = imageList->Add(informationRegister->GetIcon());
 		m_treeCtrlElements->AppendItem(informationRegisters, informationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(informationRegister));
 	}
 	wxTreeItemId accumulationRegisters = AppendGroupItem(root, g_metaAccumulationRegisterCLSID, _("Accumulation registers"));
-	for (auto accumulationRegister : commonMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : activeMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
 		int imageIndex = imageList->Add(accumulationRegister->GetIcon());
 		m_treeCtrlElements->AppendItem(accumulationRegisters, accumulationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(accumulationRegister));
 	}

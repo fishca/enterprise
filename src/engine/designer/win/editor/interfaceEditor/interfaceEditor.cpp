@@ -61,7 +61,7 @@ void CInterfaceEditor::InitInterface()
 
 	wxImageList* imageList = m_interfaceCtrl->GetImageList();
 	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
-	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(commonMetaData->GetCommonMetaObject()));
+	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -128,7 +128,7 @@ void CInterfaceEditor::FillData()
 {
 	IMetaData* metaData = m_metaInterface->GetMetaData();
 	wxASSERT(metaData);
-	IMetaObject* commonObject = commonMetaData->GetCommonMetaObject();
+	IMetaObject* commonObject = activeMetaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_interfaceCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());
@@ -136,7 +136,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
-	for (auto commonForm : commonMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+	for (auto commonForm : activeMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
 		if (commonForm->IsDeleted())
 			continue;
 		AppendItem(m_treeFORMS, commonForm);
@@ -145,7 +145,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
-	for (auto constant : commonMetaData->GetMetaObject(g_metaConstantCLSID)) {
+	for (auto constant : activeMetaData->GetMetaObject(g_metaConstantCLSID)) {
 		if (constant->IsDeleted())
 			continue;
 		AppendItem(m_treeCONSTANTS, constant);
@@ -154,7 +154,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
-	for (auto catalog : commonMetaData->GetMetaObject(g_metaCatalogCLSID)) {
+	for (auto catalog : activeMetaData->GetMetaObject(g_metaCatalogCLSID)) {
 		if (catalog->IsDeleted())
 			continue;
 		AppendItem(m_treeCATALOGS, catalog);
@@ -163,7 +163,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
-	for (auto document : commonMetaData->GetMetaObject(g_metaDocumentCLSID)) {
+	for (auto document : activeMetaData->GetMetaObject(g_metaDocumentCLSID)) {
 		if (document->IsDeleted())
 			continue;
 		AppendItem(m_treeDOCUMENTS, document);
@@ -172,7 +172,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
-	for (auto dataProcessor : commonMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : activeMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
 		if (dataProcessor->IsDeleted())
 			continue;
 		AppendItem(m_treeDATAPROCESSORS, dataProcessor);
@@ -181,7 +181,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
-	for (auto report : commonMetaData->GetMetaObject(g_metaReportCLSID)) {
+	for (auto report : activeMetaData->GetMetaObject(g_metaReportCLSID)) {
 		if (report->IsDeleted())
 			continue;
 		AppendItem(m_treeREPORTS, report);
@@ -190,7 +190,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
-	for (auto informationRegister : commonMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : activeMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
 		if (informationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
@@ -199,7 +199,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
-	for (auto accumulationRegister : commonMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : activeMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
 		if (accumulationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);

@@ -54,7 +54,7 @@ bool CDataProcessorFileDocument::OnCloseDocument()
 	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
 	}
-	objectInspector->SelectObject(commonMetaData->GetCommonMetaObject());
+	objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
 	return true;
 }
 

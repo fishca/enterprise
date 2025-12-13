@@ -12,21 +12,21 @@
 
 CCompileModule* CModuleManagerExternalDataProcessor::GetCompileModule() const
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
 CProcUnit* CModuleManagerExternalDataProcessor::GetProcUnit() const
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, CValue*>& CModuleManagerExternalDataProcessor::GetContextVariables()
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
@@ -59,7 +59,7 @@ bool CModuleManagerExternalDataProcessor::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_compileModule->SetParent(moduleManager->GetCompileModule());
@@ -221,21 +221,21 @@ bool CModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 
 CCompileModule* CModuleManagerExternalReport::GetCompileModule() const
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
 CProcUnit* CModuleManagerExternalReport::GetProcUnit() const
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
 std::map<wxString, CValue*>& CModuleManagerExternalReport::GetContextVariables()
 {
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
@@ -268,7 +268,7 @@ bool CModuleManagerExternalReport::CreateMainModule()
 	if (m_initialized)
 		return true;
 
-	IModuleManager* moduleManager = commonMetaData->GetModuleManager();
+	IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_compileModule->SetParent(moduleManager->GetCompileModule());

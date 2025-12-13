@@ -150,11 +150,11 @@ protected:
 	m_metaData->UnRegisterCtor(generate_class_name(prefixList))
 
 //object class
-class CMetaValueCtorObjectTypeCtor : public IMetaValueTypeCtor {
+class CMetaValueObjectTypeCtor : public IMetaValueTypeCtor {
 	IMetaObjectRecordData* m_metaObject;
 public:
 
-	CMetaValueCtorObjectTypeCtor(IMetaObjectRecordData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueObjectTypeCtor(IMetaObjectRecordData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("O_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -174,11 +174,11 @@ protected:
 	class_identifier_t m_classType;
 };
 
-class CMetaExternalValueCtorObjectTypeCtor : public CMetaValueCtorObjectTypeCtor {
+class CMetaValueExternalObjectTypeCtor : public CMetaValueObjectTypeCtor {
 	class_identifier_t m_classType;
 public:
 
-	CMetaExternalValueCtorObjectTypeCtor(IMetaObjectRecordData* recordRef) : CMetaValueCtorObjectTypeCtor(recordRef) {
+	CMetaValueExternalObjectTypeCtor(IMetaObjectRecordData* recordRef) : CMetaValueObjectTypeCtor(recordRef) {
 		m_classType = string_to_clsid(wxT("EO_") +
 			stringUtils::IntToStr(recordRef->GetMetaID()));
 	}
@@ -187,9 +187,9 @@ public:
 };
 
 #define registerObject()\
-	m_metaData->RegisterCtor(new CMetaValueCtorObjectTypeCtor(this))
+	m_metaData->RegisterCtor(new CMetaValueObjectTypeCtor(this))
 #define registerExternalObject()\
-	m_metaData->RegisterCtor(new CMetaExternalValueCtorObjectTypeCtor(this))
+	m_metaData->RegisterCtor(new CMetaValueExternalObjectTypeCtor(this))
 #define unregisterObject()\
 	m_metaData->UnRegisterCtor(generate_class_name(prefixObject))
 

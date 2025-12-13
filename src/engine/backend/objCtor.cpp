@@ -55,14 +55,14 @@ CValue* CMetaValueListRegisterTypeCtor::CreateObject() const
 }
 
 //object class
-wxClassInfo* CMetaValueCtorObjectTypeCtor::GetClassInfo() const
+wxClassInfo* CMetaValueObjectTypeCtor::GetClassInfo() const
 {
 	IRecordDataObject* dataObject = m_metaObject->CreateRecordDataObject();
 	wxASSERT(dataObject); wxClassInfo* classInfo = dataObject->GetClassInfo();
 	wxDELETE(dataObject); return classInfo;
 }
 
-CValue* CMetaValueCtorObjectTypeCtor::CreateObject() const
+CValue* CMetaValueObjectTypeCtor::CreateObject() const
 {
 	return m_metaObject->CreateRecordDataObject();
 }

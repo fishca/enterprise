@@ -515,7 +515,6 @@ bool IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyAttributeDeletionMark)->OnAfterRunMetaObject(flags))
 		return false;
 
-	unregisterObject();
 	return IMetaObjectRecordDataRef::OnAfterRunMetaObject(flags);
 }
 
@@ -538,6 +537,7 @@ bool IMetaObjectRecordDataMutableRef::OnAfterCloseMetaObject()
 	if (!(*m_propertyAttributeDeletionMark)->OnAfterCloseMetaObject())
 		return false;
 
+	unregisterObject();
 	return IMetaObjectRecordDataRef::OnAfterCloseMetaObject();
 }
 

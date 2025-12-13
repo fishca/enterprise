@@ -399,10 +399,10 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 
 bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 {
-	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeNumber)->OnBeforeCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributeDate)->OnBeforeCloseMetaObject())
 		return false;
 
 	if (!(*m_propertyAttributePosted)->OnBeforeCloseMetaObject())
@@ -441,10 +441,10 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 
 bool CMetaObjectDocument::OnAfterCloseMetaObject()
 {
-	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeNumber)->OnAfterCloseMetaObject())
 		return false;
 
-	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributeDate)->OnAfterCloseMetaObject())
 		return false;
 
 	if (!(*m_propertyAttributePosted)->OnAfterCloseMetaObject())

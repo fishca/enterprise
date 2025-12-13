@@ -46,7 +46,7 @@ public:
 		m_propertyDefFormObject->SetValue(id);
 	}
 
-	CMetaObjectDataProcessor(int objMode = METAOBJECT_NORMAL);
+	CMetaObjectDataProcessor();
 	virtual ~CMetaObjectDataProcessor();
 
 	//support icons
@@ -108,12 +108,15 @@ protected:
 
 #define default_meta_id 10 //for dataProcessors
 
-class CMetaObjectDataProcessorExternal : public CMetaObjectDataProcessor {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectDataProcessorExternal);
+class CMetaObjectExternalDataProcessor : public CMetaObjectDataProcessor {
+	wxDECLARE_DYNAMIC_CLASS(CMetaObjectExternalDataProcessor);
 public:
-	CMetaObjectDataProcessorExternal() : CMetaObjectDataProcessor(METAOBJECT_EXTERNAL) {
+	CMetaObjectExternalDataProcessor() : CMetaObjectDataProcessor() {
 		m_metaId = default_meta_id;
 	}
+
+	//ñreate from file?
+	virtual bool IsExternalCreate() const { return true; }
 };
 
 //********************************************************************************************

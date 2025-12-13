@@ -118,8 +118,6 @@
     <ClInclude Include="debugger\debugClientBridge.h" />
     <ClInclude Include="debugger\debugDefs.h" />
     <ClInclude Include="debugger\debugServer.h" />
-    <ClInclude Include="external\metadataDataProcessor.h" />
-    <ClInclude Include="external\metadataReport.h" />
     <ClInclude Include="backend_form.h" />
     <ClInclude Include="fileSystem\fs.h" />
     <ClInclude Include="fileSystem\lz\lzhuf.h" />
@@ -169,6 +167,8 @@
     <ClInclude Include="metaCtor.h" />
     <ClInclude Include="metadata.h" />
     <ClInclude Include="metadataConfiguration.h" />
+    <ClInclude Include="metadataDataProcessor.h" />
+    <ClInclude Include="metadataReport.h" />
     <ClInclude Include="metaDefines.h" />
     <ClInclude Include="backend_metatree.h" />
     <ClInclude Include="moduleInfo.h" />
@@ -320,10 +320,6 @@
     <ClCompile Include="debugger\debugClientBridge.cpp" />
     <ClCompile Include="debugger\debugClientQuery.cpp" />
     <ClCompile Include="debugger\debugServer.cpp" />
-    <ClCompile Include="external\metadataDataProcessor.cpp" />
-    <ClCompile Include="external\metadataDataProcessorFactory.cpp" />
-    <ClCompile Include="external\metadataReport.cpp" />
-    <ClCompile Include="external\metadataReportFactory.cpp" />
     <ClCompile Include="backend_form.cpp" />
     <ClCompile Include="fileSystem\fs.cpp" />
     <ClCompile Include="fileSystem\lz\lzhuf.cpp" />
@@ -447,7 +443,11 @@
     <ClCompile Include="metadata.cpp" />
     <ClCompile Include="metadataConfiguration.cpp" />
     <ClCompile Include="metadataConfigurationQuery.cpp" />
+    <ClCompile Include="metadataDataProcessor.cpp" />
+    <ClCompile Include="metadataDataProcessorFactory.cpp" />
     <ClCompile Include="metadataFactory.cpp" />
+    <ClCompile Include="metadataReport.cpp" />
+    <ClCompile Include="metadataReportFactory.cpp" />
     <ClCompile Include="moduleInfo.cpp" />
     <ClCompile Include="moduleManager\moduleManager.cpp" />
     <ClCompile Include="moduleManager\moduleManagerEvent.cpp" />

@@ -340,12 +340,6 @@ public:
 #pragma endregion 
 };
 
-enum
-{
-	METAOBJECT_NORMAL = 1,
-	METAOBJECT_EXTERNAL,
-};
-
 enum eObjectMode {
 	OBJECT_ITEM = 1,
 	OBJECT_FOLDER
@@ -356,16 +350,17 @@ class BACKEND_API IMetaObjectRecordDataExt : public IMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataExt);
 protected:
 	CRole* m_roleUse = IMetaObject::CreateRole("use", _("use"));
-protected:
-	//external or default dataProcessor
-	int m_objMode;
 public:
 
-	//get object mode 
-	int GetObjectMode() const { return m_objMode; }
-
 	//ctor
-	IMetaObjectRecordDataExt(int objMode = METAOBJECT_NORMAL);
+	IMetaObjectRecordDataExt();
+
+	//ñreate from file?
+	virtual bool IsExternalCreate() const { return false; }
+
+	//module manager is started or exit 
+	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterCloseMetaObject();
 
 	//create associate value 
 	IRecordDataObjectExt* CreateObjectValue(); //create object
@@ -375,6 +370,7 @@ public:
 	virtual IRecordDataObject* CreateRecordDataObject();
 
 protected:
+
 	//create empty object
 	virtual IRecordDataObjectExt* CreateObjectExtValue() = 0;  //create object 
 };
@@ -1238,7 +1234,7 @@ protected:
 
 	//code/number generator 
 	virtual bool IsSetUniqueIdentifier() const;
-	
+
 	virtual bool GenerateUniqueIdentifier(const wxString& strPrefix);
 	virtual bool ResetUniqueIdentifier();
 

@@ -124,7 +124,7 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 		return true;
 	}
 	case enExternalDataProcessors:
-		pvarPropVal = CValue::CreateAndPrepareValueRef<CManagerExternalDataProcessorValue>();
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CDataProcessorExternalManager>();
 		return true;
 	case enReports:
 	{
@@ -139,7 +139,7 @@ bool CContextSystemManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 		return true;
 	}
 	case enExternalReports:
-		pvarPropVal = CValue::CreateAndPrepareValueRef<CManagerExternalReport>();
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CReportExternalManager>();
 		return true;
 	case enInformationRegisters:
 	{

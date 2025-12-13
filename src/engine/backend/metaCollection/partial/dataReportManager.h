@@ -34,11 +34,11 @@ protected:
 	CMethodHelper* m_methodHelper;
 };
 
-class CManagerExternalReport : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CManagerExternalReport);
+class CReportExternalManager : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CReportExternalManager);
 public:
-	CManagerExternalReport();
-	virtual ~CManagerExternalReport();
+	CReportExternalManager();
+	virtual ~CReportExternalManager();
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 

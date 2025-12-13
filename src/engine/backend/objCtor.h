@@ -247,10 +247,10 @@ protected:
 	class_identifier_t m_classType;
 };
 
-class CMetaExternalValueManagerTypeCtor : public CMetaValueManagerTypeCtor {
+class CMetaValueExternalManagerTypeCtor : public CMetaValueManagerTypeCtor {
 public:
 
-	CMetaExternalValueManagerTypeCtor(IMetaObject* recordRef) :CMetaValueManagerTypeCtor(recordRef) {
+	CMetaValueExternalManagerTypeCtor(IMetaObject* recordRef) :CMetaValueManagerTypeCtor(recordRef) {
 		m_classType = string_to_clsid(wxT("EM_") +
 			stringUtils::IntToStr(recordRef->GetMetaID()));
 	}
@@ -261,7 +261,7 @@ public:
 #define registerManager()\
 	m_metaData->RegisterCtor(new CMetaValueManagerTypeCtor(this))
 #define registerExternalManager()\
-	m_metaData->RegisterCtor(new CMetaExternalValueManagerTypeCtor(this))
+	m_metaData->RegisterCtor(new CMetaValueExternalManagerTypeCtor(this))
 #define unregisterManager()\
 	m_metaData->UnRegisterCtor(generate_class_name(prefixManager))
 

@@ -515,8 +515,8 @@ void CMetadataTree::SortItem()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "backend/external/metadataDataProcessor.h"
-#include "backend/external/metadataReport.h"
+#include "backend/metadataDataProcessor.h"
+#include "backend/metadataReport.h"
 
 void CMetadataTree::InsertItem()
 {

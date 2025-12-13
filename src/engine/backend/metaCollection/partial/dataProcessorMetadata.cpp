@@ -7,13 +7,13 @@
 #include "backend/metaData.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectDataProcessor, IMetaObjectRecordDataExt)
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectDataProcessorExternal, CMetaObjectDataProcessor)
+wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectExternalDataProcessor, CMetaObjectDataProcessor)
 
 //********************************************************************************************
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CMetaObjectDataProcessor::CMetaObjectDataProcessor(int objMode) : IMetaObjectRecordDataExt(objMode)
+CMetaObjectDataProcessor::CMetaObjectDataProcessor() : IMetaObjectRecordDataExt()
 {
 }
 
@@ -49,7 +49,7 @@ IRecordDataObjectExt* CMetaObjectDataProcessor::CreateObjectExtValue()
 	wxASSERT(moduleManager);
 	CRecordDataObjectDataProcessor* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
-		if (m_objMode == METAOBJECT_NORMAL) {
+		if (!IsExternalCreate()) {
 			if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
 				return CValue::CreateAndPrepareValueRef<CRecordDataObjectDataProcessor>(this);
 		}
@@ -58,7 +58,7 @@ IRecordDataObjectExt* CMetaObjectDataProcessor::CreateObjectExtValue()
 		}
 	}
 	else {
-		if (m_objMode == METAOBJECT_NORMAL) {
+		if (!IsExternalCreate()) {
 			pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectDataProcessor>(this);
 		}
 		else {
@@ -107,7 +107,7 @@ bool CMetaObjectDataProcessor::LoadData(CMemoryReader& dataReader)
 	//Load default form 
 	m_propertyDefFormObject->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
-	return IMetaObjectRecordData::LoadData(dataReader);
+	return IMetaObjectRecordDataExt::LoadData(dataReader);
 }
 
 bool CMetaObjectDataProcessor::SaveData(CMemoryWriter& dataWritter)
@@ -119,7 +119,7 @@ bool CMetaObjectDataProcessor::SaveData(CMemoryWriter& dataWritter)
 	//Save default form 
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormObject->GetValueAsInteger()));
 
-	return IMetaObjectRecordData::SaveData(dataWritter);
+	return IMetaObjectRecordDataExt::SaveData(dataWritter);
 }
 
 //***********************************************************************
@@ -130,10 +130,10 @@ bool CMetaObjectDataProcessor::SaveData(CMemoryWriter& dataWritter)
 
 bool CMetaObjectDataProcessor::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObjectRecordData::OnCreateMetaObject(metaData, flags))
+	if (!IMetaObjectRecordDataExt::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return (m_objMode == METAOBJECT_NORMAL ? (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) : true) &&
+	return (!IsExternalCreate() ? (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags) : true) &&
 		(*m_propertyModuleObject)->OnCreateMetaObject(metaData, flags);
 }
 
@@ -142,7 +142,7 @@ bool CMetaObjectDataProcessor::OnLoadMetaObject(IMetaData* metaData)
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 
 		if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 			return false;
@@ -156,12 +156,12 @@ bool CMetaObjectDataProcessor::OnLoadMetaObject(IMetaData* metaData)
 			return false;
 	}
 
-	return IMetaObjectRecordData::OnLoadMetaObject(metaData);
+	return IMetaObjectRecordDataExt::OnLoadMetaObject(metaData);
 }
 
 bool CMetaObjectDataProcessor::OnSaveMetaObject(int flags)
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 			return false;
 	}
@@ -169,12 +169,12 @@ bool CMetaObjectDataProcessor::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordData::OnSaveMetaObject(flags);
+	return IMetaObjectRecordDataExt::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectDataProcessor::OnDeleteMetaObject()
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 			return false;
 	}
@@ -182,7 +182,7 @@ bool CMetaObjectDataProcessor::OnDeleteMetaObject()
 	if (!(*m_propertyModuleObject)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObjectRecordData::OnDeleteMetaObject();
+	return IMetaObjectRecordDataExt::OnDeleteMetaObject();
 }
 
 bool CMetaObjectDataProcessor::OnReloadMetaObject()
@@ -203,7 +203,7 @@ bool CMetaObjectDataProcessor::OnReloadMetaObject()
 
 bool CMetaObjectDataProcessor::OnBeforeRunMetaObject(int flags)
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) {
 			return false;
 		}
@@ -213,12 +213,12 @@ bool CMetaObjectDataProcessor::OnBeforeRunMetaObject(int flags)
 		return false;
 	}
 
-	return IMetaObjectRecordData::OnBeforeRunMetaObject(flags);
+	return IMetaObjectRecordDataExt::OnBeforeRunMetaObject(flags);
 }
 
 bool CMetaObjectDataProcessor::OnAfterRunMetaObject(int flags)
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) {
 			return false;
 		}
@@ -232,17 +232,17 @@ bool CMetaObjectDataProcessor::OnAfterRunMetaObject(int flags)
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		if (IMetaObjectRecordData::OnAfterRunMetaObject(flags))
+		if (IMetaObjectRecordDataExt::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
 		return false;
 	}
 
-	return IMetaObjectRecordData::OnAfterRunMetaObject(flags);
+	return IMetaObjectRecordDataExt::OnAfterRunMetaObject(flags);
 }
 
 bool CMetaObjectDataProcessor::OnBeforeCloseMetaObject()
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) {
 			return false;
 		}
@@ -256,17 +256,17 @@ bool CMetaObjectDataProcessor::OnBeforeCloseMetaObject()
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		if (IMetaObjectRecordData::OnBeforeCloseMetaObject())
+		if (IMetaObjectRecordDataExt::OnBeforeCloseMetaObject())
 			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		return false;
 	}
 
-	return IMetaObjectRecordData::OnBeforeCloseMetaObject();
+	return IMetaObjectRecordDataExt::OnBeforeCloseMetaObject();
 }
 
 bool CMetaObjectDataProcessor::OnAfterCloseMetaObject()
 {
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 			return false;
 	}
@@ -275,7 +275,7 @@ bool CMetaObjectDataProcessor::OnAfterCloseMetaObject()
 		return false;
 	}
 
-	return IMetaObjectRecordData::OnAfterCloseMetaObject();
+	return IMetaObjectRecordDataExt::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
@@ -305,4 +305,4 @@ void CMetaObjectDataProcessor::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 //***********************************************************************
 
 METADATA_TYPE_REGISTER(CMetaObjectDataProcessor, "dataProcessor", g_metaDataProcessorCLSID);
-METADATA_TYPE_REGISTER(CMetaObjectDataProcessorExternal, "externalDataProcessor", g_metaExternalDataProcessorCLSID);
+METADATA_TYPE_REGISTER(CMetaObjectExternalDataProcessor, "externalDataProcessor", g_metaExternalDataProcessorCLSID);

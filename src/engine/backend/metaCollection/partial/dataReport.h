@@ -45,7 +45,7 @@ public:
 		m_propertyDefFormObject->SetValue(id);
 	}
 
-	CMetaObjectReport(int objMode = METAOBJECT_NORMAL);
+	CMetaObjectReport();
 	virtual ~CMetaObjectReport();
 
 	//support icons
@@ -107,12 +107,15 @@ protected:
 
 #define default_meta_id 10 //for reports
 
-class CMetaObjectReportExternal : public CMetaObjectReport {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectReportExternal);
+class CMetaObjectExternalReport : public CMetaObjectReport {
+	wxDECLARE_DYNAMIC_CLASS(CMetaObjectExternalReport);
 public:
-	CMetaObjectReportExternal() : CMetaObjectReport(METAOBJECT_EXTERNAL) {
+	CMetaObjectExternalReport() : CMetaObjectReport() {
 		m_metaId = default_meta_id;
 	}
+
+	//ñreate from file?
+	virtual bool IsExternalCreate() const { return true; }
 };
 
 //********************************************************************************************

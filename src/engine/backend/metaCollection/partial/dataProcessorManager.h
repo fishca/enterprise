@@ -34,11 +34,11 @@ protected:
 	CMetaObjectDataProcessor* m_metaObject;
 };
 
-class CManagerExternalDataProcessorValue : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CManagerExternalDataProcessorValue);
+class CDataProcessorExternalManager : public CValue {
+	wxDECLARE_DYNAMIC_CLASS(CDataProcessorExternalManager);
 public:
-	CManagerExternalDataProcessorValue();
-	virtual ~CManagerExternalDataProcessorValue();
+	CDataProcessorExternalManager();
+	virtual ~CDataProcessorExternalManager();
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();

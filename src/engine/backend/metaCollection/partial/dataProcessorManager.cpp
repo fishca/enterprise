@@ -49,14 +49,14 @@ wxString CDataProcessorManager::GetString() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerExternalDataProcessorValue, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorExternalManager, CValue);
 
-CManagerExternalDataProcessorValue::CManagerExternalDataProcessorValue() : CValue(eValueTypes::TYPE_VALUE, true),
+CDataProcessorExternalManager::CDataProcessorExternalManager() : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper())
 {
 }
 
-CManagerExternalDataProcessorValue::~CManagerExternalDataProcessorValue()
+CDataProcessorExternalManager::~CDataProcessorExternalManager()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -118,16 +118,16 @@ bool CDataProcessorManager::CallAsFunc(const long lMethodNum, CValue& pvarRetVal
 	return false;
 }
 
-void CManagerExternalDataProcessorValue::PrepareNames() const
+void CDataProcessorExternalManager::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc("create", "create(fullPath)");
 }
 
 #include "backend/system/systemManager.h"
-#include "backend/external/metadataDataProcessor.h"
+#include "backend/metadataDataProcessor.h"
 
-bool CManagerExternalDataProcessorValue::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CDataProcessorExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -154,4 +154,4 @@ bool CManagerExternalDataProcessorValue::CallAsFunc(const long lMethodNum, CValu
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CManagerExternalDataProcessorValue, "extenalManagerDataProcessor", string_to_clsid("MG_EXTD"));
+SYSTEM_TYPE_REGISTER(CDataProcessorExternalManager, "externalManagerDataProcessor", string_to_clsid("MG_EXTD"));

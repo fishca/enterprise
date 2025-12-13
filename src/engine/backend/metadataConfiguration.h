@@ -124,15 +124,15 @@ protected:
 
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
-	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
-	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* parentObj);
+	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* object);
+	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* object);
 
 	//run/close recursively:
-	bool RunChildMetadata(IMetaObject* parentObj, int flags, bool before);
-	bool CloseChildMetadata(IMetaObject* parentObj, int flags, bool before);
+	bool RunChildMetadata(IMetaObject* object, int flags, bool before);
+	bool CloseChildMetadata(IMetaObject* object, int flags, bool before);
 
 	//clear recursively:
-	bool ClearChildMetadata(IMetaObject* parentObj);
+	bool ClearChildMetadata(IMetaObject* object);
 
 protected:
 
@@ -238,10 +238,10 @@ protected:
 	//loader/saver/deleter: 
 	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
 	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* parentObj, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* object, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteMetadata(const class_identifier_t& clsid);
-	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parentObj);
+	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object);
 
 private:
 	CMetaDataConfiguration* m_configMetadata;

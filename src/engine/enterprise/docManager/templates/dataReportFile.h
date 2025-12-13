@@ -2,7 +2,7 @@
 #define _DATA_REPORT_H__
 
 #include "frontend/docView/docView.h"
-#include "backend/external/metadataReport.h"
+#include "backend/metadataReport.h"
 
 // The view using a standard wxTextCtrl to show its contents
 class CReportView : public CMetaView

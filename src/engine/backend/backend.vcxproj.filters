@@ -19,12 +19,6 @@
     <ClInclude Include="debugger\debugServer.h">
       <Filter>debugger</Filter>
     </ClInclude>
-    <ClInclude Include="external\metadataDataProcessor.h">
-      <Filter>external</Filter>
-    </ClInclude>
-    <ClInclude Include="external\metadataReport.h">
-      <Filter>external</Filter>
-    </ClInclude>
     <ClInclude Include="moduleManager\moduleManager.h">
       <Filter>moduleManager</Filter>
     </ClInclude>
@@ -640,6 +634,8 @@
     <ClInclude Include="metaCollection\metaInterfaceObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
+    <ClInclude Include="metadataDataProcessor.h" />
+    <ClInclude Include="metadataReport.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -661,18 +657,6 @@
     </ClCompile>
     <ClCompile Include="debugger\debugServer.cpp">
       <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="external\metadataDataProcessor.cpp">
-      <Filter>external</Filter>
-    </ClCompile>
-    <ClCompile Include="external\metadataDataProcessorFactory.cpp">
-      <Filter>external</Filter>
-    </ClCompile>
-    <ClCompile Include="external\metadataReport.cpp">
-      <Filter>external</Filter>
-    </ClCompile>
-    <ClCompile Include="external\metadataReportFactory.cpp">
-      <Filter>external</Filter>
     </ClCompile>
     <ClCompile Include="moduleManager\moduleManager.cpp">
       <Filter>moduleManager</Filter>
@@ -1416,13 +1400,14 @@
     <ClCompile Include="metaCollection\metaModuleObjectProperty.cpp">
       <Filter>metaCollection</Filter>
     </ClCompile>
+    <ClCompile Include="metadataDataProcessorFactory.cpp" />
+    <ClCompile Include="metadataReport.cpp" />
+    <ClCompile Include="metadataReportFactory.cpp" />
+    <ClCompile Include="metadataDataProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">
       <UniqueIdentifier>{e7188396-0035-47b0-b863-be1ec229b525}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external">
-      <UniqueIdentifier>{3379560f-6e0b-4972-b8d0-20e417961d4b}</UniqueIdentifier>
     </Filter>
     <Filter Include="moduleManager">
       <UniqueIdentifier>{ac49a1b3-bb42-4b4f-9b17-a6ec169f254f}</UniqueIdentifier>
@@ -1609,6 +1594,12 @@
     <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x86.dll">
       <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63l.dat" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x86.dll" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x64.dll" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuin63_x86.dll" />
+    <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icuuc63_x64.dll" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">
@@ -1639,24 +1630,6 @@
     </None>
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked2.xpm">
       <Filter>propertyManager\property\advprop\ctrl\res</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icudt63_x86.dll">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icudt63l.dat">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icuin63_x64.dll">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icuin63_x86.dll">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
-    </None>
-    <None Include="databaseLayer\firebird\engine\dll\icuuc63_x64.dll">
-      <Filter>databaseLayer\firebird\engine\dll</Filter>
     </None>
   </ItemGroup>
 </Project>

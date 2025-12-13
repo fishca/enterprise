@@ -49,14 +49,14 @@ wxString CReportManager::GetString() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerExternalReport, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CReportExternalManager, CValue);
 
-CManagerExternalReport::CManagerExternalReport() : CValue(eValueTypes::TYPE_VALUE, true),
+CReportExternalManager::CReportExternalManager() : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper())
 {
 }
 
-CManagerExternalReport::~CManagerExternalReport()
+CReportExternalManager::~CReportExternalManager()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -116,16 +116,16 @@ bool CReportManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CVa
 	return false;
 }
 
-void CManagerExternalReport::PrepareNames() const
+void CReportExternalManager::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc("create", "create(fullPath)");
 }
 
 #include "backend/system/systemManager.h"
-#include "backend/external/metadataReport.h"
+#include "backend/metadataReport.h"
 
-bool CManagerExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CReportExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	CValue ret;
 	switch (lMethodNum)
@@ -151,4 +151,4 @@ bool CManagerExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetVa
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CManagerExternalReport, "extenalManagerReport", string_to_clsid("MG_EXTR"));
+SYSTEM_TYPE_REGISTER(CReportExternalManager, "externalManagerReport", string_to_clsid("MG_EXTR"));

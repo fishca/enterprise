@@ -137,12 +137,12 @@ bool CMetaDataConfigurationFile::RunDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataConfigurationFile::RunChildMetadata(IMetaObject* parent, int flags, bool before)
+bool CMetaDataConfigurationFile::RunChildMetadata(IMetaObject* object, int flags, bool before)
 {
-	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		
-		auto child = parent->GetChild(idx);
-		if (!parent->FilterChild(child->GetClassType()))
+		auto child = object->GetChild(idx);
+		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
 		if (child->IsDeleted())
@@ -218,12 +218,12 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* parent, int flags, bool before)
+bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* object, int flags, bool before)
 {
-	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		
-		auto child = parent->GetChild(idx);
-		if (!parent->FilterChild(child->GetClassType()))
+		auto child = object->GetChild(idx);
+		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
 		if (child->IsDeleted())
@@ -268,12 +268,12 @@ bool CMetaDataConfigurationFile::ClearDatabase()
 	return true;
 }
 
-bool CMetaDataConfigurationFile::ClearChildMetadata(IMetaObject* parent)
+bool CMetaDataConfigurationFile::ClearChildMetadata(IMetaObject* object)
 {
-	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		
-		auto child = parent->GetChild(idx);
-		if (!parent->FilterChild(child->GetClassType()))
+		auto child = object->GetChild(idx);
+		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
 		if (!child->OnDeleteMetaObject())
@@ -282,11 +282,11 @@ bool CMetaDataConfigurationFile::ClearChildMetadata(IMetaObject* parent)
 		if (!ClearChildMetadata(child))
 			return false;
 
-		parent->RemoveChild(child);
+		object->RemoveChild(child);
 		idx--;
 	}
 
-	parent->DecrRef();
+	object->DecrRef();
 	return true;
 }
 
@@ -396,7 +396,7 @@ bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& cl
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* parent)
+bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -421,7 +421,7 @@ bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemory
 			wxASSERT(clsid != 0);
 
 			IMetaObject* newMetaObject = nullptr;
-			CValue* ppParams[] = { parent };
+			CValue* ppParams[] = { object };
 			try {
 				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
@@ -450,7 +450,7 @@ bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemory
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* parent)
+bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -475,7 +475,7 @@ bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CM
 			wxASSERT(clsid != 0);
 
 			IMetaObject* newMetaObject = nullptr;
-			CValue* ppParams[] = { parent };
+			CValue* ppParams[] = { object };
 			try {
 				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
@@ -684,14 +684,14 @@ bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMem
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* parent, int flags)
+bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* object, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
-	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
-		auto child = parent->GetChild(idx);
-		if (!parent->FilterChild(child->GetClassType()))
+		auto child = object->GetChild(idx);
+		if (!object->FilterChild(child->GetClassType()))
 			continue;
 		if (child->IsDeleted())
 			continue;
@@ -744,12 +744,12 @@ bool CMetaDataConfigurationStorage::DeleteMetadata(const class_identifier_t& cls
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* parent)
+bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object)
 {
-	for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
-		auto child = parent->GetChild(idx);
-		if (!parent->FilterChild(child->GetClassType()))
+		auto child = object->GetChild(idx);
+		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
 		if (child->IsDeleted()) {
@@ -761,7 +761,7 @@ bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t
 			return false;
 		}
 		if (child->IsDeleted()) {
-			parent->RemoveChild(child);
+			object->RemoveChild(child);
 			child->DecrRef();
 		}
 	}

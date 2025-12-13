@@ -8,7 +8,7 @@
 #include <wx/statline.h>
 
 #include "mainFrame/metatree/metatreeWnd.h"
-#include "backend/external/metadataReport.h"
+#include "backend/metadataReport.h"
 
 class CDataReportTree : public IMetaDataTree {
 	wxDECLARE_DYNAMIC_CLASS(CDataReportTree);

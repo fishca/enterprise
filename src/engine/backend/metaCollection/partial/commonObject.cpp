@@ -76,6 +76,10 @@ IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& st
 
 #include "backend/fileSystem/fs.h"
 
+//***********************************************************************
+//*                           read & save events                        *
+//***********************************************************************
+
 bool IMetaObjectRecordData::OnLoadMetaObject(IMetaData* metaData)
 {
 	return IMetaObject::OnLoadMetaObject(metaData);
@@ -93,29 +97,11 @@ bool IMetaObjectRecordData::OnDeleteMetaObject()
 
 bool IMetaObjectRecordData::OnBeforeRunMetaObject(int flags)
 {
-	if (GetClassType() == g_metaExternalDataProcessorCLSID)
-		registerExternalObject();
-	else if (GetClassType() == g_metaExternalReportCLSID)
-		registerExternalObject();
-	else if (GetClassType() != g_metaEnumerationCLSID)
-		registerObject();
-
-	if (GetClassType() == g_metaExternalDataProcessorCLSID)
-		registerExternalManager();
-	else if (GetClassType() == g_metaExternalReportCLSID)
-		registerExternalManager();
-	else
-		registerManager();
-
 	return IMetaObject::OnBeforeRunMetaObject(flags);
 }
 
 bool IMetaObjectRecordData::OnAfterCloseMetaObject()
 {
-	if (GetClassType() != g_metaEnumerationCLSID)
-		unregisterObject();
-
-	unregisterManager();
 	return IMetaObject::OnAfterCloseMetaObject();
 }
 
@@ -123,15 +109,15 @@ bool IMetaObjectRecordData::OnAfterCloseMetaObject()
 //*						IMetaObjectRecordDataExt					    *
 //***********************************************************************
 
-IMetaObjectRecordDataExt::IMetaObjectRecordDataExt(int objMode) :
-	IMetaObjectRecordData(), m_objMode(objMode)
+IMetaObjectRecordDataExt::IMetaObjectRecordDataExt() :
+	IMetaObjectRecordData()
 {
 }
 
 IRecordDataObjectExt* IMetaObjectRecordDataExt::CreateObjectValue()
 {
 	IRecordDataObjectExt* createdValue = CreateObjectExtValue();
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (createdValue && !createdValue->InitializeObject()) {
 			wxDELETE(createdValue);
 			return nullptr;
@@ -143,7 +129,7 @@ IRecordDataObjectExt* IMetaObjectRecordDataExt::CreateObjectValue()
 IRecordDataObjectExt* IMetaObjectRecordDataExt::CreateObjectValue(IRecordDataObjectExt* objSrc)
 {
 	IRecordDataObjectExt* createdValue = CreateObjectExtValue();
-	if (m_objMode == METAOBJECT_NORMAL) {
+	if (!IsExternalCreate()) {
 		if (createdValue && !createdValue->InitializeObject(objSrc)) {
 			wxDELETE(createdValue);
 			return nullptr;
@@ -155,6 +141,32 @@ IRecordDataObjectExt* IMetaObjectRecordDataExt::CreateObjectValue(IRecordDataObj
 IRecordDataObject* IMetaObjectRecordDataExt::CreateRecordDataObject()
 {
 	return CreateObjectValue();
+}
+
+//***********************************************************************
+//*                           read & save events                        *
+//***********************************************************************
+
+bool IMetaObjectRecordDataExt::OnBeforeRunMetaObject(int flags)
+{
+	if (IsExternalCreate()) {
+		registerExternalObject();
+		registerExternalManager();
+	}
+	else {
+		registerObject();
+		registerManager();
+	}
+
+	return IMetaObjectRecordData::OnBeforeRunMetaObject(flags);
+}
+
+bool IMetaObjectRecordDataExt::OnAfterCloseMetaObject()
+{
+	unregisterObject();
+	unregisterManager();
+
+	return IMetaObjectRecordData::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
@@ -243,15 +255,13 @@ bool IMetaObjectRecordDataRef::OnBeforeRunMetaObject(int flags)
 
 	registerReference();
 	registerRefList();
-
-	if (!IMetaObjectRecordData::OnBeforeRunMetaObject(flags))
-		return false;
+	registerManager();
 
 	const IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_Reference);
-	if (typeCtor != nullptr) 
+	if (typeCtor != nullptr)
 		(*m_propertyAttributeReference)->SetDefaultMetaType(typeCtor->GetClassType());
-	
-	return true;
+
+	return IMetaObjectRecordData::OnBeforeRunMetaObject(flags);
 }
 
 bool IMetaObjectRecordDataRef::OnAfterRunMetaObject(int flags)
@@ -274,6 +284,7 @@ bool IMetaObjectRecordDataRef::OnAfterCloseMetaObject()
 
 	unregisterReference();
 	unregisteRefList();
+	unregisterManager();
 
 	return IMetaObjectRecordData::OnAfterCloseMetaObject();
 }
@@ -492,6 +503,7 @@ bool IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(int flags)
 	if (!(*m_propertyAttributeDeletionMark)->OnBeforeRunMetaObject(flags))
 		return false;
 
+	registerObject();
 	return IMetaObjectRecordDataRef::OnBeforeRunMetaObject(flags);
 }
 
@@ -503,6 +515,7 @@ bool IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyAttributeDeletionMark)->OnAfterRunMetaObject(flags))
 		return false;
 
+	unregisterObject();
 	return IMetaObjectRecordDataRef::OnAfterRunMetaObject(flags);
 }
 
@@ -1419,7 +1432,7 @@ IRecordDataObjectExt::IRecordDataObjectExt(const IRecordDataObjectExt& source) :
 
 IRecordDataObjectExt::~IRecordDataObjectExt()
 {
-	if (m_metaObject->GetObjectMode() == METAOBJECT_EXTERNAL) {
+	if (m_metaObject->IsExternalCreate()) {
 		if (!appData->DesignerMode()) {
 			IMetaData* metaData = m_metaObject->GetMetaData();
 			if (!metaData->CloseDatabase(forceCloseFlag)) {
@@ -1432,7 +1445,7 @@ IRecordDataObjectExt::~IRecordDataObjectExt()
 
 bool IRecordDataObjectExt::InitializeObject()
 {
-	if (m_metaObject->GetObjectMode() == METAOBJECT_NORMAL) {
+	if (!m_metaObject->IsExternalCreate()) {
 		IMetaData* metaData = m_metaObject->GetMetaData();
 		wxASSERT(metaData);
 		IModuleManager* moduleManager = metaData->GetModuleManager();
@@ -1464,21 +1477,21 @@ bool IRecordDataObjectExt::InitializeObject()
 
 	PrepareEmptyObject();
 
-	if (m_metaObject->GetObjectMode() == METAOBJECT_NORMAL) {
+	if (!m_metaObject->IsExternalCreate()) {
 		if (!appData->DesignerMode()) {
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
 	}
 
 	PrepareNames();
-	
+
 	//is Ok
 	return true;
 }
 
 bool IRecordDataObjectExt::InitializeObject(IRecordDataObjectExt* source)
 {
-	if (m_metaObject->GetObjectMode() == METAOBJECT_NORMAL) {
+	if (!m_metaObject->IsExternalCreate()) {
 		IMetaData* metaData = m_metaObject->GetMetaData();
 		wxASSERT(metaData);
 		IModuleManager* moduleManager = metaData->GetModuleManager();
@@ -1509,14 +1522,14 @@ bool IRecordDataObjectExt::InitializeObject(IRecordDataObjectExt* source)
 
 	PrepareEmptyObject();
 
-	if (m_metaObject->GetObjectMode() == METAOBJECT_NORMAL) {
+	if (!m_metaObject->IsExternalCreate()) {
 		if (!appData->DesignerMode()) {
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
 	}
 
 	PrepareNames();
-	
+
 	//is Ok
 	return true;
 }
@@ -1612,7 +1625,7 @@ bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 	}
 
 	PrepareNames();
-	
+
 	//is Ok
 	return succes;
 }

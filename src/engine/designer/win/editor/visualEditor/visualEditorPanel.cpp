@@ -29,30 +29,18 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 	m_splitter->SetSashGravity(0.5);
 	m_splitter->SetMinimumPaneSize(20); // Smalest size the
 
-	wxBoxSizer* m_sizerMain = new wxBoxSizer(wxVERTICAL);
-	m_sizerMain->Add(m_splitter, 1, wxEXPAND, 0);
-
-	wxPanel* panelDesigner = new wxPanel(m_splitter, wxID_ANY);
-	wxBoxSizer* designerSizer = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
+	sizerMain->Add(m_splitter, 1, wxEXPAND, 0);
 
 	wxASSERT(m_visualEditor == nullptr);
 
-	m_visualEditor = new CVisualEditorHost(this, panelDesigner);
+	m_visualEditor = new CVisualEditorHost(this, m_splitter);
+	m_objectTree = new CVisualEditorObjectTree(this, m_splitter);
 
-	designerSizer->Add(m_visualEditor, 1, wxEXPAND, 0);
+	m_splitter->SplitHorizontally(m_visualEditor, 
+		CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), -300);
 
-	panelDesigner->SetSizer(designerSizer);
-
-	wxPanel* panelTree = new wxPanel(m_splitter, wxID_ANY);
-	wxBoxSizer* treesizer = new wxBoxSizer(wxVERTICAL);
-
-	m_objectTree = new CVisualEditorObjectTree(this, panelTree);
-
-	treesizer->Add(CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 1, wxEXPAND, 0);
-	panelTree->SetSizer(treesizer);
-
-	m_splitter->SplitVertically(panelDesigner, panelTree, -300);
-	SetSizer(m_sizerMain);
+	SetSizer(sizerMain);
 
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);

@@ -21,11 +21,7 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::CVisualEditorHost(CVisu
 {
 	IVisualHost::SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 
-#ifdef __WXMSW__
-	SetOwnBackgroundColour(wxColour(150, 150, 150));
-#else
 	SetOwnBackgroundColour(wxColour(192, 192, 192));
-#endif
 
 	m_back = new CDesignerWindow(this, wxID_ANY, wxPoint(10, 10));
 	m_back->GetEventHandler()->Connect(wxID_ANY, wxEVT_LEFT_DOWN, wxMouseEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnClickBackPanel), nullptr, this);

@@ -163,6 +163,8 @@ void CObjectInspector::ShowProperty()
 		mainFrame->ShowProperty();
 }
 
+#include "frontend/visualView/ctrl/frame.h"
+
 wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id)
 {
 	int pgStyle;
@@ -192,6 +194,10 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	pg->SetExtraStyle(wxPG_EX_NATIVE_DOUBLE_BUFFERING);
 	pg->SetDescBoxHeight(descBoxHeight);
 	pg->SendSizeEvent();
+
+	pg->SetForegroundColour(wxDefaultStypeFGColour);
+	pg->SetBackgroundColour(wxDefaultStypeBGColour);
+
 	return pg;
 }
 

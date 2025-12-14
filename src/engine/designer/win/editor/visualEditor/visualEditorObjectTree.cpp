@@ -459,6 +459,8 @@ EVT_MENU(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupM
 EVT_UPDATE_UI(wxID_ANY, CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnUpdateEvent)
 wxEND_EVENT_TABLE()
 
+#include "frontend/artProvider/artProvider.h"
+
 bool CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::HasDeleteObject() {
 	return m_selID == MENU_DELETE;
 }
@@ -468,16 +470,25 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::CVisualEditorI
 {
 	obj->PrepareDefaultMenu(this);
 
-	Append(MENU_CUT, wxT("Cut\tCtrl+X"));
-	Append(MENU_COPY, wxT("Copy\tCtrl+C"));
-	Append(MENU_PASTE, wxT("Paste\tCtrl+V"));
+	wxMenuItem* item = nullptr;
+	
+	item = Append(MENU_CUT, wxT("Cut\tCtrl+X"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_CUT, wxART_MENU));
+	item = Append(MENU_COPY, wxT("Copy\tCtrl+C"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_MENU));
+	item = Append(MENU_PASTE, wxT("Paste\tCtrl+V"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_MENU));
 	AppendSeparator();
-	Append(MENU_DELETE, wxT("Delete\tCtrl+D"));
+	item = Append(MENU_DELETE, wxT("Delete\tCtrl+D"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
 	AppendSeparator();
-	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"));
-	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"));
+	item = Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU));
+	item = Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU));
 	AppendSeparator();
-	Append(MENU_PROPERTIES, wxT("Properties"));
+	item = Append(MENU_PROPERTIES, wxT("Properties"));
+	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)

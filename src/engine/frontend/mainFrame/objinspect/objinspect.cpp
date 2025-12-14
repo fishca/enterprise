@@ -178,7 +178,7 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	case wxOES_OI_DEFAULT_STYLE:
 	case wxOES_OI_SINGLE_PAGE_STYLE:
 	default:
-		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_DESCRIPTION | wxPG_TOOLTIPS | wxPGMAN_DEFAULT_STYLE;
+		pgStyle = wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_DESCRIPTION| wxPG_TOOLTIPS | wxPGMAN_DEFAULT_STYLE;
 		defaultDescBoxHeight = 150;
 		break;
 	}
@@ -197,6 +197,12 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 
 	pg->SetForegroundColour(wxDefaultStypeFGColour);
 	pg->SetBackgroundColour(wxDefaultStypeBGColour);
+
+	pg->GetGrid()->SetMarginColour(wxDefaultStypeBGColour.ChangeLightness(95));
+	
+	pg->GetGrid()->SetCaptionBackgroundColour(wxDefaultStypeBGColour.ChangeLightness(95));
+	pg->GetGrid()->SetCaptionTextColour(*wxBLACK);
+	pg->GetGrid()->SetCellTextColour(*wxBLACK);
 
 	return pg;
 }

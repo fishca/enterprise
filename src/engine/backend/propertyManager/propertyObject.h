@@ -22,6 +22,11 @@ class BACKEND_API IMetaData;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define propertyDefName		wxT("propertyEvent")
+#define propertyDefLabel	_("property and event")
+
+///////////////////////////////////////////////////////////////////////////////
+
 class BACKEND_API CPropertyCategory final {
 	wxString m_catName;
 	wxString m_catLabel;
@@ -33,8 +38,8 @@ class BACKEND_API CPropertyCategory final {
 
 private:
 	CPropertyCategory(IPropertyObject* object) :
-		m_catName("propertyEvent"),
-		m_catLabel(_("property and event")),
+		m_catName(propertyDefName),
+		m_catLabel(propertyDefLabel),
 		m_catHelp(wxEmptyString),
 		m_owner(object)
 	{

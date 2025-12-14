@@ -85,18 +85,25 @@ private:
 			//pg->AddPage( pageName, obj_info->GetSmallIconFile() );
 			pg->AddPage(pageName);
 		}
+
 		const wxString& catName = category->GetName();
-		wxPGProperty* id = pg->Append(new wxPropertyCategory(category->GetLabel(), catName));
-		AddItems(name, obj, category, itemMap);
-		std::map< wxString, bool >::iterator it = m_isExpanded.find(catName);
-		if (it != m_isExpanded.end()) {
-			if (it->second) {
-				pg->Expand(id);
-			}
-			else {
-				pg->Collapse(id);
+		if (!stringUtils::CompareString(catName, propertyDefName)) {
+			wxPGProperty* id = pg->Append(new wxPropertyCategory(category->GetLabel(), catName));
+			AddItems(name, obj, category, itemMap);
+			std::map< wxString, bool >::iterator it = m_isExpanded.find(catName);
+			if (it != m_isExpanded.end()) {
+				if (it->second) {
+					pg->Expand(id);
+				}
+				else {
+					pg->Collapse(id);
+				}
 			}
 		}
+		else {
+			AddItems(name, obj, category, itemMap);
+		}
+
 		pg->SetPropertyAttributeAll(wxPG_BOOL_USE_CHECKBOX, (long)1);
 	}
 
@@ -159,18 +166,24 @@ private:
 				continue;
 			}
 
-			wxPGProperty* catId = m_pg->AppendIn(category->GetName(), new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
-			AddItems(nextCat->GetName(), obj, nextCat, properties);
-
-			std::map< wxString, bool >::iterator it = m_isExpanded.find(nextCat->GetName());
-			if (it != m_isExpanded.end())
-			{
-				if (it->second) {
-					m_pg->Expand(catId);
+			const wxString& catName = category->GetName();
+			if (!stringUtils::CompareString(catName, propertyDefName)) {
+				wxPGProperty* catId = m_pg->AppendIn(catName, new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
+				AddItems(nextCat->GetName(), obj, nextCat, properties);
+				std::map< wxString, bool >::iterator it = m_isExpanded.find(nextCat->GetName());
+				if (it != m_isExpanded.end())
+				{
+					if (it->second) {
+						m_pg->Expand(catId);
+					}
+					else {
+						m_pg->Collapse(catId);
+					}
 				}
-				else {
-					m_pg->Collapse(catId);
-				}
+			}
+			else {
+				wxPGProperty* catId = m_pg->Append(new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
+				AddItems(nextCat->GetName(), obj, nextCat, properties);
 			}
 		}
 	}
@@ -224,18 +237,23 @@ private:
 				continue;
 			}
 
-			wxPGProperty* catId = m_pg->AppendIn(category->GetName(), new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
-
-			AddItems(nextCat->GetName(), obj, nextCat, events);
-
-			std::map< wxString, bool >::iterator it = m_isExpanded.find(nextCat->GetName());
-			if (it != m_isExpanded.end()) {
-				if (it->second) {
-					m_pg->Expand(catId);
+			const wxString& catName = category->GetName();
+			if (!stringUtils::CompareString(catName, propertyDefName)) {
+				wxPGProperty* catId = m_pg->AppendIn(category->GetName(), new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
+				AddItems(nextCat->GetName(), obj, nextCat, events);
+				std::map< wxString, bool >::iterator it = m_isExpanded.find(nextCat->GetName());
+				if (it != m_isExpanded.end()) {
+					if (it->second) {
+						m_pg->Expand(catId);
+					}
+					else {
+						m_pg->Collapse(catId);
+					}
 				}
-				else {
-					m_pg->Collapse(catId);
-				}
+			}
+			else {
+				wxPGProperty* catId = m_pg->Append(new wxPropertyCategory(nextCat->GetLabel(), nextCat->GetName()));
+				AddItems(nextCat->GetName(), obj, nextCat, events);
 			}
 		}
 	}
@@ -251,10 +269,10 @@ private:
 	bool ModifyEvent(IEvent* event, const wxVariant& newValue);
 
 	void RestoreLastSelectedPropItem() {
-		
+
 		wxPGProperty* propPtr = m_pg->GetPropertyByName(wxT("name"));
 		if (propPtr != nullptr) {
-			
+
 			m_pg->SelectProperty(propPtr, false);
 
 			std::map< wxPGProperty*, IProperty*>::iterator itProperty = m_propMap.find(propPtr);
@@ -298,9 +316,9 @@ public:
 			Create(selobj, force);
 		}
 
-		if (selobj != nullptr) 
+		if (selobj != nullptr)
 			wxLogDebug("! <debug> activate property %s", selobj->GetClassName());
-		else 
+		else
 			wxLogDebug("! <debug> clear property");
 	}
 

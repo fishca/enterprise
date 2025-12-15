@@ -15,7 +15,7 @@ private:
 
 	CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("general"), _("general"));
 	CPropertyName* m_propertyName = IPropertyObject::CreateProperty<CPropertyName>(m_categoryGeneral, wxT("name"), _("name"), wxEmptyString);
-	CPropertyString* m_propertyText = IPropertyObject::CreateProperty<CPropertyString>(m_categoryGeneral, wxT("text"), _("text"), wxEmptyString);
+	CPropertyText* m_propertyText = IPropertyObject::CreateProperty<CPropertyText>(m_categoryGeneral, wxT("text"), _("text"), wxEmptyString);
 
 	CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("alignment"));
 	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("horizontal align"), wxAlignment::wxALIGN_LEFT);

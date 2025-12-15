@@ -141,7 +141,7 @@ IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFo
 {
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormSelect,
+		CMetaObjectCatalog::eFormFolderSelect,
 		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true),
 		formGuid
 	);

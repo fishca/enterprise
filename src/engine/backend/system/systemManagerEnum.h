@@ -11,9 +11,9 @@ public:
 	//CValueStatusMessage(eStatusMessage status) : IEnumeration(status) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eStatusMessage::eStatusMessage_Information, wxT("information"));
-		AddEnumeration(eStatusMessage::eStatusMessage_Warning, wxT("warning"));
-		AddEnumeration(eStatusMessage::eStatusMessage_Error, wxT("error"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Information, wxT("information"), _("Information"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Warning, wxT("warning"), _("Warning"));
+		AddEnumeration(eStatusMessage::eStatusMessage_Error, wxT("error"), _("Error"));
 	}
 };
 
@@ -24,10 +24,10 @@ public:
 	//CValueQuestionMode(eQuestionMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eQuestionMode::eQuestionMode_YesNo, wxT("yesNo"));
-		AddEnumeration(eQuestionMode::eQuestionMode_YesNoCancel, wxT("yesNoCancel"));
-		AddEnumeration(eQuestionMode::eQuestionMode_OK, wxT("ok"));
-		AddEnumeration(eQuestionMode::eQuestionMode_OKCancel, wxT("okCancel"));
+		AddEnumeration(eQuestionMode::eQuestionMode_YesNo, wxT("yesNo"), _("Yes or no"));
+		AddEnumeration(eQuestionMode::eQuestionMode_YesNoCancel, wxT("yesNoCancel"), _("Yes or no or cancel"));
+		AddEnumeration(eQuestionMode::eQuestionMode_OK, wxT("ok"), _("Ok"));
+		AddEnumeration(eQuestionMode::eQuestionMode_OKCancel, wxT("okCancel"), _("Ok or cancel"));
 	}
 };
 
@@ -38,10 +38,10 @@ public:
 	//CValueQuestionReturnCode(eQuestionReturnCode code) : IEnumeration(code) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Yes, wxT("yes"));
-		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_No, wxT("no"));
-		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK, wxT("ok"));
-		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Cancel, wxT("cancel"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Yes, wxT("yes"), _("Yes"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_No, wxT("no"), _("Yes"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_OK, wxT("ok"), _("Ok"));
+		AddEnumeration(eQuestionReturnCode::eQuestionReturnCode_Cancel, wxT("cancel"), _("Cancel"));
 	}
 };
 
@@ -52,8 +52,8 @@ public:
 	//CValueRoundMode(eRoundMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eRoundMode::eRoundMode_Round15as10, wxT("round15as10"));
-		AddEnumeration(eRoundMode::eRoundMode_Round15as20, wxT("round15as20"));
+		AddEnumeration(eRoundMode::eRoundMode_Round15as10, wxT("round15as10"), _("Round 15 as 10"));
+		AddEnumeration(eRoundMode::eRoundMode_Round15as20, wxT("round15as20"), _("Round 15 as 20"));
 	}
 };
 
@@ -71,7 +71,7 @@ public:
 		AddEnumeration(enChars::eTab, wxT("Tab"));
 		AddEnumeration(enChars::eVTab, wxT("VTab"));
 	}
-	
+
 	virtual wxString GetDescription(enChars val) const {
 		return (char)val;
 	}

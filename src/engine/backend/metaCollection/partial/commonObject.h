@@ -380,9 +380,9 @@ class BACKEND_API IMetaObjectRecordDataRef : public IMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataRef);
 protected:
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("presentation"));
-	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("quick choice"), false);
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
+	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
+	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("Quick choice"), false);
 
 	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 
@@ -540,13 +540,13 @@ protected:
 class BACKEND_API IMetaObjectRecordDataMutableRef : public IMetaObjectRecordDataRef {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataMutableRef);
 private:
-	CRole* m_roleRead = IMetaObject::CreateRole("read", _("read"));
-	CRole* m_roleInsert = IMetaObject::CreateRole("insert", _("insert"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
-	CRole* m_roleDelete = IMetaObject::CreateRole("delete", _("delete"));
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
+	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
 protected:
 
-	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("list generation"));
+	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("List generation"));
 	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
 
@@ -712,8 +712,8 @@ protected:
 	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
 
 private:
-	CRole* m_roleRead = IMetaObject::CreateRole("read", _("read"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
 protected:
 	IMetaObjectRegisterData();
 	virtual ~IMetaObjectRegisterData();

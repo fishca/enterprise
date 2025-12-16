@@ -90,7 +90,7 @@ wxPGProperty* wxPGPictureProperty::CreatePropertySource(int sourceIndex)
 	// Add 'source' property (common for all other children)
 	sourceChoices.Add(_("Load From Art Provider"));
 
-	wxPGProperty* srcProp = new wxEnumProperty(wxT("source"), wxPG_LABEL, sourceChoices, sourceIndex);
+	wxPGProperty* srcProp = new wxEnumProperty(_("Source"), wxT("source"), sourceChoices, sourceIndex);
 	srcProp->SetHelpString(
 		wxString(_("Load From Art Provider:\n")) +
 		wxString(_("Query registered providers for bitmap with given ID.\n\n")));
@@ -159,7 +159,7 @@ wxPGProperty* wxPGPictureProperty::CreatePropertyArtId()
 	artIdChoices.Add(wxT("wxART_FULL_SCREEN"));
 	artIdChoices.Add(wxT("wxART_EDIT"));
 
-	wxPGProperty* propArtId = new wxEditEnumProperty(wxT("id"), wxPG_LABEL, artIdChoices);
+	wxPGProperty* propArtId = new wxEditEnumProperty(_("Id"), wxT("id"), artIdChoices);
 	propArtId->SetHelpString(_("Choose a wxArtID unique identifier of the bitmap or enter a wxArtID for your custom wxArtProvider. IDs with prefix 'gtk-' are available under wxGTK only."));
 
 	return propArtId;
@@ -179,7 +179,7 @@ wxPGProperty* wxPGPictureProperty::CreatePropertyArtClient()
 	artClientChoices.Add(wxT("wxART_MESSAGE_BOX"));
 	artClientChoices.Add(wxT("wxART_OTHER"));
 
-	wxPGProperty* propArtClient = new wxEditEnumProperty(wxT("client"), wxPG_LABEL, artClientChoices);
+	wxPGProperty* propArtClient = new wxEditEnumProperty(_("Client"), wxT("client"), artClientChoices);
 	propArtClient->SetHelpString(_("Choose a wxArtClient identifier of the client (i.e. who is asking for the bitmap) or enter a wxArtClient for your custom wxArtProvider."));
 
 	return propArtClient;

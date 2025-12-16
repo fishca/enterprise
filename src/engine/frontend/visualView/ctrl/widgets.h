@@ -13,13 +13,13 @@ class CValueButton : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueButton);
 protected:
 
-	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("button"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryButton, wxT("caption"), _("caption"), _("My button"));
-	CPropertyPicture* m_propertyIcon = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryButton, wxT("icon"), _("icon"));
+	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryButton, wxT("caption"), _("Caption"), wxT("Button"));
+	CPropertyPicture* m_propertyIcon = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryButton, wxT("icon"), _("Icon"));
 
 	//event
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"));
-	CEventControl* m_onButtonPressed = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onButtonPressed"), wxArrayString{ wxT("control") });
+	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	CEventControl* m_onButtonPressed = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onButtonPressed"), _("Button pressed"), wxArrayString{ wxT("control") });
 
 public:
 
@@ -55,10 +55,10 @@ protected:
 class CValueStaticText : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueStaticText);
 protected:
-	CPropertyCategory* m_categoryStaticText = IPropertyObject::CreatePropertyCategory(wxT("staticText"), _("static text"));
-	CPropertyBoolean* m_propertyMarkup = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStaticText, wxT("markup"), _("markup"), true);
-	CPropertyUInteger* m_propertyWrap = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStaticText, wxT("wrap"), _("wrap"), 0);
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryStaticText, wxT("caption"), _("caption"), _("My label"));
+	CPropertyCategory* m_categoryStaticText = IPropertyObject::CreatePropertyCategory(wxT("staticText"), _("Static text"));
+	CPropertyBoolean* m_propertyMarkup = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStaticText, wxT("markup"), _("Markup"), true);
+	CPropertyUInteger* m_propertyWrap = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStaticText, wxT("wrap"), _("Wrap"), 0);
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryStaticText, wxT("caption"), _("Caption"), wxT("Static text"));
 public:
 
 	CValueStaticText();
@@ -89,28 +89,28 @@ protected:
 	bool GetChoiceForm(CPropertyList* property);
 protected:
 
-	CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textControl"), _("text control"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryText, wxT("caption"), wxEmptyString);
-	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("password mode"), false);
-	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("multilineMode"), _("multiline mode"), false);
-	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("texteditMode"), _("textedit mode"), true);
+	CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textControl"), _("Text control"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryText, wxT("Caption"), wxEmptyString);
+	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("Password mode"), false);
+	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("multilineMode"), _("Multiline mode"), false);
+	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("texteditMode"), _("Textedit mode"), true);
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("source"), eValueTypes::TYPE_STRING);
-	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("choice form"), &CValueTextCtrl::GetChoiceForm, wxNOT_FOUND);
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
+	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"), eValueTypes::TYPE_STRING);
+	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("Choice form"), &CValueTextCtrl::GetChoiceForm, wxNOT_FOUND);
 
-	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("button"));
-	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("select"), true);
-	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("clear"), true);
-	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("open"), false);
+	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
+	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select"), true);
+	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear"), true);
+	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open"), false);
 
-	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("event"));
-	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("onChange"), wxArrayString{ wxT("control") });
-	CEventControl* m_eventStartChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startChoice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventStartListChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startListChoice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("clearing"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("opening"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("choiceProcessing"), wxArrayString{ wxT("control"), wxT("valueSelected"), wxT("standartProcessing") });
+	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
+	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("onChange"), _("Change"), wxArrayString{ wxT("control") });
+	CEventControl* m_eventStartChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startChoice"), _("Start choice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
+	CEventControl* m_eventStartListChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startListChoice"), _("Start list choice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
+	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("clearing"), _("Clearing"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
+	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("opening"), _("Opening"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
+	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("choiceProcessing"), _("Choice processing"), wxArrayString{ wxT("control"), wxT("valueSelected"), wxT("standartProcessing") });
 
 public:
 
@@ -277,15 +277,15 @@ class CValueCheckbox : public IValueWindow,
 
 	CValue m_selValue = false;
 
-	CPropertyCategory* m_categoryCheckBox = IPropertyObject::CreatePropertyCategory(wxT("checkbox"), _("checkbox"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryCheckBox, wxT("caption"), _("caption"), wxEmptyString);
-	CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), wxT("title location"), enTitleLocation::eLeft);
+	CPropertyCategory* m_categoryCheckBox = IPropertyObject::CreatePropertyCategory(wxT("checkbox"), _("Checkbox"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryCheckBox, wxT("caption"), _("Caption"), wxT("Checkbox"));
+	CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), _("Title location"), enTitleLocation::eLeft);
 
 	CPropertyCategory* m_categorySource = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryCheckBox, wxT("source"), _("source"), eValueTypes::TYPE_BOOLEAN);
+	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryCheckBox, wxT("source"), _("Source"), eValueTypes::TYPE_BOOLEAN);
 
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("event"));
-	CEventControl* m_onCheckboxClicked = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onCheckboxClicked"), wxArrayString{ wxT("control") });
+	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
+	CEventControl* m_onCheckboxClicked = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onCheckboxClicked"), _("Checkbox clicked"), wxArrayString{wxT("control")});
 
 public:
 
@@ -374,9 +374,9 @@ protected:
 class CValueRadioButton : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueRadioButton);
 protected:
-	CPropertyCategory* m_categoryRadioButton = IPropertyObject::CreatePropertyCategory(wxT("radioButton"), _("radio button"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryRadioButton, wxT("caption"), _("caption"), _("RadioBtn"));
-	CPropertyBoolean* m_propertySelected = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryRadioButton, wxT("selected"), _("selected"));
+	CPropertyCategory* m_categoryRadioButton = IPropertyObject::CreatePropertyCategory(wxT("radioButton"), _("Radio button"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryRadioButton, wxT("caption"), _("Caption"), _("Radio button"));
+	CPropertyBoolean* m_propertySelected = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryRadioButton, wxT("selected"), _("Selected"));
 public:
 
 	void SetCaption(const wxString& caption) {
@@ -412,8 +412,8 @@ public:
 class CValueStaticLine : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueStaticLine);
 protected:
-	CPropertyCategory* m_categoryStaticLine = IPropertyObject::CreatePropertyCategory(wxT("staticLine"), _("static line"));
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryStaticLine, wxT("orient"), _("orient"), wxHORIZONTAL);
+	CPropertyCategory* m_categoryStaticLine = IPropertyObject::CreatePropertyCategory(wxT("staticLine"), _("Static line"));
+	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryStaticLine, wxT("orient"), _("Orient"), wxHORIZONTAL);
 public:
 
 	CValueStaticLine();
@@ -439,11 +439,11 @@ public:
 class CValueSlider : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueSlider);
 protected:
-	CPropertyCategory* m_categorySlider = IPropertyObject::CreatePropertyCategory(wxT("slider"), _("slider"));
-	CPropertyInteger* m_propertyMinValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("minValue"), _("min value"), 0);
-	CPropertyInteger* m_propertyMaxValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("maxValue"), _("max value"), 100);
-	CPropertyInteger* m_propertyValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("value"), _("value"), 50);
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySlider, wxT("orient"), _("orient"), wxHORIZONTAL);
+	CPropertyCategory* m_categorySlider = IPropertyObject::CreatePropertyCategory(wxT("slider"), _("Slider"));
+	CPropertyInteger* m_propertyMinValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("minValue"), _("Min value"), 0);
+	CPropertyInteger* m_propertyMaxValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("maxValue"), _("Max value"), 100);
+	CPropertyInteger* m_propertyValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categorySlider, wxT("value"), _("Value"), 50);
+	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySlider, wxT("orient"), _("Orient"), wxHORIZONTAL);
 public:
 
 	CValueSlider();
@@ -469,10 +469,10 @@ public:
 class CValueGauge : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueGauge);
 protected:
-	CPropertyCategory* m_categoryGauge = IPropertyObject::CreatePropertyCategory(wxT("gauge"), _("gauge"));
-	CPropertyInteger* m_propertyRange = IPropertyObject::CreateProperty<CPropertyInteger>(m_categoryGauge, wxT("range"), _("range"), 100);
-	CPropertyInteger* m_propertyValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categoryGauge, wxT("value"), _("value"), 30);
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryGauge, wxT("orient"), _("orient"), wxHORIZONTAL);
+	CPropertyCategory* m_categoryGauge = IPropertyObject::CreatePropertyCategory(wxT("gauge"), _("Gauge"));
+	CPropertyInteger* m_propertyRange = IPropertyObject::CreateProperty<CPropertyInteger>(m_categoryGauge, wxT("range"), _("Range"), 100);
+	CPropertyInteger* m_propertyValue = IPropertyObject::CreateProperty<CPropertyInteger>(m_categoryGauge, wxT("value"), _("Value"), 30);
+	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryGauge, wxT("orient"), _("Orient"), wxHORIZONTAL);
 public:
 
 	CValueGauge();

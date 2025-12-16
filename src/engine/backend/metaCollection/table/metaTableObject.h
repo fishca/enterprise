@@ -9,9 +9,9 @@ private:
 	//CMetaObjectAttributePredefined* m_numberLine = IMetaObjectCompositeData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0);
 protected:
 
-	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory("group", _("group"));
-	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("item mode"), eItemMode::eItemMode_Item);
-	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectCompositeData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0));
+	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
+	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
+	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
 
 public:
 

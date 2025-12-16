@@ -13,7 +13,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBoxColumn, IValueControl);
 
 bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 {
-	property->AppendItem(wxT("default"), _("default"), wxNOT_FOUND);
+	property->AppendItem(wxT("default"), _("Default"), wxNOT_FOUND);
 
 	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {

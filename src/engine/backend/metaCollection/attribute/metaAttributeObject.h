@@ -198,14 +198,14 @@ protected:
 class BACKEND_API CMetaObjectAttribute : public IMetaObjectAttribute {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectAttribute);
 protected:
-	CPropertyCategory* m_categoryType = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertyType* m_propertyType = IPropertyObject::CreateProperty<CPropertyType>(m_categoryType, wxT("type"), _("type"), eValueTypes::TYPE_STRING);
-	CPropertyCategory* m_categoryAttribute = IPropertyObject::CreatePropertyCategory(wxT("attribute"), _("attribute"));
-	CPropertyBoolean* m_propertyFillCheck = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryAttribute, wxT("fillCheck"), _("fill check"));
-	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("presentation"));
-	CPropertyEnum<CValueEnumSelectMode>* m_propertySelectMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSelectMode>>(m_categoryPresentation, wxT("select"), _("select group and items"), eSelectMode::eSelectMode_Items);
-	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("group"));
-	CPropertyEnum<CValueEnumItemMode>* m_propertyItemMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("item mode"), eItemMode::eItemMode_Item);
+	CPropertyCategory* m_categoryType = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
+	CPropertyType* m_propertyType = IPropertyObject::CreateProperty<CPropertyType>(m_categoryType, wxT("type"), _("Type"), eValueTypes::TYPE_STRING);
+	CPropertyCategory* m_categoryAttribute = IPropertyObject::CreatePropertyCategory(wxT("attribute"), _("Attribute"));
+	CPropertyBoolean* m_propertyFillCheck = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryAttribute, wxT("fillCheck"), _("Fill check"));
+	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
+	CPropertyEnum<CValueEnumSelectMode>* m_propertySelectMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSelectMode>>(m_categoryPresentation, wxT("select"), _("Select group and items"), eSelectMode::eSelectMode_Items);
+	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
+	CPropertyEnum<CValueEnumItemMode>* m_propertyItemMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
 public:
 
 	CMetaObjectAttribute::CMetaObjectAttribute(const eValueTypes& valType = eValueTypes::TYPE_STRING) :

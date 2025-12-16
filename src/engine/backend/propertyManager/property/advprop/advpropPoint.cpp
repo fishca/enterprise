@@ -15,8 +15,8 @@ wxPGPointProperty::wxPGPointProperty(const wxString& label,
 	const wxPoint& value) : wxPGProperty(label, strName)
 {
 	DoSetValue(value);
-	AddPrivateChild(new wxIntProperty(wxT("x"), wxPG_LABEL, value.x));
-	AddPrivateChild(new wxIntProperty(wxT("y"), wxPG_LABEL, value.y));
+	AddPrivateChild(new wxIntProperty(_("X"), wxT("x"), value.x));
+	AddPrivateChild(new wxIntProperty(_("Y"), wxT("y"), value.y));
 }
 
 wxPGPointProperty::~wxPGPointProperty() {}

@@ -22,9 +22,9 @@ public:
 	//CValueEnumItemMode(const eItemMode &mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eItemMode_Item, wxT("items"));
-		AddEnumeration(eItemMode_Folder, wxT("folders"));
-		AddEnumeration(eItemMode_Folder_Item, wxT("foldersAndItems"));
+		AddEnumeration(eItemMode_Item, wxT("items"), _("Items"));
+		AddEnumeration(eItemMode_Folder, wxT("folders"), _("Folders"));
+		AddEnumeration(eItemMode_Folder_Item, wxT("foldersAndItems"), _("Folders and items"));
 	}
 };
 class CValueEnumSelectMode : public IEnumeration<eSelectMode> {
@@ -34,9 +34,9 @@ public:
 	//CValueEnumSelectMode(const eSelectMode &mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eSelectMode_Items, wxT("items"));
-		AddEnumeration(eSelectMode_Folders, wxT("folders"));
-		AddEnumeration(eSelectMode_FoldersAndItems, wxT("foldersAndItems"));
+		AddEnumeration(eSelectMode_Items, wxT("items"), _("items"));
+		AddEnumeration(eSelectMode_Folders, wxT("folders"), _("Folders"));
+		AddEnumeration(eSelectMode_FoldersAndItems, wxT("foldersAndItems"), _("Folders and items"));
 	}
 };
 #pragma endregion 

@@ -5,7 +5,7 @@
 #include "backend/uniqueKey.h"
 
 #define defaultFormType wxNOT_FOUND
-#define formDefaultName _("form")
+#define formDefaultName _("Form")
 
 class BACKEND_API ISourceDataObject;
 
@@ -78,10 +78,10 @@ private:
 	bool GetFormType(CPropertyList* prop);
 protected:
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("form"));
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("type"), &CMetaObjectForm::GetFormType, wxNOT_FOUND);
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
+	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::GetFormType, wxNOT_FOUND);
 
 public:
 
@@ -139,9 +139,9 @@ class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonForm);
 protected:
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("form"));
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 
-	CRole* m_roleUse = IMetaObject::CreateRole("use", _("use"));
+	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("use"));
 
 public:
 

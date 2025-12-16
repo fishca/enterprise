@@ -17,12 +17,12 @@
 class BACKEND_API CMetaObjectConfiguration : public IMetaObject {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConfiguration);
 private:
-	CRole* m_roleAdministration = IMetaObject::CreateRole("administration", _("administration"));
-	CRole* m_roleDataAdministration = IMetaObject::CreateRole("dataAdministration", _("data administration"));
-	CRole* m_roleUpdateDatabaseConfiguration = IMetaObject::CreateRole("updateDatabaseConfiguration", _("update database configuration"));
-	CRole* m_roleActiveUsers = IMetaObject::CreateRole("activeUsers", _("active users"));
-	CRole* m_roleExclusiveMode = IMetaObject::CreateRole("exclusiveMode", _("exclusive mode"));
-	CRole* m_roleModeAllFunction = IMetaObject::CreateRole("modeAllFunctions", _("mode \"All functions\""));
+	CRole* m_roleAdministration = IMetaObject::CreateRole(wxT("administration"), _("Administration"));
+	CRole* m_roleDataAdministration = IMetaObject::CreateRole(wxT("dataAdministration"), _("Data administration"));
+	CRole* m_roleUpdateDatabaseConfiguration = IMetaObject::CreateRole(wxT("updateDatabaseConfiguration"), _("Update database configuration"));
+	CRole* m_roleActiveUsers = IMetaObject::CreateRole(wxT("activeUsers"), _("Active users"));
+	CRole* m_roleExclusiveMode = IMetaObject::CreateRole(wxT("exclusiveMode"), _("Exclusive mode"));
+	CRole* m_roleModeAllFunction = IMetaObject::CreateRole(wxT("modeAllFunctions"), _("Mode \"All functions\""));
 protected:
 
 	enum
@@ -30,10 +30,10 @@ protected:
 		ID_METATREE_OPEN_INIT_MODULE = 19000,
 	};
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("configurationModule"), _("configuration module")));
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("configurationModule"), _("Configuration module")));
 
-	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("compatibility"), _("compatibility"));
-	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("version"), _("version"), version_oes_last);
+	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("compatibility"), _("Compatibility"));
+	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("version"), _("Version"), version_oes_last);
 
 public:
 

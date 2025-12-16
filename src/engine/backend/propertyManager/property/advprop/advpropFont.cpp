@@ -78,10 +78,10 @@ wxPGFontProperty::wxPGFontProperty(const wxString& label, const wxString& strNam
 
 	//wxString emptyString(wxEmptyString);
 
-	AddPrivateChild(new wxIntProperty(_("point Size"), wxT("point Size"),
+	AddPrivateChild(new wxIntProperty(_("Point Size"), wxT("point Size"),
 		value.m_pointSize));
 
-	AddPrivateChild(new wxEnumProperty(_("family"), wxT("family"),
+	AddPrivateChild(new wxEnumProperty(_("Family"), wxT("family"),
 		gs_fp_es_family_labels, gs_fp_es_family_values,
 		value.m_family));
 
@@ -91,20 +91,20 @@ wxPGFontProperty::wxPGFontProperty(const wxString& label, const wxString& strNam
 		wxPGGlobalVars->m_fontFamilyChoices->Index(faceName) == wxNOT_FOUND)
 		wxPGGlobalVars->m_fontFamilyChoices->AddAsSorted(faceName);
 
-	wxPGProperty* p = new wxEnumProperty(_("face Name"), wxT("face Name"),
+	wxPGProperty* p = new wxEnumProperty(_("Face Name"), wxT("face Name"),
 		*wxPGGlobalVars->m_fontFamilyChoices);
 
 	p->SetValueFromString(faceName, wxPG_FULL_VALUE);
 
 	AddPrivateChild(p);
 
-	AddPrivateChild(new wxEnumProperty(_("style"), wxT("style"),
+	AddPrivateChild(new wxEnumProperty(_("Style"), wxT("style"),
 		gs_fp_es_style_labels, gs_fp_es_style_values, value.m_style));
 
-	AddPrivateChild(new wxEnumProperty(_("weight"), wxT("weight"),
+	AddPrivateChild(new wxEnumProperty(_("Weight"), wxT("weight"),
 		gs_fp_es_weight_labels, gs_fp_es_weight_values, value.m_weight));
 
-	AddPrivateChild(new wxBoolProperty(_("underlined"), wxT("underlined"),
+	AddPrivateChild(new wxBoolProperty(_("Underlined"), wxT("underlined"),
 		value.m_underlined));
 }
 

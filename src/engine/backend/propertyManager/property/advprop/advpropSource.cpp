@@ -19,7 +19,7 @@ wxPGSourceDataProperty::wxPGSourceDataProperty(IPropertyObject* property, const 
 
 	IBackendTypeSourceFactory* typeFactory = dynamic_cast<IBackendTypeSourceFactory*>(property);
 	wxASSERT(typeFactory);
-	m_typeSelector = new wxPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : eSelectorDataType::eSelectorDataType_reference, _("type"), wxT("type"), dataSource->CloneSourceAttribute());
+	m_typeSelector = new wxPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : eSelectorDataType::eSelectorDataType_reference, _("Type"), wxT("type"), dataSource->CloneSourceAttribute());
 	AddPrivateChild(m_typeSelector);
 
 	//m_flags |= wxPG_PROP_READONLY;

@@ -126,7 +126,7 @@ private:
 class BACKEND_API CMetaObjectModule : public IMetaObjectModule {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectModule);
 protected:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("Module"));
 public:
 	CMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
 		: IMetaObjectModule(name, synonym, comment)
@@ -156,10 +156,10 @@ private:
 
 protected:
 
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("Module"));
 
-	CPropertyCategory* m_moduleCategory = IPropertyObject::CreatePropertyCategory(wxT("common module"), _("common module"));
-	CPropertyBoolean* m_propertyGlobalModule = IPropertyObject::CreateProperty<CPropertyBoolean>(m_moduleCategory, wxT("globalModule"), _("global module"), false);
+	CPropertyCategory* m_moduleCategory = IPropertyObject::CreatePropertyCategory(wxT("common module"), _("Common module"));
+	CPropertyBoolean* m_propertyGlobalModule = IPropertyObject::CreateProperty<CPropertyBoolean>(m_moduleCategory, wxT("globalModule"), _("Global module"), false);
 
 public:
 
@@ -215,7 +215,7 @@ protected:
 class BACKEND_API CMetaObjectManagerModule : public CMetaObjectCommonModule {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectManagerModule);
 protected:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("Module"));
 public:
 	CMetaObjectManagerModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
 		: CMetaObjectCommonModule(name, synonym, comment)

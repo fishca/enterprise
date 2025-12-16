@@ -14,8 +14,8 @@ wxPGSizeProperty::wxPGSizeProperty(const wxString& label,
 	const wxSize& value) : wxPGProperty(label, strName)
 {
 	DoSetValue(value);
-	AddPrivateChild(new wxIntProperty(_("width"), wxPG_LABEL, value.x));
-	AddPrivateChild(new wxIntProperty(_("height"), wxPG_LABEL, value.y));
+	AddPrivateChild(new wxIntProperty(_("Width"), wxT("width"), value.x));
+	AddPrivateChild(new wxIntProperty(_("Height"), wxT("height"), value.y));
 }
 
 void wxPGSizeProperty::RefreshChildren()
@@ -35,12 +35,12 @@ wxVariant wxPGSizeProperty::ChildChanged(wxVariant& thisValue, const int childIn
 	const int val = childValue.GetLong();
 	switch (childIndex)
 	{
-		case 0:
-			size.x = val;
-			break;
-		case 1:
-			size.y = val;
-			break;
+	case 0:
+		size.x = val;
+		break;
+	case 1:
+		size.y = val;
+		break;
 	}
 	wxVariant newVariant;
 	newVariant << size;

@@ -8,17 +8,17 @@ class BACKEND_API CRecordDataObjectConstant;
 class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandData {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
 private:
-	CRole* m_roleRead = IMetaObject::CreateRole("read", _("read"));
-	CRole* m_roleInsert = IMetaObject::CreateRole("insert", _("insert"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole("update", _("update"));
-	CRole* m_roleDelete = IMetaObject::CreateRole("delete", _("delete"));
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
+	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
 protected:
 	enum
 	{
 		ID_METATREE_OPEN_CONSTANT_MANAGER = 19000,
 	};
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordModule"), _("record module")));
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordModule"), _("Record module")));
 
 public:
 

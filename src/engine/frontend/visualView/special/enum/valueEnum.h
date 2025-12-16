@@ -15,8 +15,8 @@ public:
 	//CValueEnumOrient(wxOrientation orient) : IEnumeration(orient) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxHORIZONTAL, wxT("horizontal"));
-		AddEnumeration(wxVERTICAL, wxT("vertical"));
+		AddEnumeration(wxHORIZONTAL, wxT("horizontal"), _("Horizontal"));
+		AddEnumeration(wxVERTICAL, wxT("vertical"), _("Vertical"));
 	}
 };
 
@@ -27,8 +27,8 @@ public:
 	//CValueEnumStretch(const wxStretch &v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxStretch::wxSHRINK, wxT("shrink"));
-		AddEnumeration(wxStretch::wxEXPAND, wxT("expand"));
+		AddEnumeration(wxStretch::wxSHRINK, wxT("shrink"), _("Shrink"));
+		AddEnumeration(wxStretch::wxEXPAND, wxT("expand"), _("Expand"));
 	}
 };
 
@@ -41,8 +41,8 @@ public:
 	//CValueEnumOrientNotebookPage(const wxAuiNotebookOption& v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_TOP, wxT("top"));
-		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_BOTTOM, wxT("bottom"));
+		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_TOP, wxT("top"), _("Top"));
+		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_BOTTOM, wxT("bottom"), _("Bottom"));
 	}
 };
 
@@ -53,9 +53,9 @@ public:
 	//CValueEnumHorizontalAlignment(const wxAlignment& v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAlignment::wxALIGN_LEFT, wxT("left"));
-		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"));
-		AddEnumeration(wxAlignment::wxALIGN_RIGHT, wxT("right"));
+		AddEnumeration(wxAlignment::wxALIGN_LEFT, wxT("left"), _("Left"));
+		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"), _("Center"));
+		AddEnumeration(wxAlignment::wxALIGN_RIGHT, wxT("right"), _("Right"));
 	}
 };
 
@@ -66,9 +66,9 @@ public:
 	//CValueEnumVerticalAlignment(const wxAlignment& v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAlignment::wxALIGN_TOP, wxT("top"));
-		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"));
-		AddEnumeration(wxAlignment::wxALIGN_BOTTOM, wxT("bottom"));
+		AddEnumeration(wxAlignment::wxALIGN_TOP, wxT("top"), _("Top"));
+		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"), _("Center"));
+		AddEnumeration(wxAlignment::wxALIGN_BOTTOM, wxT("bottom"), _("Bottom"));
 	}
 };
 
@@ -79,12 +79,12 @@ public:
 	//CValueEnumBorder(const wxPenStyle& v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxPenStyle::wxPENSTYLE_TRANSPARENT, wxT("none"), _("none"));
-		AddEnumeration(wxPenStyle::wxPENSTYLE_SOLID, wxT("solid"), _("solid"));
-		AddEnumeration(wxPenStyle::wxPENSTYLE_DOT, wxT("dotted"), _("dotted"));
-		AddEnumeration(wxPenStyle::wxPENSTYLE_SHORT_DASH, wxT("thin_dashed"), _("thin dashed"));
-		AddEnumeration(wxPenStyle::wxPENSTYLE_DOT_DASH, wxT("thick_dashed"), _("thick dashed"));
-		AddEnumeration(wxPenStyle::wxPENSTYLE_LONG_DASH, wxT("large_dashed"), _("large dashed"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_TRANSPARENT, wxT("none"), _("None"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_SOLID, wxT("solid"), _("Solid"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_DOT, wxT("dotted"), _("Dotted"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_SHORT_DASH, wxT("thin_dashed"), _("Thin dashed"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_DOT_DASH, wxT("thick_dashed"), _("Thick dashed"));
+		AddEnumeration(wxPenStyle::wxPENSTYLE_LONG_DASH, wxT("large_dashed"), _("Large dashed"));
 	}
 };
 
@@ -95,8 +95,8 @@ public:
 	//CValueEnumTitleLocation(enTitleLocation v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enTitleLocation::eLeft, wxT("left"));
-		AddEnumeration(enTitleLocation::eRight, wxT("right"));
+		AddEnumeration(enTitleLocation::eLeft, wxT("left"), _("Left"));
+		AddEnumeration(enTitleLocation::eRight, wxT("right"), _("Right"));
 	}
 };
 #pragma endregion 

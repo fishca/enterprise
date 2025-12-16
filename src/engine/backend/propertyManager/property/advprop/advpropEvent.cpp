@@ -67,10 +67,10 @@ wxPGEditorDialogAdapter* wxEventProperty::GetEditorDialog() const
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 			const wxString &eventName = pg->GetUncommittedPropertyValue();
 			if (eventName.IsEmpty()) {
-				wxPGProperty* pgProp = pg->GetPropertyByLabel(wxT("name"));
-
+				
+				wxPGProperty* pgProp = pg->GetPropertyByName(wxT("name"));
 				prop->SetValueFromString(
-					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + wxT("_") + prop->GetLabel());
+					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + wxT("_") + prop->GetName());
 
 				SetValue(prop->GetValue());
 			}

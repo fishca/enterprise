@@ -34,16 +34,16 @@ protected:
 class BACKEND_API CMetaObjectGrid : public IMetaObjectGrid {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonGrid);
 protected:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("template"));
-	CPropertyTempalate* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertyTempalate>(m_categoryTemplate, wxT("templateData"), _("template data"));
+	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("Template"));
+	CPropertyTempalate* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertyTempalate>(m_categoryTemplate, wxT("templateData"), _("Template data"));
 public:
 };
 
 class BACKEND_API CMetaObjectCommonGrid : public IMetaObjectGrid {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonGrid);
 protected:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("commonTemplate"), _("common template"));
-	CPropertyTempalate* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertyTempalate>(m_categoryTemplate, wxT("templateData"), _("template data"));
+	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("commonTemplate"), _("Common template"));
+	CPropertyTempalate* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertyTempalate>(m_categoryTemplate, wxT("templateData"), _("Template data"));
 public:
 };
 

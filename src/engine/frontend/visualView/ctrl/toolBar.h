@@ -25,8 +25,8 @@ class CValueToolbar : public IValueWindow {
 protected:
 	bool GetActionSource(CPropertyList*);
 protected:
-	CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("action"));
-	CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("action source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
+	CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("Toolbar"));
+	CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("Source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
 public:
 
 	void SetActionSrc(const form_identifier_t& action) { return m_actSource->SetValue(action); }
@@ -95,15 +95,15 @@ private:
 	bool GetToolAction(CEventAction* evtList);
 private:
 
-	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("toolbar item"));
+	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
 
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("caption"), _("New tool"));
-	CPropertyPicture* m_propertyBitmap = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("bitmap"), _("bitmap"));
-	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("context menu"), false);
-	CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("tooltip"), wxEmptyString);
-	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("enabled"), true);
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("Caption"), _("New tool"));
+	CPropertyPicture* m_propertyBitmap = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("bitmap"), _("Bitmap"));
+	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
+	CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("Tooltip"), wxEmptyString);
+	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("Enabled"), true);
 
-	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), wxArrayString{ wxT("control") }, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
+	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), _("Action"), wxArrayString{wxT("control")}, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 public:
 

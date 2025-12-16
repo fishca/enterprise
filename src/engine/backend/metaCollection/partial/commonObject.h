@@ -349,7 +349,7 @@ enum eObjectMode {
 class BACKEND_API IMetaObjectRecordDataExt : public IMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataExt);
 protected:
-	CRole* m_roleUse = IMetaObject::CreateRole("use", _("use"));
+	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
 public:
 
 	//ctor

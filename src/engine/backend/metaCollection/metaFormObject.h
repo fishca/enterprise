@@ -141,7 +141,7 @@ protected:
 
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 
-	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("use"));
+	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
 
 public:
 

@@ -98,7 +98,8 @@ private:
 	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
 
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("Caption"), _("New tool"));
-	CPropertyPicture* m_propertyBitmap = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("bitmap"), _("Bitmap"));
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_PictureAndText);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
 	CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("Tooltip"), wxEmptyString);
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("Enabled"), true);

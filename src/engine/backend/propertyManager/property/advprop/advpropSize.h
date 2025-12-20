@@ -9,7 +9,6 @@
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGSizeProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGSizeProperty)
 public:
 	
 	wxPGSizeProperty(const wxString& label = wxPG_LABEL,
@@ -19,10 +18,12 @@ public:
 	virtual wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
 		wxVariant& childValue) const override;
 
-	void RefreshChildren() override;
+	virtual void RefreshChildren() override;
 
 protected:
 	void DoSetValue(const wxSize& value) { m_value = WXVARIANT(value); }
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGSizeProperty);
 };
 
 #endif

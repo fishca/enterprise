@@ -15,7 +15,8 @@ protected:
 
 	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryButton, wxT("caption"), _("Caption"), wxT("Button"));
-	CPropertyPicture* m_propertyIcon = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryButton, wxT("icon"), _("Icon"));
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryButton, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_PictureAndText);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryButton, wxT("picture"), _("Picture"));
 
 	//event
 	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));

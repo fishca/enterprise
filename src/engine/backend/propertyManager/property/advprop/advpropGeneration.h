@@ -11,8 +11,6 @@ class BACKEND_API IPropertyObject;
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGGenerationProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGGenerationProperty);
-private:
 	void FillByClsid(const class_identifier_t& clsid);
 public:
 
@@ -34,6 +32,8 @@ public:
 
 protected:
 	IPropertyObject* m_ownerProperty = nullptr;
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGGenerationProperty);
 };
 
 #endif

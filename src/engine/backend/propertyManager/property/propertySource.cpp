@@ -1,5 +1,5 @@
 #include "propertySource.h"
-#include "backend/propertyManager/property/variant/sourceVariant.h"
+#include "backend/propertyManager/property/variant/variantSource.h"
 
 wxVariantData* CPropertySource::CreateVariantData(const IPropertyObject* property, const eValueTypes& type) const
 {

@@ -10,12 +10,9 @@ class BACKEND_API IPropertyObject;
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGSourceDataProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGSourceDataProperty)
 public:
 
-	IPropertyObject* GetPropertyObject() const { 
-		return m_typeSelector->GetPropertyObject(); 
-	}
+	IPropertyObject* GetPropertyObject() const { return m_typeSelector->GetPropertyObject(); }
 
 	wxPGSourceDataProperty(IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
@@ -34,8 +31,9 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 protected:
-
 	wxPGTypeProperty* m_typeSelector;
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGSourceDataProperty)
 };
 
 #endif

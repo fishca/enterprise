@@ -33,6 +33,9 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::RebuildTree(
 	Connect(wxID_ANY, wxEVT_COMMAND_TREE_ITEM_EXPANDED, wxTreeEventHandler(CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::OnExpansionChange));
 
 	m_tcObjects->Thaw();
+
+	m_tcObjects->Refresh();
+	m_tcObjects->Update();
 }
 
 void CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::AddChildren(IValueFrame* obj, const wxTreeItemId& parent, bool is_root)

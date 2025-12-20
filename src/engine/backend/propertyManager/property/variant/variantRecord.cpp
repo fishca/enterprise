@@ -1,4 +1,4 @@
-#include "recordVariant.h"
+#include "variantRecord.h"
 
 wxString wxVariantDataRecord::MakeString() const
 {

@@ -1,4 +1,4 @@
-#include "typeVariant.h"
+#include "variantType.h"
 #include "backend/metaData.h"
 
 wxString wxVariantDataAttribute::MakeString() const

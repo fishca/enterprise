@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -25,6 +25,7 @@
     <ClInclude Include="backend_exception.h" />
     <ClInclude Include="backend_core.h" />
     <ClInclude Include="backend_mainFrame.h" />
+    <ClInclude Include="backend_picture.h" />
     <ClInclude Include="backend_type.h" />
     <ClInclude Include="clsid.h" />
     <ClInclude Include="compiler\byteCode.h" />
@@ -124,6 +125,8 @@
     <ClInclude Include="fileSystem\quicklz\quicklz.h" />
     <ClInclude Include="fileSystem\types.h" />
     <ClInclude Include="guid.h" />
+    <ClInclude Include="metaCollection\metaPictureObject.h" />
+    <ClInclude Include="pictureDescription.h" />
     <ClInclude Include="metaCollection\attribute\metaAttributeObject.h" />
     <ClInclude Include="metaCollection\attribute\metaAttributeObjectEnum.h" />
     <ClInclude Include="metaCollection\dimension\metaDimensionObject.h" />
@@ -215,15 +218,16 @@
     <ClInclude Include="propertyManager\property\propertyString.h" />
     <ClInclude Include="propertyManager\property\propertyTemplate.h" />
     <ClInclude Include="propertyManager\property\propertyType.h" />
-    <ClInclude Include="propertyManager\property\variant\actionVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\formVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\genVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\moduleVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\numberVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\ownerVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\recordVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\sourceVariant.h" />
-    <ClInclude Include="propertyManager\property\variant\typeVariant.h" />
+    <ClInclude Include="propertyManager\property\variant\variantAction.h" />
+    <ClInclude Include="propertyManager\property\variant\variantForm.h" />
+    <ClInclude Include="propertyManager\property\variant\variantGen.h" />
+    <ClInclude Include="propertyManager\property\variant\variantModule.h" />
+    <ClInclude Include="propertyManager\property\variant\variantNumber.h" />
+    <ClInclude Include="propertyManager\property\variant\variantOwner.h" />
+    <ClInclude Include="propertyManager\property\variant\variantPicture.h" />
+    <ClInclude Include="propertyManager\property\variant\variantRecord.h" />
+    <ClInclude Include="propertyManager\property\variant\variantSource.h" />
+    <ClInclude Include="propertyManager\property\variant\variantType.h" />
     <ClInclude Include="roleHelper.h" />
     <ClInclude Include="srcExplorer.h" />
     <ClInclude Include="srcObject.h" />
@@ -240,6 +244,7 @@
     <ClInclude Include="system\value\valueGuid.h" />
     <ClInclude Include="system\value\valueMap.h" />
     <ClInclude Include="system\value\valueOLE.h" />
+    <ClInclude Include="system\value\valuePicture.h" />
     <ClInclude Include="system\value\valuePoint.h" />
     <ClInclude Include="system\value\valueSize.h" />
     <ClInclude Include="system\value\valueTable.h" />
@@ -251,7 +256,6 @@
     <ClInclude Include="utils\wxmd5.hpp" />
     <ClInclude Include="valueInfo.h" />
     <ClInclude Include="value_cast.h" />
-    <ClInclude Include="value_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="appData.cpp" />
@@ -260,6 +264,9 @@
     <ClCompile Include="backend_exception.cpp" />
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
+    <ClCompile Include="metaCollection\metaPictureObject.cpp" />
+    <ClCompile Include="metaCollection\metaPictureObject_res.cpp" />
+    <ClCompile Include="pictureDescription.cpp" />
     <ClCompile Include="backend_type.cpp" />
     <ClCompile Include="compiler\byteCode.cpp" />
     <ClCompile Include="compiler\compileCode.cpp" />
@@ -486,6 +493,7 @@
     <ClCompile Include="propertyManager\property\propertyList.cpp" />
     <ClCompile Include="propertyManager\property\propertyOwner.cpp" />
     <ClCompile Include="propertyManager\property\propertyPicture.cpp" />
+    <ClCompile Include="propertyManager\property\propertyPictureExt.cpp" />
     <ClCompile Include="propertyManager\property\propertyPoint.cpp" />
     <ClCompile Include="propertyManager\property\propertyRecord.cpp" />
     <ClCompile Include="propertyManager\property\propertySize.cpp" />
@@ -493,15 +501,16 @@
     <ClCompile Include="propertyManager\property\propertyString.cpp" />
     <ClCompile Include="propertyManager\property\propertyTemplate.cpp" />
     <ClCompile Include="propertyManager\property\propertyType.cpp" />
-    <ClCompile Include="propertyManager\property\variant\actionVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\formVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\genVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\moduleVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\numberVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\ownerVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\recordVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\sourceVariant.cpp" />
-    <ClCompile Include="propertyManager\property\variant\typeVariant.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantAction.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantForm.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantGen.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantModule.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantNumber.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantOwner.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantPicture.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantRecord.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantSource.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantType.cpp" />
     <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="interfaceHelper.cpp" />
     <ClCompile Include="system\systemManager.cpp" />
@@ -515,6 +524,7 @@
     <ClCompile Include="system\value\valueGuid.cpp" />
     <ClCompile Include="system\value\valueMap.cpp" />
     <ClCompile Include="system\value\valueOLE.cpp" />
+    <ClCompile Include="system\value\valuePicture.cpp" />
     <ClCompile Include="system\value\valuePoint.cpp" />
     <ClCompile Include="system\value\valueSize.cpp" />
     <ClCompile Include="system\value\valueTable.cpp" />

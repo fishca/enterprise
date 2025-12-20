@@ -310,6 +310,9 @@ public:
 	/// Gets the owner object
 	virtual IPropertyObject* GetOwner() const { return nullptr; }
 
+	/// Gets the metadata object
+	virtual IMetaData* GetMetaData() const { return nullptr; }
+
 	/**
 	* Obtiene la propiedad identificada por el nombre.
 	*
@@ -331,8 +334,6 @@ public:
 	/**
 	* Obtiene el número de hijos del objeto.
 	*/
-	//unsigned int GetChildCount() const { return (unsigned int)m_children.size(); }
-
 	unsigned int GetPropertyIndex(const wxString& nameParam) const;
 
 	IProperty* GetPropertyByIndex(unsigned int idx) const {

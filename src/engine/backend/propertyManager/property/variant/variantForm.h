@@ -1,7 +1,7 @@
 #ifndef __FORM_VARIANT_H__
 #define __FORM_VARIANT_H__
 
-#include "moduleVariant.h"
+#include "variantModule.h"
 
 class BACKEND_API wxVariantDataForm : public wxVariantDataModule {
 	wxString MakeString() const;

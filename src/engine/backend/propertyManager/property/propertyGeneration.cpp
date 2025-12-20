@@ -1,5 +1,5 @@
 #include "propertyGeneration.h"
-#include "backend/propertyManager/property/variant/genVariant.h"
+#include "backend/propertyManager/property/variant/variantGen.h"
 
 wxVariantData* CPropertyGeneration::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {

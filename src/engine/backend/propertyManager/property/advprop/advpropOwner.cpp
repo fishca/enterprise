@@ -1,5 +1,5 @@
 #include "advpropOwner.h"
-#include "backend/propertyManager/property/variant/ownerVariant.h"
+#include "backend/propertyManager/property/variant/variantOwner.h"
 #include "backend/propertyManager/propertyEditor.h"
 
 #define icon_size 16

@@ -438,18 +438,6 @@
     <ClInclude Include="propertyManager\propertyManager.h">
       <Filter>propertyManager</Filter>
     </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\recordVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\ownerVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\genVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\typeVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
     <ClInclude Include="propertyManager\property\propertyColour.h">
       <Filter>propertyManager\property</Filter>
     </ClInclude>
@@ -464,12 +452,6 @@
     </ClInclude>
     <ClInclude Include="propertyManager\property\propertyPicture.h">
       <Filter>propertyManager\property</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\numberVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\sourceVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
     </ClInclude>
     <ClInclude Include="propertyManager\propertyEditor.h">
       <Filter>propertyManager</Filter>
@@ -580,17 +562,11 @@
     <ClInclude Include="propertyManager\property\propertyModule.h">
       <Filter>propertyManager\property</Filter>
     </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\moduleVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
     <ClInclude Include="propertyManager\property\propertyTemplate.h">
       <Filter>propertyManager\property</Filter>
     </ClInclude>
     <ClInclude Include="propertyManager\property\propertyForm.h">
       <Filter>propertyManager\property</Filter>
-    </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\formVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
     </ClInclude>
     <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h">
       <Filter>propertyManager\property\advprop</Filter>
@@ -625,17 +601,51 @@
     <ClInclude Include="databaseLayer\firebird\engine\firebird\impl\types_pub.h">
       <Filter>databaseLayer\firebird\engine\firebird\impl</Filter>
     </ClInclude>
-    <ClInclude Include="propertyManager\property\variant\actionVariant.h">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClInclude>
     <ClInclude Include="value_cast.h" />
-    <ClInclude Include="value_ptr.h" />
     <ClInclude Include="interfaceHelper.h" />
     <ClInclude Include="metaCollection\metaInterfaceObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
     <ClInclude Include="metadataDataProcessor.h" />
     <ClInclude Include="metadataReport.h" />
+    <ClInclude Include="pictureDescription.h" />
+    <ClInclude Include="propertyManager\property\variant\variantAction.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantForm.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantGen.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantModule.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantNumber.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantOwner.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantPicture.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantRecord.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantSource.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="propertyManager\property\variant\variantType.h">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClInclude>
+    <ClInclude Include="backend_picture.h" />
+    <ClInclude Include="system\value\valuePicture.h">
+      <Filter>system\value</Filter>
+    </ClInclude>
+    <ClInclude Include="metaCollection\metaPictureObject.h">
+      <Filter>metaCollection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1211,18 +1221,6 @@
     <ClCompile Include="propertyManager\property\propertyOwner.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\recordVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\genVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\ownerVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\typeVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
     <ClCompile Include="propertyManager\property\propertyColour.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
@@ -1237,12 +1235,6 @@
     </ClCompile>
     <ClCompile Include="propertyManager\property\propertyPicture.cpp">
       <Filter>propertyManager\property</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\numberVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\sourceVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
     </ClCompile>
     <ClCompile Include="propertyManager\propertyEditor.cpp">
       <Filter>propertyManager</Filter>
@@ -1365,23 +1357,14 @@
     <ClCompile Include="propertyManager\property\propertyModule.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\moduleVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
     <ClCompile Include="propertyManager\property\propertyTemplate.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
     <ClCompile Include="propertyManager\property\propertyForm.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\formVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
-    </ClCompile>
     <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp">
       <Filter>propertyManager\property\advprop</Filter>
-    </ClCompile>
-    <ClCompile Include="propertyManager\property\variant\actionVariant.cpp">
-      <Filter>propertyManager\property\variant</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\dataProcessorMetadata_res.cpp">
       <Filter>metaCollection\partial</Filter>
@@ -1404,6 +1387,49 @@
     <ClCompile Include="metadataReport.cpp" />
     <ClCompile Include="metadataReportFactory.cpp" />
     <ClCompile Include="metadataDataProcessor.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantAction.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantForm.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantGen.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantModule.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantNumber.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantOwner.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantPicture.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantRecord.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantSource.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\variant\variantType.cpp">
+      <Filter>propertyManager\property\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="pictureDescription.cpp" />
+    <ClCompile Include="system\value\valuePicture.cpp">
+      <Filter>system\value</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\metaPictureObject.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\metaPictureObject_res.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\propertyPictureExt.cpp">
+      <Filter>propertyManager\property</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

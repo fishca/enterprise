@@ -11,8 +11,28 @@
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxNumberProperty : public wxNumericProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxNumberProperty);
+public:
+	wxNumberProperty(const wxString& label = wxPG_LABEL,
+		const wxString& name = wxPG_LABEL,
+		const number_t& value = 0.0);
+	virtual ~wxNumberProperty();
+
+	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const wxOVERRIDE;
+	virtual bool StringToValue(wxVariant& variant,
+		const wxString& text,
+		int argFlags = 0) const wxOVERRIDE;
+	virtual bool DoSetAttribute(const wxString& name, wxVariant& value) wxOVERRIDE;
+
+	virtual bool ValidateValue(wxVariant& value,
+		wxPGValidationInfo& validationInfo) const wxOVERRIDE;
+
+	static wxValidator* GetClassValidator();
+
+	virtual wxValidator* DoGetValidator() const wxOVERRIDE;
+	virtual wxVariant AddSpinStepValue(long stepScale) const wxOVERRIDE;
+
 protected:
+
 	// Common validation code to be called in ValidateValue() implementations.
 	// Note that 'value' is reference on purpose, so we can write
 	// back to it when mode is wxPG_PROPERTY_VALIDATION_SATURATE or wxPG_PROPERTY_VALIDATION_WRAP.
@@ -38,28 +58,11 @@ protected:
 		}
 		return true;
 	}
-public:
-	wxNumberProperty(const wxString& label = wxPG_LABEL,
-		const wxString& name = wxPG_LABEL,
-		const number_t& value = 0.0);
-	virtual ~wxNumberProperty();
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const wxOVERRIDE;
-	virtual bool StringToValue(wxVariant& variant,
-		const wxString& text,
-		int argFlags = 0) const wxOVERRIDE;
-	virtual bool DoSetAttribute(const wxString& name, wxVariant& value) wxOVERRIDE;
-
-	virtual bool ValidateValue(wxVariant& value,
-		wxPGValidationInfo& validationInfo) const wxOVERRIDE;
-
-	static wxValidator* GetClassValidator();
-
-	virtual wxValidator* DoGetValidator() const wxOVERRIDE;
-	virtual wxVariant AddSpinStepValue(long stepScale) const wxOVERRIDE;
-
-protected:
 	int m_precision;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxNumberProperty);
 };
 
 #endif

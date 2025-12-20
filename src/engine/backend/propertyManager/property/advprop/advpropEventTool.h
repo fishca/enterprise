@@ -11,7 +11,6 @@ class BACKEND_API IPropertyObject;
 // -----------------------------------------------------------------------
 
 class wxEventToolProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxEventToolProperty)
 private:
 
 	mutable class wxEventToolPropertyData {
@@ -61,6 +60,8 @@ public:
 
 protected:
 	IPropertyObject* m_ownerProperty;
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxEventToolProperty);
 };
 
 #endif

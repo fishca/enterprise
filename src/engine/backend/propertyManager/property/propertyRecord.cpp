@@ -1,5 +1,5 @@
 #include "propertyRecord.h"
-#include "backend/propertyManager/property/variant/recordVariant.h"
+#include "backend/propertyManager/property/variant/variantRecord.h"
 
 wxVariantData* CPropertyRecord::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {

@@ -2,18 +2,54 @@
 #define __ADVPROP_PICTURE_H__
 
 #include <wx/propgrid/propgrid.h>
+
 #include "backend/backend_core.h"
+#include "backend/pictureDescription.h"
+
+// -----------------------------------------------------------------------
+// wxPGExternalImageProperty
+// -----------------------------------------------------------------------
+
+class wxPGExternalImageProperty : public wxEditorDialogProperty {
+public:
+
+	wxPGExternalImageProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxVariant& value = wxVariant());
+
+	virtual wxSize OnMeasureImage(int item) const override { return wxSize(16, 16); }
+	virtual void OnCustomPaint(wxDC& dc,
+		const wxRect& rect, wxPGPaintData& paintdata) override;
+
+	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
+	virtual bool StringToValue(wxVariant& variant,
+		const wxString& text,
+		int argFlags = 0) const override;
+
+	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
+
+protected:
+
+	wxString m_basePath;
+	wxString m_initialPath;
+	wxString m_wildcard;
+
+	int m_indFilter;
+
+	wxBitmap   m_bitmap; // final thumbnail area
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGExternalImageProperty);
+};
 
 // -----------------------------------------------------------------------
 // wxPGPictureProperty
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGPictureProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGPictureProperty)
 public:
+
 	wxPGPictureProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
-		const wxString& value = wxString());
+		const wxVariant& value = wxVariant());
 
 	virtual ~wxPGPictureProperty() {}
 
@@ -24,36 +60,23 @@ public:
 		return false;
 	}
 
-	wxPGProperty* CreatePropertySource(int sourceIndex = 0);
-
-	wxPGProperty* CreatePropertyArtId();
-	wxPGProperty* CreatePropertyArtClient();
-
-	wxString SetupImage(const wxString& imgPath = wxEmptyString);
-	wxString SetupResource(const wxString& resName = wxEmptyString);
-
-	void SetPrevSource(int src) { m_prevSrc = src; }
-
+	virtual void RefreshChildren() override;
 	virtual wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
 		wxVariant& childValue) const override;
 
-	virtual void OnSetValue() override;
-	void CreateChildren();
-
-	void UpdateChildValues(const wxString& value);
-
-	virtual void RefreshChildren() override;
-
 protected:
 
-	void GetChildValues(const wxString& parentValue, wxArrayString& childValues) const;
+	wxEnumProperty* m_propertySource;
 
-	static wxArrayString m_ids;
-	static wxArrayString m_clients;
-	
-	wxArrayString m_strings;
+	wxEditEnumProperty* m_propertyBackend;
+	wxEditEnumProperty* m_propertyConfiguration;
+	wxPGExternalImageProperty* m_propertyFile;
 
-	int m_prevSrc;
+	std::map<int, class_identifier_t> m_valChoices;
+	std::map<int, CGuid> m_confChoices;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGPictureProperty);
 };
 
 #endif

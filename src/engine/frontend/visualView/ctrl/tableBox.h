@@ -377,7 +377,9 @@ private:
 	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("style"), _("Style"));
 	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("width"), _("Width"), wxDVC_DEFAULT_WIDTH);
 	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("align"), _("Align"), wxALIGN_LEFT);
-	CPropertyPicture* m_propertyIcon = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("icon"), _("Icon"));
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryStyle, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_PictureAndText);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("picture"), _("Picture"));
+
 	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("visible"), _("Visible"), true);
 	CPropertyBoolean* m_propertyResizable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("resizable"), _("Resizable"), true);
 	//CPropertyBoolean* m_propertySortable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("sortable"), _("Sortable"), false);

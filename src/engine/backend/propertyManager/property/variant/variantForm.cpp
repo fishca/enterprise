@@ -1,4 +1,4 @@
-#include "formVariant.h"
+#include "variantForm.h"
 
 wxString wxVariantDataForm::MakeString() const
 {

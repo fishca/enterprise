@@ -11,10 +11,10 @@ public:
 #pragma region clsid 
 
 	void SetDefaultMetaType(const eValueTypes& valType = eValueTypes::TYPE_EMPTY) { GetTypeDesc().SetDefaultMetaType(valType); }
-	
+
 	void SetDefaultMetaType(const class_identifier_t& clsid) { GetTypeDesc().SetDefaultMetaType(clsid); }
 	void SetDefaultMetaType(const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(clsid); }
-	
+
 	void SetDefaultMetaType(const std::vector<class_identifier_t>& array) { GetTypeDesc().SetDefaultMetaType(array); }
 	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CTypeDescription::CTypeData& descr) { GetTypeDesc().SetDefaultMetaType(array, descr); }
 	void SetDefaultMetaType(const std::vector<class_identifier_t>& array, const CQualifierNumber& qNumber, const CQualifierDate& qDate, CQualifierString& qString) { GetTypeDesc().SetDefaultMetaType(array, qNumber, qDate, qString); }
@@ -63,7 +63,8 @@ enum eSelectorDataType {
 
 //////////////////////////////////////////////////////////////
 
-class BACKEND_API IBackendTypeConfigFactory : public IBackendTypeFactory {
+class BACKEND_API IBackendTypeConfigFactory :
+	public IBackendTypeFactory {
 public:
 
 	virtual eSelectorDataType GetFilterDataType() const {
@@ -92,7 +93,8 @@ enum eSourceDataType {
 
 //////////////////////////////////////////////////////////////
 
-class BACKEND_API IBackendTypeSourceFactory : public IBackendTypeConfigFactory {
+class BACKEND_API IBackendTypeSourceFactory :
+	public IBackendTypeConfigFactory {
 public:
 
 	virtual eSourceDataType GetFilterSourceDataType() const {

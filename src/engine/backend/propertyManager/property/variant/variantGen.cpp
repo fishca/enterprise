@@ -1,4 +1,4 @@
-#include "genVariant.h"
+#include "variantGen.h"
 
 wxString wxVariantDataGeneration::MakeString() const
 {

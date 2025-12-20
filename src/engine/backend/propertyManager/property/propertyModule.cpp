@@ -1,5 +1,5 @@
 #include "propertyModule.h"
-#include "backend/propertyManager/property/variant/moduleVariant.h"
+#include "backend/propertyManager/property/variant/variantModule.h"
 
 #define chunkForm 0x023456543
 

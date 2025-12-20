@@ -11,7 +11,6 @@
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxGeneralStringProperty : public wxStringProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxGeneralStringProperty)
 public:
 
 	wxGeneralStringProperty(const wxString& label = wxPG_LABEL,
@@ -23,6 +22,9 @@ public:
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
 		int argFlags = 0) const override;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxGeneralStringProperty);
 };
 
 // -----------------------------------------------------------------------
@@ -30,7 +32,6 @@ public:
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxMultilineStringProperty : public wxLongStringProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxMultilineStringProperty)
 public:
 	wxMultilineStringProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
@@ -38,9 +39,12 @@ public:
 		wxLongStringProperty(label, name, value)
 	{
 	}
-
 protected:
+	
 	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxMultilineStringProperty);
 };
 
 #endif

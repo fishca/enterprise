@@ -28,7 +28,7 @@ void CValueNotebookPage::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisu
     wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxparent);
 
     if (notebook != nullptr && m_propertyVisible->GetValueAsBoolean()) {
-        notebook->AddPage(page, m_propertyCaption->GetValueAsString(), false, m_propertyIcon->GetValueAsBitmap());
+        notebook->AddPage(page, m_propertyCaption->GetValueAsString(), false, m_propertyPicture->GetValueAsBitmap());
         page->SetOrientation(m_propertyOrient->GetValueAsInteger());
     }
 
@@ -54,11 +54,25 @@ void CValueNotebookPage::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisu
     int pos_old = notebook->FindPage((wxWindow*)wxobject);
     if (pos_old != wxNOT_FOUND && pos != pos_old)
         notebook->RemovePage(pos_old);
+   
     if (m_propertyVisible->GetValueAsBoolean()) {
+        
         if (pos != pos_old)
-            notebook->InsertPage(pos, (wxWindow*)wxobject, m_propertyCaption->GetValueAsString(), pos_old == wxNOT_FOUND, m_propertyIcon->GetValueAsBitmap());
-        notebook->SetPageText(pos, m_propertyCaption->GetValueAsString());
-        notebook->SetPageBitmap(pos, m_propertyIcon->GetValueAsBitmap());
+            notebook->InsertPage(pos, (wxWindow*)wxobject, m_propertyCaption->GetValueAsString(), pos_old == wxNOT_FOUND, m_propertyPicture->GetValueAsBitmap());
+        
+        if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+            notebook->SetPageText(pos, m_propertyCaption->GetValueAsString());
+            notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
+        }
+        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+            notebook->SetPageText(pos, wxEmptyString);
+            notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
+        }
+        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+            notebook->SetPageText(pos, m_propertyCaption->GetValueAsString());
+            notebook->SetPageBitmap(pos, wxNullBitmap);
+        }
+       
         CPanelPage* page = dynamic_cast<CPanelPage*>(wxobject);
         wxASSERT(page);
         page->SetOrientation(m_propertyOrient->GetValueAsInteger());
@@ -104,18 +118,22 @@ bool CValueNotebookPage::CanDeleteControl() const
 bool CValueNotebookPage::LoadData(CMemoryReader& reader)
 {
     m_propertyCaption->LoadData(reader);
-    m_propertyIcon->LoadData(reader);
+    m_propertyRepresentation->LoadData(reader);
+    m_propertyPicture->LoadData(reader);
     m_propertyVisible->LoadData(reader);
     m_propertyOrient->LoadData(reader);
+
     return IValueControl::LoadData(reader);
 }
 
 bool CValueNotebookPage::SaveData(CMemoryWriter& writer)
 {
     m_propertyCaption->SaveData(writer);
-    m_propertyIcon->SaveData(writer);
+    m_propertyRepresentation->SaveData(writer);
+    m_propertyPicture->SaveData(writer);
     m_propertyVisible->SaveData(writer);
     m_propertyOrient->SaveData(writer);
+
     return IValueControl::SaveData(writer);
 }
 

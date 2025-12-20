@@ -9,7 +9,6 @@
 // -----------------------------------------------------------------------
 
 class wxEventProperty : public wxStringProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxEventProperty)
 public:
 
 	wxEventProperty(const wxString& label = wxPG_LABEL,
@@ -24,6 +23,9 @@ public:
 		int argFlags = 0) const override;
 
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxEventProperty);
 };
 
 #endif

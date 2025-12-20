@@ -1,5 +1,5 @@
 #include "advpropNumber.h"
-#include "backend/propertyManager/property/variant/numberVariant.h"
+#include "backend/propertyManager/property/variant/variantNumber.h"
 
 // -----------------------------------------------------------------------
 // wxPGSourceDataProperty

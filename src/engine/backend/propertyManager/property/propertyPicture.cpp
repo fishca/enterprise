@@ -1,45 +1,61 @@
 #include "propertyPicture.h"
+#include "backend/propertyManager/property/variant/variantPicture.h"
 
-void CPropertyPicture::SetValue(const wxBitmap& bmp)
+////////////////////////////////////////////////////////////////////////
+
+wxVariantData* CPropertyPicture::CreateVariantData(IPropertyObject* property, const CPictureDescription& id) const
 {
-	m_propValue = wxT("Load From Art Provider;;");
+	return new wxVariantDataPicture(property, id);
 }
 
-void CPropertyPicture::SetValue(const wxString& bmp)
-{
-	m_propValue = bmp; 
-}
+////////////////////////////////////////////////////////////////////////
 
 wxBitmap CPropertyPicture::GetValueAsBitmap() const
 {
-	return typeConv::StringToBitmap(m_propValue);
+	return get_cell_variant<wxVariantDataPicture>()->GetPictureBitmap();
 }
 
-wxString CPropertyPicture::GetValueAsString() const
+CPictureDescription& CPropertyPicture::GetValueAsPictureDesc() const
 {
-	return m_propValue.GetString();
+	return get_cell_variant<wxVariantDataPicture>()->GetPictureDesc();
 }
+
+void CPropertyPicture::SetValue(const CPictureDescription& val)
+{
+	m_propValue = CreateVariantData(m_owner, val);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+bool CPropertyPicture::IsEmptyProperty() const {
+	return get_cell_variant<wxVariantDataPicture>()->IsEmptyPicture();
+}
+
+#include "backend/system/value/valuePicture.h"
 
 //base property for "picture"
 bool CPropertyPicture::SetDataValue(const CValue& varPropVal)
 {
+	CValuePicture* valueType = varPropVal.ConvertToType<CValuePicture>();
+	if (valueType != nullptr) {
+		SetValue(valueType->GetPictureDesc());
+		return true;
+	}
 	return false;
 }
 
 bool CPropertyPicture::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = _("picture_data");
+	pvarPropVal = CValue::CreateObjectValue<CValuePicture>(GetValueAsPictureDesc());
 	return true;
 }
 
 bool CPropertyPicture::LoadData(CMemoryReader& reader)
 {
-	CPropertyPicture::SetValue(reader.r_stringZ());
-	return true;
+	return CPictureDescriptionMemory::LoadData(reader, GetValueAsPictureDesc());
 }
 
 bool CPropertyPicture::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(CPropertyPicture::GetValueAsString());
-	return true;
+	return CPictureDescriptionMemory::SaveData(writer, GetValueAsPictureDesc());
 }

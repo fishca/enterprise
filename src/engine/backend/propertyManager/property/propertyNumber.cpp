@@ -1,6 +1,5 @@
 #include "propertyNumber.h"
-#include "backend/propertyManager/property/variant/numberVariant.h"
-
+#include "backend/propertyManager/property/variant/variantNumber.h"
 
 wxVariantData* CPropertyNumber::CreateVariantData(const number_t& val)
 {

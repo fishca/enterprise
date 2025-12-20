@@ -1,5 +1,5 @@
 #include "eventAction.h"
-#include "backend/propertyManager/property/variant/actionVariant.h"
+#include "backend/propertyManager/property/variant/variantAction.h"
 
 wxVariantData* CEventAction::CreateVariantData(const IPropertyObject* property, const CActionDescription& act) const
 {

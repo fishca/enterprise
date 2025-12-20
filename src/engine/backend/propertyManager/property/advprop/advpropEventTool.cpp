@@ -1,7 +1,7 @@
 #include "advpropEventTool.h"
 
 #include "backend/propertyManager/property/eventAction.h"
-#include "backend/propertyManager/property/variant/actionVariant.h"
+#include "backend/propertyManager/property/variant/variantAction.h"
 #include "backend/propertyManager/propertyEditor.h"
 
 // -----------------------------------------------------------------------

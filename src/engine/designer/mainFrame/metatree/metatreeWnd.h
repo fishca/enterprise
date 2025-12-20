@@ -31,7 +31,6 @@ public:
 	virtual bool CloseFormMDI(IMetaObject* metaObject);
 	virtual CMetaDocument* GetDocument(IMetaObject* metaObject) const;
 
-
 	virtual void CloseMetaObject(IMetaObject* metaObject) {
 		CMetaDocument* doc = GetDocument(metaObject);
 		if (doc != nullptr) {
@@ -99,6 +98,7 @@ private:
 	wxTreeItemId m_treeFORMS;
 	wxTreeItemId m_treeTEMPLATES;
 
+	wxTreeItemId m_treePICTURES;
 	wxTreeItemId m_treeINTERFACES;
 	wxTreeItemId m_treeROLES;
 
@@ -387,7 +387,7 @@ private:
 public:
 
 	bool RenameMetaObject(IMetaObject* metaObject, const wxString& newName);
-
+	
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
 
 	CMetadataTree();

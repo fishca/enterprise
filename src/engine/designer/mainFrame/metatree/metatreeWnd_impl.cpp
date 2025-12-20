@@ -17,6 +17,7 @@
 
 #define interfacesName _("interfaces")
 #define rolesName _("roles")
+#define picturesName _("pictures")
 
 #define constantsName _("constants")
 
@@ -1398,6 +1399,8 @@ void CMetadataTree::InitTree()
 	m_treeFORMS = AppendGroupItem(m_treeCOMMON, g_metaCommonFormCLSID, commonFormsName);
 	m_treeTEMPLATES = AppendGroupItem(m_treeCOMMON, g_metaCommonTemplateCLSID, commonTemplatesName);
 
+	m_treePICTURES = AppendGroupItem(m_treeCOMMON, g_metaPictureCLSID, picturesName);
+
 	m_treeINTERFACES = AppendGroupItem(m_treeCOMMON, g_metaInterfaceCLSID, interfacesName);
 	m_treeROLES = AppendGroupItem(m_treeCOMMON, g_metaRoleCLSID, rolesName);
 
@@ -1454,6 +1457,8 @@ void CMetadataTree::ClearTree()
 		m_metaTreeWnd->DeleteChildren(m_treeINTERFACES);
 	if (m_treeROLES.IsOk())
 		m_metaTreeWnd->DeleteChildren(m_treeROLES);
+	if (m_treePICTURES.IsOk())
+		m_metaTreeWnd->DeleteChildren(m_treePICTURES);
 
 	if (m_treeCONSTANTS.IsOk())
 		m_metaTreeWnd->DeleteChildren(m_treeCONSTANTS);
@@ -1554,6 +1559,26 @@ void CMetadataTree::FillData()
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeTEMPLATES))
 		m_metaTreeWnd->Delete(m_treeTEMPLATES);
+
+	//****************************************************************
+	//*                          Pictures							 *
+	//****************************************************************
+	for (auto commonPictures : m_metaData->GetMetaObject(g_metaPictureCLSID)) {
+
+		if (commonPictures->IsDeleted())
+			continue;
+
+		const wxString& strName = commonPictures->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treePICTURES, commonPictures);
+	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treePICTURES))
+		m_metaTreeWnd->Delete(m_treePICTURES);
 
 	//****************************************************************
 	//*                          Interfaces							 *

@@ -11,21 +11,23 @@
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGFontProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGFontProperty)
 public:
 
 	wxPGFontProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxFontContainer& value = *wxNORMAL_FONT);
 	virtual ~wxPGFontProperty() override;
 
-	wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
+	virtual wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
 		wxVariant& childValue) const override;
 
-	void RefreshChildren() override;
+	virtual void RefreshChildren() override;
 
-	void OnSetValue() override;
-	wxString GetValueAsString(int argFlags = 0) const override;
+	virtual void OnSetValue() override;
+	virtual wxString GetValueAsString(int argFlags = 0) const override;
 
-	bool OnEvent(wxPropertyGrid* propgrid, wxWindow* primary, wxEvent& event) override;
+	virtual bool OnEvent(wxPropertyGrid* propgrid, wxWindow* primary, wxEvent& event) override;
+
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGFontProperty);
 };
 
 #endif

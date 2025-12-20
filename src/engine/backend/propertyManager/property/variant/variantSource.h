@@ -1,7 +1,7 @@
 #ifndef __SOURCE_DATA_VARIANT_H__
 #define __SOURCE_DATA_VARIANT_H__
 
-#include "typeVariant.h"
+#include "variantType.h"
 
 class BACKEND_API wxVariantDataAttributeSource : public wxVariantDataAttribute {
 protected:
@@ -132,9 +132,7 @@ public:
 
 	virtual ~wxVariantDataSource() { m_attributeSource->DecRef(); }
 
-	virtual wxVariantDataSource* Clone() const {
-		return new wxVariantDataSource(*this);
-	}
+	virtual wxVariantDataSource* Clone() const { return new wxVariantDataSource(*this); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -45,6 +45,7 @@ public:
 			clsid == g_metaCommonTemplateCLSID ||
 			clsid == g_metaRoleCLSID ||
 			clsid == g_metaInterfaceCLSID ||
+			clsid == g_metaPictureCLSID ||
 			clsid == g_metaConstantCLSID ||
 			clsid == g_metaCatalogCLSID ||
 			clsid == g_metaDocumentCLSID ||

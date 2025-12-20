@@ -1,4 +1,4 @@
-#include "actionVariant.h"
+#include "variantAction.h"
 
 wxString wxVariantDataAction::MakeString() const
 {

@@ -1,5 +1,5 @@
 #include "propertyOwner.h"
-#include "backend/propertyManager/property/variant/ownerVariant.h"
+#include "backend/propertyManager/property/variant/variantOwner.h"
 
 wxVariantData* CPropertyOwner::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {

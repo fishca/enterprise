@@ -1,5 +1,5 @@
 #include "propertyType.h"
-#include "backend/propertyManager/property/variant/typeVariant.h"
+#include "backend/propertyManager/property/variant/variantType.h"
 
 ////////////////////////////////////////////////////////////////////////
 

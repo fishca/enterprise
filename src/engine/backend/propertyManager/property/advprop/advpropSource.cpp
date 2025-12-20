@@ -1,6 +1,6 @@
 #include "advpropSource.h"
 
-#include "backend/propertyManager/property/variant/sourceVariant.h"
+#include "backend/propertyManager/property/variant/variantSource.h"
 #include "backend/system/value/valueTable.h"
 
 #define icon_size 16

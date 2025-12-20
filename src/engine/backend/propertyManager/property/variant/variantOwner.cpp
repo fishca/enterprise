@@ -1,4 +1,4 @@
-#include "ownerVariant.h"
+#include "variantOwner.h"
 #include "backend/metaData.h"
 
 wxString wxVariantDataOwner::MakeString() const

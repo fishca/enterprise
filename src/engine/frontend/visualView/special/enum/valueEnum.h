@@ -6,6 +6,12 @@ enum enTitleLocation {
 	eRight
 };
 
+enum enRepresentation {	
+	eRepresentation_Text,
+	eRepresentation_Picture,
+	eRepresentation_PictureAndText
+};
+
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
 class CValueEnumOrient : public IEnumeration<wxOrientation> {
@@ -99,5 +105,19 @@ public:
 		AddEnumeration(enTitleLocation::eRight, wxT("right"), _("Right"));
 	}
 };
+
+class CValueEnumRepresentation : public IEnumeration<enRepresentation> {
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumRepresentation);
+public:
+	CValueEnumRepresentation() : IEnumeration() {}
+	//CValueEnumTitleLocation(enTitleLocation v) : IEnumeration(v) {}
+
+	virtual void CreateEnumeration() {
+		AddEnumeration(enRepresentation::eRepresentation_Text, wxT("text"), _("Text"));
+		AddEnumeration(enRepresentation::eRepresentation_Picture, wxT("picture"), _("Picture"));
+		AddEnumeration(enRepresentation::eRepresentation_PictureAndText, wxT("pictureText"), _("Picture and text"));
+	}
+};
+
 #pragma endregion 
 #endif

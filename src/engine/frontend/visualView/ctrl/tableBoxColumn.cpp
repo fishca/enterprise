@@ -129,7 +129,19 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 
 	const unsigned int order_position = GetParentPosition();
 
-	dataViewColumn->SetTitle(GetControlCaption());
+	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+	}
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+		dataViewColumn->SetTitle(wxEmptyString);
+		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+	}
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetBitmap(wxNullBitmap);
+	}
+
 	dataViewColumn->SetWidth(m_propertyWidth->GetValueAsUInteger());
 	dataViewColumn->SetAlignment(m_propertyAlign->GetValueAsEnum());
 
@@ -138,7 +150,6 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	IValueModel* modelValue = GetOwner()->GetModel();
 	CSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
 
-	dataViewColumn->SetBitmap(m_propertyIcon->GetValueAsBitmap());
 	dataViewColumn->SetHidden(!m_propertyVisible->GetValueAsBoolean());
 	dataViewColumn->SetSortable(sort != nullptr && !appData->DesignerMode());
 	dataViewColumn->SetResizeable(m_propertyResizable->GetValueAsBoolean());
@@ -227,7 +238,8 @@ bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
 bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 {
 	m_propertyCaption->LoadData(reader);
-	m_propertyIcon->LoadData(reader);
+	m_propertyRepresentation->LoadData(reader);
+	m_propertyPicture->LoadData(reader);
 
 	m_propertyPasswordMode->LoadData(reader);
 	m_propertyMultilineMode->LoadData(reader);
@@ -262,7 +274,8 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 {
 	m_propertyCaption->SaveData(writer);
-	m_propertyIcon->SaveData(writer);
+	m_propertyRepresentation->SaveData(writer);
+	m_propertyPicture->SaveData(writer);
 
 	m_propertyPasswordMode->SaveData(writer);
 	m_propertyMultilineMode->SaveData(writer);

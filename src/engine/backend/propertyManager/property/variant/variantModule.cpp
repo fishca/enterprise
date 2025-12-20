@@ -1,4 +1,4 @@
-#include "moduleVariant.h"
+#include "variantModule.h"
 
 wxString wxVariantDataModule::MakeString() const
 {

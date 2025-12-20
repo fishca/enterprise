@@ -1,4 +1,4 @@
-#include "numberVariant.h"
+#include "variantNumber.h"
 
 wxString wxVariantDataNumber::MakeString() const
 {

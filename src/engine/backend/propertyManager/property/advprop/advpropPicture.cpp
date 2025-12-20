@@ -1,15 +1,11 @@
 #include "advpropPicture.h"
 
-#include <wx/log.h>
-#include <wx/regex.h>
+#include "backend/propertyManager/property/propertyPicture.h"
+#include "backend/propertyManager/property/variant/variantPicture.h"
 
 // -----------------------------------------------------------------------
 // wxPGPictureProperty
 // -----------------------------------------------------------------------
-
-// static long gs_imageFilterIndex = -1; TODO: new wxPropertyGrid misses the
-//                                             wxPG_FILE_FILTER_INDEX attribute ID
-static wxString gs_imageInitialPath = wxEmptyString;
 
 #if wxCHECK_VERSION(3, 1, 0)
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGPictureProperty, wxPGProperty, TextCtrl)
@@ -17,315 +13,364 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGPictureProperty, wxPGProperty, TextCtrl)
 WX_PG_IMPLEMENT_PROPERTY_CLASS(wxPGPictureProperty, wxPGProperty, wxString, const wxString&, TextCtrl)
 #endif
 
-void wxPGPictureProperty::GetChildValues(const wxString& parentValue, wxArrayString& childValues) const
-{
-	// some properties can contain value like "[-1;-1]" which must be modified due to use of ";" as a
-	// string separator
-	wxString values = parentValue;
+static int s_indFilter = -1;
 
-	wxRegEx regex(wxT("\\[.+;.+\\]"));
-	if (regex.IsValid())
-	{
-		if (regex.Matches(values))
-		{
-			wxString sizeVal = regex.GetMatch(values);
-			sizeVal.Replace(wxT(";"), wxT("<semicolon>"));
-			sizeVal.Replace(wxT("["), wxT(""));
-			sizeVal.Replace(wxT("]"), wxT(""));
-			regex.Replace(&values, sizeVal);
-		}
-	}
-
-	childValues = wxStringTokenize(values, wxT(';'), wxTOKEN_RET_EMPTY_ALL);
-	for (wxArrayString::iterator value = childValues.begin(); value != childValues.end(); ++value)
-	{
-		value->Trim(false);
-		value->Replace(wxT("<semicolon>"), wxT(";"));
-	}
-}
+#include "backend/metadataConfiguration.h"
+#include "backend/metaCollection/metaPictureObject.h"
 
 wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 	const wxString& strName,
-	const wxString& value) : wxPGProperty(label, strName)
+	const wxVariant& value) : wxPGProperty(label, strName),
+	m_propertySource(nullptr),
+	m_propertyBackend(nullptr), m_propertyConfiguration(nullptr), m_propertyFile(nullptr)
 {
-	SetValue(WXVARIANT(value));
-	CreateChildren();
-	UpdateChildValues(value);
-}
+	wxVariantDataPicture* pictureVariant = property_cast(value, wxVariantDataPicture);
+	wxASSERT(pictureVariant);
 
-void wxPGPictureProperty::CreateChildren()
-{
-	wxString  propValue = m_value.GetString();
-	wxVariant thisValue = WXVARIANT(propValue);
-	wxVariant childValue;
-	int       childIndex = 0;
-	wxArrayString childVals;
-	GetChildValues(propValue, childVals);
-	wxString  source;
-	if (childVals.Count() > 0)
-	{
-		source = childVals.Item(0);
-	}
-	else
-	{
-		source = _("Load From File");
-	}
-	m_prevSrc = -1;
-	if (source == wxString(_("Load From Art Provider")))
-	{
-		childIndex = 1;
-	}
-
-	childValue = WXVARIANT(childIndex);
-
-	CreatePropertySource(childIndex);
-
-	ChildChanged(thisValue, 0, childValue);
-}
-
-wxPGProperty* wxPGPictureProperty::CreatePropertySource(int sourceIndex)
-{
-	wxPGChoices sourceChoices;
+	wxPGChoices sourceChoices, systemChoices, configurationChoices;
 
 	// Add 'source' property (common for all other children)
-	sourceChoices.Add(_("Load From Art Provider"));
+	sourceChoices.Add(_("Load from backend"), eFromBackend);
+	sourceChoices.Add(_("Load from file"), eFromFile);
 
-	wxPGProperty* srcProp = new wxEnumProperty(_("Source"), wxT("source"), sourceChoices, sourceIndex);
-	srcProp->SetHelpString(
-		wxString(_("Load From Art Provider:\n")) +
-		wxString(_("Query registered providers for bitmap with given ID.\n\n")));
-	AddPrivateChild(srcProp);
-	return srcProp;
+	unsigned int system_value = 0, system_config = 0;
+
+	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_metadata)) {
+		const wxIcon backend_icon = so->GetClassIcon();
+		if (backend_icon.IsOk()) {
+			wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so->GetClassName(), system_value++);
+			entry.SetBitmap(so->GetClassIcon());
+			m_valChoices.insert_or_assign(
+				entry.GetValue(), so->GetClassType()
+			);
+		}
+	}
+
+	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
+		const wxIcon backend_icon = so->GetClassIcon();
+		if (backend_icon.IsOk()) {
+			wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so->GetClassName(), system_value++);
+			entry.SetBitmap(so->GetClassIcon());
+			m_valChoices.insert_or_assign(
+				entry.GetValue(), so->GetClassType()
+			);
+		}
+	}
+
+	const IPropertyObject* ownerValue = pictureVariant->GetOwner();
+	if (ownerValue != nullptr) {
+		const IMetaData* metaData = ownerValue->GetMetaData();
+		for (const auto object : metaData->GetMetaObject(g_metaPictureCLSID)) {
+			CMetaObjectPicture* picture = nullptr;
+			if (object->ConvertToValue(picture)) {
+				wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
+					object->GetName(), system_config++);
+				entry.SetBitmap(picture->GetValueAsBitmap());
+				m_confChoices.insert_or_assign(
+					entry.GetValue(), picture->GetGuid()
+				);
+			}
+		}
+		sourceChoices.Add(_("Load from configuration"), eFromConfiguration);
+	}
+
+	m_propertySource = new wxEnumProperty(_("Source"), wxT("source"), sourceChoices);
+	m_propertySource->SetHelpString(_("Select a source picture"));
+
+	AddPrivateChild(m_propertySource);
+
+	m_propertyBackend = new wxEditEnumProperty(_("System"), wxT("system"), systemChoices);
+	m_propertyBackend->SetHelpString(_("Image from engine collections"));
+
+	AddPrivateChild(m_propertyBackend);
+
+	// Add 'configuration' property (common for all other children)
+	m_propertyConfiguration = new wxEditEnumProperty(_("Configuration"), wxT("configuration"), configurationChoices);
+	m_propertyConfiguration->SetHelpString(_("Image from configuration"));
+
+	AddPrivateChild(m_propertyConfiguration);
+
+	// Add 'file_path' property (common for 'Load From File' and 'Load From Embedded File' choices)
+	m_propertyFile = new wxPGExternalImageProperty(_("File path"), wxT("file_path"), pictureVariant->CloneExternalPicture());
+	m_propertyFile->SetHelpString(_("Path to the image file."));
+
+	AddPrivateChild(m_propertyFile);
+
+	//Set current value
+	SetValue(value);
 }
 
-wxPGProperty* wxPGPictureProperty::CreatePropertyArtId()
-{
-	wxPGChoices artIdChoices;
-
-	// Create 'id' property ('Load From Art Provider' only)
-	artIdChoices.Add(wxT("wxART_ADD_BOOKMARK"));
-	artIdChoices.Add(wxT("wxART_DEL_BOOKMARK"));
-	artIdChoices.Add(wxT("wxART_HELP_SIDE_PANEL"));
-	artIdChoices.Add(wxT("wxART_HELP_SETTINGS"));
-	artIdChoices.Add(wxT("wxART_HELP_BOOK"));
-	artIdChoices.Add(wxT("wxART_HELP_FOLDER"));
-	artIdChoices.Add(wxT("wxART_HELP_PAGE"));
-	artIdChoices.Add(wxT("wxART_GO_BACK"));
-	artIdChoices.Add(wxT("wxART_GO_FORWARD"));
-	artIdChoices.Add(wxT("wxART_GO_UP"));
-	artIdChoices.Add(wxT("wxART_GO_DOWN"));
-	artIdChoices.Add(wxT("wxART_GO_TO_PARENT"));
-	artIdChoices.Add(wxT("wxART_GO_HOME"));
-	artIdChoices.Add(wxT("wxART_FILE_OPEN"));
-	artIdChoices.Add(wxT("wxART_FILE_SAVE"));
-	artIdChoices.Add(wxT("wxART_FILE_SAVE_AS"));
-	artIdChoices.Add(wxT("wxART_GOTO_FIRST"));
-	artIdChoices.Add(wxT("wxART_GOTO_LAST"));
-	artIdChoices.Add(wxT("wxART_PRINT"));
-	artIdChoices.Add(wxT("wxART_HELP"));
-	artIdChoices.Add(wxT("wxART_TIP"));
-	artIdChoices.Add(wxT("wxART_REPORT_VIEW"));
-	artIdChoices.Add(wxT("wxART_LIST_VIEW"));
-	artIdChoices.Add(wxT("wxART_NEW_DIR"));
-	artIdChoices.Add(wxT("wxART_HARDDISK"));
-	artIdChoices.Add(wxT("wxART_FLOPPY"));
-	artIdChoices.Add(wxT("wxART_CDROM"));
-	artIdChoices.Add(wxT("wxART_REMOVABLE"));
-	artIdChoices.Add(wxT("wxART_FOLDER"));
-	artIdChoices.Add(wxT("wxART_FOLDER_OPEN"));
-	artIdChoices.Add(wxT("wxART_GO_DIR_UP"));
-	artIdChoices.Add(wxT("wxART_EXECUTABLE_FILE"));
-	artIdChoices.Add(wxT("wxART_NORMAL_FILE"));
-	artIdChoices.Add(wxT("wxART_TICK_MARK"));
-	artIdChoices.Add(wxT("wxART_CROSS_MARK"));
-	artIdChoices.Add(wxT("wxART_ERROR"));
-	artIdChoices.Add(wxT("wxART_QUESTION"));
-	artIdChoices.Add(wxT("wxART_WARNING"));
-	artIdChoices.Add(wxT("wxART_INFORMATION"));
-	artIdChoices.Add(wxT("wxART_MISSING_IMAGE"));
-	artIdChoices.Add(wxT("wxART_COPY"));
-	artIdChoices.Add(wxT("wxART_CUT"));
-	artIdChoices.Add(wxT("wxART_PASTE"));
-	artIdChoices.Add(wxT("wxART_DELETE"));
-	artIdChoices.Add(wxT("wxART_NEW"));
-	artIdChoices.Add(wxT("wxART_UNDO"));
-	artIdChoices.Add(wxT("wxART_REDO"));
-	artIdChoices.Add(wxT("wxART_PLUS"));
-	artIdChoices.Add(wxT("wxART_MINUS"));
-	artIdChoices.Add(wxT("wxART_CLOSE"));
-	artIdChoices.Add(wxT("wxART_QUIT"));
-	artIdChoices.Add(wxT("wxART_FIND"));
-	artIdChoices.Add(wxT("wxART_FIND_AND_REPLACE"));
-	artIdChoices.Add(wxT("wxART_FULL_SCREEN"));
-	artIdChoices.Add(wxT("wxART_EDIT"));
-
-	wxPGProperty* propArtId = new wxEditEnumProperty(_("Id"), wxT("id"), artIdChoices);
-	propArtId->SetHelpString(_("Choose a wxArtID unique identifier of the bitmap or enter a wxArtID for your custom wxArtProvider. IDs with prefix 'gtk-' are available under wxGTK only."));
-
-	return propArtId;
-}
-
-wxPGProperty* wxPGPictureProperty::CreatePropertyArtClient()
-{
-	wxPGChoices artClientChoices;
-
-	// Create 'client' property ('Load From Art Provider' only)
-	artClientChoices.Add(wxT("wxART_TOOLBAR"));
-	artClientChoices.Add(wxT("wxART_MENU"));
-	artClientChoices.Add(wxT("wxART_BUTTON"));
-	artClientChoices.Add(wxT("wxART_FRAME_ICON"));
-	artClientChoices.Add(wxT("wxART_CMN_DIALOG"));
-	artClientChoices.Add(wxT("wxART_HELP_BROWSER"));
-	artClientChoices.Add(wxT("wxART_MESSAGE_BOX"));
-	artClientChoices.Add(wxT("wxART_OTHER"));
-
-	wxPGProperty* propArtClient = new wxEditEnumProperty(_("Client"), wxT("client"), artClientChoices);
-	propArtClient->SetHelpString(_("Choose a wxArtClient identifier of the client (i.e. who is asking for the bitmap) or enter a wxArtClient for your custom wxArtProvider."));
-
-	return propArtClient;
-}
+#include <wx/mstream.h>
 
 wxVariant wxPGPictureProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
-	wxVariant& childValue) const {
-	wxPGPictureProperty* bp = (wxPGPictureProperty*)this;
-
-	const wxString& val = thisValue.GetString();
-	wxArrayString childVals;
-	GetChildValues(val, childVals);
-	wxString newVal = val;
-
-	// Find the appropriate new state
-	switch (childIndex)
-	{
-		// source
-		case 0:
-		{
-			unsigned int count = GetChildCount();
-
-			if (m_prevSrc != 4)
-			{
-				for (unsigned int i = 1; i < count; i++)
-				{
-					wxPGProperty* p = Item(i);
-					if (p)
-					{
-						wxLogDebug(wxT("wxOESBP::ChildChanged: Removing:%s"), p->GetLabel().c_str());
-						GetGrid()->DeleteProperty(p);
-					}
-				}
-				bp->AddPrivateChild(bp->CreatePropertyArtId());
-				bp->AddPrivateChild(bp->CreatePropertyArtClient());
-			}
-
-			if (childVals.GetCount() == 3)
-				newVal = childVals.Item(0) + wxT("; ") + childVals.Item(1) + wxT("; ") + childVals.Item(2);
-			else if (childVals.GetCount() > 1)
-				newVal = childVals.Item(0) + wxT("; ; ");
-			break;
-		}
-
-		// file_path || id || resource_name
-		case 1:
-		{
-			if (Item(0)->GetValueAsString() == _("Load From Art Provider")) {
-
-				Item(1)->SetValue(childValue);
-
-				if (childVals.GetCount() == 3)
-					newVal = childVals.Item(0) + wxT("; ") + Item(1)->GetValueAsString() + wxT("; ") + Item(2)->GetValueAsString();
-				else if (childVals.GetCount() > 1)
-					newVal = childVals.Item(0) + wxT("; ; ");
-			}
-			break;
-		}
-		case 2:
-
-			Item(2)->SetValue(childValue);
-
-			if (childVals.GetCount() == 3)
-				newVal = childVals.Item(0) + wxT("; ") + Item(1)->GetValueAsString() + wxT("; ") + Item(2)->GetValueAsString();
-			else if (childVals.GetCount() > 1)
-				newVal = childVals.Item(0) + wxT("; ; ");
-
-			break;
-	}
-
-	bp->SetPrevSource(childValue.GetInteger());
-
-	if (newVal != val) {
-		wxVariant ret = WXVARIANT(newVal);
-		bp->SetValue(ret);
-
-		return ret;
-	}
-	return thisValue;
-}
-
-void wxPGPictureProperty::UpdateChildValues(const wxString& value)
+	wxVariant& childValue) const
 {
-	wxArrayString childVals;
-	GetChildValues(value, childVals);
+	wxVariantDataPicture* pictureVariant = property_cast(thisValue, wxVariantDataPicture);
 
-	if (childVals[0].Contains(_("Load From Art Provider")))
-	{
-		Item(0)->SetValue(childVals[0]);
+	if (pictureVariant != nullptr) {
 
-		if (childVals.Count() > 1)
+		wxVariantDataPicture* clonedPictureVariant = pictureVariant->Clone();
+		wxASSERT(clonedPictureVariant);
+
+		switch (childIndex)
 		{
-			wxString img = childVals[1];
-			Item(1)->SetValue(childVals[1]);
+		case 0:
+			clonedPictureVariant->SetPictureType(static_cast<EPictureType>(childValue.GetLong()));
+			break;
+		case 1:
+			clonedPictureVariant->SetFromBackendPicture(m_valChoices.at(childValue.GetLong()));
+			break;
+		case 2:
+			clonedPictureVariant->SetFromConfiguraion(m_confChoices.at(childValue.GetLong()));
+			break;
+		case 3:
+			wxVariantDataExternalPicture * externalPicture = property_cast(childValue, wxVariantDataExternalPicture);
+			wxASSERT(externalPicture);
+			clonedPictureVariant->SetFromExternalFile(externalPicture->GetExternalPictureDesc());
+			break;
 		}
 
-		if (childVals.Count() > 2)
-		{
-			wxString img = childVals[2];
-			Item(2)->SetValue(childVals[2]);
-		}
+		return clonedPictureVariant;
 	}
+
+	return wxNullVariant;
 }
 
 void wxPGPictureProperty::RefreshChildren()
 {
-	//const wxString &propVal = GetValueAsString().AfterFirst(':');
+	wxVariantDataPicture* pictureVariant = property_cast(m_value, wxVariantDataPicture);
 
-	//if (!propVal.IsEmpty()) {
-	//	UpdateChildValues(propVal);
-	//}
+	if (pictureVariant != nullptr) {
+
+		m_propertySource->Hide(false);
+		m_propertySource->SetExpanded(true);
+
+		const CPictureDescription& pd = pictureVariant->GetPictureDesc();
+
+		if (pd.m_type == EPictureType::eFromBackend) {
+			m_propertyBackend->Hide(false);
+			m_propertyBackend->SetExpanded(true);
+			m_propertyConfiguration->Hide(true);
+			m_propertyConfiguration->SetExpanded(false);
+			m_propertyFile->Hide(true);
+			m_propertyFile->SetExpanded(false);
+		}
+		else if (pd.m_type == EPictureType::eFromConfiguration) {
+			m_propertyBackend->Hide(true);
+			m_propertyBackend->SetExpanded(false);
+			m_propertyConfiguration->Hide(false);
+			m_propertyConfiguration->SetExpanded(true);
+			m_propertyFile->Hide(true);
+			m_propertyFile->SetExpanded(false);
+		}
+		else if (pd.m_type == EPictureType::eFromFile) {
+			m_propertyBackend->Hide(true);
+			m_propertyBackend->SetExpanded(false);
+			m_propertyConfiguration->Hide(true);
+			m_propertyConfiguration->SetExpanded(false);
+			m_propertyFile->Hide(false);
+			m_propertyFile->SetExpanded(true);
+		}
+
+		m_propertySource->SetValue(pd.m_type);
+
+		if (pd.m_type == EPictureType::eFromBackend) {
+			auto iterator = std::find_if(m_valChoices.begin(), m_valChoices.end(),
+				[pd](const auto pair) { return pair.second == pd.m_class_identifier; });
+			if (iterator != m_valChoices.end())
+				m_propertyBackend->SetValue(iterator->first);
+			else
+				m_propertyBackend->SetValue(wxNOT_FOUND);
+		}
+		else if (pd.m_type == EPictureType::eFromConfiguration) {
+			auto iterator = std::find_if(m_confChoices.begin(), m_confChoices.end(),
+				[pd](const auto pair) { return pair.second == pd.m_meta_guid; });
+			if (iterator != m_confChoices.end())
+				m_propertyConfiguration->SetValue(iterator->first);
+			else
+				m_propertyConfiguration->SetValue(wxNOT_FOUND);
+		}
+		else if (pd.m_type == EPictureType::eFromFile) {
+			m_propertyFile->SetValue(new wxVariantDataExternalPicture(pd.m_img_data));
+		}
+	}
+	else {
+
+		m_propertySource->Hide(true);
+		m_propertySource->SetExpanded(false);
+
+		m_propertyBackend->Hide(true);
+		m_propertyBackend->SetExpanded(false);
+
+		m_propertyConfiguration->Hide(true);
+		m_propertyConfiguration->SetExpanded(false);
+
+		m_propertyFile->Hide(true);
+		m_propertyFile->SetExpanded(false);
+	}
+
+	wxPGPictureProperty::SetExpanded(true);
 }
 
-void wxPGPictureProperty::OnSetValue()
+// -----------------------------------------------------------------------
+// wxPGExternalImageProperty
+// -----------------------------------------------------------------------
+
+wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGExternalImageProperty, wxEditorDialogProperty, TextCtrlAndButton)
+
+const wxString& wxPGGetDefaultImageWildcard(int& indFilter)
 {
+	// Form the wildcard, if not done yet
+	if (wxPGGlobalVars->m_pDefaultImageWildcard.empty()) {
+
+		wxString str, ext; s_indFilter = 0;
+
+		// TODO: This section may require locking (using global).
+		wxList& handlers = wxImage::GetHandlers();
+
+		wxList::iterator node;
+
+		// Let's iterate over the image handler list.
+		for (node = handlers.begin(); node != handlers.end(); ++node) {
+
+			wxImageHandler* handler = (wxImageHandler*)*node;
+
+			wxString ext_lo = handler->GetExtension();
+			wxString ext_up = ext_lo.Upper();
+
+			str.append(ext_up);
+			str.append(wxS(" files (*."));
+			str.append(ext_up);
+			str.append(wxS(")|*."));
+			str.append(ext_lo);
+			str.append(wxS("|"));
+
+			if (!ext.empty())
+				ext.append(wxS(";"));
+			ext.append("*." + ext_lo);
+
+			s_indFilter++;
+		}
+
+		str.append(wxS("All image files|") + ext + "|");
+		str.append(wxS("All files (*.*)|*.*"));
+
+		wxPGGlobalVars->m_pDefaultImageWildcard = str;
+	}
+
+	indFilter = s_indFilter;
+	return wxPGGlobalVars->m_pDefaultImageWildcard;
 }
 
-wxString wxPGPictureProperty::SetupImage(const wxString& imgPath)
+wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, const wxString& name, const wxVariant& value)
+	: wxEditorDialogProperty(label, name)
 {
-	if (!imgPath.IsEmpty())
-	{
-		wxFileName imgName = wxFileName(imgPath);
+	m_flags |= wxPG_PROP_SHOW_FULL_FILENAME;
+	m_flags &= ~wxPG_PROP_ACTIVE_BTN; // Property button enabled only in not read-only mode.
 
-		// Allow user to specify any file path he needs (even if it seemingly doesn't exist)
-		if (!imgName.FileExists()) return imgPath;
+	m_wildcard = wxPGGetDefaultImageWildcard(m_indFilter);
 
-		wxString   res = wxT("");
-		wxImage    img = wxImage(imgPath);
-
-		if (!img.IsOk())
-			return res;
-	}
-	return imgPath;
+	SetValue(value);
 }
 
-wxString wxPGPictureProperty::SetupResource(const wxString& resName)
+void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
+	const wxRect& rect,
+	wxPGPaintData&)
 {
-	wxString res = wxEmptyString;
-	// Keep old value from an icon resource only
-	if (resName.Contains(wxT(";")) && resName.Contains(wxT("[")))
-	{
-		return resName.BeforeFirst(wxT(';'));
+	wxVariantDataExternalPicture* pictureVariant = property_cast(GetValue(), wxVariantDataExternalPicture);
+
+	if (!pictureVariant->IsEmptyPicture()) {
+
+		// Draw the thumbnail
+		// Create the bitmap here because required size is not known in OnSetValue().
+
+		// Delete the cache if required size changed
+		if (m_bitmap.IsOk() && (m_bitmap.GetSize() != rect.GetSize())) {
+			m_bitmap = wxNullBitmap;
+		}
+
+		m_bitmap = pictureVariant->GetPictureBitmap(wxSize(rect.width, rect.height));
 	}
-	else if (resName.Contains(wxT(";")))
-	{
-		return res;
+	else {
+		m_bitmap = wxNullBitmap;
 	}
-	return resName;
+
+	if (m_bitmap.IsOk()) {
+		dc.DrawBitmap(m_bitmap, rect.x, rect.y, false);
+	}
+	else {
+		// No file - just draw a white box
+		dc.SetBrush(*wxWHITE_BRUSH);
+		dc.DrawRectangle(rect);
+	}
+}
+
+bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
+{
+	if (text.IsEmpty()) {
+		variant = new wxVariantDataExternalPicture();
+		return true;
+	}
+
+	return false;
+}
+
+bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
+{
+	wxVariantDataExternalPicture* externalPicture = property_cast(value, wxVariantDataExternalPicture);
+	wxASSERT_MSG(externalPicture != nullptr, "Function called for incompatible property");
+
+	wxFileName filename(externalPicture->GetPictureFileName());
+
+	wxString path = filename.GetPath();
+	wxString file = filename.GetFullName();
+
+	if (path.empty() && !m_basePath.empty())
+		path = m_basePath;
+
+	wxFileDialog dlg(pg->GetPanel(),
+		m_dlgTitle.empty() ? _("Choose a picture") : m_dlgTitle,
+		m_initialPath.empty() ? path : m_initialPath,
+		file,
+		m_wildcard.empty() ? _(wxALL_FILES) : m_wildcard,
+		m_dlgStyle,
+		wxDefaultPosition);
+
+	if (m_indFilter >= 0) dlg.SetFilterIndex(m_indFilter);
+
+	if (dlg.ShowModal() == wxID_OK) {
+
+		// Get from FS
+		wxFileName filename = dlg.GetPath();
+		m_indFilter = dlg.GetFilterIndex();
+
+		// Cache the image
+		if (filename.FileExists()) {
+
+			wxImage image(filename.GetFullPath());
+			wxMemoryOutputStream outputStream;
+
+			if (image.SaveFile(outputStream, wxBitmapType::wxBITMAP_TYPE_PNG)) {
+
+				CExternalPictureDescription container;
+
+				// Get the data from the output stream's buffer
+				// The output stream manages the memory buffer internally.
+				const size_t buffer_len = outputStream.GetLength();
+
+				container.m_img_name = filename.GetFullPath();
+				container.m_img_buffer.resize(buffer_len, '\0');
+
+				outputStream.CopyTo(container.m_img_buffer.data(), buffer_len);
+
+				container.m_width = image.GetWidth();
+				container.m_height = image.GetHeight();
+
+				value = new wxVariantDataExternalPicture(container);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }

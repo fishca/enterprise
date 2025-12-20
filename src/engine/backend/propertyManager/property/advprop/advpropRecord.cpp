@@ -1,5 +1,5 @@
 #include "advpropRecord.h"
-#include "backend/propertyManager/property/variant/recordVariant.h"
+#include "backend/propertyManager/property/variant/variantRecord.h"
 #include "backend/propertyManager/propertyEditor.h"
 
 #define icon_size 16

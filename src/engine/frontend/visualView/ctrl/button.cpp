@@ -28,8 +28,19 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 	wxButton* button = dynamic_cast<wxButton*>(wxobject);
 
 	if (button != nullptr) {
-		button->SetLabel(m_propertyCaption->GetValueAsString());
-		button->SetBitmap(m_propertyIcon->GetValueAsBitmap());
+
+		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		}
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+			button->SetLabel(wxEmptyString);
+			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		}
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetBitmap(wxNullBitmap);
+		}
 	}
 
 	UpdateWindow(button);
@@ -46,7 +57,8 @@ void CValueButton::Cleanup(wxObject* obj, IVisualHost* visualHost)
 bool CValueButton::LoadData(CMemoryReader& reader)
 {
 	m_propertyCaption->LoadData(reader);
-	m_propertyIcon->LoadData(reader);
+	m_propertyRepresentation->LoadData(reader);
+	m_propertyPicture->LoadData(reader);
 
 	//events
 	m_onButtonPressed->LoadData(reader);
@@ -57,7 +69,8 @@ bool CValueButton::LoadData(CMemoryReader& reader)
 bool CValueButton::SaveData(CMemoryWriter& writer)
 {
 	m_propertyCaption->SaveData(writer);
-	m_propertyIcon->SaveData(writer);
+	m_propertyRepresentation->SaveData(writer);
+	m_propertyPicture->SaveData(writer);
 
 	//events
 	m_onButtonPressed->SaveData(writer);

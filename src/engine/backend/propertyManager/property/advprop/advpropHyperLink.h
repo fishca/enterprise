@@ -13,7 +13,6 @@ class BACKEND_API IPropertyObject;
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGHyperLinkProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGHyperLinkProperty)
 public:
 
 	wxPGHyperLinkProperty(IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
@@ -25,11 +24,12 @@ public:
 		const wxString& text,
 		int argFlags = 0) const override;
 
-	virtual void OnSetValue();
+	virtual void OnSetValue() override;
 
 protected:
-
 	IPropertyObject* m_ownerProperty = nullptr;
+private:
+	WX_PG_DECLARE_PROPERTY_CLASS(wxPGHyperLinkProperty);
 };
 
 #endif

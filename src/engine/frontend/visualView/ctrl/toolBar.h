@@ -111,6 +111,9 @@ public:
 	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
 	wxString GetCaption() const { return m_propertyCaption->GetValueAsString(); }
 
+	void SetToolTip(const wxString& caption) { return m_properyTooltip->SetValue(caption); }
+	wxString GetToolTip() const { return m_properyTooltip->GetValueAsString(); }
+
 	void SetAction(const CActionDescription& action) { return m_eventAction->SetValue(action); }
 	const CActionDescription& GetAction() const { return m_eventAction->GetValueAsActionDesc(); }
 

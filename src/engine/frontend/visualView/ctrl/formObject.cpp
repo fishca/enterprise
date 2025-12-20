@@ -53,6 +53,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 					);
 				toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(action_id));
 				toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
+				toolBarItem->SetToolTip(actionData.GetCaptionByID(action_id));
 				toolBarItem->SetAction(action_id);
 				prevSrcData = currSrcData;
 			}
@@ -124,6 +125,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 								);
 							toolBarItem->SetControlName(toolBar->GetControlName() + wxT("_") + actionData.GetNameByID(action_id));
 							toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
+							toolBarItem->SetToolTip(actionData.GetCaptionByID(action_id));
 							toolBarItem->SetAction(action_id);
 							prevSrcData = currSrcData;
 						}
@@ -211,6 +213,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 					);
 				toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(id));
 				toolBarItem->SetCaption(actionData.GetCaptionByID(id));
+				toolBarItem->SetToolTip(actionData.GetCaptionByID(id));
 				toolBarItem->SetAction(id);
 			}
 			else {

@@ -62,15 +62,15 @@ IMetaData* IValueControl::GetMetaData() const
 
 form_identifier_t IValueControl::GetTypeForm() const
 {
-	if (!m_formOwner) {
+	if (m_formOwner == nullptr) {
 		wxASSERT(m_formOwner);
 		return 0;
 	}
 
-	const IMetaObjectForm* metaFormObj =
-		m_formOwner->GetFormMetaObject();
-	wxASSERT(metaFormObj);
-	return metaFormObj->GetTypeForm();
+	const IMetaObjectForm* creator = m_formOwner->GetFormMetaObject();
+ 	if (creator != nullptr) 
+		return creator->GetTypeForm();
+	return m_formOwner->GetTypeForm();
 }
 
 CProcUnit* IValueControl::GetFormProcUnit() const

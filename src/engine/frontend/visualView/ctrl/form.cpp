@@ -105,14 +105,14 @@ IMetaData* CValueForm::GetMetaData() const
 			return metaObject->GetMetaData();
 	}
 
-	return m_metaFormObject ?
+	return m_metaFormObject != nullptr ?
 		m_metaFormObject->GetMetaData() :
 		nullptr;
 }
 
 form_identifier_t CValueForm::GetTypeForm() const
 {
-	return m_metaFormObject ?
+	return m_metaFormObject != nullptr ?
 		m_metaFormObject->GetTypeForm() :
 		m_formType;
 }

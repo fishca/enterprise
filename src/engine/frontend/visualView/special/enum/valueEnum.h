@@ -7,6 +7,7 @@ enum enTitleLocation {
 };
 
 enum enRepresentation {	
+	eRepresentation_Auto, 
 	eRepresentation_Text,
 	eRepresentation_Picture,
 	eRepresentation_PictureAndText
@@ -113,6 +114,7 @@ public:
 	//CValueEnumTitleLocation(enTitleLocation v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
+		AddEnumeration(enRepresentation::eRepresentation_Auto, wxT("auto"), _("Auto"));
 		AddEnumeration(enRepresentation::eRepresentation_Text, wxT("text"), _("Text"));
 		AddEnumeration(enRepresentation::eRepresentation_Picture, wxT("picture"), _("Picture"));
 		AddEnumeration(enRepresentation::eRepresentation_PictureAndText, wxT("pictureText"), _("Picture and text"));

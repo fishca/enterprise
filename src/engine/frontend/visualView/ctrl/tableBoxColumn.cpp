@@ -129,7 +129,11 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 
 	const unsigned int order_position = GetParentPosition();
 
-	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+	}
+	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
 		dataViewColumn->SetTitle(GetControlCaption());
 		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 	}

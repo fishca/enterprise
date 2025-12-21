@@ -32,7 +32,7 @@ CValueForm::CActionCollection CValueForm::GetActionCollection(const form_identif
 	actionData.AddAction(wxT("help"), _("Help"), enHelp);
 
 	actionData.AddSeparator();
-	actionData.AddAction(wxT("change"), _("Change form"), enChange);
+	actionData.AddAction(wxT("change"), _("Change form"), g_controlFormCLSID, false, enChange);
 
 	return actionData;
 }

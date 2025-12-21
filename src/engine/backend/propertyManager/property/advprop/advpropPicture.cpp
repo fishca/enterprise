@@ -100,8 +100,6 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 	SetValue(value);
 }
 
-#include <wx/mstream.h>
-
 wxVariant wxPGPictureProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
 	wxVariant& childValue) const
 {
@@ -275,7 +273,7 @@ wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, cons
 
 void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	const wxRect& rect,
-	wxPGPaintData&d)
+	wxPGPaintData& d)
 {
 	wxVariantDataExternalPicture* pictureVariant = property_cast(GetValue(), wxVariantDataExternalPicture);
 
@@ -341,34 +339,11 @@ bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 	if (dlg.ShowModal() == wxID_OK) {
 
 		// Get from FS
-		wxFileName filename = dlg.GetPath();
-		m_indFilter = dlg.GetFilterIndex();
-
-		// Cache the image
-		if (filename.FileExists()) {
-
-			wxImage image(filename.GetFullPath());
-			wxMemoryOutputStream outputStream;
-
-			if (image.SaveFile(outputStream, wxBitmapType::wxBITMAP_TYPE_PNG)) {
-
-				CExternalPictureDescription container;
-
-				// Get the data from the output stream's buffer
-				// The output stream manages the memory buffer internally.
-				const size_t buffer_len = outputStream.GetLength();
-
-				container.m_img_name = filename.GetFullPath();
-				container.m_img_buffer.resize(buffer_len, '\0');
-
-				outputStream.CopyTo(container.m_img_buffer.data(), buffer_len);
-
-				container.m_width = image.GetWidth();
-				container.m_height = image.GetHeight();
-
-				value = new wxVariantDataExternalPicture(container);
-				return true;
-			}
+		CExternalPictureDescription container;
+		
+		if (CBackendPicture::LoadFromFile(dlg.GetPath(), container)) {
+			value = new wxVariantDataExternalPicture(container);
+			return true;
 		}
 	}
 

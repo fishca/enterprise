@@ -135,17 +135,17 @@ private:
 
 #include <wx/module.h>
 
-class wxOESArtModule : public wxModule
+class wxFrontendModule : public wxModule
 {
 public:
-	wxOESArtModule() : wxModule() {}
+	wxFrontendModule() : wxModule() {}
 	virtual bool OnInit() {
 		wxArtProvider::Push(new wxFrontendArtProvider);
 		return true;
 	}
 	virtual void OnExit() {}
 private:
-	wxDECLARE_DYNAMIC_CLASS(wxOESArtModule);
+	wxDECLARE_DYNAMIC_CLASS(wxFrontendModule);
 };
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxOESArtModule, wxModule);
+wxIMPLEMENT_DYNAMIC_CLASS(wxFrontendModule, wxModule);

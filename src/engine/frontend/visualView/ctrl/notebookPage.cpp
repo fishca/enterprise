@@ -60,7 +60,11 @@ void CValueNotebookPage::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisu
         if (pos != pos_old)
             notebook->InsertPage(pos, (wxWindow*)wxobject, m_propertyCaption->GetValueAsString(), pos_old == wxNOT_FOUND, m_propertyPicture->GetValueAsBitmap());
         
-        if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+        if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+            notebook->SetPageText(pos, m_propertyCaption->GetValueAsString());
+            notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
+        }
+        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
             notebook->SetPageText(pos, m_propertyCaption->GetValueAsString());
             notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
         }

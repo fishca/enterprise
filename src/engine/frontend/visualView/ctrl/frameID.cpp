@@ -7,7 +7,7 @@
 #include "form.h"
 
 
-IValueFrame* IValueFrame::DoFindControlByName(const wxString& controlName, IValueFrame* top)
+IValueFrame* IValueFrame::DoFindControlByName(const wxString& controlName, IValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
 		IValueFrame* child = top->GetChild(idx);
@@ -25,12 +25,12 @@ IValueFrame* IValueFrame::DoFindControlByName(const wxString& controlName, IValu
 	return nullptr;
 }
 
-IValueFrame* IValueFrame::FindControlByName(const wxString& controlName)
+IValueFrame* IValueFrame::FindControlByName(const wxString& controlName) const
 {
 	return DoFindControlByName(controlName, GetOwnerForm());
 }
 
-void IValueFrame::DoGenerateNewID(form_identifier_t& id, IValueFrame* top)
+void IValueFrame::DoGenerateNewID(form_identifier_t& id, IValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
 		IValueFrame* child = top->GetChild(idx);
@@ -54,7 +54,7 @@ form_identifier_t IValueFrame::GenerateNewID()
 	return id;
 }
 
-IValueFrame* IValueFrame::DoFindControlByID(const form_identifier_t& id, IValueFrame* top)
+IValueFrame* IValueFrame::DoFindControlByID(const form_identifier_t& id, IValueFrame* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
 		IValueFrame* child = top->GetChild(idx);
@@ -72,7 +72,7 @@ IValueFrame* IValueFrame::DoFindControlByID(const form_identifier_t& id, IValueF
 	return nullptr;
 }
 
-IValueFrame* IValueFrame::FindControlByID(const form_identifier_t& id)
+IValueFrame* IValueFrame::FindControlByID(const form_identifier_t& id) const
 {
 	return DoFindControlByID(id, GetOwnerForm());
 }

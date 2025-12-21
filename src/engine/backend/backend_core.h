@@ -31,6 +31,7 @@ typedef int meta_identifier_t;
 typedef int form_identifier_t;
 typedef int action_identifier_t;
 
+typedef unsigned wxLongLong_t picture_identifier_t;
 typedef unsigned int version_identifier_t;
 
 typedef std::map<

@@ -78,6 +78,15 @@ public:
 	void AddToolItem();
 	void AddToolSeparator();
 
+	//array of the commands 
+	CActionCollection GetActionArray() const {
+		IValueFrame* sourceElement =
+			GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
+		if (sourceElement != nullptr)
+			return sourceElement->GetActionCollection(sourceElement->GetTypeForm());
+		return CActionCollection();
+	}
+
 protected:
 
 	//events 
@@ -98,13 +107,13 @@ private:
 	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
 
 	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("Caption"), _("New tool"));
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_PictureAndText);
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
 	CPropertyString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryToolbar, wxT("tooltip"), _("Tooltip"), wxEmptyString);
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("Enabled"), true);
 
-	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), _("Action"), wxArrayString{wxT("control")}, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
+	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), _("Action"), wxArrayString{ wxT("control") }, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 public:
 
@@ -117,11 +126,58 @@ public:
 	void SetAction(const CActionDescription& action) { return m_eventAction->SetValue(action); }
 	const CActionDescription& GetAction() const { return m_eventAction->GetValueAsActionDesc(); }
 
+	///////////////////////////////////////////////////////////////////////
+
+	CValueToolbar* GetOwner() const { return m_parent->ConvertToType<CValueToolbar>(); }
+
+	wxBitmap GetItemPicture() const {
+		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
+		if (m_propertyPicture->IsEmptyProperty()) {
+			const action_identifier_t selected = actionDesc.GetSystemAction();
+			if (selected != wxNOT_FOUND) {
+				const CActionCollection& data = GetOwner()->GetActionArray();
+				for (unsigned int i = 0; i < data.GetCount(); i++) {
+					const action_identifier_t& id = data.GetID(i);
+					if (selected == data.GetID(i)) {
+						const CPictureDescription& pictureDesc = data.GetPictureByID(actionDesc.GetSystemAction());
+						if (pictureDesc.IsEmptyPicture())
+							return wxNullBitmap;
+						return CBackendPicture::CreatePicture(pictureDesc, GetMetaData());
+					}
+				}
+			}
+		}
+		return m_propertyPicture->GetValueAsBitmap();
+	}
+
+	enRepresentation GetItemRepresentation() const {
+		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
+		if (m_propertyPicture->IsEmptyProperty()) {
+			const action_identifier_t selected = actionDesc.GetSystemAction();
+			if (selected != wxNOT_FOUND) {
+				const CActionCollection& data = GetOwner()->GetActionArray();
+				for (unsigned int i = 0; i < data.GetCount(); i++) {
+					const action_identifier_t& id = data.GetID(i);
+					if (selected == data.GetID(i)) {
+						const CPictureDescription& pictureDesc = data.GetPictureByID(actionDesc.GetSystemAction());
+						if (pictureDesc.IsEmptyPicture())
+							return enRepresentation::eRepresentation_PictureAndText;
+						return data.IsCreatePictureAndText(id) ?
+							enRepresentation::eRepresentation_PictureAndText : enRepresentation::eRepresentation_Picture;
+					}
+				}
+			}
+		}
+		return enRepresentation::eRepresentation_PictureAndText;
+	}
+
+	///////////////////////////////////////////////////////////////////////
+
 	CValueToolBarItem();
 
 	//get caption 
-	virtual wxString GetControlCaption() const {	
-		if (!m_propertyCaption->IsEmptyProperty()) 
+	virtual wxString GetControlCaption() const {
+		if (!m_propertyCaption->IsEmptyProperty())
 			return GetCaption();
 		return _("<empty caption>");
 	}
@@ -150,11 +206,19 @@ class CValueToolBarSeparator : public IValueControl {
 	wxDECLARE_DYNAMIC_CLASS(CValueToolBarSeparator);
 public:
 
+	///////////////////////////////////////////////////////////////////////
+
+	CValueToolbar* GetOwner() const {
+		return m_parent->ConvertToType<CValueToolbar>();
+	}
+
+	///////////////////////////////////////////////////////////////////////
+
 	CValueToolBarSeparator();
 
 	//get caption 
-	virtual wxString GetControlCaption() const { 
-		return _("Separator"); 
+	virtual wxString GetControlCaption() const {
+		return _("Separator");
 	}
 
 	//control factory

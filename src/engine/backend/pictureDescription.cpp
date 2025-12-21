@@ -84,21 +84,3 @@ bool CExternalPictureDescriptionMemory::SaveData(CMemoryWriter& writer, CExterna
 
 	return true;
 }
-
-////////////////////////////////////////////////////////////////////////
-
-bool CExternalPictureDescription::IsEmptyPicture() const
-{
-	return m_height == 0 && m_width == 0;
-}
-
-bool CPictureDescription::IsEmptyPicture() const
-{
-	if (m_type == eFromBackend)
-		return m_class_identifier != 0 && CValue::IsRegisterCtor(m_class_identifier);
-	else if (m_type == eFromConfiguration)
-		return !m_meta_guid.isValid();
-	else if (m_type == eFromFile)
-		return m_img_data.m_height == 0 && m_img_data.m_width == 0;
-	return false;
-}

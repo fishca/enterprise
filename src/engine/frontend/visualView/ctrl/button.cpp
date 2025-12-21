@@ -29,7 +29,11 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 	if (button != nullptr) {
 
-		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		}
+		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
 			button->SetLabel(m_propertyCaption->GetValueAsString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}

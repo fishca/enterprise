@@ -12,7 +12,7 @@ enum EPictureType
 
 struct CExternalPictureDescription {
 
-	bool IsEmptyPicture() const;
+	bool IsEmptyPicture() const { return m_height == 0 && m_width == 0; }
 
 	bool operator ==(const CExternalPictureDescription& rhs) const {
 		return m_img_buffer == rhs.m_img_buffer
@@ -38,12 +38,21 @@ struct CPictureDescription {
 	EPictureType m_type;
 
 	CPictureDescription() : m_type(eFromBackend) {}
-	CPictureDescription(const class_identifier_t& id) : m_type(eFromBackend), m_class_identifier(id) {}
+	CPictureDescription(const picture_identifier_t& id) : m_type(eFromBackend), m_class_identifier(id) {}
 	CPictureDescription(const CGuid& id) : m_type(eFromConfiguration), m_meta_guid(id) {}
 	CPictureDescription(const CExternalPictureDescription& data) : m_type(eFromFile), m_img_data(data) {}
+	
 	~CPictureDescription() {}
 
-	bool IsEmptyPicture() const;
+	bool IsEmptyPicture() const {
+		if (m_type == eFromBackend)
+			return m_class_identifier == 0 || !CValue::IsRegisterCtor(m_class_identifier);
+		else if (m_type == eFromConfiguration)
+			return !m_meta_guid.isValid();
+		else if (m_type == eFromFile)
+			return m_img_data.m_height == 0 && m_img_data.m_width == 0;
+		return true;
+	}
 
 	bool operator ==(const CPictureDescription& rhs) const
 	{
@@ -64,7 +73,7 @@ struct CPictureDescription {
 		return false;
 	}
 
-	class_identifier_t m_class_identifier = 0;
+	picture_identifier_t m_class_identifier = 0;
 	CGuid m_meta_guid;
 	CExternalPictureDescription m_img_data;
 };

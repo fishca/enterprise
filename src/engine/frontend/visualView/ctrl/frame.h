@@ -77,9 +77,9 @@ protected:
 
 private:
 
-	IValueFrame* DoFindControlByID(const form_identifier_t& id, IValueFrame* control);
-	IValueFrame* DoFindControlByName(const wxString& controlName, IValueFrame* control);
-	void DoGenerateNewID(form_identifier_t& id, IValueFrame* top);
+	IValueFrame* DoFindControlByID(const form_identifier_t& id, IValueFrame* control) const;
+	IValueFrame* DoFindControlByName(const wxString& controlName, IValueFrame* control) const;
+	void DoGenerateNewID(form_identifier_t& id, IValueFrame* top) const;
 
 public:
 
@@ -147,8 +147,8 @@ public:
 	/**
 	* Find by control id
 	*/
-	virtual IValueFrame* FindControlByName(const wxString& controlName);
-	virtual IValueFrame* FindControlByID(const form_identifier_t& id);
+	virtual IValueFrame* FindControlByName(const wxString& controlName) const;
+	virtual IValueFrame* FindControlByID(const form_identifier_t& id) const;
 
 	/**
 	* Support form

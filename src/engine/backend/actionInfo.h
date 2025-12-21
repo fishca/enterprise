@@ -1,22 +1,28 @@
 #ifndef __ACTION_INFO_H__
 #define __ACTION_INFO_H__
 
-class CActionDescription {
-	wxString m_strAction;
+struct CActionDescription {
+
 	action_identifier_t m_lAction;
-public:
+	wxString m_strAction;
 
-	bool operator == (const CActionDescription& rhs) const { 
-		if (m_lAction == wxNOT_FOUND) 
-			return m_strAction == rhs.m_strAction;
-		return m_lAction == rhs.m_lAction; 
-	}
-
-	CActionDescription(const action_identifier_t& lAction) :m_strAction(), m_lAction(lAction) {}
-	CActionDescription(const wxString& strAction) :m_strAction(strAction), m_lAction(wxNOT_FOUND) {}
+	CActionDescription(const action_identifier_t& lAction) : m_strAction(), m_lAction(lAction) {}
+	CActionDescription(const wxString& strAction) : m_strAction(strAction), m_lAction(wxNOT_FOUND) {}
 
 	wxString GetCustomAction() const { return m_strAction; }
 	action_identifier_t GetSystemAction() const { return m_lAction; }
+
+	bool IsEmptyAction() const {
+		if (m_lAction == wxNOT_FOUND)
+			return m_strAction.IsEmpty();
+		return true;
+	}
+
+	bool operator == (const CActionDescription& rhs) const {
+		if (m_lAction == wxNOT_FOUND)
+			return m_strAction == rhs.m_strAction;
+		return m_lAction == rhs.m_lAction;
+	}
 
 	friend class CActionDescriptionMemory;
 };
@@ -28,90 +34,106 @@ public:
 	static bool SaveData(class CMemoryWriter& writer, CActionDescription& typeDesc);
 };
 
+#include "backend_picture.h"
+
 class IActionDataObject {
 protected:
+
 	class CActionCollection {
+
 		CValue* m_srcData;
-		struct CAction {
+
+		struct CActionItem {
 			action_identifier_t m_act_id;
 			wxString m_name;
 			wxString m_caption;
-			wxBitmap m_bitmap;
+			CPictureDescription m_pictureDescription;
+			bool m_pictureAndText;
 			bool m_createDef;
 			CValue* m_srcData;
-			CAction() : m_name(wxEmptyString),
-				m_caption(wxEmptyString),
-				m_bitmap(wxNullBitmap),
-				m_act_id(wxNOT_FOUND) {
-			}
-			CAction(const action_identifier_t& act_id, const wxString& name, const wxString& description, const wxBitmap& bitmap, bool createDef, CValue* srcData) :
-				m_act_id(act_id), m_name(name), m_caption(description), m_bitmap(bitmap), m_createDef(createDef), m_srcData(srcData) {
-			}
+
+			CActionItem() : m_name(wxEmptyString), m_caption(wxEmptyString), m_pictureDescription(), m_act_id(wxNOT_FOUND), m_pictureAndText(false), m_createDef(false) {}
+			CActionItem(const action_identifier_t& act_id, const wxString& name, const wxString& description, bool createDef, CValue* srcData) : m_act_id(act_id), m_name(name), m_caption(description), m_pictureDescription(), m_pictureAndText(false), m_createDef(createDef), m_srcData(srcData) {}
+			CActionItem(const action_identifier_t& act_id, const wxString& name, const wxString& description, const CPictureDescription& pictureDescription, bool pictureAndText, bool createDef, CValue* srcData) : m_act_id(act_id), m_name(name), m_caption(description), m_pictureDescription(pictureDescription), m_pictureAndText(pictureAndText), m_createDef(createDef), m_srcData(srcData) {}
 		};
-		std::vector<CAction> m_vecAction;
+
+		std::vector<CActionItem> m_vecAction;
+
 	private:
 
-		bool find_act(const action_identifier_t& lNumAction) const {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
-				return lNumAction == act.m_act_id;
-				}
-			);
-			return it == m_vecAction.end();
+		bool IsExistAction(const action_identifier_t& lNumAction) const {
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+			return iterator == m_vecAction.end();
 		}
 
 	public:
 
 		CValue* GetSourceData() const { return m_srcData; }
-
 		CActionCollection(CValue* srcData = nullptr) : m_srcData(srcData) {}
 
 		void AddAction(const wxString& name, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.emplace_back(
 				lNumAction,
 				name,
 				wxEmptyString,
-				wxNullBitmap,
+				CPictureDescription(),
+				false,
 				createDef,
 				srcData ? srcData : m_srcData
 			);
 		}
 
 		void AddAction(const wxString& name, const wxString& caption, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.emplace_back(
 				lNumAction,
 				name,
 				caption,
-				wxNullBitmap,
+				CPictureDescription(),
+				false,
 				createDef,
 				srcData ? srcData : m_srcData
 			);
 		}
 
-		void AddAction(const wxString& name, const wxString& caption, const wxBitmap& bitmap, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+		void AddAction(const wxString& name, const wxString& caption, const CPictureDescription& pictureDescription, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.emplace_back(
 				lNumAction,
 				name,
 				caption,
-				bitmap,
+				pictureDescription,
+				false,
 				createDef,
 				srcData ? srcData : m_srcData
 			);
 		}
 
-		void AddSeparator() {
-			m_vecAction.emplace_back();
+		void AddAction(const wxString& name, const wxString& caption, const CPictureDescription& pictureDescription, bool pictureAndText, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
+			wxASSERT(IsExistAction(lNumAction));
+			m_vecAction.emplace_back(
+				lNumAction,
+				name,
+				caption,
+				pictureDescription,
+				pictureAndText,
+				createDef,
+				srcData ? srcData : m_srcData
+			);
 		}
+
+		void AddSeparator() { m_vecAction.emplace_back(); }
 
 		void InsertAction(unsigned int index, const wxString& name, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.insert(m_vecAction.begin() + index, {
 				lNumAction,
 				name,
 				wxEmptyString,
-				wxNullBitmap,
+				CPictureDescription(),
+				false,
 				createDef,
 				srcData ? srcData : m_srcData
 				}
@@ -119,80 +141,122 @@ protected:
 		}
 
 		void InsertAction(unsigned int index, const wxString& name, const wxString& caption, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.insert(m_vecAction.begin() + index, {
 				lNumAction,
 				name,
 				caption,
-				wxNullBitmap,
+				CPictureDescription(),
+				false,
 				createDef,
 				srcData ? srcData : m_srcData
 				}
 			);
 		}
 
-		void InsertAction(unsigned int index, const wxString& name, const wxString& caption, const wxBitmap& bitmap, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
-			wxASSERT(find_act(lNumAction));
+		void InsertAction(unsigned int index, const wxString& name, const wxString& caption, const CPictureDescription& pictureDescription, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
+			wxASSERT(IsExistAction(lNumAction));
 			m_vecAction.insert(m_vecAction.begin() + index, {
 				lNumAction,
 				name,
 				caption,
-				bitmap,
+				pictureDescription,
 				createDef,
+								false,
 				srcData ? srcData : m_srcData
 				}
 			);
 		}
 
-		void InsertSeparator(unsigned int index) {
-			m_vecAction.insert(m_vecAction.begin() + index, {});
+		void InsertAction(unsigned int index, const wxString& name, const wxString& caption, const CPictureDescription& pictureDescription, bool pictureAndText, const action_identifier_t& lNumAction, bool createDef = true, CValue* srcData = nullptr) {
+			wxASSERT(IsExistAction(lNumAction));
+			m_vecAction.insert(m_vecAction.begin() + index, {
+				lNumAction,
+				name,
+				caption,
+				pictureDescription,
+				createDef,
+				pictureAndText,
+				srcData ? srcData : m_srcData
+				}
+			);
 		}
+
+		void InsertSeparator(unsigned int index) { m_vecAction.insert(m_vecAction.begin() + index, {}); }
 
 		void RemoveAction(const action_identifier_t& lNumAction) {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
-				return lNumAction == act.m_act_id; }
-			);
-			if (it != m_vecAction.end()) {
-				m_vecAction.erase(it);
-			}
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end()) m_vecAction.erase(iterator);
 		}
 
 		wxString GetNameByID(const action_identifier_t& lNumAction) const {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
 				return lNumAction == act.m_act_id; });
-			if (it != m_vecAction.end())
-				return it->m_name;
+
+			if (iterator != m_vecAction.end())
+				return iterator->m_name;
+
 			return wxEmptyString;
 		}
 
 		wxString GetCaptionByID(const action_identifier_t& lNumAction) const {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
-				return lNumAction == act.m_act_id; }
-			);
-			if (it != m_vecAction.end()) {
-				wxString caption = it->m_caption;
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end()) {
+				wxString caption = iterator->m_caption;
 				return caption.Length() > 0 ?
-					caption : it->m_name;
+					caption : iterator->m_name;
 			}
+
 			return wxEmptyString;
 		}
 
+		CPictureDescription GetPictureByID(const action_identifier_t& lNumAction) const {
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end())
+				return iterator->m_pictureDescription;
+
+			return CPictureDescription();
+		}
+
+		bool IsCreatePictureAndText(const action_identifier_t& lNumAction) const {
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end())
+				return iterator->m_pictureAndText;
+
+			return true;
+		}
+
 		bool IsCreateInForm(const action_identifier_t& lNumAction) const {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
-				return lNumAction == act.m_act_id; }
-			);
-			if (it != m_vecAction.end())
-				return it->m_createDef;
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end())
+				return iterator->m_createDef;
 
 			return true;
 		}
 
 		CValue* GetSourceDataByID(const action_identifier_t& lNumAction) const {
-			auto& it = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CAction& act) {
-				return lNumAction == act.m_act_id; }
-			);
-			if (it != m_vecAction.end())
-				return it->m_srcData;
+
+			auto iterator = std::find_if(m_vecAction.begin(), m_vecAction.end(), [lNumAction](const CActionItem& act) {
+				return lNumAction == act.m_act_id; });
+
+			if (iterator != m_vecAction.end())
+				return iterator->m_srcData;
 			return nullptr;
 		}
 
@@ -202,9 +266,7 @@ protected:
 			return m_vecAction[idx].m_act_id;
 		}
 
-		unsigned int GetCount() const {
-			return m_vecAction.size();
-		}
+		unsigned int GetCount() const { return m_vecAction.size(); }
 	};
 
 public:
@@ -219,6 +281,8 @@ public:
 				actionData.AddAction(
 					data.GetNameByID(id),
 					data.GetCaptionByID(id),
+					data.GetPictureByID(id),
+					data.IsCreatePictureAndText(id),
 					id,
 					data.IsCreateInForm(id),
 					data.GetSourceDataByID(id)

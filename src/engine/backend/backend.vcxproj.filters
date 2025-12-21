@@ -1430,6 +1430,7 @@
     <ClCompile Include="propertyManager\property\propertyPictureExt.cpp">
       <Filter>propertyManager\property</Filter>
     </ClCompile>
+    <ClCompile Include="backend_picture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

@@ -25,32 +25,26 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 			while (GetChildCount() != 0) {
 				g_visualHostContext->CutControl(GetChild(0), true);
 			}
-
-			IValueFrame* sourceElement = m_actSource->GetValueAsInteger() != wxNOT_FOUND ?
-				FindControlByID(m_actSource->GetValueAsInteger()) : nullptr;
-
-			if (sourceElement != nullptr) {
-				CActionCollection actionData =
-					sourceElement->GetActionCollection(sourceElement->GetTypeForm());
-				for (unsigned int i = 0; i < actionData.GetCount(); i++) {
-					const action_identifier_t &id = actionData.GetID(i);
-					if (id != wxNOT_FOUND) {
-						CValueToolBarItem* toolItem = dynamic_cast<CValueToolBarItem*>(
-							m_formOwner->CreateControl("tool", this)
+		
+			const CActionCollection& actionData = GetActionArray();
+			for (unsigned int i = 0; i < actionData.GetCount(); i++) {
+				const action_identifier_t& id = actionData.GetID(i);
+				if (id != wxNOT_FOUND) {
+					CValueToolBarItem* toolItem = dynamic_cast<CValueToolBarItem*>(
+						m_formOwner->CreateControl(wxT("tool"), this)
 						);
-						wxASSERT(toolItem);
-						toolItem->SetControlName(GetControlName() + wxT("_") + actionData.GetNameByID(id));
-						toolItem->SetCaption(actionData.GetCaptionByID(id));
-						toolItem->SetToolTip(actionData.GetCaptionByID(id));
-						toolItem->SetAction(id);
-						g_visualHostContext->InsertControl(toolItem, this);
-					}
-					else {
-						CValueToolBarSeparator* toolItemSeparator = dynamic_cast<CValueToolBarSeparator*>(
-							m_formOwner->CreateControl("toolSeparator", this)
+					wxASSERT(toolItem);
+					toolItem->SetControlName(GetControlName() + wxT("_") + actionData.GetNameByID(id));
+					toolItem->SetCaption(actionData.GetCaptionByID(id));
+					toolItem->SetToolTip(actionData.GetCaptionByID(id));
+					toolItem->SetAction(id);
+					g_visualHostContext->InsertControl(toolItem, this);
+				}
+				else {
+					CValueToolBarSeparator* toolItemSeparator = dynamic_cast<CValueToolBarSeparator*>(
+						m_formOwner->CreateControl(wxT("toolSeparator"), this)
 						);
-						g_visualHostContext->InsertControl(toolItemSeparator, this);
-					}
+					g_visualHostContext->InsertControl(toolItemSeparator, this);
 				}
 			}
 

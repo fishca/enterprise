@@ -14,22 +14,9 @@ wxString wxVariantDataExternalPicture::GetPictureFileName() const
 	return m_pictureExternalFile.m_img_name;
 }
 
-#include <wx/mstream.h>
-
 wxBitmap wxVariantDataExternalPicture::GetPictureBitmap(const wxSize& size) const
 {
-	if (!m_pictureExternalFile.m_img_buffer.empty()) {
-		wxMemoryInputStream inputStream(
-			m_pictureExternalFile.m_img_buffer.data(),
-			m_pictureExternalFile.m_img_buffer.size()
-		);
-		const wxImage image(inputStream);
-		if (size != image.GetSize())
-			return image.Scale(size.x, size.y, wxIMAGE_QUALITY_HIGH);
-		return image;
-	}
-
-	return wxNullBitmap;
+	return CBackendPicture::CreatePicture(m_pictureExternalFile, size);
 }
 
 wxString wxVariantDataPicture::MakeString() const
@@ -44,39 +31,9 @@ wxString wxVariantDataPicture::MakeString() const
 	return wxEmptyString;
 }
 
-#include "backend/metadataConfiguration.h"
-#include "backend/metaCollection/metaPictureObject.h"
-
 wxBitmap wxVariantDataPicture::GetPictureBitmap(const wxSize& size) const
 {
-	if (m_pictureDesc.m_type == EPictureType::eFromBackend) {
-		const IAbstractTypeCtor* so =
-			CValue::GetAvailableCtor(m_pictureDesc.m_class_identifier);
-		if (so != nullptr) return so->GetClassIcon();
-	}
-	else if (m_pictureDesc.m_type == EPictureType::eFromConfiguration) {
-		if (m_ownerProperty != nullptr) {
-			const IMetaData* metaData = m_ownerProperty->GetMetaData();
-			if (metaData != nullptr && m_pictureDesc.m_meta_guid.isValid()) {
-				CMetaObjectPicture* picture = nullptr;
-				if (metaData->GetMetaObject(picture, m_pictureDesc.m_meta_guid))
-					return picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
-			}
-		}
-	}
-	else if (m_pictureDesc.m_type == EPictureType::eFromFile) {
-		if (!m_pictureDesc.m_img_data.m_img_buffer.empty()) {
-			wxMemoryInputStream inputStream(
-				m_pictureDesc.m_img_data.m_img_buffer.data(),
-				m_pictureDesc.m_img_data.m_img_buffer.size()
-			);
-			const wxImage image(inputStream);
-			if (size != image.GetSize())
-				return image.Scale(size.x, size.y, wxIMAGE_QUALITY_HIGH);
-			return image;
-		}
-	}
-
-	return wxNullBitmap;
+	return CBackendPicture::CreatePicture(m_pictureDesc,
+		m_ownerProperty ? m_ownerProperty->GetMetaData() : nullptr, size);
 }
 

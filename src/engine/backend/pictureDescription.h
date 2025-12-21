@@ -46,7 +46,7 @@ struct CPictureDescription {
 
 	bool IsEmptyPicture() const {
 		if (m_type == eFromBackend)
-			return m_class_identifier == 0 || !CValue::IsRegisterCtor(m_class_identifier);
+			return m_class_identifier == 0;
 		else if (m_type == eFromConfiguration)
 			return !m_meta_guid.isValid();
 		else if (m_type == eFromFile)

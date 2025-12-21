@@ -35,26 +35,12 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	unsigned int system_value = 0, system_config = 0;
 
-	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_metadata)) {
-		const wxIcon backend_icon = so->GetClassIcon();
-		if (backend_icon.IsOk()) {
-			wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so->GetClassName(), system_value++);
-			entry.SetBitmap(so->GetClassIcon());
-			m_valChoices.insert_or_assign(
-				entry.GetValue(), so->GetClassType()
-			);
-		}
-	}
-
-	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
-		const wxIcon backend_icon = so->GetClassIcon();
-		if (backend_icon.IsOk()) {
-			wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so->GetClassName(), system_value++);
-			entry.SetBitmap(so->GetClassIcon());
-			m_valChoices.insert_or_assign(
-				entry.GetValue(), so->GetClassType()
-			);
-		}
+	for (auto so : CBackendPicture::GetArrayPicture()) {
+		wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so.m_name, system_value++);
+		entry.SetBitmap(so.m_image);
+		m_valChoices.insert_or_assign(
+			entry.GetValue(), so.m_id
+		);
 	}
 
 	const IPropertyObject* ownerValue = pictureVariant->GetOwner();

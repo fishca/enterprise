@@ -275,7 +275,7 @@ wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, cons
 
 void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	const wxRect& rect,
-	wxPGPaintData&)
+	wxPGPaintData&d)
 {
 	wxVariantDataExternalPicture* pictureVariant = property_cast(GetValue(), wxVariantDataExternalPicture);
 
@@ -289,7 +289,7 @@ void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 			m_bitmap = wxNullBitmap;
 		}
 
-		m_bitmap = pictureVariant->GetPictureBitmap(wxSize(rect.width, rect.height));
+		m_bitmap = pictureVariant->GetPictureBitmap(wxSize(d.m_drawnWidth, d.m_drawnHeight));
 	}
 	else {
 		m_bitmap = wxNullBitmap;

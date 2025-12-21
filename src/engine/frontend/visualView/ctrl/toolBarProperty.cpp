@@ -41,6 +41,7 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 						wxASSERT(toolItem);
 						toolItem->SetControlName(GetControlName() + wxT("_") + actionData.GetNameByID(id));
 						toolItem->SetCaption(actionData.GetCaptionByID(id));
+						toolItem->SetToolTip(actionData.GetCaptionByID(id));
 						toolItem->SetAction(id);
 						g_visualHostContext->InsertControl(toolItem, this);
 					}

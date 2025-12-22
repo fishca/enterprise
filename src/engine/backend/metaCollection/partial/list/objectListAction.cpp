@@ -17,7 +17,7 @@ CListDataObjectEnumRef::CActionCollection CListDataObjectEnumRef::GetActionColle
 	CActionCollection actionData(this);
 
 	if (m_choiceMode)
-		actionData.AddAction("select", _("Select"), eChooseValue);
+		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 
 	const CActionCollection& data =
 		IValueTable::GetActionCollection(formType);
@@ -28,6 +28,8 @@ CListDataObjectEnumRef::CActionCollection CListDataObjectEnumRef::GetActionColle
 			actionData.AddAction(
 				data.GetNameByID(id),
 				data.GetCaptionByID(id),
+				data.GetPictureByID(id),
+				data.IsCreatePictureAndText(id),
 				id
 			);
 		}
@@ -58,7 +60,7 @@ CListDataObjectRef::CActionCollection CListDataObjectRef::GetActionCollection(co
 	CActionCollection actionData(this);
 
 	if (m_choiceMode)
-		actionData.AddAction("select", _("Select"), eChooseValue);
+		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 
 	if (m_choiceMode)
 		actionData.AddSeparator();
@@ -72,6 +74,8 @@ CListDataObjectRef::CActionCollection CListDataObjectRef::GetActionCollection(co
 			actionData.AddAction(
 				data.GetNameByID(id),
 				data.GetCaptionByID(id),
+				data.GetPictureByID(id), 
+				data.IsCreatePictureAndText(id),
 				id
 			);
 		}
@@ -80,7 +84,7 @@ CListDataObjectRef::CActionCollection CListDataObjectRef::GetActionCollection(co
 		}
 	}
 
-	actionData.InsertAction(3, "markAsDelete", _("Mark as delete"), eMarkAsDelete);
+	actionData.InsertAction(3, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 
 	return actionData;
 }
@@ -108,12 +112,12 @@ CListDataObjectRef::CActionCollection CTreeDataObjectFolderRef::GetActionCollect
 	CActionCollection actionData(this);
 
 	if (m_choiceMode) {
-		actionData.AddAction("select", _("Select"), eChooseValue);
+		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 		actionData.AddSeparator();
 	}
 
 	if (m_listMode == LIST_FOLDER || m_listMode == LIST_ITEM || m_listMode == LIST_ITEM_FOLDER) {
-		actionData.AddAction("addFolder", _("Add folder"), eAddFolder);
+		actionData.AddAction(wxT("addFolder"), _("Add folder"), g_picAddFolderCLSID, true, eAddFolder);
 	}
 
 	CActionCollection data =
@@ -128,6 +132,8 @@ CListDataObjectRef::CActionCollection CTreeDataObjectFolderRef::GetActionCollect
 			actionData.AddAction(
 				data.GetNameByID(id),
 				data.GetCaptionByID(id),
+				data.GetPictureByID(id),
+				data.IsCreatePictureAndText(id),
 				id
 			);
 		}
@@ -137,10 +143,10 @@ CListDataObjectRef::CActionCollection CTreeDataObjectFolderRef::GetActionCollect
 	}
 
 	if (m_choiceMode) {
-		actionData.InsertAction(5, "markAsDelete", _("Mark as delete"), eMarkAsDelete);
+		actionData.InsertAction(5, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 	}
 	else {
-		actionData.InsertAction(4, "markAsDelete", _("Mark as delete"), eMarkAsDelete);
+		actionData.InsertAction(4, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 	}
 
 	return actionData;

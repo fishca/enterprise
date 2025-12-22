@@ -17,12 +17,12 @@ enum
 CRecordDataObjectCatalog::CActionCollection CRecordDataObjectCatalog::GetActionCollection(const form_identifier_t &formType)
 {
 	CActionCollection catalogActions(this);
-	catalogActions.AddAction("saveAndClose", _("Save and close"), eDefActionAndClose);
-	catalogActions.AddAction("save", _("Save"), eSave);
+	catalogActions.AddAction(wxT("saveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
+	catalogActions.AddAction(wxT("save"), _("Save"), g_picSaveCLSID, true, eSave);
 	catalogActions.AddSeparator();
-	catalogActions.AddAction("generate", _("Generate"), eGenerate);
+	catalogActions.AddAction(wxT("generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
 	catalogActions.AddSeparator();
-	catalogActions.AddAction("copy", _("Copy"), eCopy);
+	catalogActions.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, true, eCopy);
 	return catalogActions;
 }
 

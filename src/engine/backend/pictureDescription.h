@@ -85,4 +85,7 @@ public:
 	static bool SaveData(class CMemoryWriter& writer, CPictureDescription& pictureDesc);
 };
 
+extern BACKEND_API bool RegisterBackendPicture(const wxString name,
+	const picture_identifier_t& id, const wxBitmap& image);
+
 #endif 

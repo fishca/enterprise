@@ -646,6 +646,7 @@
     <ClInclude Include="metaCollection\metaPictureObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
+    <ClInclude Include="picturePredefined.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1431,6 +1432,7 @@
       <Filter>propertyManager\property</Filter>
     </ClCompile>
     <ClCompile Include="backend_picture.cpp" />
+    <ClCompile Include="picturePredefined.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

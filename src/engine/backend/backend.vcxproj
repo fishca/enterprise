@@ -179,6 +179,7 @@
     <ClInclude Include="moduleManager\moduleManagerExt.h" />
     <ClInclude Include="number.h" />
     <ClInclude Include="objCtor.h" />
+    <ClInclude Include="picturePredefined.h" />
     <ClInclude Include="propertyManager\propertyEditor.h" />
     <ClInclude Include="propertyManager\propertyManager.h" />
     <ClInclude Include="propertyManager\propertyObject.h" />
@@ -463,6 +464,7 @@
     <ClCompile Include="moduleManager\moduleManagerMetadataUnit.cpp" />
     <ClCompile Include="moduleManager\moduleManagerUnit.cpp" />
     <ClCompile Include="objCtor.cpp" />
+    <ClCompile Include="picturePredefined.cpp" />
     <ClCompile Include="propertyManager\propertyEditor.cpp" />
     <ClCompile Include="propertyManager\propertyObject.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropEvent.cpp" />

@@ -2,6 +2,7 @@
 #define __BACKEND_PICTURE_H__
 
 #include "pictureDescription.h"
+#include "picturePredefined.h"
 
 struct CBackendPictureEntry {
 	wxString m_name;
@@ -28,8 +29,5 @@ public:
 	static std::vector<CBackendPictureEntry> GetArrayPicture();
 #pragma endregion 
 };
-
-#define BACKEND_PICTURE_REGISTER(name, image, clsid)\
-	CBackendPicture::AppendPicture(clsid, wxT(name), image); \
 
 #endif

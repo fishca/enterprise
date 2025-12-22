@@ -17,13 +17,13 @@ enum action {
 CRecordDataObjectDocument::CActionCollection CRecordDataObjectDocument::GetActionCollection(const form_identifier_t &formType)
 {
 	CActionCollection documentActions(this);
-	documentActions.AddAction("postAndClose", _("Post and close"), eDefActionAndClose);
-	documentActions.AddAction("post", _("Post"), ePost);
-	documentActions.AddAction("clearPosting", _("Clear posting"), eClearPosting);
+	documentActions.AddAction(wxT("postAndClose"), _("Post and close"), g_picPostCLSID, true, eDefActionAndClose);
+	documentActions.AddAction(wxT("post"), _("Post"), g_picPostCLSID, true, ePost);
+	documentActions.AddAction(wxT("clearPosting"), _("Clear posting"), g_picSaveCLSID, true, eClearPosting);
 	documentActions.AddSeparator();
-	documentActions.AddAction("generate", _("Generate"), eGenerate);
+	documentActions.AddAction(wxT("generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
 	documentActions.AddSeparator();
-	documentActions.AddAction("copy", _("Copy"), eCopy);
+	documentActions.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, true, eCopy);
 
 	return documentActions;
 }

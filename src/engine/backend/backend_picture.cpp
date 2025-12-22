@@ -8,6 +8,19 @@ static std::vector<CBackendPictureEntry> s_arrayPicture;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& image)
+{
+	if (!CBackendPicture::IsRegisterPicture(id)) {
+		CBackendPicture::AppendPicture(name, id, image);
+		return true;
+	}
+
+	wxASSERT_MSG(false, "Picture is register");
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool CBackendPicture::LoadFromFile(const wxString& strFileName, CExternalPictureDescription& pictureDesc)
 {
 	wxFileName filename = strFileName;

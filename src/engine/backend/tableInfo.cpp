@@ -47,18 +47,17 @@ IValueModel::CActionCollection IValueModel::GetActionCollection(const form_ident
 	CActionCollection action(this);
 
 	if (UseStandartCommand()) {
-		action.AddAction("add", _("Add"), eAddValue);
-		action.AddAction("copy", _("Copy"), eCopyValue);
-		action.AddAction("edit", _("Edit"), eEditValue);
-		action.AddAction("delete", _("Delete"), eDeleteValue);
+		action.AddAction(wxT("add"), _("Add"), g_picAddCLSID, true, eAddValue);
+		action.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, true, eCopyValue);
+		action.AddAction(wxT("edit"), _("Edit"), g_picEditCLSID, true, eEditValue);
+		action.AddAction(wxT("delete"), _("Delete"), g_picDeleteCLSID, true, eDeleteValue);
 	}
 
 	if (UseFilter()) {
 		if (UseStandartCommand()) action.AddSeparator();
-		action.AddAction("filter", _("Filter"), eFilter);
-		action.AddAction("filterByColumn", _("Filter by column"), eFilterByColumn);
-		action.AddSeparator();
-		action.AddAction("filterClear", _("Filter clear"), eFilterClear);
+		action.AddAction(wxT("filter"), _("Filter"), g_picFilterCLSID, true, eFilter);
+		action.AddAction(wxT("filterByColumn"), _("Filter by column"), g_picFilterSetCLSID, false, eFilterByColumn);
+		action.AddAction(wxT("filterClear"), _("Filter clear"), g_picFilterClearCLSID, false, eFilterClear);
 	}
 
 	return action;

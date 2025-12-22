@@ -268,6 +268,9 @@ void CValueTableBox::OnContextMenu(wxDataViewEvent& event)
 		const action_identifier_t& id = actionData.GetID(idx);
 		if (id != wxNOT_FOUND) {
 			wxMenuItem* menuItem = menu.Append(id, actionData.GetCaptionByID(id));
+			CPictureDescription &pictureDesc = actionData.GetPictureByID(id);
+			if (!pictureDesc.IsEmptyPicture())
+				menuItem->SetBitmap(CBackendPicture::CreatePicture(pictureDesc));
 		}
 	}
 	wxDataViewCtrl* wnd = wxDynamicCast(

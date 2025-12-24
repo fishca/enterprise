@@ -1,5 +1,6 @@
 #include "backend_picture.h"
 
+#include <wx/base64.h>
 #include <wx/mstream.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8,10 +9,32 @@ static std::vector<CBackendPictureEntry> s_arrayPicture;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& image)
+BACKEND_API bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const char* const* data)
 {
 	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::AppendPicture(name, id, image);
+		CBackendPicture::AppendPicture(name, id, wxImage(data));
+		return true;
+	}
+
+	wxASSERT_MSG(false, "Picture is register");
+	return false;
+}
+
+bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxString& base64)
+{
+	if (!CBackendPicture::IsRegisterPicture(id)) {
+		CBackendPicture::AppendPicture(name, id, CBackendPicture::GetImageFromBase64(base64));
+		return true;
+	}
+
+	wxASSERT_MSG(false, "Picture is register");
+	return false;
+}
+
+bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
+{
+	if (!CBackendPicture::IsRegisterPicture(id)) {
+		CBackendPicture::AppendPicture(name, id, bitmap);
 		return true;
 	}
 
@@ -44,6 +67,7 @@ bool CBackendPicture::LoadFromFile(const wxString& strFileName, CExternalPicture
 
 			pictureDesc.m_width = image.GetWidth();
 			pictureDesc.m_height = image.GetHeight();
+
 			return true;
 		}
 	}
@@ -115,12 +139,12 @@ bool CBackendPicture::IsRegisterPicture(const picture_identifier_t& id)
 	return false;
 }
 
-void CBackendPicture::AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& image)
+void CBackendPicture::AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
 {
 	CBackendPictureEntry entry;
 	entry.m_name = name;
 	entry.m_id = id;
-	entry.m_image = image;
+	entry.m_data = bitmap;
 	s_arrayPicture.push_back(entry);
 }
 
@@ -130,7 +154,7 @@ wxBitmap CBackendPicture::GetPicture(const picture_identifier_t& id)
 		[id](const auto entry) { return entry.m_id == id; });
 
 	if (iterator != s_arrayPicture.end())
-		return iterator->m_image;
+		return iterator->m_data;
 
 	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
 	if (so != nullptr)
@@ -149,7 +173,7 @@ std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
 			CBackendPictureEntry entry;
 			entry.m_name = so->GetClassName();
 			entry.m_id = so->GetClassType();
-			entry.m_image = backend_icon;
+			entry.m_data = backend_icon;
 			arrayPicture.push_back(entry);
 		}
 	}
@@ -160,7 +184,7 @@ std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
 			CBackendPictureEntry entry;
 			entry.m_name = so->GetClassName();
 			entry.m_id = so->GetClassType();
-			entry.m_image = backend_icon;
+			entry.m_data = backend_icon;
 			arrayPicture.push_back(entry);
 		}
 	}
@@ -168,3 +192,20 @@ std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
 	return arrayPicture;
 }
 #pragma endregion
+#pragma region __picture_conv_h__
+wxString CBackendPicture::CreateBase64Image(const wxImage& image) {
+	wxMemoryOutputStream outputStream;
+	if (image.SaveFile(outputStream, wxBitmapType::wxBITMAP_TYPE_PNG)) {
+		const wxStreamBuffer* buffer =
+			outputStream.GetOutputStreamBuffer();
+		return wxBase64Encode(buffer->GetBufferStart(), buffer->GetLastAccess());
+	}
+	return wxEmptyString;
+}
+
+wxImage CBackendPicture::GetImageFromBase64(const wxString& src) {
+	const wxMemoryBuffer& buffer = wxBase64Decode(src);
+	return wxMemoryInputStream(
+		buffer.GetData(), buffer.GetDataLen());
+}
+#pragma endregion 

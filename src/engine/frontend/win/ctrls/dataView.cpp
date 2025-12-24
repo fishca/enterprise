@@ -470,6 +470,11 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			m_filterModel = new wxDataViewFilterModel();
 			m_dataViewFilter->AssociateModel(m_filterModel);
 
+			wxIcon dlg_icon;
+			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picFilterCLSID));
+
+			wxDialog::SetIcon(dlg_icon);
+
 			wxDialog::SetMinSize(size);
 			wxDialog::Centre(wxBOTH);
 		}

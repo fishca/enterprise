@@ -216,6 +216,10 @@ CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 	SetSizer(commonSizer);
 	Centre(wxBOTH);
 
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picChangeFormCLSID));
+	
+	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
 }
 

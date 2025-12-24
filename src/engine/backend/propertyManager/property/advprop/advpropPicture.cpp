@@ -37,7 +37,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	for (auto so : CBackendPicture::GetArrayPicture()) {
 		wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so.m_name, system_value++);
-		entry.SetBitmap(so.m_image);
+		entry.SetBitmap(so.m_data);
 		m_valChoices.insert_or_assign(
 			entry.GetValue(), so.m_id
 		);

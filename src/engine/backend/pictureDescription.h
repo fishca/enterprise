@@ -85,7 +85,15 @@ public:
 	static bool SaveData(class CMemoryWriter& writer, CPictureDescription& pictureDesc);
 };
 
+// Initialize with XPM data
 extern BACKEND_API bool RegisterBackendPicture(const wxString name,
-	const picture_identifier_t& id, const wxBitmap& image);
+	const picture_identifier_t& id, const char* const* data);
 
+// Initialize with Base-64 + PNG data
+extern BACKEND_API bool RegisterBackendPicture(const wxString name,
+	const picture_identifier_t& id, const wxString& base64);
+
+// Initialize with BMP
+extern BACKEND_API bool RegisterBackendPicture(const wxString name,
+	const picture_identifier_t& id, const wxBitmap& bitmap);
 #endif 

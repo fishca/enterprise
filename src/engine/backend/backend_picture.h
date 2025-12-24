@@ -6,14 +6,15 @@
 
 struct CBackendPictureEntry {
 	wxString m_name;
-	wxBitmap m_image;
-
+	wxBitmap m_data;
 	picture_identifier_t m_id;
 };
 
 class BACKEND_API CBackendPicture {
 	CBackendPicture() = delete;
 public:
+
+	static void AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap);
 
 	static bool LoadFromFile(const wxString& strFileName, CExternalPictureDescription& pictureDesc);
 	static bool LoadFromFile(const wxString& strFileName, CPictureDescription& pictureDesc);
@@ -24,9 +25,13 @@ public:
 
 #pragma region __picture_factory_h__
 	static bool IsRegisterPicture(const picture_identifier_t& id);
-	static void AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& image);
 	static wxBitmap GetPicture(const picture_identifier_t& id);
 	static std::vector<CBackendPictureEntry> GetArrayPicture();
+#pragma endregion 
+
+#pragma region __picture_conv_h__
+	static wxString CreateBase64Image(const wxImage& image);
+	static wxImage GetImageFromBase64(const wxString& src);
 #pragma endregion 
 };
 

@@ -113,20 +113,26 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* par
 
 	while (forConstructor ||
 		countRec > 0) {
+		
 		bool foundedName = false;
 
 		if (parent != nullptr) {
 
 			for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
+				
 				auto child = parent->GetChild(idx);
 				if (clsid != child->GetClassType())
 					continue;
+				
 				if (!parent->FilterChild(child->GetClassType()))
 					continue;
+				
 				if (child->IsDeleted())
 					continue;
-				if (newName == child->GetName()) {
-					foundedName = true; break;
+				
+				if (stringUtils::CompareString(newName, child->GetName())) {
+					foundedName = true; 
+					break;
 				}
 			}
 		}

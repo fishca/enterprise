@@ -50,17 +50,18 @@ IMetaObject* CDataProcessorTree::CreateItem(bool showValue)
 
 		if (showValue) { OpenFormMDI(createdObject); }
 		UpdateToolbar(createdObject, FillItem(createdObject, item, 
-			prev_selected == objectInspector->GetSelectedObject()));
+			prev_selected == objectInspector->GetSelectedObject(), false));
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 		}
 	}
 
+	m_metaTreeWnd->RefreshSelectedItem();
 	return createdObject;
 }
 
-wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
+wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -95,7 +96,9 @@ wxTreeItemId CDataProcessorTree::FillItem(IMetaObject* metaItem, const wxTreeIte
 
 	m_metaTreeWnd->Thaw();
 
-	m_metaTreeWnd->ScrollTo(createdItem);
+	if (scroll)
+		m_metaTreeWnd->ScrollTo(createdItem);
+
 	return createdItem;
 }
 
@@ -232,7 +235,7 @@ void CDataProcessorTree::UpItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CDataProcessorTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataProcessorTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -290,7 +293,7 @@ void CDataProcessorTree::DownItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CDataProcessorTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataProcessorTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,

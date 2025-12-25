@@ -182,18 +182,18 @@ private:
 
 	IMetaDataConfiguration* m_metaData;
 
-	class CMetadataTreeWnd : public wxTreeCtrl {
+	class CMetaTreeCtrl : public wxTreeCtrl {
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 
 		class CMatadataTreeView : public CMetaView
 		{
 		public:
 
-			CMatadataTreeView(CMetadataTreeWnd* tree) : m_ownerTree(tree) {}
+			CMatadataTreeView(CMetaTreeCtrl* tree) : m_ownerTree(tree) {}
 			virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 
 		private:
-			CMetadataTreeWnd* m_ownerTree;
+			CMetaTreeCtrl* m_ownerTree;
 		};
 
 	private:
@@ -210,9 +210,20 @@ private:
 			return data->m_metaObject;
 		}
 
-		CMetadataTreeWnd();
-		CMetadataTreeWnd(CMetadataTree* parent);
-		virtual ~CMetadataTreeWnd();
+		void RefreshSelectedItem(bool scroll = true) {
+
+			const wxTreeItemId& item = GetSelection();
+
+			if (scroll)
+				wxTreeCtrl::ScrollTo(item);
+
+			wxTreeCtrl::Refresh();
+			wxTreeCtrl::Update();
+		}
+
+		CMetaTreeCtrl();
+		CMetaTreeCtrl(CMetadataTree* parent);
+		virtual ~CMetaTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -284,7 +295,7 @@ private:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	CMetadataTreeWnd* m_metaTreeWnd;
+	CMetaTreeCtrl* m_metaTreeWnd;
 
 private:
 
@@ -344,7 +355,7 @@ private:
 	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject = true);
 	IMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true);
+	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -387,7 +398,7 @@ private:
 public:
 
 	bool RenameMetaObject(IMetaObject* metaObject, const wxString& newName);
-	
+
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
 
 	CMetadataTree();

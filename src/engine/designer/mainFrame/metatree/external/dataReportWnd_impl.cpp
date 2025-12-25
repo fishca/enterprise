@@ -49,7 +49,8 @@ IMetaObject* CDataReportTree::CreateItem(bool showValue)
 		IPropertyObject* prev_selected = objectInspector->GetSelectedObject();
 
 		if (showValue) { OpenFormMDI(createdObject); }
-		UpdateToolbar(createdObject, FillItem(createdObject, item, false));
+		UpdateToolbar(createdObject, FillItem(createdObject, item, 
+			prev_selected == objectInspector->GetSelectedObject(), false));
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
@@ -59,10 +60,11 @@ IMetaObject* CDataReportTree::CreateItem(bool showValue)
 			objectInspector->SelectObject(createdObject);
 	}
 
+	m_metaTreeWnd->RefreshSelectedItem();
 	return createdObject;
 }
 
-wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
+wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -97,7 +99,8 @@ wxTreeItemId CDataReportTree::FillItem(IMetaObject* metaItem, const wxTreeItemId
 
 	m_metaTreeWnd->Thaw();
 
-	m_metaTreeWnd->ScrollTo(createdItem);
+	if (scroll)
+		m_metaTreeWnd->ScrollTo(createdItem);
 	return createdItem;
 }
 
@@ -235,7 +238,7 @@ void CDataReportTree::UpItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CDataReportTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataReportTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -293,7 +296,7 @@ void CDataReportTree::DownItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CDataReportTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataReportTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,

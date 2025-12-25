@@ -86,7 +86,7 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 
 	sbSizerTree->Add(m_metaTreeToolbar, 0, wxALL | wxEXPAND, 0);
 
-	m_metaTreeWnd = new CDataReportTreeWnd(sbSizerTree->GetStaticBox(), this);
+	m_metaTreeWnd = new CDataReportTreeCtrl(sbSizerTree->GetStaticBox(), this);
 	m_metaTreeWnd->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
@@ -94,13 +94,13 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
 
 	sbSizerTree->Add(m_metaTreeWnd, 1, wxALL | wxEXPAND, 0);
 
@@ -131,13 +131,13 @@ CDataReportTree::~CDataReportTree()
 	m_synonymValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataReportTree::OnEditCaptionSynonym), nullptr, this);
 	m_commentValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataReportTree::OnEditCaptionComment), nullptr, this);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
 
 	m_buttonModule->Disconnect(wxEVT_BUTTON, wxCommandEventHandler(CDataReportTree::OnButtonModuleClicked), nullptr, this);
 }
@@ -221,44 +221,44 @@ void CDataReportTree::OnButtonModuleClicked(wxCommandEvent& event)
 	OpenFormMDI(report->GetModuleObject());
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataReportTree::CDataReportTreeWnd, wxTreeCtrl);
+wxIMPLEMENT_DYNAMIC_CLASS(CDataReportTree::CDataReportTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
 //*                                  metatree window						       *
 //**********************************************************************************
 
-wxBEGIN_EVENT_TABLE(CDataReportTree::CDataReportTreeWnd, wxTreeCtrl)
+wxBEGIN_EVENT_TABLE(CDataReportTree::CDataReportTreeCtrl, wxTreeCtrl)
 
-EVT_LEFT_UP(CDataReportTree::CDataReportTreeWnd::OnLeftUp)
-EVT_LEFT_DOWN(CDataReportTree::CDataReportTreeWnd::OnLeftDown)
-EVT_LEFT_DCLICK(CDataReportTree::CDataReportTreeWnd::OnLeftDClick)
-EVT_RIGHT_UP(CDataReportTree::CDataReportTreeWnd::OnRightUp)
-EVT_RIGHT_DOWN(CDataReportTree::CDataReportTreeWnd::OnRightDown)
-EVT_RIGHT_DCLICK(CDataReportTree::CDataReportTreeWnd::OnRightDClick)
-EVT_MOTION(CDataReportTree::CDataReportTreeWnd::OnMouseMove)
-EVT_KEY_UP(CDataReportTree::CDataReportTreeWnd::OnKeyUp)
-EVT_KEY_DOWN(CDataReportTree::CDataReportTreeWnd::OnKeyDown)
+EVT_LEFT_UP(CDataReportTree::CDataReportTreeCtrl::OnLeftUp)
+EVT_LEFT_DOWN(CDataReportTree::CDataReportTreeCtrl::OnLeftDown)
+EVT_LEFT_DCLICK(CDataReportTree::CDataReportTreeCtrl::OnLeftDClick)
+EVT_RIGHT_UP(CDataReportTree::CDataReportTreeCtrl::OnRightUp)
+EVT_RIGHT_DOWN(CDataReportTree::CDataReportTreeCtrl::OnRightDown)
+EVT_RIGHT_DCLICK(CDataReportTree::CDataReportTreeCtrl::OnRightDClick)
+EVT_MOTION(CDataReportTree::CDataReportTreeCtrl::OnMouseMove)
+EVT_KEY_UP(CDataReportTree::CDataReportTreeCtrl::OnKeyUp)
+EVT_KEY_DOWN(CDataReportTree::CDataReportTreeCtrl::OnKeyDown)
 
-EVT_TREE_SEL_CHANGING(wxID_ANY, CDataReportTree::CDataReportTreeWnd::OnSelecting)
-EVT_TREE_SEL_CHANGED(wxID_ANY, CDataReportTree::CDataReportTreeWnd::OnSelected)
+EVT_TREE_SEL_CHANGING(wxID_ANY, CDataReportTree::CDataReportTreeCtrl::OnSelecting)
+EVT_TREE_SEL_CHANGED(wxID_ANY, CDataReportTree::CDataReportTreeCtrl::OnSelected)
 
-EVT_TREE_ITEM_COLLAPSING(wxID_ANY, CDataReportTree::CDataReportTreeWnd::OnCollapsing)
-EVT_TREE_ITEM_EXPANDING(wxID_ANY, CDataReportTree::CDataReportTreeWnd::OnExpanding)
+EVT_TREE_ITEM_COLLAPSING(wxID_ANY, CDataReportTree::CDataReportTreeCtrl::OnCollapsing)
+EVT_TREE_ITEM_EXPANDING(wxID_ANY, CDataReportTree::CDataReportTreeCtrl::OnExpanding)
 
-EVT_MENU(ID_METATREE_NEW, CDataReportTree::CDataReportTreeWnd::OnCreateItem)
-EVT_MENU(ID_METATREE_EDIT, CDataReportTree::CDataReportTreeWnd::OnEditItem)
-EVT_MENU(ID_METATREE_REMOVE, CDataReportTree::CDataReportTreeWnd::OnRemoveItem)
-EVT_MENU(ID_METATREE_PROPERTY, CDataReportTree::CDataReportTreeWnd::OnPropertyItem)
+EVT_MENU(ID_METATREE_NEW, CDataReportTree::CDataReportTreeCtrl::OnCreateItem)
+EVT_MENU(ID_METATREE_EDIT, CDataReportTree::CDataReportTreeCtrl::OnEditItem)
+EVT_MENU(ID_METATREE_REMOVE, CDataReportTree::CDataReportTreeCtrl::OnRemoveItem)
+EVT_MENU(ID_METATREE_PROPERTY, CDataReportTree::CDataReportTreeCtrl::OnPropertyItem)
 
-EVT_SET_FOCUS(CDataReportTree::CDataReportTreeWnd::OnSetFocus)
-EVT_KILL_FOCUS(CDataReportTree::CDataReportTreeWnd::OnSetFocus)
+EVT_SET_FOCUS(CDataReportTree::CDataReportTreeCtrl::OnSetFocus)
+EVT_KILL_FOCUS(CDataReportTree::CDataReportTreeCtrl::OnSetFocus)
 
-EVT_MENU(wxID_COPY, CDataReportTree::CDataReportTreeWnd::OnCopyItem)
-EVT_MENU(wxID_PASTE, CDataReportTree::CDataReportTreeWnd::OnPasteItem)
+EVT_MENU(wxID_COPY, CDataReportTree::CDataReportTreeCtrl::OnCopyItem)
+EVT_MENU(wxID_PASTE, CDataReportTree::CDataReportTreeCtrl::OnPasteItem)
 
 wxEND_EVENT_TABLE()
 
-CDataReportTree::CDataReportTreeWnd::CDataReportTreeWnd()
+CDataReportTree::CDataReportTreeCtrl::CDataReportTreeCtrl()
 	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMetaView)
 {
 	wxAcceleratorEntry entries[2];
@@ -272,7 +272,7 @@ CDataReportTree::CDataReportTreeWnd::CDataReportTreeWnd()
 	SetDoubleBuffered(true);
 }
 
-CDataReportTree::CDataReportTreeWnd::CDataReportTreeWnd(wxWindow* parentWnd, CDataReportTree* ownerWnd)
+CDataReportTree::CDataReportTreeCtrl::CDataReportTreeCtrl(wxWindow* parentWnd, CDataReportTree* ownerWnd)
 	: wxTreeCtrl(parentWnd, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_HIDE_ROOT | wxTR_TWIST_BUTTONS), m_ownerTree(ownerWnd), m_metaView(new CMetaView)
 {
 	wxAcceleratorEntry entries[2];
@@ -288,7 +288,7 @@ CDataReportTree::CDataReportTreeWnd::CDataReportTreeWnd(wxWindow* parentWnd, CDa
 
 #include "frontend/docView/docManager.h"
 
-CDataReportTree::CDataReportTreeWnd::~CDataReportTreeWnd()
+CDataReportTree::CDataReportTreeCtrl::~CDataReportTreeCtrl()
 {
 	if (docManager != nullptr &&
 		m_metaView == docManager->GetAnyUsableView()) {

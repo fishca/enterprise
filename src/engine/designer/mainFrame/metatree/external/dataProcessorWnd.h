@@ -92,7 +92,7 @@ protected:
 
 	wxButton* m_buttonModule;
 
-	class CDataProcessorTreeWnd : public wxTreeCtrl {
+	class CDataProcessorTreeCtrl : public wxTreeCtrl {
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
 
@@ -101,9 +101,20 @@ protected:
 
 	public:
 
-		CDataProcessorTreeWnd();
-		CDataProcessorTreeWnd(wxWindow* parentWnd, CDataProcessorTree* ownerWnd);
-		virtual ~CDataProcessorTreeWnd();
+		void RefreshSelectedItem(bool scroll = true) {
+
+			const wxTreeItemId& item = GetSelection();
+
+			if (scroll)
+				wxTreeCtrl::ScrollTo(item);
+
+			wxTreeCtrl::Refresh();
+			wxTreeCtrl::Update();
+		}
+
+		CDataProcessorTreeCtrl();
+		CDataProcessorTreeCtrl(wxWindow* parentWnd, CDataProcessorTree* ownerWnd);
+		virtual ~CDataProcessorTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -165,7 +176,7 @@ protected:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	CDataProcessorTreeWnd* m_metaTreeWnd;
+	CDataProcessorTreeCtrl* m_metaTreeWnd;
 	CMetaDataDataProcessor* m_metaData;
 
 private:
@@ -226,7 +237,7 @@ private:
 	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject = true);
 	IMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true);
+	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();

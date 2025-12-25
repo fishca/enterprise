@@ -5,7 +5,7 @@
 
 #include "dataReportWnd.h"
 
-void CDataReportTree::CDataReportTreeWnd::OnLeftDClick(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftDClick(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -16,19 +16,19 @@ void CDataReportTree::CDataReportTreeWnd::OnLeftDClick(wxMouseEvent &event)
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void CDataReportTree::CDataReportTreeWnd::OnLeftUp(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftUp(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnLeftDown(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnLeftDown(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnRightUp(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -48,7 +48,7 @@ void CDataReportTree::CDataReportTreeWnd::OnRightUp(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(innerMenu, event.GetPosition());
@@ -63,7 +63,7 @@ void CDataReportTree::CDataReportTreeWnd::OnRightUp(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete innerMenu;
@@ -72,7 +72,7 @@ void CDataReportTree::CDataReportTreeWnd::OnRightUp(wxMouseEvent &event)
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnRightDown(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 
@@ -92,7 +92,7 @@ void CDataReportTree::CDataReportTreeWnd::OnRightDown(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		PopupMenu(defaultMenu, event.GetPosition());
@@ -107,7 +107,7 @@ void CDataReportTree::CDataReportTreeWnd::OnRightDown(wxMouseEvent &event)
 				continue;
 			}
 
-			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 
 		delete defaultMenu;
@@ -117,69 +117,69 @@ void CDataReportTree::CDataReportTreeWnd::OnRightDown(wxMouseEvent &event)
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnRightDClick(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRightDClick(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnKeyUp(wxKeyEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnKeyUp(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnKeyDown(wxKeyEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnKeyDown(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnMouseMove(wxMouseEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnMouseMove(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnCreateItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCreateItem(wxCommandEvent &event)
 {
 	m_ownerTree->CreateItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnEditItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnEditItem(wxCommandEvent &event)
 {
 	m_ownerTree->EditItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnRemoveItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnRemoveItem(wxCommandEvent &event)
 {
 	m_ownerTree->RemoveItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnPropertyItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnPropertyItem(wxCommandEvent &event)
 {
 	m_ownerTree->PropertyItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnUpItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnUpItem(wxCommandEvent& event)
 {
 	m_ownerTree->UpItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnDownItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnDownItem(wxCommandEvent& event)
 {
 	m_ownerTree->DownItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnSortItem(wxCommandEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnSortItem(wxCommandEvent& event)
 {
 	m_ownerTree->SortItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnCommandItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCommandItem(wxCommandEvent &event)
 {
 	m_ownerTree->CommandItem(event.GetId()); event.Skip();
 }
 
 #include <wx/clipbrd.h>
 
-void CDataReportTree::CDataReportTreeWnd::OnCopyItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
 {
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
@@ -212,7 +212,7 @@ void CDataReportTree::CDataReportTreeWnd::OnCopyItem(wxCommandEvent &event)
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnPasteItem(wxCommandEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 {
 	if (!m_ownerTree->IsEditable())
 		return;
@@ -248,7 +248,7 @@ void CDataReportTree::CDataReportTreeWnd::OnPasteItem(wxCommandEvent &event)
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void CDataReportTree::CDataReportTreeWnd::OnSetFocus(wxFocusEvent& event)
+void CDataReportTree::CDataReportTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
 		docManager->ActivateView(m_metaView);
@@ -265,17 +265,17 @@ void CDataReportTree::CDataReportTreeWnd::OnSetFocus(wxFocusEvent& event)
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnSelecting(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnSelecting(wxTreeEvent &event)
 {
 	event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnSelected(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnSelected(wxTreeEvent &event)
 {
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnCollapsing(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnCollapsing(wxTreeEvent &event)
 {
 	if (GetRootItem() != event.GetItem()) {
 		m_ownerTree->Collapse(); event.Skip();
@@ -285,7 +285,7 @@ void CDataReportTree::CDataReportTreeWnd::OnCollapsing(wxTreeEvent &event)
 	}
 }
 
-void CDataReportTree::CDataReportTreeWnd::OnExpanding(wxTreeEvent &event)
+void CDataReportTree::CDataReportTreeCtrl::OnExpanding(wxTreeEvent &event)
 {
 	m_ownerTree->Expand(); event.Skip();
 }

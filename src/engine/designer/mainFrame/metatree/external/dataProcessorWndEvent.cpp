@@ -5,7 +5,7 @@
 
 #include "dataProcessorWnd.h"
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftDClick(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDClick(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) { 
@@ -16,19 +16,19 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftDClick(wxMouseEvent &event
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftUp(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftUp(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnLeftDown(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDown(wxMouseEvent &event)
 {
 	const wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk() && curItem == GetSelection()) m_ownerTree->SelectItem();
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnRightUp(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightUp(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -42,7 +42,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightUp(wxMouseEvent &event)
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		PopupMenu(defaultMenu, event.GetPosition());
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
@@ -52,7 +52,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightUp(wxMouseEvent &event)
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		delete defaultMenu;
 	}
@@ -61,7 +61,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightUp(wxMouseEvent &event)
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDown(wxMouseEvent &event)
 {
 	wxTreeItemId curItem = HitTest(event.GetPosition());
 	if (curItem.IsOk()) {
@@ -75,7 +75,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		PopupMenu(defaultMenu, event.GetPosition());
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
@@ -85,7 +85,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
-			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeWnd::OnCommandItem, this, def_menu->GetId());
+			GetEventHandler()->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem, this, def_menu->GetId());
 		}
 		delete defaultMenu;
 	}
@@ -94,69 +94,69 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDown(wxMouseEvent &event)
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnRightDClick(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDClick(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnKeyUp(wxKeyEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyUp(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnKeyDown(wxKeyEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnKeyDown(wxKeyEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnMouseMove(wxMouseEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnMouseMove(wxMouseEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnCreateItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem(wxCommandEvent &event)
 {
 	m_ownerTree->CreateItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnEditItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem(wxCommandEvent &event)
 {
 	m_ownerTree->EditItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnRemoveItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem(wxCommandEvent &event)
 {
 	m_ownerTree->RemoveItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnPropertyItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnPropertyItem(wxCommandEvent &event)
 {
 	m_ownerTree->PropertyItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnUpItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem(wxCommandEvent& event)
 {
 	m_ownerTree->UpItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnDownItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem(wxCommandEvent& event)
 {
 	m_ownerTree->DownItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnSortItem(wxCommandEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem(wxCommandEvent& event)
 {
 	m_ownerTree->SortItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnCommandItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCommandItem(wxCommandEvent &event)
 {
 	m_ownerTree->CommandItem(event.GetId()); event.Skip();
 }
 
 #include <wx/clipbrd.h>
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnCopyItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCopyItem(wxCommandEvent &event)
 {
 	const wxTreeItemId& item = GetSelection();
 	if (!item.IsOk())
@@ -189,7 +189,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnCopyItem(wxCommandEvent &event
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem(wxCommandEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnPasteItem(wxCommandEvent &event)
 {
 	if (!m_ownerTree->IsEditable())
 		return;
@@ -226,7 +226,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnPasteItem(wxCommandEvent &even
 #include "frontend/docView/docManager.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus(wxFocusEvent& event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
 	if (event.GetEventType() == wxEVT_SET_FOCUS) {
 		docManager->ActivateView(m_metaView);
@@ -243,17 +243,17 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnSetFocus(wxFocusEvent& event)
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnSelecting(wxTreeEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSelecting(wxTreeEvent &event)
 {
 	event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnSelected(wxTreeEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnSelected(wxTreeEvent &event)
 {
 	m_ownerTree->SelectItem(); event.Skip();
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnCollapsing(wxTreeEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnCollapsing(wxTreeEvent &event)
 {
 	if (GetRootItem() != event.GetItem()) {
 		m_ownerTree->Collapse(); event.Skip();
@@ -263,7 +263,7 @@ void CDataProcessorTree::CDataProcessorTreeWnd::OnCollapsing(wxTreeEvent &event)
 	}
 }
 
-void CDataProcessorTree::CDataProcessorTreeWnd::OnExpanding(wxTreeEvent &event)
+void CDataProcessorTree::CDataProcessorTreeCtrl::OnExpanding(wxTreeEvent &event)
 {
 	m_ownerTree->Expand(); event.Skip();
 }

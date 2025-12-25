@@ -217,15 +217,16 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 		IPropertyObject* oldSelection = objectInspector->GetSelectedObject();
 		if (showValue) { OpenFormMDI(createdObject); }
 		UpdateToolbar(createdObject,
-			FillItem(createdObject, item, oldSelection == objectInspector->GetSelectedObject()));
+			FillItem(createdObject, item, oldSelection == objectInspector->GetSelectedObject(), false));
 	}
 
 	Thaw();
 
+	m_metaTreeWnd->RefreshSelectedItem();
 	return createdObject;
 }
 
-wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select)
+wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
 	m_metaTreeWnd->Freeze();
 
@@ -268,7 +269,9 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 
 	m_metaTreeWnd->Thaw();
 
-	m_metaTreeWnd->ScrollTo(createdItem);
+	if (scroll)
+		m_metaTreeWnd->ScrollTo(createdItem);
+
 	return createdItem;
 }
 
@@ -280,6 +283,7 @@ void CMetadataTree::EditItem()
 	IMetaObject* m_currObject = GetMetaObject(selection);
 	if (!m_currObject)
 		return;
+	
 	OpenFormMDI(m_currObject);
 }
 
@@ -408,7 +412,7 @@ void CMetadataTree::UpItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CMetadataTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetadataTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -468,7 +472,7 @@ void CMetadataTree::DownItem()
 			);
 
 			auto tree = m_metaTreeWnd;
-			std::function<void(CMetadataTreeWnd*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetadataTreeWnd* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,

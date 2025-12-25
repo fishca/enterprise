@@ -14,7 +14,7 @@ class BACKEND_API CBackendPicture {
 	CBackendPicture() = delete;
 public:
 
-	static void AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap);
+	static void RegisterPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap);
 
 	static bool LoadFromFile(const wxString& strFileName, CExternalPictureDescription& pictureDesc);
 	static bool LoadFromFile(const wxString& strFileName, CPictureDescription& pictureDesc);

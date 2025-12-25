@@ -4,16 +4,8 @@
 
 #define sign_dataReport 0x2355F6421261D
 
-class BACKEND_API CMetaDataReport : public IMetaData {
-	wxString m_fullPath;
-
-	IMetaData* m_ownerMeta; //owner for saving/loading
-	CModuleManagerExternalReport* m_moduleManager;
-	CMetaObjectReport* m_commonObject; 	//common meta object
-	bool m_configOpened;
-
-	version_identifier_t m_version;
-
+class BACKEND_API CMetaDataReport :
+	public IMetaData {
 public:
 
 	CMetaDataReport();
@@ -54,6 +46,9 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType() const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
+
+	//Get owner metadata 
+	virtual bool GetOwner(IMetaData*& metaData) const;
 
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
@@ -101,4 +96,15 @@ protected:
 	bool RunChildMetadata(IMetaObject* object, int flags, bool before);
 	bool CloseChildMetadata(IMetaObject* object, int flags, bool before);
 	bool ClearChildMetadata(IMetaObject* object);
+
+private:
+
+	wxString m_fullPath;
+
+	IMetaData* m_ownerMeta; //owner for saving/loading
+	CModuleManagerExternalReport* m_moduleManager;
+	CMetaObjectReport* m_commonObject; 	//common meta object
+	bool m_configOpened;
+
+	version_identifier_t m_version;
 };

@@ -136,6 +136,12 @@ std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType() co
 	return activeMetaData->GetListCtorsByType();
 }
 
+bool CMetaDataDataProcessor::GetOwner(IMetaData*& metaData) const
+{
+	metaData = activeMetaData;
+	return true;
+}
+
 std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(clsid, refType);

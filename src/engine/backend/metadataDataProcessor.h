@@ -4,17 +4,8 @@
 
 #define sign_dataProcessor 0x1345F6621261E
 
-class BACKEND_API CMetaDataDataProcessor : public IMetaData
-{
-	wxString m_fullPath;
-
-	IMetaData* m_ownerMeta; //owner for saving/loading
-	CModuleManagerExternalDataProcessor* m_moduleManager;
-	CMetaObjectDataProcessor* m_commonObject; 	//common meta object
-	bool m_configOpened;
-
-	version_identifier_t m_version;
-
+class BACKEND_API CMetaDataDataProcessor :
+	public IMetaData {
 public:
 
 	CMetaDataDataProcessor();
@@ -27,9 +18,7 @@ public:
 	virtual void SetVersion(const version_identifier_t& version) { m_version = version; }
 	virtual version_identifier_t GetVersion() const { return m_version; }
 
-	virtual wxString GetFileName() const {
-		return m_fullPath;
-	}
+	virtual wxString GetFileName() const { return m_fullPath; }
 
 	//runtime support:
 	virtual CValue* CreateObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const;
@@ -58,6 +47,9 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
+	//Get owner metadata 
+	virtual bool GetOwner(IMetaData*& metaData) const;
+
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
 		return m_factoryCtorCountChanges +
@@ -77,9 +69,7 @@ public:
 	bool LoadFromFile(const wxString& strFileName);
 	bool SaveToFile(const wxString& strFileName);
 
-	virtual IMetaObject* GetCommonMetaObject() const {
-		return m_commonObject;
-	}
+	virtual IMetaObject* GetCommonMetaObject() const {return m_commonObject;}
 
 	//start/exit module 
 	virtual bool StartMainModule() { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
@@ -106,4 +96,15 @@ protected:
 	bool RunChildMetadata(IMetaObject* object, int flags, bool before);
 	bool CloseChildMetadata(IMetaObject* object, int flags, bool before);
 	bool ClearChildMetadata(IMetaObject* object);
+
+private:
+
+	wxString m_fullPath;
+
+	IMetaData* m_ownerMeta; //owner for saving/loading
+	CModuleManagerExternalDataProcessor* m_moduleManager;
+	CMetaObjectDataProcessor* m_commonObject; 	//common meta object
+	bool m_configOpened;
+
+	version_identifier_t m_version;
 };

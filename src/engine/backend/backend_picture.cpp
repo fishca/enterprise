@@ -9,10 +9,10 @@ static std::vector<CBackendPictureEntry> s_arrayPicture;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-BACKEND_API bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const char* const* data)
+bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const char* const* data)
 {
 	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::AppendPicture(name, id, wxImage(data));
+		CBackendPicture::RegisterPicture(name, id, wxImage(data));
 		return true;
 	}
 
@@ -23,7 +23,7 @@ BACKEND_API bool RegisterBackendPicture(const wxString name, const picture_ident
 bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxString& base64)
 {
 	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::AppendPicture(name, id, CBackendPicture::GetImageFromBase64(base64));
+		CBackendPicture::RegisterPicture(name, id, CBackendPicture::GetImageFromBase64(base64));
 		return true;
 	}
 
@@ -34,7 +34,7 @@ bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id,
 bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
 {
 	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::AppendPicture(name, id, bitmap);
+		CBackendPicture::RegisterPicture(name, id, bitmap);
 		return true;
 	}
 
@@ -111,8 +111,10 @@ wxBitmap CBackendPicture::CreatePicture(const CPictureDescription& pictureDesc, 
 	}
 	else if (pictureDesc.m_type == EPictureType::eFromConfiguration) {
 		if (metaData != nullptr && pictureDesc.m_meta_guid.isValid()) {
-			CMetaObjectPicture* picture = nullptr;
-			if (metaData->GetMetaObject(picture, pictureDesc.m_meta_guid))
+			CMetaObjectPicture* picture = nullptr; IMetaData* metaDataOwner = nullptr;
+			if (metaData != nullptr && metaData->GetOwner(metaDataOwner) && metaDataOwner != nullptr && metaDataOwner->GetMetaObject(picture, pictureDesc.m_meta_guid))
+				return picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
+			else if (metaData != nullptr && metaData->GetMetaObject(picture, pictureDesc.m_meta_guid))
 				return picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
 		}
 	}
@@ -139,7 +141,7 @@ bool CBackendPicture::IsRegisterPicture(const picture_identifier_t& id)
 	return false;
 }
 
-void CBackendPicture::AppendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
+void CBackendPicture::RegisterPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
 {
 	CBackendPictureEntry entry;
 	entry.m_name = name;

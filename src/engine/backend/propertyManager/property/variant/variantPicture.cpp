@@ -34,6 +34,6 @@ wxString wxVariantDataPicture::MakeString() const
 wxBitmap wxVariantDataPicture::GetPictureBitmap(const wxSize& size) const
 {
 	return CBackendPicture::CreatePicture(m_pictureDesc,
-		m_ownerProperty ? m_ownerProperty->GetMetaData() : nullptr, size);
+		m_ownerProperty != nullptr ? m_ownerProperty->GetMetaData() : nullptr, size);
 }
 

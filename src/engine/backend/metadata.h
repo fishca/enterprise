@@ -132,6 +132,9 @@ public:
 	virtual std::vector<IMetaObject*> GetMetaObject(const IMetaObject* top = nullptr) const;
 	virtual std::vector<IMetaObject*> GetMetaObject(const class_identifier_t& clsid, const IMetaObject* top = nullptr) const;
 
+	//Get parent metadata 
+	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
+
 	//find object
 	virtual IMetaObject* FindByName(const wxString& fullName) const;
 

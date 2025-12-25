@@ -37,7 +37,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	wxPGChoiceEntry& entry =
 		systemChoices.AddAsSorted(wxEmptyString, system_value++);
-	
+
 	m_valChoices.insert_or_assign(entry.GetValue(), 0);
 
 	for (auto so : CBackendPicture::GetArrayPicture()) {
@@ -50,21 +50,37 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	const IPropertyObject* ownerValue = pictureVariant->GetOwner();
 	if (ownerValue != nullptr) {
-		const IMetaData* metaData = ownerValue->GetMetaData();
 
+		const IMetaData* metaData = ownerValue->GetMetaData();
 
 		wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(wxEmptyString, system_config++);
 		m_confChoices.insert_or_assign(entry.GetValue(), wxNullGuid);
 
-		for (const auto object : metaData->GetMetaObject(g_metaPictureCLSID)) {
-			CMetaObjectPicture* picture = nullptr;
-			if (object->ConvertToValue(picture)) {
-				wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
-					object->GetName(), system_config++);
-				entry.SetBitmap(picture->GetValueAsBitmap());
-				m_confChoices.insert_or_assign(
-					entry.GetValue(), picture->GetGuid()
-				);
+		IMetaData* metaDataOwner = nullptr;
+		if (metaData != nullptr && metaData->GetOwner(metaDataOwner)) {
+			for (const auto object : metaDataOwner->GetMetaObject(g_metaPictureCLSID)) {
+				CMetaObjectPicture* picture = nullptr;
+				if (object->ConvertToValue(picture)) {
+					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
+						object->GetName(), system_config++);
+					entry.SetBitmap(picture->GetValueAsBitmap());
+					m_confChoices.insert_or_assign(
+						entry.GetValue(), picture->GetGuid()
+					);
+				}
+			}
+		}
+		else if (metaData != nullptr) {
+			for (const auto object : metaData->GetMetaObject(g_metaPictureCLSID)) {
+				CMetaObjectPicture* picture = nullptr;
+				if (object->ConvertToValue(picture)) {
+					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
+						object->GetName(), system_config++);
+					entry.SetBitmap(picture->GetValueAsBitmap());
+					m_confChoices.insert_or_assign(
+						entry.GetValue(), picture->GetGuid()
+					);
+				}
 			}
 		}
 

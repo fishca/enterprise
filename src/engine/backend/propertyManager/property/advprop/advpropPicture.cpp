@@ -35,6 +35,11 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	unsigned int system_value = 0, system_config = 0;
 
+	wxPGChoiceEntry& entry =
+		systemChoices.AddAsSorted(wxEmptyString, system_value++);
+	
+	m_valChoices.insert_or_assign(entry.GetValue(), 0);
+
 	for (auto so : CBackendPicture::GetArrayPicture()) {
 		wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so.m_name, system_value++);
 		entry.SetBitmap(so.m_data);
@@ -46,6 +51,11 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 	const IPropertyObject* ownerValue = pictureVariant->GetOwner();
 	if (ownerValue != nullptr) {
 		const IMetaData* metaData = ownerValue->GetMetaData();
+
+
+		wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(wxEmptyString, system_config++);
+		m_confChoices.insert_or_assign(entry.GetValue(), wxNullGuid);
+
 		for (const auto object : metaData->GetMetaObject(g_metaPictureCLSID)) {
 			CMetaObjectPicture* picture = nullptr;
 			if (object->ConvertToValue(picture)) {
@@ -57,6 +67,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 				);
 			}
 		}
+
 		sourceChoices.Add(_("Load from configuration"), eFromConfiguration);
 	}
 
@@ -326,7 +337,7 @@ bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 
 		// Get from FS
 		CExternalPictureDescription container;
-		
+
 		if (CBackendPicture::LoadFromFile(dlg.GetPath(), container)) {
 			value = new wxVariantDataExternalPicture(container);
 			return true;

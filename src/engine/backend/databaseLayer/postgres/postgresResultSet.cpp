@@ -72,10 +72,10 @@ int CPostgresResultSet::GetResultInt(int nField)
 
 wxString CPostgresResultSet::GetResultString(int nField)
 {
-	wxString strValue = _("");
+	wxString strValue = wxEmptyString;
 	if (m_bBinaryResults)
 	{
-		wxLogError(_("Not implemented\n"));
+		wxLogError(wxT("Not implemented\n"));
 	}
 	else
 	{
@@ -96,7 +96,7 @@ long long CPostgresResultSet::GetResultLong(int nField)
 	long long nValue = 0;
 	if (m_bBinaryResults)
 	{
-		wxLogError(_("Not implemented\n"));
+		wxLogError(wxT("Not implemented\n"));
 	}
 	else
 	{
@@ -118,7 +118,7 @@ bool CPostgresResultSet::GetResultBool(int nField)
 	bool bValue = false;
 	if (m_bBinaryResults)
 	{
-		wxLogError(_("Not implemented\n"));
+		wxLogError(wxT("Not implemented\n"));
 	}
 	else
 	{
@@ -127,7 +127,7 @@ bool CPostgresResultSet::GetResultBool(int nField)
 			if (m_pInterface->GetPQgetisnull()(m_pResult, m_nCurrentRow, nField - 1) != 1)
 			{
 				wxString strValue = ConvertFromUnicodeStream(m_pInterface->GetPQgetvalue()(m_pResult, m_nCurrentRow, nField - 1));
-				bValue = (strValue != _("0"));
+				bValue = (strValue != wxT("0"));
 			}
 		}
 	}
@@ -219,7 +219,7 @@ double CPostgresResultSet::GetResultDouble(int nField)
 	double dblValue = 0;
 	if (m_bBinaryResults)
 	{
-		wxLogError(_("Not implemented\n"));
+		wxLogError(wxT("Not implemented\n"));
 	}
 	else
 	{
@@ -238,7 +238,7 @@ number_t CPostgresResultSet::GetResultNumber(int nField)
 	number_t dblValue = 0;
 	if (m_bBinaryResults)
 	{
-		wxLogError(_("Not implemented\n"));
+		wxLogError(wxT("Not implemented\n"));
 	}
 	else
 	{
@@ -264,7 +264,7 @@ int CPostgresResultSet::LookupField(const wxString& strField)
 
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
-		wxString msg(_("Field '") + strField + _("' not found in the resultset"));
+		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;

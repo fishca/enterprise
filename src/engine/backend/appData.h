@@ -136,12 +136,14 @@ public:
 
 	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase);
 	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
-		const wxString& strUser = _(""), const wxString& strPassword = _(""), const wxString& strDatabase = _(""));
+		const wxString& strUser = wxEmptyString, const wxString& strPassword = wxEmptyString, const wxString& strDatabase = wxEmptyString);
 
 	static bool DestroyAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
 
 	// Initialize application
+	bool InitLocale();
+	
 	bool Connect(const wxString& user, const wxString& password, const int flags = _app_start_default_flag);
 	bool Disconnect();
 
@@ -221,6 +223,7 @@ private:
 	static void CreateTableSequence();
 	static void CreateTableEvent();
 private:
+	
 	static CApplicationData* s_instance;
 
 	eRunMode m_runMode;
@@ -251,7 +254,11 @@ private:
 	wxString m_strUser;
 	wxString m_strPassword;
 
-	bool m_exclusiveMode = false; //Монопольный режим
+	// LOCALE
+	wxLocale m_locale;
+	int m_locale_lang;
+
+	bool m_exclusiveMode = false; //Exclusive mode
 };
 
 ///////////////////////////////////////////////////////////////////////////////

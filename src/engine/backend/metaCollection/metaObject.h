@@ -25,6 +25,7 @@ const class_identifier_t g_metaCommonTemplateCLSID = string_to_clsid("MD_CTMP");
 const class_identifier_t g_metaRoleCLSID = string_to_clsid("MD_ROLE");
 const class_identifier_t g_metaInterfaceCLSID = string_to_clsid("MD_SSYST");
 const class_identifier_t g_metaPictureCLSID = string_to_clsid("MD_PICTR");
+const class_identifier_t g_metaLanguageCLSID = string_to_clsid("MD_LANG");
 
 //ADVANCED OBJECTS
 const class_identifier_t g_metaAttributeCLSID = string_to_clsid("MD_ATTR");

@@ -18,7 +18,7 @@ private:
 	CSourceExplorer() {}
 
 	CSourceExplorer(IMetaObjectCompositeData* refData, const class_identifier_t& clsid) {
-		m_srcData = { wxT("ref"), _("ref"), refData, refData->GetMetaID(), { clsid }, true, false };
+		m_srcData = { wxT("ref"), _("Ref"), refData, refData->GetMetaID(), { clsid }, true, false };
 
 		for (const auto object : refData->GetGenericAttributeArrayObject()) {
 			CSourceExplorer::AppendSource(object);
@@ -39,7 +39,7 @@ private:
 public:
 
 	CSourceExplorer(IMetaObject* refData, const class_identifier_t& clsid, bool tableSection, bool select = false) {
-		m_srcData = { wxT("ref"), _("ref"), refData, refData->GetMetaID(), clsid, true, true, tableSection, select };
+		m_srcData = { wxT("ref"), _("Ref"), refData, refData->GetMetaID(), clsid, true, true, tableSection, select };
 	}
 
 	// this object 

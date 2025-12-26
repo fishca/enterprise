@@ -26,11 +26,11 @@ CMysqlDatabaseLayer::CMysqlDatabaseLayer()
 	}
 #endif
 	InitDatabase();
-	m_strServer = _("localhost");
+	m_strServer = wxT("localhost");
 	m_iPort = 3306; // default
-	m_strDatabase = _("");
-	m_strUser = _("");
-	m_strPassword = _("");
+	m_strDatabase = wxEmptyString;
+	m_strUser = wxEmptyString;
+	m_strPassword = wxEmptyString;
 }
 
 CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strDatabase)
@@ -47,10 +47,10 @@ CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strDatabase)
 	}
 #endif
 	InitDatabase();
-	m_strServer = _("localhost");
+	m_strServer = wxT("localhost");
 	m_iPort = 3306; // default
-	m_strUser = _("");
-	m_strPassword = _("");
+	m_strUser = wxEmptyString;
+	m_strPassword = wxEmptyString;
 	Open(strDatabase);
 }
 
@@ -69,8 +69,8 @@ CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strServer, const wxStri
 #endif
 	InitDatabase();
 	ParseServerAndPort(strServer);
-	m_strUser = _("");
-	m_strPassword = _("");
+	m_strUser = wxEmptyString;
+	m_strPassword = wxEmptyString;
 	Open(strDatabase);
 }
 
@@ -88,7 +88,7 @@ CMysqlDatabaseLayer::CMysqlDatabaseLayer(const wxString& strDatabase, const wxSt
 	}
 #endif
 	InitDatabase();
-	m_strServer = _("localhost");
+	m_strServer = wxT("localhost");
 	m_iPort = 3306; // default
 	m_strUser = strUser;
 	m_strPassword = strPassword;
@@ -210,7 +210,7 @@ bool CMysqlDatabaseLayer::Open(const wxString& strDatabase)
 			"CHARACTER_SET_RESULTS=utf8;";
 
 		m_pInterface->GetMysqlRealQuery()((MYSQL*)m_pDatabase, sqlStatement, strlen(sqlStatement));
-		wxCSConv conv(_("UTF-8"));
+		wxCSConv conv(wxT("UTF-8"));
 		SetEncoding(&conv);
 #endif
 
@@ -227,7 +227,7 @@ bool CMysqlDatabaseLayer::Open(const wxString& strDatabase)
 
 void CMysqlDatabaseLayer::ParseServerAndPort(const wxString& strServer)
 {
-	int portIndicator = strServer.Find(_(":"));
+	int portIndicator = strServer.Find(wxT(":"));
 	if (portIndicator > -1)
 	{
 		m_strServer = strServer.SubString(0, portIndicator - 1);
@@ -495,7 +495,7 @@ bool CMysqlDatabaseLayer::TableExists(const wxString& table)
 	try
 	{
 #endif
-		wxString query = _("SHOW TABLE STATUS WHERE Comment != 'VIEW' AND Name=?;");
+		wxString query = wxT("SHOW TABLE STATUS WHERE Comment != 'VIEW' AND Name=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -576,7 +576,7 @@ bool CMysqlDatabaseLayer::ViewExists(const wxString& view)
 	try
 	{
 #endif
-		wxString query = _("SHOW TABLE STATUS WHERE Comment = 'VIEW' AND Name=?;");
+		wxString query = wxT("SHOW TABLE STATUS WHERE Comment = 'VIEW' AND Name=?;");
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -638,7 +638,7 @@ wxArrayString CMysqlDatabaseLayer::GetTables()
 		try
 		{
 #endif
-			wxString query = _("SHOW TABLE STATUS WHERE Comment != 'VIEW';");
+			wxString query = wxT("SHOW TABLE STATUS WHERE Comment != 'VIEW';");
 			pResult = ExecuteQuery(query);
 
 			while (pResult->Next())
@@ -699,7 +699,7 @@ wxArrayString CMysqlDatabaseLayer::GetViews()
 		try
 		{
 #endif
-			wxString query = _("SHOW TABLE STATUS WHERE Comment = 'VIEW';");
+			wxString query = wxT("SHOW TABLE STATUS WHERE Comment = 'VIEW';");
 			pResult = ExecuteQuery(query);
 
 			while (pResult->Next())
@@ -740,7 +740,7 @@ wxArrayString CMysqlDatabaseLayer::GetColumns(const wxString& table)
 	try
 	{
 #endif
-		wxString query = wxString::Format(_("SHOW COLUMNS FROM %s;"), table.c_str());
+		wxString query = wxString::Format(wxT("SHOW COLUMNS FROM %s;"), table.c_str());
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())

@@ -4,15 +4,13 @@
 #include <wx/app.h>
 #include "codeRunner.h"
 
-class CCodeRunnerApp : public wxApp
-{
-	wxLocale m_locale;
+class CCodeRunnerApp : public wxApp {
 	CFrameCodeRunner* m_codeRunner = new CFrameCodeRunner(nullptr, wxID_ANY);
 public:
 	virtual bool OnInit();
 	virtual int OnExit();
 
-	void AppendOutput(const wxString &str);
+	void AppendOutput(const wxString& str);
 };
 
 wxDECLARE_APP(CCodeRunnerApp);

@@ -12,7 +12,7 @@ CMysqlParameter::CMysqlParameter(const wxString& strValue)
 	m_nParameterType = CMysqlParameter::PARAM_STRING;
 	m_strValue = strValue;
 	m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
-	if (_("") == strValue)
+	if (wxEmptyString == strValue)
 	{
 		m_nBufferLength = 0;
 	}

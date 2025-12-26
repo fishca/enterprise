@@ -80,10 +80,10 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	m_auiToolBarUsers = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT);
 	m_auiToolBarUsers->SetArtProvider(new wxAuiLunaToolBarArt());
 
-	m_toolAdd = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_ADD, _("add"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolCopy = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_COPY, _("copy"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolEdit = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_EDIT, _("edit"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolDelete = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_DELETE, _("delete"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolAdd = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_ADD, _("Add"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolCopy = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_COPY, _("Copy"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolEdit = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_EDIT, _("Edit"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolDelete = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_DELETE, _("Delete"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
 
 	m_auiToolBarUsers->Realize();
 	m_auiToolBarUsers->Connect(wxEVT_MENU, wxCommandEventHandler(CDialogUserList::OnCommandMenu), nullptr, this);

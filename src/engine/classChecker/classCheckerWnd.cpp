@@ -25,7 +25,7 @@ CFrameClassChecker::CFrameClassChecker(wxWindow* parent, wxWindowID id, const wx
 	wxStaticBoxSizer* sbSizerOutput;
 	sbSizerOutput = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("Output")), wxHORIZONTAL);
 
-	m_staticText_output = new wxStaticText(sbSizerOutput->GetStaticBox(), wxID_ANY, _("result"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticText_output = new wxStaticText(sbSizerOutput->GetStaticBox(), wxID_ANY, _("Result"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticText_output->Wrap(-1);
 	sbSizerOutput->Add(m_staticText_output, 1, wxALIGN_CENTER_VERTICAL, 5);
 

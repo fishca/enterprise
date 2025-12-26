@@ -76,7 +76,7 @@ CFirebirdPreparedStatement* CFirebirdPreparedStatement::CreateStatement(CFirebir
 		pStatement->SetEncoding(conv);
 
 		pStatement->SetErrorCode(DATABASE_LAYER_ERROR);
-		pStatement->SetErrorMessage(_("No SQL Statements found"));
+		pStatement->SetErrorMessage(wxT("No SQL Statements found"));
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		// If we're using exceptions, then assume that the calling program won't
@@ -425,14 +425,14 @@ int CFirebirdPreparedStatement::FindStatementAndAdjustPositionIndex(int* pPositi
 void CFirebirdPreparedStatement::SetInvalidParameterPositionError(int nPosition)
 {
 	SetErrorCode(DATABASE_LAYER_ERROR);
-	SetErrorMessage(_("Invalid Prepared Statement Parameter"));
+	SetErrorMessage(wxT("Invalid Prepared Statement Parameter"));
 
 	ThrowDatabaseException();
 }
 
 void CFirebirdPreparedStatement::InterpretErrorCodes()
 {
-	wxLogError(_("FirebirdPreparesStatement::InterpretErrorCodes()\n"));
+	wxLogError(wxT("FirebirdPreparesStatement::InterpretErrorCodes()\n"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(m_Status);
 	SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));

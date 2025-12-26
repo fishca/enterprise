@@ -18,69 +18,69 @@ wxString CBackendException::ms_strError;
 //////////////////////////////////////////////////////////////////////
 static wxString gs_listErrorString[] =
 {
-	"Usage: %s <filename>",
-	"Error reading file %s",
-	"Error opening file %s",
-	"ASSERT: Module system error %s in line %d",
-	"ASSERT_VALID: Module system error %s in line %d",
-	"System error(out of array) when trying to process an error with a number %d",
-	"Symbol expected :\n%s",
-	"Word expected :\n%s",
-	"Constant boolean expected:\n%s",
-	"Constant number expected:\n%s",
-	"Constant string expected:\n%s",
-	"Constant date expected:\n%s",
-	"Duplicate identifier %s",//ERROR_IDENTIFIER_DUPLICATE
-	"Label '%s' not defined",
-	"One of the keywords is expected!",
-	"Module code expected",
-	"Identifier expected",//ERROR_IDENTIFIER_DEFINE
-	"Region name expected",//ERROR_IDENTIFIER_REGION
-	"Keyword or identifier expected",//ERROR_CODE
-	"Symbol expected '%s'",//ERROR_DELIMETER
-	"Closing parenthesis or comma expected",//ERROR_FUNC_DELIMETER
-	"Function or procedure declaration keyword expected",//ERROR_FUNC_DEFINE
-	"Module cannot have a return statement",//ERROR_RETURN
-	"Expected constant",//ERROR_CONST_DEFINE
-	"An operator is expected to complete a procedure or function!",//ERROR_ENDFUNC_DEFINE
-	"Error writing file: %s",//ERROR_FILE_WRITE
-	"Error in expression:\n%s",//ERROR_EXPRESSION
-	"Keyword expected %s",//ERROR_KEYWORD
-	"Identifier '%s' not found",//ERROR_IDENTIFIER_NOT_FOUND
-	"Operator Break can be used only inside the cycle",//ERROR_USE_BREAK
-	"Operator Continue can be used only inside the cycle",//ERROR_USE_CONTINUE
-	"Operator Return cannot be used outside the procedure or function",//ERROR_USE_RETURN
-	"Expected program operators",//ERROR_USE_BLOCK
-	"Expected expression",//ERROR_EXPRESSION_REQUIRE
-	"Procedure or function not detected (%s)",//ERROR_CALL_FUNCTION
-	"Variable with the specified name is already defined (%s)",//ERROR_DEF_VARIABLE
-	"A procedure or function with the specified name is already defined (%s)",//ERROR_DEF_FUNCTION
-	"Too many parameters",//ERROR_MANY_PARAMS
-	"Not enough parameters",//ERROR_FEW_PARAMS
-	"Var is not found (%s)",//ERROR_VAR_NOT_FOUND
-	"Unexpected program code termination",//ERROR_END_PROGRAM
-	"This module may contain only definitions of procedures and functions", //ERROR_ONLY_FUNCTION
-	"Use procedure as function (%s)", //ERROR_USE_PROCEDURE_AS_FUNCTION
-	"Expected integer positive sign constant",//ERROR_ARRAY_SIZE_CONST
-	"Re-import the parent module",//ERROR_DUBLICATE_IMPORT
-	"Module not found",//ERROR_MODULE_NOT_FOUND
-	"The import statement must be at the beginning of the module",//ERROR_USE_IMPORT
-	"Final conditional compilation statement expected",//ERROR_USE_ENDDEF
-	"A pending region statement is expected",//ERROR_USE_ENDREGION
+	_("Usage: %s <filename>"),
+	_("Error reading file %s"),
+	_("Error opening file %s"),
+	_("ASSERT: Module system error %s in line %d"),
+	_("ASSERT_VALID: Module system error %s in line %d"),
+	_("System error(out of array) when trying to process an error with a number %d"),
+	_("Symbol expected :\n%s"),
+	_("Word expected :\n%s"),
+	_("Constant boolean expected:\n%s"),
+	_("Constant number expected:\n%s"),
+	_("Constant string expected:\n%s"),
+	_("Constant date expected:\n%s"),
+	_("Duplicate identifier %s"),//ERROR_IDENTIFIER_DUPLICATE
+	_("Label '%s' not defined"),
+	_("One of the keywords is expected!"),
+	_("Module code expected"),
+	_("Identifier expected"),//ERROR_IDENTIFIER_DEFINE
+	_("Region name expected"),//ERROR_IDENTIFIER_REGION
+	_("Keyword or identifier expected"),//ERROR_CODE
+	_("Symbol expected '%s'"),//ERROR_DELIMETER
+	_("Closing parenthesis or comma expected"),//ERROR_FUNC_DELIMETER
+	_("Function or procedure declaration keyword expected"),//ERROR_FUNC_DEFINE
+	_("Module cannot have a return statement"),//ERROR_RETURN
+	_("Expected constant"),//ERROR_CONST_DEFINE
+	_("An operator is expected to complete a procedure or function!"),//ERROR_ENDFUNC_DEFINE
+	_("Error writing file: %s"),//ERROR_FILE_WRITE
+	_("Error in expression:\n%s"),//ERROR_EXPRESSION
+	_("Keyword expected %s"),//ERROR_KEYWORD
+	_("Identifier '%s' not found"),//ERROR_IDENTIFIER_NOT_FOUND
+	_("Operator Break can be used only inside the cycle"),//ERROR_USE_BREAK
+	_("Operator Continue can be used only inside the cycle"),//ERROR_USE_CONTINUE
+	_("Operator Return cannot be used outside the procedure or function"),//ERROR_USE_RETURN
+	_("Expected program operators"),//ERROR_USE_BLOCK
+	_("Expected expression"),//ERROR_EXPRESSION_REQUIRE
+	_("Procedure or function not detected (%s)"),//ERROR_CALL_FUNCTION
+	_("Variable with the specified name is already defined (%s)"),//ERROR_DEF_VARIABLE
+	_("A procedure or function with the specified name is already defined (%s)"),//ERROR_DEF_FUNCTION
+	_("Too many parameters"),//ERROR_MANY_PARAMS
+	_("Not enough parameters"),//ERROR_FEW_PARAMS
+	_("Var is not found (%s)"),//ERROR_VAR_NOT_FOUND
+	_("Unexpected program code termination"),//ERROR_END_PROGRAM
+	_("This module may contain only definitions of procedures and functions"), //ERROR_ONLY_FUNCTION
+	_("Use procedure as function (%s)"), //ERROR_USE_PROCEDURE_AS_FUNCTION
+	_("Expected integer positive sign constant"),//ERROR_ARRAY_SIZE_CONST
+	_("Re-import the parent module"),//ERROR_DUBLICATE_IMPORT
+	_("Module not found"),//ERROR_MODULE_NOT_FOUND
+	_("The import statement must be at the beginning of the module"),//ERROR_USE_IMPORT
+	_("Final conditional compilation statement expected"),//ERROR_USE_ENDDEF
+	_("A pending region statement is expected"),//ERROR_USE_ENDREGION
 
-	"Constructor not found (%s)",//ERROR_CALL_CONSTRUCTOR
+	_("Constructor not found (%s)"),//ERROR_CALL_CONSTRUCTOR
 
-	"Type error define",//ERROR_TYPE_DEF
-	"Bad variable type",//ERROR_BAD_TYPE
-	"Bad value type",//ERROR_BAD_TYPE_EXPRESSION
-	"Variable must be a numeric type",//ERROR_NUMBER_TYPE
+	_("Type error define"),//ERROR_TYPE_DEF
+	_("Bad variable type"),//ERROR_BAD_TYPE
+	_("Bad value type"),//ERROR_BAD_TYPE_EXPRESSION
+	_("Variable must be a numeric type"),//ERROR_NUMBER_TYPE
 
-	"Boolean value expected",//ERROR_BAD_TYPE_EXPRESSION_B
-	"Numeric value expected",//ERROR_BAD_TYPE_EXPRESSION_N
-	"String value expected",//ERROR_BAD_TYPE_EXPRESSION_S
-	"Date value expected",//ERROR_BAD_TYPE_EXPRESSION_D
+	_("Boolean value expected"),//ERROR_BAD_TYPE_EXPRESSION_B
+	_("Numeric value expected"),//ERROR_BAD_TYPE_EXPRESSION_N
+	_("String value expected"),//ERROR_BAD_TYPE_EXPRESSION_S
+	_("Date value expected"),//ERROR_BAD_TYPE_EXPRESSION_D
 
-	"Variable type does not support this operation",//ERROR_TYPE_OPERATION
+	_("Variable type does not support this operation"),//ERROR_TYPE_OPERATION
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -104,11 +104,11 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 	const wxString& strDocPath = error.m_strDocPath;
 
 	if (activeMetaData != nullptr) {
-		
+
 		wxString strModuleData;
 
 		if (!isEvalMode) {
-			
+
 			if (strModuleData.IsEmpty() && strFileName.IsEmpty()) {
 				IMetaObjectModule* foundedDoc = dynamic_cast<IMetaObjectModule*>(activeMetaData->FindByName(error.m_strDocPath));
 				wxASSERT(foundedDoc);
@@ -128,7 +128,7 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 
 		const wxString& strCodeLineError = isEvalMode ? wxEmptyString :
 			CBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
-		
+
 		CBackendException::ProcessError(strFileName,
 			strModuleName, strDocPath,
 			error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
@@ -136,7 +136,7 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 		);
 	}
 	else {
-		
+
 		CBackendException::ProcessError(strFileName,
 			strModuleName, strDocPath,
 			error.m_numString, error.m_numLine + 1,
@@ -152,11 +152,11 @@ void CBackendException::ProcessError(const wxString& strFileName,
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + wxString::Format("%i", currLine) + wxT(")}: ");
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + wxString::Format(wxT("%i"), currLine) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? CBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
 	strErrorMessage += (sm_evalMode ? wxEmptyString : strCodeLineError);
 
-	if (sm_evalMode) strErrorMessage.Replace('\n', ' ');
+	if (sm_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
 	stringUtils::TrimAll(strErrorMessage);
 
@@ -224,7 +224,7 @@ wxString CBackendException::FormatV(const wxString& fmt, va_list& list)
 {
 	wxString strErrorBuffer = wxString::FormatV(_(fmt), list); va_end(list);
 	if (CBackendException::IsEvalMode())
-		strErrorBuffer.Replace('\n', " ");
+		strErrorBuffer.Replace(wxT('\n'), wxT(' '));
 	stringUtils::TrimAll(strErrorBuffer);
 	return strErrorBuffer;
 }
@@ -248,7 +248,7 @@ wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigne
 	unsigned int endPos = sizeText;
 
 	for (unsigned int i = (currPos == sizeText ? currPos - 1 : currPos); i > 0; i--) {
-		if (strBuffer[i] == '\n') {
+		if (strBuffer[i] == wxT('\n')) {
 			startPos = i + 1;
 			break;
 		};
@@ -256,15 +256,15 @@ wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigne
 
 	//look for the end of the line where the translation error message is returned
 	for (unsigned int i = currPos; i < sizeText; i++) {
-		if (strBuffer[i] == '\n') {
+		if (strBuffer[i] == wxT('\n')) {
 			endPos = i; break;
 		};
 	}
 
 	//determine the line number
-	unsigned int currLine = 1 + strBuffer.Left(startPos).Replace('\n', '\n');
+	unsigned int currLine = 1 + strBuffer.Left(startPos).Replace(wxT('\n'), wxT('\n'));
 
-	wxString strError = wxString::Format("%s <<?>> %s", strBuffer.Mid(startPos, currPos - startPos), strBuffer.Mid(currPos, endPos - currPos));
+	wxString strError = wxString::Format(wxT("%s <<?>> %s"), strBuffer.Mid(startPos, currPos - startPos), strBuffer.Mid(currPos, endPos - currPos));
 	strError.Replace('\r', '\0');
 	strError.Replace('\t', ' ');
 

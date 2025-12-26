@@ -35,7 +35,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer()
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -66,7 +66,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase)
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -97,7 +97,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strDatabase, cons
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -127,7 +127,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -157,7 +157,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -186,7 +186,7 @@ CFirebirdDatabaseLayer::CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading Firebird library"));
+		SetErrorMessage(wxT("Error loading Firebird library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -244,7 +244,7 @@ bool CFirebirdDatabaseLayer::Open()
 	if (m_pInterface == NULL)
 		return false;
 
-	//wxCSConv conv(_("UTF-8"));
+	//wxCSConv conv(wxT("UTF-8"));
 	//SetEncoding(&conv);
 
 	// Combine the server and databsae path strings to pass into the isc_attach_databse function
@@ -403,7 +403,7 @@ void CFirebirdDatabaseLayer::BeginTransaction()
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(_("Beginning transaction"));
+	//wxLogDebug(wxT("Beginning transaction"));
 	if (m_pDatabase)
 	{
 		fb_tr_list *fbNextNode = new fb_tr_list;
@@ -440,7 +440,7 @@ void CFirebirdDatabaseLayer::Commit()
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(_("Committing transaction"));
+	//wxLogDebug(wxT("Committing transaction"));
 	if (m_pDatabase && m_fbNode->m_pTransaction)
 	{
 		isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
@@ -467,7 +467,7 @@ void CFirebirdDatabaseLayer::RollBack()
 {
 	ResetErrorCodes();
 
-	//wxLogDebug(_("Rolling back transaction"));
+	//wxLogDebug(wxT("Rolling back transaction"));
 	if (m_pDatabase && m_fbNode->m_pTransaction)
 	{
 		isc_tr_handle pTransaction = (isc_tr_handle)m_fbNode->m_pTransaction;
@@ -503,7 +503,7 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 	{
 		wxCharBuffer sqlDebugBuffer = ConvertToUnicodeStream(strQuery);
 #ifdef DEBUG
-		wxLogDebug(_("Running query: \"%s\"\n"), (const char*)sqlDebugBuffer);
+		wxLogDebug(wxT("Running query: \"%s\"\n"), (const char*)sqlDebugBuffer);
 #endif // !DEBUG
 		wxArrayString QueryArray;
 		if (bParseQuery)
@@ -530,7 +530,7 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 				BeginTransaction();
 				if (GetErrorCode() != DATABASE_LAYER_OK)
 				{
-					wxLogError(_("Unable to start transaction"));
+					wxLogError(wxT("Unable to start transaction"));
 					ThrowDatabaseException();
 					return DATABASE_LAYER_QUERY_RESULT_ERROR;
 				}
@@ -575,7 +575,7 @@ int CFirebirdDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuer
 	}
 	else
 	{
-		wxLogError(_("Database handle is NULL"));
+		wxLogError(wxT("Database handle is NULL"));
 		return DATABASE_LAYER_QUERY_RESULT_ERROR;
 	}
 }
@@ -587,7 +587,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 	{
 		wxCharBuffer sqlDebugBuffer = ConvertToUnicodeStream(strQuery);
 #if DEBUG 
-		wxLogDebug(_("Running query: \"%s\""), (const char*)sqlDebugBuffer);
+		wxLogDebug(wxT("Running query: \"%s\""), (const char*)sqlDebugBuffer);
 #endif
 		wxArrayString QueryArray = ParseQueries(strQuery);
 
@@ -608,7 +608,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 					BeginTransaction();
 					if (GetErrorCode() != DATABASE_LAYER_OK)
 					{
-						wxLogError(_("Unable to start transaction"));
+						wxLogError(wxT("Unable to start transaction"));
 						ThrowDatabaseException();
 						return NULL;
 					}
@@ -803,7 +803,7 @@ IDatabaseResultSet* CFirebirdDatabaseLayer::DoRunQueryWithResults(const wxString
 	}
 	else
 	{
-		wxLogError(_("Database handle is NULL"));
+		wxLogError(wxT("Database handle is NULL"));
 		return NULL;
 	}
 }
@@ -1139,7 +1139,7 @@ wxString CFirebirdDatabaseLayer::TranslateErrorCodeToString(CFirebirdInterface* 
 
 void CFirebirdDatabaseLayer::InterpretErrorCodes()
 {
-	//wxLogDebug(_("CFirebirdDatabaseLayer::InterpretErrorCodes()"));
+	//wxLogDebug(wxT("CFirebirdDatabaseLayer::InterpretErrorCodes()"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(*(ISC_STATUS_ARRAY*)m_pStatus);
 	SetErrorMessage(CFirebirdDatabaseLayer::TranslateErrorCodeToString(m_pInterface, nSqlCode, *(ISC_STATUS_ARRAY*)m_pStatus));

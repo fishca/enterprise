@@ -10,9 +10,9 @@
 void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	const wxString& tableName = GetMetaObject()->GetTableNameDB();
 
@@ -340,9 +340,9 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
@@ -777,9 +777,9 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
@@ -1159,9 +1159,9 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	CValue isFolder, parent;
 	const wxString& tableName = m_metaObject->GetTableNameDB();

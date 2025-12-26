@@ -18,6 +18,7 @@
 #define interfacesName _("interfaces")
 #define rolesName _("roles")
 #define picturesName _("pictures")
+#define languagesName _("languages")
 
 #define constantsName _("constants")
 
@@ -530,7 +531,7 @@ void CMetadataTree::InsertItem()
 	if (hSelItem == m_treeDATAPROCESSORS) {
 
 		wxFileDialog openFileDialog(this, _("Open data processor file"), "", "",
-			_("data processor files (*.edp)|*.edp"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			_("Data processor files (*.edp)|*.edp"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
@@ -1408,6 +1409,8 @@ void CMetadataTree::InitTree()
 	m_treeINTERFACES = AppendGroupItem(m_treeCOMMON, g_metaInterfaceCLSID, interfacesName);
 	m_treeROLES = AppendGroupItem(m_treeCOMMON, g_metaRoleCLSID, rolesName);
 
+	m_treeLANGUAGES = AppendGroupItem(m_treeCOMMON, g_metaLanguageCLSID, languagesName);
+
 	//*****************************************************************************************************
 	//*                                      Custom objects                                               *
 	//*****************************************************************************************************
@@ -1567,18 +1570,18 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Pictures							 *
 	//****************************************************************
-	for (auto commonPictures : m_metaData->GetMetaObject(g_metaPictureCLSID)) {
+	for (auto picture : m_metaData->GetMetaObject(g_metaPictureCLSID)) {
 
-		if (commonPictures->IsDeleted())
+		if (picture->IsDeleted())
 			continue;
 
-		const wxString& strName = commonPictures->GetName();
+		const wxString& strName = picture->GetName();
 
 		if (!m_strSearch.IsEmpty()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treePICTURES, commonPictures);
+		const wxTreeItemId& hItem = AppendItem(m_treePICTURES, picture);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treePICTURES))
@@ -1607,22 +1610,42 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Roles								 *
 	//****************************************************************
-	for (auto commonRole : m_metaData->GetMetaObject(g_metaRoleCLSID)) {
+	for (auto role : m_metaData->GetMetaObject(g_metaRoleCLSID)) {
 
-		if (commonRole->IsDeleted())
+		if (role->IsDeleted())
 			continue;
 
-		const wxString& strName = commonRole->GetName();
+		const wxString& strName = role->GetName();
 
 		if (!m_strSearch.IsEmpty()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeROLES, commonRole);
+		const wxTreeItemId& hItem = AppendItem(m_treeROLES, role);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeROLES))
 		m_metaTreeWnd->Delete(m_treeROLES);
+
+	//****************************************************************
+	//*                          Languages							 *
+	//****************************************************************
+	for (auto language : m_metaData->GetMetaObject(g_metaLanguageCLSID)) {
+
+		if (language->IsDeleted())
+			continue;
+
+		const wxString& strName = language->GetName();
+
+		if (!m_strSearch.IsEmpty()
+			&& strName.Find(m_strSearch) < 0)
+			continue;
+
+		const wxTreeItemId& hItem = AppendItem(m_treeLANGUAGES, language);
+	}
+
+	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeLANGUAGES))
+		m_metaTreeWnd->Delete(m_treeLANGUAGES);
 
 	//****************************************************************
 	//*                          Constants                           *

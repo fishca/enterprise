@@ -92,6 +92,8 @@ bool CApplicationData::CreateAppDataEnv()
 	try {
 #endif
 		s_instance = new CApplicationData(eRunMode::eENTERPRISE_MODE);
+		if (!s_instance->InitLocale())
+			return false;
 		return true;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
@@ -131,6 +133,9 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDir
 				return false;
 			}
 
+			if (!s_instance->InitLocale())
+				return false;
+
 			return true;
 		}
 		return false;
@@ -163,6 +168,9 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strSer
 
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
+
+			if (!s_instance->InitLocale())
+				return false;
 
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
@@ -212,6 +220,39 @@ bool CApplicationData::DestroyAppDataEnv()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <wx/stdpaths.h>
+
+bool CApplicationData::InitLocale()
+{
+#ifdef WXDEBUG
+	wxLog::AddTraceMask(wxS("i18n"));
+#endif // WXDEBUG
+
+	m_locale_lang = wxLocale::GetSystemLanguage();
+
+	// Independently of whether we succeeded to set the locale or not, try
+	// to load the translations (for the default system language) here.
+
+	// normally this wouldn't be necessary as the catalog files would be found
+	// in the default locations, but when the program is not installed the
+	// catalogs are in the build directory where we wouldn't find them by
+	// default
+
+	wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
+	wxLocale::AddCatalogLookupPathPrefix(fn.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
+
+	if (!m_locale.Init(m_locale_lang, wxLOCALE_LOAD_DEFAULT)) {
+		if (!m_locale.Init(wxLanguage::wxLANGUAGE_ENGLISH, wxLOCALE_LOAD_DEFAULT))
+			return false;
+	}
+
+	// Initialize the catalogs we'll be using.
+	m_locale.AddCatalog(wxT("open_es"));
+
+	wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
+	return true;
+}
 
 bool CApplicationData::Connect(const wxString& user, const wxString& password, const int flags)
 {

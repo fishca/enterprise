@@ -15,7 +15,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer()
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -35,7 +35,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase)
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -56,7 +56,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -77,7 +77,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strDatabase, cons
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -98,7 +98,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -119,7 +119,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const wxString& strServer, const 
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}
@@ -140,7 +140,7 @@ CPostgresDatabaseLayer::CPostgresDatabaseLayer(const CPostgresDatabaseLayer& src
 	if (!m_pInterface->Init())
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR_LOADING_LIBRARY);
-		SetErrorMessage(_("Error loading PostgreSQL library"));
+		SetErrorMessage(wxT("Error loading PostgreSQL library"));
 		ThrowDatabaseException();
 		return;
 	}

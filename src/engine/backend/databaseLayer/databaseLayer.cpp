@@ -98,7 +98,7 @@ void IDatabaseLayer::CloseResultSets()
 	DatabaseResultSetHashSet::iterator stop = m_ResultSets.end();
 	while (start != stop)
 	{
-		wxLogDebug(_("ResultSet NOT closed and cleaned up by the IDatabaseLayer dtor"));
+		wxLogDebug(wxT("ResultSet NOT closed and cleaned up by the IDatabaseLayer dtor"));
 		delete(*start++);
 	}
 	m_ResultSets.clear();
@@ -111,7 +111,7 @@ void IDatabaseLayer::CloseStatements()
 	DatabaseStatementHashSet::iterator stop = m_Statements.end();
 	while (start != stop)
 	{
-		wxLogDebug(_("PreparedStatement NOT closed and cleaned up by the DatabaseLayer dtor"));
+		wxLogDebug(wxT("PreparedStatement NOT closed and cleaned up by the DatabaseLayer dtor"));
 		//delete (*start); start++;
 		delete(*start++);
 	}
@@ -222,7 +222,7 @@ int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxVariant* 
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultInt(field->GetString());
 				else
 					value = pResult->GetResultInt(field->GetLong());
@@ -306,7 +306,7 @@ wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxV
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultString(field->GetString());
 				else
 					value = pResult->GetResultString(field->GetLong());
@@ -390,7 +390,7 @@ long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxVariant
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultLong(field->GetString());
 				else
 					value = pResult->GetResultLong(field->GetLong());
@@ -474,7 +474,7 @@ bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxVariant
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultBool(field->GetString());
 				else
 					value = pResult->GetResultBool(field->GetLong());
@@ -558,7 +558,7 @@ wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxV
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultDate(field->GetString());
 				else
 					value = pResult->GetResultDate(field->GetLong());
@@ -642,7 +642,7 @@ void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxVarian
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultBlob(field->GetString(), buffer);
 				else
 					value = pResult->GetResultBlob(field->GetLong(), buffer);
@@ -726,7 +726,7 @@ double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxVar
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultDouble(field->GetString());
 				else
 					value = pResult->GetResultDouble(field->GetLong());
@@ -810,7 +810,7 @@ number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxV
 			}
 			else
 			{
-				if (field->IsType(_("string")))
+				if (field->IsType(wxT("string")))
 					value = pResult->GetResultNumber(field->GetString());
 				else
 					value = pResult->GetResultNumber(field->GetLong());
@@ -881,7 +881,7 @@ wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxVa
 
 		while (pResult->Next())
 		{
-			if (field->IsType(_("string")))
+			if (field->IsType(wxT("string")))
 				returnArray.Add(pResult->GetResultInt(field->GetString()));
 			else
 				returnArray.Add(pResult->GetResultInt(field->GetLong()));
@@ -934,7 +934,7 @@ wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, cons
 
 		while (pResult->Next())
 		{
-			if (field->IsType(_("string")))
+			if (field->IsType(wxT("string")))
 				returnArray.Add(pResult->GetResultString(field->GetString()));
 			else
 				returnArray.Add(pResult->GetResultString(field->GetLong()));
@@ -987,7 +987,7 @@ wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wx
 
 		while (pResult->Next())
 		{
-			if (field->IsType(_("string")))
+			if (field->IsType(wxT("string")))
 				returnArray.Add(pResult->GetResultLong(field->GetString()));
 			else
 				returnArray.Add(pResult->GetResultLong(field->GetLong()));
@@ -1041,7 +1041,7 @@ wxArrayDouble IDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, cons
 
 		while (pResult->Next())
 		{
-			if (field->IsType(_("string")))
+			if (field->IsType(wxT("string")))
 				returnArray.Add(pResult->GetResultDouble(field->GetString()));
 			else
 				returnArray.Add(pResult->GetResultDouble(field->GetLong()));

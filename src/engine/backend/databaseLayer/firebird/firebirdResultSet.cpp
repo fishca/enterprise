@@ -52,7 +52,7 @@ bool CFirebirdResultSet::Next()
 	}
 	else  // Errors!!!
 	{
-		wxLogError(_("Error retrieving Next record\n"));
+		wxLogError(wxT("Error retrieving Next record\n"));
 		InterpretErrorCodes();
 		ThrowDatabaseException();
 		return false;
@@ -136,7 +136,7 @@ wxString CFirebirdResultSet::GetResultString(int nField)
 			// Set error codes and throw an exception here
 			strReturn = wxT("");
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -187,7 +187,7 @@ long long CFirebirdResultSet::GetResultLong(int nField)
 			// We should really set error codes and throw an exception here
 			nReturn = 0;
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -260,7 +260,7 @@ wxDateTime CFirebirdResultSet::GetResultDate(int nField)
 			// Set error codes and throw an exception here
 			dateReturn = wxDefaultDateTime;
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -317,7 +317,7 @@ double CFirebirdResultSet::GetResultDouble(int nField)
 			// Set error codes and throw an exception here
 			dblReturn = 0.00;
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -380,7 +380,7 @@ number_t CFirebirdResultSet::GetResultNumber(int nField)
 			// Set error codes and throw an exception here
 			dblReturn = 0.00;
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -452,7 +452,7 @@ void* CFirebirdResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 			tempBuffer.SetDataLen(0);
 			buffer = tempBuffer;
 
-			SetErrorMessage(_("Invalid field type"));
+			SetErrorMessage(wxT("Invalid field type"));
 			SetErrorCode(DATABASE_LAYER_INCOMPATIBLE_FIELD_TYPE);
 
 			ThrowDatabaseException();
@@ -618,7 +618,7 @@ int CFirebirdResultSet::LookupField(const wxString& strField)
 
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
-		wxString msg(_("Field '") + strField + _("' not found in the resultset"));
+		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
@@ -635,7 +635,7 @@ int CFirebirdResultSet::LookupField(const wxString& strField)
 
 void CFirebirdResultSet::InterpretErrorCodes()
 {
-	wxLogError(_("CFirebirdResultSet::InterpretErrorCodes()\n"));
+	wxLogError(wxT("CFirebirdResultSet::InterpretErrorCodes()\n"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(m_Status);
 	SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));

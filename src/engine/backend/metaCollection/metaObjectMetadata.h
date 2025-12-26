@@ -10,7 +10,7 @@
 //*                                  metaData object                                      *
 //*****************************************************************************************
 
-#define configurationDefaultName _("ñonfiguration")
+#define configurationDefaultName _("configration")
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -46,6 +46,7 @@ public:
 			clsid == g_metaRoleCLSID ||
 			clsid == g_metaInterfaceCLSID ||
 			clsid == g_metaPictureCLSID ||
+			clsid == g_metaLanguageCLSID ||
 			clsid == g_metaConstantCLSID ||
 			clsid == g_metaCatalogCLSID ||
 			clsid == g_metaDocumentCLSID ||

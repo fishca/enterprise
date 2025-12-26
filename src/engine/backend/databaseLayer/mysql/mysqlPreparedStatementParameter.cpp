@@ -66,12 +66,12 @@ CMysqlPreparedStatementParameter::CMysqlPreparedStatementParameter(MYSQL_BIND* p
 	//if (nType == MYSQL_TYPE_STRING || nType == MYSQL_TYPE_VAR_STRING || nType == MYSQL_TYPE_BLOB
 	//  || nType == MYSQL_TYPE_TINY_BLOB || nType == MYSQL_TYPE_MEDIUM_BLOB || nType == MYSQL_TYPE_LONG_BLOB)
 	//{
-	  //wxLogDebug(_("Allocating %ld bytes in the MYSQL_BIND buffer\n"), pField->length);
+	  //wxLogDebug(wxT("Allocating %ld bytes in the MYSQL_BIND buffer\n"), pField->length);
 	void* pBuffer = m_Data.bufferValue.GetWriteBuf(m_pBind->buffer_length);
 	if (pBuffer == 0)
 	{
 		SetErrorCode(CMysqlDatabaseLayer::TranslateErrorCode(0));
-		SetErrorMessage(_("Error allocating buffer"));
+		SetErrorMessage(wxT("Error allocating buffer"));
 		ThrowDatabaseException();
 	}
 	m_pBind->buffer = pBuffer;

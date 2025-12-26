@@ -11,9 +11,9 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -27,14 +27,14 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("failed to write object in db!"));
+					CSystemFunction::Raise(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -43,7 +43,7 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -63,9 +63,9 @@ bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -79,14 +79,14 @@ bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("failed to write object in db!"));
+					CSystemFunction::Raise(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -95,7 +95,7 @@ bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}

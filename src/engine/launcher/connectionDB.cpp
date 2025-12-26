@@ -65,7 +65,7 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 	m_staticTextPassword->Wrap(-1);
 	sizerPassword->Add(m_staticTextPassword, 1, wxALIGN_CENTER_VERTICAL, 0);
 
-	m_textCtrlPassword = new wxTextCtrl(this, wxID_ANY, _("_________________"), wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
+	m_textCtrlPassword = new wxTextCtrl(this, wxID_ANY, wxT("_________________"), wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
 	sizerPassword->Add(m_textCtrlPassword, 3, wxALL | wxEXPAND, 5);
 	mainSizer->Add(sizerPassword, 0, wxEXPAND, 5);
 

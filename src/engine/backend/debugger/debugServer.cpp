@@ -71,7 +71,7 @@ bool CDebuggerServer::CreateServer(const wxString& hostName, unsigned short star
 		}
 
 		wxASSERT_MSG(m_socketConnectionThread != nullptr
-			&& m_socketConnectionThread->m_socket != nullptr, _("client not connected!"));
+			&& m_socketConnectionThread->m_socket != nullptr, _("Client not connected!"));
 	}
 
 	return m_socketConnectionThread != nullptr;

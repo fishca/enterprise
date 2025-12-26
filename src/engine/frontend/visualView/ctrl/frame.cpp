@@ -29,12 +29,12 @@ wxString IValueFrame::GetClassName() const
 {
 	const class_identifier_t& clsid = GetClassType();
 	if (clsid == 0)
-		return _("Not founded in wxClassInfo!");
+		return _("Class not registered");
 
 	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 	if (typeCtor != nullptr)
 		return typeCtor->GetClassName();
-	return _("Not founded in wxClassInfo!");
+	return _("Class not registered");
 }
 
 wxString IValueFrame::GetObjectTypeName() const
@@ -44,12 +44,13 @@ wxString IValueFrame::GetObjectTypeName() const
 
 	if (typeCtor != nullptr)
 		return typeCtor->GetTypeControlName();
-	return _("Not founded in wxClassInfo!");
+	return _("Class not registered");
 }
 
 #define	headerBlock 0x012230
 #define	dataBlock 0x012250
 #define	childBlock 0x012270
+#define	frameBlock 0x012290
 
 bool IValueFrame::IsEditable() const
 {
@@ -61,11 +62,8 @@ bool IValueFrame::IsEditable() const
 
 bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader)
 {
-	//Save meta version 
+	//save meta version 
 	const version_identifier_t& version = dataReader.r_u32(); //reserved 
-
-	//Load unique guid 
-	const CGuid& class_guid = dataReader.r_stringZ();
 
 	//Load meta id
 	m_controlId = dataReader.r_u32();
@@ -76,27 +74,41 @@ bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& da
 	//default value 
 	m_expanded = dataReader.r_u8();
 
-	return LoadData(dataReader);
+	//load frame 
+	wxMemoryBuffer buffer_chunk;
+	if (!dataReader.r_chunk(frameBlock, buffer_chunk))
+		return false;
+
+	CMemoryReader dataObjectReader(buffer_chunk);
+	dataObjectReader.r_u32(); //reserved flags
+	if (!LoadData(dataObjectReader))
+		return false;
+	
+	return true;
 }
 
 bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter, bool copy_form)
 {
-	//Save meta version 
+	//save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
 
-	//Save unique guid
-	dataWritter.w_stringZ(wxNewUniqueGuid);
-
-	//Save meta id 
+	//save meta id 
 	dataWritter.w_u32(m_controlId);
 
-	//Save standart fields
+	//save standart fields
 	dataWritter.w_stringZ(GetControlName());
 
 	//default value 
 	dataWritter.w_u8(m_expanded);
 
-	return SaveData(dataWritter);
+	//save frame 
+	CMemoryWriter dataObjectWritter;
+	dataObjectWritter.w_u32(0); //reserved flags
+	if (!SaveData(dataObjectWritter))
+		return false;
+
+	dataWritter.w_chunk(frameBlock, dataObjectWritter.buffer());
+	return true;
 }
 
 //*******************************************************************
@@ -327,8 +339,8 @@ void IValueFrame::PrepareNames() const
 	}
 
 	m_methodHelper->AppendProp(wxT("events"), true, false, 0, eEvent);
-	
-	if (m_valEventContainer != nullptr) m_valEventContainer->PrepareNames();	
+
+	if (m_valEventContainer != nullptr) m_valEventContainer->PrepareNames();
 }
 
 bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)

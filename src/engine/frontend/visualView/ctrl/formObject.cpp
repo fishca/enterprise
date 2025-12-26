@@ -376,7 +376,7 @@ CValue CValueForm::CreateControl(const CValueType* clsControl, const CValue& vCo
 		return CValue();
 
 	if (!CValue::IsRegisterCtor(clsControl->GetString(), eCtorObjectType::eCtorObjectType_object_control)) {
-		CSystemFunction::Raise(_("Ñlass does not belong to control!"));
+		CSystemFunction::Raise(_("Error occurred while trying to create a form element!"));
 	}
 
 	//get parent obj

@@ -162,7 +162,7 @@ bool IVisualHost::ClearVisualHost()
 IValueFrame* IVisualHost::GetObjectBase(const wxObject* wxobject) const
 {
 	if (nullptr == wxobject) {
-		wxLogError(_("wxObject was nullptr!"));
+		wxLogError(wxT("wxObject was nullptr!"));
 		return nullptr;
 	}
 
@@ -171,14 +171,14 @@ IValueFrame* IVisualHost::GetObjectBase(const wxObject* wxobject) const
 			return pair.first;
 	}
 
-	wxLogError(_("No corresponding IValueFrame for wxObject. Name: %s"), wxobject->GetClassInfo()->GetClassName());
+	wxLogError(wxT("No corresponding IValueFrame for wxObject. Name: %s"), wxobject->GetClassInfo()->GetClassName());
 	return nullptr;
 }
 
 wxObject* IVisualHost::GetWxObject(const IValueFrame* baseobject) const
 {
 	if (baseobject == nullptr) {
-		wxLogError(_("baseobject was nullptr!"));
+		wxLogError(wxT("baseobject was nullptr!"));
 		return nullptr;
 	}
 
@@ -190,7 +190,7 @@ wxObject* IVisualHost::GetWxObject(const IValueFrame* baseobject) const
 			return pair.second;
 	}
 
-	wxLogError(_("No corresponding wxObject for IValueFrame. Name: %s"), baseobject->GetClassName().c_str());
+	wxLogError(wxT("No corresponding wxObject for IValueFrame. Name: %s"), baseobject->GetClassName().c_str());
 	return nullptr;
 }
 

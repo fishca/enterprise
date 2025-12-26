@@ -71,17 +71,13 @@ bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
 	return wxApp::OnCmdLineParsed(parser);
 }
 #endif
+
 //////////////////////////////////////////////////////////////////////////////////
 
 bool CDesignerApp::OnInit()
 {
-	wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
-
-	m_locale.AddCatalogLookupPathPrefix(_T("lang"));
-	m_locale.AddCatalog(m_locale.GetCanonicalName());
-
 	wxSocketBase::Initialize();
-	return m_locale.Init(wxLANGUAGE_ENGLISH) && wxApp::OnInit();
+	return wxApp::OnInit();
 }
 
 int CDesignerApp::OnRun()
@@ -93,7 +89,7 @@ int CDesignerApp::OnRun()
 
 	// Get the data directory
 	bool ret = false;
-	
+
 	if (m_strFile.IsEmpty()) {
 		ret = appDataCreateServer(eRunMode::eDESIGNER_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase
@@ -170,7 +166,7 @@ int CDesignerApp::OnRun()
 		const wxString& strLastError = CBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		mainFrameDestroy();
-		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();		
+		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
 		return 1;
 	}
 	if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();

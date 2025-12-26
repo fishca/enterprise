@@ -13,9 +13,9 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -29,14 +29,14 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("failed to write object in db!"));
+					CSystemFunction::Raise(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -45,7 +45,7 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -65,9 +65,9 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -81,14 +81,14 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("failed to write object in db!"));
+					CSystemFunction::Raise(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -97,7 +97,7 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -188,9 +188,9 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -228,9 +228,9 @@ bool CRecordManagerObjectInformationRegister::DeleteRegister()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -242,7 +242,7 @@ bool CRecordManagerObjectInformationRegister::DeleteRegister()
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to delete object in db!"));
+						CSystemFunction::Raise(_("Failed to delete object in db!"));
 						return false;
 					}
 

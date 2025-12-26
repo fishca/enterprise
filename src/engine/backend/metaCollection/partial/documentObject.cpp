@@ -224,9 +224,9 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -236,7 +236,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 				wxASSERT(attributeDeletionMark);
 				IRecordDataObjectRef::GetValueByMetaID(*attributeDeletionMark, deletionMark);
 				if (deletionMark.GetBoolean()) {
-					CSystemFunction::Raise(_("failed to post object in db!"));
+					CSystemFunction::Raise(_("Failed to post object in db!"));
 					return false;
 				}
 			}
@@ -256,7 +256,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 
@@ -296,7 +296,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 						if (generateUniqueIdentifier) 
 							CRecordDataObjectDocument::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 
@@ -315,7 +315,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 							if (generateUniqueIdentifier)
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 
@@ -323,7 +323,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 							if (generateUniqueIdentifier)
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 					}
@@ -335,7 +335,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 
@@ -343,7 +343,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 					}
@@ -354,7 +354,7 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 							if (generateUniqueIdentifier) 
 								CRecordDataObjectDocument::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to write object in db!"));
+							CSystemFunction::Raise(_("Failed to write object in db!"));
 							return false;
 						}
 					}
@@ -380,9 +380,9 @@ bool CRecordDataObjectDocument::DeleteObject()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -396,14 +396,14 @@ bool CRecordDataObjectDocument::DeleteObject()
 						m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to delete object in db!"));
+							CSystemFunction::Raise(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!m_registerRecords->DeleteRecordSet()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!"));
+						CSystemFunction::Raise(_("Failed to write object in db!"));
 						return false;
 					}
 
@@ -413,14 +413,14 @@ bool CRecordDataObjectDocument::DeleteObject()
 
 						if (cancel.GetBoolean()) {
 							db_query_active_transaction.RollBackTransaction();
-							CSystemFunction::Raise(_("failed to delete object in db!"));
+							CSystemFunction::Raise(_("Failed to delete object in db!"));
 							return false;
 						}
 					}
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to delete object in db!"));
+						CSystemFunction::Raise(_("Failed to delete object in db!"));
 						return false;
 					}
 

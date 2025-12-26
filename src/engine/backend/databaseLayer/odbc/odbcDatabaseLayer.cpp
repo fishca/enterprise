@@ -440,7 +440,7 @@ bool COdbcDatabaseLayer::TableExists(const wxString& table)
 	// Use SQLTables
 	SQLHSTMT pStatement = allocStmth();
 	wxCharBuffer tableBuffer = ConvertToUnicodeStream(table);
-	wxString tableType = _("TABLE");
+	wxString tableType = wxT("TABLE");
 	wxCharBuffer tableTypeBuffer = ConvertToUnicodeStream(tableType);
 	int tableTypeBufferLength = GetEncodedStreamLength(tableType);
 	SQLRETURN nRet = m_pInterface->GetSQLTables()(pStatement,
@@ -472,7 +472,7 @@ bool COdbcDatabaseLayer::ViewExists(const wxString& view)
 	// Use SQLTables
 	SQLHSTMT pStatement = allocStmth();
 	wxCharBuffer viewBuffer = ConvertToUnicodeStream(view);
-	wxString tableType = _("VIEW");
+	wxString tableType = wxT("VIEW");
 	wxCharBuffer tableTypeBuffer = ConvertToUnicodeStream(tableType);
 	int tableTypeBufferLength = GetEncodedStreamLength(tableType);
 	SQLRETURN nRet = m_pInterface->GetSQLTables()(pStatement,
@@ -502,7 +502,7 @@ wxArrayString COdbcDatabaseLayer::GetTables()
 {
 	wxArrayString returnArray;
 	SQLHSTMT pStatement = allocStmth();
-	wxString tableType = _("TABLE");
+	wxString tableType = wxT("TABLE");
 	wxCharBuffer tableTypeBuffer = ConvertToUnicodeStream(tableType);
 	int tableTypeBufferLength = GetEncodedStreamLength(tableType);
 	SQLRETURN nRet = m_pInterface->GetSQLTables()(pStatement,
@@ -557,7 +557,7 @@ wxArrayString COdbcDatabaseLayer::GetViews()
 {
 	wxArrayString returnArray;
 	SQLHSTMT pStatement = allocStmth();
-	wxString tableType = _("VIEW");
+	wxString tableType = wxT("VIEW");
 	wxCharBuffer tableTypeBuffer = ConvertToUnicodeStream(tableType);
 	int tableTypeBufferLength = GetEncodedStreamLength(tableType);
 	SQLRETURN nRet = m_pInterface->GetSQLTables()(pStatement,
@@ -668,7 +668,7 @@ wxArrayString COdbcDatabaseLayer::GetColumns(const wxString& table)
 //void COdbcDatabaseLayer::InterpretErrorCodes( long nCode, SQLHSTMT stmth_ptr )
 void COdbcDatabaseLayer::InterpretErrorCodes(long nCode, void* stmth_ptr)
 {
-	wxLogDebug(_("COdbcDatabaseLayer::InterpretErrorCodes()\n"));
+	wxLogDebug(wxT("COdbcDatabaseLayer::InterpretErrorCodes()\n"));
 
 	//if ((nCode != SQL_SUCCESS) ) // && (nCode != SQL_SUCCESS_WITH_INFO))
 	{

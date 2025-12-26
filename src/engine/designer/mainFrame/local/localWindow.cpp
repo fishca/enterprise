@@ -105,9 +105,9 @@ void CLocalWindow::OnSize(wxSizeEvent& event)
 void CLocalWindow::ClearAndCreate()
 {
 	m_treeCtrl->ClearAll();
-	m_treeCtrl->AppendColumn("Name", wxLIST_FORMAT_LEFT, 100);
-	m_treeCtrl->AppendColumn("Value", wxLIST_FORMAT_LEFT, 150);
-	m_treeCtrl->AppendColumn("Type", wxLIST_FORMAT_LEFT, 250);
+	m_treeCtrl->AppendColumn(_("Name"), wxLIST_FORMAT_LEFT, 100);
+	m_treeCtrl->AppendColumn(_("Value"), wxLIST_FORMAT_LEFT, 150);
+	m_treeCtrl->AppendColumn(_("Type"), wxLIST_FORMAT_LEFT, 250);
 
 	UpdateColumnSizes();
 }

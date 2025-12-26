@@ -12,9 +12,9 @@ CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, cons
 	if (!appData->DesignerMode()) {
 	
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 	
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		if (db_query->TableExists(tableName)) {

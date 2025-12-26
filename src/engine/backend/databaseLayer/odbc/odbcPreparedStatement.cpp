@@ -398,7 +398,7 @@ void COdbcPreparedStatement::SetParam(int nPosition, COdbcParameter* pParameter)
 
 void COdbcPreparedStatement::InterpretErrorCodes(long nCode, SQLHSTMT stmth_ptr)
 {
-	wxLogDebug(_("COdbcPreparedStatement::InterpretErrorCodes()\n"));
+	wxLogDebug(wxT("COdbcPreparedStatement::InterpretErrorCodes()\n"));
 
 	//if ((nCode != SQL_SUCCESS) ) // && (nCode != SQL_SUCCESS_WITH_INFO))
 	{

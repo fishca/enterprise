@@ -16,7 +16,7 @@ CSqliteDatabaseLayer::CSqliteDatabaseLayer()
 	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //&m_Database; //new sqlite3;
-	wxCSConv conv(_("UTF-8"));
+	wxCSConv conv(wxT("UTF-8"));
 	SetEncoding(&conv);
 }
 
@@ -24,7 +24,7 @@ CSqliteDatabaseLayer::CSqliteDatabaseLayer(const wxString& strDatabase, bool mus
 	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //new sqlite3;
-	wxCSConv conv(_("UTF-8"));
+	wxCSConv conv(wxT("UTF-8"));
 	SetEncoding(&conv);
 	Open(strDatabase, mustExist);
 }
@@ -33,7 +33,7 @@ CSqliteDatabaseLayer::CSqliteDatabaseLayer(const CSqliteDatabaseLayer& src)
 	: IDatabaseLayer()
 {
 	m_pDatabase = nullptr; //new sqlite3;
-	wxCSConv conv(_("UTF-8"));
+	wxCSConv conv(wxT("UTF-8"));
 	SetEncoding(&conv);
 	Open(wxEmptyString, false);
 }
@@ -53,7 +53,7 @@ bool CSqliteDatabaseLayer::Open(const wxString& strDatabase, bool mustExist)
 		mustExist && !(wxFileName::FileExists(strDatabase)))
 	{
 		SetErrorCode(DATABASE_LAYER_ERROR);
-		SetErrorMessage(_("The specified database file '") + strDatabase + _("' does not exist."));
+		SetErrorMessage(wxT("The specified database file '") + strDatabase + wxT("' does not exist."));
 		ThrowDatabaseException();
 		return false;
 	}
@@ -114,20 +114,20 @@ bool CSqliteDatabaseLayer::IsOpen()
 
 void CSqliteDatabaseLayer::BeginTransaction()
 {
-	wxLogDebug(_("Beginning transaction"));
-	DoRunQuery(_("begin deferred transaction;"), false);
+	wxLogDebug(wxT("Beginning transaction"));
+	DoRunQuery(wxT("begin deferred transaction;"), false);
 }
 
 void CSqliteDatabaseLayer::Commit()
 {
-	wxLogDebug(_("Commiting transaction"));
-	DoRunQuery(_("commit transaction;"), false);
+	wxLogDebug(wxT("Commiting transaction"));
+	DoRunQuery(wxT("commit transaction;"), false);
 }
 
 void CSqliteDatabaseLayer::RollBack()
 {
-	wxLogDebug(_("Rolling back transaction"));
-	DoRunQuery(_("rollback transaction;"), false);
+	wxLogDebug(wxT("Rolling back transaction"));
+	DoRunQuery(wxT("rollback transaction;"), false);
 }
 
 bool CSqliteDatabaseLayer::IsActiveTransaction()
@@ -155,7 +155,7 @@ int CSqliteDatabaseLayer::DoRunQuery(const wxString& strQuery, bool bParseQuery)
 	while (start != stop)
 	{
 		char* szErrorMessage = nullptr;
-		wxString strErrorMessage = _("");
+		wxString strErrorMessage = wxEmptyString;
 		wxCharBuffer sqlBuffer = ConvertToUnicodeStream(*start);
 		int nReturn = sqlite3_exec((sqlite3*)m_pDatabase, sqlBuffer, 0, 0, &szErrorMessage);
 
@@ -189,7 +189,7 @@ IDatabaseResultSet* CSqliteDatabaseLayer::DoRunQueryWithResults(const wxString& 
 		for (unsigned int i = 0; i < (QueryArray.size() - 1); i++)
 		{
 			char* szErrorMessage = nullptr;
-			wxString strErrorMessage = _("");
+			wxString strErrorMessage = wxEmptyString;
 			wxCharBuffer sqlBuffer = ConvertToUnicodeStream(QueryArray[i]);
 			int nReturn = sqlite3_exec((sqlite3*)m_pDatabase, sqlBuffer, 0, 0, &szErrorMessage);
 
@@ -312,14 +312,14 @@ bool CSqliteDatabaseLayer::TableExists(const wxString& table)
 	try
 	{
 #endif
-		wxString attach = "sqlite_master", t = table;
+		wxString attach = wxT("sqlite_master"), t = table;
 		size_t pos_attach = table.find('.');
 		if (pos_attach > 0) {
 			attach = table.Left(pos_attach + 1) + attach;
 			t = table.Right(table.length() - pos_attach - 1);
 		}
 
-		wxString query = wxT("SELECT COUNT(*) FROM " + attach + " WHERE type='table' AND name=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM " + attach + wxT(" WHERE type='table' AND name=?;"));
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -384,14 +384,14 @@ bool CSqliteDatabaseLayer::ViewExists(const wxString& view)
 	try
 	{
 #endif
-		wxString attach = "sqlite_master", v = view;
+		wxString attach = wxT("sqlite_master"), v = view;
 		size_t pos_attach = view.find('.');
 		if (pos_attach > 0) {
 			attach = view.Left(pos_attach + 1) + attach;
 			v = view.Right(view.length() - pos_attach - 1);
 		}
 
-		wxString query = wxT("SELECT COUNT(*) FROM " + attach + " WHERE type='view' AND name=?;");
+		wxString query = wxT("SELECT COUNT(*) FROM " + attach + wxT(" WHERE type='view' AND name=?;"));
 		pStatement = DoPrepareStatement(query);
 		if (pStatement)
 		{
@@ -452,7 +452,7 @@ wxArrayString CSqliteDatabaseLayer::GetTables()
 	try
 	{
 #endif
-		wxString query = _("SELECT name FROM sqlite_master WHERE type='table';");
+		wxString query = wxT("SELECT name FROM sqlite_master WHERE type='table';");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -491,7 +491,7 @@ wxArrayString CSqliteDatabaseLayer::GetViews()
 	try
 	{
 #endif
-		wxString query = _("SELECT name FROM sqlite_master WHERE type='view';");
+		wxString query = wxT("SELECT name FROM sqlite_master WHERE type='view';");
 		pResult = ExecuteQuery(query);
 
 		while (pResult->Next())
@@ -535,7 +535,7 @@ wxArrayString CSqliteDatabaseLayer::GetColumns(const wxString& table)
 	{
 #endif
 		wxCharBuffer tableNameBuffer = ConvertToUnicodeStream(table);
-		wxString query = wxString::Format(_("SELECT * FROM '%s' LIMIT 0;"), table.c_str());
+		wxString query = wxString::Format(wxT("SELECT * FROM '%s' LIMIT 0;"), table.c_str());
 		pResult = ExecuteQuery(query);
 		pResult->Next();
 		pMetaData = pResult->GetMetaData();

@@ -107,8 +107,8 @@ void CStackWindow::OnSize(wxSizeEvent& event)
 void CStackWindow::ClearAndCreate()
 {
 	m_treeCtrl->ClearAll();
-	m_treeCtrl->AppendColumn("Line", wxLIST_FORMAT_LEFT, 100);
-	m_treeCtrl->AppendColumn("Module", wxLIST_FORMAT_LEFT, 750);
+	m_treeCtrl->AppendColumn(_("Line"), wxLIST_FORMAT_LEFT, 100);
+	m_treeCtrl->AppendColumn(_("Module"), wxLIST_FORMAT_LEFT, 750);
 
 	UpdateColumnSizes();
 }

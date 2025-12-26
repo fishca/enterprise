@@ -228,13 +228,14 @@ void CMetaDocManager::OnPreview(wxCommandEvent& WXUNUSED(event))
 
 		if (!preview->IsOk()) {
 			delete preview;
-			wxLogError(_("Print preview creation failed."));
+			wxLogError(wxT("Print preview creation failed."));
 			return;
 		}
 
 		wxPreviewFrame* frame = CreatePreviewFrame(preview,
 			wxTheApp->GetTopWindow(),
 			_("Print Preview"));
+		
 		wxCHECK_RET(frame, "should create a print preview frame");
 
 		frame->Centre(wxBOTH);

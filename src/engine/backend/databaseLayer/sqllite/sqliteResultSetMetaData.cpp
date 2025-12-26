@@ -18,17 +18,17 @@ int CSqliteResultSetMetaData::GetColumnType(int i)
 	int returnType = COLUMN_UNKNOWN;
 	wxString columnTypeString = ConvertFromUnicodeStream(sqlite3_column_decltype(m_pSqliteStatement, i - 1));
 	columnTypeString.MakeUpper();
-	if (columnTypeString.IsSameAs(_("INTEGER")) || columnTypeString.IsSameAs(_("INT")) || columnTypeString.IsSameAs(_("LONG")))
+	if (columnTypeString.IsSameAs(wxT("INTEGER")) || columnTypeString.IsSameAs(wxT("INT")) || columnTypeString.IsSameAs(wxT("LONG")))
 		returnType = COLUMN_INTEGER;
-	else if (columnTypeString.IsSameAs(_("STRING")) || columnTypeString.StartsWith(_("VARCHAR")))
+	else if (columnTypeString.IsSameAs(wxT("STRING")) || columnTypeString.StartsWith(wxT("VARCHAR")))
 		returnType = COLUMN_STRING;
-	else if (columnTypeString.IsSameAs(_("DOUBLE")) || columnTypeString.IsSameAs(_("FLOAT")))
+	else if (columnTypeString.IsSameAs(wxT("DOUBLE")) || columnTypeString.IsSameAs(wxT("FLOAT")))
 		returnType = COLUMN_DOUBLE;
-	else if (columnTypeString.IsSameAs(_("BOOL")))
+	else if (columnTypeString.IsSameAs(wxT("BOOL")))
 		returnType = COLUMN_BOOL;
-	else if (columnTypeString.IsSameAs(_("BLOB")))
+	else if (columnTypeString.IsSameAs(wxT("BLOB")))
 		returnType = COLUMN_BLOB;
-	else if (columnTypeString.IsSameAs(_("DATE")) || columnTypeString.IsSameAs(_("DATETIME")) || columnTypeString.IsSameAs(_("TIMESTAMP")))
+	else if (columnTypeString.IsSameAs(wxT("DATE")) || columnTypeString.IsSameAs(wxT("DATETIME")) || columnTypeString.IsSameAs(wxT("TIMESTAMP")))
 		returnType = COLUMN_DATE;
 	else
 		returnType = COLUMN_UNKNOWN;

@@ -64,13 +64,13 @@ bool CSqliteResultSet::Next()
 
 	if ((nReturn != SQLITE_ROW) && (nReturn != SQLITE_DONE))
 	{
-		wxLogError(_("Error with RunQueryWithResults\n"));
+		wxLogError(wxT("Error with RunQueryWithResults\n"));
 		SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
 #if SQLITE_VERSION_NUMBER>=3002002
 		// sqlite3_db_handle wasn't added to the SQLite3 API until version 3.2.2
 		SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(sqlite3_db_handle(m_pSqliteStatement))));
 #else
-		SetErrorMessage(_("Unknown error advancing result set"));
+		SetErrorMessage(wxT("Unknown error advancing result set"));
 #endif
 		ThrowDatabaseException();
 		return false;
@@ -93,7 +93,7 @@ int CSqliteResultSet::GetResultInt(int nField)
 
 wxString CSqliteResultSet::GetResultString(int nField)
 {
-	wxString strValue = _("");
+	wxString strValue = wxEmptyString;
 	if (m_pSqliteStatement == nullptr)
 		m_pSqliteStatement = m_pStatement->GetLastStatement();
 	strValue = ConvertFromUnicodeStream((const char*)(sqlite3_column_text(m_pSqliteStatement, nField - 1)));
@@ -127,7 +127,7 @@ wxDateTime CSqliteResultSet::GetResultDate(int nField)
 	wxString strDate = GetResultString(nField);
 	wxDateTime date;
 	// First check for the 2-digit year format
-	if (date.ParseFormat(strDate, _("%m/%d/%y %H:%M:%S")) != NULL)
+	if (date.ParseFormat(strDate, wxT("%m/%d/%y %H:%M:%S")) != NULL)
 	{
 		return date;
 	}
@@ -208,7 +208,7 @@ int CSqliteResultSet::LookupField(const wxString& strField)
 
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
-		wxString msg(_("Field '") + strField + _("' not found in the resultset"));
+		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;

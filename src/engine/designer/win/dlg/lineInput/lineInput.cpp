@@ -16,7 +16,7 @@ CDialogLineInput::CDialogLineInput(wxWindow* parent, wxWindowID id, const wxStri
 	m_staticTextLine->Wrap(-1);
 	bSizerLeft->Add(m_staticTextLine, 0, wxEXPAND | wxTOP | wxRIGHT | wxLEFT, 5);
 
-	m_lineNumber = new wxTextCtrl(this, wxID_ANY, _("1"), wxDefaultPosition, wxDefaultSize, 0);
+	m_lineNumber = new wxTextCtrl(this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, 0);
 	bSizerLeft->Add(m_lineNumber, 0, wxTOP | wxRIGHT | wxLEFT, 5);
 
 	bSizerTotal->Add(bSizerLeft, 0, wxEXPAND, 5);

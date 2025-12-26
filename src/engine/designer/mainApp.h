@@ -21,7 +21,6 @@ class CDesignerApp : public wxApp {
 	wxString m_strIBUser;
 	wxString m_strIBPassword;
 
-	wxLocale m_locale;
 public:
 	virtual bool OnInit();
 #if wxUSE_ON_FATAL_EXCEPTION

@@ -246,9 +246,9 @@ void COutputWindow::OnContextMenu(wxContextMenuEvent& event)
 
 	wxMenu* popupMenu = new wxMenu;
 
-	wxMenuItem* menuItemCopy = popupMenu->Append(idcmdCopy, wxT("Copy"));
+	wxMenuItem* menuItemCopy = popupMenu->Append(idcmdCopy, _("Copy"));
 	menuItemCopy->Enable(wxStyledTextCtrl::CanCopy());
-	wxMenuItem* menuItemClear = popupMenu->Append(idcmdClear, wxT("Clear"));
+	wxMenuItem* menuItemClear = popupMenu->Append(idcmdClear, _("Clear"));
 
 	wxStyledTextCtrl::PopupMenu(popupMenu, pt);
 	//event.Skip();

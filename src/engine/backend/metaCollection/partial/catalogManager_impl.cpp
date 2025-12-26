@@ -13,9 +13,9 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 	if (!appData->DesignerMode()) {
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!cParam.IsEmpty()) {
 			const wxString& tableName = m_metaObject->GetTableNameDB();
@@ -52,9 +52,9 @@ CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) c
 	if (!appData->DesignerMode()) {
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		if (!cParam.IsEmpty()) {
 			const wxString tableName = m_metaObject->GetTableNameDB();

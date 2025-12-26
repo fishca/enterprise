@@ -436,7 +436,7 @@ void* COdbcResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 		nReturn = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
 		if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 		{
-			wxLogError(_T("Error with RunQueryWithResults - 1\n"));
+			wxLogError(wxT("Error with RunQueryWithResults - 1\n"));
 			InterpretErrorCodes(nReturn, m_pOdbcStatement);
 			ThrowDatabaseException();
 		}
@@ -465,7 +465,7 @@ void* COdbcResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 			nReturn = m_pInterface->GetSQLGetData()(m_pOdbcStatement, nField, SQL_C_BINARY, &buff, iLength, &iSize);
 			if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
 			{
-				wxLogError(_T("Error with RunQueryWithResults - 2\n"));
+				wxLogError(wxT("Error with RunQueryWithResults - 2\n"));
 				InterpretErrorCodes(nReturn, m_pOdbcStatement);
 				ThrowDatabaseException();
 			}
@@ -514,7 +514,7 @@ int COdbcResultSet::LookupField(const wxString& strField)
 
 	if (SearchIterator == m_FieldLookupMap.end())
 	{
-		wxString msg(_("Field '") + strField + _("' not found in the resultset"));
+		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;

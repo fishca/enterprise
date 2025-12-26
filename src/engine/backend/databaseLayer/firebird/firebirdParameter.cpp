@@ -84,7 +84,7 @@ CFirebirdParameter::CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* 
 	else
 	{
 		// Error?
-		wxLogError(_("Parameter type is not compatible with parameter of type number\n"));
+		wxLogError(wxT("Parameter type is not compatible with parameter of type number\n"));
 	}
 
 	m_nNullFlag = 0;
@@ -123,7 +123,7 @@ CFirebirdParameter::CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* 
 	else
 	{
 		// Error?
-		wxLogError(_("Parameter type is not compatible with parameter of type double\n"));
+		wxLogError(wxT("Parameter type is not compatible with parameter of type double\n"));
 	}
 
 	m_nNullFlag = 0;

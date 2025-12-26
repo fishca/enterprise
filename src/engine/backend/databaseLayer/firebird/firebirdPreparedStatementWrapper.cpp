@@ -31,7 +31,7 @@ CFirebirdPreparedStatementWrapper::~CFirebirdPreparedStatementWrapper()
 		int nReturn = m_pInterface->GetIscDsqlFreeStatement()(m_Status, &m_pStatement, DSQL_drop);
 		if (nReturn != 0)
 		{
-			wxLogError(_("Error calling isc_dsql_free_statement"));
+			wxLogError(wxT("Error calling isc_dsql_free_statement"));
 			InterpretErrorCodes();
 			ThrowDatabaseException();
 		}
@@ -311,7 +311,7 @@ bool CFirebirdPreparedStatementWrapper::IsSelectQuery()
 
 void CFirebirdPreparedStatementWrapper::InterpretErrorCodes()
 {
-	wxLogDebug(_("FirebirdPreparesStatementWrapper::InterpretErrorCodes()\n"));
+	wxLogDebug(wxT("FirebirdPreparesStatementWrapper::InterpretErrorCodes()\n"));
 
 	long nSqlCode = m_pInterface->GetIscSqlcode()(m_Status);
 	SetErrorCode(CFirebirdDatabaseLayer::TranslateErrorCode(nSqlCode));

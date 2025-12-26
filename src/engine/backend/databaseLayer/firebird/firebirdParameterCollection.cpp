@@ -169,7 +169,7 @@ void CFirebirdParameterCollection::AllocateParameterSpace()
 			pVar->sqldata = nullptr;
 			break;
 		default:
-			wxLogError(_("Error allocating space for unknown parameter type\n"));
+			wxLogError(wxT("Error allocating space for unknown parameter type\n"));
 			break;
 		}
 	}
@@ -222,7 +222,7 @@ void CFirebirdParameterCollection::FreeParameterSpace()
 					//wxDELETE(pVar->sqldata);
 					break;
 				default:
-					wxLogError(_("Error deleting unknown parameter type\n"));
+					wxLogError(wxT("Error deleting unknown parameter type\n"));
 					break;
 				}
 			}

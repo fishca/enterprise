@@ -9,14 +9,8 @@
 
 bool CCodeRunnerApp::OnInit()
 {
-	wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
-
-	m_locale.AddCatalogLookupPathPrefix(_T("lang"));
-	m_locale.AddCatalog(m_locale.GetCanonicalName());
-	m_codeRunner->Show();
-
 	CApplicationData::CreateAppDataEnv();
-	return m_locale.Init(wxLANGUAGE_ENGLISH) && wxApp::OnInit();
+	return wxApp::OnInit() && m_codeRunner->Show();
 }
 
 int CCodeRunnerApp::OnExit()
@@ -30,4 +24,4 @@ void CCodeRunnerApp::AppendOutput(const wxString& str)
 	m_codeRunner->AppendOutput(str);
 }
 
-wxIMPLEMENT_APP(CCodeRunnerApp);   
+wxIMPLEMENT_APP(CCodeRunnerApp);

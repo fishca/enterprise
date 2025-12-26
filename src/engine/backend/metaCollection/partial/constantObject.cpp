@@ -278,9 +278,9 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 	if (!appData->DesignerMode()) {
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();
@@ -321,9 +321,9 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 		const CValue& constValue = m_constValue;
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("database is not open!"));
+			CBackendException::Error(_("Database is not open!"));
 
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();

@@ -51,7 +51,7 @@ int CMysqlResultSetMetaData::GetColumnType(int i)
 			returnType = COLUMN_STRING;
 			break;
 		default:
-			wxPrintf(_("Don't understand type : %d\n"), returnType);
+			wxPrintf(wxT("Don't understand type : %d\n"), returnType);
 			returnType = COLUMN_UNKNOWN;
 			break;
 		};

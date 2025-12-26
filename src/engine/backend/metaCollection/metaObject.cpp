@@ -10,7 +10,9 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue)
+wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue);
+
+#define metaBlock 0x200222
 
 //*****************************************************************************************
 //*                                  MetaObject                                           *
@@ -82,7 +84,7 @@ IMetaObject::~IMetaObject()
 bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 {
 	//Save meta version 
-	const version_identifier_t& version = dataReader.r_u32(); //reserved 
+	(void)dataReader.r_u32(); //reserved 
 
 	//Load unique guid 
 	wxString strGuid;
@@ -93,9 +95,9 @@ bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 	m_metaId = dataReader.r_u32();
 
 	//Load standart fields
-	m_propertyName->SetValue(dataReader.r_stringZ());
-	m_propertySynonym->SetValue(dataReader.r_stringZ());
-	m_propertyComment->SetValue(dataReader.r_stringZ());
+	m_propertyName->LoadData(dataReader);
+	m_propertySynonym->LoadData(dataReader);
+	m_propertyComment->LoadData(dataReader);
 
 	//special info deleted 
 	if (dataReader.r_u8()) {
@@ -110,24 +112,34 @@ bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 	if (!LoadRole(dataReader))
 		return false;
 
-	return LoadData(dataReader);
+	//load meta 
+	wxMemoryBuffer buffer_chunk;
+	if (!dataReader.r_chunk(metaBlock, buffer_chunk))
+		return false;
+
+	CMemoryReader dataObjectReader(buffer_chunk);
+	dataObjectReader.r_u32(); //reserved flags
+	if (!LoadData(dataObjectReader))
+		return false;
+
+	return true;
 }
 
 bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 {
-	//Save meta version 
+	//save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
 
-	//Save unique guid
+	//save unique guid
 	dataWritter.w_stringZ(m_metaGuid);
 
-	//Save meta id 
+	//save meta id 
 	dataWritter.w_u32(m_metaId);
 
-	//Save standart fields
-	dataWritter.w_stringZ(m_propertyName->GetValueAsString());
-	dataWritter.w_stringZ(m_propertySynonym->GetValueAsString());
-	dataWritter.w_stringZ(m_propertyComment->GetValueAsString());
+	//save standart fields
+	m_propertyName->SaveData(dataWritter);
+	m_propertySynonym->SaveData(dataWritter);
+	m_propertyComment->SaveData(dataWritter);
 
 	//special info deleted
 	dataWritter.w_u8(IsDeleted());
@@ -140,7 +152,14 @@ bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 	if (!SaveRole(dataWritter))
 		return false;
 
-	return SaveData(dataWritter);
+	//save meta 
+	CMemoryWriter dataObjectWritter;
+	dataObjectWritter.w_u32(0); //reserved flags
+	if (!SaveData(dataObjectWritter))
+		return false;
+
+	dataWritter.w_chunk(metaBlock, dataObjectWritter.buffer());
+	return true;
 }
 
 bool IMetaObject::LoadMetaObject(IMetaData* metaData, CMemoryReader& dataReader)

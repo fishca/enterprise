@@ -209,7 +209,7 @@ IDatabaseResultSet* CPostgresPreparedStatement::RunQueryWithResults()
 wxString CPostgresPreparedStatement::GenerateRandomStatementName()
 {
 	// Just come up with a string prefixed with "databaselayer_" and 10 random characters
-	wxString strReturn = _("databaselayer_");
+	wxString strReturn = wxT("databaselayer_");
 	for (int i = 0; i < 10; i++)
 	{
 		strReturn << (int)(10.0*rand() / (RAND_MAX + 1.0));

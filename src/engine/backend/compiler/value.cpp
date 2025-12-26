@@ -22,7 +22,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValue, wxObject);
 #ifdef DEBUG_VALUE
 static unsigned int s_nCreateCount = 0;
 #define DEBUG_VALUE_CREATE() \
-	wxLogDebug("Create %d", s_nCreateCount++); 
+	wxLogDebug(wxT("Create %d"), s_nCreateCount++); 
 #else 
 #define DEBUG_VALUE_CREATE() 
 #endif
@@ -771,7 +771,7 @@ wxString CValue::GetClassName() const
 	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
 		return m_pRef->GetClassName();
 	const class_identifier_t& clsid = GetClassType();
-	if (clsid == 0) CBackendException::Error("Not founded in wxClassInfo!");
+	if (clsid == 0) CBackendException::Error(_("Class not registered"));
 	return CValue::GetNameObjectFromID(clsid);
 }
 

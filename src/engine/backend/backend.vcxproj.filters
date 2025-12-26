@@ -647,6 +647,9 @@
       <Filter>metaCollection</Filter>
     </ClInclude>
     <ClInclude Include="picturePredefined.h" />
+    <ClInclude Include="metaCollection\metaLanguageObject.h">
+      <Filter>metaCollection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1433,6 +1436,12 @@
     </ClCompile>
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="picturePredefined.cpp" />
+    <ClCompile Include="metaCollection\metaLanguageObject_res.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="metaCollection\metaLanguageObject.cpp">
+      <Filter>metaCollection</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

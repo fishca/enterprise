@@ -83,13 +83,8 @@ bool CEnterpriseApp::OnCmdLineParsed(wxCmdLineParser& parser)
 
 bool CEnterpriseApp::OnInit()
 {
-	wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
-
-	m_locale.AddCatalogLookupPathPrefix(_T("lang"));
-	m_locale.AddCatalog(m_locale.GetCanonicalName());
-
 	wxSocketBase::Initialize();
-	return m_locale.Init(wxLANGUAGE_ENGLISH) && wxApp::OnInit();
+	return wxApp::OnInit();
 }
 
 int CEnterpriseApp::OnRun()

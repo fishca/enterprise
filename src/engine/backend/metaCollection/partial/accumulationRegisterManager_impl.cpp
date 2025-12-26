@@ -14,9 +14,9 @@
 CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
@@ -185,9 +185,9 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("database is not open!"));
+		CBackendException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();

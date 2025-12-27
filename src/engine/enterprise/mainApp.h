@@ -23,6 +23,9 @@ class CEnterpriseApp : public wxApp {
 	wxString m_strIBUser;
 	wxString m_strIBPassword;
 
+	//LOCALE
+	wxString m_strLocale;
+
 public:
 	virtual bool OnInit();
 #if wxUSE_ON_FATAL_EXCEPTION

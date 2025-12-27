@@ -44,11 +44,14 @@ void CEnterpriseApp::OnInitCmdLine(wxCmdLineParser& parser)
 	parser.AddOption(wxT("usr"), wxT("usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddOption(wxT("pwd"), wxT("pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 
-	//user db 
+	// USER 
 	parser.AddOption(wxT("ib_usr"), wxT("ib_usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddOption(wxT("ib_pwd"), wxT("ib_pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 
-	//debug   
+	// LOCALE
+	parser.AddOption(wxT("lc"), wxT("lc"), "Start from current locale", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+
+	// DEBUG   
 	parser.AddSwitch(wxT("debug"), wxT("debug"), "Enable debugging for application.", wxCMD_LINE_VAL_NONE);
 
 	return wxApp::OnInitCmdLine(parser);
@@ -66,11 +69,14 @@ bool CEnterpriseApp::OnCmdLineParsed(wxCmdLineParser& parser)
 	parser.Found(wxT("usr"), &m_strUser);
 	parser.Found(wxT("pwd"), &m_strPassword);
 
-	//user db 
+	// USER 
 	parser.Found(wxT("ib_usr"), &m_strIBUser);
 	parser.Found(wxT("ib_pwd"), &m_strIBPassword);
 
-	//debug 
+	// LOCALE
+	parser.Found(wxT("lc"), &m_strLocale);
+
+	// DEBUG 
 	m_debugEnable = parser.FoundSwitch(wxT("debug")) == wxCMD_SWITCH_ON;
 
 	return wxApp::OnCmdLineParsed(parser);
@@ -99,12 +105,12 @@ int CEnterpriseApp::OnRun()
 
 	if (m_strFile.IsEmpty()) {
 		ret = appDataCreateServer(eRunMode::eENTERPRISE_MODE,
-			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase
+			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
 		ret = appDataCreateFile(eRunMode::eENTERPRISE_MODE,
-			m_strFile
+			m_strFile, m_strLocale
 		);
 	}
 

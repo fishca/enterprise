@@ -75,7 +75,8 @@ CApplicationData::CApplicationData(eRunMode runMode) :
 	m_sessionGuid(wxNewUniqueGuid),
 	m_startedDate(wxDateTime::Now()),
 	m_strComputer(wxGetHostName()),
-	m_sessionUpdater(nullptr)
+	m_sessionUpdater(nullptr),
+	m_locale_lang(wxLanguage::wxLANGUAGE_UNKNOWN)
 {
 }
 
@@ -92,7 +93,7 @@ bool CApplicationData::CreateAppDataEnv()
 	try {
 #endif
 		s_instance = new CApplicationData(eRunMode::eENTERPRISE_MODE);
-		if (!s_instance->InitLocale())
+		if (!SetLocaleAppDataEnv())
 			return false;
 		return true;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
@@ -106,7 +107,7 @@ bool CApplicationData::CreateAppDataEnv()
 
 #define sys_db wxT("sys.fdb")
 
-bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase)
+bool CApplicationData::CreateFileAppDataEnv(eRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
@@ -129,11 +130,11 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDir
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {
-				s_instance->DestroyAppDataEnv();
+				DestroyAppDataEnv();
 				return false;
 			}
 
-			if (!s_instance->InitLocale())
+			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
 
 			return true;
@@ -148,8 +149,8 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strDir
 	return false;
 }
 
-bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
-	const wxString& strUser, const wxString& strPassword, const wxString& strDatabase)
+bool CApplicationData::CreateServerAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
+	const wxString& strUser, const wxString& strPassword, const wxString& strDatabase, const wxString& strLocale)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
@@ -169,7 +170,7 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strSer
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
 
-			if (!s_instance->InitLocale())
+			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
 
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
@@ -179,7 +180,7 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strSer
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {
-				s_instance->DestroyAppDataEnv();
+				DestroyAppDataEnv();
 				return false;
 			}
 
@@ -193,6 +194,14 @@ bool CApplicationData::CreateAppDataEnv(eRunMode runMode, const wxString& strSer
 	}
 #endif
 	return false;
+}
+
+bool CApplicationData::SetLocaleAppDataEnv(const wxString& strLocale)
+{
+	if (s_instance == nullptr)
+		return false;
+
+	return s_instance->InitLocale(strLocale);
 }
 
 bool CApplicationData::DestroyAppDataEnv()
@@ -223,35 +232,47 @@ bool CApplicationData::DestroyAppDataEnv()
 
 #include <wx/stdpaths.h>
 
-bool CApplicationData::InitLocale()
+bool CApplicationData::InitLocale(const wxString& locale)
 {
+	if (m_locale_lang == wxLanguage::wxLANGUAGE_UNKNOWN) {
+
 #ifdef WXDEBUG
-	wxLog::AddTraceMask(wxS("i18n"));
+		wxLog::AddTraceMask(wxS("i18n"));
 #endif // WXDEBUG
 
-	m_locale_lang = wxLocale::GetSystemLanguage();
+		m_locale_lang = wxLocale::GetSystemLanguage();
 
-	// Independently of whether we succeeded to set the locale or not, try
-	// to load the translations (for the default system language) here.
+		if (!locale.IsEmpty()) {
+			const wxLanguageInfo* foundedLocale = wxLocale::FindLanguageInfo(locale);
+			if (foundedLocale != nullptr)
+				m_locale_lang = foundedLocale->Language;
+		}
 
-	// normally this wouldn't be necessary as the catalog files would be found
-	// in the default locations, but when the program is not installed the
-	// catalogs are in the build directory where we wouldn't find them by
-	// default
+		// Independently of whether we succeeded to set the locale or not, try
+		// to load the translations (for the default system language) here.
 
-	wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
-	wxLocale::AddCatalogLookupPathPrefix(fn.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
+		// normally this wouldn't be necessary as the catalog files would be found
+		// in the default locations, but when the program is not installed the
+		// catalogs are in the build directory where we wouldn't find them by
+		// default
 
-	if (!m_locale.Init(m_locale_lang, wxLOCALE_LOAD_DEFAULT)) {
-		if (!m_locale.Init(wxLanguage::wxLANGUAGE_ENGLISH, wxLOCALE_LOAD_DEFAULT))
-			return false;
+		wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
+		wxLocale::AddCatalogLookupPathPrefix(fn.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
+
+		if (!m_locale.Init(m_locale_lang)) {
+			if (!m_locale.Init(wxLanguage::wxLANGUAGE_ENGLISH))
+				return false;
+			m_locale_lang = wxLanguage::wxLANGUAGE_ENGLISH;
+		}
+
+		// Initialize the catalogs we'll be using.
+		m_locale.AddCatalog(wxT("open_es"));
+
+		wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
+		return true;
 	}
 
-	// Initialize the catalogs we'll be using.
-	m_locale.AddCatalog(wxT("open_es"));
-
-	wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
-	return true;
+	return false;
 }
 
 bool CApplicationData::Connect(const wxString& user, const wxString& password, const int flags)

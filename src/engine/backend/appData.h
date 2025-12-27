@@ -5,8 +5,8 @@
 
 #define appData				(CApplicationData::Get())
 
-#define appDataCreateFile(mode,database) (CApplicationData::CreateAppDataEnv(mode,database))
-#define appDataCreateServer(mode,server,port,user,password,database) (CApplicationData::CreateAppDataEnv(mode,server,port,user,password,database))
+#define appDataCreateFile(mode,database,locale) (CApplicationData::CreateFileAppDataEnv(mode,database,locale))
+#define appDataCreateServer(mode,server,port,user,password,database,locale) (CApplicationData::CreateServerAppDataEnv(mode,server,port,user,password,database,locale))
 
 #define appDataDestroy()	(CApplicationData::DestroyAppDataEnv())
 
@@ -134,16 +134,17 @@ public:
 	static bool CreateAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
 
-	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strDirDatabase);
-	static bool CreateAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
-		const wxString& strUser = wxEmptyString, const wxString& strPassword = wxEmptyString, const wxString& strDatabase = wxEmptyString);
+	static bool CreateFileAppDataEnv(eRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale = wxT(""));
+	static bool CreateServerAppDataEnv(eRunMode runMode, const wxString& strServer, const wxString& strPort,
+		const wxString& strUser = wxT(""), const wxString& strPassword = wxT(""), const wxString& strDatabase = wxT(""), const wxString& strLocale = wxT(""));
 
+	static bool SetLocaleAppDataEnv(const wxString& strLocale = wxT(""));
 	static bool DestroyAppDataEnv();
 	///////////////////////////////////////////////////////////////////////////
 
 	// Initialize application
-	bool InitLocale();
-	
+	bool InitLocale(const wxString& locale = wxT(""));
+
 	bool Connect(const wxString& user, const wxString& password, const int flags = _app_start_default_flag);
 	bool Disconnect();
 
@@ -223,7 +224,7 @@ private:
 	static void CreateTableSequence();
 	static void CreateTableEvent();
 private:
-	
+
 	static CApplicationData* s_instance;
 
 	eRunMode m_runMode;

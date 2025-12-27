@@ -19,7 +19,7 @@ void CDocMDIFrame::CreatePropertyPane()
 	paneInfo.MinimizeButton(false);
 	paneInfo.MaximizeButton(false);
 	paneInfo.DestroyOnClose(false);
-	paneInfo.Caption(_("Property"));
+	paneInfo.Caption(_("Properties"));
 	paneInfo.MinSize(300, 0);
 	paneInfo.Right();
 	paneInfo.Show(false);

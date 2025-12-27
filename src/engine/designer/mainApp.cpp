@@ -45,9 +45,12 @@ void CDesignerApp::OnInitCmdLine(wxCmdLineParser& parser)
 	parser.AddOption(wxT("usr"), wxT("usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddOption(wxT("pwd"), wxT("pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 
-	//user db 
+	// USER 
 	parser.AddOption(wxT("ib_usr"), wxT("ib_usr"), "Start from current user", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddOption(wxT("ib_pwd"), wxT("ib_pwd"), "Start from current password", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
+
+	// LOCALE
+	parser.AddOption(wxT("lc"), wxT("lc"), "Start from current locale", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
 
 	return wxApp::OnInitCmdLine(parser);
 }
@@ -64,9 +67,12 @@ bool CDesignerApp::OnCmdLineParsed(wxCmdLineParser& parser)
 	parser.Found(wxT("usr"), &m_strUser);
 	parser.Found(wxT("pwd"), &m_strPassword);
 
-	//user db 
+	// USER  
 	parser.Found(wxT("ib_usr"), &m_strIBUser);
 	parser.Found(wxT("ib_pwd"), &m_strIBPassword);
+
+	// LOCALE
+	parser.Found(wxT("lc"), &m_strLocale);
 
 	return wxApp::OnCmdLineParsed(parser);
 }
@@ -92,12 +98,12 @@ int CDesignerApp::OnRun()
 
 	if (m_strFile.IsEmpty()) {
 		ret = appDataCreateServer(eRunMode::eDESIGNER_MODE,
-			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase
+			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
 		ret = appDataCreateFile(eRunMode::eDESIGNER_MODE,
-			m_strFile
+			m_strFile, m_strLocale
 		);
 	}
 

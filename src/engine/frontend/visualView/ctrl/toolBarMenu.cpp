@@ -8,8 +8,8 @@ enum
 
 void CValueToolbar::PrepareDefaultMenu(wxMenu* menu)
 {
-	menu->Append(MENU_ADDITEM, wxT("Add tool\tInsert"))->SetBitmap(CValueToolBarItem::GetIconGroup());
-	menu->Append(MENU_ADDITEM_SEPARATOR, wxT("Add separator\tInsert"))->SetBitmap(CValueToolBarSeparator::GetIconGroup());
+	menu->Append(MENU_ADDITEM, _("Add tool\tInsert"))->SetBitmap(CValueToolBarItem::GetIconGroup());
+	menu->Append(MENU_ADDITEM_SEPARATOR, _("Add separator\tInsert"))->SetBitmap(CValueToolBarSeparator::GetIconGroup());
 	menu->AppendSeparator();
 }
 

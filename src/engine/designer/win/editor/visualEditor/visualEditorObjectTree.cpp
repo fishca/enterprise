@@ -475,22 +475,22 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::CVisualEditorI
 
 	wxMenuItem* item = nullptr;
 	
-	item = Append(MENU_CUT, wxT("Cut\tCtrl+X"));
+	item = Append(MENU_CUT, _("Cut\tCtrl+X"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_CUT, wxART_MENU));
-	item = Append(MENU_COPY, wxT("Copy\tCtrl+C"));
+	item = Append(MENU_COPY, _("Copy\tCtrl+C"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_MENU));
-	item = Append(MENU_PASTE, wxT("Paste\tCtrl+V"));
+	item = Append(MENU_PASTE, _("Paste\tCtrl+V"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_MENU));
 	AppendSeparator();
-	item = Append(MENU_DELETE, wxT("Delete\tCtrl+D"));
+	item = Append(MENU_DELETE, _("Delete\tCtrl+D"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
 	AppendSeparator();
-	item = Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"));
+	item = Append(MENU_MOVE_UP, _("Move Up\tAlt+Up"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU));
-	item = Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"));
+	item = Append(MENU_MOVE_DOWN, _("Move Down\tAlt+Down"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU));
 	AppendSeparator();
-	item = Append(MENU_PROPERTIES, wxT("Properties"));
+	item = Append(MENU_PROPERTIES, _("Properties"));
 	item->SetBitmap(wxArtProvider::GetBitmap(wxART_PROPERTY, wxART_SERVICE));
 }
 

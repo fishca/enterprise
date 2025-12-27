@@ -7,7 +7,7 @@ enum
 
 void CValueNotebook::PrepareDefaultMenu(wxMenu* menu)
 {
-	menu->Append(MENU_ADDPAGE, wxT("Add page\tInsert"))->SetBitmap(CValueNotebookPage::GetIconGroup());
+	menu->Append(MENU_ADDPAGE, _("Add page\tInsert"))->SetBitmap(CValueNotebookPage::GetIconGroup());
 	menu->AppendSeparator();
 }
 

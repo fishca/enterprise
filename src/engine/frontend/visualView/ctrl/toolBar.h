@@ -98,6 +98,8 @@ protected:
 	friend class CValueForm;
 };
 
+#include "frontend/artProvider/null/null.xpm"
+
 class CValueToolBarItem : public IValueControl {
 	wxDECLARE_DYNAMIC_CLASS(CValueToolBarItem);
 private:
@@ -106,7 +108,7 @@ private:
 
 	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
 
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("Caption"), _("New tool"));
+	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryToolbar, wxT("caption"), _("Caption"), wxT(""));
 	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
@@ -130,6 +132,7 @@ public:
 
 	CValueToolbar* GetOwner() const { return m_parent->ConvertToType<CValueToolbar>(); }
 
+#pragma region __tool_item_desc_h__
 	wxBitmap GetItemPicture() const {
 		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
 		if (m_propertyPicture->IsEmptyProperty()) {
@@ -146,8 +149,46 @@ public:
 					}
 				}
 			}
+			else if (m_propertyCaption->IsEmptyProperty()) {
+				return wxBitmap(s_null_xpm);
+			}
 		}
+	
 		return m_propertyPicture->GetValueAsBitmap();
+	}
+
+	wxString GetItemCaption() const {
+		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
+		if (m_propertyCaption->IsEmptyProperty()) {
+			const action_identifier_t selected = actionDesc.GetSystemAction();
+			if (selected != wxNOT_FOUND) {
+				const CActionCollection& data = GetOwner()->GetActionArray();
+				for (unsigned int i = 0; i < data.GetCount(); i++) {
+					const action_identifier_t& id = data.GetID(i);
+					if (selected == data.GetID(i)) {
+						return data.GetCaptionByID(selected);
+					}
+				}
+			}
+		}
+		return m_propertyCaption->GetValueAsString();
+	}
+
+	wxString GetItemToolTip() const {
+		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
+		if (m_properyTooltip->IsEmptyProperty()) {
+			const action_identifier_t selected = actionDesc.GetSystemAction();
+			if (selected != wxNOT_FOUND) {
+				const CActionCollection& data = GetOwner()->GetActionArray();
+				for (unsigned int i = 0; i < data.GetCount(); i++) {
+					const action_identifier_t& id = data.GetID(i);
+					if (selected == data.GetID(i)) {
+						return data.GetCaptionByID(selected);
+					}
+				}
+			}
+		}
+		return m_properyTooltip->GetValueAsString();
 	}
 
 	enRepresentation GetItemRepresentation() const {
@@ -170,6 +211,8 @@ public:
 		}
 		return enRepresentation::eRepresentation_PictureAndText;
 	}
+
+#pragma endregion 
 
 	///////////////////////////////////////////////////////////////////////
 

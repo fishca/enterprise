@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 
 	// Init appData
 	bool connected = appDataCreateServer(eRunMode::eENTERPRISE_MODE,
-		strServer, strPort, strUser, strPassword, strDatabase
+		strServer, strPort, strUser, strPassword, strDatabase, wxT("en")
 	);
 
 	// If connection is failed then exit from application 

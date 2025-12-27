@@ -70,11 +70,11 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 
 		if (GetItemRepresentation() == enRepresentation::eRepresentation_PictureAndText) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
-				m_propertyCaption->GetValueAsString(),
+				GetItemCaption(),
 				GetItemPicture(),
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				m_properyTooltip->GetValueAsString(),
+				GetItemToolTip(),
 				wxEmptyString,
 				wxobject
 			);
@@ -85,18 +85,18 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 				GetItemPicture(),
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				m_properyTooltip->GetValueAsString(),
+				GetItemToolTip(),
 				wxEmptyString,
 				wxobject
 			);
 		}
 		else if (GetItemRepresentation() == enRepresentation::eRepresentation_Text) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
-				m_propertyCaption->GetValueAsString(),
+				GetItemCaption(),
 				wxNullBitmap,
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				m_properyTooltip->GetValueAsString(),
+				GetItemToolTip(),
 				wxEmptyString,
 				wxobject
 			);
@@ -104,11 +104,11 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
-			m_propertyCaption->GetValueAsString(),
+			GetItemCaption(),
 			GetItemPicture(),
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			m_properyTooltip->GetValueAsString(),
+			GetItemToolTip(),
 			wxEmptyString,
 			wxobject
 		);
@@ -119,18 +119,18 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 			GetItemPicture(),
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			m_properyTooltip->GetValueAsString(),
+			GetItemToolTip(),
 			wxEmptyString,
 			wxobject
 		);
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
-			m_propertyCaption->GetValueAsString(),
+			GetItemCaption(),
 			wxNullBitmap,
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			m_properyTooltip->GetValueAsString(),
+			GetItemToolTip(),
 			wxEmptyString,
 			wxobject
 		);

@@ -3,6 +3,8 @@
 #include <array>
 #include <map>
 
+#include "artProvider/null/null.xpm"
+
 #include "artProvider/codeEditor/intelli/functionBlue.xpm"
 #include "artProvider/codeEditor/intelli/functionRed.xpm"
 #include "artProvider/codeEditor/intelli/procedureBlue.xpm"

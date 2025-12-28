@@ -127,7 +127,7 @@ public:
 	virtual void ExecuteMenu(IVisualHost* visualHost, int id);
 
 	// filter data 
-	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id);
+	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const;
 
 	//contol value
 	virtual bool HasValueInControl() const {
@@ -331,7 +331,7 @@ public:
 public:
 
 	//filter source
-	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id);
+	virtual bool FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const;
 
 	//get control value
 	virtual bool SetControlValue(const CValue& varControlVal = CValue());

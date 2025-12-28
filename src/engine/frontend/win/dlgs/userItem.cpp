@@ -158,7 +158,7 @@ CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const
 	wxArrayString m_choiceRoleChoices;
 	m_choiceRoleChoices.Add(_("not selected"));
 
-	for (auto metaRole : activeMetaData->GetMetaObject(g_metaRoleCLSID)) {
+	for (auto metaRole : activeMetaData->GetAnyArrayObject(g_metaRoleCLSID)) {
 		m_choiceRoleChoices.Add(metaRole->GetName());
 	}
 
@@ -169,7 +169,7 @@ CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const
 	wxArrayString m_choiceInterfaceChoices;
 	m_choiceInterfaceChoices.Add(_("not selected"));
 
-	for (auto metaInterface : activeMetaData->GetMetaObject(g_metaInterfaceCLSID)) {
+	for (auto metaInterface : activeMetaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
 		m_choiceInterfaceChoices.Add(metaInterface->GetName());
 	}
 	m_choiceInterface = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_choiceInterfaceChoices, 0);

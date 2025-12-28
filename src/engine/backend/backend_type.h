@@ -105,7 +105,7 @@ public:
 	virtual class ISourceObject* GetSourceObject() const = 0;
 
 	// filter data 
-	virtual bool FilterSource(const class CSourceExplorer& src, const meta_identifier_t& id);
+	virtual bool FilterSource(const class CSourceExplorer& src, const meta_identifier_t& id) const;
 };
 
 #endif

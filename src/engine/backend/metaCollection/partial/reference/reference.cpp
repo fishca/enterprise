@@ -71,8 +71,8 @@ CReferenceDataObject::~CReferenceDataObject()
 
 CReferenceDataObject* CReferenceDataObject::Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid)
 {
-	IMetaObjectRecordDataRef* metaObject = nullptr;
-	if (metaData->GetMetaObject(metaObject, id)) {
+	IMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IMetaObjectRecordDataRef>(id);
+	if (metaObject != nullptr) {
 		//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, objGuid](CReferenceDataObject* ref) {
 		//	return metaObject == ref->GetMetaObject() && objGuid == ref->GetGuid(); }
 		//);
@@ -103,8 +103,8 @@ CReferenceDataObject* CReferenceDataObject::Create(IMetaData* metaData, void* pt
 {
 	reference_t* reference = static_cast<reference_t*>(ptr);
 	if (reference != nullptr) {
-		IMetaObjectRecordDataRef* metaObject = nullptr;
-		if (metaData->GetMetaObject(metaObject, reference->m_id)) {
+		IMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IMetaObjectRecordDataRef>(reference->m_id);
+		if (metaObject != nullptr) {
 			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](CReferenceDataObject* ref) {
 			//	return metaObject == ref->GetMetaObject() && ref->GetGuid() == reference->m_guid; }
 			//);
@@ -120,8 +120,8 @@ CReferenceDataObject* CReferenceDataObject::CreateFromPtr(IMetaData* metaData, v
 {
 	reference_t* reference = static_cast<reference_t*>(ptr);
 	if (reference != nullptr) {
-		IMetaObjectRecordDataRef* metaObject = nullptr;
-		if (metaData->GetMetaObject(metaObject, reference->m_id)) {
+		IMetaObjectRecordDataRef* metaObject = metaData->FindAnyObjectByFilter<IMetaObjectRecordDataRef>(reference->m_id);
+		if (metaObject != nullptr) {
 			//auto& it = std::find_if(gs_references.begin(), gs_references.end(), [metaObject, reference](CReferenceDataObject* ref) {
 			//	return metaObject == ref->GetMetaObject() && ref->GetGuid() == reference->m_guid; }
 			//);

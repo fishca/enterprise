@@ -267,6 +267,7 @@
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
+    <ClCompile Include="metaCollection\metaLanguageObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject_res.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject.cpp" />
     <ClCompile Include="metaCollection\metaPictureObject.cpp" />

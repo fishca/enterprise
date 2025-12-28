@@ -215,7 +215,7 @@ class_identifier_t CValueTableBox::GetSourceClassType() const
 	return m_tableModel->GetSourceClassType();
 }
 
-bool CValueTableBox::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id)
+bool CValueTableBox::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const
 {
 	return src.IsTableSection();
 }

@@ -165,7 +165,7 @@ void IMetaDataTree::EditModule(const wxString& fullName, int lineNumber, bool se
 	if (metaData == nullptr)
 		return;
 
-	IMetaObject* metaObject = metaData->FindByName(fullName);
+	IMetaObject* metaObject = metaData->FindAnyObjectByFilter(fullName);
 
 	if (metaObject == nullptr || metaObject->IsDeleted())
 		return;
@@ -1510,7 +1510,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          CommonModules                       *
 	//****************************************************************
-	for (auto commonModule : m_metaData->GetMetaObject(g_metaCommonModuleCLSID)) {
+	for (auto commonModule : m_metaData->GetAnyArrayObject(g_metaCommonModuleCLSID)) {
 
 		if (commonModule->IsDeleted())
 			continue;
@@ -1530,7 +1530,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
-	for (auto commonForm : m_metaData->GetMetaObject(g_metaCommonFormCLSID)) {
+	for (auto commonForm : m_metaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 
 		if (commonForm->IsDeleted())
 			continue;
@@ -1550,7 +1550,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          CommonMakets                        *
 	//****************************************************************
-	for (auto commonTemlate : m_metaData->GetMetaObject(g_metaCommonTemplateCLSID)) {
+	for (auto commonTemlate : m_metaData->GetAnyArrayObject(g_metaCommonTemplateCLSID)) {
 
 		if (commonTemlate->IsDeleted())
 			continue;
@@ -1570,7 +1570,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Pictures							 *
 	//****************************************************************
-	for (auto picture : m_metaData->GetMetaObject(g_metaPictureCLSID)) {
+	for (auto picture : m_metaData->GetAnyArrayObject(g_metaPictureCLSID)) {
 
 		if (picture->IsDeleted())
 			continue;
@@ -1590,7 +1590,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Interfaces							 *
 	//****************************************************************
-	for (auto commonInterface : m_metaData->GetMetaObject(g_metaInterfaceCLSID)) {
+	for (auto commonInterface : m_metaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
 
 		if (commonInterface->IsDeleted())
 			continue;
@@ -1610,7 +1610,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Roles								 *
 	//****************************************************************
-	for (auto role : m_metaData->GetMetaObject(g_metaRoleCLSID)) {
+	for (auto role : m_metaData->GetAnyArrayObject(g_metaRoleCLSID)) {
 
 		if (role->IsDeleted())
 			continue;
@@ -1630,7 +1630,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Languages							 *
 	//****************************************************************
-	for (auto language : m_metaData->GetMetaObject(g_metaLanguageCLSID)) {
+	for (auto language : m_metaData->GetAnyArrayObject(g_metaLanguageCLSID)) {
 
 		if (language->IsDeleted())
 			continue;
@@ -1650,7 +1650,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
-	for (auto constant : m_metaData->GetMetaObject(g_metaConstantCLSID)) {
+	for (auto constant : m_metaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 
 		if (constant->IsDeleted())
 			continue;
@@ -1670,7 +1670,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
-	for (auto catalog : m_metaData->GetMetaObject(g_metaCatalogCLSID)) {
+	for (auto catalog : m_metaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 
 		if (catalog->IsDeleted())
 			continue;
@@ -1691,7 +1691,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
-	for (auto document : m_metaData->GetMetaObject(g_metaDocumentCLSID)) {
+	for (auto document : m_metaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 
 		if (document->IsDeleted())
 			continue;
@@ -1712,7 +1712,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Enumerations                        *
 	//****************************************************************
-	for (auto enumeration : m_metaData->GetMetaObject(g_metaEnumerationCLSID)) {
+	for (auto enumeration : m_metaData->GetAnyArrayObject(g_metaEnumerationCLSID)) {
 
 		if (enumeration->IsDeleted())
 			continue;
@@ -1733,7 +1733,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
-	for (auto dataProcessor : m_metaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : m_metaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 
 		if (dataProcessor->IsDeleted())
 			continue;
@@ -1754,7 +1754,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
-	for (auto report : m_metaData->GetMetaObject(g_metaReportCLSID)) {
+	for (auto report : m_metaData->GetAnyArrayObject(g_metaReportCLSID)) {
 
 		if (report->IsDeleted())
 			continue;
@@ -1775,7 +1775,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
-	for (auto informationRegister : m_metaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : m_metaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 
 		if (informationRegister->IsDeleted())
 			continue;
@@ -1796,7 +1796,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
-	for (auto accumulationRegister : m_metaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : m_metaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 
 		if (accumulationRegister->IsDeleted())
 			continue;

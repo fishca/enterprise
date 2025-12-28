@@ -176,7 +176,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
-	for (auto commonForm : activeMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+	for (auto commonForm : activeMetaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 		if (commonForm->IsDeleted())
 			continue;
 		AppendItem(m_treeFORMS, commonForm);
@@ -185,7 +185,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
-	for (auto constant : activeMetaData->GetMetaObject(g_metaConstantCLSID)) {
+	for (auto constant : activeMetaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 		if (constant->IsDeleted())
 			continue;
 		AppendItem(m_treeCONSTANTS, constant);
@@ -194,7 +194,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
-	for (auto catalog : activeMetaData->GetMetaObject(g_metaCatalogCLSID)) {
+	for (auto catalog : activeMetaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 		if (catalog->IsDeleted())
 			continue;
 		AppendItem(m_treeCATALOGS, catalog);
@@ -203,7 +203,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
-	for (auto document : activeMetaData->GetMetaObject(g_metaDocumentCLSID)) {
+	for (auto document : activeMetaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 		if (document->IsDeleted())
 			continue;
 		AppendItem(m_treeDOCUMENTS, document);
@@ -212,7 +212,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
-	for (auto dataProcessor : activeMetaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : activeMetaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 		if (dataProcessor->IsDeleted())
 			continue;
 		AppendItem(m_treeDATAPROCESSORS, dataProcessor);
@@ -221,7 +221,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
-	for (auto report : activeMetaData->GetMetaObject(g_metaReportCLSID)) {
+	for (auto report : activeMetaData->GetAnyArrayObject(g_metaReportCLSID)) {
 		if (report->IsDeleted())
 			continue;
 		AppendItem(m_treeREPORTS, report);
@@ -230,7 +230,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
-	for (auto informationRegister : activeMetaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : activeMetaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 		if (informationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
@@ -239,7 +239,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
-	for (auto accumulationRegister : activeMetaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 		if (accumulationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);

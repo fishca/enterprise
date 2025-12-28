@@ -14,9 +14,9 @@ class BACKEND_API wxPGRecordProperty : public wxPGProperty {
 	void FillByClsid(const class_identifier_t& clsid);
 public:
 
-	IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
+	const IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGRecordProperty(IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxPGRecordProperty(const IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
@@ -31,7 +31,7 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 protected:
-	IPropertyObject* m_ownerProperty = nullptr;
+	const IPropertyObject* m_ownerProperty = nullptr;
 private:
 	WX_PG_DECLARE_PROPERTY_CLASS(wxPGRecordProperty);
 };

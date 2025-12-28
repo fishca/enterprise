@@ -17,7 +17,7 @@ void CMetaObjectCatalog::OnPropertyChanged(IProperty* property, const wxVariant&
 	if (m_propertyOwner == property) {
 		const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); CTypeDescription typeDesc;
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-			const IMetaObject* catalog = m_metaData->GetMetaObject(metaDesc.GetByIdx(idx));
+			const IMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 			if (catalog != nullptr) {
 				const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
 				wxASSERT(so);

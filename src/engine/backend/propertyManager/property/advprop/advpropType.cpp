@@ -29,7 +29,7 @@ void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, co
 	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
 	wxASSERT(so);
 	if (so->GetObjectTypeCtor() == eCtorObjectType::eCtorObjectType_object_metadata) {
-		IMetaData* metaData = dynamic_cast<IBackendTypeConfigFactory*>(m_ownerProperty)->GetMetaData();
+		const IMetaData* metaData = dynamic_cast<const IBackendTypeConfigFactory*>(m_ownerProperty)->GetMetaData();
 		wxASSERT(metaData);
 		if (metaData != nullptr) {
 			if (selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
@@ -85,7 +85,7 @@ void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, co
 
 #include "backend/system/value/valueTable.h"
 
-wxPGTypeProperty::wxPGTypeProperty(IPropertyObject* property, const eSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
+wxPGTypeProperty::wxPGTypeProperty(const IPropertyObject* property, const eSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
 	wxPGProperty(label, strName), m_ownerProperty(property)
 {
 	m_precision = new wxUIntProperty(_("Precision"), wxT("precision"), 0);
@@ -483,7 +483,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			wxPGTypeProperty* dlgProp = wxDynamicCast(prop, wxPGTypeProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
-			IBackendTypeConfigFactory* typeFactory = dynamic_cast<IBackendTypeConfigFactory*>(dlgProp->GetPropertyObject());
+			const IBackendTypeConfigFactory* typeFactory = dynamic_cast<const IBackendTypeConfigFactory*>(dlgProp->GetPropertyObject());
 			if (typeFactory == nullptr) return false;
 
 			wxVariantDataAttribute* data = property_cast(dlgProp->GetValue(), wxVariantDataAttribute);

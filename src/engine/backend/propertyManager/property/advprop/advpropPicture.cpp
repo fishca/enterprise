@@ -58,7 +58,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 		IMetaData* metaDataOwner = nullptr;
 		if (metaData != nullptr && metaData->GetOwner(metaDataOwner)) {
-			for (const auto object : metaDataOwner->GetMetaObject(g_metaPictureCLSID)) {
+			for (const auto object : metaDataOwner->GetAnyArrayObject(g_metaPictureCLSID)) {
 				CMetaObjectPicture* picture = nullptr;
 				if (object->ConvertToValue(picture)) {
 					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
@@ -71,7 +71,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 			}
 		}
 		else if (metaData != nullptr) {
-			for (const auto object : metaData->GetMetaObject(g_metaPictureCLSID)) {
+			for (const auto object : metaData->GetAnyArrayObject(g_metaPictureCLSID)) {
 				CMetaObjectPicture* picture = nullptr;
 				if (object->ConvertToValue(picture)) {
 					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(

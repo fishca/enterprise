@@ -110,7 +110,7 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 		if (!isEvalMode) {
 
 			if (strModuleData.IsEmpty() && strFileName.IsEmpty()) {
-				IMetaObjectModule* foundedDoc = dynamic_cast<IMetaObjectModule*>(activeMetaData->FindByName(error.m_strDocPath));
+				const IMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IMetaObjectModule>(error.m_strDocPath);
 				wxASSERT(foundedDoc);
 				strModuleData = foundedDoc->GetModuleText();
 			}
@@ -119,7 +119,7 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 				if (backend_mainFrame != nullptr) {
 					IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
 					wxASSERT(metadata);
-					IMetaObjectModule* foundedDoc = dynamic_cast<IMetaObjectModule*>(metadata->FindByName(error.m_strDocPath));
+					const IMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IMetaObjectModule>(error.m_strDocPath);
 					wxASSERT(foundedDoc);
 					strModuleData = foundedDoc->GetModuleText();
 				}

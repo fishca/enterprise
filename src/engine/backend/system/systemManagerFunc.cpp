@@ -936,7 +936,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 {
 	if (!strFormName.IsEmpty()) {
 
-		for (const auto object : activeMetaData->GetMetaObject(g_metaCommonFormCLSID)) {
+		for (const auto object : activeMetaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 			if (stringUtils::CompareString(strFormName, object->GetName())) {
 
 				CMetaObjectCommonForm* creator = object->ConvertToType<CMetaObjectCommonForm>();

@@ -312,12 +312,12 @@ public:
 
 	//find child by guid 
 	IMetaObject* FindChildByGuid(const CGuid& guid) const {
-	
+
 		for (const auto object : m_children) {
 			if (object->CompareGuid(guid))
 				return object;
 		}
-		
+
 		return nullptr;
 	}
 
@@ -432,7 +432,184 @@ protected:
 	virtual void DoSetRight(const CRole* role, const bool& val = true);
 #pragma endregion
 
+#pragma region __array_h__
+
+	template <typename _T1>
+	bool FillArrayObjectByFilter(
+		std::vector<_T1*>& array,
+		std::initializer_list<class_identifier_t> filter,
+		const bool use_child_filter = false) const
+	{
+		for (auto& child : m_children) {
+
+			if (!child->IsAllowed())
+				continue;
+
+			if (filter.size() > 0) {
+				bool success = false;
+				class_identifier_t child_clsid = child->GetClassType();
+				for (const auto filter_clsid : filter) {
+					if (child_clsid == filter_clsid) {
+						success = true;
+						break;
+					}
+				}
+
+				if (success)
+					array.emplace_back(static_cast<_T1*>(child));
+			}
+			else {
+				_T1* ptr = dynamic_cast<_T1*>(child);
+				if (ptr != nullptr) array.emplace_back(ptr);
+			}
+
+			if (use_child_filter)
+				child->FillArrayObjectByFilter<_T1>(array, filter, true);
+		}
+
+		return array.size() > 0;
+	}
+
+#pragma endregion 
+#pragma region __filter_h__
+
+	template<typename _T1>
+	_T1* FindObjectByFilter(const wxString& name,
+		const std::initializer_list<class_identifier_t> filter,
+		const bool use_child_filter = false) const
+	{
+		for (auto& child : m_children) {
+
+			if (child->IsDeleted())
+				continue;
+
+			if (stringUtils::CompareString(name, child->GetName())) {
+
+				if (filter.size() > 0) {
+
+					bool success = false;
+					class_identifier_t child_clsid = child->GetClassType();
+					for (const auto filter_clsid : filter) {
+						if (child_clsid == filter_clsid) {
+							success = true;
+							break;
+						}
+					}
+
+					return success ?
+						static_cast<_T1*>(child) : nullptr;
+				}
+
+				return dynamic_cast<_T1*>(child);
+			}
+
+			if (use_child_filter) {
+				_T1* founded = child->FindObjectByFilter<_T1>(name, filter, true);
+				if (founded != nullptr)
+					return founded;
+			}
+		}
+
+		//self 
+		if (stringUtils::CompareString(name, GetName()))
+			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+
+		return nullptr;
+	}
+
+	template<typename _T1>
+	_T1* FindObjectByFilter(const meta_identifier_t& id,
+		const std::initializer_list<class_identifier_t> filter,
+		const bool use_child_filter = false) const
+	{
+		for (auto& child : m_children) {
+
+			if (child->IsDeleted())
+				continue;
+
+			if (child->CompareId(id)) {
+
+				if (filter.size() > 0) {
+
+					bool success = false;
+					class_identifier_t child_clsid = child->GetClassType();
+					for (const auto filter_clsid : filter) {
+						if (child_clsid == filter_clsid) {
+							success = true;
+							break;
+						}
+					}
+
+					return success ?
+						static_cast<_T1*>(child) : nullptr;
+				}
+
+				return dynamic_cast<_T1*>(child);
+			}
+
+			if (use_child_filter) {
+				_T1* founded = child->FindObjectByFilter<_T1>(id, filter, true);
+				if (founded != nullptr)
+					return founded;
+			}
+		}
+
+		//self 
+		if (CompareId(id))
+			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+
+		return nullptr;
+	}
+
+	template<typename _T1>
+	_T1* FindObjectByFilter(const CGuid& id,
+		const std::initializer_list<class_identifier_t> filter,
+		const bool use_child_filter = false) const
+	{
+		for (auto& child : m_children) {
+
+			if (child->IsDeleted())
+				continue;
+
+			if (child->CompareGuid(id)) {
+
+				if (filter.size() > 0) {
+
+					bool success = false;
+					class_identifier_t child_clsid = child->GetClassType();
+					for (const auto filter_clsid : filter) {
+						if (child_clsid == filter_clsid) {
+							success = true;
+							break;
+						}
+					}
+
+					return success ?
+						static_cast<_T1*>(child) : nullptr;
+				}
+
+				return dynamic_cast<_T1*>(child);
+			}
+
+			if (use_child_filter) {
+				_T1* founded = child->FindObjectByFilter<_T1>(id, filter, true);
+				if (founded != nullptr)
+					return founded;
+			}
+		}
+
+		//self 
+		if (CompareGuid(id))
+			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+
+		return nullptr;
+	}
+
+#pragma endregion 
+
 protected:
+
+	friend class IMetaData;
 
 	mutable CGuid m_metaCopyGuid, m_metaPasteGuid;
 

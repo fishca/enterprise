@@ -151,10 +151,3 @@ std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType(eCto
 {
 	return activeMetaData->GetListCtorsByType(refType);
 }
-
-IMetaObject* CMetaDataDataProcessor::GetMetaObject(const meta_identifier_t& id)
-{
-	IMetaObject* metaObject = IMetaData::GetMetaObject(id);
-	if (metaObject != nullptr) return metaObject;
-	return activeMetaData->GetMetaObject(id);
-}

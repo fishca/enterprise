@@ -17,9 +17,9 @@ private:
 	void FillByClsid(const eSelectorDataType &selectorDataType, const class_identifier_t& clsid);
 public:
 
-	IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
+	const IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGTypeProperty(IPropertyObject* property = nullptr, const eSelectorDataType& selectorDataType = eSelectorDataType::eSelectorDataType_any, const wxString& label = wxPG_LABEL,
+	wxPGTypeProperty(const IPropertyObject* property = nullptr, const eSelectorDataType& selectorDataType = eSelectorDataType::eSelectorDataType_any, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
@@ -45,7 +45,7 @@ public:
 
 protected:
 
-	IPropertyObject* m_ownerProperty = nullptr;
+	const IPropertyObject* m_ownerProperty = nullptr;
 
 	wxUIntProperty* m_precision;
 	wxUIntProperty* m_scale;

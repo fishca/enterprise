@@ -11,26 +11,18 @@ class BACKEND_API IMetaValueTypeCtor;
 
 class BACKEND_API IMetaData {
 	void DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const;
-	//Get metaobjects 
-	void DoGetMetaObject(std::vector<IMetaObject*>& metaObjects, const IMetaObject* top) const;
-	void DoGetMetaObject(const class_identifier_t& clsid,
-		std::vector<IMetaObject*>& metaObjects, const IMetaObject* top) const;
-	//find object
-	IMetaObject* DoFindByName(const wxString& fullName, IMetaObject* top) const;
-	//get metaObject 
-	IMetaObject* DoGetMetaObject(const meta_identifier_t& id, IMetaObject* top) const;
-	IMetaObject* DoGetMetaObject(const CGuid& guid, IMetaObject* top) const;
 public:
+
 	IMetaData() :
 		m_metaTree(nullptr),
 		m_metaModify(false) {
 	}
+
 	virtual ~IMetaData() {}
 
 	virtual IModuleManager* GetModuleManager() const = 0;
 
 	virtual bool IsModified() const { return m_metaModify; }
-
 	virtual void Modify(bool modify = true) {
 		if (m_metaTree != nullptr)
 			m_metaTree->Modify(modify);
@@ -118,56 +110,131 @@ public:
 		return m_factoryCtorCountChanges + CValue::GetFactoryCountChanges();
 	}
 
+	//get parent metadata 
+	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
+
+	//associate this metaData with 
+	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }
+	virtual void SetMetaTree(IBackendMetadataTree* metaTree) { m_metaTree = metaTree; }
+
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag) = 0;
 	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
 
 	//metaobject
-	IMetaObject* CreateMetaObject(const class_identifier_t& clsid, IMetaObject* parentMetaObj, bool runObject = true);
+	IMetaObject* CreateMetaObject(const class_identifier_t& clsid, 
+		IMetaObject* parentMetaObj, bool runObject = true);
 
 	bool RenameMetaObject(IMetaObject* object, const wxString& newName);
 	void RemoveMetaObject(IMetaObject* object, IMetaObject* objParent = nullptr);
 
-	//Get metaobjects 
-	virtual std::vector<IMetaObject*> GetMetaObject(const IMetaObject* top = nullptr) const;
-	virtual std::vector<IMetaObject*> GetMetaObject(const class_identifier_t& clsid, const IMetaObject* top = nullptr) const;
+#pragma region __array_h__
 
-	//Get parent metadata 
-	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
-
-	//find object
-	virtual IMetaObject* FindByName(const wxString& fullName) const;
-
-	//get metaObject 
-	template <typename T>
-	inline bool GetMetaObject(T*& foundedVal, const meta_identifier_t& id, IMetaObject* top = nullptr) const {
-		foundedVal = dynamic_cast<T*>(GetMetaObject(id, top));
-		return foundedVal != nullptr;
+	//any  
+	template <typename _T1 = IMetaObject>
+	std::vector<_T1*> GetAnyArrayObject() const {
+		std::vector<_T1*> array;
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, {});
+		return array;
 	}
 
-	template <typename T>
-	inline bool GetMetaObject(T*& foundedVal, const CGuid& guid, IMetaObject* top = nullptr) const {
-		foundedVal = dynamic_cast<T*>(GetMetaObject(guid, top));
-		return foundedVal != nullptr;
+	//any 
+	template <typename _T1 = IMetaObject>
+	std::vector<_T1*> GetAnyArrayObject(const class_identifier_t& clsid) const {
+		std::vector<_T1*> array;
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, { clsid });
+		return array;
 	}
 
-	//get metaObject 
-	virtual IMetaObject* GetMetaObject(const meta_identifier_t& id, IMetaObject* top = nullptr) const;
-	virtual IMetaObject* GetMetaObject(const CGuid& guid, IMetaObject* top = nullptr) const;
+	//any  
+	template <typename _T1 = IMetaObject>
+	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<class_identifier_t> filter) const {
+		std::vector<_T1*> array;
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, filter);
+		return array;
+	}
 
-	//Associate this metaData with 
-	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }
-	virtual void SetMetaTree(IBackendMetadataTree* metaTree) { m_metaTree = metaTree; }
+#pragma endregion
+#pragma region __filter_h__
+
+	//any 
+	template <typename _T1 = IMetaObject, typename _T2>
+	_T1* FindAnyObjectByFilter(const _T2& id) const {
+		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, nullptr, {});
+	}
+
+	//any 
+	template <typename _T1 = IMetaObject, typename _T2>
+	_T1* FindAnyObjectByFilter(const _T2& id, const class_identifier_t& clsid) const {
+		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, nullptr, { clsid });
+	}
+
+	//any 
+	template <typename _T1 = IMetaObject, typename _T2>
+	_T1* FindAnyObjectByFilter(const _T2& id,
+		const std::initializer_list<class_identifier_t> filter) const {
+		return FindObjectByFilter<_T2, IMetaObject, IMetaObject, _T1>(id, nullptr, filter);
+	}
+
+#pragma endregion 
 
 	//ID's 
-	virtual meta_identifier_t GenerateNewID() const;
+	meta_identifier_t GenerateNewID() const;
 
-	//Generate new name
-	virtual wxString GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& sPrefix = wxEmptyString, bool forConstructor = false);
+	//generate new name
+	wxString GetNewName(const class_identifier_t& clsid,
+		IMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
 
 protected:
 
-	bool m_metaModify;
+#pragma region __array_h__
+
+	template <typename _T1 = IMetaObject>
+	bool FillArrayObjectByFilter(
+		std::vector<_T1*>& array,
+		const std::initializer_list<class_identifier_t> filter) const
+	{
+		return FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, filter);
+	}
+
+	template <typename _T1 = IMetaObject, typename _T2 = IMetaObject>
+	bool FillArrayObjectByFilter(
+		std::vector<_T1*>& array,
+		const _T2* top,
+		const std::initializer_list<class_identifier_t> filter) const
+	{
+		if (top != nullptr)
+			return top->FillArrayObjectByFilter(array, filter, true);
+		const auto commonObject = GetCommonMetaObject();
+		if (commonObject != nullptr)
+			return commonObject->FillArrayObjectByFilter(array, filter, true);
+		return false;
+	}
+
+#pragma endregion 
+#pragma region __filter_h__
+
+	template<typename _T1, typename _T2 = IMetaObject>
+	_T2* FindObjectByFilter(
+		const _T1& id,
+		const std::initializer_list<class_identifier_t> filter) const {
+		return FindObjectByFilter<_T1, IMetaObject, _T2>(id, nullptr, filter);
+	}
+
+	template<typename _T1, typename _T2 = IMetaObject, typename _T3 = IMetaObject>
+	_T3* FindObjectByFilter(
+		const _T1& id,
+		const _T2* top,
+		const std::initializer_list<class_identifier_t> filter) const {
+		if (top != nullptr)
+			return top->FindObjectByFilter<_T3>(id, filter, true);
+		const auto commonObject = GetCommonMetaObject();
+		if (commonObject != nullptr)
+			return commonObject->FindObjectByFilter<_T3>(id, filter, true);
+		return nullptr;
+	}
+
+#pragma endregion 
 
 	enum
 	{
@@ -175,6 +242,8 @@ protected:
 		eDataBlock = 0x2350,
 		eChildBlock = 0x2370
 	};
+
+	bool m_metaModify;
 
 	//custom types
 	std::vector<IMetaValueTypeCtor*> m_factoryCtors;

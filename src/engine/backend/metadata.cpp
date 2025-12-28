@@ -99,13 +99,13 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 	return newMetaObject;
 }
 
-wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& prefix, bool forConstructor)
+wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& strPrefix, bool forConstructor)
 {
 	unsigned int countRec = forConstructor ?
 		0 : 1;
 
-	wxString currPrefix = prefix.Length() > 0 ?
-		prefix : wxT("newItem");
+	wxString currPrefix = strPrefix.Length() > 0 ?
+		strPrefix : wxT("newItem");
 
 	wxString newName = forConstructor ?
 		wxString::Format(wxT("%s"), currPrefix) :
@@ -113,25 +113,25 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* par
 
 	while (forConstructor ||
 		countRec > 0) {
-		
+
 		bool foundedName = false;
 
 		if (parent != nullptr) {
 
 			for (unsigned int idx = 0; idx < parent->GetChildCount(); idx++) {
-				
+
 				auto child = parent->GetChild(idx);
 				if (clsid != child->GetClassType())
 					continue;
-				
+
 				if (!parent->FilterChild(child->GetClassType()))
 					continue;
-				
+
 				if (child->IsDeleted())
 					continue;
-				
+
 				if (stringUtils::CompareString(newName, child->GetName())) {
-					foundedName = true; 
+					foundedName = true;
 					break;
 				}
 			}
@@ -146,106 +146,15 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* par
 	return newName;
 }
 
-std::vector<IMetaObject*> IMetaData::GetMetaObject(const IMetaObject* top) const
-{
-	std::vector<IMetaObject*> metaObjects;
-	DoGetMetaObject(metaObjects, top != nullptr ? top : GetCommonMetaObject());
-	return metaObjects;
-}
-
-std::vector<IMetaObject*> IMetaData::GetMetaObject(const class_identifier_t& clsid, const IMetaObject* top) const
-{
-	std::vector<IMetaObject*> metaObjects;
-	DoGetMetaObject(clsid, metaObjects, top != nullptr ? top : GetCommonMetaObject());
-	return metaObjects;
-}
-
-void IMetaData::DoGetMetaObject(std::vector<IMetaObject*>& list, const IMetaObject* top) const
-{
-	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
-		wxASSERT(child);
-		DoGetMetaObject(list, child);
-	}
-	if (top->IsDeleted()) return;
-	list.push_back(const_cast<IMetaObject*>(top));
-}
-
-void IMetaData::DoGetMetaObject(const class_identifier_t& clsid, std::vector<IMetaObject*>& list, const IMetaObject* top) const
-{
-	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
-		wxASSERT(child);
-		DoGetMetaObject(clsid, list, child);
-	}
-	if (top->IsDeleted()) return;
-	if (clsid == top->GetClassType()) list.push_back(const_cast<IMetaObject*>(top));
-}
-
-IMetaObject* IMetaData::FindByName(const wxString& fullName) const
-{
-	return DoFindByName(fullName, GetCommonMetaObject());
-}
-
-IMetaObject* IMetaData::DoFindByName(const wxString& strFileName, IMetaObject* top) const
-{
-	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
-		wxASSERT(child);
-		IMetaObject* foundedMeta = DoFindByName(strFileName, child);
-		if (foundedMeta != nullptr) return foundedMeta;
-	}
-	if (top->IsDeleted()) return nullptr;
-	if (strFileName == top->GetDocPath()) return top;
-	return nullptr;
-}
-
-IMetaObject* IMetaData::GetMetaObject(const meta_identifier_t& id, IMetaObject* top) const
-{
-	if (id == wxNOT_FOUND) return nullptr;
-	return DoGetMetaObject(id, top != nullptr ? top : GetCommonMetaObject());
-}
-
-IMetaObject* IMetaData::GetMetaObject(const CGuid& guid, IMetaObject* top) const
-{
-	if (!guid.isValid()) return nullptr;
-	return DoGetMetaObject(guid, top != nullptr ? top : GetCommonMetaObject());
-}
-
-IMetaObject* IMetaData::DoGetMetaObject(const meta_identifier_t& id, IMetaObject* top) const
-{
-	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
-		wxASSERT(child);
-		IMetaObject* foundedMeta = DoGetMetaObject(id, child);
-		if (foundedMeta != nullptr) return foundedMeta;
-	}
-	if (top->CompareId(id)) return top;
-	return nullptr;
-}
-
-IMetaObject* IMetaData::DoGetMetaObject(const CGuid& guid, IMetaObject* top) const
-{
-	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
-		wxASSERT(child);
-		IMetaObject* foundedMeta = DoGetMetaObject(guid, child);
-		if (foundedMeta != nullptr) return foundedMeta;
-	}
-
-	if (top->CompareGuid(guid)) return top;
-	return nullptr;
-}
-
 bool IMetaData::RenameMetaObject(IMetaObject* metaObject, const wxString& newName)
 {
 	bool foundedName = false;
 
-	for (auto& child : GetMetaObject(metaObject->GetClassType())) {
-		if (child->GetParent() != metaObject->GetParent())
+	for (const auto object : GetAnyArrayObject(metaObject->GetClassType())) {
+		if (object->GetParent() != metaObject->GetParent())
 			continue;
-		if (child != metaObject &&
-			stringUtils::CompareString(newName, child->GetName())) {
+		if (object != metaObject &&
+			stringUtils::CompareString(newName, object->GetName())) {
 			foundedName = true;
 			break;
 		}

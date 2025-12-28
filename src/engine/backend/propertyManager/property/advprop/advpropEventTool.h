@@ -58,8 +58,6 @@ public:
 	virtual void OnSetValue() override;
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
-protected:
-	IPropertyObject* m_ownerProperty;
 private:
 	WX_PG_DECLARE_PROPERTY_CLASS(wxEventToolProperty);
 };

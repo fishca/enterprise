@@ -735,7 +735,7 @@ void CCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 		IMetaData* metaData = metaObject->GetMetaData();
 		wxASSERT(metaData);
 
-		for (const auto object : metaData->GetMetaObject(g_metaCommonFormCLSID))
+		for (const auto object : metaData->GetAnyArrayObject(g_metaCommonFormCLSID))
 			m_ac.Append(eContentType::eVariable, object->GetName(), wxEmptyString);
 	}
 }

@@ -14,17 +14,17 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGOwnerProperty, wxPGProperty, ComboBoxAndButton
 
 void wxPGOwnerProperty::FillByClsid(const class_identifier_t& clsid)
 {
-	IMetaObjectGenericData* metaGenericData = dynamic_cast<IMetaObjectGenericData*>(m_ownerProperty);
+	const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(m_ownerProperty);
 	if (metaGenericData != nullptr) {
-		IMetaData* metaData = metaGenericData->GetMetaData();
+		const IMetaData* metaData = metaGenericData->GetMetaData();
 		wxASSERT(metaData);
-		for (auto metaOwner : metaData->GetMetaObject(clsid)) {
+		for (auto metaOwner : metaData->GetAnyArrayObject(clsid)) {
 			m_choices.Add(metaOwner->GetName(), metaOwner->GetIcon(), metaOwner->GetMetaID());
 		}
 	}
 }
 
-wxPGOwnerProperty::wxPGOwnerProperty(IPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
+wxPGOwnerProperty::wxPGOwnerProperty(const IPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
 	: wxPGProperty(label, strName), m_ownerProperty(property)
 {
 	FillByClsid(g_metaCatalogCLSID);
@@ -83,7 +83,7 @@ wxPGEditorDialogAdapter* wxPGOwnerProperty::GetEditorDialog() const
 			int groupIcon = imageList->Add(so->GetClassIcon());
 			const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
 				groupIcon, groupIcon);
-			for (auto metaObject : metaData->GetMetaObject(clsid)) {
+			for (auto metaObject : metaData->GetAnyArrayObject(clsid)) {
 				IMetaObjectRecordDataRef* registerData = dynamic_cast<IMetaObjectRecordDataRef*>(metaObject);
 				if (registerData != nullptr) {
 					{
@@ -116,7 +116,7 @@ wxPGEditorDialogAdapter* wxPGOwnerProperty::GetEditorDialog() const
 
 			wxVariantDataOwner* data = property_cast(dlgProp->GetValue(), wxVariantDataOwner);
 			if (data == nullptr) return false;
-			IMetaObjectGenericData* metaGenericData = dynamic_cast<IMetaObjectGenericData*>(dlgProp->GetPropertyObject());
+			const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(dlgProp->GetPropertyObject());
 			if (metaGenericData == nullptr) return false;
 
 			// launch editor dialog

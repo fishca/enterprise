@@ -67,57 +67,57 @@ bool IModuleManager::CMetadataUnit::GetPropVal(const long lPropNum, CValue& pvar
 	switch (lPropNum)
 	{
 	case enCommonModules: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaCommonModuleCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaCommonModuleCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enCommonForms: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaCommonFormCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enCommonTemplates: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaCommonTemplateCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaCommonTemplateCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enConstants: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaConstantCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enCatalogs: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaCatalogCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enDocuments: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaDocumentCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enEnumerations: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaEnumerationCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaEnumerationCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enDataProcessors: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaDataProcessorCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enReports: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaReportCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaReportCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enInformationRegisters: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaInformationRegisterCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 	} break;
 	case enAccumulationRegisters: {
-		for (const auto object : m_metaData->GetMetaObject(g_metaAccumulationRegisterCLSID)) {
+		for (const auto object : m_metaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 			valStruct->Insert(object->GetName(), object);
 		}
 		break;

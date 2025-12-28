@@ -128,7 +128,7 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 						if (id != wxNOT_FOUND) {
 							const IMetaData* metaData = GetMetaData();
 							const IMetaObject* foundedObject = metaData != nullptr
-								? metaData->GetMetaObject(id) : nullptr;
+								? metaData->FindAnyObjectByFilter(id) : nullptr;
 							metaObject->ProcessChoice(this, foundedObject != nullptr ? foundedObject->GetName() : wxEmptyString, GetSelectMode());
 						}
 						else {

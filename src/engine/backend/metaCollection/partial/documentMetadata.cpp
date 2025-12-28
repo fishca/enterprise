@@ -377,8 +377,8 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 
 	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		IMetaObjectRegisterData* registerData = nullptr;
-		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
+		const IMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
+		if (registerData != nullptr) {
 			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
 			wxASSERT(infoRecorder);
 			infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
@@ -419,8 +419,8 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 
 	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		IMetaObjectRegisterData* registerData = nullptr;
-		if (m_metaData->GetMetaObject(registerData, metaDesc.GetByIdx(idx))) {
+		const IMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
+		if (registerData != nullptr) {
 			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
 			wxASSERT(infoRecorder);
 			infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());

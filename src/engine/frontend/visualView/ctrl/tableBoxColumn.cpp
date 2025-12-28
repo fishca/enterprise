@@ -186,7 +186,7 @@ bool CValueTableBoxColumn::CanDeleteControl() const
 //*							 Control value	                        *
 //*******************************************************************
 
-bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id)
+bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const
 {
 	return id == GetOwner()->GetSource();
 }

@@ -111,11 +111,17 @@ wxBitmap CBackendPicture::CreatePicture(const CPictureDescription& pictureDesc, 
 	}
 	else if (pictureDesc.m_type == EPictureType::eFromConfiguration) {
 		if (metaData != nullptr && pictureDesc.m_meta_guid.isValid()) {
-			CMetaObjectPicture* picture = nullptr; IMetaData* metaDataOwner = nullptr;
-			if (metaData != nullptr && metaData->GetOwner(metaDataOwner) && metaDataOwner != nullptr && metaDataOwner->GetMetaObject(picture, pictureDesc.m_meta_guid))
-				return picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
-			else if (metaData != nullptr && metaData->GetMetaObject(picture, pictureDesc.m_meta_guid))
-				return picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
+			IMetaData* metaDataOwner = nullptr;
+			if (metaData != nullptr && metaData->GetOwner(metaDataOwner) && metaDataOwner != nullptr) {
+				const CMetaObjectPicture* picture =
+					metaDataOwner->FindAnyObjectByFilter<CMetaObjectPicture>(pictureDesc.m_meta_guid);
+				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
+			}
+			else if (metaData != nullptr) {
+				const CMetaObjectPicture* picture =
+					metaData->FindAnyObjectByFilter<CMetaObjectPicture>(pictureDesc.m_meta_guid);
+				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
+			}
 		}
 	}
 	else if (pictureDesc.m_type == EPictureType::eFromFile) {

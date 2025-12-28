@@ -104,7 +104,7 @@ CValue IBackendTypeConfigFactory::AdjustValue(const CValue& varValue) const
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool IBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id)
+bool IBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const
 {
 	return !src.IsTableSection();
 }

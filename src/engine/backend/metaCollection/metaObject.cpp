@@ -41,12 +41,12 @@ IBackendMetadataTree* IMetaObject::GetMetaDataTree() const
 
 bool IMetaObject::BuildNewName()
 {
-	bool foundedName = false;
-	for (const auto object : m_metaData->GetMetaObject(GetClassType())) {
+	const wxString& strName = GetName(); bool foundedName = false;
+	for (const auto object : m_metaData->GetAnyArrayObject(GetClassType())) {
 		if (object->GetParent() != GetParent())
 			continue;
 		if (object != this &&
-			stringUtils::CompareString(GetName(), object->GetName())) {
+			stringUtils::CompareString(strName, object->GetName())) {
 			foundedName = true;
 			break;
 		}

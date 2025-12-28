@@ -12,9 +12,9 @@ class BACKEND_API IPropertyObject;
 class BACKEND_API wxPGSourceDataProperty : public wxPGProperty {
 public:
 
-	IPropertyObject* GetPropertyObject() const { return m_typeSelector->GetPropertyObject(); }
+	const IPropertyObject* GetPropertyObject() const { return m_typeSelector->GetPropertyObject(); }
 
-	wxPGSourceDataProperty(IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxPGSourceDataProperty(const IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxVariant& value = wxNullVariant);
 

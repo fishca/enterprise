@@ -510,8 +510,8 @@ bool CValueForm::GenerateForm(IRecordDataObjectRef* obj) const
 
 	meta_identifier_t sel_id = 0;
 	if (selectDataType->ShowModal(sel_id)) {
-		IMetaObjectRecordDataMutableRef* meta = nullptr;
-		if (metaData->GetMetaObject(meta, sel_id)) {
+		IMetaObjectRecordDataMutableRef* meta = metaData->FindAnyObjectByFilter<IMetaObjectRecordDataMutableRef>(sel_id);
+		if (meta != nullptr) {
 			IRecordDataObjectRef* genObj = meta->CreateObjectValue(obj, true);
 			if (genObj != nullptr) {
 				genObj->ShowFormValue();

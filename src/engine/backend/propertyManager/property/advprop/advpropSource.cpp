@@ -11,13 +11,13 @@
 
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGSourceDataProperty, wxPGProperty, TextCtrlAndButton)
 
-wxPGSourceDataProperty::wxPGSourceDataProperty(IPropertyObject* property, const wxString& label, const wxString& strName,
+wxPGSourceDataProperty::wxPGSourceDataProperty(const IPropertyObject* property, const wxString& label, const wxString& strName,
 	const wxVariant& value) : wxPGProperty(label, strName)
 {
 	wxVariantDataSource* dataSource = property_cast(value, wxVariantDataSource);
 	wxASSERT(dataSource);
 
-	IBackendTypeSourceFactory* typeFactory = dynamic_cast<IBackendTypeSourceFactory*>(property);
+	const IBackendTypeSourceFactory* typeFactory = dynamic_cast<const IBackendTypeSourceFactory*>(property);
 	wxASSERT(typeFactory);
 	m_typeSelector = new wxPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : eSelectorDataType::eSelectorDataType_reference, _("Type"), wxT("type"), dataSource->CloneSourceAttribute());
 	AddPrivateChild(m_typeSelector);
@@ -121,7 +121,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			return list;
 		}
 
-		bool ProcessAttribute(wxPropertyGrid* pg, wxPGProperty* dlgProp, IBackendTypeSourceFactory* typeFactory, wxVariantDataSource* srcData) {
+		bool ProcessAttribute(wxPropertyGrid* pg, wxPGProperty* dlgProp, const IBackendTypeSourceFactory* typeFactory, wxVariantDataSource* srcData) {
 
 			const meta_identifier_t& dataSource = srcData != nullptr ? srcData->GetSource() : wxNOT_FOUND;
 
@@ -286,7 +286,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 				&& selItem.IsOk();
 		}
 
-		bool ProcessTableColumn(wxPropertyGrid* pg, wxPGProperty* dlgProp, IBackendTypeSourceFactory* typeFactory, wxVariantDataSource* srcData) {
+		bool ProcessTableColumn(wxPropertyGrid* pg, wxPGProperty* dlgProp, const IBackendTypeSourceFactory* typeFactory, wxVariantDataSource* srcData) {
 
 			const meta_identifier_t& dataSource = srcData != nullptr ? srcData->GetSource() : wxNOT_FOUND;
 
@@ -384,7 +384,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			wxPGSourceDataProperty* dlgProp = wxDynamicCast(prop, wxPGSourceDataProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
-			IBackendTypeSourceFactory* typeFactory = dynamic_cast<IBackendTypeSourceFactory*>(dlgProp->GetPropertyObject());
+			const IBackendTypeSourceFactory* typeFactory = dynamic_cast<const IBackendTypeSourceFactory*>(dlgProp->GetPropertyObject());
 			if (typeFactory == nullptr) return false;
 
 			wxVariantDataSource* srcData = property_cast(dlgProp->GetValue(), wxVariantDataSource);

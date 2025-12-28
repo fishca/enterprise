@@ -357,8 +357,10 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 					if (singleValue != nullptr) {
 						IMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);
-						eSelectMode selMode = eSelectMode::eSelectMode_Items; IMetaObjectAttribute* attribute = nullptr;
-						if (activeMetaData->GetMetaObject(attribute, filterData.m_filterModel, metaObject))
+						const IMetaObjectAttribute* attribute = activeMetaData->FindAnyObjectByFilter<IMetaObjectAttribute>(filterData.m_filterModel);
+
+						eSelectMode selMode = eSelectMode::eSelectMode_Items;
+						if (attribute != nullptr)
 							selMode = attribute->GetSelectMode();
 						metaObject->ProcessChoice(this, wxEmptyString, selMode);
 					}

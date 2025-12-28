@@ -75,9 +75,6 @@ public:
 	virtual bool StartMainModule() { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
 	virtual bool ExitMainModule(bool force = false) { return m_moduleManager ? m_moduleManager->ExitMainModule(force) : false; }
 
-	//get metaObject 
-	virtual IMetaObject* GetMetaObject(const meta_identifier_t& id);
-
 protected:
 
 	//header loader/saver 

@@ -11,15 +11,15 @@ class BACKEND_API IBackendMetadataTree {
 public:
 
 	virtual ~IBackendMetadataTree() {}
-	
+
 	virtual form_identifier_t SelectFormType(class CMetaObjectForm* metaObject) const = 0;
 	virtual void Activate() = 0;
 
 	virtual void SetReadOnly(bool readOnly = true) = 0;
 	virtual bool IsEditable() const = 0;
-	
+
 	virtual void Modify(bool modify) = 0;
-	virtual void EditModule(const wxString& fullName, int lineNumber, bool setRunLine = true) = 0;
+	virtual void EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine = true) = 0;
 
 	virtual bool OpenFormMDI(IMetaObject* obj) = 0;
 	virtual bool OpenFormMDI(IMetaObject* obj, IBackendMetaDocument*& foundedDoc) = 0;

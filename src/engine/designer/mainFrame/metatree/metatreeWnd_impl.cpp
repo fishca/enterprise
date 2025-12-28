@@ -159,13 +159,13 @@ CMetaDocument* IMetaDataTree::GetDocument(IMetaObject* obj) const
 	return nullptr;
 }
 
-void IMetaDataTree::EditModule(const wxString& fullName, int lineNumber, bool setRunLine)
+void IMetaDataTree::EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine)
 {
 	const IMetaData* metaData = GetMetaData();
 	if (metaData == nullptr)
 		return;
 
-	IMetaObject* metaObject = metaData->FindAnyObjectByFilter(fullName);
+	IMetaObject* metaObject = metaData->FindAnyObjectByFilter(moduleName);
 
 	if (metaObject == nullptr || metaObject->IsDeleted())
 		return;
@@ -284,7 +284,7 @@ void CMetadataTree::EditItem()
 	IMetaObject* m_currObject = GetMetaObject(selection);
 	if (!m_currObject)
 		return;
-	
+
 	OpenFormMDI(m_currObject);
 }
 

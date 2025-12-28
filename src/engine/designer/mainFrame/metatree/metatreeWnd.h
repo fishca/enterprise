@@ -63,7 +63,7 @@ protected:
 	};
 
 	void CreateToolBar(wxWindow* parent);
-	void EditModule(const wxString& fullName, int lineNumber, bool setRunLine = true);
+	void EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine = true);
 
 	enum
 	{

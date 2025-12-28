@@ -340,6 +340,8 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 	if (!item.IsOk())
 		return;
 
+	m_ownerTree->Freeze();
+	
 	if (wxTheClipboard->Open() && wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
 
 		wxCustomDataObject data(oes_clipboard_metadata);
@@ -363,6 +365,8 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 		wxTheClipboard->Close();
 	}
 
+	m_ownerTree->Thaw();
+	
 	RefreshSelectedItem();
 	event.Skip();
 }

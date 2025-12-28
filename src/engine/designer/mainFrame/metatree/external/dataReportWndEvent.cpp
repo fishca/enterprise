@@ -220,6 +220,9 @@ void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 	const wxTreeItemId& item = m_ownerTree->GetSelectionIdentifier();
 	if (!item.IsOk())
 		return;
+
+	m_ownerTree->Thaw();
+
 	if (wxTheClipboard->Open()
 		&& wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
 		wxCustomDataObject data(oes_clipboard_metadata);
@@ -241,7 +244,9 @@ void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 		wxTheClipboard->Close();
 	}
 
-	Update();
+	m_ownerTree->Freeze();
+	RefreshSelectedItem();
+
 	event.Skip();
 }
 

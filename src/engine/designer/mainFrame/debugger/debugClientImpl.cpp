@@ -89,10 +89,11 @@ void CDebuggerClientBridge::OnEnterLoop(wxSocketClient* sock, const CDebugLineDa
 void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data)
 {
 	if (docManager != nullptr) {
+		const CGuid& moduleName = data.m_moduleName;
 		if (data.m_fileName.IsEmpty()) {
 			IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(data.m_moduleName);
+				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName);
 				if (foundedMeta != nullptr) {
 					IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
 					if (foundedDoc != nullptr) {
@@ -109,7 +110,7 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineDa
 				wxASSERT(foundedMetadata);
 				IBackendMetadataTree* metaTree = foundedMetadata->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = foundedMetadata->FindAnyObjectByFilter(data.m_moduleName);
+					IMetaObject* foundedMeta = foundedMetadata->FindAnyObjectByFilter(moduleName);
 					if (foundedMeta != nullptr) {
 						IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
 						if (foundedDoc != nullptr) {
@@ -131,10 +132,11 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineDa
 void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)
 {
 	if (docManager != nullptr) {
+		const CGuid& moduleName = data.m_moduleName;
 		if (data.m_fileName.IsEmpty()) {
-			IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
+			const IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(data.m_moduleName);
+				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName);
 				if (foundedMeta != nullptr) {
 					IModuleDocument* foundedDoc = static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
 					if (foundedDoc != nullptr) {
@@ -148,9 +150,9 @@ void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)
 			if (foundedDoc != nullptr) {
 				IMetaData* metaData = foundedDoc->GetMetaData();
 				wxASSERT(metaData);
-				IBackendMetadataTree* metaTree = metaData->GetMetaTree();
+				const IBackendMetadataTree* metaTree = metaData->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(data.m_moduleName);
+					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName);
 					if (foundedMeta != nullptr) {
 						IModuleDocument* foundedDoc = static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
 						if (foundedDoc != nullptr) {
@@ -199,10 +201,11 @@ void CDebuggerClientBridge::OnMessageFromServer(const CDebugLineData& data, cons
 void CDebuggerClientBridge::OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr)
 {
 	if (docManager != nullptr) {
+		const CGuid& moduleName = data.m_moduleName;
 		if (data.m_fileName.IsEmpty()) {
 			IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(data.m_moduleName);
+				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName);
 				if (foundedMeta != nullptr) {
 					IModuleDocument* foundedDoc =
 						static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
@@ -221,7 +224,7 @@ void CDebuggerClientBridge::OnSetToolTip(const CDebugExpressionData& data, const
 				wxASSERT(metaData);
 				IBackendMetadataTree* metaTree = metaData->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(data.m_moduleName);
+					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName);
 					if (foundedMeta != nullptr) {
 						IModuleDocument* foundedDoc =
 							static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));

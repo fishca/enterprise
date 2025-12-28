@@ -20,9 +20,7 @@ bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 			const IMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 			if (metaObjectValue != nullptr) {
-				IMetaObjectAttribute* attribute = wxDynamicCast(
-					metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IMetaObjectAttribute
-				);
+				const IMetaObjectAttribute* attribute = wxDynamicCast(metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IMetaObjectAttribute);
 				wxASSERT(attribute);
 				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 				if (so != nullptr) {

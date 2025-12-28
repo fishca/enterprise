@@ -38,16 +38,20 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 
 		static void ConstructMenu(wxMenu* dst, wxMenu* src) {
 
-			for (auto& it : dst->GetMenuItems()) {
+			for (const auto it : dst->GetMenuItems()) {
 
-				wxMenuItem* menuItem = src->Append(it->GetId(),
+				wxMenuItem* menuItem = src->Append(
+					it->GetId(),
 					it->GetItemLabel(),
 					it->GetHelp(),
 					it->GetKind()
 				);
 
-				menuItem->SetMarginWidth(it->GetMarginWidth());
+				menuItem->Enable(it->IsEnabled());
+
 				menuItem->SetBitmap(it->GetBitmap());
+				menuItem->SetMarginWidth(it->GetMarginWidth());
+				menuItem->SetHelp(it->GetHelp());
 
 				if (it->IsSubMenu()) {
 					wxMenu* subMenu = new wxMenu;
@@ -74,7 +78,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 
 		if (pMenuBar != nullptr) {
 
-			const int pos_edit = pMenuBar->FindMenu(wxGetStockLabel(wxID_EDIT, wxSTOCK_NOFLAGS));
+			const int pos_edit = pMenuBar->FindMenu(wxGetStockLabel(wxID_EDIT));
 
 			for (unsigned int idx = 0; idx < pMenuBar->GetMenuCount(); idx++) {
 

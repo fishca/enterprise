@@ -221,7 +221,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 	if (!item.IsOk())
 		return;
 
-	m_ownerTree->Thaw();
+	m_ownerTree->Freeze();
 
 	if (wxTheClipboard->Open()
 		&& wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
@@ -244,7 +244,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 		wxTheClipboard->Close();
 	}
 
-	m_ownerTree->Freeze();
+	m_ownerTree->Thaw();
 	RefreshSelectedItem();
 
 	event.Skip();

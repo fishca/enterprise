@@ -479,14 +479,40 @@ m_event(event), m_oldValue(oldValue), m_newValue(newValue)
 
 void ModifyEventCmd::DoExecute()
 {
-	m_visualData->Modify(true);
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+
+	// Get the IValueFrame from the event
+	IValueFrame* control = dynamic_cast<IValueFrame*>(m_event->GetPropertyObject());
+	wxASSERT(control);
+
 	m_event->SetValue(m_newValue);
+	m_visualData->Modify(true);
+
+	if (g_controlFormCLSID == control->GetClassType()) {
+		visualEditor->UpdateVisualHost();
+	}
+	else {
+		visualEditor->UpdateControl(control);
+	}
 }
 
 void ModifyEventCmd::DoRestore()
 {
-	m_visualData->Modify(true);
+	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+
+	// Get the IValueFrame from the event
+	IValueFrame* control = dynamic_cast<IValueFrame*>(m_event->GetPropertyObject());
+	wxASSERT(control);
+
 	m_event->SetValue(m_oldValue);
+	m_visualData->Modify(true);
+
+	if (g_controlFormCLSID == control->GetClassType()) {
+		visualEditor->UpdateVisualHost();
+	}
+	else {
+		visualEditor->UpdateControl(control);
+	}
 }
 
 //-----------------------------------------------------------------------------

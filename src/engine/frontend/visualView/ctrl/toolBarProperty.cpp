@@ -15,7 +15,7 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 {
 	if (m_actSource == property) {
 
-		int answer = wxMessageBox(
+		const int answer = wxMessageBox(
 			_("The data source has been changed. Refill Tools?"),
 			_("Toolbar"), wxYES_NO
 		);
@@ -25,7 +25,7 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 			while (GetChildCount() != 0) {
 				g_visualHostContext->CutControl(GetChild(0), true);
 			}
-		
+
 			const CActionCollection& actionData = GetActionArray();
 			for (unsigned int i = 0; i < actionData.GetCount(); i++) {
 				const action_identifier_t& id = actionData.GetID(i);
@@ -35,8 +35,8 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 						);
 					wxASSERT(toolItem);
 					toolItem->SetControlName(GetControlName() + wxT("_") + actionData.GetNameByID(id));
-					toolItem->SetCaption(actionData.GetCaptionByID(id));
-					toolItem->SetToolTip(actionData.GetCaptionByID(id));
+					//toolItem->SetCaption(actionData.GetCaptionByID(id));
+					//toolItem->SetToolTip(actionData.GetCaptionByID(id));
 					toolItem->SetAction(id);
 					g_visualHostContext->InsertControl(toolItem, this);
 				}

@@ -17,6 +17,7 @@ class BACKEND_API CEventAction : public IEvent {
 				m_listPropValue.GetItemLabel(idx),
 				m_listPropValue.GetItemId(idx)
 			);
+			item.SetBitmap(m_listPropValue.GetItemBitmap(idx));
 			constants.Add(item);
 		}
 		return constants;
@@ -29,32 +30,33 @@ class BACKEND_API CEventAction : public IEvent {
 			wxString m_strName;
 			wxString m_strLabel;
 			wxString m_strHelp;
+			wxBitmap m_bmp;
 			action_identifier_t m_id;
 			CValue m_value;
 		public:
 
 			CEventOptionItem() :
-				m_strName(), m_strLabel(), m_id(-1), m_value(), m_isOk(true)
+				m_strName(), m_strLabel(), m_id(wxNOT_FOUND), m_value(), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const action_identifier_t& l, const CValue& v) :
-				m_strName(name), m_strLabel(name), m_id(l), m_value(v), m_isOk(true)
+			CEventOptionItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+				m_strName(name), m_strLabel(name), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const action_identifier_t& l, const CValue& v) :
-				m_strName(name), m_strLabel(label), m_id(l), m_value(v), m_isOk(true)
+			CEventOptionItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+				m_strName(name), m_strLabel(label), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const CValue& v) :
-				m_strName(name), m_strLabel(label), m_strHelp(help), m_id(l), m_value(v), m_isOk(true)
+			CEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+				m_strName(name), m_strLabel(label), m_bmp(b), m_strHelp(help), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
 			CEventOptionItem(const CEventOptionItem& item) :
-				m_strName(item.m_strName), m_strLabel(item.m_strLabel), m_strHelp(item.m_strHelp), m_id(item.m_id), m_value(item.m_value), m_isOk(true)
+				m_strName(item.m_strName), m_strLabel(item.m_strLabel), m_strHelp(item.m_strHelp), m_bmp(item.m_bmp), m_id(item.m_id), m_value(item.m_value), m_isOk(true)
 			{
 			}
 
@@ -62,6 +64,7 @@ class BACKEND_API CEventAction : public IEvent {
 				m_strName = src.m_strName;
 				m_strLabel = src.m_strLabel;
 				m_strHelp = src.m_strHelp;
+				m_bmp = src.m_bmp;
 				m_id = src.m_id;
 				m_value = src.m_value;
 				return *this;
@@ -91,15 +94,16 @@ class BACKEND_API CEventAction : public IEvent {
 
 		void ResetListItem() { m_listValue.clear(); }
 
-		void AppendItem(const wxString& name, const action_identifier_t& l, const CValue& v) { (void)m_listValue.emplace_back(name, l, v); }
-		void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const CValue& v) { (void)m_listValue.emplace_back(name, label, l, v); }
-		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const CValue& v) { (void)m_listValue.emplace_back(label, help, l, v); }
+		void AppendItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(name, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(name, label, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(label, help, l, b, v); }
 
 		bool HasValue(const action_identifier_t& l) const { return GetItemById(l); }
 
 		wxString GetItemName(const unsigned int idx) const { return GetItemAt(idx).m_strName; }
 		wxString GetItemLabel(const unsigned int idx) const { return GetItemAt(idx).m_strLabel; }
 		wxString GetItemHelp(const unsigned int idx) const { return GetItemAt(idx).m_strHelp; }
+		wxBitmap GetItemBitmap(const unsigned int idx) const { return GetItemAt(idx).m_bmp; }
 		action_identifier_t GetItemId(const unsigned int idx) const { return GetItemAt(idx).m_id; }
 		CValue GetItemValue(const unsigned int idx) const { return GetItemAt(idx).m_value; }
 
@@ -144,9 +148,9 @@ public:
 #pragma endregion 
 
 #pragma region item 
-	void AppendItem(const wxString& name, const action_identifier_t& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, v); }
-	void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, v); }
-	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, v); }
+	void AppendItem(const wxString& name, const action_identifier_t& l, wxBitmap &b, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
 #pragma endregion
 
 	template <typename optClass>

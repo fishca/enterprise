@@ -17,14 +17,16 @@ wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& 
 	wxVariantDataAction* dataAction = property_cast(value, wxVariantDataAction);
 	wxASSERT(dataAction);
 
-	SetChoices(choices);
-
+	m_choices.Assign(choices);
+	m_value = wxPGVariant_Zero;
+	
 	const CActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
 	if (actionDesc.GetSystemAction() != wxNOT_FOUND) {
 		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
 			const int val = m_choices.GetValue(i);
-			if (actionDesc.GetSystemAction() == val) {
+			if (val == actionDesc.GetSystemAction()) {
 				m_flags &= ~(wxPG_PROP_ACTIVE_BTN);
+				m_valueBitmapBundle = m_choices.Item(i).GetBitmap();
 				m_actionData.SetNumber(val);
 				SetValue(value);
 				return;
@@ -53,8 +55,8 @@ wxString wxEventToolProperty::ValueToString(wxVariant& value, int argFlags) cons
 
 	for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
 		const int sel_val = m_choices.GetValue(i);
-		if (sel_val == actionDesc.GetSystemAction()) 
-			return m_choices.GetLabel(i);		
+		if (sel_val == actionDesc.GetSystemAction())
+			return m_choices.GetLabel(i);
 	}
 
 	return actionDesc.GetCustomAction();
@@ -84,18 +86,29 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 bool wxEventToolProperty::IntToValue(wxVariant& value, int number, int argFlags) const
 {
 	value = new wxVariantDataAction(m_choices.GetValue(number));
+	
 	m_actionData.SetNumber(
 		m_choices.GetValue(number)
 	);
+
 	return true;
 }
 
 void wxEventToolProperty::OnSetValue()
 {
 	if (m_actionData.IsCustomAction()) {
+		m_valueBitmapBundle = wxNullBitmap;
 		SetFlag(wxPG_PROP_ACTIVE_BTN); // Property button always enabled.
 	}
 	else {
+		m_valueBitmapBundle = wxNullBitmap;
+		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
+			const int val = m_choices.GetValue(i);
+			if (val == m_actionData.GetNumber()) {
+				m_valueBitmapBundle = m_choices.Item(i).GetBitmap();
+				break;
+			}
+		}
 		ClearFlag(wxPG_PROP_ACTIVE_BTN); // Property button always disabled.
 	}
 }
@@ -111,7 +124,7 @@ wxPGEditorDialogAdapter* wxEventToolProperty::GetEditorDialog() const
 			wxEventToolProperty* dlgProp = wxDynamicCast(prop, wxEventToolProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
-			const wxString& strActionEvent = pg->GetUncommittedPropertyValue();		
+			const wxString& strActionEvent = pg->GetUncommittedPropertyValue();
 			if (strActionEvent.IsEmpty()) {
 				wxPGProperty* pgProp = pg->GetPropertyByName(wxT("name"));
 				const wxString& strActionEvent =
@@ -119,7 +132,7 @@ wxPGEditorDialogAdapter* wxEventToolProperty::GetEditorDialog() const
 				SetValue(new wxVariantDataAction(strActionEvent));
 				return true;
 			}
-		
+
 			SetValue(new wxVariantDataAction(strActionEvent));
 			return true;
 		}

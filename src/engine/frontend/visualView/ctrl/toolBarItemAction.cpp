@@ -12,11 +12,13 @@ bool CValueToolBarItem::GetToolAction(CEventAction* evtList)
 		const CActionCollection& data = sourceElement->GetActionCollection(sourceElement->GetTypeForm());
 		for (unsigned int i = 0; i < data.GetCount(); i++) {
 			const action_identifier_t& id = data.GetID(i);
-			if (id == wxNOT_FOUND) continue; 
+			if (id == wxNOT_FOUND) continue;
+			const CPictureDescription& pictureDesc = data.GetPictureByID(id);
 			evtList->AppendItem(
-				data.GetNameByID(id), 
-				data.GetCaptionByID(id), 
-				id, 
+				data.GetNameByID(id),
+				data.GetCaptionByID(id),
+				id,
+				pictureDesc.IsEmptyPicture() ? wxNullBitmap : CBackendPicture::CreatePicture(pictureDesc, GetMetaData()),
 				CValue::CreateObjectValue<CValueActionEvent>(data.GetNameByID(id), id)
 			);
 		}

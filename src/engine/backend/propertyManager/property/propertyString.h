@@ -118,7 +118,7 @@ public:
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		return new wxMultilineStringProperty(m_propLabel, m_propName, GetValueAsString());
+		return new wxCaptionStringProperty(m_owner, m_propLabel, m_propName, GetValueAsString());
 	}
 };
 

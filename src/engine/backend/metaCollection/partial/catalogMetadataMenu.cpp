@@ -9,9 +9,9 @@
 bool CMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = nullptr;
-	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open module"));
+	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
 	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
-	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager"));
+	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
 	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
 	defaultMenu->AppendSeparator();
 	return false;

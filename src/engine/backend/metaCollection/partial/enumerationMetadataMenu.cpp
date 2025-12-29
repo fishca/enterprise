@@ -8,7 +8,7 @@
 
 bool CMetaObjectEnumeration::PrepareContextMenu(wxMenu *defaultMenu)
 {
-	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager"));
+	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
 	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
 	defaultMenu->AppendSeparator();
 	return false;

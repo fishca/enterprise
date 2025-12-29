@@ -1012,7 +1012,7 @@
     <ClCompile Include="metaCollection\partial\constantManager.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
-    <ClCompile Include="metaCollection\partial\constantMenu.cpp">
+    <ClCompile Include="metaCollection\partial\constantMetadataMenu.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\constantMetadata.cpp">

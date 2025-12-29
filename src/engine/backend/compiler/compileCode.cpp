@@ -708,7 +708,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 			if (numParent > MAX_OBJECTS_LEVEL) {
 				CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 				if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-					CBackendException::Error("Recursive call of modules!");
+					CBackendException::Error(_("Recursive call of modules!"));
 				}
 			}
 			std::shared_ptr<CCompileContext::CVariable> currentVariable = nullptr;
@@ -1116,7 +1116,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		if (numParent > MAX_OBJECTS_LEVEL) {
 			CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 			if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-				CBackendException::Error("Recursive call of modules!");
+				CBackendException::Error(_("Recursive call of modules!"));
 			}
 		}
 

@@ -165,7 +165,7 @@ inline void SubValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		}
 	}
 	else {
-		CBackendException::Error("Subtraction operation cannot be applied for this type (%s)", cValue2.GetClassName());
+		CBackendException::Error(_("Subtraction operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -186,7 +186,7 @@ inline void MultValue(CValue& cValue1, const CValue& cValue2, const CValue& cVal
 		}
 	}
 	else {
-		CBackendException::Error("Multiplication operation cannot be applied for this type (%s)", cValue2.GetClassName());
+		CBackendException::Error(_("Multiplication operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -197,11 +197,11 @@ inline void DivValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
 		const number_t& flNumber3 = cValue3.GetNumber();
 		if (flNumber3.IsZero())
-			CBackendException::Error("Divide by zero");
+			CBackendException::Error(_("Divide by zero"));
 		cValue1.m_fData = cValue2.GetNumber() / flNumber3;
 	}
 	else {
-		CBackendException::Error("Division operation cannot be applied for this type (%s)", cValue2.GetClassName());
+		CBackendException::Error(_("Division operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	};
 }
 
@@ -213,12 +213,12 @@ inline void ModValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		ttmath::Int<TTMATH_BITS(128)> val128_2, val128_3;
 		const number_t& flNumber3 = cValue3.GetNumber(); flNumber3.ToInt(val128_3);
 		if (val128_3.IsZero())
-			CBackendException::Error("Divide by zero");
+			CBackendException::Error(_("Divide by zero"));
 		const number_t& flNumber2 = cValue2.GetNumber(); flNumber2.ToInt(val128_2);
 		cValue1.m_fData = val128_2 % val128_3;
 	}
 	else {
-		CBackendException::Error("Modulo operation cannot be applied for this type (%s)", cValue2.GetClassName());
+		CBackendException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -395,9 +395,9 @@ inline void SetTypeNumber(CValue& cValue1, const number_t& fValue)
 #define CheckAndError(variable, name)\
 {\
  if(variable.m_typeClass!=eValueTypes::TYPE_REFFER)\
- CBackendException::Error("No attribute or method found '%s' - a variable is not an aggregate object", name);\
+ CBackendException::Error(_("No attribute or method found '%s' - a variable is not an aggregate object"), name);\
  else\
- CBackendException::Error("Aggregate object field not found '%s'", name);\
+ CBackendException::Error(_("Aggregate object field not found '%s'"), name);\
 }
 
 //Index arrays
@@ -478,9 +478,9 @@ void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta
 
 #ifdef DEBUG
 	if (pContext == nullptr) {
-		CBackendException::Error("No execution context defined!");
+		CBackendException::Error(_("No execution context defined!"));
 		if (m_pByteCode == nullptr)
-			CBackendException::Error("No execution code set!");
+			CBackendException::Error(_("No execution code set!"));
 	}
 #endif
 
@@ -882,7 +882,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	Reset();
 
 	if (!cByteCode.m_bCompile)
-		CBackendException::Error("Module: %s not compiled!", cByteCode.m_strModuleName);
+		CBackendException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
 
 	s_nRecCount = 0;
 	m_pByteCode = &cByteCode;
@@ -890,7 +890,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	//check the conformity of modules (compiled and running)
 	if (GetParent() && GetParent()->m_pByteCode != m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendException::Error("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s",
+		CBackendException::Error(_("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName,
 			GetParent()->m_pByteCode->m_strModuleName
@@ -898,7 +898,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	}
 	else if (!GetParent() && m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendException::Error("System error - compilation failed (#2)\nModule1:%s\nParent1:%s",
+		CBackendException::Error(_("System error - compilation failed (#2)\nModule1:%s\nParent1:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName
 		);
@@ -969,7 +969,7 @@ long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExpo
 		m_pByteCode->FindMethod(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendException::Error("Procedure or function \"%s\" not found!", strMethodName);
+		CBackendException::Error(_("Procedure or function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0) {
 		return lCodeLine;
@@ -997,7 +997,7 @@ long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bEx
 		m_pByteCode->FindFunction(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendException::Error("Function \"%s\" not found!", strMethodName);
+		CBackendException::Error(_("Function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0)
 		return lCodeLine;

@@ -146,7 +146,7 @@ void CValueContainer::Insert(const CValue& varKeyValue, const CValue& cValue)
 	std::map<const CValue, CValue>::iterator it = m_containerValues.find(varKeyValue);
 	if (it != m_containerValues.end()) {
 		if (!appData->DesignerMode())
-			CBackendException::Error("Key '%s' is already using!", varKeyValue.GetString());
+			CBackendException::Error(_("Key '%s' is already using!"), varKeyValue.GetString());
 		return;
 	}
 	if (m_methodHelper != nullptr) m_methodHelper->AppendProp(varKeyValue.GetString());
@@ -190,7 +190,7 @@ bool CValueContainer::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 		pvarValue = itFound->second; return true;
 	}
 	if (!appData->DesignerMode())
-		CBackendException::Error("Key '%s' not found!", varKeyValue.GetString());
+		CBackendException::Error(_("Key '%s' not found!"), varKeyValue.GetString());
 	return false;
 }
 
@@ -198,7 +198,7 @@ bool CValueContainer::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 //*                            CValueStructure                         *
 //**********************************************************************
 
-#define st_error_conversion "Error conversion value. Must be string!"
+#define st_error_conversion _("Error conversion value. Must be string!")
 
 bool CValueStructure::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {

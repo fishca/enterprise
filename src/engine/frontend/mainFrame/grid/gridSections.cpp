@@ -23,7 +23,7 @@ wxPoint CSectionCtrl::GetRange(const wxString& sectionName) const
 		}
 	}
 
-	CBackendException::Error("Wrong section named \"%s\"", sectionName);
+	CBackendException::Error(_("Wrong section named \"%s\""), sectionName);
 	return wxPoint();
 }
 

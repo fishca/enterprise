@@ -2408,7 +2408,7 @@ bool IRecordSetObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {
 	long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
-		CBackendException::Error("Array index out of bounds");
+		CBackendException::Error(_("Array index out of bounds"));
 		return false;
 	}
 	pvarValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(index));
@@ -2579,7 +2579,7 @@ bool IRecordSetObject::CRecordSetObjectRegisterColumnCollection::GetAt(const CVa
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendException::Error("Index goes beyond array");
+		CBackendException::Error(_("Index goes beyond array"));
 		return false;
 	}
 

@@ -68,7 +68,7 @@ CParamUnit CCompileContext::GetVariable(const wxString& strVarName, bool bFindIn
 				if (numParent > MAX_OBJECTS_LEVEL) {
 					//CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 					if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-						CBackendException::Error("Recursive call of modules!");
+						CBackendException::Error(_("Recursive call of modules!"));
 					}
 				}
 				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found

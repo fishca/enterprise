@@ -861,7 +861,7 @@ int CSystemFunction::ArgCount()//КоличествоАргументовПро�
 
 wxString CSystemFunction::ArgValue(int n)//ЗначениеАргументаПрограммы
 {
-	if (n<0 || n> __argc) CBackendException::Error("Invalid argument index");
+	if (n<0 || n> __argc) CBackendException::Error(_("Invalid argument index"));
 	return __wargv[n];
 }
 

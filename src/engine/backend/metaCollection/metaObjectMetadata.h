@@ -10,7 +10,7 @@
 //*                                  metaData object                                      *
 //*****************************************************************************************
 
-#define configurationDefaultName _("configration")
+#define configurationDefaultName _("configuration")
 
 ///////////////////////////////////////////////////////////////////////////
 

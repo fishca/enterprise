@@ -41,6 +41,8 @@ bool IMetaDataConfiguration::Destroy()
 	return true;
 }
 
+#include "backend/metaCollection/metaLanguageObject.h"
+
 //**************************************************************************************************
 //*                                          ConfigMetadata										   *
 //**************************************************************************************************
@@ -63,6 +65,24 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 	m_commonObject->PrepareNames();
 	m_commonObject->IncrRef();
+
+	{
+		CValue* ppParams[] = { m_commonObject };
+		CMetaObjectLanguage* commonLanguage =
+			CValue::CreateAndConvertObjectRef<CMetaObjectLanguage>(g_metaLanguageCLSID, ppParams, 1);
+
+		if (commonLanguage->OnCreateMetaObject(this, newObjectFlag)) {
+
+			if (!commonLanguage->OnLoadMetaObject(this)) {
+				wxASSERT_MSG(false, "commonLanguage->OnLoadMetaObject() == false");
+			}
+
+			commonLanguage->SetName(wxT("english"));
+		}
+
+		commonLanguage->PrepareNames();
+		commonLanguage->IncrRef();
+	}
 
 	wxASSERT(m_moduleManager);
 }
@@ -91,40 +111,40 @@ bool CMetaDataConfigurationFile::RunDatabase(int flags)
 	}
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-		
+
 		auto child = m_commonObject->GetChild(idx);
 		if (!m_commonObject->FilterChild(child->GetClassType()))
 			continue;
 
 		if (child->IsDeleted())
 			continue;
-		
+
 		if (!child->OnBeforeRunMetaObject(flags))
 			return false;
-		
+
 		if (!RunChildMetadata(child, flags, true))
 			return false;
 	}
 
 	if (m_moduleManager->CreateMainModule()) {
-		
+
 		if (!m_commonObject->OnAfterRunMetaObject(flags)) {
 			wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
 			return false;
 		}
-		
+
 		for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-		
+
 			auto child = m_commonObject->GetChild(idx);
 			if (!m_commonObject->FilterChild(child->GetClassType()))
 				continue;
 
 			if (child->IsDeleted())
 				continue;
-			
+
 			if (!child->OnAfterRunMetaObject(flags))
 				return false;
-			
+
 			if (!RunChildMetadata(child, flags, false))
 				return false;
 		}
@@ -140,14 +160,14 @@ bool CMetaDataConfigurationFile::RunDatabase(int flags)
 bool CMetaDataConfigurationFile::RunChildMetadata(IMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
 		if (child->IsDeleted())
 			continue;
-		
+
 		if (before && !child->OnBeforeRunMetaObject(flags))
 			return false;
 
@@ -169,17 +189,17 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 	//	return false;
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-		
+
 		auto child = m_commonObject->GetChild(idx);
 		if (!m_commonObject->FilterChild(child->GetClassType()))
 			continue;
-		
+
 		if (child->IsDeleted())
 			continue;
-		
+
 		if (!child->OnBeforeCloseMetaObject())
 			return false;
-		
+
 		if (!CloseChildMetadata(child, (flags & forceCloseFlag) != 0, true))
 			return false;
 	}
@@ -194,7 +214,7 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 	}
 
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-		
+
 		auto child = m_commonObject->GetChild(idx);
 		if (!m_commonObject->FilterChild(child->GetClassType()))
 			continue;
@@ -221,7 +241,7 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
@@ -245,7 +265,7 @@ bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* object, int fla
 bool CMetaDataConfigurationFile::ClearDatabase()
 {
 	for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
-	
+
 		auto child = m_commonObject->GetChild(idx);
 		if (!m_commonObject->FilterChild(child->GetClassType()))
 			continue;
@@ -271,7 +291,7 @@ bool CMetaDataConfigurationFile::ClearDatabase()
 bool CMetaDataConfigurationFile::ClearChildMetadata(IMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;

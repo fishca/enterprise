@@ -7,15 +7,22 @@ class BACKEND_API CMetaObjectLanguage : public IMetaObject {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectLanguage);
 public:
 
-	wxString GetLanguageCode() const {
-		return m_propertyCode->GetValueAsString();
-	}
+	wxString GetCode() const { return m_propertyCode->GetValueAsString(); }
+	void SetCode(const wxString& strCode) { m_propertyCode->SetValue(strCode); }
 
 	CMetaObjectLanguage(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
+
+	//events: 
+	virtual bool OnDeleteMetaObject();
+
+	//module manager is started or exit 
+	//after and before for designer 
+	virtual bool OnBeforeRunMetaObject(int flags);
+	virtual bool OnAfterRunMetaObject(int flags);
 
 	/**
 	* Property events
@@ -29,9 +36,9 @@ protected:
 
 private:
 
-	bool IsValidCode(const wxString& code);
+	bool IsValidCode(const wxString& strLangCode);
 
-	CPropertyName* m_propertyCode = 
+	CPropertyName* m_propertyCode =
 		IPropertyObject::CreateProperty<CPropertyName>(m_categorySecondary, wxT("code"), _("Code"), wxT("en"));
 };
 

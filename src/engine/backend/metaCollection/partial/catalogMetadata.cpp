@@ -150,11 +150,14 @@ IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFo
 
 bool CMetaObjectCatalog::GetFormObject(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(), 
+				formObject->GetIcon(),
+				formObject);
 		}
 	}
 	return true;
@@ -162,11 +165,14 @@ bool CMetaObjectCatalog::GetFormObject(CPropertyList* prop)
 
 bool CMetaObjectCatalog::GetFormFolder(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormFolder == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(), 
+				formObject->GetIcon(),
+				formObject);
 		}
 	}
 	return true;
@@ -174,11 +180,14 @@ bool CMetaObjectCatalog::GetFormFolder(CPropertyList* prop)
 
 bool CMetaObjectCatalog::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(),
+				formObject->GetMetaID(),
+				formObject->GetIcon(),
+				formObject);
 		}
 	}
 	return true;
@@ -186,11 +195,14 @@ bool CMetaObjectCatalog::GetFormList(CPropertyList* prop)
 
 bool CMetaObjectCatalog::GetFormSelect(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(),
+				formObject->GetMetaID(),
+				formObject->GetIcon(),
+				formObject);
 		}
 	}
 	return true;
@@ -198,11 +210,14 @@ bool CMetaObjectCatalog::GetFormSelect(CPropertyList* prop)
 
 bool CMetaObjectCatalog::GetFormFolderSelect(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormFolderSelect == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(), 
+				formObject->GetIcon(),
+				formObject);
 		}
 	}
 	return true;
@@ -386,12 +401,12 @@ bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 			typeDesc.AppendMetaType(so->GetClassType());
 		}
 	}
-	
+
 	(*m_propertyAttributeOwner)->SetDefaultMetaType(typeDesc);
 
 	if ((*m_propertyAttributeOwner)->GetClsidCount() > 0)
 		(*m_propertyAttributeOwner)->ClearFlag(metaDisableFlag);
-	else 
+	else
 		(*m_propertyAttributeOwner)->SetFlag(metaDisableFlag);
 
 	if (appData->DesignerMode()) {

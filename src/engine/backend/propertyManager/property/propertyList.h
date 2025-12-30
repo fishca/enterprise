@@ -2,6 +2,7 @@
 #define __PROPERTY_LIST_H__
 
 #include "backend/propertyManager/propertyObject.h"
+#include "backend/propertyManager/property/advprop/advpropList.h"
 
 //base property for "list"
 class BACKEND_API CPropertyList : public IProperty {
@@ -14,6 +15,7 @@ class BACKEND_API CPropertyList : public IProperty {
 					m_listPropValue.GetItemLabel(idx),
 					m_listPropValue.GetItemId(idx)
 				);
+				item.SetBitmap(m_listPropValue.GetItemBitmap(idx));
 				constants.Add(item);
 			}
 		}
@@ -63,6 +65,7 @@ class BACKEND_API CPropertyList : public IProperty {
 			wxString m_strName;
 			wxString m_strLabel;
 			wxString m_strHelp;
+			wxBitmap m_bmp;
 			long m_id;
 			CPropertyOptionValue m_value;
 		public:
@@ -72,23 +75,23 @@ class BACKEND_API CPropertyList : public IProperty {
 			{
 			}
 
-			CPropertyOptionItem(const wxString& name, const long& l, const CPropertyOptionValue& v) :
-				m_strName(name), m_strLabel(name), m_id(l), m_value(v), m_isOk(true)
+			CPropertyOptionItem(const wxString& name, const long& l, const wxBitmap& b, const CPropertyOptionValue& v) :
+				m_strName(name), m_strLabel(name), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CPropertyOptionItem(const wxString& name, const wxString& label, const long& l, const CPropertyOptionValue& v) :
-				m_strName(name), m_strLabel(label), m_id(l), m_value(v), m_isOk(true)
+			CPropertyOptionItem(const wxString& name, const wxString& label, const long& l, const wxBitmap& b, const CPropertyOptionValue& v) :
+				m_strName(name), m_strLabel(label), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CPropertyOptionItem(const wxString& name, const wxString& label, const wxString& help, const long& l, const CPropertyOptionValue& v) :
-				m_strName(name), m_strLabel(label), m_strHelp(help), m_id(l), m_value(v), m_isOk(true)
+			CPropertyOptionItem(const wxString& name, const wxString& label, const wxString& help, const long& l, const wxBitmap& b, const CPropertyOptionValue& v) :
+				m_strName(name), m_strLabel(label), m_strHelp(help), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
 			CPropertyOptionItem(const CPropertyOptionItem& item) :
-				m_strName(item.m_strName), m_strLabel(item.m_strLabel), m_strHelp(item.m_strHelp), m_id(item.m_id), m_value(item.m_value), m_isOk(true)
+				m_strName(item.m_strName), m_strLabel(item.m_strLabel), m_strHelp(item.m_strHelp), m_bmp(item.m_bmp), m_id(item.m_id), m_value(item.m_value), m_isOk(true)
 			{
 			}
 
@@ -125,15 +128,16 @@ class BACKEND_API CPropertyList : public IProperty {
 
 		void ResetListItem() { m_listValue.clear(); }
 
-		void AppendItem(const wxString& name, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, name, l, v); }
-		void AppendItem(const wxString& name, const wxString& label, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, l, v); }
-		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, help, l, v); }
+		void AppendItem(const wxString& name, const int& l, const wxBitmap& b, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, name, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const int& l, const wxBitmap& b, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const wxBitmap& b, const CPropertyOptionValue& v) { (void)m_listValue.emplace_back(name, label, help, l, b, v); }
 
 		bool HasValue(const long& l) const { return GetItemById(l); }
 
 		wxString GetItemName(const unsigned int idx) const { return GetItemAt(idx).m_strName; }
 		wxString GetItemLabel(const unsigned int idx) const { return GetItemAt(idx).m_strLabel; }
 		wxString GetItemHelp(const unsigned int idx) const { return GetItemAt(idx).m_strHelp; }
+		wxBitmap GetItemBitmap(const unsigned int idx) const { return GetItemAt(idx).m_bmp; }
 		long GetItemId(const unsigned int idx) const { return GetItemAt(idx).m_id; }
 		CValue* GetItemValue(const unsigned int idx) const { return GetItemAt(idx).m_value; }
 
@@ -182,30 +186,30 @@ public:
 	}
 
 #pragma region item 
-	void AppendItem(const wxString& name, const int& l, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, l, v); }
-	void AppendItem(const wxString& name, const wxString& label, const int& l, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, label, l, v); }
-	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, label, help, l, v); }
+	void AppendItem(const wxString& name, const int& l, const wxBitmap& b, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const int& l, const wxBitmap& b, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const int& l, const wxBitmap& b, const CPropertyOptionValue& v = CPropertyOptionValue()) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
 #pragma endregion
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, value)
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value = wxNOT_FOUND) : IProperty(cat, name, value)
 	{
 		m_functor = new CPropertyValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, label, value)
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value = wxNOT_FOUND) : IProperty(cat, name, label, value)
 	{
 		m_functor = new CPropertyValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CPropertyList(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value) : IProperty(cat, name, label, helpString, value)
+		bool (optClass::* funcHandler)(CPropertyList* prop), const long& value = wxNOT_FOUND) : IProperty(cat, name, label, helpString, value)
 	{
-		m_functor = new CPropertyValueFunctor<optClass>s(funcHandler, (optClass*)cat->GetPropertyObject());
+		m_functor = new CPropertyValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	virtual ~CPropertyList() { wxDELETE(m_functor); }
@@ -216,7 +220,7 @@ public:
 	virtual wxPGProperty* GetPGProperty() const {
 		if (!m_functor->Invoke(const_cast<CPropertyList*>(this)))
 			return nullptr;
-		return new wxEnumProperty(m_propLabel, m_propName, GetValueList(), GetValueAsInteger());
+		return new wxPGListProperty(m_propLabel, m_propName, GetValueList(), GetValueAsInteger());
 	}
 
 	// Set/Get property data

@@ -134,12 +134,14 @@ IBackendValueForm* CMetaObjectDocument::GetSelectForm(const wxString& strFormNam
 
 bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormObject == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(),
+				formObject->GetMetaID(), 
+				formObject->GetIcon(), 
+				formObject);
 		}
 	}
 	return true;
@@ -147,27 +149,33 @@ bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
 
 bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(),
+				formObject->GetIcon(), 
+				formObject);
 		}
 	}
+	
 	return true;
 }
 
 bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
-
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormSelect == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(), 
+				formObject->GetIcon(), 
+				formObject);
 		}
 	}
+	
 	return true;
 }
 

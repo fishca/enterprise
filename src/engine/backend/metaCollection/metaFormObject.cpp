@@ -45,10 +45,10 @@ IBackendValueForm* IMetaObjectForm::CreateAndBuildForm(const IMetaObjectForm* cr
 {
 	IBackendValueForm* result = nullptr;
 
-	if (creator != nullptr) {	
+	if (creator != nullptr) {
 		const IMetaData* metaData = creator->GetMetaData();
 		wxASSERT(metaData);
-		const IModuleManager* moduleManager = metaData->GetModuleManager();		
+		const IModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (!moduleManager->FindCompileModule(creator, result)) {
 			result = IBackendValueForm::CreateNewForm(creator, ownerControl, srcObject, formGuid);
@@ -151,7 +151,8 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 		GetParent(), IMetaObjectGenericData
 	);
 	wxASSERT(metaObject);
-	prop->AppendItem(formDefaultName, defaultFormType);
+	prop->AppendItem(formDefaultName, defaultFormType, GetIcon());
+
 	CFormTypeList formList = metaObject->GetFormType();
 	for (unsigned int idx = 0; idx < formList.GetItemCount(); idx++) {
 		prop->AppendItem(
@@ -159,9 +160,11 @@ bool CMetaObjectForm::GetFormType(CPropertyList* prop)
 			formList.GetItemLabel(idx),
 			formList.GetItemHelp(idx),
 			formList.GetItemId(idx),
+			GetIcon(),
 			formList.GetItemName(idx)
 		);
 	}
+	
 	return true;
 }
 

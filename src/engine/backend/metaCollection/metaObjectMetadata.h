@@ -32,6 +32,10 @@ protected:
 
 	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("configurationModule"), _("Configuration module")));
 
+	CPropertyCategory* m_propertyPresetValues = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
+	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultRole"), _("Default role"), _("Default configuration role"), &CMetaObjectConfiguration::GetRoleList);
+	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultLanguage"), _("Default language"), _("Default configuration language"), &CMetaObjectConfiguration::GetLanguageList);
+
 	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("compatibility"), _("Compatibility"));
 	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("version"), _("Version"), version_oes_last);
 
@@ -61,24 +65,14 @@ public:
 		return false;
 	}
 
-	virtual void SetVersion(const version_identifier_t& version) {
-		m_propertyVersion->SetValue(static_cast<eProgramVersion>(version));
-	}
-
-	version_identifier_t GetVersion() const {
-		return m_propertyVersion->GetValueAsInteger();
-	}
+	void SetVersion(const version_identifier_t& version) { m_propertyVersion->SetValue(static_cast<eProgramVersion>(version)); }
+	version_identifier_t GetVersion() const { return m_propertyVersion->GetValueAsInteger(); }
 
 	CMetaObjectConfiguration();
 	virtual ~CMetaObjectConfiguration();
 
-	virtual wxString GetFullName() const {
-		return configurationDefaultName;
-	}
-
-	virtual wxString GetModuleName() const {
-		return configurationDefaultName;
-	}
+	virtual wxString GetFullName() const { return configurationDefaultName; }
+	virtual wxString GetModuleName() const { return configurationDefaultName; }
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -110,6 +104,18 @@ protected:
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	bool GetRoleList(CPropertyList* prop) {
+		prop->AppendItem(wxT("test"), 1, wxNullBitmap);
+		return true;
+	}
+
+	bool GetLanguageList(CPropertyList* prop) {
+		prop->AppendItem(wxT("test"), 1, wxNullBitmap);
+		return true;
+	}
 };
 
 #endif 

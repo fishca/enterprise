@@ -189,6 +189,7 @@
     <ClInclude Include="propertyManager\property\advprop\advpropFont.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropGeneration.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h" />
+    <ClInclude Include="propertyManager\property\advprop\advpropList.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropNumber.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropOwner.h" />
     <ClInclude Include="propertyManager\property\advprop\advpropPicture.h" />
@@ -476,6 +477,7 @@
     <ClCompile Include="propertyManager\property\advprop\advpropFont.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropGeneration.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp" />
+    <ClCompile Include="propertyManager\property\advprop\advpropList.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropNumber.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropOwner.cpp" />
     <ClCompile Include="propertyManager\property\advprop\advpropPicture.cpp" />

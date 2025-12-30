@@ -11,8 +11,6 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
 
 bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 {
-	property->AppendItem(wxT("default"), _("Default"), wxNOT_FOUND);
-
 	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
 		IMetaObjectRecordDataRef* metaObject = nullptr;
@@ -40,6 +38,7 @@ bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 				property->AppendItem(
 					form->GetSynonym(),
 					form->GetMetaID(),
+					form->GetIcon(), 
 					form
 				);
 			}

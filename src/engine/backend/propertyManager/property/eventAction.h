@@ -147,10 +147,10 @@ public:
 	void SetValue(const CActionDescription& val);
 #pragma endregion 
 
-#pragma region item 
-	void AppendItem(const wxString& name, const action_identifier_t& l, wxBitmap &b, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, b, v); }
-	void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
-	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
+#pragma region item
+	void AppendItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
 #pragma endregion
 
 	template <typename optClass>

@@ -650,6 +650,9 @@
     <ClInclude Include="metaCollection\metaLanguageObject.h">
       <Filter>metaCollection</Filter>
     </ClInclude>
+    <ClInclude Include="propertyManager\property\advprop\advpropList.h">
+      <Filter>propertyManager\property\advprop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1444,6 +1447,9 @@
     </ClCompile>
     <ClCompile Include="metaCollection\metaLanguageObjectProperty.cpp">
       <Filter>metaCollection</Filter>
+    </ClCompile>
+    <ClCompile Include="propertyManager\property\advprop\advpropList.cpp">
+      <Filter>propertyManager\property\advprop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

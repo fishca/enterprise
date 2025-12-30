@@ -48,13 +48,18 @@ IBackendValueForm* CMetaObjectAccumulationRegister::GetListForm(const wxString& 
 
 bool CMetaObjectAccumulationRegister::GetFormList(CPropertyList* prop)
 {
-	prop->AppendItem(wxT("notSelected"), _("<not selected>"), wxNOT_FOUND);
 	for (auto formObject : GetFormArrayObject()) {
 		if (!formObject->IsAllowed()) continue;
 		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(formObject->GetName(), formObject->GetMetaID(), formObject);
+			prop->AppendItem(
+				formObject->GetName(), 
+				formObject->GetMetaID(), 
+				formObject->GetIcon(), 
+				formObject
+			);
 		}
 	}
+	
 	return true;
 }
 

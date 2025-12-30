@@ -41,12 +41,6 @@ bool CMetaDataConfiguration::LoadDatabase(int flags)
 		}
 	}
 
-	//clear data 
-	if (!ClearDatabase()) {
-		wxASSERT_MSG(false, "ClearDatabase() == false");
-		return false;
-	}
-
 	// load config
 	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT binary_data, file_guid FROM %s; ", GetCommonConfigTable(GetConfigType()));
 	if (resultSet == nullptr)
@@ -54,6 +48,12 @@ bool CMetaDataConfiguration::LoadDatabase(int flags)
 
 	//load metadata from DB 
 	if (resultSet->Next()) {
+
+		//clear data 
+		if (!ClearDatabase()) {
+			wxASSERT_MSG(false, "ClearDatabase() == false");
+			return false;
+		}
 
 		wxMemoryBuffer binaryData;
 		resultSet->GetResultBlob(wxT("binary_data"), binaryData);

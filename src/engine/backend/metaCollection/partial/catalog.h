@@ -28,7 +28,7 @@ private:
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("object"), _("Form object"), eFormObject);
+		formList.AppendItem(wxT("formObject"), _("Form object"), eFormObject);
 		formList.AppendItem(wxT("formFolder"), _("Form group"), eFormFolder);
 		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
 		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);

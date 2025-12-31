@@ -103,6 +103,15 @@ bool CMetaDataReport::ClearDatabase()
 	return true;
 }
 
+////////////////////////////////////////////////////////////////////
+
+wxString CMetaDataReport::GetLangCode() const
+{
+	return activeMetaData->GetLangCode();
+}
+
+////////////////////////////////////////////////////////////////////
+
 bool CMetaDataReport::ClearChildMetadata(IMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {

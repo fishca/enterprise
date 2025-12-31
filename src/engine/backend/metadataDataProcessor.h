@@ -56,6 +56,9 @@ public:
 			activeMetaData != nullptr ? activeMetaData->GetFactoryCountChanges() : 0;
 	}
 
+	//get language code 
+	virtual wxString GetLangCode() const;
+
 	//metaData 
 	virtual bool LoadDatabase();
 	virtual bool SaveDatabase();

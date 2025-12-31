@@ -91,6 +91,9 @@ public:
 		return m_md5Hash == dst->m_md5Hash;
 	}
 
+	//get language code 
+	virtual wxString GetLangCode() const;
+
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag);
 	virtual bool CloseDatabase(int flags = defaultFlag);

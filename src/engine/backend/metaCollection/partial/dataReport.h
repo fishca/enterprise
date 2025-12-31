@@ -31,10 +31,8 @@ protected:
 	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectReport::GetFormObject);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectReport::FillFormObject);
 
-private:
-	bool GetFormObject(CPropertyList* prop);
 public:
 
 	form_identifier_t GetDefFormObject() const {
@@ -95,7 +93,7 @@ protected:
 
 	//create empty object
 	virtual IRecordDataObjectExt* CreateObjectExtValue();  //create object 
-	
+
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
@@ -103,6 +101,21 @@ protected:
 protected:
 	friend class IMetaData;
 	friend class CRecordDataObjectReport;
+private:
+	bool FillFormObject(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormReport == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+
+		return true;
+	}
 };
 
 #define default_meta_id 10 //for reports

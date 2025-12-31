@@ -16,10 +16,23 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectConfiguration, IMetaObject);
 //*                                  MetadataObject                                       *
 //*****************************************************************************************
 
+#include "backend/metaCollection/metaLanguageObject.h"
+
+wxString CMetaObjectConfiguration::GetLangCode() const
+{
+	const CMetaObjectLanguage* language =
+		FindAnyObjectByFilter<CMetaObjectLanguage>(GetLanguage());
+
+	if (language != nullptr)
+		return language->GetCode();
+
+	return wxT("");
+}
+
 CMetaObjectConfiguration::CMetaObjectConfiguration() : IMetaObject(configurationDefaultName)
 {
 	//set default proc
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, {"cancel"});
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onStart", eContentHelper::eProcedureHelper);
 	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeExit", eContentHelper::eProcedureHelper, { "cancel" });
 	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onExit", eContentHelper::eProcedureHelper);
@@ -35,12 +48,20 @@ CMetaObjectConfiguration::~CMetaObjectConfiguration()
 bool CMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
 {
 	m_propertyVersion->SetValue(dataReader.r_s32());
+
+	m_propertyDefRole->LoadData(dataReader);
+	m_propertyDefLanguage->LoadData(dataReader);
+
 	return (*m_propertyModuleConfiguration)->LoadMeta(dataReader);
 }
 
 bool CMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 {
 	dataWritter.w_s32(m_propertyVersion->GetValueAsInteger());
+
+	m_propertyDefRole->SaveData(dataWritter);
+	m_propertyDefLanguage->SaveData(dataWritter);
+
 	return (*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
 }
 
@@ -73,6 +94,9 @@ bool CMetaObjectConfiguration::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject(flags)) {
 		return false;
 	}
+
+	if (m_propertyDefLanguage->IsEmptyProperty())
+		return false; 
 
 	return IMetaObject::OnSaveMetaObject(flags);
 }

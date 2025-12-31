@@ -106,13 +106,6 @@ public:
 #pragma endregion
 #pragma region __array_h__
 
-	//any
-	std::vector<IMetaObject*> GetAnyArrayObject(
-		std::vector<IMetaObject*>& array = std::vector<IMetaObject*>()) const {
-		FillArrayObjectByFilter<IMetaObject>(array, {});
-		return array;
-	}
-
 	//predefined 
 	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
 		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
@@ -122,12 +115,6 @@ public:
 
 #pragma endregion 
 #pragma region __filter_h__
-
-	//any 
-	template <typename _T1>
-	IMetaObject* FindAnyObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObject>(id, {});
-	}
 
 	//predefined 
 	template <typename _T1>

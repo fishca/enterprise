@@ -33,7 +33,7 @@ public:
 		CMetaObjectRecordManager() : IMetaObject() {}
 	};
 private:
-	
+
 	CMetaObjectRecordManager* m_metaRecordManager;
 
 protected:
@@ -42,16 +42,13 @@ protected:
 	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CMetaObjectInformationRegister::GetFormRecord);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectInformationRegister::GetFormList);
+	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CMetaObjectInformationRegister::FillFormRecord);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectInformationRegister::FillFormList);
 
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
 	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
 	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("writeMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
 
-private:
-	bool GetFormRecord(CPropertyList* prop);
-	bool GetFormList(CPropertyList* prop);
 public:
 
 	CMetaObjectInformationRegister();
@@ -128,21 +125,21 @@ protected:
 
 	//get default attributes
 	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
-		
+
 		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributeLineActive->GetMetaObject());
 		}
-		
+
 		if (GetPeriodicity() != ePeriodicity::eNonPeriodic ||
 			GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
 		}
-		
+
 		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributeRecorder->GetMetaObject());
 			array.emplace_back(m_propertyAttributeLineNumber->GetMetaObject());
 		}
-		
+
 		return true;
 	}
 
@@ -151,7 +148,7 @@ protected:
 		std::vector<IMetaObjectAttribute*>& array) const {
 
 		if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
-			
+
 			if (GetPeriodicity() != ePeriodicity::eNonPeriodic) {
 				array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
 			}
@@ -184,6 +181,36 @@ protected:
 	friend class IMetaData;
 	friend class CRecordSetObjectInformationRegister;
 	friend class CRecordManagerObjectInformationRegister;
+
+private:
+
+	bool FillFormRecord(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormRecord == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
+
+	bool FillFormList(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormList == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
 };
 
 //********************************************************************************************

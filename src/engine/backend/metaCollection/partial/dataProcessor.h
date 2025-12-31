@@ -32,10 +32,8 @@ protected:
 	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectDataProcessor::GetFormObject);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectDataProcessor::FillFormObject);
 
-private:
-	bool GetFormObject(CPropertyList* prop);
 public:
 
 	form_identifier_t GetDefFormObject() const {
@@ -104,6 +102,20 @@ protected:
 protected:
 	friend class IMetaData;
 	friend class CRecordDataObjectDataProcessor;
+private:
+	bool FillFormObject(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormDataProcessor == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
 };
 
 #define default_meta_id 10 //for dataProcessors

@@ -105,13 +105,16 @@ public:
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(const class_identifier_t& clsid, enum eCtorMetaType refType) const;
 	virtual std::vector<IMetaValueTypeCtor*> GetListCtorsByType(enum eCtorMetaType refType) const;
 
+	//get parent metadata 
+	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
+
 	//factory version 
 	virtual unsigned int GetFactoryCountChanges() const {
 		return m_factoryCtorCountChanges + CValue::GetFactoryCountChanges();
 	}
 
-	//get parent metadata 
-	virtual bool GetOwner(IMetaData*& metaData) const { return false; }
+	//get language code 
+	virtual wxString GetLangCode() const = 0;
 
 	//associate this metaData with 
 	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }

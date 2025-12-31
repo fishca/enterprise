@@ -218,8 +218,7 @@ public:
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		if (!m_functor->Invoke(const_cast<CPropertyList*>(this)))
-			return nullptr;
+		m_functor->Invoke(const_cast<CPropertyList*>(this));
 		return new wxPGListProperty(m_propLabel, m_propName, GetValueList(), GetValueAsInteger());
 	}
 

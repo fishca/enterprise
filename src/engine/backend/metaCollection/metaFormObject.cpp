@@ -145,27 +145,31 @@ bool CMetaObjectForm::SaveData(CMemoryWriter& writer)
 	return m_propertyForm->SaveData(writer);
 }
 
-bool CMetaObjectForm::GetFormType(CPropertyList* prop)
-{
-	IMetaObjectGenericData* metaObject = wxDynamicCast(
-		GetParent(), IMetaObjectGenericData
-	);
-	wxASSERT(metaObject);
-	prop->AppendItem(formDefaultName, defaultFormType, GetIcon());
+//***********************************************************************
 
-	CFormTypeList formList = metaObject->GetFormType();
-	for (unsigned int idx = 0; idx < formList.GetItemCount(); idx++) {
-		prop->AppendItem(
-			formList.GetItemName(idx),
-			formList.GetItemLabel(idx),
-			formList.GetItemHelp(idx),
-			formList.GetItemId(idx),
-			GetIcon(),
-			formList.GetItemName(idx)
-		);
+bool CMetaObjectForm::FillGenericFormType(CPropertyList* prop)
+{
+	const IMetaObjectGenericData* geneticObject = m_parent != nullptr ?
+		m_parent->ConvertToType<IMetaObjectGenericData>() : nullptr;
+
+	if (geneticObject != nullptr) {
+
+		CFormTypeList formList = geneticObject->GetFormType();
+		for (unsigned int idx = 0; idx < formList.GetItemCount(); idx++) {
+			prop->AppendItem(
+				formList.GetItemName(idx),
+				formList.GetItemLabel(idx),
+				formList.GetItemHelp(idx),
+				formList.GetItemId(idx),
+				GetIcon(),
+				formList.GetItemName(idx)
+			);
+		}
+
+		return true;
 	}
-	
-	return true;
+
+	return false;
 }
 
 //***********************************************************************

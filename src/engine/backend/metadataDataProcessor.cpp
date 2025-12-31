@@ -65,16 +65,16 @@ m_version(version_oes_last)
 CMetaDataDataProcessor::~CMetaDataDataProcessor()
 {
 	if (m_commonObject->IsExternalCreate()) {
-		
+
 		if (!m_moduleManager->DestroyMainModule()) {
 			wxASSERT_MSG(false, "m_moduleManager->DestroyMainModule() == false");
 		}
-		
+
 		//delete module manager
 		if (m_moduleManager != nullptr) {
 			m_moduleManager->DecrRef();
 		}
-		
+
 		//clear data 
 		if (!ClearDatabase()) {
 			wxASSERT_MSG(false, "ClearDatabase() == false");
@@ -99,9 +99,18 @@ bool CMetaDataDataProcessor::ClearDatabase()
 {
 	if (!ClearChildMetadata(m_commonObject))
 		return false;
-	
+
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////
+
+wxString CMetaDataDataProcessor::GetLangCode() const
+{
+	return activeMetaData->GetLangCode();
+}
+
+////////////////////////////////////////////////////////////////////
 
 bool CMetaDataDataProcessor::ClearChildMetadata(IMetaObject* object)
 {
@@ -121,7 +130,7 @@ bool CMetaDataDataProcessor::ClearChildMetadata(IMetaObject* object)
 		idx--;
 	}
 
-	if (object != m_commonObject) 
+	if (object != m_commonObject)
 		object->DecrRef();
 
 	return true;
@@ -180,11 +189,11 @@ bool CMetaDataDataProcessor::RunDatabase(int flags)
 bool CMetaDataDataProcessor::RunChildMetadata(IMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
-		
+
 		if (child->IsDeleted())
 			continue;
 		if (before && !child->OnBeforeRunMetaObject(flags))
@@ -221,11 +230,11 @@ bool CMetaDataDataProcessor::CloseDatabase(int flags)
 bool CMetaDataDataProcessor::CloseChildMetadata(IMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
-		
+
 		if (child->IsDeleted())
 			continue;
 		if (before && !child->OnBeforeCloseMetaObject())
@@ -479,11 +488,11 @@ bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid,
 bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* object, int flags)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
-		
+
 		CMemoryWriter writterMemory;
 		if (child->IsDeleted())
 			continue;
@@ -519,11 +528,11 @@ bool CMetaDataDataProcessor::DeleteCommonMetadata(const class_identifier_t& clsi
 bool CMetaDataDataProcessor::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
-		
+
 		auto child = object->GetChild(idx);
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
-		
+
 		if (child->IsDeleted()) {
 
 			if (!child->DeleteMetaObject(m_ownerMeta))

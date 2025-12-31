@@ -75,37 +75,6 @@ IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& strForm
 }
 #pragma endregion
 
-bool CMetaObjectEnumeration::GetFormList(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(),
-				formObject->GetMetaID(),
-				formObject->GetIcon(),
-				formObject);
-		}
-	}
-	return true;
-}
-
-bool CMetaObjectEnumeration::GetFormSelect(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormSelect == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(),
-				formObject->GetMetaID(),
-				formObject->GetIcon(),
-				formObject);
-		}
-	}
-
-	return true;
-}
-
 wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	for (auto obj : GetEnumObjectArray()) {

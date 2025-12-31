@@ -32,14 +32,12 @@ protected:
 	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectAccumulationRegister::GetFormList);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectAccumulationRegister::FillFormList);
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertyEnum<CValueEnumAccumulationRegisterType>* m_propertyRegisterType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumAccumulationRegisterType>>(m_categoryData, wxT("register_type"), _("Register type"), eRegisterType::eBalances);
 
 	CPropertyInnerAttribute<>* m_propertyAttributeRecordType = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
 
-private:
-	bool GetFormList(CPropertyList* prop);
 public:
 
 	CMetaObjectAttributePredefined* GetRegisterRecordType() const {
@@ -182,6 +180,23 @@ protected:
 
 protected:
 	friend class IMetaData;
+private:
+
+	bool FillFormList(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormList == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object
+				);
+			}
+		}
+
+		return true;
+	}
 };
 
 //********************************************************************************************

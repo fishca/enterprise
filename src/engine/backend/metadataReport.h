@@ -61,6 +61,9 @@ public:
 	virtual bool SaveDatabase();
 	virtual bool ClearDatabase();
 
+	//get language code 
+	virtual wxString GetLangCode() const;
+
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag);
 	virtual bool CloseDatabase(int flags = defaultFlag);

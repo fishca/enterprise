@@ -132,53 +132,6 @@ IBackendValueForm* CMetaObjectDocument::GetSelectForm(const wxString& strFormNam
 }
 #pragma endregion
 
-bool CMetaObjectDocument::GetFormObject(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormObject == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(),
-				formObject->GetMetaID(), 
-				formObject->GetIcon(), 
-				formObject);
-		}
-	}
-	return true;
-}
-
-bool CMetaObjectDocument::GetFormList(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(), 
-				formObject->GetMetaID(),
-				formObject->GetIcon(), 
-				formObject);
-		}
-	}
-	
-	return true;
-}
-
-bool CMetaObjectDocument::GetFormSelect(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormSelect == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(), 
-				formObject->GetMetaID(), 
-				formObject->GetIcon(), 
-				formObject);
-		}
-	}
-	
-	return true;
-}
-
 wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	CValue vDate, vNumber;

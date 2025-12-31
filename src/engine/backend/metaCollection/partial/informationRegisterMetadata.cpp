@@ -59,40 +59,6 @@ IBackendValueForm* CMetaObjectInformationRegister::GetListForm(const wxString& s
 }
 #pragma endregion
 
-/////////////////////////////////////////////////////////////////////////////
-
-bool CMetaObjectInformationRegister::GetFormRecord(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormRecord == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(), 
-				formObject->GetMetaID(), 
-				formObject->GetIcon(), 
-				formObject);
-		}
-	}
-	
-	return true;
-}
-
-bool CMetaObjectInformationRegister::GetFormList(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormList == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(), 
-				formObject->GetMetaID(), 
-				formObject->GetIcon(),
-				formObject);
-		}
-	}
-	
-	return true;
-}
-
 //***************************************************************************
 //*								form record								    *
 //***************************************************************************

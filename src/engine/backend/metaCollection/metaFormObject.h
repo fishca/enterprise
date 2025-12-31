@@ -74,14 +74,12 @@ private:
 	friend class IListDataObject;
 	friend class IRecordDataObject;
 
-private:
-	bool GetFormType(CPropertyList* prop);
 protected:
 
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::GetFormType, wxNOT_FOUND);
+	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::FillFormType);
 
 public:
 
@@ -133,6 +131,14 @@ protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	bool FillGenericFormType(CPropertyList* prop);
+	bool FillFormType(CPropertyList* prop) {
+		prop->AppendItem(formDefaultName, defaultFormType, GetIcon());
+		return FillGenericFormType(prop);
+	}
 };
 
 class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {

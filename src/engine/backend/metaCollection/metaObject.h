@@ -310,17 +310,6 @@ public:
 		return true;
 	}
 
-	//find child by guid 
-	IMetaObject* FindChildByGuid(const CGuid& guid) const {
-
-		for (const auto object : m_children) {
-			if (object->CompareGuid(guid))
-				return object;
-		}
-
-		return nullptr;
-	}
-
 	//methods 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
@@ -401,6 +390,27 @@ public:
 	//copy & paste object 
 	bool CopyObject(CMemoryWriter& writer) const;
 	bool PasteObject(CMemoryReader& reader);
+
+#pragma region __array_h__
+
+	//any
+	template <typename _T1 = IMetaObject>
+	std::vector<_T1*> GetAnyArrayObject(
+		std::vector<_T1*>& array = std::vector<_T1*>()) const {
+		FillArrayObjectByFilter<_T1>(array, {});
+		return array;
+	}
+
+#pragma endregion 
+#pragma region __filter_h__
+
+	//any 
+	template <typename _T1 = IMetaObject, typename _T2>
+	_T1* FindAnyObjectByFilter(const _T2& id) const {
+		return FindObjectByFilter<_T1>(id, {});
+	}
+
+#pragma endregion 
 
 protected:
 

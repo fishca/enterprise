@@ -28,7 +28,7 @@ private:
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("formObject"), _("Form object"), eFormObject);
+		formList.AppendItem(wxT("object"), _("Form object"), eFormObject);
 		formList.AppendItem(wxT("formFolder"), _("Form group"), eFormFolder);
 		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
 		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
@@ -43,11 +43,11 @@ protected:
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
 
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectCatalog::GetFormObject, wxNOT_FOUND);
-	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolder"), _("Default Folder Form"), &CMetaObjectCatalog::GetFormFolder, wxNOT_FOUND);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectCatalog::GetFormList, wxNOT_FOUND);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CMetaObjectCatalog::GetFormSelect, wxNOT_FOUND);
-	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolderSelect"), _("Default Folder Select Form"), &CMetaObjectCatalog::GetFormFolderSelect, wxNOT_FOUND);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectCatalog::FillFormObject);
+	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolder"), _("Default Folder Form"), &CMetaObjectCatalog::FillFormFolder);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectCatalog::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CMetaObjectCatalog::FillFormSelect);
+	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolderSelect"), _("Default Folder Select Form"), &CMetaObjectCatalog::FillFormFolderSelect);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("listOwner"), _("List owner"));
@@ -56,12 +56,6 @@ protected:
 	//CMetaObjectAttributePredefined* m_attributeOwner = IMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item);
 	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
-private:
-	bool GetFormObject(CPropertyList* prop);
-	bool GetFormFolder(CPropertyList* prop);
-	bool GetFormList(CPropertyList* prop);
-	bool GetFormSelect(CPropertyList* prop);
-	bool GetFormFolderSelect(CPropertyList* prop);
 public:
 
 	CMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
@@ -185,6 +179,78 @@ protected:
 
 	friend class IMetaData;
 	friend class CRecordDataObjectCatalog;
+
+private:
+
+	bool FillFormObject(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormObject == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
+
+	bool FillFormFolder(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormFolder == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
+
+	bool FillFormList(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormList == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
+
+	bool FillFormSelect(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormSelect == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
+
+	bool FillFormFolderSelect(CPropertyList* prop) {
+		for (auto object : GetFormArrayObject()) {
+			if (!object->IsAllowed()) continue;
+			if (eFormFolderSelect == object->GetTypeForm()) {
+				prop->AppendItem(
+					object->GetName(),
+					object->GetMetaID(),
+					object->GetIcon(),
+					object);
+			}
+		}
+		return true;
+	}
 };
 
 //********************************************************************************************

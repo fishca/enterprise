@@ -33,8 +33,8 @@ protected:
 	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("configurationModule"), _("Configuration module")));
 
 	CPropertyCategory* m_propertyPresetValues = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultRole"), _("Default role"), _("Default configuration role"), &CMetaObjectConfiguration::GetRoleList);
-	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultLanguage"), _("Default language"), _("Default configuration language"), &CMetaObjectConfiguration::GetLanguageList);
+	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultRole"), _("Default role"), _("Default configuration role"), &CMetaObjectConfiguration::FillRoleList);
+	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultLanguage"), _("Default language"), _("Default configuration language"), &CMetaObjectConfiguration::FillLanguageList);
 
 	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("compatibility"), _("Compatibility"));
 	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("version"), _("Version"), version_oes_last);
@@ -67,6 +67,15 @@ public:
 
 	void SetVersion(const version_identifier_t& version) { m_propertyVersion->SetValue(static_cast<eProgramVersion>(version)); }
 	version_identifier_t GetVersion() const { return m_propertyVersion->GetValueAsInteger(); }
+
+	void SetLanguage(const meta_identifier_t& id) { m_propertyDefLanguage->SetValue(id); }
+	meta_identifier_t GetLanguage() const { return m_propertyDefLanguage->GetValueAsInteger(); }
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+	wxString GetLangCode() const;
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
 
 	CMetaObjectConfiguration();
 	virtual ~CMetaObjectConfiguration();
@@ -107,14 +116,34 @@ protected:
 
 private:
 
-	bool GetRoleList(CPropertyList* prop) {
-		prop->AppendItem(wxT("test"), 1, wxNullBitmap);
-		return true;
+	bool FillRoleList(CPropertyList* prop) {
+		std::vector<IMetaObject*> array;			
+		if (FillArrayObjectByFilter(array, { g_metaRoleCLSID })) {
+			for (const auto child : array) {
+				prop->AppendItem(
+					child->GetName(), 
+					child->GetMetaID(), 
+					child->GetIcon(),
+					child);
+			}
+			return true;
+		}	
+		return false;
 	}
 
-	bool GetLanguageList(CPropertyList* prop) {
-		prop->AppendItem(wxT("test"), 1, wxNullBitmap);
-		return true;
+	bool FillLanguageList(CPropertyList* prop) {
+		std::vector<IMetaObject*> array;
+		if (FillArrayObjectByFilter(array, { g_metaLanguageCLSID })) {
+			for (const auto child : array) {
+				prop->AppendItem(
+					child->GetName(),
+					child->GetMetaID(),
+					child->GetIcon(),
+					child);
+			}
+			return true;
+		}
+		return false;
 	}
 };
 

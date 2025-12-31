@@ -82,6 +82,8 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 		commonLanguage->PrepareNames();
 		commonLanguage->IncrRef();
+
+		m_commonObject->SetLanguage(commonLanguage->GetMetaID());
 	}
 
 	wxASSERT(m_moduleManager);
@@ -100,6 +102,18 @@ CMetaDataConfigurationFile::~CMetaDataConfigurationFile()
 	//delete common metaObject
 	wxDELETE(m_commonObject);
 }
+
+////////////////////////////////////////////////////////////////////
+
+wxString CMetaDataConfigurationFile::GetLangCode() const
+{
+	if (m_commonObject != nullptr)
+		return m_commonObject->GetLangCode();
+	
+	return wxT("");
+}
+
+////////////////////////////////////////////////////////////////////
 
 bool CMetaDataConfigurationFile::RunDatabase(int flags)
 {

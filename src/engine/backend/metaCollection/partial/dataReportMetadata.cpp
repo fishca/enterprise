@@ -91,22 +91,6 @@ IBackendValueForm* CMetaObjectReport::GetObjectForm(const wxString& strFormName,
 }
 #pragma endregion
 
-bool CMetaObjectReport::GetFormObject(CPropertyList* prop)
-{
-	for (auto formObject : GetFormArrayObject()) {
-		if (!formObject->IsAllowed()) continue;
-		if (eFormReport == formObject->GetTypeForm()) {
-			prop->AppendItem(
-				formObject->GetName(), 
-				formObject->GetMetaID(), 
-				formObject->GetIcon(),
-				formObject);
-		}
-	}
-
-	return true; 
-}
-
 //***************************************************************************
 //*                       Save & load metaData                              *
 //***************************************************************************

@@ -56,7 +56,7 @@ void IValueWindow::UpdateWindow(wxWindow* window)
 	window->Show(m_propertyVisible->GetValueAsBoolean());
 
 	// Tooltip
-	window->SetToolTip(m_propertyTooltip->GetValueAsString());
+	window->SetToolTip(m_propertyTooltip->GetValueAsTranslateString());
 
 	//after lay out 
 	if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize ||

@@ -67,7 +67,7 @@ bool CValueCheckbox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 wxString CValueCheckbox::GetControlCaption() const
 {
 	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsString();
+		return m_propertyCaption->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();

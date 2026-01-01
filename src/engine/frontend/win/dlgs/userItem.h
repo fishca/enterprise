@@ -23,14 +23,34 @@
 
 #include "backend/backend_core.h"
 
-#include "frontend/win/theme/luna_tabart.h"
-#include "frontend/win/theme/luna_dockart.h"
+class CDialogUserItem : public wxDialog {
 
-class CUserWnd : public wxDialog
-{
+	struct CDataUserLanguageItem {
+		wxString m_strLanguageGuid;
+		wxString m_strLanguageCode;
+	};
+
+public:
+
+	bool ReadUserData(const CGuid& userGuid, bool copy = false);
+
+	CDialogUserItem(wxWindow* parent, wxWindowID id = wxID_ANY,
+		const wxString& title = _("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+	
+protected:
+
+	// Virtual event handlers, overide them in your derived class
+	virtual void OnPasswordText(wxCommandEvent& event);
+	virtual void OnOKButtonClick(wxCommandEvent& event);
+	virtual void OnCancelButtonClick(wxCommandEvent& event);
+
+private:
+
 	bool m_bInitialized;
 
-	wxString md5Password;
+	wxString m_strUserPassword;
+
+	std::map<int, CDataUserLanguageItem> m_languageArray;
 
 	wxAuiNotebook* m_mainNotebook;
 	wxPanel* m_main;
@@ -47,26 +67,11 @@ class CUserWnd : public wxDialog
 	wxButton* m_bottomCancel;
 
 	wxStaticText* m_staticRole;
-	wxStaticText* m_staticInterface;
+	wxStaticText* m_staticLanguage;
 	wxChoice* m_choiceRole;
-	wxChoice* m_choiceInterface;
+	wxChoice* m_choiceLanguage;
 
-	CGuid m_userGuid; 
-
-private:
-
-	// Virtual event handlers, overide them in your derived class
-	virtual void OnPasswordText(wxCommandEvent& event);
-	virtual void OnOKButtonClick(wxCommandEvent& event);
-	virtual void OnCancelButtonClick(wxCommandEvent& event); 
-
-public:
-
-	bool ReadUserData(const CGuid &guid, bool copy = false);
-
-	CUserWnd(wxWindow* parent, wxWindowID id = wxID_ANY, 
-		const wxString& title = wxT("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	virtual ~CUserWnd();
+	CGuid m_userGuid;
 };
 
 #endif 

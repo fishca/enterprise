@@ -7,18 +7,18 @@
 class BACKEND_API IPropertyString : public IProperty {
 public:
 
+	wxString GetValueAsString() const {
+		wxString result;
+		GetValueAsString(result);
+		return result;
+	}
+
 	bool GetValueAsString(wxString& result) const {
 		if (!m_propValue.IsNull())
 			return m_propValue.GetData()->Write(result);
 		return false;
 	}
 
-	wxString GetValueAsString() const {
-		wxString result;
-		GetValueAsString(result);
-		return result;
-	}
-	
 	void SetValue(const wxString& strValue) { m_propValue = strValue; }
 
 	IPropertyString(CPropertyCategory* cat, const wxString& name,
@@ -73,20 +73,20 @@ public:
 };
 
 //base property for "general" - unique name 
-class CPropertyName : public IPropertyString {
+class CPropertyUString : public IPropertyString {
 public:
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name,
+	CPropertyUString(CPropertyCategory* cat, const wxString& name,
 		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label,
+	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label,
 		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	CPropertyName(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
 		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}
@@ -97,46 +97,64 @@ public:
 	}
 };
 
-//base property for "caption" - for translate, descr 
-class CPropertyCaption : public IPropertyString {
+//base property for "caption" - for translate 
+class CPropertyTString : public IPropertyString {
 public:
 
-	CPropertyCaption(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IPropertyString(cat, name, value)
+	wxString GetValueAsTranslateString() const {
+		wxString result;
+		GetValueAsTranslateString(result);
+		return result;
+	}
+
+	bool CPropertyTString::GetValueAsTranslateString(wxString& result) const {
+		if (GetValueAsString(result))
+			return CBackendLocalization::GetTranslateGetRawLocText(result, result);
+		return false;
+	}
+
+	CPropertyTString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : IPropertyString(cat, name, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	CPropertyCaption(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IPropertyString(cat, name, label, value)
+	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : IPropertyString(cat, name, label, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	CPropertyCaption(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
+	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : IPropertyString(cat, name, label, helpString, CBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
+
+	virtual bool IsEmptyProperty() const { return GetValueAsTranslateString().IsEmpty(); }
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		return new wxCaptionStringProperty(m_owner, m_propLabel, m_propName, GetValueAsString());
+		return new wxTranslateStringProperty(m_owner, m_propLabel, m_propName, GetValueAsString());
 	}
+
+	// set/get property data
+	virtual bool SetDataValue(const CValue& varPropVal);
+	virtual bool GetDataValue(CValue& pvarPropVal) const;
 };
 
 //base property for "text"
-class CPropertyText : public IPropertyString {
+class CPropertyMString : public IPropertyString {
 public:
 
-	CPropertyText(CPropertyCategory* cat, const wxString& name,
+	CPropertyMString(CPropertyCategory* cat, const wxString& name,
 		const wxString& value) : IPropertyString(cat, name, value)
 	{
 	}
 
-	CPropertyText(CPropertyCategory* cat, const wxString& name, const wxString& label,
+	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label,
 		const wxString& value) : IPropertyString(cat, name, label, value)
 	{
 	}
 
-	CPropertyText(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
 		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
 	{
 	}

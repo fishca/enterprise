@@ -13,7 +13,7 @@ CValueButton::CValueButton() : IValueWindow()
 
 wxObject* CValueButton::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxButton* wxbutton = new wxButton(wxparent, wxID_ANY, m_propertyCaption->GetValueAsString());
+	wxButton* wxbutton = new wxButton(wxparent, wxID_ANY, m_propertyCaption->GetValueAsTranslateString());
 	//setup event 
 	wxbutton->Bind(wxEVT_BUTTON, &CValueButton::OnButtonPressed, this);
 	return wxbutton;
@@ -30,11 +30,11 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 	if (button != nullptr) {
 
 		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
-			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
-			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
@@ -42,7 +42,7 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
-			button->SetLabel(m_propertyCaption->GetValueAsString());
+			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
 			button->SetBitmap(wxNullBitmap);
 		}
 	}

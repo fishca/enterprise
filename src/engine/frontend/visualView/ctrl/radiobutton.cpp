@@ -15,7 +15,7 @@ CValueRadioButton::CValueRadioButton() : IValueWindow()
 wxObject* CValueRadioButton::Create(wxWindow* wxparent, IVisualHost *visualHost) 
 {
 	wxRadioButton *radioButton = new wxRadioButton(wxparent, wxID_ANY,
-		m_propertyCaption->GetValueAsString(),
+		m_propertyCaption->GetValueAsTranslateString(),
 		wxDefaultPosition,
 		wxDefaultSize);
 
@@ -31,7 +31,7 @@ void CValueRadioButton::Update(wxObject* wxobject, IVisualHost *visualHost)
 	wxRadioButton *radioButton = dynamic_cast<wxRadioButton *>(wxobject);
 
 	if (radioButton != nullptr) {
-		radioButton->SetLabel(m_propertyCaption->GetValueAsString());
+		radioButton->SetLabel(m_propertyCaption->GetValueAsTranslateString());
 		radioButton->SetValue(m_propertySelected->GetValueAsBoolean() != false);
 	}
 

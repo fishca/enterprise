@@ -15,7 +15,7 @@ CValueStaticText::CValueStaticText() : IValueWindow()
 wxObject* CValueStaticText::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxStaticText* staticText = new wxStaticText(wxparent, wxID_ANY,
-		m_propertyCaption->GetValueAsString(),
+		m_propertyCaption->GetValueAsTranslateString(),
 		wxDefaultPosition,
 		wxDefaultSize);
 
@@ -31,10 +31,12 @@ void CValueStaticText::Update(wxObject* wxobject, IVisualHost* visualHost)
 	wxStaticText* staticText = dynamic_cast<wxStaticText*>(wxobject);
 
 	if (staticText != nullptr) {
-		staticText->SetLabel(m_propertyCaption->GetValueAsString());
+			
+		staticText->SetLabel(m_propertyCaption->GetValueAsTranslateString());
 		staticText->Wrap(m_propertyWrap->GetValueAsUInteger());
+		
 		if (m_propertyMarkup->GetValueAsBoolean() != false) {
-			staticText->SetLabelMarkup(m_propertyCaption->GetValueAsString());
+			staticText->SetLabelMarkup(m_propertyCaption->GetValueAsTranslateString());
 		}
 	}
 

@@ -174,11 +174,11 @@ class CValueStaticBoxSizer : public IValueSizer {
 	wxDECLARE_DYNAMIC_CLASS(CValueStaticBoxSizer);
 protected:
 	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("Orient"), wxHORIZONTAL);
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categorySizer, wxT("caption"), _("Caption"), wxEmptyString);
+	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categorySizer, wxT("caption"), _("Caption"), wxT(""));
 	CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categorySizer, wxT("font"), _("Font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
 	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("fg"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
 	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("bg"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
-	CPropertyString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxEmptyString);
+	CPropertyString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxT(""));
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("contextMenu"), _("Context menu"), _("Generates event handler for displaying of menu assigned to this widgets as a context menu."));
 	CPropertyString* m_propertyContextHelp = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("contextHelp"), _("Context help"), _("Attach context-sensitive help to the window. Note: The Project's &quot;help_provider&quot; property must be set for context-sensitive help to work."), wxEmptyString);
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
@@ -188,9 +188,7 @@ public:
 	CValueStaticBoxSizer();
 
 	//get caption 
-	virtual wxString GetControlCaption() const {
-		return m_propertyCaption->GetValue();
-	}
+	virtual wxString GetControlCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
 
 	//control factory
 	virtual wxObject* Create(wxWindow* parent, IVisualHost* visualHost) override;

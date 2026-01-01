@@ -24,7 +24,7 @@ class CEnterpriseApp : public wxApp {
 	wxString m_strIBPassword;
 
 	//LOCALE
-	wxString m_strLocale;
+	wxString m_strLocale = wxT("en");
 
 public:
 	virtual bool OnInit();

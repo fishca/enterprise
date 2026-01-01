@@ -268,6 +268,10 @@ bool CApplicationData::InitLocale(const wxString& locale)
 		// Initialize the catalogs we'll be using.
 		m_locale.AddCatalog(wxT("open_es"));
 
+		// Initialize localization engine 
+		CBackendLocalization::SetUserLanguage(m_locale.GetName());
+
+		//Set default time 
 		wxDateTime::SetCountry(wxDateTime::Country::Country_Default);
 		return true;
 	}
@@ -275,12 +279,12 @@ bool CApplicationData::InitLocale(const wxString& locale)
 	return false;
 }
 
-bool CApplicationData::Connect(const wxString& user, const wxString& password, const int flags)
+bool CApplicationData::Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags)
 {
 	if (m_created_metadata)
 		return false;
-	if (!StartSession(user, password))
-		return false;  //start session	 
+	if (!StartSession(strUserName, strUserPassword))
+		return false;  //start session
 	if (!metaDataCreate(m_runMode, flags))
 		return false;
 	m_created_metadata = true;
@@ -317,82 +321,44 @@ bool CApplicationData::Disconnect()
 #pragma region execute 
 long CApplicationData::RunApplication(const wxString& strAppName, bool searchDebug) const
 {
-	wxString executeCmd = strAppName + " ";
-
-	if (m_strFile.IsEmpty()) {
-		if (!m_strServer.IsEmpty())
-			executeCmd += wxT(" /srv ") + m_strServer;
-		if (!m_strPort.IsEmpty())
-			executeCmd += wxT(" /p ") + m_strPort;
-		if (!m_strDatabase.IsEmpty())
-			executeCmd += wxT(" /db ") + m_strDatabase;
-		if (!m_strUser.IsEmpty())
-			executeCmd += wxT(" /usr ") + m_strUser;
-		if (!m_strPassword.IsEmpty())
-			executeCmd += wxT(" /pwd ") + m_strPassword;
-	}
-	else {
-		executeCmd += wxT(" /file ") + m_strFile;
-	}
-
-	if (searchDebug)
-		executeCmd += wxT(" /debug");
-	if (!m_strUserIB.IsEmpty())
-		executeCmd += wxT(" /ib_usr ") + m_strUserIB;
-	if (!m_strPasswordIB.IsEmpty())
-		executeCmd += wxT(" /ib_pwd ") + m_strPasswordIB;
-
-	const long execute = wxExecute(executeCmd);
-
-	if (searchDebug) {
-
-		unsigned short num_attempts = 0;
-
-		debugClient->SearchServer(true);
-		while (debugClient != nullptr) {
-
-			if (debugClient->GetConnectionSuccess())
-				break;
-
-			if (num_attempts > 300)
-				break;
-
-			num_attempts++;
-			wxMilliSleep(5);
-		}
-	}
-
-	return execute;
+	return RunApplication(strAppName,
+		m_userInfo.m_strUserName,
+		m_userInfo.m_strUserPassword,
+		searchDebug
+	);
 }
 
-long CApplicationData::RunApplication(const wxString& strAppName, const wxString& user, const wxString& password, bool searchDebug) const
+long CApplicationData::RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug) const
 {
-	wxString executeCmd = strAppName + " ";
+	wxString executeCmd = strAppName + wxT(' ');
 
 	if (m_strFile.IsEmpty()) {
 
 		if (!m_strServer.IsEmpty())
-			executeCmd += wxT(" /srv ") + m_strServer;
+			executeCmd += wxString::Format(wxT(" /srv %s"), m_strServer);
 		if (!m_strPort.IsEmpty())
-			executeCmd += wxT(" /p ") + m_strPort;
+			executeCmd += wxString::Format(wxT(" /p %s"), m_strPort);
 		if (!m_strDatabase.IsEmpty())
-			executeCmd += wxT(" /db ") + m_strDatabase;
+			executeCmd += wxString::Format(wxT(" /db %s"), m_strDatabase);
 		if (!m_strUser.IsEmpty())
-			executeCmd += wxT(" /usr ") + m_strUser;
+			executeCmd += wxString::Format(wxT(" /usr %s"), m_strUser);
 		if (!m_strPassword.IsEmpty())
-			executeCmd += wxT(" /pwd ") + m_strPassword;
+			executeCmd += wxString::Format(wxT(" /pwd %s"), m_strPassword);
 	}
 	else {
-		executeCmd += wxT(" /file ") + m_strFile;
+		executeCmd += wxString::Format(wxT(" /file %s"), m_strFile);
 	}
 
 	if (searchDebug)
-		executeCmd += wxT(" /debug");
+		executeCmd += wxString::Format(wxT(" /debug"));
 
-	if (!user.IsEmpty())
-		executeCmd += wxT(" /ib_usr ") + user;
-	if (!password.IsEmpty())
-		executeCmd += wxT(" /ib_pwd ") + password;
+	if (!strUserName.IsEmpty())
+		executeCmd += wxString::Format(wxT(" /ib_usr %s"), strUserName);
+
+	if (!strUserPassword.IsEmpty())
+		executeCmd += wxString::Format(wxT(" /ib_pwd %s"), strUserPassword);
+
+	executeCmd += wxString::Format(wxT(" /lc %s"), m_locale.GetName());
 
 	const long execute = wxExecute(executeCmd);
 
@@ -416,7 +382,86 @@ long CApplicationData::RunApplication(const wxString& strAppName, const wxString
 
 	return execute;
 }
+
 #pragma endregion
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool CApplicationData::AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword)
+{
+	if (!strUserName.IsEmpty() || HasAllowedUser()) {
+		m_userInfo = ReadUserData(strUserName);
+		return m_userInfo.IsOk() &&
+			m_userInfo.m_strUserPassword == CApplicationData::ComputeMd5(strUserPassword);
+	}
+
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void CApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryReader reader(buffer);
+
+	userInfo.m_strUserGuid = reader.r_stringZ();
+	userInfo.m_strUserName = reader.r_stringZ();
+	userInfo.m_strUserFullName = reader.r_stringZ();
+	userInfo.m_strUserPassword = reader.r_stringZ();
+}
+
+void CApplicationData::ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryReader reader(buffer);
+
+	unsigned int count = reader.r_u32();
+	userInfo.m_roleArray.reserve(count);
+	for (unsigned int idx = 0; idx < count; idx++) {
+		CApplicationDataUserInfo::CApplicationDataUserRole entry;
+		entry.m_strRoleGuid = reader.r_stringZ();
+		entry.m_roleId = reader.r_s32();
+		userInfo.m_roleArray.emplace_back(std::move(entry));
+	}
+}
+
+void CApplicationData::ReadUserData_Language(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryReader reader(buffer);
+	userInfo.m_strLanguageGuid = reader.r_stringZ();
+	userInfo.m_strLanguageCode = reader.r_stringZ();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+wxMemoryBuffer CApplicationData::SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryWriter writter;
+	writter.w_stringZ(userInfo.m_strUserGuid);
+	writter.w_stringZ(userInfo.m_strUserName);
+	writter.w_stringZ(userInfo.m_strUserFullName);
+	writter.w_stringZ(userInfo.m_strUserPassword);
+	return writter.buffer();
+}
+
+wxMemoryBuffer CApplicationData::SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryWriter writter;
+	writter.w_u32(userInfo.m_roleArray.size());
+	for (const auto role : userInfo.m_roleArray) {
+		writter.w_stringZ(role.m_strRoleGuid);
+		writter.w_s32(role.m_roleId);
+	}
+	return writter.buffer();
+}
+
+wxMemoryBuffer CApplicationData::SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const
+{
+	CMemoryWriter writter;
+	writter.w_stringZ(userInfo.m_strLanguageGuid);
+	writter.w_stringZ(userInfo.m_strLanguageCode);
+	return writter.buffer();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <backend/utils/wxmd5.hpp>

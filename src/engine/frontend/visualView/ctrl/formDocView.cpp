@@ -394,7 +394,7 @@ wxString CValueForm::GetControlCaption() const
 		if (metaForm != nullptr) return metaForm->GetSynonym();
 	}
 
-	return m_propertyCaption->GetValueAsString();
+	return m_propertyCaption->GetValueAsTranslateString();
 }
 
 //////////////////////////////////////////////////////////////

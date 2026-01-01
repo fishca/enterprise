@@ -125,6 +125,7 @@
     <ClInclude Include="fileSystem\quicklz\quicklz.h" />
     <ClInclude Include="fileSystem\types.h" />
     <ClInclude Include="guid.h" />
+    <ClInclude Include="backend_localization.h" />
     <ClInclude Include="metaCollection\metaLanguageObject.h" />
     <ClInclude Include="metaCollection\metaPictureObject.h" />
     <ClInclude Include="pictureDescription.h" />
@@ -268,9 +269,11 @@
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
+    <ClCompile Include="backend_localization.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject_res.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject.cpp" />
+    <ClCompile Include="metaCollection\metaObjectMetadataProperty.cpp" />
     <ClCompile Include="metaCollection\metaPictureObject.cpp" />
     <ClCompile Include="metaCollection\metaPictureObject_res.cpp" />
     <ClCompile Include="pictureDescription.cpp" />
@@ -508,6 +511,7 @@
     <ClCompile Include="propertyManager\property\propertySize.cpp" />
     <ClCompile Include="propertyManager\property\propertySource.cpp" />
     <ClCompile Include="propertyManager\property\propertyString.cpp" />
+    <ClCompile Include="propertyManager\property\propertyStringExt.cpp" />
     <ClCompile Include="propertyManager\property\propertyTemplate.cpp" />
     <ClCompile Include="propertyManager\property\propertyType.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantAction.cpp" />

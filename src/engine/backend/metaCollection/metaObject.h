@@ -2,8 +2,9 @@
 #define __META_OBJECT_H__
 
 #include "backend/propertyManager/propertyManager.h"
-#include "backend/metaCtor.h"
+
 #include "backend/backend_metatree.h"
+#include "backend/metaCtor.h"
 
 #include "backend/interfaceHelper.h"
 #include "backend/roleHelper.h"
@@ -163,8 +164,8 @@ class BACKEND_API IMetaObject :
 protected:
 
 	CPropertyCategory* m_categoryCommon = IPropertyObject::CreatePropertyCategory(wxT("common"), _("Common"));
-	CPropertyName* m_propertyName = IPropertyObject::CreateProperty<CPropertyName>(m_categoryCommon, wxT("name"), _("Name"), _("Name of metadata object"), wxEmptyString);
-	CPropertyCaption* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryCommon, wxT("synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("name"), _("Name"), _("Name of metadata object"), wxEmptyString);
+	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
 	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("Comment"), _("Comment"), wxEmptyString);
 
 	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("Secondary"));
@@ -183,7 +184,10 @@ public:
 	wxString GetName() const { return m_propertyName->GetValueAsString(); }
 	void SetName(const wxString& strName) { m_propertyName->SetValue(strName); }
 
-	wxString GetSynonym() const { return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) : m_propertySynonym->GetValueAsString(); }
+	wxString GetSynonym() const {
+		return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) :
+			m_propertySynonym->GetValueAsTranslateString();
+	}
 	void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
 
 	wxString GetComment() const { return m_propertyComment->GetValueAsString(); }
@@ -488,6 +492,9 @@ protected:
 		const std::initializer_list<class_identifier_t> filter,
 		const bool use_child_filter = false) const
 	{
+		if (name.IsEmpty())
+			return nullptr;
+
 		for (auto& child : m_children) {
 
 			if (child->IsDeleted())
@@ -532,6 +539,9 @@ protected:
 		const std::initializer_list<class_identifier_t> filter,
 		const bool use_child_filter = false) const
 	{
+		if (id <= 0)
+			return nullptr;
+
 		for (auto& child : m_children) {
 
 			if (child->IsDeleted())
@@ -576,6 +586,9 @@ protected:
 		const std::initializer_list<class_identifier_t> filter,
 		const bool use_child_filter = false) const
 	{
+		if (!id.isValid())
+			return nullptr;
+
 		for (auto& child : m_children) {
 
 			if (child->IsDeleted())

@@ -75,6 +75,35 @@ private:
 };
 #pragma endregion
 
+#pragma region user
+struct CApplicationDataUserInfo {
+
+	struct CApplicationDataUserRole {
+		wxString m_strRoleGuid;
+		meta_identifier_t m_roleId = wxNOT_FOUND;
+	};
+
+	bool IsOk() const { return !m_strUserGuid.IsEmpty(); }
+
+	bool IsSetPassword() const { return !m_strUserName.IsEmpty() && !m_strUserPassword.IsEmpty(); }
+	bool IsSetRole() const { return m_roleArray.size() > 0; }
+	bool IsSetLanguage() const { return !m_strLanguageGuid.IsEmpty() && !m_strLanguageCode.IsEmpty(); }
+
+	//User info 
+	wxString m_strUserGuid;
+	wxString m_strUserName;
+	wxString m_strUserFullName;
+	wxString m_strUserPassword;
+
+	//Role info 
+	std::vector<CApplicationDataUserRole> m_roleArray;
+
+	//Language info 
+	wxString m_strLanguageGuid;
+	wxString m_strLanguageCode;
+};
+#pragma endregion
+
 // This class is a singleton class.
 class BACKEND_API CApplicationData {
 
@@ -145,7 +174,7 @@ public:
 	// Initialize application
 	bool InitLocale(const wxString& locale = wxT(""));
 
-	bool Connect(const wxString& user, const wxString& password, const int flags = _app_start_default_flag);
+	bool Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags = _app_start_default_flag);
 	bool Disconnect();
 
 	static std::shared_ptr<IDatabaseLayer> GetDatabaseLayer() {
@@ -156,7 +185,7 @@ public:
 
 #pragma region execute 
 	long RunApplication(const wxString& strAppName, bool searchDebug = true) const;
-	long RunApplication(const wxString& strAppName, const wxString& user, const wxString& password, bool searchDebug = true) const;
+	long RunApplication(const wxString& strAppName, const wxString& strUserName, const wxString& strUserPassword, bool searchDebug = true) const;
 #pragma endregion
 
 	eRunMode GetAppMode() const { return m_runMode; }
@@ -178,18 +207,35 @@ public:
 		return wxEmptyString;
 	}
 
-	bool AuthenticationAndSetUser(const wxString& userName, const wxString& md5Password);
+	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
 
 	bool ExclusiveMode() const { return m_exclusiveMode; }
-	const wxString& GetUserName() const { return m_strUserIB; }
-	const wxString& GetUserPassword() const { return m_strPasswordIB; }
+
+	const wxString& GetUserName() const { return m_userInfo.m_strUserName; }
+	const wxString& GetUserPassword() const { return m_userInfo.m_strUserFullName; }
 	wxString GetComputerName() const { return m_strComputer; }
+	wxDateTime GetStartedDate() const { return m_startedDate; }
+
 	wxArrayString GetAllowedUser() const;
 
 #pragma region session  
+
 	const CApplicationDataSessionArray GetSessionArray() const {
 		return m_sessionUpdater->GetSessionArray();
 	}
+
+#pragma endregion 
+
+#pragma region language  
+
+	CGuid GetUserLanguageGuid() const {
+		return m_userInfo.m_strLanguageGuid;
+	}
+
+	wxString GetUserLanguageCode() const {
+		return m_userInfo.m_strLanguageCode;
+	}
+
 #pragma endregion 
 
 	static bool IsForceExit() {
@@ -209,13 +255,26 @@ public:
 		}
 	}
 
+#pragma region user  
+	CApplicationDataUserInfo ReadUserData(const CGuid& userGuid) const;
+	CApplicationDataUserInfo ReadUserData(const wxString& userName) const;
+	bool SaveUserData(const CApplicationDataUserInfo& userInfo) const;
+#pragma endregion
+
 private:
 	bool HasAllowedUser() const;
-	bool AuthenticationUser(const wxString& userName, const wxString& md5Password) const;
 	bool StartSession(const wxString& userName, const wxString& md5Password);
 	bool CloseSession();
 private:
-	wxString ComputeMd5() const { return ComputeMd5(m_strPasswordIB); }
+	void ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
+	void ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
+	void ReadUserData_Language(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
+private:
+	wxMemoryBuffer SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const;
+	wxMemoryBuffer SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const;
+	wxMemoryBuffer SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const;
+private:
+	wxString ComputeMd5() const { return ComputeMd5(m_userInfo.m_strUserPassword); }
 	wxString ComputeMd5(const wxString& userPassword) const;
 private:
 	static bool TableAlreadyCreated();
@@ -228,11 +287,12 @@ private:
 	static CApplicationData* s_instance;
 
 	eRunMode m_runMode;
-	wxString m_strUserIB, m_strPasswordIB;
 	wxString m_strComputer;
 	wxDateTime m_startedDate;
 	wxDateTime m_lastActivity;
 	CGuid m_sessionGuid;
+
+	CApplicationDataUserInfo m_userInfo;
 
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;

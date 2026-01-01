@@ -1,96 +1,63 @@
 #include "userItem.h"
 
-#include <wx/base64.h>
-
-#include "backend/databaseLayer/databaseLayer.h"
-#include "backend/metadataConfiguration.h"
-#include "backend/utils/wxmd5.hpp"
-
-void CUserWnd::OnPasswordText(wxCommandEvent& event)
-{
-	if (m_bInitialized) {
-		wxString newPassword = m_textPassword->GetValue();
-		if (!newPassword.IsEmpty()) {
-			md5Password = wxMD5::ComputeMd5(newPassword);
-		}
-		else {
-			md5Password = wxEmptyString;
-		}
-	}
-	event.Skip();
-}
+#include "frontend/win/theme/luna_tabart.h"
+#include "frontend/win/theme/luna_dockart.h"
 
 #include "backend/appData.h"
+#include "backend/utils/wxmd5.hpp"
 
-void CUserWnd::OnOKButtonClick(wxCommandEvent& event)
+#include "backend/metadataConfiguration.h"
+
+bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
 {
-	if (m_textName->IsEmpty()) {
-		return;
-	}
+	if (m_userGuid.isValid())
+		return false;
 
-	IPreparedStatement* prepStatement = nullptr;
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-		prepStatement = db_query->PrepareStatement("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; ", user_table);
-	else 
-		prepStatement = db_query->PrepareStatement("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);", user_table);
+	const CApplicationDataUserInfo& userInfo = appData->ReadUserData(userGuid);
+	if (userInfo.IsOk()) {
 
-	if (prepStatement != nullptr) {
-		if (!m_userGuid.isValid()) {
-			m_userGuid = wxNewUniqueGuid;
-		}
-		prepStatement->SetParamString(1, m_userGuid.str());
-		prepStatement->SetParamString(2, m_textName->GetValue());
-		prepStatement->SetParamString(3, m_textFullName->GetValue());
-		prepStatement->SetParamDate(4, wxDateTime::Now());
+		m_textName->SetValue(userInfo.m_strUserName);
+		m_textFullName->SetValue(userInfo.m_strUserFullName);
 
-		CMemoryWriter writter;
-		writter.w_stringZ(md5Password);
-
-		prepStatement->SetParamNumber(5, writter.size());
-		prepStatement->SetParamBlob(6, writter.pointer(), writter.size());
-
-		prepStatement->RunQuery();
-		prepStatement->Close();
-	}
-
-	event.Skip();
-}
-
-void CUserWnd::OnCancelButtonClick(wxCommandEvent& event)
-{
-	event.Skip();
-}
-
-bool CUserWnd::ReadUserData(const CGuid& guid, bool copy)
-{
-	if (m_userGuid.isValid()) return false;
-	
-	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE guid = '%s';", user_table, guid.str());
-	if (resultSet->Next()) {
-		m_textName->SetValue(resultSet->GetResultString("name"));
-		m_textFullName->SetValue(resultSet->GetResultString("fullName"));
-		wxMemoryBuffer buffer;
-		resultSet->GetResultBlob("binaryData", buffer);
-		CMemoryReader reader(buffer.GetData(), buffer.GetDataLen());
-		reader.r_stringZ(md5Password);
-		if (!md5Password.IsEmpty()) {
+		if (userInfo.IsSetPassword()) {
 			m_bInitialized = false;
 			m_textPassword->SetValue(
 				wxT("12345678")
 			);
 			m_bInitialized = true;
 		}
+
+		if (userInfo.IsSetLanguage()) {
+
+			auto iterator = std::find_if(m_languageArray.begin(), m_languageArray.end(),
+				[userInfo](const auto& pair) { return userInfo.m_strLanguageGuid == pair.second.m_strLanguageGuid; });
+
+			if (iterator != m_languageArray.end()) {
+				m_choiceLanguage->SetSelection(iterator->first);
+			}
+			else if (activeMetaData != nullptr) {
+				const wxString& strLanguageCode = activeMetaData->GetLangCode();
+				auto iterator_active_metadata = std::find_if(m_languageArray.begin(), m_languageArray.end(),
+					[strLanguageCode](const auto& pair) { return strLanguageCode == pair.second.m_strLanguageCode; });
+				m_choiceLanguage->SetSelection(iterator_active_metadata->first);
+			}
+			else {
+				m_choiceLanguage->SetSelection(0);
+			}
+		}
+
+		if (!copy)
+			m_userGuid = userInfo.m_strUserGuid;
+
+		return true;
 	}
-	resultSet->Close();
-	if (!copy) {
-		m_userGuid = guid;
-	}
-	return true;
+
+	return false;
 }
 
-#include "backend/metaData.h"
+#include "backend/metaCollection/metaLanguageObject.h"
 
-CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style), m_bInitialized(false)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -104,11 +71,11 @@ CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const
 	wxBoxSizer* m_sizerUserTop = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer* m_sizerLabel = new wxBoxSizer(wxVERTICAL);
 
-	m_staticName = new wxStaticText(m_main, wxID_ANY, wxT("Name:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticName = new wxStaticText(m_main, wxID_ANY, _("Name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticName->Wrap(-1);
 	m_sizerLabel->Add(m_staticName, 0, wxALL, 9);
 
-	m_staticFullName = new wxStaticText(m_main, wxID_ANY, wxT("Full name:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticFullName = new wxStaticText(m_main, wxID_ANY, _("Full name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticFullName->Wrap(-1);
 	m_sizerLabel->Add(m_staticFullName, 0, wxALL, 9);
 
@@ -147,39 +114,41 @@ CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const
 	m_staticRole->Wrap(-1);
 	sizerLabels->Add(m_staticRole, 0, wxALL | wxEXPAND, 5);
 
-	m_staticInterface = new wxStaticText(m_other, wxID_ANY, _("Interface:"), wxDefaultPosition, wxDefaultSize, 0);
-	m_staticInterface->Wrap(-1);
-	sizerLabels->Add(m_staticInterface, 0, wxALL | wxEXPAND, 5);
+	m_staticLanguage = new wxStaticText(m_other, wxID_ANY, _("Language:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticLanguage->Wrap(-1);
+	sizerLabels->Add(m_staticLanguage, 0, wxALL | wxEXPAND, 5);
 
 	sizerOther->Add(sizerLabels, 0, wxEXPAND, 5);
 
+	m_choiceRole = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	for (const auto object : activeMetaData->GetAnyArrayObject(g_metaRoleCLSID)) {
+		const int index = m_choiceRole->Append(object->GetName());
+	}
+	m_choiceRole->SetSelection(0);
+
+	m_choiceLanguage = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+
+	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectLanguage>(g_metaLanguageCLSID)) {
+
+		CDataUserLanguageItem entry;
+		entry.m_strLanguageGuid = object->GetDocPath();
+		entry.m_strLanguageCode = object->GetLangCode();
+
+		const int index = m_choiceLanguage->Append(object->GetSynonym());
+		m_languageArray.insert_or_assign(index, std::move(entry));
+	}
+
+	m_choiceLanguage->SetSelection(0);
+
 	wxBoxSizer* sizerChoice = new wxBoxSizer(wxVERTICAL);
 
-	wxArrayString m_choiceRoleChoices;
-	m_choiceRoleChoices.Add(_("not selected"));
-
-	for (auto metaRole : activeMetaData->GetAnyArrayObject(g_metaRoleCLSID)) {
-		m_choiceRoleChoices.Add(metaRole->GetName());
-	}
-
-	m_choiceRole = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_choiceRoleChoices, 0);
-	m_choiceRole->SetSelection(0);
 	sizerChoice->Add(m_choiceRole, 0, wxTOP | wxRIGHT | wxLEFT | wxEXPAND, 5);
-
-	wxArrayString m_choiceInterfaceChoices;
-	m_choiceInterfaceChoices.Add(_("not selected"));
-
-	for (auto metaInterface : activeMetaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
-		m_choiceInterfaceChoices.Add(metaInterface->GetName());
-	}
-	m_choiceInterface = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_choiceInterfaceChoices, 0);
-	m_choiceInterface->SetSelection(0);
-	sizerChoice->Add(m_choiceInterface, 0, wxRIGHT | wxLEFT | wxEXPAND, 5);
+	sizerChoice->Add(m_choiceLanguage, 0, wxRIGHT | wxLEFT | wxEXPAND, 5);
 
 	sizerOther->Add(sizerChoice, 1, wxEXPAND, 5);
 	m_other->SetSizer(sizerOther);
 
-	m_mainNotebook->AddPage(m_other, _("Role"), true, wxNullBitmap);
+	m_mainNotebook->AddPage(m_other, _("Other"), true, wxNullBitmap);
 
 	m_mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
 
@@ -199,19 +168,58 @@ CUserWnd::CUserWnd(wxWindow* parent, wxWindowID id, const wxString& title, const
 	this->Centre(wxBOTH);
 
 	// Connect Events
-	m_textPassword->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CUserWnd::OnPasswordText), nullptr, this);
+	m_textPassword->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CDialogUserItem::OnPasswordText), nullptr, this);
 
-	m_bottomOK->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CUserWnd::OnOKButtonClick), nullptr, this);
-	m_bottomCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CUserWnd::OnCancelButtonClick), nullptr, this);
+	m_bottomOK->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogUserItem::OnOKButtonClick), nullptr, this);
+	m_bottomCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogUserItem::OnCancelButtonClick), nullptr, this);
 
 	m_bInitialized = true;
 }
 
-CUserWnd::~CUserWnd()
+void CDialogUserItem::OnPasswordText(wxCommandEvent& event)
 {
-	// Disconnect Events
-	m_textPassword->Disconnect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CUserWnd::OnPasswordText), nullptr, this);
+	if (m_bInitialized) {
+		const wxString& strUserPassword = m_textPassword->GetValue();
+		if (!strUserPassword.IsEmpty()) {
+			m_strUserPassword = wxMD5::ComputeMd5(strUserPassword);
+		}
+		else {
+			m_strUserPassword.Clear();
+		}
+	}
 
-	m_bottomOK->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CUserWnd::OnOKButtonClick), nullptr, this);
-	m_bottomCancel->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CUserWnd::OnCancelButtonClick), nullptr, this);
+	event.Skip();
+}
+
+void CDialogUserItem::OnOKButtonClick(wxCommandEvent& event)
+{
+	if (m_textName->IsEmpty())
+		return;
+
+	CApplicationDataUserInfo userInfo;
+
+	if (!m_userGuid.isValid())
+		m_userGuid = wxNewUniqueGuid;
+
+	userInfo.m_strUserGuid = m_userGuid.str();
+	userInfo.m_strUserName = m_textName->GetValue();
+	userInfo.m_strUserFullName = m_textFullName->GetValue();
+	userInfo.m_strUserPassword = m_strUserPassword;
+
+	const int selection = m_choiceLanguage->GetSelection();
+	if (selection != wxNOT_FOUND) {
+		const CDataUserLanguageItem& info = m_languageArray.at(selection);
+		userInfo.m_strLanguageGuid = info.m_strLanguageGuid;
+		userInfo.m_strLanguageCode = info.m_strLanguageCode;
+	}
+
+	if (!appData->SaveUserData(userInfo))
+		return;
+
+	event.Skip();
+}
+
+void CDialogUserItem::OnCancelButtonClick(wxCommandEvent& event)
+{
+	event.Skip();
 }

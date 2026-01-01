@@ -242,7 +242,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsString(); }
+	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
 
 	void SetPasswordMode(bool caption) { return m_propertyPasswordMode->SetValue(caption); }
 	bool GetPasswordMode() const { return m_propertyPasswordMode->GetValueAsBoolean(); }
@@ -358,7 +358,7 @@ protected:
 private:
 
 	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("info"), _("Info"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryInfo, wxT("caption"), _("Caption"), wxEmptyString);
+	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("caption"), _("Caption"), wxT(""));
 	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("passwordMode"), _("Password mode"), false);
 	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("multilineMode"), _("Multiline mode"), false);
 	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("texteditMode"), _("Textedit mode"), true);

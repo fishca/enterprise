@@ -48,6 +48,7 @@ public:
 	static wxString Lower(const CValue& cSource);
 	static wxString Chr(short nCode);
 	static short Asc(const CValue& cSource);
+	static wxString TStr(const CValue& cSource, const CValue& cLanguage);
 
 	//--- Работа с датой и временем:
 	static CValue CurrentDate();

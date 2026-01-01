@@ -13,56 +13,56 @@ CValueStaticBoxSizer::CValueStaticBoxSizer() : IValueSizer()
 
 wxObject* CValueStaticBoxSizer::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxStaticBox* m_staticBox = new wxStaticBox(wxparent, wxID_ANY, m_propertyCaption->GetValueAsString());
-	return new wxStaticBoxSizer(m_staticBox, m_propertyOrient->GetValueAsInteger());
+	wxStaticBox* staticBox = new wxStaticBox(wxparent, wxID_ANY, m_propertyCaption->GetValueAsTranslateString());
+	return new wxStaticBoxSizer(staticBox, m_propertyOrient->GetValueAsInteger());
 }
 
 void CValueStaticBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
-	wxStaticBox* wndBox = staticboxsizer->GetStaticBox();
-	wxASSERT(wndBox);
+	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
+	wxASSERT(staticBox);
 	
 	if (visualHost->IsDesignerHost()) {
-		wndBox->PushEventHandler(g_visualHostContext->GetHighlightPaintHandler(wndBox));
+		staticBox->PushEventHandler(g_visualHostContext->GetHighlightPaintHandler(staticBox));
 	}
 }
 
 void CValueStaticBoxSizer::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxStaticBoxSizer* m_staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
-	wxStaticBox* m_wndBox = m_staticboxsizer->GetStaticBox();
-	wxASSERT(m_wndBox);
-	if (m_staticboxsizer != nullptr) {
-		m_wndBox->SetLabel(m_propertyCaption->GetValueAsString());
-		m_wndBox->SetMinSize(m_propertyMinSize->GetValueAsSize());
+	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
+	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
+	wxASSERT(staticBox);
+	if (staticboxsizer != nullptr) {
+		staticBox->SetLabel(m_propertyCaption->GetValueAsTranslateString());
+		staticBox->SetMinSize(m_propertyMinSize->GetValueAsSize());
 
-		m_wndBox->SetFont(m_propertyFont->GetValueAsFont());
-		m_wndBox->SetForegroundColour(m_propertyFG->GetValueAsColour());
-		m_wndBox->SetBackgroundColour(m_propertyBG->GetValueAsColour());
-		m_wndBox->Enable(m_propertyEnabled->GetValueAsBoolean());
-		m_wndBox->Show(m_propertyVisible->GetValueAsBoolean());
-		m_wndBox->SetToolTip(m_propertyTooltip->GetValueAsString());
+		staticBox->SetFont(m_propertyFont->GetValueAsFont());
+		staticBox->SetForegroundColour(m_propertyFG->GetValueAsColour());
+		staticBox->SetBackgroundColour(m_propertyBG->GetValueAsColour());
+		staticBox->Enable(m_propertyEnabled->GetValueAsBoolean());
+		staticBox->Show(m_propertyVisible->GetValueAsBoolean());
+		staticBox->SetToolTip(m_propertyTooltip->GetValueAsString());
 
-		m_staticboxsizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
-		m_staticboxsizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
+		staticboxsizer->SetOrientation(m_propertyOrient->GetValueAsInteger());
+		staticboxsizer->SetMinSize(m_propertyMinSize->GetValueAsSize());
 
 		//after lay out 
 		if (m_propertyMinSize->GetValueAsSize() != wxDefaultSize) {
-			m_wndBox->Layout();
+			staticBox->Layout();
 		}
 	}
 
-	UpdateSizer(m_staticboxsizer);
+	UpdateSizer(staticboxsizer);
 }
 
 void CValueStaticBoxSizer::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxStaticBoxSizer* m_staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
-	wxStaticBox* m_wndBox = m_staticboxsizer->GetStaticBox();
-	wxASSERT(m_wndBox);
+	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
+	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
+	wxASSERT(staticBox);
 	if (visualHost->IsDesignerHost()) {
-		m_wndBox->PopEventHandler(true);
+		staticBox->PopEventHandler(true);
 	}
 }
 

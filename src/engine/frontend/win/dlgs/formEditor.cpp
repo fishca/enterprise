@@ -509,8 +509,8 @@ wxEND_EVENT_TABLE()
 CDialogFormEditor::CDialogFormEditorItemPopupMenu::CDialogFormEditorItemPopupMenu(CDialogFormEditor* parent, IValueFrame* obj)
 	: wxMenu(), m_handler(parent), m_object(obj)
 {
-	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"));
-	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"));
+	Append(MENU_MOVE_UP, wxT("Move Up\tAlt+Up"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_UP), wxASCII_STR(wxART_MENU)));
+	Append(MENU_MOVE_DOWN, wxT("Move Down\tAlt+Down"))->SetBitmap(wxArtProvider::GetBitmap(wxASCII_STR(wxART_GO_DOWN), wxASCII_STR(wxART_MENU)));
 }
 
 void CDialogFormEditor::CDialogFormEditorItemPopupMenu::OnMenuEvent(wxCommandEvent& event)

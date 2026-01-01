@@ -286,6 +286,12 @@ short CSystemFunction::Asc(const CValue& cSource)
 	return static_cast<wchar_t>(stringValue[0]);
 }
 
+wxString CSystemFunction::TStr(const CValue& cSource, const CValue& cLanguage)
+{
+	return CBackendLocalization::GetTranslateGetRawLocText(
+		cSource.GetString(), cLanguage.GetString());
+}
+
 //---Работа с датой и временем
 CValue CSystemFunction::CurrentDate()
 {
@@ -502,7 +508,7 @@ void CSystemFunction::Message(const wxString& strMessage, eStatusMessage status)
 		backend_mainFrame->Message(strMessage, status);
 }
 
-void CSystemFunction::Alert(const wxString& strMessage) //Предупреждение
+void CSystemFunction::Alert(const wxString& strMessage) //Alert
 {
 	if (CBackendException::IsEvalMode())
 		return;
@@ -515,7 +521,7 @@ void CSystemFunction::Alert(const wxString& strMessage) //Предупрежде
 	}
 }
 
-CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)//Вопрос
+CValue CSystemFunction::Question(const wxString& strMessage, eQuestionMode mode)//Question
 {
 	if (CBackendException::IsEvalMode()) {
 		return CValue::CreateAndPrepareValueRef<CValueQuestionReturnCode>();
@@ -854,30 +860,30 @@ int CSystemFunction::Rand()
 	return rand();
 }
 
-int CSystemFunction::ArgCount()//КоличествоАргументовПрограммы
+int CSystemFunction::ArgCount()//ArgCount
 {
 	return __argc;
 }
 
-wxString CSystemFunction::ArgValue(int n)//ЗначениеАргументаПрограммы
+wxString CSystemFunction::ArgValue(int n)//ArgValue
 {
 	if (n<0 || n> __argc) CBackendException::Error(_("Invalid argument index"));
 	return __wargv[n];
 }
 
-wxString CSystemFunction::ComputerName()//ИмяКомпьютера
+wxString CSystemFunction::ComputerName()//ComputerName
 {
 	return wxGetHostName();
 }
 
-void CSystemFunction::RunApp(const wxString& sCommand)//ЗапуститьПриложение
+void CSystemFunction::RunApp(const wxString& sCommand)//RunApp
 {
 	if (CBackendException::IsEvalMode())
 		return;
 	wxExecute(sCommand);
 }
 
-void CSystemFunction::SetAppTitle(const wxString& sTitle)//ЗаголовокСистемы
+void CSystemFunction::SetAppTitle(const wxString& sTitle)//SetAppTitle
 {
 	if (CBackendException::IsEvalMode())
 		return;
@@ -903,12 +909,12 @@ bool CSystemFunction::ExclusiveMode() {
 }
 
 wxString CSystemFunction::GeneralLanguage() {
-	return wxT("en_US");
+	return appData->GetUserLanguageCode();
 }
 
 #include "backend/metaData.h"
 
-void CSystemFunction::EndJob(bool force) //ЗавершитьРаботуСистемы
+void CSystemFunction::EndJob(bool force) //EndJob
 {
 	if (force) {
 		appDataDestroy();

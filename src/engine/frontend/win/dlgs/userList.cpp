@@ -140,7 +140,7 @@ void CDialogUserList::OnContextMenu(wxDataViewEvent &event)
 
 void CDialogUserList::OnItemActivated(wxDataViewEvent &event)
 {
-	CUserWnd *userWnd = new CUserWnd(this, wxID_ANY);
+	CDialogUserItem *userWnd = new CDialogUserItem(this, wxID_ANY);
 	CUserListModel *model =
 		dynamic_cast<CUserListModel *>(m_dataViewUsers->GetModel());
 	userWnd->ReadUserData(model->GetGuidByRow(event.GetItem()));
@@ -153,7 +153,7 @@ void CDialogUserList::OnCommandMenu(wxCommandEvent &event)
 	wxDataViewItem sel = m_dataViewUsers->GetSelection();
 
 	if (event.GetId() == wxID_USERS_TOOL_ADD) {
-		CUserWnd *userWnd = new CUserWnd(this, wxID_ANY);
+		CDialogUserItem *userWnd = new CDialogUserItem(this, wxID_ANY);
 		userWnd->ShowModal();
 	}
 
@@ -162,13 +162,13 @@ void CDialogUserList::OnCommandMenu(wxCommandEvent &event)
 
 	if (sel.IsOk()) {
 		if (event.GetId() == wxID_USERS_TOOL_EDIT) {
-			CUserWnd *userWnd = new CUserWnd(this, wxID_ANY);
+			CDialogUserItem *userWnd = new CDialogUserItem(this, wxID_ANY);
 			userWnd->ReadUserData(model->GetGuidByRow(sel));
 			userWnd->ShowModal();
 		}
 
 		if (event.GetId() == wxID_USERS_TOOL_COPY) {
-			CUserWnd *userWnd = new CUserWnd(this, wxID_ANY);
+			CDialogUserItem *userWnd = new CDialogUserItem(this, wxID_ANY);
 			userWnd->ReadUserData(model->GetGuidByRow(sel), true);
 			userWnd->ShowModal();
 		}

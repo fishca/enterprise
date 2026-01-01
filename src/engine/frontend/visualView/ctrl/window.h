@@ -14,7 +14,7 @@ protected:
     CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryWindow, wxT("font"), _("Font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
     CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryWindow, wxT("fg"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
     CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryWindow, wxT("bg"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
-    CPropertyString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categoryWindow, wxT("tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxEmptyString);
+    CPropertyTString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryWindow, wxT("tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxT(""));
     CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryWindow, wxT("enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
     CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryWindow, wxT("visible"), _("Visible"), _("Indicates that a pane caption should be visible."), true);
 public:

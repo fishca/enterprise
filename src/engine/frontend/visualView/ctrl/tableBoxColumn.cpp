@@ -82,7 +82,7 @@ IMetaData* CValueTableBoxColumn::GetMetaData() const
 wxString CValueTableBoxColumn::GetControlCaption() const
 {
 	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsString();
+		return m_propertyCaption->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
@@ -95,7 +95,7 @@ wxString CValueTableBoxColumn::GetControlCaption() const
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, m_propertyCaption->GetValueAsString(),
+	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, GetControlCaption(),
 		wxNOT_FOUND,
 		m_propertyWidth->GetValueAsUInteger(),
 		m_propertyAlign->GetValueAsEnum(),

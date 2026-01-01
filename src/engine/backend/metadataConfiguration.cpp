@@ -109,7 +109,7 @@ wxString CMetaDataConfigurationFile::GetLangCode() const
 {
 	if (m_commonObject != nullptr)
 		return m_commonObject->GetLangCode();
-	
+
 	return wxT("");
 }
 
@@ -547,10 +547,26 @@ bool CMetaDataConfiguration::OnInitialize(const int flags)
 
 	if (!CMetaDataConfigurationStorage::TableAlreadyCreated())
 		return false;
+
 	debugServerInit(flags);
-	if (!LoadDatabase()) return false;
-	if (backend_mainFrame != nullptr) backend_mainFrame->OnInitializeConfiguration(GetConfigType());
-	if ((flags & _app_start_create_debug_server_flag) != 0) debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
+
+	if (!LoadDatabase())
+		return false;
+
+#pragma region language  
+	// Check current language
+	const IMetaObject* foundedLanguage = 
+		IMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
+	// Initialize localization engine  
+	CBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
+#pragma endregion 
+
+	if (backend_mainFrame != nullptr)
+		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
+
+	if ((flags & _app_start_create_debug_server_flag) != 0)
+		debugServer->CreateServer(defaultHost, defaultDebuggerPort, true);
+
 	return true;
 }
 
@@ -581,19 +597,33 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 		CMetaDataConfigurationStorage::CreateConfigSaveTable();
 	}
 
-	//Initialize debugger
+	// Initialize debugger
 	debugClientInit();
-	if (!LoadDatabase()) return false;
+
+	// Load database
+	if (!LoadDatabase())
+		return false;
+
+#pragma endregion 
+
+	// Initialize localization engine 
+	CBackendLocalization::SetUserLanguage(GetLangCode());
+
+#pragma endregion 
+
 	if (backend_mainFrame != nullptr)
 		backend_mainFrame->OnInitializeConfiguration(GetConfigType());
+
 	return true;
 }
 
 bool CMetaDataConfigurationStorage::OnDestroy()
 {
 	debugClientDestroy();
+
 	if (backend_mainFrame != nullptr)
 		backend_mainFrame->OnDestroyConfiguration(GetConfigType());
+
 	return true;
 }
 

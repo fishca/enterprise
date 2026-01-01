@@ -81,7 +81,7 @@ class CValueNotebookPage : public IValueControl {
 	wxDECLARE_DYNAMIC_CLASS(CValueNotebookPage);
 protected:
 	CPropertyCategory* m_categoryPage = IPropertyObject::CreatePropertyCategory(wxT("page"), _("Page"));
-	CPropertyCaption* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyCaption>(m_categoryPage, wxT("caption"), _("Caption"), _("New page"));
+	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryPage, wxT("caption"), _("Caption"), wxT("New page"));
 	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPage, wxT("visible"), _("Visible"), true);
 	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryPage, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryPage, wxT("picture"), _("Picture"));
@@ -100,7 +100,7 @@ public:
 	//get caption 
 	virtual wxString GetControlCaption() const {
 		if (!m_propertyCaption->IsEmptyProperty())
-			return _("Page item: ") + m_propertyCaption->GetValueAsString();
+			return _("Page item: ") + CBackendLocalization::GetTranslateGetRawLocText(m_propertyCaption->GetValueAsString());
 		return _("Page item: ") + _("<empty caption>");
 	}
 

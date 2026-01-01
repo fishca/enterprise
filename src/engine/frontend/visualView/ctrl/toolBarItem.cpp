@@ -20,11 +20,11 @@ void CValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisua
 	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddTool(GetControlID(),
-		m_propertyCaption->GetValueAsString(),
+		m_propertyCaption->GetValueAsTranslateString(),
 		m_propertyPicture->GetValueAsBitmap(),
 		wxNullBitmap,
 		wxItemKind::wxITEM_NORMAL,
-		m_properyTooltip->GetValueAsString(),
+		m_properyTooltip->GetValueAsTranslateString(),
 		wxEmptyString,
 		wxobject
 	);
@@ -67,70 +67,73 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 		toolbar->DestroyTool(GetControlID());
 
 	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
-
-		if (GetItemRepresentation() == enRepresentation::eRepresentation_PictureAndText) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
+		if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_PictureAndText) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
-				GetItemCaption(),
-				GetItemPicture(),
+				GetItemCaption(collection),
+				GetItemPicture(collection),
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				GetItemToolTip(),
+				GetItemToolTip(collection),
 				wxEmptyString,
 				wxobject
 			);
 		}
-		else if (GetItemRepresentation() == enRepresentation::eRepresentation_Picture) {
+		else if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_Picture) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
 				wxEmptyString,
-				GetItemPicture(),
+				GetItemPicture(collection),
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				GetItemToolTip(),
+				GetItemToolTip(collection),
 				wxEmptyString,
 				wxobject
 			);
 		}
-		else if (GetItemRepresentation() == enRepresentation::eRepresentation_Text) {
+		else if (GetItemRepresentation(collection) == enRepresentation::eRepresentation_Text) {
 			toolItem = toolbar->InsertTool(idx, GetControlID(),
-				GetItemCaption(),
+				GetItemCaption(collection),
 				wxNullBitmap,
 				wxNullBitmap,
 				wxItemKind::wxITEM_NORMAL,
-				GetItemToolTip(),
+				GetItemToolTip(collection),
 				wxEmptyString,
 				wxobject
 			);
 		}
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
-			GetItemCaption(),
-			GetItemPicture(),
+			GetItemCaption(collection),
+			GetItemPicture(collection),
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			GetItemToolTip(),
+			GetItemToolTip(collection),
 			wxEmptyString,
 			wxobject
 		);
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
 			wxEmptyString,
-			GetItemPicture(),
+			GetItemPicture(collection),
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			GetItemToolTip(),
+			GetItemToolTip(collection),
 			wxEmptyString,
 			wxobject
 		);
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+		const CActionCollection& collection = GetOwner()->GetActionArray();
 		toolItem = toolbar->InsertTool(idx, GetControlID(),
-			GetItemCaption(),
+			GetItemCaption(collection),
 			wxNullBitmap,
 			wxNullBitmap,
 			wxItemKind::wxITEM_NORMAL,
-			GetItemToolTip(),
+			GetItemToolTip(collection),
 			wxEmptyString,
 			wxobject
 		);

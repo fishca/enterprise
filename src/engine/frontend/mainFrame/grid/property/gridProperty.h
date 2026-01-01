@@ -14,8 +14,8 @@ class CPropertyObjectGrid : public IPropertyObject {
 private:
 
 	CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("general"), _("General"));
-	CPropertyName* m_propertyName = IPropertyObject::CreateProperty<CPropertyName>(m_categoryGeneral, wxT("name"), _("Name"), wxEmptyString);
-	CPropertyText* m_propertyText = IPropertyObject::CreateProperty<CPropertyText>(m_categoryGeneral, wxT("text"), _("Text"), wxEmptyString);
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("name"), _("Name"), wxEmptyString);
+	CPropertyMString* m_propertyText = IPropertyObject::CreateProperty<CPropertyMString>(m_categoryGeneral, wxT("text"), _("Text"), wxEmptyString);
 
 	CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("Alignment"));
 	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), wxAlignment::wxALIGN_LEFT);

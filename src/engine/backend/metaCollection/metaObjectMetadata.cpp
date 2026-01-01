@@ -24,7 +24,7 @@ wxString CMetaObjectConfiguration::GetLangCode() const
 		FindAnyObjectByFilter<CMetaObjectLanguage>(GetLanguage());
 
 	if (language != nullptr)
-		return language->GetCode();
+		return language->GetLangCode();
 
 	return wxT("");
 }

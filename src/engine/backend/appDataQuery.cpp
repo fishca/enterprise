@@ -65,7 +65,7 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_CalcActiveSession()
 			wxT("UPDATE %s SET lastActive = '%s', userName = '%s' WHERE session = '%s';"),
 			session_table,
 			currentTime.FormatISOCombined(' '),
-			appData->m_strUserIB,
+			appData->GetUserName(),
 			m_session.str()
 		);
 	}
@@ -78,11 +78,11 @@ void CApplicationData::CApplicationDataSessionUpdater::Job_CalcActiveSession()
 		);
 
 		dbSessionPrepareData->SetParamString(1, m_session.str());
-		dbSessionPrepareData->SetParamString(2, appData->m_strUserIB); //empty user!
-		dbSessionPrepareData->SetParamInt(3, appData->m_runMode);
-		dbSessionPrepareData->SetParamDate(4, appData->m_startedDate);
+		dbSessionPrepareData->SetParamString(2, appData->GetUserName()); //empty user!
+		dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
+		dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
 		dbSessionPrepareData->SetParamDate(5, currentTime);
-		dbSessionPrepareData->SetParamString(6, appData->m_strComputer);
+		dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
 
 		dbSessionPrepareData->RunQuery();
 
@@ -230,23 +230,21 @@ const CApplicationDataSessionArray CApplicationData::CApplicationDataSessionUpda
 
 bool CApplicationData::CApplicationDataSessionUpdater::VerifySessionUpdater() const
 {
-	for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); idx++) {
-
-		if (appData->m_runMode == m_sessionArray.GetSessionApplication(idx) &&
-			appData->m_runMode == eDESIGNER_MODE) {
-
-			try {
-				CBackendException::Error(
-					_("Another designer process is already running:\n%s, %s, %s"),
-					m_sessionArray.GetStartedDate(idx),
-					m_sessionArray.GetComputerName(idx),
-					m_sessionArray.GetUserName(idx)
-				);
+	if (appData->GetAppMode() == eDESIGNER_MODE) {
+		for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); idx++) {
+			if (eDESIGNER_MODE == m_sessionArray.GetSessionApplication(idx)) {
+				try {
+					CBackendException::Error(
+						_("Another designer process is already running:\n%s, %s, %s"),
+						m_sessionArray.GetStartedDate(idx),
+						m_sessionArray.GetComputerName(idx),
+						m_sessionArray.GetUserName(idx)
+					);
+				}
+				catch (...) {
+				}
+				return false;
 			}
-			catch (...) {
-			}
-
-			return false;
 		}
 	}
 
@@ -282,16 +280,16 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 
 	dbSessionPrepareData->SetParamString(1, m_session.str());
 	dbSessionPrepareData->SetParamString(2, wxEmptyString); //empty user!
-	dbSessionPrepareData->SetParamInt(3, appData->m_runMode);
-	dbSessionPrepareData->SetParamDate(4, appData->m_startedDate);
+	dbSessionPrepareData->SetParamInt(3, appData->GetAppMode());
+	dbSessionPrepareData->SetParamDate(4, appData->GetStartedDate());
 	dbSessionPrepareData->SetParamDate(5, wxDateTime::Now());
-	dbSessionPrepareData->SetParamString(6, appData->m_strComputer);
+	dbSessionPrepareData->SetParamString(6, appData->GetComputerName());
 
 	dbSessionPrepareData->RunQuery();
 	dbSessionPrepareData->Close();
 
 	m_sessionArray.AppendSession(
-		appData->m_runMode, appData->m_startedDate, appData->m_strUserIB, appData->m_strComputer, m_session.str()
+		appData->GetAppMode(), appData->GetStartedDate(), appData->GetUserName(), appData->GetComputerName(), m_session.str()
 	);
 
 	if (dbSessionPrepareData != nullptr)
@@ -436,12 +434,12 @@ void CApplicationData::CreateTableSequence()
 {
 	if (!db_query->TableExists(sequence_table)) {
 
-		db_query->RunQuery(wxT("create table %s ("	
+		db_query->RunQuery(wxT("create table %s ("
 			"meta_guid         VARCHAR(36)   NOT NULL,"
 			"prefix			   VARCHAR(24)   NOT NULL,"
-			"number            INTEGER       NOT NULL,"		
+			"number            INTEGER       NOT NULL,"
 			"primary key (meta_guid, prefix));"),
-			
+
 			sequence_table);
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
@@ -466,60 +464,155 @@ void CApplicationData::CreateTableEvent()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+enum
+{
+	eBlockPswd = 0x0234530,
+	eBlockRole = 0x0234540,
+	eBlockLang = 0x0234550,
+};
+
+#include "fileSystem/fs.h"
+
+CApplicationDataUserInfo CApplicationData::ReadUserData(const CGuid& userGuid) const
+{
+	CApplicationDataUserInfo userInfo;
+	if (!userGuid.isValid())
+		return userInfo;
+
+	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
+		wxT("SELECT * FROM %s WHERE guid = '%s';"), user_table, userGuid.str());
+
+	if (dbUserResult != nullptr && dbUserResult->Next()) {
+
+		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
+		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
+		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+
+		wxMemoryBuffer buffer;
+		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
+		CMemoryReader userReader(buffer);
+
+		wxMemoryBuffer bufferPassword;
+		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
+			ReadUserData_Password(bufferPassword, userInfo);
+		}
+
+		wxMemoryBuffer bufferRole;
+		if (userReader.r_chunk(eBlockRole, bufferRole)) {
+			ReadUserData_Role(bufferRole, userInfo);
+		}
+
+		wxMemoryBuffer bufferLang;
+		if (userReader.r_chunk(eBlockLang, bufferLang)) {
+			ReadUserData_Language(bufferLang, userInfo);
+		}
+
+		if (dbUserResult != nullptr)
+			dbUserResult->Close();
+
+		db_query->CloseResultSet(dbUserResult);
+	}
+
+	return userInfo;
+}
+
+CApplicationDataUserInfo CApplicationData::ReadUserData(const wxString& strUserName) const
+{
+	CApplicationDataUserInfo userInfo;
+	if (strUserName.IsEmpty())
+		return userInfo;
+
+	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
+		wxT("SELECT * FROM %s WHERE name = '%s';"), user_table, strUserName);
+
+	if (dbUserResult != nullptr && dbUserResult->Next()) {
+
+		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
+		
+		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
+		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+
+		wxMemoryBuffer buffer;
+		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
+		CMemoryReader userReader(buffer);
+
+		wxMemoryBuffer bufferPassword;
+		if (userReader.r_chunk(eBlockPswd, bufferPassword)) {
+			ReadUserData_Password(bufferPassword, userInfo);
+		}
+
+		wxMemoryBuffer bufferRole;
+		if (userReader.r_chunk(eBlockRole, bufferRole)) {
+			ReadUserData_Role(bufferRole, userInfo);
+		}
+
+		wxMemoryBuffer bufferLang;
+		if (userReader.r_chunk(eBlockLang, bufferLang)) {
+			ReadUserData_Language(bufferLang, userInfo);
+		}
+
+		if (dbUserResult != nullptr)
+			dbUserResult->Close();
+
+		db_query->CloseResultSet(dbUserResult);
+	}
+
+	return userInfo;
+}
+
+bool CApplicationData::SaveUserData(const CApplicationDataUserInfo& userInfo) const
+{
+	IPreparedStatement* dbUserPrepareData = nullptr;
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		dbUserPrepareData = db_query->PrepareStatement(
+			wxT("INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (guid) DO UPDATE SET guid = excluded.guid, name = excluded.name, fullName = excluded.fullName, changed = excluded.changed, dataSize = excluded.dataSize, binaryData = excluded.binaryData; "), user_table);
+	else
+		dbUserPrepareData = db_query->PrepareStatement(
+			wxT("UPDATE OR INSERT INTO %s (guid, name, fullName, changed, dataSize, binaryData) VALUES(?, ?, ?, ?, ?, ?) MATCHING (guid);"), user_table);
+
+	if (dbUserPrepareData == nullptr)
+		return false;
+
+	dbUserPrepareData->SetParamString(1, userInfo.m_strUserGuid);
+	dbUserPrepareData->SetParamString(2, userInfo.m_strUserName);
+	dbUserPrepareData->SetParamString(3, userInfo.m_strUserFullName);
+	dbUserPrepareData->SetParamDate(4, wxDateTime::Now());
+
+	CMemoryWriter writter;
+
+	writter.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
+	writter.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
+	writter.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
+
+	dbUserPrepareData->SetParamNumber(5, writter.size());
+	dbUserPrepareData->SetParamBlob(6, writter.pointer(), writter.size());
+
+	const int result = dbUserPrepareData->RunQuery();
+
+	if (dbUserPrepareData != nullptr)
+		dbUserPrepareData->Close();
+
+	db_query->CloseStatement(dbUserPrepareData);
+	return result != DATABASE_LAYER_QUERY_RESULT_ERROR;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 bool CApplicationData::HasAllowedUser() const
 {
 	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT name FROM %s;"),
-		user_table
-	);
+		wxT("SELECT name FROM %s;"), user_table);
+
 	if (dbUserResult == nullptr) return false;
 	bool hasUsers = false;
 	if (dbUserResult->Next()) hasUsers = true;
 
 	if (dbUserResult != nullptr)
 		dbUserResult->Close();
+
 	db_query->CloseResultSet(dbUserResult);
 	return hasUsers;
-}
-
-#include "fileSystem/fs.h"
-
-bool CApplicationData::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
-{
-	if (!HasAllowedUser()) return true;
-
-	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
-		wxT("SELECT * FROM %s WHERE name = '%s';"),
-		user_table, userName
-	);
-
-	if (dbUserResult == nullptr)
-		return false;
-
-	bool succes = false;
-
-	if (dbUserResult->Next()) {
-		wxString md5Password; wxMemoryBuffer buffer;
-		dbUserResult->GetResultBlob(wxT("binaryData"), buffer);
-		CMemoryReader reader(buffer.GetData(), buffer.GetDataLen());
-		reader.r_stringZ(md5Password);
-		if (md5Password == CApplicationData::ComputeMd5(userPassword)) succes = true;
-	}
-
-	if (dbUserResult != nullptr)
-		dbUserResult->Close();
-	db_query->CloseResultSet(dbUserResult);
-	return succes;
-}
-
-bool CApplicationData::AuthenticationAndSetUser(const wxString& userName, const wxString& userPassword)
-{
-	if (AuthenticationUser(userName, userPassword)) {
-		m_strUserIB = userName;
-		m_strPasswordIB = userPassword;
-		return true;
-	}
-	return false;
 }
 
 wxArrayString CApplicationData::GetAllowedUser() const
@@ -536,7 +629,7 @@ wxArrayString CApplicationData::GetAllowedUser() const
 	return arrayUsers;
 }
 
-bool CApplicationData::StartSession(const wxString& userName, const wxString& userPassword)
+bool CApplicationData::StartSession(const wxString& strUserName, const wxString& strUserPassword)
 {
 	if (!CloseSession())
 		return false;
@@ -550,12 +643,12 @@ bool CApplicationData::StartSession(const wxString& userName, const wxString& us
 	if (!m_sessionUpdater->InitSessionUpdater())
 		return false;
 
-	if (!AuthenticationAndSetUser(userName, userPassword)) {
+	if (!AuthenticationAndSetUser(strUserName, strUserPassword)) {
 
 		succes = false;
 
 		if (backend_mainFrame != nullptr &&
-			backend_mainFrame->AuthenticationUser(userName, userPassword)) {
+			backend_mainFrame->AuthenticationUser(strUserName, strUserPassword)) {
 			succes = true;
 		}
 	}

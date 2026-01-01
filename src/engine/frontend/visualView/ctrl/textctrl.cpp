@@ -110,7 +110,7 @@ bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 wxString CValueTextCtrl::GetControlCaption() const
 {
 	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsString();
+		return m_propertyCaption->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();

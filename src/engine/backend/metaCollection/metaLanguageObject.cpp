@@ -18,7 +18,7 @@ bool CMetaObjectLanguage::IsValidCode(const wxString& strLangCode)
 		return false;
 
 	for (const auto language : m_metaData->GetAnyArrayObject<CMetaObjectLanguage>(g_metaLanguageCLSID)) {
-		if (language != this && stringUtils::CompareString(strLangCode, language->GetCode()))
+		if (language != this && stringUtils::CompareString(strLangCode, language->GetLangCode()))
 			return false;
 	}
 
@@ -51,7 +51,7 @@ bool CMetaObjectLanguage::OnAfterRunMetaObject(int flags)
 
 		for (const auto object : languageArray) {
 			if (object != this &&
-				stringUtils::CompareString(strLangCode, object->GetCode())) {
+				stringUtils::CompareString(strLangCode, object->GetLangCode())) {
 				foundedName = true;
 				break;
 			}
@@ -66,7 +66,7 @@ bool CMetaObjectLanguage::OnAfterRunMetaObject(int flags)
 					metaPrevName.Left(length + 1), num_rec); bool foundedCodeName = false;
 				for (const auto object : languageArray) {
 					if (object != this &&
-						stringUtils::CompareString(strNewLangCode, object->GetCode())) {
+						stringUtils::CompareString(strNewLangCode, object->GetLangCode())) {
 						foundedCodeName = true;
 						break;
 					}

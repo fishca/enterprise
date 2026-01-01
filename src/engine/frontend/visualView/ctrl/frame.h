@@ -10,6 +10,7 @@
 
 #include "backend/backend_type.h"
 #include "backend/backend_form.h"
+#include "backend/backend_localization.h"
 
 #include "frontend/visualView/formdefs.h"
 #include "frontend/visualView/controlCtor.h"
@@ -139,7 +140,7 @@ public:
 
 	// get control caption
 	virtual wxString GetControlCaption() const {
-		return stringUtils::GenerateSynonym(GetClassName());
+		return wxGetTranslation(stringUtils::GenerateSynonym(GetClassName()));
 	}
 
 	virtual CGuid GetControlGuid() const { return m_controlGuid; }
@@ -412,7 +413,7 @@ public:
 		arr.Add(wxT("font"));
 		arr.Add(wxT("fg"));
 		arr.Add(wxT("bg"));
-		arr.Add(wxT("align")); 
+		arr.Add(wxT("align"));
 		arr.Add(wxT("stretch"));
 		arr.Add(wxT("proportion"));
 		arr.Add(wxT("orient"));

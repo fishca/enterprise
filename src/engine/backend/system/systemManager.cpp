@@ -39,6 +39,7 @@ enum
 	enLower,
 	enChr,
 	enAsc,
+	enTStr, 
 	//--- Работа с датой и временем:
 	enCurrentDate,
 	enWorkingDate,
@@ -140,6 +141,7 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc("lower", 1, "lower(string)");
 	m_methodHelper->AppendFunc("chr", 1, "chr(number)");
 	m_methodHelper->AppendFunc("asc", 1, "asc(string)");
+	m_methodHelper->AppendFunc("tstr", 1, "tstr(string, lang)");
 	//--- Работа с датой и временем:
 	m_methodHelper->AppendFunc("currentDate", "currentDate()");
 	m_methodHelper->AppendFunc("workingDate", 1, "workingDate(date)");
@@ -251,6 +253,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		case enLower: pvarRetValue = Lower(*paParams[0]); return true;
 		case enChr: pvarRetValue = Chr(paParams[0]->GetInteger()); return true;
 		case enAsc: pvarRetValue = Asc(*paParams[0]); return true;
+		case enTStr: pvarRetValue = TStr(*paParams[0], lSizeArray > 0 ? paParams[1]->GetString() : wxT("")); return true;
 			//--- Работа с датой и временем:
 		case enCurrentDate: pvarRetValue = CurrentDate(); return true;
 		case enWorkingDate: pvarRetValue = WorkingDate(); return true;

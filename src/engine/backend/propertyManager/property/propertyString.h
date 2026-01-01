@@ -73,7 +73,7 @@ public:
 };
 
 //base property for "general" - unique name 
-class CPropertyUString : public IPropertyString {
+class BACKEND_API CPropertyUString : public IPropertyString {
 public:
 
 	CPropertyUString(CPropertyCategory* cat, const wxString& name,
@@ -98,7 +98,7 @@ public:
 };
 
 //base property for "caption" - for translate 
-class CPropertyTString : public IPropertyString {
+class BACKEND_API CPropertyTString : public IPropertyString {
 public:
 
 	wxString GetValueAsTranslateString() const {
@@ -141,7 +141,7 @@ public:
 };
 
 //base property for "text"
-class CPropertyMString : public IPropertyString {
+class BACKEND_API CPropertyMString : public IPropertyString {
 public:
 
 	CPropertyMString(CPropertyCategory* cat, const wxString& name,

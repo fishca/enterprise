@@ -20,7 +20,7 @@ void CValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisua
 	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddTool(GetControlID(),
-		m_propertyCaption->GetValueAsTranslateString(),
+		m_propertyTitle->GetValueAsTranslateString(),
 		m_propertyPicture->GetValueAsBitmap(),
 		wxNullBitmap,
 		wxItemKind::wxITEM_NORMAL,
@@ -240,7 +240,7 @@ bool CValueToolBarSeparator::CanDeleteControl() const
 
 bool CValueToolBarItem::LoadData(CMemoryReader& reader)
 {
-	m_propertyCaption->LoadData(reader);
+	m_propertyTitle->LoadData(reader);
 	m_propertyPicture->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
 	m_propertyContextMenu->LoadData(reader);
@@ -255,7 +255,7 @@ bool CValueToolBarItem::LoadData(CMemoryReader& reader)
 
 bool CValueToolBarItem::SaveData(CMemoryWriter& writer)
 {
-	m_propertyCaption->SaveData(writer);
+	m_propertyTitle->SaveData(writer);
 	m_propertyPicture->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
 	m_propertyContextMenu->SaveData(writer);

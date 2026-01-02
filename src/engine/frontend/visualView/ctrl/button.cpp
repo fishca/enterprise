@@ -13,7 +13,7 @@ CValueButton::CValueButton() : IValueWindow()
 
 wxObject* CValueButton::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxButton* wxbutton = new wxButton(wxparent, wxID_ANY, m_propertyCaption->GetValueAsTranslateString());
+	wxButton* wxbutton = new wxButton(wxparent, wxID_ANY, m_propertyTitle->GetValueAsTranslateString());
 	//setup event 
 	wxbutton->Bind(wxEVT_BUTTON, &CValueButton::OnButtonPressed, this);
 	return wxbutton;
@@ -30,11 +30,11 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 	if (button != nullptr) {
 
 		if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
-			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
+			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
-			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
+			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
@@ -42,7 +42,7 @@ void CValueButton::Update(wxObject* wxobject, IVisualHost* visualHost)
 			button->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 		}
 		else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
-			button->SetLabel(m_propertyCaption->GetValueAsTranslateString());
+			button->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 			button->SetBitmap(wxNullBitmap);
 		}
 	}
@@ -60,7 +60,7 @@ void CValueButton::Cleanup(wxObject* obj, IVisualHost* visualHost)
 
 bool CValueButton::LoadData(CMemoryReader& reader)
 {
-	m_propertyCaption->LoadData(reader);
+	m_propertyTitle->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
 	m_propertyPicture->LoadData(reader);
 
@@ -72,7 +72,7 @@ bool CValueButton::LoadData(CMemoryReader& reader)
 
 bool CValueButton::SaveData(CMemoryWriter& writer)
 {
-	m_propertyCaption->SaveData(writer);
+	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
 	m_propertyPicture->SaveData(writer);
 

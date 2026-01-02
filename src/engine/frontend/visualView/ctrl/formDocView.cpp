@@ -383,9 +383,9 @@ IMetaObjectGenericData* CValueForm::GetMetaObject() const
 
 //////////////////////////////////////////////////////////////
 
-wxString CValueForm::GetControlCaption() const
+wxString CValueForm::GetControlTitle() const
 {
-	if (m_propertyCaption->IsEmptyProperty()) {
+	if (m_propertyTitle->IsEmptyProperty()) {
 
 		const IMetaObjectGenericData* metaSource = GetMetaObject();
 		if (metaSource != nullptr) return metaSource->GetSynonym();
@@ -394,7 +394,7 @@ wxString CValueForm::GetControlCaption() const
 		if (metaForm != nullptr) return metaForm->GetSynonym();
 	}
 
-	return m_propertyCaption->GetValueAsTranslateString();
+	return m_propertyTitle->GetValueAsTranslateString();
 }
 
 //////////////////////////////////////////////////////////////

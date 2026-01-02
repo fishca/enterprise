@@ -64,10 +64,10 @@ bool CValueCheckbox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
-wxString CValueCheckbox::GetControlCaption() const
+wxString CValueCheckbox::GetControlTitle() const
 {
-	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsTranslateString();
+	if (!m_propertyTitle->IsEmptyProperty()) {
+		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
@@ -103,12 +103,12 @@ void CValueCheckbox::Update(wxObject* wxobject, IVisualHost* visualHost)
 			}
 		}
 
-		checkbox->SetLabel(GetControlCaption());
+		checkbox->SetLabel(GetControlTitle());
 		if (!appData->DesignerMode()) {
 			checkbox->SetValue(m_selValue.GetBoolean());
 		}
 		checkbox->SetWindowStyle(
-			m_propertyTitle->GetValueAsInteger() == 1 ? wxALIGN_LEFT :
+			m_propertyTitleLocation->GetValueAsInteger() == 1 ? wxALIGN_LEFT :
 			wxALIGN_RIGHT
 		);
 	}
@@ -166,9 +166,9 @@ bool CValueCheckbox::SetControlValue(const CValue& varControlVal)
 
 bool CValueCheckbox::LoadData(CMemoryReader& reader)
 {
-	wxString caption; reader.r_stringZ(caption);
-	m_propertyCaption->SetValue(caption);
-	m_propertyTitle->SetValue(reader.r_s32());
+	wxString title; reader.r_stringZ(title);
+	m_propertyTitle->SetValue(title);
+	m_propertyTitleLocation->SetValue(reader.r_s32());
 	if (!m_propertySource->LoadData(reader))
 		return false;
 
@@ -179,8 +179,8 @@ bool CValueCheckbox::LoadData(CMemoryReader& reader)
 
 bool CValueCheckbox::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(m_propertyCaption->GetValueAsString());
-	writer.w_s32(m_propertyTitle->GetValueAsInteger());
+	writer.w_stringZ(m_propertyTitle->GetValueAsString());
+	writer.w_s32(m_propertyTitleLocation->GetValueAsInteger());
 	if (!m_propertySource->SaveData(writer))
 		return false;
 

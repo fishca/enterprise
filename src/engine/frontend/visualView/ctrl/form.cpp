@@ -68,7 +68,7 @@ bool CValueForm::LoadData(CMemoryReader& reader)
 {
 	wxString propValue = wxEmptyString;
 	reader.r_stringZ(propValue);
-	m_propertyCaption->SetValue(propValue);
+	m_propertyTitle->SetValue(propValue);
 	m_propertyOrient->SetValue(reader.r_s32());
 	reader.r_stringZ(propValue);
 	m_propertyFG->SetValue(typeConv::StringToColour(propValue));
@@ -80,7 +80,7 @@ bool CValueForm::LoadData(CMemoryReader& reader)
 
 bool CValueForm::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(m_propertyCaption->GetValueAsString());
+	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
 
 	writer.w_stringZ(

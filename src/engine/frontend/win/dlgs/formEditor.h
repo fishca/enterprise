@@ -127,7 +127,7 @@ protected:
 	void UpdateItem(const wxTreeItemId& id, IValueFrame* obj) {
 
 		// mostramos el nombre
-		const wxString& caption = obj->GetControlCaption();
+		const wxString& caption = obj->GetControlTitle();
 
 		// actualizamos el item
 		if (caption.IsEmpty()) {

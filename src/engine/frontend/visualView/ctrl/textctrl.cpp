@@ -107,10 +107,10 @@ bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
-wxString CValueTextCtrl::GetControlCaption() const
+wxString CValueTextCtrl::GetControlTitle() const
 {
-	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsTranslateString();
+	if (!m_propertyTitle->IsEmptyProperty()) {
+		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
@@ -159,7 +159,7 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 			}
 		}
 
-		textEditor->SetLabel(GetControlCaption());
+		textEditor->SetLabel(GetControlTitle());
 
 		if (!appData->DesignerMode()) {
 			textEditor->SetValue(m_selValue.GetString());
@@ -266,7 +266,7 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 bool CValueTextCtrl::LoadData(CMemoryReader& reader)
 {
 	wxString caption; reader.r_stringZ(caption);
-	m_propertyCaption->SetValue(caption);
+	m_propertyTitle->SetValue(caption);
 
 	m_propertyPasswordMode->SetValue(reader.r_u8());
 	m_propertyMultilineMode->SetValue(reader.r_u8());
@@ -294,7 +294,7 @@ bool CValueTextCtrl::LoadData(CMemoryReader& reader)
 
 bool CValueTextCtrl::SaveData(CMemoryWriter& writer)
 {
-	writer.w_stringZ(m_propertyCaption->GetValueAsString());
+	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 
 	writer.w_u8(m_propertyPasswordMode->GetValueAsBoolean());
 	writer.w_u8(m_propertyMultilineMode->GetValueAsBoolean());

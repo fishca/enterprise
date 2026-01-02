@@ -15,7 +15,7 @@ CValueStaticText::CValueStaticText() : IValueWindow()
 wxObject* CValueStaticText::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	wxStaticText* staticText = new wxStaticText(wxparent, wxID_ANY,
-		m_propertyCaption->GetValueAsTranslateString(),
+		m_propertyTitle->GetValueAsTranslateString(),
 		wxDefaultPosition,
 		wxDefaultSize);
 
@@ -32,11 +32,11 @@ void CValueStaticText::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 	if (staticText != nullptr) {
 			
-		staticText->SetLabel(m_propertyCaption->GetValueAsTranslateString());
+		staticText->SetLabel(m_propertyTitle->GetValueAsTranslateString());
 		staticText->Wrap(m_propertyWrap->GetValueAsUInteger());
 		
 		if (m_propertyMarkup->GetValueAsBoolean() != false) {
-			staticText->SetLabelMarkup(m_propertyCaption->GetValueAsTranslateString());
+			staticText->SetLabelMarkup(m_propertyTitle->GetValueAsTranslateString());
 		}
 	}
 
@@ -56,7 +56,7 @@ bool CValueStaticText::LoadData(CMemoryReader& reader)
 	m_propertyMarkup->SetValue(reader.r_u8());
 	m_propertyWrap->SetValue(reader.r_u32());
 	wxString label; reader.r_stringZ(label);
-	m_propertyCaption->SetValue(label);
+	m_propertyTitle->SetValue(label);
 	return IValueWindow::LoadData(reader);
 }
 
@@ -64,7 +64,7 @@ bool CValueStaticText::SaveData(CMemoryWriter& writer)
 {
 	writer.w_u8(m_propertyMarkup->GetValueAsBoolean());
 	writer.w_u32(m_propertyWrap->GetValueAsUInteger());
-	writer.w_stringZ(m_propertyCaption->GetValueAsString());
+	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 
 	return IValueWindow::SaveData(writer);
 }

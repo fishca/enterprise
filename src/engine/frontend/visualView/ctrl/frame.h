@@ -139,7 +139,7 @@ public:
 	}
 
 	// get control caption
-	virtual wxString GetControlCaption() const {
+	virtual wxString GetControlTitle() const {
 		return wxGetTranslation(stringUtils::GenerateSynonym(GetClassName()));
 	}
 
@@ -407,7 +407,7 @@ public:
 
 		wxArrayString arr;
 
-		arr.Add(wxT("caption"));
+		arr.Add(wxT("title"));
 		arr.Add(wxT("minimum_size"));
 		arr.Add(wxT("maximum_size"));
 		arr.Add(wxT("font"));

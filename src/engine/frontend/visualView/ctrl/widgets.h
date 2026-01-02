@@ -14,7 +14,7 @@ class CValueButton : public IValueWindow {
 protected:
 
 	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryButton, wxT("caption"), _("Caption"), wxT("Button"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryButton, wxT("title"), _("Title"), wxT("Button"));
 	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryButton, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryButton, wxT("picture"), _("Picture"));
 
@@ -24,13 +24,13 @@ protected:
 
 public:
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	CValueButton();
 
-	//get caption 
-	virtual wxString GetControlCaption() const { return GetCaption(); }
+	//get title
+	virtual wxString GetControlTitle() const { return GetCaption(); }
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -59,11 +59,11 @@ protected:
 	CPropertyCategory* m_categoryStaticText = IPropertyObject::CreatePropertyCategory(wxT("staticText"), _("Static text"));
 	CPropertyBoolean* m_propertyMarkup = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStaticText, wxT("markup"), _("Markup"), true);
 	CPropertyUInteger* m_propertyWrap = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStaticText, wxT("wrap"), _("Wrap"), 0);
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryStaticText, wxT("caption"), _("Caption"), wxT("Static text"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryStaticText, wxT("title"), _("Title"), wxT("Static text"));
 public:
 
-	void SetCaption(const wxString& caption) { m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	CValueStaticText();
 
@@ -93,20 +93,20 @@ protected:
 	bool GetChoiceForm(CPropertyList* property);
 protected:
 
-	CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textControl"), _("Text control"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryText, wxT("Caption"), wxT(""));
-	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("Password mode"), false);
-	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("multilineMode"), _("Multiline mode"), false);
-	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("texteditMode"), _("Textedit mode"), true);
+	CPropertyCategory* m_categoryText = IPropertyObject::CreatePropertyCategory(wxT("textbox"), _("Textbox"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryText, wxT("title"), _("Title"), wxT(""));
+	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("passwordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
+	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("multilineMode"), _("Multiline mode"), _("Multiline mode"), false);
+	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryText, wxT("texteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
 
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"), eValueTypes::TYPE_STRING);
 	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("Choice form"), &CValueTextCtrl::GetChoiceForm, wxNOT_FOUND);
 
 	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
-	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select"), true);
-	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear"), true);
-	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open"), false);
+	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select button"), true);
+	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear button"), true);
+	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open button"), false);
 
 	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
 	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("onChange"), _("Change"), wxArrayString{ wxT("control") });
@@ -123,8 +123,8 @@ public:
 	meta_identifier_t GetSource(const meta_identifier_t& id) { return m_propertySource->GetValueAsSource(); }
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	void SetSelectButton(bool caption) { return m_propertySelectButton->SetValue(caption); }
 	bool GetSelectButton() const { return m_propertySelectButton->GetValueAsBoolean(); }
@@ -160,8 +160,8 @@ public:
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	//get caption 
-	virtual wxString GetControlCaption() const;
+	//get title
+	virtual wxString GetControlTitle() const;
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -282,8 +282,8 @@ class CValueCheckbox : public IValueWindow,
 	CValue m_selValue = false;
 
 	CPropertyCategory* m_categoryCheckBox = IPropertyObject::CreatePropertyCategory(wxT("checkbox"), _("Checkbox"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCheckBox, wxT("caption"), _("Caption"), wxT("Checkbox"));
-	CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), _("Title location"), enTitleLocation::eLeft);
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCheckBox, wxT("title"), _("Title"), wxT("Checkbox"));
+	CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitleLocation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("titleLocation"), _("Title location"), enTitleLocation::eLeft);
 
 	CPropertyCategory* m_categorySource = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryCheckBox, wxT("source"), _("Source"), eValueTypes::TYPE_BOOLEAN);
@@ -298,8 +298,8 @@ public:
 	meta_identifier_t GetSource() const { return m_propertySource->GetValueAsSource(); }
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	CValueCheckbox();
 
@@ -330,8 +330,8 @@ public:
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
 
-	//get caption 
-	virtual wxString GetControlCaption() const;
+	//get title
+	virtual wxString GetControlTitle() const;
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -379,17 +379,17 @@ class CValueRadioButton : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueRadioButton);
 protected:
 	CPropertyCategory* m_categoryRadioButton = IPropertyObject::CreatePropertyCategory(wxT("radioButton"), _("Radio button"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryRadioButton, wxT("caption"), _("Caption"), wxT("Radio button"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryRadioButton, wxT("title"), _("Title"), wxT("Radio button"));
 	CPropertyBoolean* m_propertySelected = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryRadioButton, wxT("selected"), _("Selected"));
 public:
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	CValueRadioButton();
 
-	//get caption 
-	virtual wxString GetControlCaption() const { return GetCaption(); }
+	//get title
+	virtual wxString GetControlTitle() const { return GetCaption(); }
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;

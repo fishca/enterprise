@@ -79,10 +79,10 @@ IMetaData* CValueTableBoxColumn::GetMetaData() const
 		m_formOwner->GetMetaData() : nullptr;
 }
 
-wxString CValueTableBoxColumn::GetControlCaption() const
+wxString CValueTableBoxColumn::GetControlTitle() const
 {
-	if (!m_propertyCaption->IsEmptyProperty()) {
-		return m_propertyCaption->GetValueAsTranslateString();
+	if (!m_propertyTitle->IsEmptyProperty()) {
+		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
 		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
@@ -95,7 +95,7 @@ wxString CValueTableBoxColumn::GetControlCaption() const
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, GetControlCaption(),
+	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, GetControlTitle(),
 		wxNOT_FOUND,
 		m_propertyWidth->GetValueAsUInteger(),
 		m_propertyAlign->GetValueAsEnum(),
@@ -129,11 +129,11 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	const unsigned int order_position = GetParentPosition();
 
 	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
-		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
-		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
@@ -141,7 +141,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
-		dataViewColumn->SetTitle(GetControlCaption());
+		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(wxNullBitmap);
 	}
 
@@ -240,7 +240,7 @@ bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
 
 bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 {
-	m_propertyCaption->LoadData(reader);
+	m_propertyTitle->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
 	m_propertyPicture->LoadData(reader);
 
@@ -276,7 +276,7 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 
 bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 {
-	m_propertyCaption->SaveData(writer);
+	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
 	m_propertyPicture->SaveData(writer);
 

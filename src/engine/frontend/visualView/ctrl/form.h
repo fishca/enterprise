@@ -118,7 +118,7 @@ private:
 
 protected:
 	CPropertyCategory* m_categoryFrame = IPropertyObject::CreatePropertyCategory(wxT("frame"), _("Frame"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryFrame, wxT("caption"), _("Caption"), wxT(""));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryFrame, wxT("title"), _("Title"), wxT(""));
 	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("fg"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
 	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryFrame, wxT("bg"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
 	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryFrame, wxT("enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
@@ -131,8 +131,8 @@ public:
 
 public:
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	wxColour GetForegroundColour() const { return m_propertyFG->GetValueAsColour(); }
 	wxColour GetBackgroundColour() const { return m_propertyBG->GetValueAsColour(); }
@@ -233,7 +233,7 @@ public:
 	IMetaObjectGenericData* GetMetaObject() const;
 
 	// get control caption
-	virtual wxString GetControlCaption() const;
+	virtual wxString GetControlTitle() const;
 
 	CValue GetCreatedValue() const { return m_createdValue; }
 	CValue GetChangedValue() const { return m_changedValue; }

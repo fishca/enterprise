@@ -34,8 +34,8 @@ public:
 
 	CValueToolbar();
 
-	//get caption 
-	virtual wxString GetControlCaption() const {
+	//get title
+	virtual wxString GetControlTitle() const {
 
 		if (!m_actSource->IsEmptyProperty()) {
 			CValue pvarPropVal;
@@ -105,7 +105,7 @@ private:
 
 	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
 
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("caption"), _("Caption"), wxT(""));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("title"), _("Title"), wxT(""));
 	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
 	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
@@ -116,8 +116,8 @@ private:
 
 public:
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	void SetToolTip(const wxString& caption) { return m_properyTooltip->SetValue(caption); }
 	wxString GetToolTip() const { return m_properyTooltip->GetValueAsTranslateString(); }
@@ -145,7 +145,7 @@ public:
 					}
 				}
 			}
-			else if (m_propertyCaption->IsEmptyProperty()) {
+			else if (m_propertyTitle->IsEmptyProperty()) {
 				return wxBitmap(s_null_xpm);
 			}
 		}
@@ -155,7 +155,7 @@ public:
 
 	wxString GetItemCaption(const CActionCollection& collection) const {
 		const CActionDescription& actionDesc = m_eventAction->GetValueAsActionDesc();
-		if (m_propertyCaption->IsEmptyProperty()) {
+		if (m_propertyTitle->IsEmptyProperty()) {
 			const action_identifier_t selected = actionDesc.GetSystemAction();
 			if (selected != wxNOT_FOUND) {
 				for (unsigned int i = 0; i < collection.GetCount(); i++) {
@@ -166,7 +166,7 @@ public:
 				}
 			}
 		}
-		return m_propertyCaption->GetValueAsTranslateString();
+		return m_propertyTitle->GetValueAsTranslateString();
 	}
 
 	wxString GetItemToolTip(const CActionCollection& collection) const {
@@ -211,9 +211,9 @@ public:
 
 	CValueToolBarItem();
 
-	//get caption 
-	virtual wxString GetControlCaption() const {
-		if (!m_propertyCaption->IsEmptyProperty())
+	//get title
+	virtual wxString GetControlTitle() const {
+		if (!m_propertyTitle->IsEmptyProperty())
 			return GetCaption();
 		return _("<empty caption>");
 	}
@@ -252,8 +252,8 @@ public:
 
 	CValueToolBarSeparator();
 
-	//get caption 
-	virtual wxString GetControlCaption() const {
+	//get title
+	virtual wxString GetControlTitle() const {
 		return _("Separator");
 	}
 

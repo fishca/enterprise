@@ -75,8 +75,8 @@ public:
 	// before/after run 
 	virtual bool InitializeControl() { CreateModel(); return true; }
 
-	//get caption 
-	virtual wxString GetControlCaption() const {
+	//get title
+	virtual wxString GetControlTitle() const {
 
 		if (!m_propertySource->IsEmptyProperty()) {
 			CValue pvarPropVal;
@@ -241,8 +241,8 @@ public:
 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetCaption(const wxString& caption) { return m_propertyCaption->SetValue(caption); }
-	wxString GetCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	void SetCaption(const wxString& caption) { return m_propertyTitle->SetValue(caption); }
+	wxString GetCaption() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	void SetPasswordMode(bool caption) { return m_propertyPasswordMode->SetValue(caption); }
 	bool GetPasswordMode() const { return m_propertyPasswordMode->GetValueAsBoolean(); }
@@ -299,8 +299,8 @@ public:
 	//get type description 
 	virtual CTypeDescription& GetTypeDesc() const { return m_propertySource->GetValueAsTypeDesc(); }
 
-	//get caption 
-	virtual wxString GetControlCaption() const;
+	//get title
+	virtual wxString GetControlTitle() const;
 
 	//control factory
 	virtual wxObject* Create(wxWindow* wxparent, IVisualHost* visualHost) override;
@@ -358,19 +358,19 @@ protected:
 private:
 
 	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("info"), _("Info"));
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("caption"), _("Caption"), wxT(""));
-	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("passwordMode"), _("Password mode"), false);
-	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("multilineMode"), _("Multiline mode"), false);
-	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("texteditMode"), _("Textedit mode"), true);
-
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("title"), _("Title"), wxT(""));
+	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("passwordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
+	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("multilineMode"), _("Multiline mode"), _("Multiline mode"), false);
+	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("texteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
+	
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"), eValueTypes::TYPE_STRING);
 	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
 
-	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("button"));
-	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select"), true);
-	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear"), true);
-	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open"), false);
+	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
+	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select button"), true);
+	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear button"), true);
+	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open button"), false);
 
 	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("style"), _("Style"));
 	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("width"), _("Width"), wxDVC_DEFAULT_WIDTH);

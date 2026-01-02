@@ -174,7 +174,7 @@ class CValueStaticBoxSizer : public IValueSizer {
 	wxDECLARE_DYNAMIC_CLASS(CValueStaticBoxSizer);
 protected:
 	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("Orient"), wxHORIZONTAL);
-	CPropertyTString* m_propertyCaption = IPropertyObject::CreateProperty<CPropertyTString>(m_categorySizer, wxT("caption"), _("Caption"), wxT(""));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categorySizer, wxT("title"), _("Title"), wxT(""));
 	CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categorySizer, wxT("font"), _("Font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
 	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("fg"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
 	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("bg"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
@@ -187,8 +187,8 @@ public:
 
 	CValueStaticBoxSizer();
 
-	//get caption 
-	virtual wxString GetControlCaption() const { return m_propertyCaption->GetValueAsTranslateString(); }
+	//get title
+	virtual wxString GetControlTitle() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	//control factory
 	virtual wxObject* Create(wxWindow* parent, IVisualHost* visualHost) override;

@@ -6,7 +6,7 @@
 class FRONTEND_API IValueControl : public IValueFrame {
 	wxDECLARE_ABSTRACT_CLASS(IValueControl);
 protected:
-	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("name"), _("Name"), _("The name of the control."), wxEmptyString);
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("name"), _("Name"), _("Object name"), wxT(""));
 public:
 
 	IValueControl();

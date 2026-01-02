@@ -79,13 +79,7 @@ public:
 	void AddToolSeparator();
 
 	//array of the commands 
-	CActionCollection GetActionArray() const {
-		IValueFrame* sourceElement =
-			GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
-		if (sourceElement != nullptr)
-			return sourceElement->GetActionCollection(sourceElement->GetTypeForm());
-		return CActionCollection();
-	}
+	const CActionCollection& GetActionArray() const { return m_actionArray; }
 
 protected:
 
@@ -94,6 +88,9 @@ protected:
 	void OnTool(wxCommandEvent& event);
 	void OnToolDropDown(wxAuiToolBarEvent& event);
 	void OnRightDown(wxMouseEvent& event);
+
+	//storage for action array 
+	CActionCollection m_actionArray;
 
 	friend class CValueForm;
 };

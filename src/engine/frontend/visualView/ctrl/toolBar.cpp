@@ -59,6 +59,16 @@ void CValueToolbar::Update(wxObject* wxobject, IVisualHost* visualHost)
 	CAuiToolBar* toolbar = dynamic_cast<CAuiToolBar*>(wxobject);
 
 	if (toolbar != nullptr) {
+
+		const action_identifier_t id = GetActionSrc(); 
+		IValueFrame* sourceElement =
+			id != wxNOT_FOUND ? FindControlByID(id) : nullptr;
+	
+		if (sourceElement != nullptr)
+			m_actionArray = sourceElement->GetActionCollection(sourceElement->GetTypeForm());
+		else
+			m_actionArray = CActionCollection();
+
 	}
 
 	UpdateWindow(toolbar);

@@ -76,7 +76,7 @@ private:
 #pragma endregion
 
 #pragma region config
-struct BACKEND_API CApplicationDataConfigInfo {
+struct CApplicationDataConfigInfo {
 
 	bool IsSetLocale() const { return !m_strLocale.IsEmpty(); }
 
@@ -187,8 +187,10 @@ public:
 	bool Connect(const wxString& strUserName, const wxString& strUserPassword, const int flags = _app_start_default_flag);
 	bool Disconnect();
 
+#pragma region config
 	// Read setting from file
 	void ReadEngineConfig();
+#pragma endregion
 
 	static std::shared_ptr<IDatabaseLayer> GetDatabaseLayer() {
 		if (s_instance != nullptr)
@@ -305,8 +307,12 @@ private:
 	wxDateTime m_lastActivity;
 	CGuid m_sessionGuid;
 
+#pragma region config
 	CApplicationDataConfigInfo m_configInfo;
+#pragma endregion 
+#pragma region user
 	CApplicationDataUserInfo m_userInfo;
+#pragma endregion 
 
 	static bool m_forceExit;
 	static wxCriticalSection m_cs_force_exit;

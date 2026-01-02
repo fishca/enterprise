@@ -141,7 +141,7 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc("lower", 1, "lower(string)");
 	m_methodHelper->AppendFunc("chr", 1, "chr(number)");
 	m_methodHelper->AppendFunc("asc", 1, "asc(string)");
-	m_methodHelper->AppendFunc("tstr", 1, "tstr(string, lang)");
+	m_methodHelper->AppendFunc("tstr", 2, "tstr(string, lang)");
 	//--- Работа с датой и временем:
 	m_methodHelper->AppendFunc("currentDate", "currentDate()");
 	m_methodHelper->AppendFunc("workingDate", 1, "workingDate(date)");

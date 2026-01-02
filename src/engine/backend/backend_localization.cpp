@@ -90,20 +90,32 @@ wxString CBackendLocalization::GetRawLocText(const std::vector<CBackendLocalizat
 
 bool CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const std::vector<CBackendLocalizationEntry>& array, wxString& strResult)
 {
-	auto iterator = std::find_if(array.begin(), array.end(),
-		[strLangCode](const CBackendLocalizationEntry& entry) {
-			return stringUtils::CompareString(entry.m_code, strLangCode); });
+	if (!strLangCode.IsEmpty()) {
+		auto iterator = std::find_if(array.begin(), array.end(),
+			[strLangCode](const CBackendLocalizationEntry& entry) {
+				return stringUtils::CompareString(entry.m_code, strLangCode); });
 
-	if (iterator != array.end()) {
-		strResult = iterator->m_data;
-		return true;
+		if (iterator != array.end()) {
+			strResult = iterator->m_data;
+			return true;
+		}
+		else if (!stringUtils::CompareString(ms_strUserLanguage, strLangCode)) {
+			const wxString& strUserLanguage = ms_strUserLanguage;
+			const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
+				[strUserLanguage](const CBackendLocalizationEntry& entry) {
+					return stringUtils::CompareString(entry.m_code, strUserLanguage); });
+			if (iterator_by_default_lang != array.end()) {
+				strResult = iterator_by_default_lang->m_data;
+				return true;
+			}
+		}
 	}
-	else if (!stringUtils::CompareString(ms_strUserLanguage, strLangCode)) {
+	else {
 		const wxString& strUserLanguage = ms_strUserLanguage;
 		const auto iterator_by_default_lang = std::find_if(array.begin(), array.end(),
 			[strUserLanguage](const CBackendLocalizationEntry& entry) {
 				return stringUtils::CompareString(entry.m_code, strUserLanguage); });
-		if (iterator != array.end()) {
+		if (iterator_by_default_lang != array.end()) {
 			strResult = iterator_by_default_lang->m_data;
 			return true;
 		}

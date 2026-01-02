@@ -289,7 +289,7 @@ short CSystemFunction::Asc(const CValue& cSource)
 wxString CSystemFunction::TStr(const CValue& cSource, const CValue& cLanguage)
 {
 	return CBackendLocalization::GetTranslateGetRawLocText(
-		cSource.GetString(), cLanguage.GetString());
+		cLanguage.GetString(), cSource.GetString());
 }
 
 //---Работа с датой и временем

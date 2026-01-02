@@ -23,8 +23,13 @@ class CEnterpriseApp : public wxApp {
 	wxString m_strIBUser;
 	wxString m_strIBPassword;
 
+#ifdef DEBUG
 	//LOCALE
 	wxString m_strLocale = wxT("en");
+#else 
+	//LOCALE
+	wxString m_strLocale;
+#endif // wxDEBUG
 
 public:
 	virtual bool OnInit();

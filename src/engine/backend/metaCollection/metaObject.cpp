@@ -223,7 +223,7 @@ bool IMetaObject::OnCreateMetaObject(IMetaData* metaData, int flags)
 	m_metaId = metaData->GenerateNewID();
 	m_metaData = metaData;
 #ifdef DEBUG  
-	wxLogDebug("* Create metaData object %s with id %i",
+	wxLogDebug(wxT("* Create metaData object %s with id %i"),
 		GetClassName(), GetMetaID()
 	);
 #endif

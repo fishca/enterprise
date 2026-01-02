@@ -32,7 +32,7 @@ public:
 		}
 		catch (...) {
 #ifdef DEBUG
-			wxLogDebug("! failed to register class: %s", m_so->GetClassName());
+			wxLogDebug(wxT("! failed to register class: %s"), m_so->GetClassName());
 #endif
 			wxDELETE(m_so);
 		}
@@ -45,7 +45,7 @@ public:
 		}
 		catch (...) {
 #ifdef DEBUG
-			wxLogDebug("! failed to unregister class: %s", m_so->GetClassName());
+			wxLogDebug(wxT("! failed to unregister class: %s"), m_so->GetClassName());
 #endif
 			wxDELETE(m_so);
 		}

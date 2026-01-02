@@ -317,9 +317,9 @@ public:
 		}
 
 		if (selobj != nullptr)
-			wxLogDebug("! <debug> activate property %s", selobj->GetClassName());
+			wxLogDebug(wxT("! <debug> activate property %s"), selobj->GetClassName());
 		else
-			wxLogDebug("! <debug> clear property");
+			wxLogDebug(wxT("! <debug> clear property"));
 	}
 
 	IPropertyObject* GetSelectedObject() const { return m_currentSel; }

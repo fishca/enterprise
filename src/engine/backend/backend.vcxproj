@@ -780,6 +780,9 @@
       <DestinationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">icuuc63%(Extension)</DestinationFileName>
       <DestinationFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">icuuc63%(Extension)</DestinationFileName>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="backend.conf">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="propertyManager\property\advprop\ctrl\res\checked2.xpm" />
     <None Include="propertyManager\property\advprop\ctrl\res\checked_d.xpm" />
     <None Include="propertyManager\property\advprop\ctrl\res\checked_ld.xpm" />

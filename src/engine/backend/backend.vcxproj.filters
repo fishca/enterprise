@@ -1667,6 +1667,7 @@
     <CopyFileToFolders Include="databaseLayer\firebird\engine\dll\icudt63_x64.dll">
       <Filter>databaseLayer\firebird\engine\dll</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="backend.conf" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="compiler\ttmath\ttmathuint_x86_64_msvc.asm">

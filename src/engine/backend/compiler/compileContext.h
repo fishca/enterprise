@@ -128,8 +128,8 @@ struct CCompileContext {
 		std::vector<int>* pListB = m_listBreak[m_numDoNumber];
 		if (pListC == 0 || pListB == 0) {
 #ifdef DEBUG 
-			wxLogDebug("Error (FinishDoList) gotoContinue=%d, gotoBreak=%d\n", gotoContinue, gotoBreak);
-			wxLogDebug("m_numDoNumber=%d\n", m_numDoNumber);
+			wxLogDebug(wxT("Error (FinishDoList) gotoContinue=%d, gotoBreak=%d\n"), gotoContinue, gotoBreak);
+			wxLogDebug(wxT("m_numDoNumber=%d\n"), m_numDoNumber);
 #endif 
 			m_numDoNumber--;
 			return;

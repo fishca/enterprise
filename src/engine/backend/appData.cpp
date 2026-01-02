@@ -93,6 +93,8 @@ bool CApplicationData::CreateAppDataEnv()
 	try {
 #endif
 		s_instance = new CApplicationData(eRunMode::eENTERPRISE_MODE);
+		s_instance->ReadEngineConfig();
+
 		if (!SetLocaleAppDataEnv())
 			return false;
 		return true;
@@ -119,6 +121,8 @@ bool CApplicationData::CreateFileAppDataEnv(eRunMode runMode, const wxString& st
 
 			s_instance = new CApplicationData(runMode);
 			s_instance->m_strFile = strDirDatabase;
+
+			s_instance->ReadEngineConfig();
 
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
@@ -166,6 +170,8 @@ bool CApplicationData::CreateServerAppDataEnv(eRunMode runMode, const wxString& 
 			s_instance->m_strUser = strUser;
 			s_instance->m_strPassword = strPassword;
 			s_instance->m_strDatabase = strDatabase;
+
+			s_instance->ReadEngineConfig();
 
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
@@ -230,6 +236,7 @@ bool CApplicationData::DestroyAppDataEnv()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <wx/fileconf.h>
 #include <wx/stdpaths.h>
 
 bool CApplicationData::InitLocale(const wxString& locale)
@@ -247,9 +254,16 @@ bool CApplicationData::InitLocale(const wxString& locale)
 			if (foundedLocale != nullptr)
 				m_locale_lang = foundedLocale->Language;
 		}
+		else if (m_configInfo.IsSetLocale()) {
+			const wxLanguageInfo* foundedLocale = wxLocale::FindLanguageInfo(m_configInfo.m_strLocale);
+			if (foundedLocale != nullptr)
+				m_locale_lang = foundedLocale->Language;
+		}
 
 		// Independently of whether we succeeded to set the locale or not, try
 		// to load the translations (for the default system language) here.
+
+		const wxString& workingDir = wxGetCwd();
 
 		// normally this wouldn't be necessary as the catalog files would be found
 		// in the default locations, but when the program is not installed the
@@ -257,6 +271,8 @@ bool CApplicationData::InitLocale(const wxString& locale)
 		// default
 
 		wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
+
+		wxLocale::AddCatalogLookupPathPrefix(workingDir + wxFILE_SEP_PATH + wxT("lang"));
 		wxLocale::AddCatalogLookupPathPrefix(fn.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
 
 		if (!m_locale.Init(m_locale_lang)) {
@@ -313,6 +329,23 @@ bool CApplicationData::Disconnect()
 	}
 
 	return true;
+}
+
+void CApplicationData::ReadEngineConfig()
+{
+	const wxString& workingDir = wxGetCwd(); wxString strConfigFile;
+	if (wxFileName::FileExists(workingDir + wxFILE_SEP_PATH + wxT("backend.conf"))) {
+		strConfigFile = workingDir +
+			wxFILE_SEP_PATH + wxT("backend.conf");
+	}
+	else {
+		wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
+		strConfigFile = fn.GetPath() +
+			wxFILE_SEP_PATH + wxT("backend.conf");
+	}
+
+	wxFileConfig fc(wxT(""), wxT(""), wxT(""), strConfigFile);
+	fc.Read(wxT("Locale"), &m_configInfo.m_strLocale);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

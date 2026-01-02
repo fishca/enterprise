@@ -147,7 +147,7 @@ CValue::~CValue()
 	if (m_typeClass == eValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
 		m_pRef->DecrRef();
 #ifdef DEBUG_VALUE
-	wxLogDebug("Delete %d", --s_nCreateCount);
+	wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
 #endif
 }
 

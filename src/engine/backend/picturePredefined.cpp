@@ -91,7 +91,7 @@ void RegisterAllBackendPicture()
 	::RegisterBackendPicture(wxT("generate"), g_picGenerateCLSID, s_generate_16_png);
 
 	::RegisterBackendPicture(wxT("user"), g_picUserCLSID, s_user_16_png);
-	::RegisterBackendPicture(wxT("userList"), g_picUserActiveCLSID, s_activeUser_16_png);
+	::RegisterBackendPicture(wxT("userActive"), g_picUserActiveCLSID, s_activeUser_16_png);
 	::RegisterBackendPicture(wxT("userList"), g_picUserListCLSID, s_userList_16_png);
 }
 

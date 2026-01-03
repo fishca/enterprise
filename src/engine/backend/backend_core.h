@@ -27,6 +27,7 @@ extern BACKEND_API unsigned int GetBuildId();
 
 #define emptyDate -62135604000000ll
 
+typedef int role_identifier_t;
 typedef int meta_identifier_t;
 typedef int form_identifier_t;
 typedef int action_identifier_t;

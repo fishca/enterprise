@@ -85,6 +85,8 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 #define commonName _("common")
 #define commonFormsName _("common forms")
 
+#define interfacesName _("interfaces")
+
 #define constantsName _("constants")
 
 #define catalogsName _("catalogs")
@@ -100,19 +102,20 @@ void CRoleEditor::InitRole()
 	wxASSERT(typeCtor);
 
 	wxImageList* imageList = m_roleCtrl->GetImageList();
-	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+	const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 	m_treeMETADATA = m_roleCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
-	int imageCommonIndex = imageList->Add(wxArtProvider::GetIcon(wxART_COMMON_FOLDER, wxART_METATREE));
+	const int imageCommonIndex = imageList->Add(wxArtProvider::GetIcon(wxART_COMMON_FOLDER, wxART_METATREE));
 	m_treeCOMMON = m_roleCtrl->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	m_treeFORMS = AppendGroupItem(m_treeCOMMON, g_metaCommonFormCLSID, commonFormsName);
+	m_treeINTERFACES = AppendGroupItem(m_treeCOMMON, g_metaInterfaceCLSID, interfacesName);
 
 	//*****************************************************************************************************
 	//*                                      Custom objects                                               *
@@ -141,21 +144,32 @@ void CRoleEditor::ClearRole() {
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
-	if (m_treeFORMS.IsOk()) m_roleCtrl->DeleteChildren(m_treeFORMS);
+	if (m_treeFORMS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeFORMS);
 
-	if (m_treeCONSTANTS.IsOk()) m_roleCtrl->DeleteChildren(m_treeCONSTANTS);
+	if (m_treeINTERFACES.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeINTERFACES);
+
+	if (m_treeCONSTANTS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeCONSTANTS);
 
 	//*****************************************************************************************************
 	//*                                      Custom objects                                               *
 	//*****************************************************************************************************
 
-	if (m_treeCATALOGS.IsOk()) m_roleCtrl->DeleteChildren(m_treeCATALOGS);
-	if (m_treeDOCUMENTS.IsOk()) m_roleCtrl->DeleteChildren(m_treeDOCUMENTS);
+	if (m_treeCATALOGS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeCATALOGS);
+	if (m_treeDOCUMENTS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeDOCUMENTS);
 
-	if (m_treeDATAPROCESSORS.IsOk()) m_roleCtrl->DeleteChildren(m_treeDATAPROCESSORS);
-	if (m_treeREPORTS.IsOk()) m_roleCtrl->DeleteChildren(m_treeREPORTS);
-	if (m_treeINFORMATION_REGISTERS.IsOk()) m_roleCtrl->DeleteChildren(m_treeINFORMATION_REGISTERS);
-	if (m_treeACCUMULATION_REGISTERS.IsOk()) m_roleCtrl->DeleteChildren(m_treeACCUMULATION_REGISTERS);
+	if (m_treeDATAPROCESSORS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeDATAPROCESSORS);
+	if (m_treeREPORTS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeREPORTS);
+	if (m_treeINFORMATION_REGISTERS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeINFORMATION_REGISTERS);
+	if (m_treeACCUMULATION_REGISTERS.IsOk())
+		m_roleCtrl->DeleteChildren(m_treeACCUMULATION_REGISTERS);
 
 	//delete all items
 	m_roleCtrl->DeleteAllItems();
@@ -166,9 +180,10 @@ void CRoleEditor::ClearRole() {
 
 void CRoleEditor::FillData()
 {
-	IMetaData* metaData = m_metaRole->GetMetaData();
+	const IMetaData* metaData = m_metaRole->GetMetaData();
 	wxASSERT(metaData);
-	IMetaObject* commonObject = activeMetaData->GetCommonMetaObject();
+
+	const IMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_roleCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());
@@ -176,16 +191,25 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
-	for (auto commonForm : activeMetaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
+	for (auto commonForm : metaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 		if (commonForm->IsDeleted())
 			continue;
 		AppendItem(m_treeFORMS, commonForm);
 	}
 
 	//****************************************************************
+	//*                          Interfaces							 *
+	//****************************************************************
+	for (auto commonInterface : metaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
+		if (commonInterface->IsDeleted())
+			continue;
+		AppendItem(m_treeINTERFACES, commonInterface);
+	}
+
+	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
-	for (auto constant : activeMetaData->GetAnyArrayObject(g_metaConstantCLSID)) {
+	for (auto constant : metaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 		if (constant->IsDeleted())
 			continue;
 		AppendItem(m_treeCONSTANTS, constant);
@@ -194,7 +218,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
-	for (auto catalog : activeMetaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
+	for (auto catalog : metaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 		if (catalog->IsDeleted())
 			continue;
 		AppendItem(m_treeCATALOGS, catalog);
@@ -203,7 +227,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
-	for (auto document : activeMetaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
+	for (auto document : metaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 		if (document->IsDeleted())
 			continue;
 		AppendItem(m_treeDOCUMENTS, document);
@@ -212,7 +236,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
-	for (auto dataProcessor : activeMetaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : metaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 		if (dataProcessor->IsDeleted())
 			continue;
 		AppendItem(m_treeDATAPROCESSORS, dataProcessor);
@@ -221,7 +245,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
-	for (auto report : activeMetaData->GetAnyArrayObject(g_metaReportCLSID)) {
+	for (auto report : metaData->GetAnyArrayObject(g_metaReportCLSID)) {
 		if (report->IsDeleted())
 			continue;
 		AppendItem(m_treeREPORTS, report);
@@ -230,7 +254,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
-	for (auto informationRegister : activeMetaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : metaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 		if (informationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
@@ -239,7 +263,7 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
-	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : metaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 		if (accumulationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);

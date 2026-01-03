@@ -20,18 +20,7 @@ const class_identifier_t g_controlNotebookPageCLSID = string_to_clsid("CT_NTPG")
 
 class CValueNotebook : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueNotebook);
-protected:
 
-	friend class CValueNotebookPage;
-
-	CPropertyCategory* m_categoryNotebook = IPropertyObject::CreatePropertyCategory(wxT("notebook"), _("Notebook"));
-	CPropertyEnum<CValueEnumOrientNotebookPage>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrientNotebookPage>>(m_categoryNotebook, wxT("orientPage"), _("Orient page"), wxAUI_NB_TOP);
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
-	CEventControl* m_eventOnPageChanged = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onPageChanged"), _("Page changed"), wxArrayString{ wxT("page") });
-
-private:
-	CValueNotebookPage* m_activePage;
-	std::vector< CValueNotebookPage*> m_aPages;
 public:
 
 	CValueNotebook();
@@ -69,24 +58,27 @@ public:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-protected:
+private:
 
 	//Events
 	void OnPageChanged(wxAuiNotebookEvent& event);
 	void OnBGDClick(wxAuiNotebookEvent& event);
 	void OnEndDrag(wxAuiNotebookEvent& event);
+
+	CValueNotebookPage* m_activePage;
+	std::vector< CValueNotebookPage*> m_pageArray;
+
+	CPropertyCategory* m_categoryNotebook = IPropertyObject::CreatePropertyCategory(wxT("notebook"), _("Notebook"));
+	CPropertyEnum<CValueEnumOrientNotebookPage>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrientNotebookPage>>(m_categoryNotebook, wxT("orientPage"), _("Orient page"), wxAUI_NB_TOP);
+	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
+	CEventControl* m_eventOnPageChanged = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onPageChanged"), _("Page changed"), wxArrayString{ wxT("page") });
+
+	friend class CValueNotebookPage;
 };
 
 class CValueNotebookPage : public IValueControl {
 	wxDECLARE_DYNAMIC_CLASS(CValueNotebookPage);
-protected:
-	CPropertyCategory* m_categoryPage = IPropertyObject::CreatePropertyCategory(wxT("page"), _("Page"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryPage, wxT("title"), _("Title"), wxT("New page"));
-	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPage, wxT("visible"), _("Visible"), true);
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryPage, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryPage, wxT("picture"), _("Picture"));
-	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("sizer"), _("sizer"));
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("Orient"), wxVERTICAL);
+
 public:
 
 	///////////////////////////////////////////////////////////////////////
@@ -122,6 +114,16 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	CPropertyCategory* m_categoryPage = IPropertyObject::CreatePropertyCategory(wxT("page"), _("Page"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryPage, wxT("title"), _("Title"), wxT("New page"));
+	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPage, wxT("visible"), _("Visible"), true);
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryPage, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryPage, wxT("picture"), _("Picture"));
+	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("sizer"), _("sizer"));
+	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("orient"), _("Orient"), wxVERTICAL);
 
 	friend class CValueNotebook;
 };

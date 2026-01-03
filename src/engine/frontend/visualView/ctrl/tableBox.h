@@ -340,6 +340,8 @@ public:
 	//choice processing
 	virtual void ChoiceProcessing(CValue& vSelected);
 
+private:
+
 	//events
 	void OnSelectButtonPressed(wxCommandEvent& event);
 	void OnOpenButtonPressed(wxCommandEvent& event);
@@ -348,21 +350,17 @@ public:
 	void OnTextEnter(wxCommandEvent& event);
 	void OnKillFocus(wxFocusEvent& event);
 
-protected:
-
 	// text processing
 	bool TextProcessing(wxTextCtrl* textCtrl, const wxString& strData);
 
 	form_identifier_t m_model_id;
-
-private:
 
 	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("info"), _("Info"));
 	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("title"), _("Title"), wxT(""));
 	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("passwordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
 	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("multilineMode"), _("Multiline mode"), _("Multiline mode"), false);
 	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("texteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
-	
+
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"), eValueTypes::TYPE_STRING);
 	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
@@ -390,6 +388,8 @@ private:
 	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("clearing"), _("Clearing"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
 	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("opening"), _("Opening"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
 	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("choiceProcessing"), _("Choice processing"), wxArrayString{ wxT("control"), wxT("valueSelected"), wxT("standartProcessing") });
+
+	friend class CValueViewRenderer;
 };
 
 #endif 

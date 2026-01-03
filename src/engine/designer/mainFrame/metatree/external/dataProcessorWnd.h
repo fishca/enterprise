@@ -29,20 +29,20 @@ private:
 private:
 
 	wxTreeItemId GetSelectionIdentifier() const {
-		wxTreeItemId parentItem = m_metaTreeWnd->GetSelection();
+		wxTreeItemId parentItem = m_metaTreeCtrl->GetSelection();
 		while (parentItem != nullptr) {
-			wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
+			wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 			if (item != nullptr) {
 				CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 				if (item_clsid != nullptr) return parentItem;
 			}
-			parentItem = m_metaTreeWnd->GetItemParent(parentItem);
+			parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
 		}
 		return wxTreeItemId(nullptr);
 	}
 
 	class_identifier_t GetClassIdentifier() const {
-		wxTreeItemData* item = m_metaTreeWnd->GetItemData(GetSelectionIdentifier());
+		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(GetSelectionIdentifier());
 		if (item != nullptr) {
 			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) return item_clsid->m_clsid;
@@ -52,17 +52,17 @@ private:
 
 	IMetaObject* GetMetaIdentifier() const {
 		wxTreeItemId parentItem = GetSelectionIdentifier();
-		wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
+		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
 			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) {
 				while (parentItem != nullptr) {
-					wxTreeItemData* item = m_metaTreeWnd->GetItemData(parentItem);
+					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
 						IMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
-					parentItem = m_metaTreeWnd->GetItemParent(parentItem);
+					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
 				}
 			}
 		}
@@ -176,7 +176,7 @@ protected:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	CDataProcessorTreeCtrl* m_metaTreeWnd;
+	CDataProcessorTreeCtrl* m_metaTreeCtrl;
 	CMetaDataDataProcessor* m_metaData;
 
 private:
@@ -184,10 +184,10 @@ private:
 	wxTreeItemId AppendRootItem(const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
 		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
-		wxImageList* imageList = m_metaTreeWnd->GetImageList();
+		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
-		return m_metaTreeWnd->AddRoot(name.IsEmpty() ? typeCtor->GetClassName() : name,
+		return m_metaTreeCtrl->AddRoot(name.IsEmpty() ? typeCtor->GetClassName() : name,
 			imageIndex,
 			imageIndex,
 			nullptr
@@ -198,10 +198,10 @@ private:
 		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
 		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
-		wxImageList* imageList = m_metaTreeWnd->GetImageList();
+		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
-		return m_metaTreeWnd->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name,
+		return m_metaTreeCtrl->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name,
 			imageIndex,
 			imageIndex,
 			new wxTreeItemClsidData(clsid)
@@ -210,10 +210,10 @@ private:
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
 		const class_identifier_t& clsid, IMetaObject* metaObject) const {
-		wxImageList* imageList = m_metaTreeWnd->GetImageList();
+		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
-		return m_metaTreeWnd->AppendItem(parent, metaObject->GetName(),
+		return m_metaTreeCtrl->AppendItem(parent, metaObject->GetName(),
 			imageIndex,
 			imageIndex,
 			new wxTreeItemClsidMetaData(clsid, metaObject)
@@ -222,10 +222,10 @@ private:
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
 		IMetaObject* metaObject) const {
-		wxImageList* imageList = m_metaTreeWnd->GetImageList();
+		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
-		return m_metaTreeWnd->AppendItem(parent, metaObject->GetName(),
+		return m_metaTreeCtrl->AppendItem(parent, metaObject->GetName(),
 			imageIndex,
 			imageIndex,
 			new wxTreeItemMetaData(metaObject)
@@ -262,7 +262,7 @@ private:
 		if (!item.IsOk())
 			return nullptr;
 		CTreeDataMetaItem* data =
-			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeWnd->GetItemData(item));
+			dynamic_cast<CTreeDataMetaItem*>(m_metaTreeCtrl->GetItemData(item));
 		if (data == nullptr)
 			return nullptr;
 		return data->m_metaObject;

@@ -28,46 +28,6 @@ class BACKEND_API IMetaData;
 ///////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API CPropertyCategory final {
-	wxString m_catName;
-	wxString m_catLabel;
-	wxString m_catHelp;
-	std::vector<wxString> m_properties;
-	std::vector<wxString> m_events;
-	std::vector< CPropertyCategory* > m_categories;
-	IPropertyObject* m_owner;
-
-private:
-	CPropertyCategory(IPropertyObject* object) :
-		m_catName(propertyDefName),
-		m_catLabel(propertyDefLabel),
-		m_catHelp(wxEmptyString),
-		m_owner(object)
-	{
-	}
-	CPropertyCategory(const wxString& name, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
-		m_catName(name),
-		m_catLabel(wxEmptyString),
-		m_catHelp(wxEmptyString),
-		m_owner(object)
-	{
-		if (ownerCat != nullptr) ownerCat->AddCategory(this);
-	}
-	CPropertyCategory(const wxString& name, const wxString& label, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
-		m_catName(name),
-		m_catLabel(label),
-		m_catHelp(wxEmptyString),
-		m_owner(object)
-	{
-		if (ownerCat != nullptr) ownerCat->AddCategory(this);
-	}
-	CPropertyCategory(const wxString& name, const wxString& label, const wxString& helpString, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
-		m_catName(name),
-		m_catLabel(label),
-		m_catHelp(helpString),
-		m_owner(object)
-	{
-		if (ownerCat != nullptr) ownerCat->AddCategory(this);
-	}
 public:
 
 	~CPropertyCategory() {
@@ -104,6 +64,48 @@ public:
 	unsigned int GetCategoryCount() const { return m_categories.size(); }
 
 	friend class IPropertyObject;
+
+private:
+
+	CPropertyCategory(IPropertyObject* object) :
+		m_catName(propertyDefName),
+		m_catLabel(propertyDefLabel),
+		m_catHelp(wxEmptyString),
+		m_owner(object)
+	{
+	}
+	CPropertyCategory(const wxString& name, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
+		m_catName(name),
+		m_catLabel(wxEmptyString),
+		m_catHelp(wxEmptyString),
+		m_owner(object)
+	{
+		if (ownerCat != nullptr) ownerCat->AddCategory(this);
+	}
+	CPropertyCategory(const wxString& name, const wxString& label, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
+		m_catName(name),
+		m_catLabel(label),
+		m_catHelp(wxEmptyString),
+		m_owner(object)
+	{
+		if (ownerCat != nullptr) ownerCat->AddCategory(this);
+	}
+	CPropertyCategory(const wxString& name, const wxString& label, const wxString& helpString, IPropertyObject* object, CPropertyCategory* ownerCat = nullptr) :
+		m_catName(name),
+		m_catLabel(label),
+		m_catHelp(helpString),
+		m_owner(object)
+	{
+		if (ownerCat != nullptr) ownerCat->AddCategory(this);
+	}
+
+	wxString m_catName;
+	wxString m_catLabel;
+	wxString m_catHelp;
+	std::vector<wxString> m_properties;
+	std::vector<wxString> m_events;
+	std::vector< CPropertyCategory* > m_categories;
+	IPropertyObject* m_owner;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

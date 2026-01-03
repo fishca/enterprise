@@ -257,7 +257,6 @@ public:
 
 	//get module object in compose object 
 	virtual CMetaObjectModule* GetModuleObject() const { return nullptr; }
-
 	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
 
 	//meta events
@@ -348,9 +347,11 @@ enum eObjectMode {
 //metaObject with file 
 class BACKEND_API IMetaObjectRecordDataExt : public IMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataExt);
-protected:
-	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
 public:
+
+#pragma region access
+	bool AccessRight_Use() const { return AccessRight(m_roleUse); }
+#pragma endregion
 
 	//ctor
 	IMetaObjectRecordDataExt();
@@ -373,18 +374,16 @@ protected:
 
 	//create empty object
 	virtual IRecordDataObjectExt* CreateObjectExtValue() = 0;  //create object 
+
+private:
+#pragma region role
+	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
+#pragma endregion
 };
 
 //metaObject with reference 
 class BACKEND_API IMetaObjectRecordDataRef : public IMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataRef);
-protected:
-
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
-	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
-	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("Quick choice"), false);
-
-	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 
 protected:
 	//ctor
@@ -395,12 +394,12 @@ public:
 	virtual CMetaObjectAttributePredefined* GetDataReference() const { return m_propertyAttributeReference->GetMetaObject(); }
 	virtual bool IsDataReference(const meta_identifier_t& id) const { return id == (*m_propertyAttributeReference)->GetMetaID(); }
 
-	virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
+	virtual bool HasQuickChoice() const {
+		return m_propertyQuickChoice->GetValueAsBoolean();
+	}
 
 	//get data selector 
-	virtual eSelectorDataType GetFilterDataType() const {
-		return eSelectorDataType::eSelectorDataType_reference;
-	}
+	virtual eSelectorDataType GetFilterDataType() const { return eSelectorDataType::eSelectorDataType_reference; }
 
 	//meta events
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
@@ -469,16 +468,18 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 	virtual bool DeleteData() { return true; }
+
+protected:
+
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
+	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
+	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("Quick choice"), false);
+	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 };
 
 //metaObject with reference - for enumeration
 class BACKEND_API IMetaObjectRecordDataEnumRef : public IMetaObjectRecordDataRef {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataEnumRef);
-private:
-
-	//default attributes 
-	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
-
 protected:
 
 	//ctor
@@ -534,22 +535,16 @@ protected:
 
 	//process default query
 	int ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum);
+
+private:
+
+	//default attributes 
+	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
 };
 
 //metaObject with reference and deletion mark 
 class BACKEND_API IMetaObjectRecordDataMutableRef : public IMetaObjectRecordDataRef {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataMutableRef);
-private:
-	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
-	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
-protected:
-
-	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("List generation"));
-	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
-
 protected:
 	//ctor
 	IMetaObjectRecordDataMutableRef();
@@ -613,19 +608,26 @@ protected:
 
 	//create empty object
 	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
+
+protected:
+
+	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("List generation"));
+	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
+
+private:
+
+#pragma region role
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
+	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
+#pragma endregion
 };
 
 //metaObject with reference and deletion mark and group/object type
 class BACKEND_API IMetaObjectRecordDataFolderMutableRef : public IMetaObjectRecordDataMutableRef {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataFolderMutableRef);
-protected:
-
-	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
-	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
-
 public:
 
 	CMetaObjectAttributePredefined* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
@@ -697,23 +699,20 @@ protected:
 	//create empty object
 	virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
 	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) final;
+
+protected:
+
+	//create default attributes
+	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 };
 
 //metaObject with key   
 class BACKEND_API IMetaObjectRegisterData :
 	public IMetaObjectGenericData {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRegisterData);
-protected:
-
-	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
-	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
-	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
-	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
-
-private:
-	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
 protected:
 	IMetaObjectRegisterData();
 	virtual ~IMetaObjectRegisterData();
@@ -892,6 +891,21 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 	virtual bool DeleteData() { return true; }
+
+protected:
+
+	//create default attributes
+	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
+
+private:
+
+#pragma region role
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
+#pragma endregion
 };
 
 //********************************************************************************************
@@ -1089,9 +1103,7 @@ public:
 	virtual wxString GetString() const;
 
 	//operator 
-	virtual operator CValue() const {
-		return this;
-	}
+	virtual operator CValue() const { return this; }
 
 	//Working with iterators
 	virtual bool HasIterator() const { return true; }
@@ -1121,22 +1133,17 @@ public:
 	virtual bool InitializeObject(IRecordDataObjectExt* source);
 
 	//get unique identifier 
-	virtual CUniqueKey GetGuid() const {
-		return m_objGuid;
-	}
+	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
-		return false;
-	}
+	virtual inline bool IsEmpty() const { return false; }
 
 	//copy new object
 	virtual IRecordDataObjectExt* CopyObjectValue();
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataExt* GetMetaObject() const {
-		return m_metaObject;
-	}
+	virtual IMetaObjectRecordDataExt* GetMetaObject() const { return m_metaObject; }
+
 protected:
 	IMetaObjectRecordDataExt* m_metaObject;
 };

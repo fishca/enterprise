@@ -331,22 +331,28 @@ bool CApplicationData::Disconnect()
 	return true;
 }
 
+#pragma region config
+
+#define BACKEND_CONF wxT("backend.conf")
+
 void CApplicationData::ReadEngineConfig()
 {
 	const wxString& workingDir = wxGetCwd(); wxString strConfigFile;
-	if (wxFileName::FileExists(workingDir + wxFILE_SEP_PATH + wxT("backend.conf"))) {
+	if (wxFileName::FileExists(workingDir + wxFILE_SEP_PATH + BACKEND_CONF)) {
 		strConfigFile = workingDir +
-			wxFILE_SEP_PATH + wxT("backend.conf");
+			wxFILE_SEP_PATH + BACKEND_CONF;
 	}
 	else {
 		wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
 		strConfigFile = fn.GetPath() +
-			wxFILE_SEP_PATH + wxT("backend.conf");
+			wxFILE_SEP_PATH + BACKEND_CONF;
 	}
 
 	wxFileConfig fc(wxT(""), wxT(""), wxT(""), strConfigFile);
 	fc.Read(wxT("Locale"), &m_configInfo.m_strLocale);
 }
+
+#pragma endregion 
 
 ///////////////////////////////////////////////////////////////////////////////
 #include "backend/debugger/debugClient.h"
@@ -452,7 +458,7 @@ void CApplicationData::ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicat
 	for (unsigned int idx = 0; idx < count; idx++) {
 		CApplicationDataUserInfo::CApplicationDataUserRole entry;
 		entry.m_strRoleGuid = reader.r_stringZ();
-		entry.m_roleId = reader.r_s32();
+		entry.m_miRoleId = reader.r_s32();
 		userInfo.m_roleArray.emplace_back(std::move(entry));
 	}
 }
@@ -482,7 +488,7 @@ wxMemoryBuffer CApplicationData::SaveUserData_Role(const CApplicationDataUserInf
 	writter.w_u32(userInfo.m_roleArray.size());
 	for (const auto role : userInfo.m_roleArray) {
 		writter.w_stringZ(role.m_strRoleGuid);
-		writter.w_s32(role.m_roleId);
+		writter.w_s32(role.m_miRoleId);
 	}
 	return writter.buffer();
 }

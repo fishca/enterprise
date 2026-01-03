@@ -5,8 +5,6 @@
 
 class FRONTEND_API IValueControl : public IValueFrame {
 	wxDECLARE_ABSTRACT_CLASS(IValueControl);
-protected:
-	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("name"), _("Name"), _("Object name"), wxT(""));
 public:
 
 	IValueControl();
@@ -20,9 +18,9 @@ public:
 		return m_propertyName->GetValueAsString(result);
 	}
 
-	virtual bool SetControlNameAsString(const wxString& result) const { 
-		m_propertyName->SetValue(result); 
-		return true; 
+	virtual bool SetControlNameAsString(const wxString& result) const {
+		m_propertyName->SetValue(result);
+		return true;
 	}
 
 	/**
@@ -70,9 +68,11 @@ public:
 	virtual form_identifier_t GetTypeForm() const;
 
 protected:
-
+	
 	//frame owner 
 	CValueForm* m_formOwner;
+
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("name"), _("Name"), _("Object name"), wxT(""));
 };
 
 #endif // !_BASE_H_

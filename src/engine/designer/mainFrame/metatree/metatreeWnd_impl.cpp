@@ -223,13 +223,13 @@ IMetaObject* CMetadataTree::CreateItem(bool showValue)
 
 	Thaw();
 
-	m_metaTreeWnd->RefreshSelectedItem();
+	m_metaTreeCtrl->RefreshSelectedItem();
 	return createdObject;
 }
 
 wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
-	m_metaTreeWnd->Freeze();
+	m_metaTreeCtrl->Freeze();
 
 	wxTreeItemId createdItem = nullptr;
 	if (metaItem->GetClassType() == g_metaTableCLSID) {
@@ -262,23 +262,23 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 		}
 	}
 
-	m_metaTreeWnd->InvalidateBestSize();
-	m_metaTreeWnd->SetEvtHandlerEnabled(select);
-	m_metaTreeWnd->SelectItem(createdItem);
-	m_metaTreeWnd->SetEvtHandlerEnabled(true);
-	m_metaTreeWnd->Expand(createdItem);
+	m_metaTreeCtrl->InvalidateBestSize();
+	m_metaTreeCtrl->SetEvtHandlerEnabled(select);
+	m_metaTreeCtrl->SelectItem(createdItem);
+	m_metaTreeCtrl->SetEvtHandlerEnabled(true);
+	m_metaTreeCtrl->Expand(createdItem);
 
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->Thaw();
 
 	if (scroll)
-		m_metaTreeWnd->ScrollTo(createdItem);
+		m_metaTreeCtrl->ScrollTo(createdItem);
 
 	return createdItem;
 }
 
 void CMetadataTree::EditItem()
 {
-	wxTreeItemId selection = m_metaTreeWnd->GetSelection();
+	wxTreeItemId selection = m_metaTreeCtrl->GetSelection();
 	if (!selection.IsOk())
 		return;
 	IMetaObject* m_currObject = GetMetaObject(selection);
@@ -290,17 +290,17 @@ void CMetadataTree::EditItem()
 
 void CMetadataTree::RemoveItem()
 {
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 
 	if (!selection.IsOk())
 		return;
 
 	wxTreeItemIdValue m_cookie;
-	wxTreeItemId hItem = m_metaTreeWnd->GetFirstChild(selection, m_cookie);
+	wxTreeItemId hItem = m_metaTreeCtrl->GetFirstChild(selection, m_cookie);
 
 	while (hItem) {
 		EraseItem(hItem);
-		hItem = m_metaTreeWnd->GetNextChild(hItem, m_cookie);
+		hItem = m_metaTreeCtrl->GetNextChild(hItem, m_cookie);
 	}
 
 	IMetaObject* metaObject = GetMetaObject(selection);
@@ -309,14 +309,14 @@ void CMetadataTree::RemoveItem()
 	m_metaData->RemoveMetaObject(metaObject);
 
 	//Delete item from tree
-	m_metaTreeWnd->Delete(selection);
+	m_metaTreeCtrl->Delete(selection);
 
 	for (auto& doc : docManager->GetDocumentsVector()) {
 		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
 
-	const wxTreeItemId nextSelection = m_metaTreeWnd->GetFocusedItem();
+	const wxTreeItemId nextSelection = m_metaTreeCtrl->GetFocusedItem();
 	if (nextSelection.IsOk()) {
 		UpdateToolbar(GetMetaObject(nextSelection), nextSelection);
 	}
@@ -335,7 +335,7 @@ void CMetadataTree::EraseItem(const wxTreeItemId& item)
 
 void CMetadataTree::SelectItem()
 {
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
@@ -347,7 +347,7 @@ void CMetadataTree::SelectItem()
 
 void CMetadataTree::PropertyItem()
 {
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 
@@ -364,18 +364,18 @@ void CMetadataTree::PropertyItem()
 
 void CMetadataTree::Collapse()
 {
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	CTreeData* data =
-		dynamic_cast<CTreeData*>(m_metaTreeWnd->GetItemData(selection));
+		dynamic_cast<CTreeData*>(m_metaTreeCtrl->GetItemData(selection));
 	if (data != nullptr)
 		data->m_expanded = false;
 }
 
 void CMetadataTree::Expand()
 {
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	CTreeData* data =
-		dynamic_cast<CTreeData*>(m_metaTreeWnd->GetItemData(selection));
+		dynamic_cast<CTreeData*>(m_metaTreeCtrl->GetItemData(selection));
 	if (data != nullptr)
 		data->m_expanded = true;
 }
@@ -387,32 +387,32 @@ void CMetadataTree::UpItem()
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
-	m_metaTreeWnd->Freeze();
+	m_metaTreeCtrl->Freeze();
 
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
-	const wxTreeItemId& nextItem = m_metaTreeWnd->GetPrevSibling(selection);
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
+	const wxTreeItemId& nextItem = m_metaTreeCtrl->GetPrevSibling(selection);
 	IMetaObject* metaObject = GetMetaObject(selection);
 	if (metaObject != nullptr && nextItem.IsOk()) {
-		const wxTreeItemId& parentItem = m_metaTreeWnd->GetItemParent(nextItem);
-		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeWnd->GetFirstChild(parentItem, coockie);
+		const wxTreeItemId& parentItem = m_metaTreeCtrl->GetItemParent(nextItem);
+		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeCtrl->GetFirstChild(parentItem, coockie);
 		size_t pos = 0;
 		do {
 			if (nextId == nextItem)
 				break;
-			nextId = m_metaTreeWnd->GetNextChild(nextId, coockie); pos++;
+			nextId = m_metaTreeCtrl->GetNextChild(nextId, coockie); pos++;
 		} while (nextId.IsOk());
 		IMetaObject* parentObject = metaObject->GetParent();
 		IMetaObject* nextObject = GetMetaObject(nextItem);
 		if (parentObject->ChangeChildPosition(metaObject, parentObject->GetChildPosition(nextObject))) {
-			wxTreeItemId newId = m_metaTreeWnd->InsertItem(parentItem,
+			wxTreeItemId newId = m_metaTreeCtrl->InsertItem(parentItem,
 				pos + 2,
-				m_metaTreeWnd->GetItemText(nextItem),
-				m_metaTreeWnd->GetItemImage(nextItem),
-				m_metaTreeWnd->GetItemImage(nextItem),
-				m_metaTreeWnd->GetItemData(nextItem)
+				m_metaTreeCtrl->GetItemText(nextItem),
+				m_metaTreeCtrl->GetItemImage(nextItem),
+				m_metaTreeCtrl->GetItemImage(nextItem),
+				m_metaTreeCtrl->GetItemData(nextItem)
 			);
 
-			auto tree = m_metaTreeWnd;
+			auto tree = m_metaTreeCtrl;
 			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
@@ -432,14 +432,14 @@ void CMetadataTree::UpItem()
 
 			swap(tree, nextItem, newId);
 
-			m_metaTreeWnd->SetItemData(nextItem, nullptr);
-			m_metaTreeWnd->Delete(nextItem);
+			m_metaTreeCtrl->SetItemData(nextItem, nullptr);
+			m_metaTreeCtrl->Delete(nextItem);
 
-			//m_metaTreeWnd->Expand(newId);
+			//m_metaTreeCtrl->Expand(newId);
 		}
 	}
 
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->Thaw();
 }
 
 void CMetadataTree::DownItem()
@@ -447,32 +447,32 @@ void CMetadataTree::DownItem()
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
-	m_metaTreeWnd->Freeze();
+	m_metaTreeCtrl->Freeze();
 
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
-	const wxTreeItemId& prevItem = m_metaTreeWnd->GetNextSibling(selection);
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
+	const wxTreeItemId& prevItem = m_metaTreeCtrl->GetNextSibling(selection);
 	IMetaObject* metaObject = GetMetaObject(selection);
 	if (metaObject != nullptr && prevItem.IsOk()) {
-		const wxTreeItemId& parentItem = m_metaTreeWnd->GetItemParent(prevItem);
-		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeWnd->GetFirstChild(parentItem, coockie);
+		const wxTreeItemId& parentItem = m_metaTreeCtrl->GetItemParent(prevItem);
+		wxTreeItemIdValue coockie; wxTreeItemId nextId = m_metaTreeCtrl->GetFirstChild(parentItem, coockie);
 		size_t pos = 0;
 		do {
 			if (nextId == prevItem)
 				break;
-			nextId = m_metaTreeWnd->GetNextChild(nextId, coockie); pos++;
+			nextId = m_metaTreeCtrl->GetNextChild(nextId, coockie); pos++;
 		} while (nextId.IsOk());
 		IMetaObject* parentObject = metaObject->GetParent();
 		IMetaObject* prevObject = GetMetaObject(prevItem);
 		if (parentObject->ChangeChildPosition(metaObject, parentObject->GetChildPosition(prevObject))) {
-			wxTreeItemId newId = m_metaTreeWnd->InsertItem(parentItem,
+			wxTreeItemId newId = m_metaTreeCtrl->InsertItem(parentItem,
 				pos - 1,
-				m_metaTreeWnd->GetItemText(prevItem),
-				m_metaTreeWnd->GetItemImage(prevItem),
-				m_metaTreeWnd->GetItemImage(prevItem),
-				m_metaTreeWnd->GetItemData(prevItem)
+				m_metaTreeCtrl->GetItemText(prevItem),
+				m_metaTreeCtrl->GetItemImage(prevItem),
+				m_metaTreeCtrl->GetItemImage(prevItem),
+				m_metaTreeCtrl->GetItemData(prevItem)
 			);
 
-			auto tree = m_metaTreeWnd;
+			auto tree = m_metaTreeCtrl;
 			std::function<void(CMetaTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CMetaTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
@@ -492,31 +492,31 @@ void CMetadataTree::DownItem()
 
 			swap(tree, prevItem, newId);
 
-			m_metaTreeWnd->SetItemData(prevItem, nullptr);
-			m_metaTreeWnd->Delete(prevItem);
+			m_metaTreeCtrl->SetItemData(prevItem, nullptr);
+			m_metaTreeCtrl->Delete(prevItem);
 
-			//m_metaTreeWnd->Expand(newId);
+			//m_metaTreeCtrl->Expand(newId);
 		}
 	}
 
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->Thaw();
 }
 
 void CMetadataTree::SortItem()
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
-	m_metaTreeWnd->Freeze();
-	const wxTreeItemId& selection = m_metaTreeWnd->GetSelection();
+	m_metaTreeCtrl->Freeze();
+	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IMetaObject* prevObject = GetMetaObject(selection);
 	if (prevObject != nullptr && selection.IsOk()) {
 		const wxTreeItemId& parentItem =
-			m_metaTreeWnd->GetItemParent(selection);
+			m_metaTreeCtrl->GetItemParent(selection);
 		if (parentItem.IsOk()) {
-			m_metaTreeWnd->SortChildren(parentItem);
+			m_metaTreeCtrl->SortChildren(parentItem);
 		}
 	}
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->Thaw();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +526,7 @@ void CMetadataTree::SortItem()
 
 void CMetadataTree::InsertItem()
 {
-	IMetaObject* commonMetaObject = m_metaData->GetCommonMetaObject(); wxTreeItemId hSelItem = m_metaTreeWnd->GetSelection();
+	IMetaObject* commonMetaObject = m_metaData->GetCommonMetaObject(); wxTreeItemId hSelItem = m_metaTreeCtrl->GetSelection();
 
 	if (hSelItem == m_treeDATAPROCESSORS) {
 
@@ -540,14 +540,14 @@ void CMetadataTree::InsertItem()
 		CMetaDataDataProcessor metadataDataProcessor(m_metaData);
 
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
-			m_metaTreeWnd->Freeze();
+			m_metaTreeCtrl->Freeze();
 			CMetaObjectDataProcessor* dataProcessor = metadataDataProcessor.GetDataProcessor();
 			wxASSERT(dataProcessor);
 			const wxTreeItemId& createdItem = AppendItem(hSelItem, dataProcessor);
 			AddDataProcessorItem(dataProcessor, createdItem);
-			m_metaTreeWnd->SelectItem(createdItem);
+			m_metaTreeCtrl->SelectItem(createdItem);
 			dataProcessor->IncrRef();
-			m_metaTreeWnd->Thaw();
+			m_metaTreeCtrl->Thaw();
 		}
 	}
 	else {
@@ -560,14 +560,14 @@ void CMetadataTree::InsertItem()
 		CMetaDataReport metadataReport(m_metaData);
 
 		if (metadataReport.LoadFromFile(openFileDialog.GetPath())) {
-			m_metaTreeWnd->Freeze();
+			m_metaTreeCtrl->Freeze();
 			CMetaObjectReport* report = metadataReport.GetReport();
 			wxASSERT(report);
 			const wxTreeItemId& createdItem = AppendItem(hSelItem, report);
 			AddReportItem(report, createdItem);
-			m_metaTreeWnd->SelectItem(createdItem);
+			m_metaTreeCtrl->SelectItem(createdItem);
 			report->IncrRef();
-			m_metaTreeWnd->Thaw();
+			m_metaTreeCtrl->Thaw();
 		}
 	}
 
@@ -576,8 +576,8 @@ void CMetadataTree::InsertItem()
 
 void CMetadataTree::ReplaceItem()
 {
-	wxTreeItemId hSelItem = m_metaTreeWnd->GetSelection();
-	IMetaObject* currentMetaObject = GetMetaObject(m_metaTreeWnd->GetSelection());
+	wxTreeItemId hSelItem = m_metaTreeCtrl->GetSelection();
+	IMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (currentMetaObject->GetClassType() == g_metaDataProcessorCLSID) {
 
@@ -589,19 +589,19 @@ void CMetadataTree::ReplaceItem()
 
 		CMetaDataDataProcessor metadataDataProcessor(m_metaData);
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
-			m_metaTreeWnd->Freeze();
+			m_metaTreeCtrl->Freeze();
 			CMetaObjectDataProcessor* metaObject = metadataDataProcessor.GetDataProcessor();
-			wxTreeItemData* itemData = m_metaTreeWnd->GetItemData(hSelItem);
+			wxTreeItemData* itemData = m_metaTreeCtrl->GetItemData(hSelItem);
 			if (itemData != nullptr) {
 				CTreeDataMetaItem* metaItem = dynamic_cast<CTreeDataMetaItem*>(itemData);
 				if (metaItem != nullptr)
 					metaItem->m_metaObject = metaObject;
 			}
 			m_metaData->RemoveMetaObject(currentMetaObject);
-			m_metaTreeWnd->SetItemText(hSelItem, metaObject->GetName());
-			m_metaTreeWnd->DeleteChildren(hSelItem);
+			m_metaTreeCtrl->SetItemText(hSelItem, metaObject->GetName());
+			m_metaTreeCtrl->DeleteChildren(hSelItem);
 			AddDataProcessorItem(metaObject, hSelItem);
-			m_metaTreeWnd->Thaw();
+			m_metaTreeCtrl->Thaw();
 		}
 	}
 	else
@@ -620,19 +620,19 @@ void CMetadataTree::ReplaceItem()
 
 		CMetaDataReport metadataDataProcessor(m_metaData);
 		if (metadataDataProcessor.LoadFromFile(openFileDialog.GetPath())) {
-			m_metaTreeWnd->Freeze();
+			m_metaTreeCtrl->Freeze();
 			CMetaObjectReport* metaObject = metadataDataProcessor.GetReport();
-			wxTreeItemData* itemData = m_metaTreeWnd->GetItemData(hSelItem);
+			wxTreeItemData* itemData = m_metaTreeCtrl->GetItemData(hSelItem);
 			if (itemData != nullptr) {
 				CTreeDataMetaItem* metaItem = dynamic_cast<CTreeDataMetaItem*>(itemData);
 				if (metaItem != nullptr)
 					metaItem->m_metaObject = metaObject;
 			}
 			m_metaData->RemoveMetaObject(currentMetaObject);
-			m_metaTreeWnd->SetItemText(hSelItem, newReport->GetName());
-			m_metaTreeWnd->DeleteChildren(hSelItem);
+			m_metaTreeCtrl->SetItemText(hSelItem, newReport->GetName());
+			m_metaTreeCtrl->DeleteChildren(hSelItem);
 			AddReportItem(newReport, hSelItem);
-			m_metaTreeWnd->Thaw();
+			m_metaTreeCtrl->Thaw();
 		}
 	}
 
@@ -641,14 +641,14 @@ void CMetadataTree::ReplaceItem()
 
 void CMetadataTree::SaveItem()
 {
-	IMetaObject* currentMetaObject = GetMetaObject(m_metaTreeWnd->GetSelection());
+	IMetaObject* currentMetaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (currentMetaObject->GetClassType() == g_metaDataProcessorCLSID) {
 
 		wxFileDialog saveFileDialog(this, _("Open data processor file"), "", "",
 			"data processor files (*.edp)|*.edp", wxFD_SAVE);
 
-		saveFileDialog.SetFilename(m_metaTreeWnd->GetItemText(m_metaTreeWnd->GetSelection()));
+		saveFileDialog.SetFilename(m_metaTreeCtrl->GetItemText(m_metaTreeCtrl->GetSelection()));
 
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
@@ -664,7 +664,7 @@ void CMetadataTree::SaveItem()
 		wxFileDialog saveFileDialog(this, _("Open report file"), "", "",
 			"report files (*.erp)|*.erp", wxFD_SAVE);
 
-		saveFileDialog.SetFilename(m_metaTreeWnd->GetItemText(m_metaTreeWnd->GetSelection()));
+		saveFileDialog.SetFilename(m_metaTreeCtrl->GetItemText(m_metaTreeCtrl->GetSelection()));
 
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
@@ -683,7 +683,7 @@ void CMetadataTree::CommandItem(unsigned int id)
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
-	IMetaObject* metaObject = GetMetaObject(m_metaTreeWnd->GetSelection());
+	IMetaObject* metaObject = GetMetaObject(m_metaTreeCtrl->GetSelection());
 
 	if (!metaObject)
 		return;
@@ -746,20 +746,20 @@ void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& 
 
 void CMetadataTree::UpdateToolbar(IMetaObject* obj, const wxTreeItemId& item)
 {
-	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeWnd->GetRootItem() && !m_bReadOnly && item != m_treeCOMMON);
-	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeWnd->GetRootItem());
-	m_metaTreeToolbar->EnableTool(ID_METATREE_REMOVE, obj != nullptr && item != m_metaTreeWnd->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly && item != m_treeCOMMON);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem());
+	m_metaTreeToolbar->EnableTool(ID_METATREE_REMOVE, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 
-	m_metaTreeToolbar->EnableTool(ID_METATREE_UP, obj != nullptr && item != m_metaTreeWnd->GetRootItem() && !m_bReadOnly);
-	m_metaTreeToolbar->EnableTool(ID_METATREE_DOWM, obj != nullptr && item != m_metaTreeWnd->GetRootItem() && !m_bReadOnly);
-	m_metaTreeToolbar->EnableTool(ID_METATREE_SORT, obj != nullptr && item != m_metaTreeWnd->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_UP, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_DOWM, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_SORT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 
 	m_metaTreeToolbar->Refresh();
 }
 
 bool CMetadataTree::RenameMetaObject(IMetaObject* metaObject, const wxString& newName)
 {
-	wxTreeItemId curItem = m_metaTreeWnd->GetSelection();
+	wxTreeItemId curItem = m_metaTreeCtrl->GetSelection();
 
 	if (!curItem.IsOk()) {
 		return false;
@@ -771,7 +771,7 @@ bool CMetadataTree::RenameMetaObject(IMetaObject* metaObject, const wxString& ne
 			currDocument->SetTitle(metaObject->GetClassName() + wxT(": ") + newName);
 			currDocument->OnChangeFilename(true);
 		}
-		m_metaTreeWnd->SetItemText(curItem, newName);
+		m_metaTreeCtrl->SetItemText(curItem, newName);
 		return true;
 	}
 	return false;
@@ -1386,7 +1386,7 @@ void CMetadataTree::AddAccumulationRegisterItem(IMetaObject* metaObject, const w
 
 void CMetadataTree::InitTree()
 {
-	wxImageList* imageList = m_metaTreeWnd->GetImageList();
+	wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 	wxASSERT(imageList);
 
 	m_treeMETADATA = AppendRootItem(g_metaCommonMetadataCLSID, _("configuration"));
@@ -1396,7 +1396,7 @@ void CMetadataTree::InitTree()
 	//*****************************************************************************************************
 
 	const int imageCommonIndex = imageList->Add(wxArtProvider::GetBitmap(wxART_COMMON_FOLDER, wxART_METATREE));
-	m_treeCOMMON = m_metaTreeWnd->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
+	m_treeCOMMON = m_metaTreeCtrl->AppendItem(m_treeMETADATA, commonName, imageCommonIndex, imageCommonIndex);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1426,14 +1426,14 @@ void CMetadataTree::InitTree()
 	m_treeACCUMULATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaAccumulationRegisterCLSID, accumulationRegisterName);
 
 	//Set item bold and name
-	m_metaTreeWnd->SetItemText(m_treeMETADATA, _("configuration"));
-	m_metaTreeWnd->SetItemBold(m_treeMETADATA);
+	m_metaTreeCtrl->SetItemText(m_treeMETADATA, _("configuration"));
+	m_metaTreeCtrl->SetItemBold(m_treeMETADATA);
 }
 
 void CMetadataTree::ActivateTree()
 {
 	if (m_metaData != nullptr)
-		objectInspector->SelectObject(GetMetaObject(m_metaTreeWnd->GetSelection()));
+		objectInspector->SelectObject(GetMetaObject(m_metaTreeCtrl->GetSelection()));
 }
 
 void CMetadataTree::ClearTree()
@@ -1447,56 +1447,56 @@ void CMetadataTree::ClearTree()
 	}
 
 	//disable event
-	m_metaTreeWnd->SetEvtHandlerEnabled(false);
+	m_metaTreeCtrl->SetEvtHandlerEnabled(false);
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
 	//*****************************************************************************************************
 
 	if (m_treeMODULES.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeMODULES);
+		m_metaTreeCtrl->DeleteChildren(m_treeMODULES);
 	if (m_treeFORMS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeFORMS);
+		m_metaTreeCtrl->DeleteChildren(m_treeFORMS);
 	if (m_treeTEMPLATES.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeTEMPLATES);
+		m_metaTreeCtrl->DeleteChildren(m_treeTEMPLATES);
 
 	if (m_treeINTERFACES.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeINTERFACES);
+		m_metaTreeCtrl->DeleteChildren(m_treeINTERFACES);
 	if (m_treeROLES.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeROLES);
+		m_metaTreeCtrl->DeleteChildren(m_treeROLES);
 	if (m_treePICTURES.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treePICTURES);
+		m_metaTreeCtrl->DeleteChildren(m_treePICTURES);
 
 	if (m_treeCONSTANTS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeCONSTANTS);
+		m_metaTreeCtrl->DeleteChildren(m_treeCONSTANTS);
 
 	//*****************************************************************************************************
 	//*                                      Custom objects                                               *
 	//*****************************************************************************************************
 
 	if (m_treeCATALOGS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeCATALOGS);
+		m_metaTreeCtrl->DeleteChildren(m_treeCATALOGS);
 	if (m_treeDOCUMENTS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeDOCUMENTS);
+		m_metaTreeCtrl->DeleteChildren(m_treeDOCUMENTS);
 	if (m_treeENUMERATIONS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeENUMERATIONS);
+		m_metaTreeCtrl->DeleteChildren(m_treeENUMERATIONS);
 	if (m_treeDATAPROCESSORS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeDATAPROCESSORS);
+		m_metaTreeCtrl->DeleteChildren(m_treeDATAPROCESSORS);
 	if (m_treeREPORTS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeREPORTS);
+		m_metaTreeCtrl->DeleteChildren(m_treeREPORTS);
 	if (m_treeINFORMATION_REGISTERS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeINFORMATION_REGISTERS);
+		m_metaTreeCtrl->DeleteChildren(m_treeINFORMATION_REGISTERS);
 	if (m_treeACCUMULATION_REGISTERS.IsOk())
-		m_metaTreeWnd->DeleteChildren(m_treeACCUMULATION_REGISTERS);
+		m_metaTreeCtrl->DeleteChildren(m_treeACCUMULATION_REGISTERS);
 
 	//delete all items
-	m_metaTreeWnd->DeleteAllItems();
+	m_metaTreeCtrl->DeleteAllItems();
 
 	//initialize tree
 	InitTree();
 
 	//enable event 
-	m_metaTreeWnd->SetEvtHandlerEnabled(true);
+	m_metaTreeCtrl->SetEvtHandlerEnabled(true);
 }
 
 void CMetadataTree::FillData()
@@ -1504,8 +1504,8 @@ void CMetadataTree::FillData()
 	IMetaObject* commonMetadata = m_metaData->GetCommonMetaObject();
 	wxASSERT(commonMetadata);
 
-	m_metaTreeWnd->SetItemText(m_treeMETADATA, m_metaData->GetConfigName());
-	m_metaTreeWnd->SetItemData(m_treeMETADATA, new wxTreeItemMetaData(commonMetadata));
+	m_metaTreeCtrl->SetItemText(m_treeMETADATA, m_metaData->GetConfigName());
+	m_metaTreeCtrl->SetItemData(m_treeMETADATA, new wxTreeItemMetaData(commonMetadata));
 
 	//****************************************************************
 	//*                          CommonModules                       *
@@ -1524,8 +1524,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeMODULES, commonModule);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeMODULES))
-		m_metaTreeWnd->Delete(m_treeMODULES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeMODULES))
+		m_metaTreeCtrl->Delete(m_treeMODULES);
 
 	//****************************************************************
 	//*                          CommonForms                         *
@@ -1544,8 +1544,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeFORMS, commonForm);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeFORMS))
-		m_metaTreeWnd->Delete(m_treeFORMS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeFORMS))
+		m_metaTreeCtrl->Delete(m_treeFORMS);
 
 	//****************************************************************
 	//*                          CommonMakets                        *
@@ -1564,8 +1564,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, commonTemlate);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeTEMPLATES))
-		m_metaTreeWnd->Delete(m_treeTEMPLATES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeTEMPLATES))
+		m_metaTreeCtrl->Delete(m_treeTEMPLATES);
 
 	//****************************************************************
 	//*                          Pictures							 *
@@ -1584,8 +1584,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treePICTURES, picture);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treePICTURES))
-		m_metaTreeWnd->Delete(m_treePICTURES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treePICTURES))
+		m_metaTreeCtrl->Delete(m_treePICTURES);
 
 	//****************************************************************
 	//*                          Interfaces							 *
@@ -1604,8 +1604,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeINTERFACES, commonInterface);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeINTERFACES))
-		m_metaTreeWnd->Delete(m_treeINTERFACES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeINTERFACES))
+		m_metaTreeCtrl->Delete(m_treeINTERFACES);
 
 	//****************************************************************
 	//*                          Roles								 *
@@ -1624,8 +1624,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeROLES, role);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeROLES))
-		m_metaTreeWnd->Delete(m_treeROLES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeROLES))
+		m_metaTreeCtrl->Delete(m_treeROLES);
 
 	//****************************************************************
 	//*                          Languages							 *
@@ -1644,8 +1644,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeLANGUAGES, language);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeLANGUAGES))
-		m_metaTreeWnd->Delete(m_treeLANGUAGES);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeLANGUAGES))
+		m_metaTreeCtrl->Delete(m_treeLANGUAGES);
 
 	//****************************************************************
 	//*                          Constants                           *
@@ -1664,8 +1664,8 @@ void CMetadataTree::FillData()
 		const wxTreeItemId& hItem = AppendItem(m_treeCONSTANTS, constant);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeCONSTANTS))
-		m_metaTreeWnd->Delete(m_treeCONSTANTS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeCONSTANTS))
+		m_metaTreeCtrl->Delete(m_treeCONSTANTS);
 
 	//****************************************************************
 	//*                        Catalogs                              *
@@ -1685,8 +1685,8 @@ void CMetadataTree::FillData()
 		AddCatalogItem(catalog, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeCATALOGS))
-		m_metaTreeWnd->Delete(m_treeCATALOGS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeCATALOGS))
+		m_metaTreeCtrl->Delete(m_treeCATALOGS);
 
 	//****************************************************************
 	//*                        Documents                             *
@@ -1706,8 +1706,8 @@ void CMetadataTree::FillData()
 		AddDocumentItem(document, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeDOCUMENTS))
-		m_metaTreeWnd->Delete(m_treeDOCUMENTS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeDOCUMENTS))
+		m_metaTreeCtrl->Delete(m_treeDOCUMENTS);
 
 	//****************************************************************
 	//*                          Enumerations                        *
@@ -1727,8 +1727,8 @@ void CMetadataTree::FillData()
 		AddEnumerationItem(enumeration, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeENUMERATIONS))
-		m_metaTreeWnd->Delete(m_treeENUMERATIONS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeENUMERATIONS))
+		m_metaTreeCtrl->Delete(m_treeENUMERATIONS);
 
 	//****************************************************************
 	//*                          Data processor                      *
@@ -1748,8 +1748,8 @@ void CMetadataTree::FillData()
 		AddDataProcessorItem(dataProcessor, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeDATAPROCESSORS))
-		m_metaTreeWnd->Delete(m_treeDATAPROCESSORS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeDATAPROCESSORS))
+		m_metaTreeCtrl->Delete(m_treeDATAPROCESSORS);
 
 	//****************************************************************
 	//*                          Report			                     *
@@ -1769,8 +1769,8 @@ void CMetadataTree::FillData()
 		AddReportItem(report, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeREPORTS))
-		m_metaTreeWnd->Delete(m_treeREPORTS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeREPORTS))
+		m_metaTreeCtrl->Delete(m_treeREPORTS);
 
 	//****************************************************************
 	//*                          Information register			     *
@@ -1790,8 +1790,8 @@ void CMetadataTree::FillData()
 		AddInformationRegisterItem(informationRegister, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeINFORMATION_REGISTERS))
-		m_metaTreeWnd->Delete(m_treeINFORMATION_REGISTERS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeINFORMATION_REGISTERS))
+		m_metaTreeCtrl->Delete(m_treeINFORMATION_REGISTERS);
 
 	//****************************************************************
 	//*                          Accumulation register			     *
@@ -1811,8 +1811,8 @@ void CMetadataTree::FillData()
 		AddAccumulationRegisterItem(accumulationRegister, hItem);
 	}
 
-	if (!m_strSearch.IsEmpty() && !m_metaTreeWnd->HasChildren(m_treeACCUMULATION_REGISTERS))
-		m_metaTreeWnd->Delete(m_treeACCUMULATION_REGISTERS);
+	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeACCUMULATION_REGISTERS))
+		m_metaTreeCtrl->Delete(m_treeACCUMULATION_REGISTERS);
 
 	//set modify 
 	Modify(m_metaData->IsModified());
@@ -1823,15 +1823,15 @@ void CMetadataTree::FillData()
 
 bool CMetadataTree::Load(IMetaDataConfiguration* metaData)
 {
-	m_metaTreeWnd->Freeze();
+	m_metaTreeCtrl->Freeze();
 	ClearTree();
 	m_metaData = metaData ? metaData : IMetaDataConfiguration::Get();
 	FillData(); //Fill all data from metaData
 	m_metaData->SetMetaTree(this);
-	m_metaTreeWnd->SelectItem(m_treeMETADATA);
-	m_metaTreeWnd->Expand(m_treeMETADATA);
-	m_metaTreeWnd->Expand(m_treeCOMMON);
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->SelectItem(m_treeMETADATA);
+	m_metaTreeCtrl->Expand(m_treeMETADATA);
+	m_metaTreeCtrl->Expand(m_treeCOMMON);
+	m_metaTreeCtrl->Thaw();
 	return true;
 }
 
@@ -1849,7 +1849,7 @@ bool CMetadataTree::Save()
 
 void CMetadataTree::Search(const wxString& strSearch)
 {
-	m_metaTreeWnd->Freeze();
+	m_metaTreeCtrl->Freeze();
 
 	//InitTree();
 	ClearTree();
@@ -1858,16 +1858,16 @@ void CMetadataTree::Search(const wxString& strSearch)
 
 	FillData(); //Fill all data from metaData
 
-	m_metaTreeWnd->SelectItem(m_treeMETADATA);
-	m_metaTreeWnd->Expand(m_treeMETADATA);
-	m_metaTreeWnd->Expand(m_treeCOMMON);
+	m_metaTreeCtrl->SelectItem(m_treeMETADATA);
+	m_metaTreeCtrl->Expand(m_treeMETADATA);
+	m_metaTreeCtrl->Expand(m_treeCOMMON);
 
 	if (!m_strSearch.IsEmpty())
-		m_metaTreeWnd->ExpandAll();
+		m_metaTreeCtrl->ExpandAll();
 
 	m_strSearch = wxEmptyString;
 
-	m_metaTreeWnd->Thaw();
+	m_metaTreeCtrl->Thaw();
 }
 
 /////////////////////////////////////////////////////////////

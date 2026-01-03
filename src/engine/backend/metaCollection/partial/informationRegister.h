@@ -32,22 +32,6 @@ public:
 	public:
 		CMetaObjectRecordManager() : IMetaObject() {}
 	};
-private:
-
-	CMetaObjectRecordManager* m_metaRecordManager;
-
-protected:
-
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
-
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CMetaObjectInformationRegister::FillFormRecord);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectInformationRegister::FillFormList);
-
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
-	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("writeMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
 
 public:
 
@@ -177,11 +161,6 @@ protected:
 	//support form 
 	virtual IBackendValueForm* GetRecordForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid);
 
-protected:
-	friend class IMetaData;
-	friend class CRecordSetObjectInformationRegister;
-	friend class CRecordManagerObjectInformationRegister;
-
 private:
 
 	bool FillFormRecord(CPropertyList* prop) {
@@ -211,6 +190,24 @@ private:
 		}
 		return true;
 	}
+
+	CMetaObjectRecordManager* m_metaRecordManager;
+
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
+	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
+	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CMetaObjectInformationRegister::FillFormRecord);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectInformationRegister::FillFormList);
+
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
+	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
+	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("writeMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
+
+	friend class CRecordSetObjectInformationRegister;
+	friend class CRecordManagerObjectInformationRegister;
+
+	friend class IMetaData;
 };
 
 //********************************************************************************************

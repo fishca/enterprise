@@ -151,4 +151,11 @@ public:
 	}
 };
 
+class BACKEND_API CBackendAccessException : public CBackendException {
+public:
+	CBackendAccessException() :
+		CBackendException(_("Not enough access rights for the user!")) {
+	}
+};
+
 #endif 

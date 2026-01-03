@@ -86,23 +86,23 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 
 	sbSizerTree->Add(m_metaTreeToolbar, 0, wxALL | wxEXPAND, 0);
 
-	m_metaTreeWnd = new CDataReportTreeCtrl(sbSizerTree->GetStaticBox(), this);
-	m_metaTreeWnd->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl = new CDataReportTreeCtrl(sbSizerTree->GetStaticBox(), this);
+	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeWnd->SetImageList(
+	m_metaTreeCtrl->SetImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
-	sbSizerTree->Add(m_metaTreeWnd, 1, wxALL | wxEXPAND, 0);
+	sbSizerTree->Add(m_metaTreeCtrl, 1, wxALL | wxEXPAND, 0);
 
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
@@ -131,13 +131,13 @@ CDataReportTree::~CDataReportTree()
 	m_synonymValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataReportTree::OnEditCaptionSynonym), nullptr, this);
 	m_commentValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataReportTree::OnEditCaptionComment), nullptr, this);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataReportTree::CDataReportTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	m_buttonModule->Disconnect(wxEVT_BUTTON, wxCommandEventHandler(CDataReportTree::OnButtonModuleClicked), nullptr, this);
 }

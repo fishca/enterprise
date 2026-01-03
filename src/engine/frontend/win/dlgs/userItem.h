@@ -23,10 +23,20 @@
 
 #include "backend/backend_core.h"
 
+#include "frontend/win/ctrls/checktree.h"
+#include "frontend/win/theme/luna_tabart.h"
+
 class CDialogUserItem : public wxDialog {
+
+	struct CDataUserRole {
+		wxString m_strRoleGuid;
+		wxString m_strRoleName;
+		role_identifier_t m_miRoleId;
+	};
 
 	struct CDataUserLanguageItem {
 		wxString m_strLanguageGuid;
+		wxString m_strLanguageName;
 		wxString m_strLanguageCode;
 	};
 
@@ -36,7 +46,7 @@ public:
 
 	CDialogUserItem(wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	
+
 protected:
 
 	// Virtual event handlers, overide them in your derived class
@@ -50,6 +60,7 @@ private:
 
 	wxString m_strUserPassword;
 
+	std::map<wxTreeItemId, CDataUserRole> m_roleArray;
 	std::map<int, CDataUserLanguageItem> m_languageArray;
 
 	wxAuiNotebook* m_mainNotebook;
@@ -68,7 +79,7 @@ private:
 
 	wxStaticText* m_staticRole;
 	wxStaticText* m_staticLanguage;
-	wxChoice* m_choiceRole;
+	wxCheckTree* m_choiceRole;
 	wxChoice* m_choiceLanguage;
 
 	CGuid m_userGuid;

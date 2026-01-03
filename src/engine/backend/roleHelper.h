@@ -14,13 +14,17 @@ class BACKEND_API IAccessObject;
 //********************************************************************************************
 
 class BACKEND_API CRole {
-	wxString m_roleName;
-	wxString m_roleLabel;
-	IAccessObject* m_owner; // pointer to the owner object
-	bool m_defValue;  // handler function name
-private:
-	void InitRole(IAccessObject* obj, const bool& value = true);
+public:
+
+	wxString GetName() const { return m_roleName; }
+	wxString GetLabel() const { return m_roleLabel.IsEmpty() ? m_roleName : m_roleLabel; }
+
+	IAccessObject* GetRoleObject() const { return m_owner; }
+
+	bool GetDefValue() const { return m_defValue; }
+
 protected:
+
 	CRole(IAccessObject* metaObject, const wxString& roleName, const wxString& roleLabel,
 		const bool& value = true) :
 		m_roleName(roleName),
@@ -30,15 +34,28 @@ protected:
 	{
 		InitRole(metaObject, value);
 	}
-public:
 
-	bool GetDefValue() const { return m_defValue; }
-
-	wxString GetName() const { return m_roleName; }
-	IAccessObject* GetRoleObject() const { return m_owner; }
-	wxString GetLabel() const { return m_roleLabel.IsEmpty() ? m_roleName : m_roleLabel; }
+private:
 
 	friend class IAccessObject;
+
+	void InitRole(IAccessObject* obj, const bool& value = true);
+
+	wxString m_roleName;
+	wxString m_roleLabel;
+	IAccessObject* m_owner; // pointer to the owner object
+	bool m_defValue;  // handler function name
+};
+
+struct CUserRoleInfo {
+
+	CUserRoleInfo() {}
+	CUserRoleInfo(const role_identifier_t& id) : m_arrayRole({ id }) {}
+	CUserRoleInfo(const std::vector<role_identifier_t>& array) : m_arrayRole(array) {}
+
+	bool IsSetRole() const { return m_arrayRole.size() > 0; }
+
+	std::vector<role_identifier_t> m_arrayRole;
 };
 
 #include "backend/fileSystem/fs.h"
@@ -48,28 +65,25 @@ public:
 
 	virtual ~IAccessObject();
 
-	bool AccessRight(const wxString& roleName) const { return true; }
-	bool AccessRight(const wxString& roleName, const wxString& userName) const { return AccessRight(roleName); }
-	bool AccessRight(const CRole* role) const { return AccessRight(role->GetName()); }
-	bool AccessRight(const CRole* role, const wxString& userName) const { return AccessRight(role->GetName(), userName); }
-	bool AccessRight(const CRole* role, const meta_identifier_t& id) const;
-	bool AccessRight(const wxString& roleName, const meta_identifier_t& id) const {
-		if (!roleName.IsEmpty()) {
-			auto& it = std::find_if(m_roles.begin(), m_roles.end(),
-				[roleName](const std::pair<wxString, CRole*>& pair) {return roleName == pair.first; }
-			);
-			if (it != m_roles.end()) return AccessRight(it->second, id);
+	bool AccessRight(const CRole* role) const { return AccessRight(role, GetUserRoleInfo()); }
+	bool AccessRight(const wxString& strRoleName) const { return AccessRight(strRoleName, GetUserRoleInfo()); }
+
+	bool AccessRight(const CRole* role, const CUserRoleInfo& roleInfo) const;
+	bool AccessRight(const wxString& strRoleName, const CUserRoleInfo& roleInfo) const {
+		if (!strRoleName.IsEmpty()) {
+			auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
+				[strRoleName](const auto& pair) { return stringUtils::CompareString(strRoleName, pair.first); });
+			if (iterator != m_roles.end()) return AccessRight(iterator->second, roleInfo);
 		}
 		return false;
 	}
 
-	bool SetRight(const CRole* role, const meta_identifier_t& id, const bool& val);
-	bool SetRight(const wxString& roleName, const meta_identifier_t& id, const bool& val) {
-		if (!roleName.IsEmpty()) {
-			auto& it = std::find_if(m_roles.begin(), m_roles.end(),
-				[roleName](const std::pair<wxString, CRole*> pair) {return roleName == pair.first; }
-			);
-			if (it != m_roles.end()) return SetRight(it->second, id, val);
+	bool SetRight(const CRole* role, const role_identifier_t& id, const bool& val);
+	bool SetRight(const wxString& strRoleName, const role_identifier_t& id, const bool& val) {
+		if (!strRoleName.IsEmpty()) {
+			auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
+				[strRoleName](const auto& pair) { return stringUtils::CompareString(strRoleName, pair.first); });
+			if (iterator != m_roles.end()) return SetRight(iterator->second, id, val);
 		}
 		return false;
 	}
@@ -97,6 +111,9 @@ protected:
 	virtual bool DoAccessRight(const CRole* role) const { return true; }
 	virtual void DoSetRight(const CRole* role, const bool& set) {}
 
+	//Create user info
+	virtual CUserRoleInfo GetUserRoleInfo() const = 0;
+
 	//load & save role in metaobject 
 	bool LoadRole(CMemoryReader& reader);
 	bool SaveRole(CMemoryWriter& writer = CMemoryWriter());
@@ -115,7 +132,7 @@ protected:
 		return new CRole(this, std::forward<Args>(args)...);
 	}
 
-	std::map<meta_identifier_t,
+	std::map<role_identifier_t,
 		std::map<wxString, bool>
 	> m_valRoles;
 

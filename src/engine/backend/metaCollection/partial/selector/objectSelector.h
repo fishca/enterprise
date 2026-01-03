@@ -3,11 +3,11 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API ISelectorObject : public CValue {
+class BACKEND_API ISelectorDataObject : public CValue {
 public:
 
-	ISelectorObject();
-	virtual ~ISelectorObject();
+	ISelectorDataObject();
+	virtual ~ISelectorDataObject();
 
 	virtual bool Next() = 0;
 
@@ -35,7 +35,7 @@ protected:
 	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CSelectorDataObject : public ISelectorObject,
+class BACKEND_API CSelectorDataObject : public ISelectorDataObject,
 	public IValueDataObject {
 public:
 
@@ -74,7 +74,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API CSelectorRegisterObject :
-	public ISelectorObject {
+	public ISelectorDataObject {
 public:
 	CSelectorRegisterObject(IMetaObjectRegisterData* metaObject);
 

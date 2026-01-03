@@ -1,8 +1,5 @@
 #include "userItem.h"
 
-#include "frontend/win/theme/luna_tabart.h"
-#include "frontend/win/theme/luna_dockart.h"
-
 #include "backend/appData.h"
 #include "backend/utils/wxmd5.hpp"
 
@@ -46,6 +43,15 @@ bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
 			}
 		}
 
+		for (const auto role : userInfo.m_roleArray) {
+
+			auto iterator = std::find_if(m_roleArray.begin(), m_roleArray.end(),
+				[role](const auto& pair) { return role.m_strRoleGuid == pair.second.m_strRoleGuid; });
+
+			if (iterator != m_roleArray.end())
+				m_choiceRole->Check(iterator->first, true);
+		}
+
 		if (!copy)
 			m_userGuid = userInfo.m_strUserGuid;
 
@@ -55,6 +61,7 @@ bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
 	return false;
 }
 
+#include "backend/metaCollection/metaRoleObject.h"
 #include "backend/metaCollection/metaLanguageObject.h"
 
 CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
@@ -62,44 +69,45 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	wxBoxSizer* m_mainSizer = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+
 	m_mainNotebook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS);
 	m_mainNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	m_main = new wxPanel(m_mainNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 
 	wxBoxSizer* sizerUser = new wxBoxSizer(wxVERTICAL);
-	wxBoxSizer* m_sizerUserTop = new wxBoxSizer(wxHORIZONTAL);
-	wxBoxSizer* m_sizerLabel = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* sizerUserTop = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* sizerLabel = new wxBoxSizer(wxVERTICAL);
 
 	m_staticName = new wxStaticText(m_main, wxID_ANY, _("Name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticName->Wrap(-1);
-	m_sizerLabel->Add(m_staticName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticName, 0, wxALL, 9);
 
 	m_staticFullName = new wxStaticText(m_main, wxID_ANY, _("Full name:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticFullName->Wrap(-1);
-	m_sizerLabel->Add(m_staticFullName, 0, wxALL, 9);
+	sizerLabel->Add(m_staticFullName, 0, wxALL, 9);
 
-	m_sizerUserTop->Add(m_sizerLabel, 0, 0, 5);
+	sizerUserTop->Add(sizerLabel, 0, 0, 5);
 
-	wxBoxSizer* m_sizerText = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* sizerText = new wxBoxSizer(wxVERTICAL);
 	m_textName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	m_sizerText->Add(m_textName, 0, wxALL | wxEXPAND, 5);
+	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, 5);
 	m_textFullName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	m_sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, 5);
-	m_sizerUserTop->Add(m_sizerText, 1, wxEXPAND, 5);
-	sizerUser->Add(m_sizerUserTop, 0, wxEXPAND, 5);
+	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, 5);
+	sizerUserTop->Add(sizerText, 1, wxEXPAND, 5);
+	sizerUser->Add(sizerUserTop, 0, wxEXPAND, 5);
 
 	m_staticline = new wxStaticLine(m_main, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
 	sizerUser->Add(m_staticline, 0, wxALL | wxEXPAND, 5);
 
-	wxBoxSizer* m_sizerUserBottom = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* sizerUserBottom = new wxBoxSizer(wxHORIZONTAL);
 	m_staticPassword = new wxStaticText(m_main, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticPassword->Wrap(-1);
-	m_sizerUserBottom->Add(m_staticPassword, 0, wxALL, 10);
+	sizerUserBottom->Add(m_staticPassword, 0, wxALL, 10);
 	m_textPassword = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
-	m_sizerUserBottom->Add(m_textPassword, 1, wxALL, 5);
+	sizerUserBottom->Add(m_textPassword, 1, wxALL, 5);
 
-	sizerUser->Add(m_sizerUserBottom, 1, wxEXPAND, 5);
+	sizerUser->Add(sizerUserBottom, 1, wxEXPAND, 5);
 
 	m_main->SetSizer(sizerUser);
 	m_main->Layout();
@@ -107,27 +115,33 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	m_mainNotebook->AddPage(m_main, _("User"), false, wxNullBitmap);
 	m_other = new wxPanel(m_mainNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 
-	wxBoxSizer* sizerOther = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* sizerOther = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* sizerLabels = new wxBoxSizer(wxVERTICAL);
 
 	m_staticRole = new wxStaticText(m_other, wxID_ANY, _("Role:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticRole->Wrap(-1);
-	sizerLabels->Add(m_staticRole, 0, wxALL | wxEXPAND, 5);
-
 	m_staticLanguage = new wxStaticText(m_other, wxID_ANY, _("Language:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticLanguage->Wrap(-1);
-	sizerLabels->Add(m_staticLanguage, 0, wxALL | wxEXPAND, 5);
 
-	sizerOther->Add(sizerLabels, 0, wxEXPAND, 5);
+	wxImageList* imageList = new wxImageList(16, 16);
 
-	m_choiceRole = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	for (const auto object : activeMetaData->GetAnyArrayObject(g_metaRoleCLSID)) {
-		const int index = m_choiceRole->Append(object->GetName());
+	m_choiceRole = new wxCheckTree(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
+	m_choiceRole->SetImageList(imageList);
+
+	const wxTreeItemId& root = m_choiceRole->AddRoot(wxT(""));
+
+	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectRole>(g_metaRoleCLSID)) {
+		CDataUserRole entry;
+		entry.m_strRoleGuid = object->GetDocPath();
+		entry.m_strRoleName = object->GetName();
+		entry.m_miRoleId = object->GetMetaID();
+		const int image = imageList->Add(object->GetIcon());
+		const wxTreeItemId& id = m_choiceRole->AppendItem(root, object->GetSynonym(), image, image);
+		m_choiceRole->SetItemState(id, wxCheckTree::UNCHECKED);
+		m_roleArray.insert_or_assign(id, entry);
 	}
-	m_choiceRole->SetSelection(0);
 
 	m_choiceLanguage = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-
 	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectLanguage>(g_metaLanguageCLSID)) {
 
 		CDataUserLanguageItem entry;
@@ -140,17 +154,20 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 
 	m_choiceLanguage->SetSelection(0);
 
+	sizerLabels->Add(m_staticRole, 0, wxEXPAND, 5);
+	sizerLabels->Add(m_choiceRole, 1, wxEXPAND, 5);
+	sizerOther->Add(sizerLabels, 1, wxEXPAND, 5);
+
 	wxBoxSizer* sizerChoice = new wxBoxSizer(wxVERTICAL);
 
-	sizerChoice->Add(m_choiceRole, 0, wxTOP | wxRIGHT | wxLEFT | wxEXPAND, 5);
-	sizerChoice->Add(m_choiceLanguage, 0, wxRIGHT | wxLEFT | wxEXPAND, 5);
+	sizerChoice->Add(m_staticLanguage, 0, wxEXPAND, 5);
+	sizerChoice->Add(m_choiceLanguage, 0, wxEXPAND, 5);
 
-	sizerOther->Add(sizerChoice, 1, wxEXPAND, 5);
+	sizerOther->Add(sizerChoice, 0, wxEXPAND, 5);
 	m_other->SetSizer(sizerOther);
 
 	m_mainNotebook->AddPage(m_other, _("Other"), true, wxNullBitmap);
-
-	m_mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
+	mainSizer->Add(m_mainNotebook, 1, wxEXPAND | wxALL, 5);
 
 	m_bottom = new wxStdDialogButtonSizer();
 	m_bottomOK = new wxButton(this, wxID_OK);
@@ -160,12 +177,18 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	m_bottom->Realize();
 
 	m_mainNotebook->SetSelection(0);
-	m_mainSizer->Add(m_bottom, 0, wxEXPAND, 5);
+	mainSizer->Add(m_bottom, 0, wxEXPAND, 5);
 
-	this->SetSizer(m_mainSizer);
+	this->SetSizer(mainSizer);
 	this->Layout();
 
 	this->Centre(wxBOTH);
+
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
 
 	// Connect Events
 	m_textPassword->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CDialogUserItem::OnPasswordText), nullptr, this);
@@ -210,7 +233,24 @@ void CDialogUserItem::OnOKButtonClick(wxCommandEvent& event)
 	if (selection != wxNOT_FOUND) {
 		const CDataUserLanguageItem& info = m_languageArray.at(selection);
 		userInfo.m_strLanguageGuid = info.m_strLanguageGuid;
+		userInfo.m_strLanguageName = info.m_strLanguageName;
 		userInfo.m_strLanguageCode = info.m_strLanguageCode;
+	}
+
+	const wxTreeItemId& root = m_choiceRole->GetRootItem();
+
+	wxTreeItemIdValue coockie;
+	wxTreeItemId item = m_choiceRole->GetFirstChild(root, coockie);
+
+	while (item.IsOk()) {
+		if (wxCheckTree::CHECKED == m_choiceRole->GetItemState(item)) {
+			const CDataUserRole& info = m_roleArray.at(item);
+			auto& entry = userInfo.m_roleArray.emplace_back();
+			entry.m_strRoleGuid = info.m_strRoleGuid;
+			entry.m_strRoleName = info.m_strRoleName;
+			entry.m_miRoleId = info.m_miRoleId;
+		}
+		item = m_choiceRole->GetNextChild(item, coockie);
 	}
 
 	if (!appData->SaveUserData(userInfo))

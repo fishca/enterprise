@@ -161,15 +161,6 @@ class BACKEND_API IMetaObject :
 
 	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
 
-protected:
-
-	CPropertyCategory* m_categoryCommon = IPropertyObject::CreatePropertyCategory(wxT("common"), _("Common"));
-	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("name"), _("Name"), _("Name of metadata object"), wxEmptyString);
-	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
-	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("Comment"), _("Comment"), wxEmptyString);
-
-	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("Secondary"));
-
 public:
 
 	// get object name as string 
@@ -446,6 +437,8 @@ protected:
 	virtual void DoSetRight(const CRole* role, const bool& val = true);
 #pragma endregion
 
+	virtual CUserRoleInfo GetUserRoleInfo() const;
+
 #pragma region __array_h__
 
 	template <typename _T1>
@@ -642,6 +635,14 @@ protected:
 
 	IMetaData* m_metaData;
 	CMethodHelper* m_methodHelper;
+
+protected:
+
+	CPropertyCategory* m_categoryCommon = IPropertyObject::CreatePropertyCategory(wxT("common"), _("Common"));
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("name"), _("Name"), _("Name of metadata object"), wxEmptyString);
+	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
+	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("Comment"), _("Comment"), wxEmptyString);
+	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("Secondary"));
 };
 
 extern BACKEND_API CRestructureInfo s_restructureInfo;

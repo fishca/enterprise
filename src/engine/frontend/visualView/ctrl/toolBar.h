@@ -22,11 +22,6 @@ const class_identifier_t g_controlToolBarSeparatorCLSID = string_to_clsid("CT_TL
 
 class CValueToolbar : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueToolbar);
-protected:
-	bool GetActionSource(CPropertyList*);
-protected:
-	CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("Toolbar"));
-	CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("Source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
 public:
 
 	void SetActionSrc(const form_identifier_t& action) { return m_actSource->SetValue(action); }
@@ -89,8 +84,15 @@ protected:
 	void OnToolDropDown(wxAuiToolBarEvent& event);
 	void OnRightDown(wxMouseEvent& event);
 
+private:
+
+	bool GetActionSource(CPropertyList*);
+
 	//storage for action array 
 	CActionCollection m_actionArray;
+
+	CPropertyCategory* m_categoryAction = IPropertyObject::CreatePropertyCategory(wxT("action"), _("Toolbar"));
+	CPropertyList* m_actSource = IPropertyObject::CreateProperty<CPropertyList>(m_categoryAction, wxT("actionSource"), _("Source"), &CValueToolbar::GetActionSource, wxNOT_FOUND);
 
 	friend class CValueForm;
 };
@@ -99,20 +101,6 @@ protected:
 
 class CValueToolBarItem : public IValueControl {
 	wxDECLARE_DYNAMIC_CLASS(CValueToolBarItem);
-private:
-	bool GetToolAction(CEventAction* evtList);
-private:
-
-	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
-
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("title"), _("Title"), wxT(""));
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
-	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
-	CPropertyTString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("tooltip"), _("Tooltip"), wxEmptyString);
-	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("Enabled"), true);
-
-	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), _("Action"), wxArrayString{ wxT("control") }, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 public:
 
@@ -233,6 +221,21 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+	bool GetToolAction(CEventAction* evtList);
+private:
+
+	CPropertyCategory* m_categoryToolbar = IPropertyObject::CreatePropertyCategory(wxT("toolBarItem"), _("Item"));
+
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("title"), _("Title"), wxT(""));
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryToolbar, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryToolbar, wxT("picture"), _("Picture"));
+	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("contextMenu"), _("Context menu"), false);
+	CPropertyTString* m_properyTooltip = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryToolbar, wxT("tooltip"), _("Tooltip"), wxEmptyString);
+	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryToolbar, wxT("enabled"), _("Enabled"), true);
+
+	CEventAction* m_eventAction = IPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("action"), _("Action"), wxArrayString{ wxT("control") }, &CValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 	friend class CValueForm;
 	friend class CValueToolbar;

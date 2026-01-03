@@ -157,7 +157,7 @@ public:
 #pragma region value_factory 
 
 	//get data selector 
-	virtual eSelectorDataType GetFilterDataType() const; 
+	virtual eSelectorDataType GetFilterDataType() const;
 
 	//Create value by selected type
 	virtual CValue CreateValue() const;
@@ -197,19 +197,10 @@ protected:
 
 class BACKEND_API CMetaObjectAttribute : public IMetaObjectAttribute {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectAttribute);
-protected:
-	CPropertyCategory* m_categoryType = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
-	CPropertyType* m_propertyType = IPropertyObject::CreateProperty<CPropertyType>(m_categoryType, wxT("type"), _("Type"), eValueTypes::TYPE_STRING);
-	CPropertyCategory* m_categoryAttribute = IPropertyObject::CreatePropertyCategory(wxT("attribute"), _("Attribute"));
-	CPropertyBoolean* m_propertyFillCheck = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryAttribute, wxT("fillCheck"), _("Fill check"));
-	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
-	CPropertyEnum<CValueEnumSelectMode>* m_propertySelectMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSelectMode>>(m_categoryPresentation, wxT("select"), _("Select group and items"), eSelectMode::eSelectMode_Items);
-	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
-	CPropertyEnum<CValueEnumItemMode>* m_propertyItemMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
 public:
 
 	CMetaObjectAttribute::CMetaObjectAttribute(const eValueTypes& valType = eValueTypes::TYPE_STRING) :
-		IMetaObjectAttribute() 
+		IMetaObjectAttribute()
 	{
 		m_propertyType->SetValue(CValue::GetIDByVT(valType));
 	}
@@ -239,6 +230,17 @@ protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	CPropertyCategory* m_categoryType = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
+	CPropertyType* m_propertyType = IPropertyObject::CreateProperty<CPropertyType>(m_categoryType, wxT("type"), _("Type"), eValueTypes::TYPE_STRING);
+	CPropertyCategory* m_categoryAttribute = IPropertyObject::CreatePropertyCategory(wxT("attribute"), _("Attribute"));
+	CPropertyBoolean* m_propertyFillCheck = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryAttribute, wxT("fillCheck"), _("Fill check"));
+	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
+	CPropertyEnum<CValueEnumSelectMode>* m_propertySelectMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSelectMode>>(m_categoryPresentation, wxT("select"), _("Select group and items"), eSelectMode::eSelectMode_Items);
+	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
+	CPropertyEnum<CValueEnumItemMode>* m_propertyItemMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
 };
 
 class BACKEND_API CMetaObjectAttributePredefined : public IMetaObjectAttribute {

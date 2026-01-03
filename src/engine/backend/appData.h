@@ -90,7 +90,8 @@ struct CApplicationDataUserInfo {
 
 	struct CApplicationDataUserRole {
 		wxString m_strRoleGuid;
-		meta_identifier_t m_roleId = wxNOT_FOUND;
+		wxString m_strRoleName;
+		role_identifier_t m_miRoleId = wxNOT_FOUND;
 	};
 
 	bool IsOk() const { return !m_strUserGuid.IsEmpty(); }
@@ -110,6 +111,7 @@ struct CApplicationDataUserInfo {
 
 	//Language info 
 	wxString m_strLanguageGuid;
+	wxString m_strLanguageName;
 	wxString m_strLanguageCode;
 };
 #pragma endregion
@@ -240,6 +242,10 @@ public:
 	}
 
 #pragma endregion 
+
+	const std::vector<CApplicationDataUserInfo::CApplicationDataUserRole>& GetUserRoleArray() const {
+		return m_userInfo.m_roleArray;
+	}
 
 #pragma region language  
 

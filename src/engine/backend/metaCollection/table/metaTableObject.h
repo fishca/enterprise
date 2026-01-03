@@ -5,13 +5,6 @@
 
 class BACKEND_API CMetaObjectTableData : public IMetaObjectCompositeData {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectTableData);
-private:
-	//CMetaObjectAttributePredefined* m_numberLine = IMetaObjectCompositeData::CreateNumber("numberLine", _("N"), wxEmptyString, 6, 0);
-protected:
-
-	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
-	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
-	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
 
 public:
 
@@ -125,6 +118,12 @@ protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
+	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
+	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
 };
 
 #endif

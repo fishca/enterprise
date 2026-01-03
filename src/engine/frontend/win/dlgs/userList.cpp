@@ -71,6 +71,8 @@ enum {
 	wxID_USERS_TOOL_DELETE,
 };
 
+#include "frontend/visualView/ctrl/frame.h"
+
 CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -80,10 +82,13 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	m_auiToolBarUsers = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT);
 	m_auiToolBarUsers->SetArtProvider(new wxAuiLunaToolBarArt());
 
-	m_toolAdd = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_ADD, _("Add"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolCopy = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_COPY, _("Copy"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolEdit = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_EDIT, _("Edit"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolDelete = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_DELETE, _("Delete"), wxNullBitmap, wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolAdd = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_ADD, _("Add"), CBackendPicture::GetPicture(g_picAddCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolCopy = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_COPY, _("Copy"), CBackendPicture::GetPicture(g_picCopyCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolEdit = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_EDIT, _("Edit"), CBackendPicture::GetPicture(g_picEditCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolDelete = m_auiToolBarUsers->AddTool(wxID_USERS_TOOL_DELETE, _("Delete"), CBackendPicture::GetPicture(g_picDeleteCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+
+	m_auiToolBarUsers->SetForegroundColour(wxDefaultStypeFGColour);
+	m_auiToolBarUsers->SetBackgroundColour(wxDefaultStypeBGColour);
 
 	m_auiToolBarUsers->Realize();
 	m_auiToolBarUsers->Connect(wxEVT_MENU, wxCommandEventHandler(CDialogUserList::OnCommandMenu), nullptr, this);
@@ -111,6 +116,12 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	this->SetSizer(sizerList);
 	this->Layout();
 	this->Centre(wxBOTH);
+
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserListCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
 }
 
 CDialogUserList::~CDialogUserList()
@@ -126,7 +137,7 @@ void CDialogUserList::OnContextMenu(wxDataViewEvent &event)
 	for (unsigned int idx = 0; idx < m_auiToolBarUsers->GetToolCount(); idx++) {
 		wxAuiToolBarItem *tool = m_auiToolBarUsers->FindToolByIndex(idx);
 		if (tool) {
-			menu.Append(tool->GetId(), tool->GetLabel());
+			menu.Append(tool->GetId(), tool->GetLabel())->SetBitmap(tool->GetBitmapBundle());
 		}
 	}
 

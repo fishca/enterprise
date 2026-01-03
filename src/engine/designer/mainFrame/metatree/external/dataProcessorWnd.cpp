@@ -86,23 +86,23 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 
 	sbSizerTree->Add(m_metaTreeToolbar, 0, wxALL | wxEXPAND, 0);
 
-	m_metaTreeWnd = new CDataProcessorTreeCtrl(sbSizerTree->GetStaticBox(), this);
-	m_metaTreeWnd->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl = new CDataProcessorTreeCtrl(sbSizerTree->GetStaticBox(), this);
+	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeWnd->SetImageList(
+	m_metaTreeCtrl->SetImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
-	sbSizerTree->Add(m_metaTreeWnd, 1, wxALL | wxEXPAND, 0);
+	sbSizerTree->Add(m_metaTreeCtrl, 1, wxALL | wxEXPAND, 0);
 
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
@@ -131,13 +131,13 @@ CDataProcessorTree::~CDataProcessorTree()
 	m_synonymValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionSynonym), nullptr, this);
 	m_commentValue->Disconnect(wxEVT_TEXT, wxCommandEventHandler(CDataProcessorTree::OnEditCaptionComment), nullptr, this);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeWnd, ID_METATREE_NEW);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeWnd, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeWnd, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
 
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeWnd, ID_METATREE_UP);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeWnd, ID_METATREE_DOWM);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeWnd, ID_METATREE_SORT);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CDataProcessorTree::CDataProcessorTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
 
 	m_buttonModule->Disconnect(wxEVT_BUTTON, wxCommandEventHandler(CDataProcessorTree::OnButtonModuleClicked), nullptr, this);
 }

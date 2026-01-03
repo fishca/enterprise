@@ -17,6 +17,7 @@ class CRoleEditor : public wxSplitterWindow {
 	wxTreeItemId m_treeCOMMON; //special tree
 
 	wxTreeItemId m_treeFORMS;
+	wxTreeItemId m_treeINTERFACES;
 
 	wxTreeItemId m_treeCONSTANTS;
 

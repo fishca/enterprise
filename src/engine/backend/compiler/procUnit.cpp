@@ -512,7 +512,7 @@ start_label:
 			//if force exit - terminate 
 			if (CApplicationData::IsForceExit())
 				break;
-			
+
 			//enter in debugger
 			if (debugServer != nullptr && !CBackendException::IsEvalMode())
 				debugServer->EnterDebugger(pContext, curCode, lPrevLine);
@@ -836,9 +836,10 @@ start_label:
 		}
 	}
 	catch (const CBackendInterrupt* err) {
+
 		CSystemFunction::Message(err->what(),
-			eStatusMessage::eStatusMessage_Error
-		);
+			eStatusMessage::eStatusMessage_Error);
+
 		while (lCodeLine < lFinish) {
 			if (curCode.m_numOper != OPER_GOTO
 				&& curCode.m_numOper != OPER_NEXT
@@ -852,7 +853,15 @@ start_label:
 			}
 		}
 	}
+	catch (const CBackendAccessException* err) {
+
+		CSystemFunction::Message(err->what(),
+			eStatusMessage::eStatusMessage_Error);
+
+		throw(new CBackendAccessException());
+	}
 	catch (const CBackendException* err) {
+
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
 			s_errorPlace.Reset(); //Error is handled in this module - erase the error location
@@ -861,6 +870,7 @@ start_label:
 			lCodeLine = tryCodeLine;
 			goto start_label;
 		}
+
 		//there is no handler in this module - save the error location for the following modules
 		//But we don't throw an error right away, because we don't know if there are any handlers further
 		if (!s_errorPlace.m_byteCode) {
@@ -870,6 +880,7 @@ start_label:
 				s_errorPlace.m_errorLine = lCodeLine;
 			}
 		}
+
 		CBackendException::ProcessError(m_pByteCode->m_listCode[lCodeLine], err->what());
 	}
 }

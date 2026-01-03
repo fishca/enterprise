@@ -25,26 +25,28 @@ void IAccessObject::AddRole(CRole* role)
 	m_roles.emplace_back(role->GetName(), role);
 }
 
-bool IAccessObject::AccessRight(const CRole* role, const meta_identifier_t& id) const
+bool IAccessObject::AccessRight(const CRole* role, const CUserRoleInfo& roleInfo) const
 {
 	if (!DoAccessRight(role))
 		return false;
 
-	auto roleData = m_valRoles.find(id);
-	if (roleData != m_valRoles.end()) {
-		auto foundedData = std::find_if(roleData->second.begin(), roleData->second.end(), [role](const std::pair<wxString, bool >& pair)
-			{
-				return stringUtils::CompareString(role->GetName(), pair.first);
-			}
-		);
-		if (foundedData != roleData->second.end())
-			return foundedData->second;
+	bool access = true;
+
+	for (const auto rid : roleInfo.m_arrayRole) {
+		const auto iterator_role = m_valRoles.find(rid);
+		if (iterator_role != m_valRoles.end()) {
+			const auto iterator = std::find_if(iterator_role->second.begin(), iterator_role->second.end(),
+				[role](const auto& pair) { return stringUtils::CompareString(role->GetName(), pair.first); });
+			if (iterator != iterator_role->second.end())
+				access = iterator->second;
+		}
+		if (access) break;
 	}
 
-	return role->GetDefValue();
+	return access;
 }
 
-bool IAccessObject::SetRight(const CRole* role, const meta_identifier_t& id, const bool& set)
+bool IAccessObject::SetRight(const CRole* role, const role_identifier_t& id, const bool& set)
 {
 	if (role == nullptr)
 		return false;
@@ -55,15 +57,11 @@ bool IAccessObject::SetRight(const CRole* role, const meta_identifier_t& id, con
 
 CRole* IAccessObject::GetRole(const wxString& nameParam) const
 {
-	auto it = std::find_if(m_roles.begin(), m_roles.end(),
-		[nameParam](const std::pair<wxString, CRole*>& pair)
-		{
-			return stringUtils::CompareString(nameParam, pair.first);
-		}
-	);
+	auto iterator = std::find_if(m_roles.begin(), m_roles.end(),
+		[nameParam](const std::pair<wxString, CRole*>& pair) { return stringUtils::CompareString(nameParam, pair.first); });
 
-	if (it != m_roles.end())
-		return &(*it->second);
+	if (iterator != m_roles.end())
+		return &(*iterator->second);
 
 	return nullptr;
 }
@@ -72,15 +70,16 @@ CRole* IAccessObject::GetRole(unsigned int idx) const
 {
 	assert(idx < m_roles.size());
 
-	auto it = m_roles.begin();
+	auto iterator = m_roles.begin();
 	unsigned int i = 0;
-	while (i < idx && it != m_roles.end()) {
+	while (i < idx && iterator != m_roles.end()) {
 		i++;
-		it++;
+		iterator++;
 	}
 
-	if (it != m_roles.end())
-		return &(*it->second);
+	if (iterator != m_roles.end())
+		return &(*iterator->second);
+
 	return nullptr;
 }
 
@@ -92,7 +91,7 @@ bool IAccessObject::LoadRole(CMemoryReader& dataReader)
 		unsigned int countRole = dataRoleReader->r_u32(); m_valRoles.clear();
 		for (unsigned int idx = 0; idx < countRole; idx++) {
 			unsigned int countData = dataRoleReader->r_u32();
-			meta_identifier_t id = dataRoleReader->r_s32();
+			role_identifier_t id = dataRoleReader->r_s32();
 			for (unsigned int idc = 0; idc < countData; idc++) {
 				wxString roleName = dataRoleReader->r_stringZ();
 				bool roleValue = dataRoleReader->r_u8();

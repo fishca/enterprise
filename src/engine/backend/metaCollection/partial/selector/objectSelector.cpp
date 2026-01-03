@@ -3,19 +3,19 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-ISelectorObject::ISelectorObject() : CValue(eValueTypes::TYPE_VALUE, true),
+ISelectorDataObject::ISelectorDataObject() : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper())
 {
 }
 
-ISelectorObject::~ISelectorObject()
+ISelectorDataObject::~ISelectorDataObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t ISelectorObject::GetClassType() const
+class_identifier_t ISelectorDataObject::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -23,7 +23,7 @@ class_identifier_t ISelectorObject::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString ISelectorObject::GetClassName() const
+wxString ISelectorDataObject::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -31,7 +31,7 @@ wxString ISelectorObject::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString ISelectorObject::GetString() const
+wxString ISelectorDataObject::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -42,7 +42,7 @@ wxString ISelectorObject::GetString() const
 /////////////////////////////////////////////////////////////////////////
 
 CSelectorDataObject::CSelectorDataObject(IMetaObjectRecordDataMutableRef* metaObject) :
-	ISelectorObject(),
+	ISelectorDataObject(),
 	IValueDataObject(CGuid(), false),
 	m_metaObject(metaObject)
 {
@@ -93,7 +93,7 @@ IRecordDataObjectRef* CSelectorDataObject::GetObject(const CGuid& guid) const
 //////////////////////////////////////////////////////////////////////////
 
 CSelectorRegisterObject::CSelectorRegisterObject(IMetaObjectRegisterData* metaObject) :
-	ISelectorObject(),
+	ISelectorDataObject(),
 	m_metaObject(metaObject)
 {
 	Reset();

@@ -262,6 +262,14 @@ void IMetaObject::DoSetRight(const CRole* role, const bool& val)
 }
 #pragma endregion
 
+CUserRoleInfo IMetaObject::GetUserRoleInfo() const
+{
+	CUserRoleInfo roleInfo;
+	for (auto role : appData->GetUserRoleArray())
+		roleInfo.m_arrayRole.emplace_back(role.m_miRoleId);
+	return roleInfo;
+}
+
 #define	headerBlock 0x002330
 #define	dataBlock 0x002350
 #define	childBlock 0x002370

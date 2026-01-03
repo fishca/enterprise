@@ -34,12 +34,10 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-private:
-
 	bool IsValidCode(const wxString& strLangCode);
 
-	CPropertyUString* m_propertyCode =
-		IPropertyObject::CreateProperty<CPropertyUString>(m_categorySecondary, wxT("code"), _("Code"), wxT("en"));
+private:
+	CPropertyUString* m_propertyCode = IPropertyObject::CreateProperty<CPropertyUString>(m_categorySecondary, wxT("code"), _("Code"), wxT("en"));
 };
 
 #endif 

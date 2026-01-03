@@ -1445,10 +1445,14 @@ IRecordDataObjectExt::~IRecordDataObjectExt()
 
 bool IRecordDataObjectExt::InitializeObject()
 {
+	if (m_metaObject->AccessRight_Use()) {
+
+	}
+
 	if (!m_metaObject->IsExternalCreate()) {
-		IMetaData* metaData = m_metaObject->GetMetaData();
+		const IMetaData* metaData = m_metaObject->GetMetaData();
 		wxASSERT(metaData);
-		IModuleManager* moduleManager = metaData->GetModuleManager();
+		const IModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
 		if (!m_compileModule) {
@@ -1491,10 +1495,15 @@ bool IRecordDataObjectExt::InitializeObject()
 
 bool IRecordDataObjectExt::InitializeObject(IRecordDataObjectExt* source)
 {
+	//if (m_metaObject->AccessRight("use", appData->GetUserName()))
+	//{
+
+	//}
+
 	if (!m_metaObject->IsExternalCreate()) {
-		IMetaData* metaData = m_metaObject->GetMetaData();
+		const IMetaData* metaData = m_metaObject->GetMetaData();
 		wxASSERT(metaData);
-		IModuleManager* moduleManager = metaData->GetModuleManager();
+		const IModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
 		if (m_compileModule == nullptr) {
@@ -1632,9 +1641,9 @@ bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 
 bool IRecordDataObjectRef::InitializeObject(IRecordDataObjectRef* source, bool generate)
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	const IModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	if (m_compileModule == nullptr) {
 		m_compileModule = new CCompileModule(m_metaObject->GetModuleObject());
@@ -2322,10 +2331,10 @@ void IRecordSetObject::CreateEmptyKey()
 
 bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool newRecord)
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	const IModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (m_compileModule == nullptr) {

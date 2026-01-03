@@ -7,18 +7,12 @@ class BACKEND_API CRecordDataObjectConstant;
 
 class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandData {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
-private:
-	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
-	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
+
 protected:
 	enum
 	{
 		ID_METATREE_OPEN_CONSTANT_MANAGER = 19000,
 	};
-
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordModule"), _("Record module")));
 
 public:
 
@@ -66,9 +60,6 @@ public:
 	//process default query
 	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
 
-private:
-	friend class IMetaData;
-	friend class CRecordDataObjectConstant;
 protected:
 
 	//load & save metaData from DB 
@@ -79,6 +70,20 @@ protected:
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
 	virtual void ProcessCommand(unsigned int id);
+
+private:
+
+	CPropertyInnerModule<CMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordModule"), _("Record module")));
+
+#pragma region role 
+	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
+	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
+	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
+#pragma endregion
+
+	friend class CRecordDataObjectConstant;
+	friend class IMetaData;
 };
 
 #include "backend/moduleInfo.h"

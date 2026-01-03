@@ -66,20 +66,6 @@ protected:
 
 class BACKEND_API CMetaObjectForm : public IMetaObjectForm {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectForm);
-private:
-
-	friend class CVisualEditor;
-
-	friend class IMetaObjectRecordData;
-	friend class IListDataObject;
-	friend class IRecordDataObject;
-
-protected:
-
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
-
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::FillFormType);
 
 public:
 
@@ -139,17 +125,19 @@ private:
 		prop->AppendItem(formDefaultName, defaultFormType, GetIcon());
 		return FillGenericFormType(prop);
 	}
+
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
+	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::FillFormType);
 };
 
 class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonForm);
-protected:
-
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
-
-	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
-
 public:
+
+#pragma region access
+	bool AccessRight_Use() const { return AccessRight(m_roleUse); }
+#pragma endregion
 
 	CMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
@@ -187,6 +175,14 @@ protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+private:
+
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
+
+#pragma region role
+	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
+#pragma endregion
 };
 
 #endif 

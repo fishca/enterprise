@@ -55,6 +55,12 @@ CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxSt
 	this->Layout();
 	this->Centre(wxBOTH);
 
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserActiveCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
+
 	RefreshActiveUserTable();
 
 	m_activeTableScanner->Bind(wxEVT_TIMER, &CDialogActiveUser::OnIdleHandler, this);

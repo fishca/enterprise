@@ -88,7 +88,7 @@ bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString
 		variant = CBackendLocalization::GetRawLocText(array);
 		return true;
 	}
-	
+
 	CBackendLocalizationEntry entry;
 	entry.m_code = CBackendLocalization::GetUserLanguage();
 	entry.m_data = text;
@@ -103,6 +103,30 @@ bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString
 
 bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
 {
+	class wxTranslateTextCtrl : public wxTextCtrl {
+	public:
+		wxTranslateTextCtrl() : wxTextCtrl() {}
+		wxTranslateTextCtrl(wxWindow* parent, wxWindowID id,
+			const wxString& value = wxEmptyString,
+			const wxPoint& pos = wxDefaultPosition,
+			const wxSize& size = wxDefaultSize,
+			long style = 0,
+			const wxValidator& validator = wxDefaultValidator,
+			const wxString& name = wxASCII_STR(wxTextCtrlNameStr))
+			:
+			wxTextCtrl(parent, id, value, pos, size, style, validator, name)
+		{
+			InvalidateBestSize();
+		}
+	protected:
+		virtual wxSize DoGetBestSize() const override {
+			wxSize best_size = wxTextCtrl::DoGetBestSize();
+			if (best_size.y > 38)
+				best_size.y = 38;
+			return best_size;
+		}
+	};
+
 	wxASSERT_MSG(value.IsType(wxS("string")), "Function called for incompatible property");
 
 	if (m_ownerProperty != nullptr) {
@@ -151,7 +175,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 					wxStaticText* ss = new wxStaticText(dlg, wxID_ANY, language->GetSynonym(),
 						wxDefaultPosition, wxDefaultSize);
 
-					wxTextCtrl* ed = new wxTextCtrl(dlg, language->GetMetaID(), strTranslate,
+					wxTextCtrl* ed = new wxTranslateTextCtrl(dlg, language->GetMetaID(), strTranslate,
 						wxDefaultPosition, wxDefaultSize, edStyle);
 
 					if (m_maxLen > 0)
@@ -163,7 +187,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 					locArray.emplace(language, ed);
 				}
 				else {
-					wxTextCtrl* ed = new wxTextCtrl(dlg, language->GetMetaID(), strTranslate,
+					wxTextCtrl* ed = new wxTranslateTextCtrl(dlg, language->GetMetaID(), strTranslate,
 						wxDefaultPosition, wxDefaultSize, edStyle);
 
 					if (m_maxLen > 0)

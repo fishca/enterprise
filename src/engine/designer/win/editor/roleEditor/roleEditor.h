@@ -72,6 +72,8 @@ private:
 		return m_roleCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
 	}
 
+	void AddInterfaceItem(IMetaObject* obj, const wxTreeItemId& item);
+
 	void InitRole();
 	void ClearRole();
 

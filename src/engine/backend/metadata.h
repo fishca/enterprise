@@ -125,7 +125,7 @@ public:
 	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
 
 	//metaobject
-	IMetaObject* CreateMetaObject(const class_identifier_t& clsid, 
+	IMetaObject* CreateMetaObject(const class_identifier_t& clsid,
 		IMetaObject* parentMetaObj, bool runObject = true);
 
 	bool RenameMetaObject(IMetaObject* object, const wxString& newName);
@@ -137,7 +137,7 @@ public:
 	template <typename _T1 = IMetaObject>
 	std::vector<_T1*> GetAnyArrayObject() const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, {});
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, {});
 		return array;
 	}
 
@@ -145,7 +145,7 @@ public:
 	template <typename _T1 = IMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const class_identifier_t& clsid) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, { clsid });
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, { clsid });
 		return array;
 	}
 
@@ -153,7 +153,7 @@ public:
 	template <typename _T1 = IMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<class_identifier_t> filter) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, filter);
+		FillArrayObjectByFilter<_T1, IMetaObject>(array, filter);
 		return array;
 	}
 
@@ -163,20 +163,20 @@ public:
 	//any 
 	template <typename _T1 = IMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id) const {
-		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, nullptr, {});
+		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, {});
 	}
 
 	//any 
 	template <typename _T1 = IMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const class_identifier_t& clsid) const {
-		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, nullptr, { clsid });
+		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, { clsid });
 	}
 
 	//any 
 	template <typename _T1 = IMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id,
 		const std::initializer_list<class_identifier_t> filter) const {
-		return FindObjectByFilter<_T2, IMetaObject, IMetaObject, _T1>(id, nullptr, filter);
+		return FindObjectByFilter<_T2, IMetaObject, IMetaObject, _T1>(id, filter);
 	}
 
 #pragma endregion 
@@ -192,48 +192,27 @@ protected:
 
 #pragma region __array_h__
 
-	template <typename _T1 = IMetaObject>
-	bool FillArrayObjectByFilter(
-		std::vector<_T1*>& array,
-		const std::initializer_list<class_identifier_t> filter) const
-	{
-		return FillArrayObjectByFilter<_T1, IMetaObject>(array, nullptr, filter);
-	}
-
 	template <typename _T1 = IMetaObject, typename _T2 = IMetaObject>
 	bool FillArrayObjectByFilter(
 		std::vector<_T1*>& array,
-		const _T2* top,
 		const std::initializer_list<class_identifier_t> filter) const
 	{
-		if (top != nullptr)
-			return top->FillArrayObjectByFilter(array, filter, true);
 		const auto commonObject = GetCommonMetaObject();
 		if (commonObject != nullptr)
-			return commonObject->FillArrayObjectByFilter(array, filter, true);
+			return commonObject->FillArrayObjectByFilter(array, filter, false);
 		return false;
 	}
 
 #pragma endregion 
 #pragma region __filter_h__
 
-	template<typename _T1, typename _T2 = IMetaObject>
-	_T2* FindObjectByFilter(
-		const _T1& id,
-		const std::initializer_list<class_identifier_t> filter) const {
-		return FindObjectByFilter<_T1, IMetaObject, _T2>(id, nullptr, filter);
-	}
-
 	template<typename _T1, typename _T2 = IMetaObject, typename _T3 = IMetaObject>
 	_T3* FindObjectByFilter(
 		const _T1& id,
-		const _T2* top,
 		const std::initializer_list<class_identifier_t> filter) const {
-		if (top != nullptr)
-			return top->FindObjectByFilter<_T3>(id, filter, true);
 		const auto commonObject = GetCommonMetaObject();
 		if (commonObject != nullptr)
-			return commonObject->FindObjectByFilter<_T3>(id, filter, true);
+			return commonObject->FindObjectByFilter<_T3>(id, filter, false);
 		return nullptr;
 	}
 

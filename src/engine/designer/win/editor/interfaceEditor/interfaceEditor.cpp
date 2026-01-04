@@ -19,7 +19,7 @@ CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	mainSizer->Add(m_interfaceCtrl, 1, wxEXPAND);
-		
+
 	m_interfaceCtrl->SelectItem(m_treeMETADATA);
 
 	wxWindow::SetSizer(mainSizer);
@@ -126,9 +126,9 @@ void CInterfaceEditor::ClearInterface() {
 
 void CInterfaceEditor::FillData()
 {
-	IMetaData* metaData = m_metaInterface->GetMetaData();
+	const IMetaData* metaData = m_metaInterface->GetMetaData();
 	wxASSERT(metaData);
-	IMetaObject* commonObject = activeMetaData->GetCommonMetaObject();
+	const IMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_interfaceCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());
@@ -136,7 +136,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          CommonForms                         *
 	//****************************************************************
-	for (auto commonForm : activeMetaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
+	for (auto commonForm : metaData->GetAnyArrayObject(g_metaCommonFormCLSID)) {
 		if (commonForm->IsDeleted())
 			continue;
 		AppendItem(m_treeFORMS, commonForm);
@@ -145,7 +145,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Constants                           *
 	//****************************************************************
-	for (auto constant : activeMetaData->GetAnyArrayObject(g_metaConstantCLSID)) {
+	for (auto constant : metaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 		if (constant->IsDeleted())
 			continue;
 		AppendItem(m_treeCONSTANTS, constant);
@@ -154,7 +154,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                        Catalogs                              *
 	//****************************************************************
-	for (auto catalog : activeMetaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
+	for (auto catalog : metaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 		if (catalog->IsDeleted())
 			continue;
 		AppendItem(m_treeCATALOGS, catalog);
@@ -163,7 +163,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                        Documents                             *
 	//****************************************************************
-	for (auto document : activeMetaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
+	for (auto document : metaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 		if (document->IsDeleted())
 			continue;
 		AppendItem(m_treeDOCUMENTS, document);
@@ -172,7 +172,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Data processor                      *
 	//****************************************************************
-	for (auto dataProcessor : activeMetaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
+	for (auto dataProcessor : metaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 		if (dataProcessor->IsDeleted())
 			continue;
 		AppendItem(m_treeDATAPROCESSORS, dataProcessor);
@@ -181,7 +181,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Report			                     *
 	//****************************************************************
-	for (auto report : activeMetaData->GetAnyArrayObject(g_metaReportCLSID)) {
+	for (auto report : metaData->GetAnyArrayObject(g_metaReportCLSID)) {
 		if (report->IsDeleted())
 			continue;
 		AppendItem(m_treeREPORTS, report);
@@ -190,7 +190,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Information register			     *
 	//****************************************************************
-	for (auto informationRegister : activeMetaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
+	for (auto informationRegister : metaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 		if (informationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
@@ -199,7 +199,7 @@ void CInterfaceEditor::FillData()
 	//****************************************************************
 	//*                          Accumulation register			     *
 	//****************************************************************
-	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
+	for (auto accumulationRegister : metaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 		if (accumulationRegister->IsDeleted())
 			continue;
 		AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);

@@ -49,7 +49,7 @@ IMetaObject* CDataReportTree::CreateItem(bool showValue)
 		IPropertyObject* prev_selected = objectInspector->GetSelectedObject();
 
 		if (showValue) { OpenFormMDI(createdObject); }
-		UpdateToolbar(createdObject, FillItem(createdObject, item, 
+		UpdateToolbar(createdObject, FillItem(createdObject, item,
 			prev_selected == objectInspector->GetSelectedObject(), false));
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
@@ -514,7 +514,7 @@ void CDataReportTree::FillData()
 			continue;
 		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeATTRIBUTES, attribute);
+		AppendItem(m_treeATTRIBUTES, attribute);
 	}
 
 	//Список табличных частей 
@@ -527,7 +527,7 @@ void CDataReportTree::FillData()
 				continue;
 			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
-			wxTreeItemId hItemNew = AppendItem(hItem, attribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
@@ -535,14 +535,14 @@ void CDataReportTree::FillData()
 	for (auto metaForm : commonMetadata->GetFormArrayObject()) {
 		if (metaForm->IsDeleted())
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeFORM, metaForm);
+		AppendItem(m_treeFORM, metaForm);
 	}
 
 	//Таблицы
 	for (auto metaTemplates : commonMetadata->GetTemplateArrayObject()) {
 		if (metaTemplates->IsDeleted())
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, metaTemplates);
+		AppendItem(m_treeTEMPLATES, metaTemplates);
 	}
 
 	//update choice selection

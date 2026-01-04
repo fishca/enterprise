@@ -22,7 +22,6 @@
     <ClInclude Include="moduleManager\moduleManager.h">
       <Filter>moduleManager</Filter>
     </ClInclude>
-    <ClInclude Include="metaDefines.h" />
     <ClInclude Include="compiler\compileModule.h">
       <Filter>compiler</Filter>
     </ClInclude>

@@ -235,6 +235,9 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 	if (metaItem->GetClassType() == g_metaTableCLSID) {
 		createdItem = AppendGroupItem(item, g_metaAttributeCLSID, metaItem);
 	}
+	else if (metaItem->GetClassType() == g_metaInterfaceCLSID) {
+		createdItem = AppendGroupItem(item, g_metaInterfaceCLSID, metaItem);
+	}
 	else {
 		createdItem = AppendItem(item, metaItem);
 	}
@@ -250,7 +253,7 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 
 	else if (metaItem->GetClassType() == g_metaTableCLSID) {
 
-		CMetaObjectTableData* metaItemRecord = dynamic_cast<CMetaObjectTableData*>(metaItem);
+		CMetaObjectTableData* metaItemRecord = metaItem->ConvertToType<CMetaObjectTableData>();
 		wxASSERT(metaItemRecord);
 
 		for (auto attribute : metaItemRecord->GetAttributeArrayObject()) {
@@ -259,6 +262,14 @@ wxTreeItemId CMetadataTree::FillItem(IMetaObject* metaItem, const wxTreeItemId& 
 			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
 			AppendItem(createdItem, attribute);
+		}
+	}
+	else if (metaItem->GetClassType() == g_metaInterfaceCLSID) {
+		CMetaObjectInterface* metaItemRecord = metaItem->ConvertToType<CMetaObjectInterface>();
+		for (auto object : metaItemRecord->GetInterfaceArrayObject()) {
+			if (object->IsDeleted())
+				continue;
+			AppendItem(createdItem, object);
 		}
 	}
 
@@ -778,7 +789,27 @@ bool CMetadataTree::RenameMetaObject(IMetaObject* metaObject, const wxString& ne
 }
 
 #include "backend/metaCollection/partial/commonObject.h"
-#include "backend/metaCollection/table/metaTableObject.h"
+
+void CMetadataTree::AddInterfaceItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
+{
+	CMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CMetaObjectInterface>();
+	wxASSERT(metaObject);
+
+	for (auto commonInterface : metaObjectValue->GetInterfaceArrayObject()) {
+
+		if (commonInterface->IsDeleted())
+			continue;
+
+		//const wxString& strName = commonInterface->GetName();
+
+		//if (!m_strSearch.IsEmpty()
+		//	&& strName.Find(m_strSearch) < 0)
+		//	continue;
+
+		AddInterfaceItem(commonInterface,
+			AppendItem(hParentID, commonInterface));
+	}
+}
 
 void CMetadataTree::AddCatalogItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
@@ -1521,7 +1552,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeMODULES, commonModule);
+		AppendItem(m_treeMODULES, commonModule);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeMODULES))
@@ -1541,7 +1572,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeFORMS, commonForm);
+		AppendItem(m_treeFORMS, commonForm);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeFORMS))
@@ -1561,7 +1592,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, commonTemlate);
+		AppendItem(m_treeTEMPLATES, commonTemlate);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeTEMPLATES))
@@ -1581,7 +1612,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treePICTURES, picture);
+		AppendItem(m_treePICTURES, picture);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treePICTURES))
@@ -1590,6 +1621,7 @@ void CMetadataTree::FillData()
 	//****************************************************************
 	//*                          Interfaces							 *
 	//****************************************************************
+
 	for (auto commonInterface : m_metaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
 
 		if (commonInterface->IsDeleted())
@@ -1601,7 +1633,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeINTERFACES, commonInterface);
+		AddInterfaceItem(commonInterface, 
+			AppendItem(m_treeINTERFACES, commonInterface));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeINTERFACES))
@@ -1621,7 +1654,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeROLES, role);
+		AppendItem(m_treeROLES, role);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeROLES))
@@ -1641,7 +1674,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeLANGUAGES, language);
+		AppendItem(m_treeLANGUAGES, language);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeLANGUAGES))
@@ -1661,7 +1694,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeCONSTANTS, constant);
+		AppendItem(m_treeCONSTANTS, constant);
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeCONSTANTS))
@@ -1681,8 +1714,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeCATALOGS, catalog);
-		AddCatalogItem(catalog, hItem);
+		AddCatalogItem(catalog,
+			AppendItem(m_treeCATALOGS, catalog));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeCATALOGS))
@@ -1702,8 +1735,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeDOCUMENTS, document);
-		AddDocumentItem(document, hItem);
+		AddDocumentItem(document,
+			AppendItem(m_treeDOCUMENTS, document));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeDOCUMENTS))
@@ -1723,8 +1756,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeENUMERATIONS, enumeration);
-		AddEnumerationItem(enumeration, hItem);
+		AddEnumerationItem(enumeration,
+			AppendItem(m_treeENUMERATIONS, enumeration));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeENUMERATIONS))
@@ -1744,8 +1777,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeDATAPROCESSORS, dataProcessor);
-		AddDataProcessorItem(dataProcessor, hItem);
+		AddDataProcessorItem(dataProcessor,
+			AppendItem(m_treeDATAPROCESSORS, dataProcessor));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeDATAPROCESSORS))
@@ -1765,8 +1798,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeREPORTS, report);
-		AddReportItem(report, hItem);
+		AddReportItem(report,
+			AppendItem(m_treeREPORTS, report));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeREPORTS))
@@ -1786,8 +1819,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeINFORMATION_REGISTERS, informationRegister);
-		AddInformationRegisterItem(informationRegister, hItem);
+		AddInformationRegisterItem(informationRegister,
+			AppendItem(m_treeINFORMATION_REGISTERS, informationRegister));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeINFORMATION_REGISTERS))
@@ -1807,8 +1840,8 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		const wxTreeItemId& hItem = AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister);
-		AddAccumulationRegisterItem(accumulationRegister, hItem);
+		AddAccumulationRegisterItem(accumulationRegister,
+			AppendItem(m_treeACCUMULATION_REGISTERS, accumulationRegister));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeACCUMULATION_REGISTERS))

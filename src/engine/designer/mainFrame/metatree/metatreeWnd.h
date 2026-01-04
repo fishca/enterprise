@@ -380,6 +380,8 @@ private:
 	void PrepareReplaceMenu(wxMenu* menu);
 	void PrepareContextMenu(wxMenu* menu, const wxTreeItemId& item);
 
+	void AddInterfaceItem(IMetaObject* obj, const wxTreeItemId& item);
+
 	void AddCatalogItem(IMetaObject* obj, const wxTreeItemId& item);
 	void AddDocumentItem(IMetaObject* obj, const wxTreeItemId& item);
 	void AddEnumerationItem(IMetaObject* obj, const wxTreeItemId& item);

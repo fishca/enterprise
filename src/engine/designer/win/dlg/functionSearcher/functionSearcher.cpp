@@ -5,9 +5,9 @@
 
 #include "functionSearcher.h"
 
-#include "frontend/artProvider/artProvider.h"
-#include "backend/metaDefines.h"
+#include "backend/metaCollection/metaModuleObject.h"
 
+#include "frontend/artProvider/artProvider.h"
 #include "frontend/docView/docView.h"
 
 #include "win/editor/codeEditor/codeEditorParser.h"

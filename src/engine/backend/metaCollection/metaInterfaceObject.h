@@ -18,6 +18,16 @@ public:
 	bool AccessRight_Use() const { return AccessRight(m_roleUse); }
 #pragma endregion
 
+	virtual bool FilterChild(const class_identifier_t& clsid) const {
+
+		if (
+			clsid == g_metaInterfaceCLSID
+			)
+			return true;
+
+		return false;
+	}
+
 	CMetaObjectInterface(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
@@ -28,6 +38,25 @@ public:
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
 	virtual void ProcessCommand(unsigned int id);
 
+#pragma region __array_h__
+
+	//interface
+	std::vector<CMetaObjectInterface*> GetInterfaceArrayObject(
+		std::vector<CMetaObjectInterface*>& array = std::vector<CMetaObjectInterface*>()) const {
+		FillArrayObjectByFilter<CMetaObjectInterface>(array, { g_metaInterfaceCLSID });
+		return array;
+	}
+
+#pragma endregion
+#pragma region __filter_h__
+
+	//interface
+	template <typename _T1>
+	CMetaObjectInterface* FindInterfaceObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CMetaObjectInterface>(id, { g_metaInterfaceCLSID });
+	}
+
+#pragma endregion 
 private:
 #pragma region role
 	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));

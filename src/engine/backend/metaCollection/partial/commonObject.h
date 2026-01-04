@@ -2,8 +2,27 @@
 #define __COMMON_OBJECT_H__
 
 #include "reference/reference.h"
-#include "backend/metaDefines.h"
 
+//special object 
+#include "backend/metaCollection/metaModuleObject.h"
+#include "backend/metaCollection/metaFormObject.h"
+#include "backend/metaCollection/metaGridObject.h"
+
+//interface
+#include "backend/metaCollection/metaInterfaceObject.h"
+
+//attributes 
+#include "backend/metaCollection/attribute/metaAttributeObject.h"
+#include "backend/metaCollection/dimension/metaDimensionObject.h"
+#include "backend/metaCollection/resource/metaResourceObject.h"
+
+//enumeration 
+#include "backend/metaCollection/enumeration/metaEnumObject.h"
+
+//tables 
+#include "backend/metaCollection/table/metaTableObject.h"
+
+//guid 
 #include "backend/system/value/valueGuid.h"
 
 #include "backend/actionInfo.h"
@@ -553,6 +572,13 @@ public:
 
 	CMetaDescription& GetGenerationDescription() const { return m_propertyGeneration->GetValueAsMetaDesc(); }
 
+#pragma region access
+	bool AccessRight_Read() const { return AccessRight(m_roleRead); }
+	bool AccessRight_Insert() const { return AccessRight(m_roleInsert); }
+	bool AccessRight_Update() const { return AccessRight(m_roleUpdate); }
+	bool AccessRight_Delete() const { return AccessRight(m_roleDelete); }
+#pragma endregion
+
 	CMetaObjectAttributePredefined* GetDataVersion() const { return m_propertyAttributeDataVersion->GetMetaObject(); }
 	bool IsDataVersion(const meta_identifier_t& id) const { return id == (*m_propertyAttributeDataVersion)->GetMetaID(); }
 
@@ -717,6 +743,11 @@ protected:
 	IMetaObjectRegisterData();
 	virtual ~IMetaObjectRegisterData();
 public:
+
+#pragma region access
+	bool AccessRight_Read() const { return AccessRight(m_roleRead); }
+	bool AccessRight_Update() const { return AccessRight(m_roleUpdate); }
+#pragma endregion
 
 	CMetaObjectAttributePredefined* GetRegisterActive() const { return m_propertyAttributeLineActive->GetMetaObject(); }
 	bool IsRegisterActive(const meta_identifier_t& id) const { return id == (*m_propertyAttributeLineActive)->GetMetaID(); }

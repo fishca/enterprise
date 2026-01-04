@@ -16,6 +16,13 @@ protected:
 
 public:
 
+#pragma region access
+	bool AccessRight_Read() const { return AccessRight(m_roleRead); }
+	bool AccessRight_Insert() const { return AccessRight(m_roleInsert); }
+	bool AccessRight_Update() const { return AccessRight(m_roleUpdate); }
+	bool AccessRight_Delete() const { return AccessRight(m_roleDelete); }
+#pragma endregion
+
 	CMetaObjectConstant();
 	virtual ~CMetaObjectConstant();
 

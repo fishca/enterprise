@@ -1,5 +1,17 @@
 #include "roleEditor.h"
 
+#define commonName _("common")
+#define commonFormsName _("common forms")
+#define interfacesName _("interfaces")
+#define constantsName _("constants")
+
+#define catalogsName _("catalogs")
+#define documentsName _("documents")
+#define dataProcessorName _("data processors")
+#define reportsName _("reports")
+#define informationRegisterName _("information Registers")
+#define accumulationRegisterName _("accumulation Registers")
+
 #define ICON_SIZE 16
 
 CRoleEditor::CRoleEditor(wxWindow* parent,
@@ -80,21 +92,22 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 	event.Skip();
 }
 
+void CRoleEditor::AddInterfaceItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
+{
+	CMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CMetaObjectInterface>();
+	wxASSERT(metaObject);
+
+	for (auto commonInterface : metaObjectValue->GetInterfaceArrayObject()) {
+
+		if (commonInterface->IsDeleted())
+			continue;
+
+		AddInterfaceItem(commonInterface,
+			AppendItem(hParentID, commonInterface));
+	}
+}
+
 #include "frontend/artProvider/artProvider.h"
-
-#define commonName _("common")
-#define commonFormsName _("common forms")
-
-#define interfacesName _("interfaces")
-
-#define constantsName _("constants")
-
-#define catalogsName _("catalogs")
-#define documentsName _("documents")
-#define dataProcessorName _("data processors")
-#define reportsName _("reports")
-#define informationRegisterName _("information Registers")
-#define accumulationRegisterName _("accumulation Registers")
 
 void CRoleEditor::InitRole()
 {
@@ -182,7 +195,6 @@ void CRoleEditor::FillData()
 {
 	const IMetaData* metaData = m_metaRole->GetMetaData();
 	wxASSERT(metaData);
-
 	const IMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
@@ -202,8 +214,9 @@ void CRoleEditor::FillData()
 	//****************************************************************
 	for (auto commonInterface : metaData->GetAnyArrayObject(g_metaInterfaceCLSID)) {
 		if (commonInterface->IsDeleted())
-			continue;
-		AppendItem(m_treeINTERFACES, commonInterface);
+			continue;	
+		AddInterfaceItem(commonInterface,
+			AppendItem(m_treeINTERFACES, commonInterface));
 	}
 
 	//****************************************************************

@@ -49,7 +49,7 @@ IMetaObject* CDataProcessorTree::CreateItem(bool showValue)
 		IPropertyObject* prev_selected = objectInspector->GetSelectedObject();
 
 		if (showValue) { OpenFormMDI(createdObject); }
-		UpdateToolbar(createdObject, FillItem(createdObject, item, 
+		UpdateToolbar(createdObject, FillItem(createdObject, item,
 			prev_selected == objectInspector->GetSelectedObject(), false));
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
@@ -146,7 +146,7 @@ void CDataProcessorTree::RemoveItem()
 		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
 
-	const wxTreeItemId &nextSelection = m_metaTreeCtrl->GetFocusedItem();
+	const wxTreeItemId& nextSelection = m_metaTreeCtrl->GetFocusedItem();
 
 	if (nextSelection.IsOk()) {
 		UpdateToolbar(GetMetaObject(nextSelection), nextSelection);
@@ -250,7 +250,7 @@ void CDataProcessorTree::UpItem()
 					tree->SetItemData(nextId, nullptr);
 					nextId = tree->GetNextChild(nextId, coockie);
 				}
-			};
+				};
 
 			swap(tree, nextItem, newId);
 
@@ -308,7 +308,7 @@ void CDataProcessorTree::DownItem()
 					tree->SetItemData(nextId, nullptr);
 					nextId = tree->GetNextChild(nextId, coockie);
 				}
-			};
+				};
 
 			swap(tree, prevItem, newId);
 
@@ -515,7 +515,7 @@ void CDataProcessorTree::FillData()
 			continue;
 		if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeATTRIBUTES, attribute);
+		AppendItem(m_treeATTRIBUTES, attribute);
 	}
 
 	//Список табличных частей 
@@ -528,7 +528,7 @@ void CDataProcessorTree::FillData()
 				continue;
 			if (attribute->GetClassType() == g_metaPredefinedAttributeCLSID)
 				continue;
-			wxTreeItemId hItemNew = AppendItem(hItem, attribute);
+			AppendItem(hItem, attribute);
 		}
 	}
 
@@ -536,7 +536,7 @@ void CDataProcessorTree::FillData()
 	for (auto metaForm : commonMetadata->GetFormArrayObject()) {
 		if (metaForm->IsDeleted())
 			continue;
-		const wxTreeItemId& hItem = AppendItem(m_treeFORM, metaForm);
+		AppendItem(m_treeFORM, metaForm);
 	}
 
 	//Таблицы

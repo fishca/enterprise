@@ -39,16 +39,32 @@ IBackendValueForm* IMetaObjectGenericData::GetGenericForm(const wxString& strFor
 #pragma region _form_creator_h_
 IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& strFormName, const form_identifier_t& form_id, IBackendControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
-	IMetaObjectForm* creator = nullptr;
+#pragma region _source_guard_
+	class CSourceDataObjectGuard {
+	public:
 
-	if (srcObject != nullptr) srcObject->SourceIncrRef();
+		CSourceDataObjectGuard(ISourceDataObject* srcObject) : m_srcObject(srcObject) {
+			if (m_srcObject != nullptr) m_srcObject->SourceIncrRef();
+		}
+
+		~CSourceDataObjectGuard() {
+			if (m_srcObject != nullptr) m_srcObject->SourceDecrRef();
+		}
+
+	private:
+		ISourceDataObject* m_srcObject;
+	};
+
+	CSourceDataObjectGuard sourceGuard(srcObject);
+#pragma endregion
+
+	IMetaObjectForm* creator = nullptr;
 
 	if (!strFormName.IsEmpty()) {
 
 		creator = FindFormObjectByFilter(strFormName, form_id);
 
 		if (creator == nullptr) {
-			if (srcObject != nullptr) srcObject->SourceDecrRef();
 			CSystemFunction::Raise(_("Form not found '") + strFormName + "'");
 			return nullptr;
 		}
@@ -70,7 +86,6 @@ IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& st
 		);
 	}
 
-	if (srcObject != nullptr) srcObject->SourceDecrRef();
 	return result;
 }
 #pragma endregion

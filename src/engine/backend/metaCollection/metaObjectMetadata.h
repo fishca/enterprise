@@ -25,12 +25,12 @@ class BACKEND_API CMetaObjectConfiguration : public IMetaObject {
 public:
 
 #pragma region access
-	bool AccessRight_Administration() const { return AccessRight(m_roleAdministration); }
-	bool AccessRight_DataAdministration() const { return AccessRight(m_roleDataAdministration); }
-	bool AccessRight_UpdateDatabaseConfiguration() const { return AccessRight(m_roleUpdateDatabaseConfiguration); }
-	bool AccessRight_ActiveUsers() const { return AccessRight(m_roleActiveUsers); }
-	bool AccessRight_ExclusiveMode() const { return AccessRight(m_roleExclusiveMode); }
-	bool AccessRight_ModeAllFunction() const { return AccessRight(m_roleModeAllFunction); }
+	bool AccessRight_Administration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_DataAdministration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleDataAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_UpdateDatabaseConfiguration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleUpdateDatabaseConfiguration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ActiveUsers(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleActiveUsers, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ExclusiveMode(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleExclusiveMode, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ModeAllFunction(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleModeAllFunction, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
 #pragma endregion
 
 	virtual bool FilterChild(const class_identifier_t& clsid) const {

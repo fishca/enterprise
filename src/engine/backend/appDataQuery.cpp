@@ -529,7 +529,7 @@ CApplicationDataUserInfo CApplicationData::ReadUserData(const wxString& strUserN
 	if (dbUserResult != nullptr && dbUserResult->Next()) {
 
 		userInfo.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
-		
+
 		userInfo.m_strUserName = dbUserResult->GetResultString(wxT("name"));
 		userInfo.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
 
@@ -615,18 +615,30 @@ bool CApplicationData::HasAllowedUser() const
 	return hasUsers;
 }
 
-wxArrayString CApplicationData::GetAllowedUser() const
+std::vector<CApplicationDataShortUserInfo> CApplicationData::GetAllowedUser() const
 {
-	IDatabaseResultSet* dbUserResult =
-		db_query->RunQueryWithResults(
-			wxT("SELECT name FROM %s;"),
-			user_table
-		);
-	if (dbUserResult == nullptr) return wxArrayString();
-	wxArrayString arrayUsers;
-	while (dbUserResult->Next()) arrayUsers.Add(dbUserResult->GetResultString(wxT("name")));
+	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(
+		wxT("SELECT guid, name, fullName FROM %s;"), user_table);
+
+	std::vector<CApplicationDataShortUserInfo> userInfo;
+
+	if (dbUserResult == nullptr)
+		return userInfo;
+
+	while (dbUserResult->Next()) {
+
+		CApplicationDataShortUserInfo entry;
+		entry.m_strUserGuid = dbUserResult->GetResultString(wxT("guid"));
+		entry.m_strUserName = dbUserResult->GetResultString(wxT("name"));
+		entry.m_strUserFullName = dbUserResult->GetResultString(wxT("fullName"));
+		userInfo.push_back(entry);
+	}
+
+	if (dbUserResult != nullptr)
+		dbUserResult->Close();
+
 	db_query->CloseResultSet(dbUserResult);
-	return arrayUsers;
+	return userInfo;
 }
 
 bool CApplicationData::StartSession(const wxString& strUserName, const wxString& strUserPassword)

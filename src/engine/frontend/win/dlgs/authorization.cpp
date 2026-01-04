@@ -4,6 +4,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
+#include "frontend/visualView/ctrl/frame.h"
+
 CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -24,14 +26,18 @@ CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, co
 
 	wxBoxSizer* bSizerBottom = new wxBoxSizer(wxVERTICAL);
 
-	m_comboBoxLogin = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, appData->GetAllowedUser());
+	m_comboBoxLogin = new wxBitmapComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
+	for (const auto userInfo : appData->GetAllowedUser()) {
+		m_comboBoxLogin->Append(userInfo.m_strUserName, CBackendPicture::GetPicture(g_picUserCLSID));
+	}
+
 	bSizerBottom->Add(m_comboBoxLogin, 0, wxALL | wxEXPAND, 5);
 	m_textCtrlPassword = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PASSWORD);
 	bSizerBottom->Add(m_textCtrlPassword, 0, wxALL | wxEXPAND, 5);
 	bSizerCtrl->Add(bSizerBottom, 1, wxEXPAND, 5);
 	bSizer->Add(bSizerCtrl, 0, wxEXPAND, 5);
 
-	wxStdDialogButtonSizer* bSizerButtons = new wxStdDialogButtonSizer();;
+	wxStdDialogButtonSizer* bSizerButtons = new wxStdDialogButtonSizer();
 	m_buttonOK = new wxButton(this, wxID_OK);
 	bSizerButtons->AddButton(m_buttonOK);
 	m_buttonCancel = new wxButton(this, wxID_CANCEL);
@@ -45,25 +51,17 @@ CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, co
 
 	this->Centre(wxBOTH);
 
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picAuthenticationCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
+
 	// Connect Events
-	m_buttonOK->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogAuthentication::OnOKButtonClick), nullptr, this);
-	m_buttonCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogAuthentication::OnCancelButtonClick), nullptr, this);
-}
-
-CDialogAuthentication::~CDialogAuthentication()
-{
-	m_buttonOK->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogAuthentication::OnOKButtonClick), nullptr, this);
-	m_buttonCancel->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogAuthentication::OnCancelButtonClick), nullptr, this);
-}
-
-void CDialogAuthentication::OnOKButtonClick(wxCommandEvent& event)
-{
-	bool succes = appData->AuthenticationAndSetUser(m_comboBoxLogin->GetValue(), m_textCtrlPassword->GetValue());
-	if (succes) event.Skip();
-	else wxMessageBox(_("Wrong user or password entered!"));
-}
-
-void CDialogAuthentication::OnCancelButtonClick(wxCommandEvent& event)
-{
-	event.Skip();
+	m_buttonOK->Bind(wxEVT_COMMAND_BUTTON_CLICKED, [&](wxCommandEvent& event) {
+		bool success = appData->AuthenticationAndSetUser(m_comboBoxLogin->GetValue(), m_textCtrlPassword->GetValue());
+		if (success) event.Skip();
+		else wxMessageBox(_("Wrong user or password entered!"));
+		}
+	);
 }

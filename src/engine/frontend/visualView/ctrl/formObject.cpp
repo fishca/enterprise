@@ -244,13 +244,20 @@ void CValueForm::InitializeForm(const IMetaObjectForm* creator,
 	//SetReadOnly(readOnly);
 }
 
+#include "backend/system/systemManager.h"
+
 bool CValueForm::InitializeFormModule()
 {
 	if (m_metaFormObject != nullptr) {
 
-		IMetaData* metaData = m_metaFormObject->GetMetaData();
+		if (!m_metaFormObject->AccessRight_Use()) {
+			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			return false;
+		}
+
+		const IMetaData* metaData = m_metaFormObject->GetMetaData();
 		wxASSERT(metaData);
-		IModuleManager* moduleManager = metaData->GetModuleManager();
+		const IModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
 		IModuleDataObject* sourceObjectValue =

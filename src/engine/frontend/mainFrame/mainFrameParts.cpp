@@ -191,11 +191,18 @@ bool CDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 
 IPropertyObject* CDocMDIFrame::GetProperty() const
 {
-	return m_objectInspector->GetSelectedObject();
+	if (m_objectInspector != nullptr)
+		return m_objectInspector->GetSelectedObject();
+	
+	return nullptr;
 }
 
 bool CDocMDIFrame::SetProperty(IPropertyObject* prop)
 {
-	m_objectInspector->SelectObject(prop);
-	return true;
+	if (m_objectInspector != nullptr) {
+		m_objectInspector->SelectObject(prop);
+		return true;
+	}
+	
+	return false;
 }

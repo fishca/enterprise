@@ -109,6 +109,9 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	m_dataViewUsers->AppendColumn(columnName);
 	m_dataViewUsers->AppendColumn(columnFullName);
 
+	m_dataViewUsers->SetForegroundColour(wxDefaultStypeFGColour);
+	//m_dataViewUsers->SetBackgroundColour(wxDefaultStypeBGColour);
+
 	m_dataViewUsers->AssociateModel(new CUserListModel);
 
 	sizerList->Add(m_dataViewUsers, 1, wxALL | wxEXPAND, 5);

@@ -19,6 +19,11 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 
 		if (!CBackendException::IsEvalMode())
 		{
+			if (!m_metaObject->AccessRight_Write()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();
@@ -71,6 +76,11 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 
 		if (!CBackendException::IsEvalMode())
 		{
+			if (!m_metaObject->AccessRight_Delete()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				db_query_active_transaction.BeginTransaction();

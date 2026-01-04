@@ -282,6 +282,11 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 		else if (db_query == nullptr)
 			CBackendException::Error(_("Database is not open!"));
 
+		if (!m_metaObject->AccessRight_Read()) {
+			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			return false;
+		}
+
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();
 		if (db_query->TableExists(tableName)) {
@@ -325,6 +330,11 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 		else if (db_query == nullptr)
 			CBackendException::Error(_("Database is not open!"));
 
+		if (!m_metaObject->AccessRight_Write()) {
+			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			return false;
+		}
+
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 		const wxString& fieldName = m_metaObject->GetFieldNameDB();
 
@@ -342,7 +352,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise("failed to write object in db!"); 
+						CSystemFunction::Raise(_("failed to write object in db!")); 
 						return false;
 					}
 				}

@@ -116,6 +116,9 @@ public:
 	//get language code 
 	virtual wxString GetLangCode() const = 0;
 
+	//Check is full access 
+	virtual bool IsFullAccess() const { return true; }
+
 	//associate this metaData with 
 	virtual IBackendMetadataTree* GetMetaTree() const { return m_metaTree; }
 	virtual void SetMetaTree(IBackendMetadataTree* metaTree) { m_metaTree = metaTree; }

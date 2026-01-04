@@ -4,6 +4,9 @@
 #pragma region __predefined_png__
 
 /* PNG */
+static const char* s_structure_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAm0lEQVR4nGNggIKK7jn/8eHa/vlXGPCBiu45/3EBkFzP3NX/ayfMv0C2Ad++//jfN3fNv9p+HIZUEDAABL58+/6/e/bKf7X9C47jNMCvaisYX3/wEoxhBqBjogzYcPAKThcR5YUN5BiwbM8tMEY24LizMxwTNMAP6gWQZhgmyYBllLqA4jDwozQW/LCkA5IMIAbgNIAUjGEAuQAAy1U9d/63FskAAAAASUVORK5CYII=";
+
+/* PNG */
 static const char* s_closeForm_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAwElEQVR4nGNgYGBgCKjZ0RpYs6OXgQiAodavaltrWOPeL2FNe7/6V29rw6cZq9qA2u01oY17vjasefY/rGnvl4Dq7X24NCOrC6rb0YpwVi1+Q/BqJmQIUZrR/di49jlI8Vf/6q3HUPn4wwgeyiCbQJqS+k7+hmr+AhJnIBb4VW07mth78nf39g//QTSIT7TmAEpc4IcWBgE1244SHQZ+OEKbqHTiRyCq8BriR2Q84zSE4rwANr1mRyux8UyKWqIAAGENJXOk4OgSAAAAAElFTkSuQmCC";
 
 /* PNG */
@@ -63,10 +66,15 @@ static const char* s_activeUser_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAA
 /* PNG */
 static const char* s_userList_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAClUlEQVR4nI2S3UtTcRjHp7dB9Fd02UW5JVqYqHPOtbNNg7EwJcGkKKulzJ1tx71pTSlF29sZHNd8iZiZk22S0IvTjEVWmiNGGV1IzkCnm3YR8xs7kbgW4gMf+PE8v+/n91z8OJw9pZJwj5IS7hgp4SZJCXdTTeRdpgS8w5yDFCk5cSod7K4tTrmvVoK5UgH9ufwtksjbbiWOn943rCw7dkgj5W45GwUYuiHehVEK4dIIYFOXwqHhb9Bageq/AhWRV9OhKEylQ54mEewNfNy9dAaMXojPQSU23hgRC2nhNom2nVr+D7tWUJIh0Mp4dG99CRvUVZ8E3VQBpk2Ir09bsDVnZlkJaRD132SFtI6/9q8gaGvgw6woRNSnZAM2sgzJtybEwwYs+prgNp2Fx0wgYFXASpYiQ6CR8cKOxnIY5QWIjv8RWNWl8LQTcFECjPWdx/JMF35FGfjtdewscwMpd6mnrhhmeQG8xupdwWq4B1jyZLD5wZ4lyCHFPFor5U3q5fmfuhqLdiLj1/HQIsVYX02WwHe/5qerTRjO2ICiqFwJGaitI90xh06EB+Y0laCpCqyGu3fD6TOtE8TuUUVH9sSRI9VNPJGbXiQN7legDQQivmssDqoSjEmML8/MLP1GUcpBlrdkvE6QgXpF+8vEHf8aOgPr6LV1w06J0XVbjba+R3DpCQxZZBi2VMFlIKDr9cZarKFaikIuK5DpJiKa4W/oDMZZLME4qIGPMA2/h3dmHv0dVUgs2FmYjiq2ZxicS6qcs6McIIcjVvsTYrUff7nQPgn9wDs8X05h6vsOvCN2uIwSFu9jB9tLz/SDc8lm68zFrG/d6nwdGV2IY2oF+zIyvw41PbuYJWi2TSduWadxENJ3fwO6qQpo9bk/SQAAAABJRU5ErkJggg==";
 
+/* PNG */
+static const char* s_authentication_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAACBklEQVR4nI2S32vTUBTH++qDL3sVfPDFP8AH/wHfBH0S9B/Yu9SQpMmE4YvtkvR2jiqssubHTbpOJ4NFK11ZW9a5NjZbOyyKE7dZqYJubl07Bmuv3MKS3i4VDxzIvef7OTnnnuPzDZh4P3kh9EC+IbEwAjhYl1j4U2A0OUQpd4JU7KLPyyTm+RWBio9GAropMmozFlz4/dqwTu1CHVWLDZSe3+gqILUnsdoR4PSiQMuM4I9fcxKEKPn0RSzXXE1voU/VfbT14dDTcQxrsBYzTgKBVo9r9q+h4KBjrUArbbeFAPxhr9QJUW6xhp48nEWTYwmUWdgkYuuF70hitYaTAIwZNi6tX4RhK7eD3ue/IcDpROzd0hcU4fVyXwXaM9Modb3KzS7W0NNHL4k7M2F1pYAadd+Ait+bEc3DQbiy1ui1UFreJu5nRPNgwq/c7Zv99IhIqycfN/YIYSq5juamc+QkKvtIYuAxZohdiPBGOj1fIcTF5a+olCX/nnlVRZN84u25ZZrwK9enxudanzf/OGI9mkFGNOOccWxqPNnCWs+NBJy+8ma23HGBg567LZU7gNcLnrCv9xbxS2EWNq3szrlpWNltPPujx7R8eWiCXiu0ehPweruc33Xh/C7ehTaO/RM+M4nWbodZ2Eol7Q4uO8zAlkCpt/4LPrMgpV4FHFzDjr+HCf8CCy0ydxOb4e4AAAAASUVORK5CYII=";
+
 #pragma endregion 
 
 void RegisterAllBackendPicture()
 {
+	::RegisterBackendPicture(wxT("structure"), g_picStructureCLSID, s_structure_16_png);
+
 	::RegisterBackendPicture(wxT("closeForm"), g_picCloseFormCLSID, s_closeForm_16_png);
 	::RegisterBackendPicture(wxT("updateForm"), g_picUpdateFormCLSID, s_updateForm_16_png);
 	::RegisterBackendPicture(wxT("helpForm"), g_picHelpFormCLSID, s_helpForm_16_png);
@@ -93,6 +101,8 @@ void RegisterAllBackendPicture()
 	::RegisterBackendPicture(wxT("user"), g_picUserCLSID, s_user_16_png);
 	::RegisterBackendPicture(wxT("userActive"), g_picUserActiveCLSID, s_activeUser_16_png);
 	::RegisterBackendPicture(wxT("userList"), g_picUserListCLSID, s_userList_16_png);
+
+	::RegisterBackendPicture(wxT("authentication"), g_picAuthenticationCLSID, s_authentication_16_png);
 }
 
 class CBackendPictureAutoLoader {

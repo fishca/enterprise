@@ -853,13 +853,6 @@ start_label:
 			}
 		}
 	}
-	catch (const CBackendAccessException* err) {
-
-		CSystemFunction::Message(err->what(),
-			eStatusMessage::eStatusMessage_Error);
-
-		throw(new CBackendAccessException());
-	}
 	catch (const CBackendException* err) {
 
 		const long trySize = tryList.size() - 1;

@@ -931,11 +931,33 @@ void CSystemFunction::EndJob(bool force) //EndJob
 
 void CSystemFunction::UserInterruptProcessing()
 {
-	bool bNeedInterruptProcessing = wxGetKeyState(WXK_CONTROL)
-		&& wxGetKeyState(WXK_CANCEL);
-	if (bNeedInterruptProcessing) {
+	if (wxGetKeyState(WXK_CONTROL) && wxGetKeyState(WXK_CANCEL))
 		throw (new CBackendInterrupt());
+}
+
+bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cData)
+{
+	const IMetaObject* object = cData.ConvertToType<IMetaObject>();
+	if (object == nullptr)
+		return false;
+	
+	return object->AccessRight(strRoleName);
+}
+
+bool CSystemFunction::IsInRole(const CValue& cData)
+{
+	const IMetaObject* foundedRole = activeMetaData->FindAnyObjectByFilter(
+		cData.GetString(), g_metaRoleCLSID);
+
+	if (foundedRole != nullptr) {
+		const role_identifier_t& rid = foundedRole->GetMetaID();
+		for (const auto role : appData->GetUserRoleArray()) {
+			if (rid == role.m_miRoleId)
+				return true;
+		}
 	}
+
+	return false;
 }
 
 CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendControlFrame* ownerControl, CValueGuid* unique)
@@ -965,11 +987,11 @@ void CSystemFunction::ShowCommonForm(const wxString& strFormName, IBackendContro
 {
 	if (CBackendException::IsEvalMode())
 		return;
+	
 	const CValue& cValue = GetCommonForm(strFormName, ownerControl, unique);
+	
 	IBackendValueForm* valueForm = dynamic_cast<IBackendValueForm*>(cValue.GetRef());
-	if (valueForm != nullptr) {
-		valueForm->ShowForm();
-	}
+	if (valueForm != nullptr) valueForm->ShowForm();
 }
 
 void CSystemFunction::BeginTransaction()

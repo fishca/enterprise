@@ -8,6 +8,8 @@
 //*******************************************************************************
 
 //COMMON PICTURES
+const picture_identifier_t g_picStructureCLSID = string_to_clsid("PC_STRCT");
+
 const picture_identifier_t g_picCloseFormCLSID = string_to_clsid("PC_CLOSE");
 const picture_identifier_t g_picUpdateFormCLSID = string_to_clsid("PC_REFRE");
 const picture_identifier_t g_picHelpFormCLSID = string_to_clsid("PC_HELP");
@@ -35,4 +37,5 @@ const picture_identifier_t g_picUserCLSID = string_to_clsid("PC_USER");
 const picture_identifier_t g_picUserActiveCLSID = string_to_clsid("PC_USRAC");
 const picture_identifier_t g_picUserListCLSID = string_to_clsid("PC_USRLS");
 
+const picture_identifier_t g_picAuthenticationCLSID = string_to_clsid("PC_ATTON");
 #endif 

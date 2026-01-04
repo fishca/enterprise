@@ -229,6 +229,11 @@ bool CRecordDataObjectDocument::WriteObject(eDocumentWriteMode writeMode, eDocum
 
 		if (!CBackendException::IsEvalMode())
 		{
+			if (!m_metaObject->AccessRight_Write()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			if (writeMode == eDocumentWriteMode::eDocumentWriteMode_Posting) {
 				CValue deletionMark = false;
 				CMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
@@ -385,6 +390,11 @@ bool CRecordDataObjectDocument::DeleteObject()
 
 		if (!CBackendException::IsEvalMode())
 		{
+			if (!m_metaObject->AccessRight_Delete()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				IBackendValueForm* const valueForm = GetForm();

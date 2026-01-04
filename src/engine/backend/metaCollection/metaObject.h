@@ -437,6 +437,10 @@ protected:
 	virtual void DoSetRight(const CRole* role, const bool& val = true);
 #pragma endregion
 
+	//Check is full access 
+	virtual bool IsFullAccess() const;
+
+	//Create user info
 	virtual CUserRoleInfo GetUserRoleInfo() const;
 
 #pragma region __array_h__

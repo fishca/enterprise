@@ -54,6 +54,11 @@ IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& st
 		}
 	}
 
+	if (!AccessRight_Show()) {
+		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		return nullptr;
+	}
+
 	IBackendValueForm* result = IBackendValueForm::FindFormByUniqueKey(ownerControl, srcObject, formGuid);
 
 	if (result == nullptr) {
@@ -1445,11 +1450,13 @@ IRecordDataObjectExt::~IRecordDataObjectExt()
 
 bool IRecordDataObjectExt::InitializeObject()
 {
-	if (m_metaObject->AccessRight_Use()) {
-
-	}
-
 	if (!m_metaObject->IsExternalCreate()) {
+
+		if (!m_metaObject->AccessRight_Use()) {
+			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			return false;
+		}
+
 		const IMetaData* metaData = m_metaObject->GetMetaData();
 		wxASSERT(metaData);
 		const IModuleManager* moduleManager = metaData->GetModuleManager();
@@ -1465,12 +1472,10 @@ bool IRecordDataObjectExt::InitializeObject()
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const CBackendException* err)
-			{
+			catch (const CBackendException* err) {
 				if (!appData->DesignerMode()) {
 					CSystemFunction::Raise(err->what());
 				}
-
 				return false;
 			};
 
@@ -1581,6 +1586,11 @@ IRecordDataObjectRef::~IRecordDataObjectRef()
 
 bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 {
+	if (!m_metaObject->AccessRight_Read()) {
+		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		return false;
+	}
+
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	IModuleManager* moduleManager = metaData->GetModuleManager();
@@ -2331,6 +2341,11 @@ void IRecordSetObject::CreateEmptyKey()
 
 bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool newRecord)
 {
+	if (!m_metaObject->AccessRight_Read()) {
+		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		return false;
+	}
+
 	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 

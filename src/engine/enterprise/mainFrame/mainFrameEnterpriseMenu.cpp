@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "mainFrameEnterprise.h"
-#include <wx/config.h>
+#include "backend/metadataConfiguration.h"
 
 //********************************************************************************
 //*                                Hotkey support                                *
@@ -32,7 +32,7 @@ void CDocEnterpriseMDIFrame::SetDefaultHotKeys()
 //********************************************************************************
 
 void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
-{	
+{
 	m_frameMenuBar = new wxMenuBar;
 
 	// and its menu bar
@@ -77,17 +77,21 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 
 	m_frameMenuBar->Append(m_menuEdit, wxGetStockLabel(wxID_EDIT));
 
-	m_menuOperations = new wxMenu;
-	m_menuOperations->Append(wxID_ENTERPRISE_ALL_OPERATIONS, _("All operations..."));
-	m_frameMenuBar->Append(m_menuOperations, _("Operations"));
+	if (activeMetaData->AccessRight_ModeAllFunction()) {
+		m_menuOperations = new wxMenu;
+		m_menuOperations->Append(wxID_ENTERPRISE_ALL_OPERATIONS, _("All operations..."));
+		m_frameMenuBar->Append(m_menuOperations, _("Operations"));
+	}
 
 	m_menuSetting = new wxMenu;
 	m_frameMenuBar->Append(m_menuSetting, _("Tools"));
 	m_menuSetting->Append(wxID_ENTERPRISE_SETTING, _("Options..."));
 
-	m_menuAdministration = new wxMenu;
-	m_menuAdministration->Append(wxID_ENTERPRISE_ACTIVE_USERS, _("Active users"));
-	m_frameMenuBar->Append(m_menuAdministration, _("Administration"));
+	if (activeMetaData->AccessRight_ActiveUsers()) {
+		m_menuAdministration = new wxMenu;
+		m_menuAdministration->Append(wxID_ENTERPRISE_ACTIVE_USERS, _("Active users"));
+		m_frameMenuBar->Append(m_menuAdministration, _("Administration"));
+	}
 
 	m_menuHelp = new wxMenu;
 	m_menuHelp->Append(wxID_ENTERPRISE_ABOUT, _("About"));

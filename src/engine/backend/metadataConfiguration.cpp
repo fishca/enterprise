@@ -113,6 +113,24 @@ wxString CMetaDataConfigurationFile::GetLangCode() const
 	return wxT("");
 }
 
+bool CMetaDataConfigurationFile::IsFullAccess() const
+{
+	bool access_right = true;
+
+	for (const auto object : GetAnyArrayObject(g_metaRoleCLSID)) {
+		access_right = false;
+		break;
+	}
+
+	if (access_right)
+		return true;
+
+	if (m_commonObject != nullptr)
+		return m_commonObject->AccessRight_Administration();
+
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////
 
 bool CMetaDataConfigurationFile::RunDatabase(int flags)
@@ -555,7 +573,7 @@ bool CMetaDataConfiguration::OnInitialize(const int flags)
 
 #pragma region language  
 	// Check current language
-	const IMetaObject* foundedLanguage = 
+	const IMetaObject* foundedLanguage =
 		IMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
 	// Initialize localization engine  
 	CBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
@@ -604,7 +622,20 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 	if (!LoadDatabase())
 		return false;
 
-#pragma endregion 
+#pragma region access
+	if (!AccessRight_Administration()) {
+
+		try {
+			CBackendException::Error(_("Not enough access rights for this user!"));
+		}
+		catch (...) {
+		}
+
+		return false;
+	}
+#pragma endregion
+
+#pragma region language  
 
 	// Initialize localization engine 
 	CBackendLocalization::SetUserLanguage(GetLangCode());

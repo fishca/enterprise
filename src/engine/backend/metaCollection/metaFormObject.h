@@ -20,6 +20,10 @@ private:
 
 public:
 
+#pragma region access
+	virtual bool AccessRight_Use() const { return true; }
+#pragma endregion
+
 	IMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	bool LoadFormData(IBackendValueForm* value) const;
@@ -136,7 +140,7 @@ class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {
 public:
 
 #pragma region access
-	bool AccessRight_Use() const { return AccessRight(m_roleUse); }
+	virtual bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
 	CMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);

@@ -19,6 +19,15 @@ enum eConfigType {
 class BACKEND_API IMetaDataConfiguration : public IMetaData {
 public:
 
+#pragma region access
+	virtual bool AccessRight_Administration() const { return true; }
+	virtual bool AccessRight_DataAdministration() const { return true; }
+	virtual bool AccessRight_UpdateDatabaseConfiguration() const { return true; }
+	virtual bool AccessRight_ActiveUsers() const { return true; }
+	virtual bool AccessRight_ExclusiveMode() const { return true; }
+	virtual bool AccessRight_ModeAllFunction() const { return true; }
+#pragma endregion
+
 	IMetaDataConfiguration() : IMetaData() {}
 
 	virtual wxString GetConfigMD5() const = 0;
@@ -39,6 +48,10 @@ public:
 	//load/save form file
 	virtual bool LoadFromFile(const wxString& strFileName) { return true; }
 	virtual bool SaveToFile(const wxString& strFileName) { return true; }
+
+	//get common module 
+	virtual CModuleManagerConfiguration* GetModuleManager() const = 0;
+	virtual CMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 
 	//start/exit module 
 	virtual bool StartMainModule(bool force = false) = 0;
@@ -73,6 +86,15 @@ private:
 class BACKEND_API CMetaDataConfigurationFile : public IMetaDataConfiguration {
 public:
 
+#pragma region access
+	virtual bool AccessRight_Administration() const { return m_commonObject->AccessRight_Administration(); }
+	virtual bool AccessRight_DataAdministration() const { return m_commonObject->AccessRight_DataAdministration(); }
+	virtual bool AccessRight_UpdateDatabaseConfiguration() const { return m_commonObject->AccessRight_UpdateDatabaseConfiguration(); }
+	virtual bool AccessRight_ActiveUsers() const { return m_commonObject->AccessRight_ActiveUsers(); }
+	virtual bool AccessRight_ExclusiveMode() const { return m_commonObject->AccessRight_ExclusiveMode(); }
+	virtual bool AccessRight_ModeAllFunction() const { return m_commonObject->AccessRight_ModeAllFunction(); }
+#pragma endregion
+
 	virtual bool IsConfigOpen() const { return m_configOpened; }
 
 	CMetaDataConfigurationFile();
@@ -94,6 +116,9 @@ public:
 	//get language code 
 	virtual wxString GetLangCode() const;
 
+	//Check is full access 
+	virtual bool IsFullAccess() const;
+
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag);
 	virtual bool CloseDatabase(int flags = defaultFlag);
@@ -104,7 +129,7 @@ public:
 	virtual bool LoadFromFile(const wxString& strFileName);
 
 	virtual CModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
-	virtual IMetaObject* GetCommonMetaObject() const { return m_commonObject; }
+	virtual CMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
 
 	//start/exit module 
 	virtual bool StartMainModule(bool force = false) {
@@ -204,6 +229,9 @@ public:
 			return false;
 		return m_configMetadata->CloseDatabase(flags);
 	}
+
+	//Check is full access 
+	virtual bool IsFullAccess() const { return true; }
 
 	//rollback to config db
 	virtual bool RoolbackDatabase();

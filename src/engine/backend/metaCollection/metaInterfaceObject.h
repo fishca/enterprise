@@ -15,7 +15,7 @@ protected:
 public:
 
 #pragma region access
-	bool AccessRight_Use() const { return AccessRight(m_roleUse); }
+	bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
 	virtual bool FilterChild(const class_identifier_t& clsid) const {

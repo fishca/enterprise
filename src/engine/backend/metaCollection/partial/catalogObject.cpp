@@ -141,6 +141,11 @@ bool CRecordDataObjectCatalog::WriteObject()
 
 		if (!CBackendException::IsEvalMode()) 
 		{
+			if (!m_metaObject->AccessRight_Write()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				IBackendValueForm* const valueForm = GetForm();
@@ -214,6 +219,11 @@ bool CRecordDataObjectCatalog::DeleteObject()
 
 		if (!CBackendException::IsEvalMode())
 		{
+			if (!m_metaObject->AccessRight_Delete()) {
+				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				IBackendValueForm* const valueForm = GetForm();

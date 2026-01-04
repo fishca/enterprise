@@ -262,6 +262,14 @@ void IMetaObject::DoSetRight(const CRole* role, const bool& val)
 }
 #pragma endregion
 
+bool IMetaObject::IsFullAccess() const
+{
+	if (appData->DesignerMode())
+		return true;
+	
+	return m_metaData->IsFullAccess();
+}
+
 CUserRoleInfo IMetaObject::GetUserRoleInfo() const
 {
 	CUserRoleInfo roleInfo;

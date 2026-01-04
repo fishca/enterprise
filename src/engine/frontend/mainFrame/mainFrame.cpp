@@ -27,7 +27,6 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 	if (s_instance == nullptr && frame != nullptr) {
 		s_instance = frame;
 		wxTheApp->SetTopWindow(s_instance);
-		s_instance->CreateGUI();
 	}
 }
 
@@ -36,6 +35,8 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 bool CDocMDIFrame::ShowFrame()
 {
 	if (s_instance != nullptr && !s_instance->IsShown() && !CApplicationData::IsForceExit()) {
+
+		s_instance->CreateGUI();
 
 		// Get the primary display
 		wxDisplay display;

@@ -17,10 +17,8 @@ protected:
 public:
 
 #pragma region access
-	bool AccessRight_Read() const { return AccessRight(m_roleRead); }
-	bool AccessRight_Insert() const { return AccessRight(m_roleInsert); }
-	bool AccessRight_Update() const { return AccessRight(m_roleUpdate); }
-	bool AccessRight_Delete() const { return AccessRight(m_roleDelete); }
+	bool AccessRight_Read() const { return IsFullAccess() || AccessRight(m_roleRead); }
+	bool AccessRight_Write() const { return IsFullAccess() || AccessRight(m_roleWrite); }
 #pragma endregion
 
 	CMetaObjectConstant();
@@ -84,9 +82,7 @@ private:
 
 #pragma region role 
 	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleInsert = IMetaObject::CreateRole(wxT("insert"), _("Insert"));
-	CRole* m_roleUpdate = IMetaObject::CreateRole(wxT("update"), _("Update"));
-	CRole* m_roleDelete = IMetaObject::CreateRole(wxT("delete"), _("Delete"));
+	CRole* m_roleWrite = IMetaObject::CreateRole(wxT("write"), _("Write"));
 #pragma endregion
 
 	friend class CRecordDataObjectConstant;

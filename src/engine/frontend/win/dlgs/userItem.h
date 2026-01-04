@@ -47,13 +47,6 @@ public:
 	CDialogUserItem(wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("User"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 264), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 
-protected:
-
-	// Virtual event handlers, overide them in your derived class
-	virtual void OnPasswordText(wxCommandEvent& event);
-	virtual void OnOKButtonClick(wxCommandEvent& event);
-	virtual void OnCancelButtonClick(wxCommandEvent& event);
-
 private:
 
 	bool m_bInitialized;

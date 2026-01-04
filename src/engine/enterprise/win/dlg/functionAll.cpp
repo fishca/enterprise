@@ -35,6 +35,12 @@ CDialogFunctionAll::CDialogFunctionAll(wxWindow* parent, wxWindowID id, const wx
 	wxDialog::Layout();
 
 	wxDialog::Centre(wxBOTH);
+
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picStructureCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
 }
 
 wxTreeItemId CDialogFunctionAll::AppendGroupItem(const wxTreeItemId& parent,
@@ -90,7 +96,6 @@ void CDialogFunctionAll::BuildTree()
 
 	m_treeCtrlElements->ExpandAll();
 }
-
 
 void CDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick(wxMouseEvent& event)
 {

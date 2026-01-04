@@ -39,7 +39,7 @@ enum
 	enLower,
 	enChr,
 	enAsc,
-	enTStr, 
+	enTStr,
 	//--- Работа с датой и временем:
 	enCurrentDate,
 	enWorkingDate,
@@ -99,6 +99,8 @@ enum
 	enGeneralLanguage,
 	enEndJob,
 	enUserInterruptProcessing,
+	enAccessRight,
+	enIsInRole,
 	enGetCommonForm,
 	enShowCommonForm,
 	enBeginTransaction,
@@ -201,6 +203,8 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc("generalLanguage", "generalLanguage()");
 	m_methodHelper->AppendFunc("endJob", 1, "endJob(boolean)");
 	m_methodHelper->AppendFunc("userInterruptProcessing", "userInterruptProcessing()");
+	m_methodHelper->AppendFunc("accessRight", 2, "accessRight(string, metadata)");
+	m_methodHelper->AppendFunc("isInRole", 1, "isInRole(string)");
 	m_methodHelper->AppendFunc("getCommonForm", 3, "getCommonForm(string, owner, uniqueGuid)");
 	m_methodHelper->AppendProc("showCommonForm", 3, "showCommonForm(string, owner, uniqueGuid)");
 	m_methodHelper->AppendProc("beginTransaction", "beginTransaction()");
@@ -316,6 +320,14 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		case enGeneralLanguage: pvarRetValue = GeneralLanguage();
 		case enEndJob: EndJob(paParams[0]->GetInteger()); return true;
 		case enUserInterruptProcessing: UserInterruptProcessing(); return true;
+		case enAccessRight:
+			if (lSizeArray > 1)
+				pvarRetValue = AccessRight(paParams[0]->GetString(), paParams[1]);
+			return lSizeArray > 1;
+		case enIsInRole:
+			if (lSizeArray > 0)
+				pvarRetValue = IsInRole(paParams[0]);
+			return lSizeArray > 0;
 		case enGetCommonForm: pvarRetValue = GetCommonForm(
 			paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,

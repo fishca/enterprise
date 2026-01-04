@@ -90,7 +90,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	sizerUserTop->Add(sizerLabel, 0, 0, 5);
 
 	wxBoxSizer* sizerText = new wxBoxSizer(wxVERTICAL);
-	m_textName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
+	m_textName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	sizerText->Add(m_textName, 0, wxALL | wxEXPAND, 5);
 	m_textFullName = new wxTextCtrl(m_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	sizerText->Add(m_textFullName, 0, wxALL | wxEXPAND, 5);
@@ -191,75 +191,101 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	wxDialog::SetFocus();
 
 	// Connect Events
-	m_textPassword->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CDialogUserItem::OnPasswordText), nullptr, this);
+	m_textName->Bind(wxEVT_COMMAND_TEXT_ENTER,
+		[&](wxCommandEvent& event) {
+			m_textFullName->SetValue(stringUtils::GenerateSynonym(event.GetString()));
+			event.Skip();
+		}
+	);
 
-	m_bottomOK->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogUserItem::OnOKButtonClick), nullptr, this);
-	m_bottomCancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogUserItem::OnCancelButtonClick), nullptr, this);
+	m_textPassword->Bind(wxEVT_COMMAND_TEXT_UPDATED,
+		[&](wxCommandEvent& event) {
+			if (m_bInitialized) {
+				const wxString& strUserPassword = m_textPassword->GetValue();
+				if (!strUserPassword.IsEmpty()) {
+					m_strUserPassword = wxMD5::ComputeMd5(strUserPassword);
+				}
+				else {
+					m_strUserPassword.Clear();
+				}
+			}
+
+			event.Skip();
+		}
+	);
+
+	m_bottomOK->Bind(wxEVT_COMMAND_BUTTON_CLICKED,
+		[&](wxCommandEvent& event) {
+
+			if (m_textName->IsEmpty())
+				return;
+
+			bool access_right = false;
+
+			if (!m_userGuid.isValid())
+				m_userGuid = wxNewUniqueGuid;
+
+			CApplicationDataUserInfo userInfo;
+
+			userInfo.m_strUserGuid = m_userGuid.str();
+			userInfo.m_strUserName = m_textName->GetValue();
+			userInfo.m_strUserFullName = m_textFullName->GetValue();
+			userInfo.m_strUserPassword = m_strUserPassword;
+
+			const CMetaObjectConfiguration* commonObject = activeMetaData->GetCommonMetaObject();
+			wxASSERT(commonObject);
+
+			const int selection = m_choiceLanguage->GetSelection();
+			if (selection != wxNOT_FOUND) {
+				const CDataUserLanguageItem& info = m_languageArray.at(selection);
+				userInfo.m_strLanguageGuid = info.m_strLanguageGuid;
+				userInfo.m_strLanguageName = info.m_strLanguageName;
+				userInfo.m_strLanguageCode = info.m_strLanguageCode;
+			}
+
+			const wxTreeItemId& root = m_choiceRole->GetRootItem();
+
+			wxTreeItemIdValue coockie;
+			wxTreeItemId item = m_choiceRole->GetFirstChild(root, coockie);
+
+			while (item.IsOk()) {
+				if (wxCheckTree::CHECKED == m_choiceRole->GetItemState(item)) {
+					const CDataUserRole& info = m_roleArray.at(item);
+					auto& entry = userInfo.m_roleArray.emplace_back();
+					entry.m_strRoleGuid = info.m_strRoleGuid;
+					entry.m_strRoleName = info.m_strRoleName;
+					entry.m_miRoleId = info.m_miRoleId;
+					access_right = commonObject->AccessRight_Administration(info.m_miRoleId) &&
+						commonObject->AccessRight_DataAdministration(info.m_miRoleId);
+				}
+				item = m_choiceRole->GetNextChild(item, coockie);
+			}
+
+			if (!access_right) {
+				for (const auto userInfo : appData->GetAllowedUser()) {
+					const CGuid& userGuid = userInfo.m_strUserGuid;
+					if (userGuid == m_userGuid)
+						continue;
+					const CApplicationDataUserInfo& userEntry = appData->ReadUserData(userGuid);
+					for (const auto role : userEntry.m_roleArray) {
+						access_right = commonObject->AccessRight_Administration(role.m_miRoleId) &&
+							commonObject->AccessRight_DataAdministration(role.m_miRoleId);
+						if (access_right) break;
+					}
+				}
+			}
+
+			if (!access_right) {
+				wxMessageBox(_("After recording, there would not be a single role with admin rights. The action is impossible!"));
+				return;
+			}
+
+			if (!appData->SaveUserData(userInfo))
+				return;
+
+			event.Skip();
+		}
+	);
 
 	m_bInitialized = true;
-}
-
-void CDialogUserItem::OnPasswordText(wxCommandEvent& event)
-{
-	if (m_bInitialized) {
-		const wxString& strUserPassword = m_textPassword->GetValue();
-		if (!strUserPassword.IsEmpty()) {
-			m_strUserPassword = wxMD5::ComputeMd5(strUserPassword);
-		}
-		else {
-			m_strUserPassword.Clear();
-		}
-	}
-
-	event.Skip();
-}
-
-void CDialogUserItem::OnOKButtonClick(wxCommandEvent& event)
-{
-	if (m_textName->IsEmpty())
-		return;
-
-	CApplicationDataUserInfo userInfo;
-
-	if (!m_userGuid.isValid())
-		m_userGuid = wxNewUniqueGuid;
-
-	userInfo.m_strUserGuid = m_userGuid.str();
-	userInfo.m_strUserName = m_textName->GetValue();
-	userInfo.m_strUserFullName = m_textFullName->GetValue();
-	userInfo.m_strUserPassword = m_strUserPassword;
-
-	const int selection = m_choiceLanguage->GetSelection();
-	if (selection != wxNOT_FOUND) {
-		const CDataUserLanguageItem& info = m_languageArray.at(selection);
-		userInfo.m_strLanguageGuid = info.m_strLanguageGuid;
-		userInfo.m_strLanguageName = info.m_strLanguageName;
-		userInfo.m_strLanguageCode = info.m_strLanguageCode;
-	}
-
-	const wxTreeItemId& root = m_choiceRole->GetRootItem();
-
-	wxTreeItemIdValue coockie;
-	wxTreeItemId item = m_choiceRole->GetFirstChild(root, coockie);
-
-	while (item.IsOk()) {
-		if (wxCheckTree::CHECKED == m_choiceRole->GetItemState(item)) {
-			const CDataUserRole& info = m_roleArray.at(item);
-			auto& entry = userInfo.m_roleArray.emplace_back();
-			entry.m_strRoleGuid = info.m_strRoleGuid;
-			entry.m_strRoleName = info.m_strRoleName;
-			entry.m_miRoleId = info.m_miRoleId;
-		}
-		item = m_choiceRole->GetNextChild(item, coockie);
-	}
-
-	if (!appData->SaveUserData(userInfo))
-		return;
-
-	event.Skip();
-}
-
-void CDialogUserItem::OnCancelButtonClick(wxCommandEvent& event)
-{
-	event.Skip();
 }

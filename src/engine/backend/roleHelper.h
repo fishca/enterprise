@@ -111,6 +111,9 @@ protected:
 	virtual bool DoAccessRight(const CRole* role) const { return true; }
 	virtual void DoSetRight(const CRole* role, const bool& set) {}
 
+	//Check is full access 
+	virtual bool IsFullAccess() const { return false; }
+
 	//Create user info
 	virtual CUserRoleInfo GetUserRoleInfo() const = 0;
 

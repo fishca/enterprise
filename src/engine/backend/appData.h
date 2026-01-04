@@ -86,6 +86,12 @@ struct CApplicationDataConfigInfo {
 #pragma endregion 
 
 #pragma region user
+struct CApplicationDataShortUserInfo {
+	wxString m_strUserGuid;
+	wxString m_strUserName;
+	wxString m_strUserFullName;
+};
+
 struct CApplicationDataUserInfo {
 
 	struct CApplicationDataUserRole {
@@ -233,7 +239,7 @@ public:
 	wxString GetComputerName() const { return m_strComputer; }
 	wxDateTime GetStartedDate() const { return m_startedDate; }
 
-	wxArrayString GetAllowedUser() const;
+	std::vector<CApplicationDataShortUserInfo> GetAllowedUser() const;
 
 #pragma region session  
 

@@ -114,22 +114,32 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS, _("Remove all breakpoits"));
 
 	m_menuConfiguration = new wxMenu;
-	
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
-	wxMenuItem *menuUpdate = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
-	menuUpdate->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(16, 16)));
-	
+
+	wxMenuItem* menuItem = nullptr;
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
+	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(16, 16)));
+
 	m_menuConfiguration->AppendSeparator();
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuraion"));
-	m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE, _("Save configuration"));
+
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuraion"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE, _("Save configuration"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	m_frameMenuBar->Append(m_menuConfiguration, _("Configuration"));
 	m_frameMenuBar->Append(m_menuDebug, _("Debug"));
 
 	m_menuAdministration = new wxMenu;
-	m_menuAdministration->Append(wxID_APPLICATION_USERS, _("Users"));
-	m_menuAdministration->Append(wxID_APPLICATION_ACTIVE_USERS, _("Active users"));
+	menuItem = m_menuAdministration->Append(wxID_APPLICATION_USERS, _("Users"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem = m_menuAdministration->Append(wxID_APPLICATION_ACTIVE_USERS, _("Active users"));
+	menuItem->Enable(activeMetaData->AccessRight_ActiveUsers());
+
 	//m_menuAdministration->AppendSeparator();
 	//m_menuAdministration->Append(wxID_APPLICATION_CONNECTION, _("Connection DB"));
 
@@ -158,7 +168,7 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnUsers, this, wxID_APPLICATION_USERS);
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnActiveUsers, this, wxID_APPLICATION_ACTIVE_USERS);
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnConnection, this, wxID_APPLICATION_CONNECTION);
-	
+
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnAbout, this, wxID_DESIGNER_ABOUT);
 
 	LoadOptions();

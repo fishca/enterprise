@@ -23,6 +23,8 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 	event.Skip();
 }
 
+#include "backend/system/systemManager.h"
+
 void CValueToolbar::OnTool(wxCommandEvent& event)
 {
 	const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
@@ -51,8 +53,8 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 							GetOwnerForm()
 						);
 					}
-					catch (...)
-					{
+					catch (const CBackendException* err) {
+						CSystemFunction::Message(err->what(), eStatusMessage_Error);
 					}
 				}
 				else if (strAction.Length() > 0) {

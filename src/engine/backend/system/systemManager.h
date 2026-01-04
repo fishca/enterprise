@@ -113,6 +113,9 @@ public:
 	static void EndJob(bool force = false);
 
 	static void UserInterruptProcessing();
+	
+	static bool AccessRight(const wxString& strRoleName, const CValue& cData);
+	static bool IsInRole(const CValue& cData);
 
 	static CValue GetCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);
 	static void ShowCommonForm(const wxString& strFormName, class IBackendControlFrame* owner, class CValueGuid* unique);

@@ -73,7 +73,7 @@ IBackendValueForm* IMetaObjectForm::CreateAndBuildForm(const IMetaObjectForm* cr
 		try {
 			success = result->InitializeFormModule();
 		}
-		catch (const CBackendException* err) {
+		catch (...) {
 			success = false;
 		}
 

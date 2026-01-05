@@ -23,7 +23,7 @@ CRecordDataObjectDocument::CActionCollection CRecordDataObjectDocument::GetActio
 	documentActions.AddSeparator();
 	documentActions.AddAction(wxT("generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
 	documentActions.AddSeparator();
-	documentActions.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, true, eCopy);
+	documentActions.AddAction(wxT("clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
 
 	return documentActions;
 }

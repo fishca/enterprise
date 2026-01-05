@@ -16,9 +16,9 @@ CRecordManagerObjectInformationRegister::CActionCollection CRecordManagerObjectI
 {
 	CActionCollection registerActions(this);
 
-	registerActions.AddAction("saveAndClose", _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
-	registerActions.AddAction("save", _("Save"), g_picSaveCLSID, true, eSave);
-	registerActions.AddAction("copy", _("Copy"), g_picCopyCLSID, true, eCopy);
+	registerActions.AddAction(wxT("saveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
+	registerActions.AddAction(wxT("save"), _("Save"), g_picSaveCLSID, true, eSave);
+	registerActions.AddAction(wxT("clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
 
 	return registerActions;
 }

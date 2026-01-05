@@ -28,6 +28,7 @@ const picture_identifier_t g_picFilterCLSID = string_to_clsid("PC_FLTER");
 const picture_identifier_t g_picFilterSetCLSID = string_to_clsid("PC_FLTES");
 const picture_identifier_t g_picFilterClearCLSID = string_to_clsid("PC_FLTEC");
 
+const picture_identifier_t g_picCloneCLSID = string_to_clsid("PC_CLONE");
 const picture_identifier_t g_picSaveCLSID = string_to_clsid("PC_SAVE");
 const picture_identifier_t g_picPostCLSID = string_to_clsid("PC_POST");
 const picture_identifier_t g_picMarkAsDeleteCLSID = string_to_clsid("PC_MDEL");

@@ -22,7 +22,7 @@ CRecordDataObjectCatalog::CActionCollection CRecordDataObjectCatalog::GetActionC
 	catalogActions.AddSeparator();
 	catalogActions.AddAction(wxT("generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
 	catalogActions.AddSeparator();
-	catalogActions.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, true, eCopy);
+	catalogActions.AddAction(wxT("clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
 	return catalogActions;
 }
 

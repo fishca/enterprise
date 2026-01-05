@@ -16,20 +16,21 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree, IMetaDataTree);
 
 #define ICON_SIZE 16
 
-#include <wx/artprov.h>
+#include "frontend/artProvider/artProvider.h"
 
 void IMetaDataTree::CreateToolBar(wxWindow* parent)
 {
 	wxASSERT(m_metaTreeToolbar);
 
 	m_metaTreeToolbar = new wxAuiToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU), _("New item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU), _("Edit item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_REMOVE, _("Remove"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU), _("Remove item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Remove item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), _("Up item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), _("Down item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_HELP_SETTINGS, wxART_MENU), _("Sort item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
+	m_metaTreeToolbar->AddSeparator();
+	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
 	m_metaTreeToolbar->Realize();
 
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
@@ -46,13 +47,14 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 	: IMetaDataTree(parent, id), m_metaData(nullptr)
 {
 	m_metaTreeToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU), _("New item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU), _("Edit item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_REMOVE, _("Remove"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU), _("Remove item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Remove item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), _("Up item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), _("Down item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_HELP_SETTINGS, wxART_MENU), _("Sort item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
+	m_metaTreeToolbar->AddSeparator();
+	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
 	m_metaTreeToolbar->Realize();
 
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
@@ -73,7 +75,7 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
@@ -96,13 +98,14 @@ CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
 	wxASSERT(m_metaTreeToolbar);
 
 	m_metaTreeToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
-	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU), _("New item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU), _("Edit item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_REMOVE, _("Remove"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU), _("Remove item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_NEW, _("New"), wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)), _("New item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_EDIT, _("Edit"), wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)), _("Edit item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DELETE, _("Delete"), wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)), _("Remove item"));
 	m_metaTreeToolbar->AddSeparator();
-	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), _("Up item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), _("Down item"));
-	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_HELP_SETTINGS, wxART_MENU), _("Sort item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_UP, _("Up"), wxArtProvider::GetBitmap(wxART_UP, wxART_FRONTEND, wxSize(16, 16)), _("Up item"));
+	m_metaTreeToolbar->AddTool(ID_METATREE_DOWM, _("Down"), wxArtProvider::GetBitmap(wxART_DOWN, wxART_FRONTEND, wxSize(16, 16)), _("Down item"));
+	m_metaTreeToolbar->AddSeparator();
+	m_metaTreeToolbar->AddTool(ID_METATREE_SORT, _("Sort"), wxArtProvider::GetBitmap(wxART_SORT, wxART_FRONTEND, wxSize(16, 16)), _("Sort item"));
 	m_metaTreeToolbar->Realize();
 
 	m_metaTreeToolbar->SetArtProvider(new wxAuiLunaToolBarArt());
@@ -118,7 +121,7 @@ CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
 
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
 	m_metaTreeToolbar->Bind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
@@ -140,7 +143,7 @@ CMetadataTree::~CMetadataTree()
 
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnCreateItem, m_metaTreeCtrl, ID_METATREE_NEW);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnEditItem, m_metaTreeCtrl, ID_METATREE_EDIT);
-	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_REMOVE);
+	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnRemoveItem, m_metaTreeCtrl, ID_METATREE_DELETE);
 
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
@@ -178,7 +181,7 @@ EVT_TREE_END_DRAG(wxID_ANY, CMetadataTree::CMetaTreeCtrl::OnEndDrag)
 
 EVT_MENU(ID_METATREE_NEW, CMetadataTree::CMetaTreeCtrl::OnCreateItem)
 EVT_MENU(ID_METATREE_EDIT, CMetadataTree::CMetaTreeCtrl::OnEditItem)
-EVT_MENU(ID_METATREE_REMOVE, CMetadataTree::CMetaTreeCtrl::OnRemoveItem)
+EVT_MENU(ID_METATREE_DELETE, CMetadataTree::CMetaTreeCtrl::OnRemoveItem)
 EVT_MENU(ID_METATREE_PROPERTY, CMetadataTree::CMetaTreeCtrl::OnPropertyItem)
 
 EVT_MENU(ID_METATREE_INSERT, CMetadataTree::CMetaTreeCtrl::OnInsertItem)
@@ -201,7 +204,7 @@ CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl()
 }
 
 CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl(CMetadataTree* parent)
-	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMatadataTreeView(this))
+	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMatadataTreeView(this))
 {
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);

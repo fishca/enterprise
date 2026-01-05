@@ -8,7 +8,7 @@
 #include "frontend/docView/docManager.h"
 #include "backend/appData.h"
 
-#define metadataName _("metaData")
+#define metadataName _("metadata")
 #define commonName _("common")
 
 #define commonModulesName _("common modules")
@@ -724,13 +724,15 @@ void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& 
 			PrepareReplaceMenu(defaultMenu);
 		}
 
-		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+		wxMenuItem* menuItem = nullptr;
+
+		menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picAddCLSID));
 		menuItem->Enable(!m_bReadOnly);
 		menuItem = defaultMenu->Append(ID_METATREE_EDIT, _("Edit"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU));
-		menuItem = defaultMenu->Append(ID_METATREE_REMOVE, _("Remove"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picEditCLSID));
+		menuItem = defaultMenu->Append(ID_METATREE_DELETE, _("Remove"));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picDeleteCLSID));
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
@@ -738,7 +740,7 @@ void CMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& 
 	}
 	else if (!metaObject && item != m_treeCOMMON) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+		menuItem->SetBitmap(CBackendPicture::GetPicture(g_picAddCLSID));
 		menuItem->Enable(!m_bReadOnly);
 
 		if (item == m_treeDATAPROCESSORS
@@ -759,7 +761,7 @@ void CMetadataTree::UpdateToolbar(IMetaObject* obj, const wxTreeItemId& item)
 {
 	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly && item != m_treeCOMMON);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem());
-	m_metaTreeToolbar->EnableTool(ID_METATREE_REMOVE, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_DELETE, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 
 	m_metaTreeToolbar->EnableTool(ID_METATREE_UP, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_DOWM, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
@@ -1633,7 +1635,7 @@ void CMetadataTree::FillData()
 			&& strName.Find(m_strSearch) < 0)
 			continue;
 
-		AddInterfaceItem(commonInterface, 
+		AddInterfaceItem(commonInterface,
 			AppendItem(m_treeINTERFACES, commonInterface));
 	}
 

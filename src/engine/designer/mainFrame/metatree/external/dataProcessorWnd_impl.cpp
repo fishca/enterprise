@@ -359,12 +359,12 @@ void CDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeIte
 		&& !metaObject->PrepareContextMenu(defaultMenu))
 	{
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 		menuItem = defaultMenu->Append(ID_METATREE_EDIT, _("Edit"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_MENU));
-		menuItem = defaultMenu->Append(ID_METATREE_REMOVE, _("Remove"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_FRONTEND, wxSize(16, 16)));
+		menuItem = defaultMenu->Append(ID_METATREE_DELETE, _("Delete"));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 		defaultMenu->AppendSeparator();
 		menuItem = defaultMenu->Append(ID_METATREE_PROPERTY, _("Properties"));
@@ -372,7 +372,7 @@ void CDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeIte
 	}
 	else if (!metaObject) {
 		wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_NEW, _("New"));
-		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS, wxART_MENU));
+		menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_ADD, wxART_FRONTEND, wxSize(16, 16)));
 		menuItem->Enable(!m_bReadOnly);
 	}
 }
@@ -381,7 +381,7 @@ void CDataProcessorTree::UpdateToolbar(IMetaObject* obj, const wxTreeItemId& ite
 {
 	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem());
-	m_metaTreeToolbar->EnableTool(ID_METATREE_REMOVE, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
+	m_metaTreeToolbar->EnableTool(ID_METATREE_DELETE, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 
 	m_metaTreeToolbar->EnableTool(ID_METATREE_UP, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_DOWM, obj != nullptr && item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);

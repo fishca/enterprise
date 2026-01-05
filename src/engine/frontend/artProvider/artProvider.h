@@ -15,6 +15,9 @@
 #define wxART_VISUALHOST			wxART_MAKE_CLIENT_ID(wxART_VISUALHOST)
 #define wxART_SERVICE				wxART_MAKE_CLIENT_ID(wxART_SERVICE)
 
+///////////////////////////////////////////////////////////////////////////////
+#define wxART_FRONTEND				wxART_MAKE_CLIENT_ID(wxART_FRONTEND)
+
 // ----------------------------------------------------------------------------
 // Art IDs
 // ----------------------------------------------------------------------------
@@ -53,5 +56,19 @@
 
 #define wxART_COMMON_FOLDER			 wxART_MAKE_ART_ID(wxART_COMMON_FOLDERS)
 #define wxART_SAVE_METADATA			 wxART_MAKE_ART_ID(wxART_SAVE_METADATA)
+
+///////////////////////////////////////////////////////////////////////////////
+
+#define wxART_DATABASE				wxART_MAKE_ART_ID(wxART_DATABASE)
+#define wxART_DATABASE_ROOLBACK		wxART_MAKE_ART_ID(wxART_DATABASE_ROOLBACK)
+#define wxART_DATABASE_APPLY		wxART_MAKE_ART_ID(wxART_DATABASE_APPLY)
+
+#define wxART_ADD					wxART_MAKE_ART_ID(wxART_ADD)
+#define wxART_EDIT					wxART_MAKE_ART_ID(wxART_EDIT)
+#define wxART_DELETE				wxART_MAKE_ART_ID(wxART_DELETE)
+#define wxART_UP					wxART_MAKE_ART_ID(wxART_UP)
+#define wxART_DOWN					wxART_MAKE_ART_ID(wxART_DOWN)
+
+#define wxART_SORT					wxART_MAKE_ART_ID(wxART_SORT)
 
 #endif

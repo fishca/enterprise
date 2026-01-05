@@ -282,6 +282,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="artProvider\artProvider.h" />
+    <ClInclude Include="artProvider\private\picturePredefined.h" />
     <ClInclude Include="docView\docManager.h" />
     <ClInclude Include="docView\docView.h" />
     <ClInclude Include="docView\templates\template.h" />

@@ -38,7 +38,7 @@ void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event)
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
@@ -48,7 +48,7 @@ void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightUp(wxMouseEvent& event)
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
@@ -71,7 +71,7 @@ void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& event
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}
@@ -81,7 +81,7 @@ void CDataProcessorTree::CDataProcessorTreeCtrl::OnRightDown(wxMouseEvent& event
 		for (auto def_menu : defaultMenu->GetMenuItems()) {
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY) {
 				continue;
 			}

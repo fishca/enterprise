@@ -1,7 +1,5 @@
 #include "artProvider.h"
-
-#include <array>
-#include <map>
+#include "backend/backend_picture.h"
 
 #include "artProvider/null/null.xpm"
 
@@ -44,16 +42,18 @@
 // wxOESArtProvider class
 // ----------------------------------------------------------------------------
 
+#include "private/picturePredefined.h"
+
 class wxFrontendArtProvider : public wxArtProvider {
 public:
 	wxFrontendArtProvider() : wxArtProvider() {}
 protected:
 
-	virtual wxBitmap CreateBitmap(
+	virtual wxBitmapBundle CreateBitmapBundle(
 		const wxArtID& id,
 		const wxArtClient& client,
 		const wxSize& size) override {
-	
+
 		static const struct wxFrontendArtProviderIconEntry {
 
 			struct wxFrontendArtProviderIconData {
@@ -119,13 +119,36 @@ protected:
 			{ wxART_METATREE, wxART_SAVE_METADATA, s_saveMetadata_xpm }
 		};
 
-		for (unsigned n = 0; n < WXSIZEOF(s_allBitmaps); n++)
-		{
+		for (unsigned n = 0; n < WXSIZEOF(s_allBitmaps); n++) {
 			const wxFrontendArtProviderIconEntry& entry = s_allBitmaps[n];
 			if (entry.id != id)
 				continue;
-			
+
 			return wxIcon(entry.data.m_data);
+		}
+
+		if (client == wxART_FRONTEND) {
+
+			if (id == wxART_DATABASE)
+				return CBackendPicture::GetImageFromBase64(s_db_32_png, size);
+			else if (id == wxART_DATABASE_ROOLBACK)
+				return CBackendPicture::GetImageFromBase64(s_db_rollback_32_png, size);
+			else if (id == wxART_DATABASE_APPLY)
+				return CBackendPicture::GetImageFromBase64(s_db_apply_32_png, size);
+			else if (id == wxART_ADD)
+				return CBackendPicture::GetImageFromBase64(s_add_32_png, size);
+			else if (id == wxART_EDIT)
+				return CBackendPicture::GetImageFromBase64(s_edit_32_png, size);
+			else if (id == wxART_DELETE)
+				return CBackendPicture::GetImageFromBase64(s_delete_32_png, size);
+			else if (id == wxART_UP)
+				return CBackendPicture::GetImageFromBase64(s_up_32_png, size);
+			else if (id == wxART_DOWN)
+				return CBackendPicture::GetImageFromBase64(s_down_32_png, size);
+			else if (id == wxART_SORT)
+				return CBackendPicture::GetImageFromBase64(s_sort_32_png, size);
+
+			return wxNullBitmap;
 		}
 
 		return wxNullBitmap;

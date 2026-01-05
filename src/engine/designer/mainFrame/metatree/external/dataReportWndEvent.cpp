@@ -42,7 +42,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 		{
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY)
 			{
 				continue;
@@ -57,7 +57,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnRightUp(wxMouseEvent &event)
 		{
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY)
 			{
 				continue;
@@ -86,7 +86,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 		{
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY)
 			{
 				continue;
@@ -101,7 +101,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 		{
 			if (def_menu->GetId() == ID_METATREE_NEW
 				|| def_menu->GetId() == ID_METATREE_EDIT
-				|| def_menu->GetId() == ID_METATREE_REMOVE
+				|| def_menu->GetId() == ID_METATREE_DELETE
 				|| def_menu->GetId() == ID_METATREE_PROPERTY)
 			{
 				continue;

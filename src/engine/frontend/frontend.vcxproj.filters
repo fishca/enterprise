@@ -1365,6 +1365,9 @@
       <Filter>win\dlg</Filter>
     </ClInclude>
     <ClInclude Include="window_ptr.h" />
+    <ClInclude Include="artProvider\private\picturePredefined.h">
+      <Filter>artProvider\private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1429,6 +1432,9 @@
     </Filter>
     <Filter Include="visualView\special\enum">
       <UniqueIdentifier>{fd65e2ab-52ca-4f1d-892c-641b7b7e68a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="artProvider\private">
+      <UniqueIdentifier>{531fb9e2-c07f-4ce7-a206-811961ef7263}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

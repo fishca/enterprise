@@ -211,9 +211,23 @@ wxString CBackendPicture::CreateBase64Image(const wxImage& image) {
 	return wxEmptyString;
 }
 
-wxImage CBackendPicture::GetImageFromBase64(const wxString& src) {
+wxImage CBackendPicture::GetImageFromBase64(const wxString& src, const wxSize& size) {
 	const wxMemoryBuffer& buffer = wxBase64Decode(src);
-	return wxMemoryInputStream(
-		buffer.GetData(), buffer.GetDataLen());
+	const wxImage& image(wxMemoryInputStream(
+		buffer.GetData(), buffer.GetDataLen()));
+	return size != wxDefaultSize ? image.Scale(
+		size.x, size.y, wxIMAGE_QUALITY_HIGH) : image;
+}
+
+wxBitmap CBackendPicture::GetBitmapFromBase64(const wxString& src, const wxSize& size)
+{
+	return GetImageFromBase64(src, size);
+}
+
+wxIcon CBackendPicture::GetIconFromBase64(const wxString& src, const wxSize& size)
+{
+	wxIcon icon;
+	icon.CopyFromBitmap(GetBitmapFromBase64(src, size));
+	return icon;
 }
 #pragma endregion 

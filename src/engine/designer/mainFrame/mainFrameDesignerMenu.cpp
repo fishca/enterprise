@@ -116,13 +116,17 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuConfiguration = new wxMenu;
 
 	wxMenuItem* menuItem = nullptr;
+	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_OPEN_DATABASE, _("Open database configuration"));
-	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());	
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_ROLLBACK_DATABASE, _("Rollback to database configuration"));
+	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_ROOLBACK, wxART_FRONTEND, wxSize(16, 16)));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database configuration"));
-	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_SAVE_METADATA, wxART_METATREE, wxSize(16, 16)));
+	menuItem->SetBitmap(wxArtProvider::GetBitmap(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	m_menuConfiguration->AppendSeparator();
 
@@ -135,13 +139,11 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_frameMenuBar->Append(m_menuDebug, _("Debug"));
 
 	m_menuAdministration = new wxMenu;
+	
 	menuItem = m_menuAdministration->Append(wxID_APPLICATION_USERS, _("Users"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 	menuItem = m_menuAdministration->Append(wxID_APPLICATION_ACTIVE_USERS, _("Active users"));
 	menuItem->Enable(activeMetaData->AccessRight_ActiveUsers());
-
-	//m_menuAdministration->AppendSeparator();
-	//m_menuAdministration->Append(wxID_APPLICATION_CONNECTION, _("Connection DB"));
 
 	m_frameMenuBar->Append(m_menuAdministration, _("Administration"));
 

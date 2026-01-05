@@ -66,6 +66,8 @@ protected:
 
 private:
 
+	mutable bool m_startMainModule; 
+
 	wxMenu* m_menuFile;
 	wxMenu* m_menuEdit;
 	wxMenu* m_menuOperations;

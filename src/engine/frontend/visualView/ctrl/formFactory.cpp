@@ -74,56 +74,68 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 {
 	class CResolveNameConflict {
 
-		// Save the original name for use later.
-		static wxString GetOriginalName(const IValueFrame* control) {
-
-			wxString originalName; control->GetControlNameAsString(originalName);
-			if (!originalName.IsEmpty()) {
-				size_t length = originalName.length();
-				while (length >= 0 && stringUtils::IsDigit(originalName[--length]));
-				originalName = originalName.Left(length + 1);
-			}
-			else {
-				const IValueFrame* parentControl = control->GetParent();
-				if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
-					originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
-				}
-				else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
-					originalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
-				}
-				else {
-					originalName = control->GetClassName();
-				}
-			}
-			return originalName;
-		}
-
 	public:
 
-		static void BuildNameSet(IValueFrame* object, CValueForm* top) {
+		static void BuildNameSet(IValueFrame* control, CValueForm* top) {
 
-			wxString originalName = GetOriginalName(object); // Save the original name for use later.
-			wxString generateName = originalName; // The name that gets incremented.
+			if (control->GetComponentType() != COMPONENT_TYPE_SIZERITEM) {
 
-			if (object->GetComponentType() != COMPONENT_TYPE_SIZERITEM) {
+				// Save the original name for use later.
+				wxString strOriginalName, strControlName;
+
+				if (control->GetControlNameAsString(strOriginalName)) {
+
+					if (!strOriginalName.IsEmpty()) {
+						size_t length = strOriginalName.length();
+						while (length >= 0 && stringUtils::IsDigit(strOriginalName[--length]));
+						strOriginalName = strOriginalName.Left(length + 1);
+					}
+					else {
+						const IValueFrame* parentControl = control->GetParent();
+						if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
+							strOriginalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+						}
+						else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
+							strOriginalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+						}
+						else {
+							strOriginalName = control->GetClassName();
+						}
+					}
+				}
+
+				wxString strGenerateName = strOriginalName; // The name that gets incremented.
+
 				// comprobamos si hay conflicto
-				unsigned int index = 0; bool founded_name = false; wxString controlName;
+				unsigned int index = 0; bool founded_name = false;
 				do {
-					for (auto& valueControl : top->m_listControl) {
-						if (0 == valueControl->GetControlID()) continue;
-						if (object == valueControl) continue;
-						if (!valueControl->GetControlNameAsString(controlName)) continue;
-						if (stringUtils::CompareString(generateName, controlName)) {
+
+					for (const auto valueControl : top->m_listControl) {
+
+						if (0 == valueControl->GetControlID())
+							continue;
+						if (control == valueControl)
+							continue;
+						if (!valueControl->GetControlNameAsString(strControlName))
+							continue;
+
+						if (stringUtils::CompareString(strGenerateName, strControlName)) {
 							founded_name = true;
 							break;
 						}
+
 						founded_name = false;
 					}
-					if (founded_name) generateName = wxString::Format(wxT("%s%i"), originalName, ++index);
-				} while (founded_name);
-			}
 
-			object->SetControlName(generateName);
+					if (founded_name) {
+						strGenerateName = wxString::Format(wxT("%s%i"),
+							strOriginalName, ++index);
+					}
+
+				} while (founded_name);
+
+				control->SetControlName(strGenerateName);
+			}
 		};
 	};
 
@@ -311,7 +323,8 @@ IValueFrame* CValueForm::PasteObject(CValueForm* dstForm, IValueFrame* dstParent
 			if (clipboard == nullptr)
 				return nullptr;
 
-			if (!clipboard->PasteObject(readerMemory)) wxDELETE(clipboard);
+			if (!clipboard->PasteObject(readerMemory)) 
+				wxDELETE(clipboard);
 
 			if (!copyOnPaste) wxTheClipboard->Clear();
 		}

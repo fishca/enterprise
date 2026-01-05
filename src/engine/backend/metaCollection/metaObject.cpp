@@ -42,13 +42,16 @@ IBackendMetadataTree* IMetaObject::GetMetaDataTree() const
 bool IMetaObject::BuildNewName()
 {
 	const wxString& strName = GetName(); bool foundedName = false;
-	for (const auto object : m_metaData->GetAnyArrayObject(GetClassType())) {
-		if (object->GetParent() != GetParent())
-			continue;
-		if (object != this &&
-			stringUtils::CompareString(strName, object->GetName())) {
-			foundedName = true;
-			break;
+	std::vector<IMetaObject*> array;
+	if (m_parent != nullptr && m_parent->FillArrayObjectByFilter(array, { GetClassType() })) {
+		for (const auto object : array) {
+			if (object->GetParent() != GetParent())
+				continue;
+			if (object != this &&
+				stringUtils::CompareString(strName, object->GetName())) {
+				foundedName = true;
+				break;
+			}
 		}
 	}
 
@@ -266,7 +269,7 @@ bool IMetaObject::IsFullAccess() const
 {
 	if (appData->DesignerMode())
 		return true;
-	
+
 	return m_metaData->IsFullAccess();
 }
 

@@ -31,7 +31,7 @@ protected:
 
 	//load & save subsystem in metaobject 
 	bool LoadInterface(CMemoryReader& reader);
-	bool SaveInterface(CMemoryWriter& writer = CMemoryWriter());
+	bool SaveInterface(CMemoryWriter& writer = CMemoryWriter()) const;
 
 	std::set<meta_identifier_t> m_interfaces;
 };

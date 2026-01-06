@@ -119,7 +119,7 @@ protected:
 
 	//load & save role in metaobject 
 	bool LoadRole(CMemoryReader& reader);
-	bool SaveRole(CMemoryWriter& writer = CMemoryWriter());
+	bool SaveRole(CMemoryWriter& writer = CMemoryWriter()) const;
 
 	/**
 	* Añade una propiedad al objeto.

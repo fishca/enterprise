@@ -430,7 +430,14 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 			writer.w_chunk(childBlock, writterChildMemory.pointer(), writterChildMemory.size());
 
 			CMemoryWriter writterDataMemory;
+			
 			if (!copyObject->CopyProperty(writterDataMemory))
+				return false;
+
+			if (!copyObject->SaveInterface(writterDataMemory))
+				return false;
+
+			if (!copyObject->SaveRole(writterDataMemory))
 				return false;
 
 			writer.w_chunk(dataBlock, writterDataMemory.pointer(), writterDataMemory.size());
@@ -488,6 +495,9 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 
 			pasteObject->BuildNewName();
 
+			pasteObject->LoadInterface(*readerDataMemory);
+			pasteObject->LoadRole(*readerDataMemory);
+
 			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
 				return false;
 
@@ -534,6 +544,9 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 				return false;
 
 			pasteObject->BuildNewName();
+
+			pasteObject->LoadInterface(*readerDataMemory);
+			pasteObject->LoadRole(*readerDataMemory);
 
 			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
 				return false;

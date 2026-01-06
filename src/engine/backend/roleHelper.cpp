@@ -105,7 +105,7 @@ bool IAccessObject::LoadRole(CMemoryReader& dataReader)
 	return false;
 }
 
-bool IAccessObject::SaveRole(CMemoryWriter& dataWritter)
+bool IAccessObject::SaveRole(CMemoryWriter& dataWritter) const
 {
 	CMemoryWriter dataRoleWritter;
 	dataRoleWritter.w_u32(m_valRoles.size());

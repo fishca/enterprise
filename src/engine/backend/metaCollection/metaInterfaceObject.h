@@ -56,8 +56,14 @@ public:
 		return FindObjectByFilter<CMetaObjectInterface>(id, { g_metaInterfaceCLSID });
 	}
 
+protected:
+
+	virtual bool LoadData(CMemoryReader& reader);
+	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
 #pragma endregion 
 private:
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categorySecondary, wxT("picture"), _("Picture"));
 #pragma region role
 	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
 #pragma endregion

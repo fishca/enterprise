@@ -17,7 +17,7 @@ bool IInterfaceObject::LoadInterface(CMemoryReader& dataReader)
 	return true;
 }
 
-bool IInterfaceObject::SaveInterface(CMemoryWriter& dataWritter)
+bool IInterfaceObject::SaveInterface(CMemoryWriter& dataWritter) const
 {
 	CMemoryWriter dataRoleWritter;
 	dataRoleWritter.w_u32(m_interfaces.size());

@@ -15,6 +15,16 @@ CMetaObjectInterface::CMetaObjectInterface(const wxString& name, const wxString&
 {
 }
 
+bool CMetaObjectInterface::LoadData(CMemoryReader& reader)
+{
+	return m_propertyPicture->LoadData(reader);
+}
+
+bool CMetaObjectInterface::SaveData(CMemoryWriter& writer)
+{
+	return m_propertyPicture->SaveData(writer);
+}
+
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************

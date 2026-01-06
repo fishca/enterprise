@@ -60,37 +60,37 @@ void CDialogFunctionAll::BuildTree()
 	wxTreeItemId root = m_treeCtrlElements->AddRoot(wxEmptyString);
 	wxTreeItemId constants = AppendGroupItem(root, g_metaConstantCLSID, _("Constants"));
 	for (auto constant : activeMetaData->GetAnyArrayObject(g_metaConstantCLSID)) {
-		int imageIndex = imageList->Add(constant->GetIcon());
+		const int imageIndex = imageList->Add(constant->GetIcon());
 		m_treeCtrlElements->AppendItem(constants, constant->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(constant));
 	}
 	wxTreeItemId catalogs = AppendGroupItem(root, g_metaCatalogCLSID, _("Catalogs"));
 	for (auto catalog : activeMetaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
-		int imageIndex = imageList->Add(catalog->GetIcon());
+		const int imageIndex = imageList->Add(catalog->GetIcon());
 		m_treeCtrlElements->AppendItem(catalogs, catalog->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(catalog));
 	}
 	wxTreeItemId documents = AppendGroupItem(root, g_metaDocumentCLSID, _("Documents"));
 	for (auto document : activeMetaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
-		int imageIndex = imageList->Add(document->GetIcon());
+		const int imageIndex = imageList->Add(document->GetIcon());
 		m_treeCtrlElements->AppendItem(documents, document->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(document));
 	}
 	wxTreeItemId dataProcessors = AppendGroupItem(root, g_metaDataProcessorCLSID, _("Data processors"));
 	for (auto dataProcessor : activeMetaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
-		int imageIndex = imageList->Add(dataProcessor->GetIcon());
+		const int imageIndex = imageList->Add(dataProcessor->GetIcon());
 		m_treeCtrlElements->AppendItem(dataProcessors, dataProcessor->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(dataProcessor));
 	}
 	wxTreeItemId reports = AppendGroupItem(root, g_metaReportCLSID, _("Reports"));
 	for (auto report : activeMetaData->GetAnyArrayObject(g_metaReportCLSID)) {
-		int imageIndex = imageList->Add(report->GetIcon());
+		const int imageIndex = imageList->Add(report->GetIcon());
 		m_treeCtrlElements->AppendItem(reports, report->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(report));
 	}
 	wxTreeItemId informationRegisters = AppendGroupItem(root, g_metaInformationRegisterCLSID, _("Information registers"));
 	for (auto informationRegister : activeMetaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
-		int imageIndex = imageList->Add(informationRegister->GetIcon());
+		const int imageIndex = imageList->Add(informationRegister->GetIcon());
 		m_treeCtrlElements->AppendItem(informationRegisters, informationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(informationRegister));
 	}
 	wxTreeItemId accumulationRegisters = AppendGroupItem(root, g_metaAccumulationRegisterCLSID, _("Accumulation registers"));
 	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
-		int imageIndex = imageList->Add(accumulationRegister->GetIcon());
+		const int imageIndex = imageList->Add(accumulationRegister->GetIcon());
 		m_treeCtrlElements->AppendItem(accumulationRegisters, accumulationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(accumulationRegister));
 	}
 
@@ -99,25 +99,15 @@ void CDialogFunctionAll::BuildTree()
 
 void CDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick(wxMouseEvent& event)
 {
-	wxTreeItemId selItem = m_treeCtrlElements->GetSelection();
+	const wxTreeItemId& selItem = m_treeCtrlElements->GetSelection();
 	if (!selItem.IsOk())
 		return;
 
 	CMetaDataItem* itemData = dynamic_cast<CMetaDataItem*>(m_treeCtrlElements->GetItemData(selItem));
 	if (itemData != nullptr) {
-		IBackendCommandData* metaObject = dynamic_cast<IBackendCommandData*>(itemData->GetMetaObject());
-		if (metaObject != nullptr) {
-			IBackendValueForm* valueForm = nullptr;
-			try {
-				valueForm = metaObject->GetDefaultCommandForm();
-				wxASSERT(valueForm);
-				valueForm->ShowForm(); Close(true);
-			}
-			catch (const CBackendException* err) {
-				wxMessageBox(err->what());
-				wxDELETE(valueForm);
-			}
-		}
+		IBackendCommandItem* metaObject = dynamic_cast<IBackendCommandItem*>(itemData->GetMetaObject());
+		if (metaObject != nullptr && metaObject->ShowFormByCommandType())
+			Close(true);
 	}
 
 	event.Skip();

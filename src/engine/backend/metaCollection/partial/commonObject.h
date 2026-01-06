@@ -61,13 +61,16 @@ class BACKEND_API CSourceExplorer;
 //*                                  Factory & metaData                                      *
 //********************************************************************************************
 
-class BACKEND_API IBackendCommandData {
+class BACKEND_API IBackendCommandItem {
 public:
 
-	virtual ~IBackendCommandData() {}
+	virtual ~IBackendCommandItem() {}
+	virtual bool ShowFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default);
+
+protected:
 
 	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() = 0;
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) = 0;
 };
 
 class BACKEND_API CFormTypeList {
@@ -157,7 +160,7 @@ private:
 #include "backend/metaCollection/metaObjectComposite.h"
 
 class BACKEND_API IMetaObjectGenericData
-	: public IMetaObjectCompositeData, public IBackendCommandData {
+	: public IMetaObjectCompositeData, public IBackendCommandItem {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectGenericData);
 public:
 	friend class IMetaData;
@@ -353,13 +356,22 @@ public:
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject() = 0;
 
-	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); }
-
 #pragma region _form_builder_h_
 	//support form 
 	virtual IBackendValueForm* GetObjectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 #pragma endregion 
+
+protected:
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create) {
+			return GetObjectForm();
+		}
+
+		return GetObjectForm();
+	}
 };
 
 enum eObjectMode {
@@ -395,6 +407,9 @@ public:
 
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject();
+
+	//get command section 
+	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Service; }
 
 protected:
 
@@ -465,9 +480,6 @@ public:
 	//get attribute code 
 	virtual IMetaObjectAttribute* GetAttributeForCode() const { return nullptr; }
 
-	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() { return GetListForm(); }
-
 	//find object value
 	virtual class CReferenceDataObject* FindObjectValue(const CGuid& guid); //find by guid and ret reference 
 
@@ -484,6 +496,19 @@ public:
 	virtual wxString GetTableNameDB() const;
 
 protected:
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create)
+			return GetObjectForm();
+		else if (cmdType == EInterfaceCommandType::EInterfaceCommandType_List)
+			return GetListForm();
+		else if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Select)
+			return GetSelectForm();
+
+		return GetListForm();
+	}
 
 	//searched array 
 	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
@@ -620,6 +645,9 @@ public:
 
 	//create single object
 	virtual IRecordDataObject* CreateRecordDataObject();
+
+	//get command section 
+	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
 
 protected:
 
@@ -897,9 +925,6 @@ public:
 	virtual bool OnBeforeRunMetaObject(int flags);
 	virtual bool OnAfterCloseMetaObject();
 
-	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() { return GetListForm(); }
-
 #pragma region _form_builder_h_
 	//support form 
 	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
@@ -910,7 +935,19 @@ public:
 
 protected:
 
+	//update current record
 	bool UpdateCurrentRecords(const wxString& tableName, IMetaObjectRegisterData* dst);
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		//if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create)
+		//	return GetObjectRecord();
+		//else if (cmdType == EInterfaceCommandType::EInterfaceCommandType_List)
+		//	return GetListForm();
+
+		return GetListForm();
+	}
 
 	///////////////////////////////////////////////////////////////////
 

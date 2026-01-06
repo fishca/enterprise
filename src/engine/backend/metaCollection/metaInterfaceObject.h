@@ -18,6 +18,12 @@ public:
 	bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
+	wxBitmap GetPictureAsBitmap() const {
+		if (!m_propertyPicture->IsEmptyProperty())
+			return m_propertyPicture->GetValueAsBitmap();
+		return CBackendPicture::CreatePicture(g_picStructureCLSID);
+	}
+
 	virtual bool FilterChild(const class_identifier_t& clsid) const {
 
 		if (
@@ -48,6 +54,10 @@ public:
 	}
 
 #pragma endregion
+
+	bool GetInterfaceItemArrayObject(EInterfaceCommandSection page,
+		std::vector<IMetaObject*>& array) const;
+
 #pragma region __filter_h__
 
 	//interface
@@ -56,12 +66,13 @@ public:
 		return FindObjectByFilter<CMetaObjectInterface>(id, { g_metaInterfaceCLSID });
 	}
 
+#pragma endregion 
+
 protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
-#pragma endregion 
 private:
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categorySecondary, wxT("picture"), _("Picture"));
 #pragma region role

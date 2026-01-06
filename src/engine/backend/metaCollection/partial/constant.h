@@ -5,7 +5,7 @@
 
 class BACKEND_API CRecordDataObjectConstant;
 
-class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandData {
+class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandItem {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
 
 protected:
@@ -49,9 +49,6 @@ public:
 	//create empty object
 	virtual CRecordDataObjectConstant* CreateObjectValue();
 
-	//get default form 
-	virtual IBackendValueForm* GetDefaultCommandForm() { return GetObjectForm(); }
-
 	//support form 
 	virtual IBackendValueForm* GetObjectForm();
 
@@ -62,10 +59,23 @@ public:
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
 
+	//get command section 
+	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Create; }
+
 	//process default query
 	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
 
 protected:
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create) {
+			return GetObjectForm();
+		}
+
+		return GetObjectForm();
+	}
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);

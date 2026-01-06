@@ -78,6 +78,9 @@ public:
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
 	virtual void ProcessCommand(unsigned int id);
 
+	//get command section 
+	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Report; }
+
 protected:
 
 	//create object data with meta form

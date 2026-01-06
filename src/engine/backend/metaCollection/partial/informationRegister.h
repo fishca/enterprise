@@ -152,6 +152,9 @@ protected:
 	virtual IRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
 	virtual IRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
 
+	//get command section 
+	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
+
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
@@ -160,6 +163,17 @@ protected:
 
 	//support form 
 	virtual IBackendValueForm* GetRecordForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid);
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create)
+			return GetRecordForm();
+		else if (cmdType == EInterfaceCommandType::EInterfaceCommandType_List)
+			return GetListForm();
+
+		return GetListForm();
+	}
 
 private:
 

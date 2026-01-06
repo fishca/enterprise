@@ -62,6 +62,7 @@ void CDocEnterpriseMDIFrame::CreateWideGui()
 	SetStatusBar(new CDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
+
 	SetMinSize(wxSize(400, 380));
 
 	// tell the manager to "commit" all the changes just made

@@ -809,7 +809,7 @@ void CMetadataTree::AddInterfaceItem(IMetaObject* metaObject, const wxTreeItemId
 		//	continue;
 
 		AddInterfaceItem(commonInterface,
-			AppendItem(hParentID, commonInterface));
+			AppendGroupItem(hParentID, g_metaInterfaceCLSID, commonInterface));
 	}
 }
 
@@ -1636,7 +1636,7 @@ void CMetadataTree::FillData()
 			continue;
 
 		AddInterfaceItem(commonInterface,
-			AppendItem(m_treeINTERFACES, commonInterface));
+			AppendGroupItem(m_treeINTERFACES, g_metaInterfaceCLSID, commonInterface));
 	}
 
 	if (!m_strSearch.IsEmpty() && !m_metaTreeCtrl->HasChildren(m_treeINTERFACES))

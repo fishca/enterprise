@@ -10,13 +10,16 @@
 #define THEME_COLOUR_MAIN wxColour(255, 232, 166) 
 #define THEME_COLOUR_BORDER wxColour(41, 57, 85) 
 
-class wxSubSystemWindow : public wxWindow {
+#include "backend/metadataConfiguration.h"
+#include "backend/metaCollection/metaInterfaceObject.h"
+
+class CSubSystemWindow : public wxWindow {
 
 	// ----------------------------------------------------------------------------
-	// wxSubSystemButton: search button used by search control
+	// CSubSystemButton: search button used by search control
 	// ----------------------------------------------------------------------------
 
-	class wxSubSystemButton : public wxControl {
+	class CSubSystemButton : public wxControl {
 
 		wxString ChopText(wxDC& dc, const wxString& text, int max_size) {
 
@@ -45,15 +48,28 @@ class wxSubSystemWindow : public wxWindow {
 
 	public:
 
-		wxSubSystemButton(wxSubSystemWindow* search, wxWindowID id, const wxString& label)
-			: wxControl(search, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER),
-			m_search(search),
+		void SetPopupWindow(wxPopupTransientWindow* wnd) {
+
+			m_popupWindow = wnd;
+
+			if (!wnd)
+				m_mainWindow->m_activeButton = nullptr;
+
+			CSubSystemButton::Refresh();
+			CSubSystemButton::Update();
+		}
+
+		const CMetaObjectInterface* GetMetaObject() const { return m_metaObject; }
+
+		CSubSystemButton(CSubSystemWindow* mainWindow, wxWindowID id, const CMetaObjectInterface* object)
+			: wxControl(mainWindow, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER),
+			m_mainWindow(mainWindow), m_bitmap(object->GetPictureAsBitmap()), m_metaObject(object), m_popupWindow(nullptr),
 			m_eventType(wxEVT_BUTTON) {
 
 			m_baseColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE);
 			m_highlightColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
 
-			SetLabel(label);
+			SetLabel(object->GetSynonym());
 
 			m_normalFont = *wxNORMAL_FONT;
 			m_selectedFont = *wxNORMAL_FONT;
@@ -63,7 +79,7 @@ class wxSubSystemWindow : public wxWindow {
 			wxColor baseColour = THEME_COLOUR_BORDER;
 
 			m_activeColour = baseColour;
-			m_baseColour = baseColour;
+			m_baseColour = baseColour.ChangeLightness(75);
 
 			m_borderPen = wxPen(THEME_COLOUR_MAIN);
 			m_baseColourPen = wxPen(THEME_COLOUR_MAIN);
@@ -73,36 +89,25 @@ class wxSubSystemWindow : public wxWindow {
 			SetBackgroundStyle(wxBG_STYLE_PAINT);
 		}
 
-		void SetActiveButton(bool a = true) {
-			m_active = a; Refresh(); Update();
-		}
-
-		bool IsActiveButton() const { return m_active; }
-
-		// The buttons in wxSearchCtrl shouldn't accept focus from keyboard because
-		// this would interfere with the usual TAB processing: the user expects
-		// that pressing TAB in the search control should switch focus to the next
-		// control and not give it to the button inside the same control. Besides,
-		// the search button can be already activated by pressing "Enter" so there
-		// is really no reason for it to be able to get focus from keyboard.
-		virtual bool AcceptsFocusFromKeyboard() const override { return false; }
-		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_search; }
+		virtual wxWindow* GetMainWindowOfCompositeControl() override { return m_mainWindow; }
 
 	protected:
 
-		void OnLeftUp(wxMouseEvent&) {
+		void OnLeftUp(wxMouseEvent& event) {
 
-			m_active = !m_active;
+			if (m_mainWindow->m_activeButton != this) {
 
-			wxCommandEvent event(m_eventType, m_search->GetId());
+				wxCommandEvent event(m_eventType, m_mainWindow->GetId());
 
-			event.SetEventObject(this);
-			event.SetString(GetLabel());
-			event.SetExtraLong(m_active);
+				event.SetEventObject(this);
+				event.SetString(GetLabel());
+				event.SetExtraLong(true);
 
-			GetEventHandler()->ProcessEvent(event);
+				GetEventHandler()->ProcessEvent(event);
+			}
 
-			Refresh();
+			CSubSystemButton::Refresh();
+			CSubSystemButton::Update();
 		}
 
 		void OnPaint(wxPaintEvent& e) {
@@ -110,7 +115,7 @@ class wxSubSystemWindow : public wxWindow {
 			wxPaintDC dc(this);
 
 			// Clear the background in case of a user bitmap with alpha channel
-			dc.SetBrush(m_search->GetBackgroundColour());
+			dc.SetBrush(m_mainWindow->GetBackgroundColour());
 			dc.Clear();
 
 			wxCoord normal_textx, normal_texty;
@@ -139,7 +144,7 @@ class wxSubSystemWindow : public wxWindow {
 			wxCoord tab_x = in_rect.x;
 			wxCoord tab_y = in_rect.y;// +in_rect.height - tab_height;
 
-			bool active = m_active;
+			bool active = m_popupWindow != nullptr;
 
 			// select pen, brush and font for the tab to be drawn
 			if (active) {
@@ -161,8 +166,7 @@ class wxSubSystemWindow : public wxWindow {
 			dc.SetClippingRegion(tab_x, tab_y, clip_width, tab_height);
 
 			wxPoint border_points[6];
-			if (m_flags & wxAUI_NB_BOTTOM)
-			{
+			if (m_flags & wxAUI_NB_BOTTOM) {
 				border_points[0] = wxPoint(tab_x, tab_y);
 				border_points[1] = wxPoint(tab_x, tab_y + tab_height - 6);
 				border_points[2] = wxPoint(tab_x + 2, tab_y + tab_height - 4);
@@ -172,14 +176,6 @@ class wxSubSystemWindow : public wxWindow {
 			}
 			else //if (m_flags & wxAUI_NB_TOP) {}
 			{
-				//border_points[0] = wxPoint(tab_x, tab_y + tab_height - 4);
-				//border_points[1] = wxPoint(tab_x, tab_y + 2);
-				//border_points[2] = wxPoint(tab_x + 2, tab_y);
-				//border_points[3] = wxPoint(tab_x + tab_width - 2, tab_y);
-				//border_points[4] = wxPoint(tab_x + tab_width, tab_y + 2);
-				//border_points[5] = wxPoint(tab_x + tab_width, tab_y + tab_height - 4);
-
-
 				border_points[0] = wxPoint(tab_x, tab_y + tab_height);
 				border_points[1] = wxPoint(tab_x, tab_y);
 				border_points[2] = wxPoint(tab_x, tab_y);
@@ -251,8 +247,8 @@ class wxSubSystemWindow : public wxWindow {
 
 				dc.GradientFillLinear(r, bottom_color, top_color, wxNORTH);
 			}
-			else
-			{
+			else {
+
 				// draw inactive tab
 				wxRect r(tab_x, tab_y, tab_width, tab_height);
 
@@ -274,8 +270,8 @@ class wxSubSystemWindow : public wxWindow {
 
 			// there are two horizontal grey lines at the bottom of the tab control,
 			// this gets rid of the top one of those lines in the tab control
-			if (active)
-			{
+			if (active) {
+
 				if (m_flags & wxAUI_NB_BOTTOM)
 					dc.SetPen(wxPen(m_baseColour.ChangeLightness(170)));
 				// TODO: else if (m_flags &wxAUI_NB_LEFT) {}
@@ -292,61 +288,26 @@ class wxSubSystemWindow : public wxWindow {
 			int text_offset;
 			int bitmap_offset = 0;
 
-			//if (page.bitmap.IsOk())
-			//{
-			//	bitmap_offset = tab_x + wxControl::FromDIP(8);
+			if (m_bitmap.IsOk()) {
 
-			//	const wxBitmap bitmap = page.bitmap.GetBitmapFor(this);
+				bitmap_offset = tab_x + wxControl::FromDIP(8);
 
-			//	// draw bitmap
-			//	dc.DrawBitmap(bitmap,
-			//		bitmap_offset,
-			//		drawn_tab_yoff + (drawn_tab_height / 2) - (bitmap.GetLogicalHeight() / 2),
-			//		true);
+				// draw bitmap
+				dc.DrawBitmap(m_bitmap,
+					bitmap_offset,
+					drawn_tab_yoff + (drawn_tab_height / 2) - (m_bitmap.GetLogicalHeight() / 2),
+					true);
 
-			//	text_offset = bitmap_offset + bitmap.GetLogicalWidth();
-			//	text_offset += wxControl::FromDIP(3); // bitmap padding
-			//}
-			//else
-			//{
-			//	text_offset = tab_x + wxControl::FromDIP(8);
-			//}
-
-			text_offset = tab_x + wxControl::FromDIP(8);
-
-			// draw close button if necessary
-			int close_button_width = 0;
-			//if (close_button_state != wxAUI_BUTTON_STATE_HIDDEN) {
-
-			//	wxBitmapBundle bb = m_disabledCloseBmp;
-
-			//	if (close_button_state == wxAUI_BUTTON_STATE_HOVER ||
-			//		close_button_state == wxAUI_BUTTON_STATE_PRESSED)
-			//	{
-			//		bb = m_activeCloseBmp;
-			//	}
-
-			//	const wxBitmap bmp = bb.GetBitmapFor(wnd);
-
-			//	int offsetY = tab_y - 1;
-			//	if (m_flags & wxAUI_NB_BOTTOM)
-			//		offsetY = 1;
-
-			//	wxRect rect(tab_x + tab_width - bmp.GetLogicalWidth() - wnd->FromDIP(1),
-			//		offsetY + (tab_height / 2) - (bmp.GetLogicalHeight() / 2),
-			//		bmp.GetLogicalWidth(),
-			//		tab_height);
-
-			//	IndentPressedBitmap(wnd->FromDIP(wxSize(1, 1)), &rect, close_button_state);
-			//	dc.DrawBitmap(bmp, rect.x, rect.y, true);
-
-			//	//*out_button_rect = rect;
-			//	close_button_width = bmp.GetLogicalWidth();
-			//}
+				text_offset = bitmap_offset + m_bitmap.GetLogicalWidth();
+				text_offset += wxControl::FromDIP(3); // bitmap padding
+			}
+			else {
+				text_offset = tab_x + wxControl::FromDIP(8);
+			}
 
 			wxString draw_text = ChopText(dc,
 				caption,
-				tab_width - (text_offset - tab_x) - close_button_width);
+				tab_width - (text_offset - tab_x));
 
 			// draw tab text
 			if (!active) {
@@ -361,7 +322,7 @@ class wxSubSystemWindow : public wxWindow {
 				drawn_tab_yoff + (drawn_tab_height) / 2 - (texty / 2) - 1);
 
 			// draw focus rectangle
-			if (false) {
+			if (active) {
 
 				wxRect focusRectText(text_offset, (drawn_tab_yoff + (drawn_tab_height) / 2 - (texty / 2) - 1),
 					selected_textx, selected_texty);
@@ -369,20 +330,17 @@ class wxSubSystemWindow : public wxWindow {
 				wxRect focusRect;
 				wxRect focusRectBitmap;
 
-				//if (page.bitmap.IsOk())
-				//{
-				//	const wxBitmap bitmap = page.bitmap.GetBitmapFor(this);
+				if (m_bitmap.IsOk()) {
+					focusRectBitmap = wxRect(bitmap_offset, drawn_tab_yoff + (drawn_tab_height / 2) - (m_bitmap.GetLogicalHeight() / 2),
+						m_bitmap.GetLogicalWidth(), m_bitmap.GetLogicalHeight());
+				}
 
-				//	focusRectBitmap = wxRect(bitmap_offset, drawn_tab_yoff + (drawn_tab_height / 2) - (bitmap.GetLogicalHeight() / 2),
-				//		bitmap.GetLogicalWidth(), bitmap.GetLogicalHeight());
-				//}
-
-				//if (page.bitmap.IsOk() && draw_text.IsEmpty())
-				//	focusRect = focusRectBitmap;
-				//else if (!page.bitmap.IsOk() && !draw_text.IsEmpty())
-				//	focusRect = focusRectText;
-				//else if (page.bitmap.IsOk() && !draw_text.IsEmpty())
-				//	focusRect = focusRectText.Union(focusRectBitmap);
+				if (m_bitmap.IsOk() && draw_text.IsEmpty())
+					focusRect = focusRectBitmap;
+				else if (!m_bitmap.IsOk() && !draw_text.IsEmpty())
+					focusRect = focusRectText;
+				else if (m_bitmap.IsOk() && !draw_text.IsEmpty())
+					focusRect = focusRectText.Union(focusRectBitmap);
 
 				focusRect.Inflate(2, 2);
 				wxRendererNative::Get().DrawFocusRect(this, dc, focusRect, 0);
@@ -393,10 +351,10 @@ class wxSubSystemWindow : public wxWindow {
 
 	private:
 
-		bool m_active = false;
-
 		unsigned int m_flags = wxAUI_TB_TEXT | wxAUI_NB_LEFT;
-		int m_textOrientation = wxAUI_TBTOOL_TEXT_LEFT;
+
+		const CMetaObjectInterface* m_metaObject;
+		wxPopupTransientWindow* m_popupWindow;
 
 		wxAuiToolBarItem item;
 
@@ -412,182 +370,323 @@ class wxSubSystemWindow : public wxWindow {
 		wxBrush m_baseColourBrush;
 		wxColour m_activeColour;
 
-		wxSubSystemWindow* m_search;
+		CSubSystemWindow* m_mainWindow;
+		wxBitmap m_bitmap;
 		wxEventType   m_eventType;
 
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	class wxPopupSubWindow : public wxPopupTransientWindow {
+	class CPopupSubWindow : public wxPopupTransientWindow {
 
-		class wxScrolledSubWindow : public wxScrolledWindow {
+		class CScrolledSubWindow : public wxScrolledWindow {
+
+			class CScrolledSubWindowSectionRefData : public wxRefCounter {
+			public:
+				EInterfaceCommandSection GetSection() const { return m_section; }
+				CScrolledSubWindowSectionRefData(EInterfaceCommandSection s) : m_section(s) {}
+			private:
+				EInterfaceCommandSection m_section;
+			};
 
 		public:
 
-			wxScrolledSubWindow() : wxScrolledWindow()
-			{
-			}
-
-			wxScrolledSubWindow(wxWindow* parent,
-				wxWindowID winid = wxID_ANY,
-				const wxPoint& pos = wxDefaultPosition,
-				const wxSize& size = wxDefaultSize,
-				long style = wxScrolledWindowStyle,
-				const wxString& name = wxASCII_STR(wxPanelNameStr))
-				: wxScrolledWindow(parent, winid, pos, size, style, name)
+			CScrolledSubWindow() : wxScrolledWindow() {}
+			CScrolledSubWindow(CPopupSubWindow* parent,
+				wxWindowID winid = wxID_ANY) : wxScrolledWindow(parent, winid, wxDefaultPosition, wxDefaultSize, wxBORDER_SUNKEN | wxHSCROLL | wxVSCROLL), m_popupWindow(parent)
 			{
 				wxBoxSizer* sizerMain = new wxBoxSizer(wxHORIZONTAL);
 				wxBoxSizer* sizerLeft = new wxBoxSizer(wxVERTICAL);
 
-				wxBoxSizer* sizerSubCommonSpacer = new wxBoxSizer(wxHORIZONTAL);
-				sizerSubCommonSpacer->Add(20, 0, 0, wxEXPAND, 5);
+				const CMetaObjectInterface* metaObject = m_popupWindow->GetMetaObject();
+				if (metaObject != nullptr) {
+					std::vector<IMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array)) {
 
-				wxBoxSizer* sizerSubCommonItem = new wxBoxSizer(wxVERTICAL);
-				m_hyperlink16 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubCommonItem->Add(m_hyperlink16, 0, wxALL, 5);
+						wxBoxSizer* sizerSubCommonSpacer = new wxBoxSizer(wxHORIZONTAL);
+						sizerSubCommonSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						wxBoxSizer* sizerSubCommonItem = new wxBoxSizer(wxVERTICAL);
 
-				m_hyperlink17 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubCommonItem->Add(m_hyperlink17, 0, wxALL, 5);
-				sizerSubCommonSpacer->Add(sizerSubCommonItem, 1, wxEXPAND, 5);
+						for (const auto object : array) {
 
-				sizerLeft->Add(sizerSubCommonSpacer, 0, wxEXPAND, 5);
-				wxBoxSizer* sizerSubsystem = new wxBoxSizer(wxVERTICAL);
+							wxButton* df = new wxButton(this, object->GetMetaID(), object->GetSynonym(),
+								wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
 
-				m_staticSubSystem = new wxStaticText(this, wxID_ANY, _("<subsytem name>"), wxDefaultPosition, wxDefaultSize, 0);
-				m_staticSubSystem->Wrap(-1);
-				m_staticSubSystem->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+							df->SetBitmap(object->GetIcon());
+							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
-				sizerSubsystem->Add(m_staticSubSystem, 0, wxALL, 5);
+							df->SetBackgroundColour(*wxWHITE);
+							df->SetForegroundColour(GetForegroundColour());
+							df->SetCursor(wxCURSOR_HAND);
+							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
-				wxBoxSizer* sizerSubsystemSpacer = new wxBoxSizer(wxHORIZONTAL);
-				sizerSubsystemSpacer->Add(20, 0, 0, wxEXPAND, 5);
-				wxBoxSizer* sizerSubSystemItem = new wxBoxSizer(wxVERTICAL);
+							sizerSubCommonItem->Add(df, 0, wxEXPAND, 5);
+						}
 
-				m_hyperlink11 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubSystemItem->Add(m_hyperlink11, 0, wxALL, 5);
+						sizerSubCommonSpacer->Add(sizerSubCommonItem, 1, wxEXPAND, 5);
+						sizerLeft->Add(sizerSubCommonSpacer, 0, wxEXPAND, 5);
+					}
+				}
 
-				m_hyperlink12 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubSystemItem->Add(m_hyperlink12, 0, wxALL, 5);
+				for (const auto child : metaObject->GetInterfaceArrayObject()) {
 
-				m_hyperlink13 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubSystemItem->Add(m_hyperlink13, 0, wxALL, 5);
+					std::vector<IMetaObject*> array;
+					if (child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array)) {
 
-				m_hyperlink14 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubSystemItem->Add(m_hyperlink14, 0, wxALL, 5);
+						wxBoxSizer* sizerSubsystem = new wxBoxSizer(wxVERTICAL);
+						wxStaticText* st = new wxStaticText(this, wxID_ANY, child->GetSynonym());
+						
+						st->SetForegroundColour(wxColour(0, 120, 215));
+						st->Wrap(-1);
+						st->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
-				m_hyperlink15 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerSubSystemItem->Add(m_hyperlink15, 0, wxALL, 5);
+						sizerSubsystem->Add(st, 0, wxALL, 5);
 
-				sizerSubsystemSpacer->Add(sizerSubSystemItem, 1, wxEXPAND, 5);
-				sizerSubsystem->Add(sizerSubsystemSpacer, 1, wxEXPAND, 5);
+						wxBoxSizer* sizerSubsystemSpacer = new wxBoxSizer(wxHORIZONTAL);
+						sizerSubsystemSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						wxBoxSizer* sizerSubSystemItem = new wxBoxSizer(wxVERTICAL);
 
-				sizerLeft->Add(sizerSubsystem, 1, wxEXPAND, 0);
+						struct CSubWindowConstructor {
+							static void NextChildConstruct(wxBoxSizer* sizerSubSystemItem, const CMetaObjectInterface* parent, CScrolledSubWindow* wnd) {
+								for (const auto child : parent->GetInterfaceArrayObject()) {
+									std::vector<IMetaObject*> subArray;
+									if (child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, subArray)) {
+
+										for (const auto object : subArray) {
+
+											wxButton* df = new wxButton(wnd, object->GetMetaID(), object->GetSynonym(),
+												wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
+
+											df->SetBitmap(object->GetIcon());
+											df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
+
+											df->SetBackgroundColour(*wxWHITE);
+											df->SetForegroundColour(wnd->GetForegroundColour());
+											df->SetCursor(wxCURSOR_HAND);
+											df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+											df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, wnd);
+
+											sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
+
+											NextChildConstruct(sizerSubSystemItem, child, wnd);
+										}
+									}
+								}
+							}
+						};
+
+						for (const auto object : array) {
+
+							wxButton* df = new wxButton(this, object->GetMetaID(), object->GetSynonym(),
+								wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
+
+							df->SetBitmap(object->GetIcon());
+							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
+
+							df->SetBackgroundColour(*wxWHITE);
+							df->SetForegroundColour(GetForegroundColour());
+							df->SetCursor(wxCURSOR_HAND);
+							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
+
+							sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
+
+							CSubWindowConstructor::NextChildConstruct(sizerSubSystemItem, child, this);
+						}
+
+						sizerSubsystemSpacer->Add(sizerSubSystemItem, 1, wxEXPAND, 5);
+						sizerSubsystem->Add(sizerSubsystemSpacer, 1, wxEXPAND, 5);
+
+						sizerLeft->Add(sizerSubsystem, 1, wxEXPAND, 0);
+					}
+				}
+
 				sizerMain->Add(sizerLeft, 0, 0, 0);
 				sizerMain->Add(50, 0, 0, wxEXPAND, 5);
 
 				wxBoxSizer* sizerRight = new wxBoxSizer(wxVERTICAL);
-				wxBoxSizer* sizerCreate = new wxBoxSizer(wxVERTICAL);
 
-				m_staticCreate = new wxStaticText(this, wxID_ANY, _("Create"), wxDefaultPosition, wxDefaultSize, 0);
-				m_staticCreate->Wrap(-1);
-				m_staticCreate->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+				if (metaObject != nullptr) {
 
-				sizerCreate->Add(m_staticCreate, 0, wxALL | wxEXPAND, 5);
+					std::vector<IMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, array)) {
 
-				wxBoxSizer* sizerCreateSpacer = new wxBoxSizer(wxHORIZONTAL);
-				sizerCreateSpacer->Add(20, 0, 0, wxEXPAND, 5);
+						wxBoxSizer* sizerCreate = new wxBoxSizer(wxVERTICAL);
+						wxStaticText* st_create = new wxStaticText(this, wxID_ANY, _("Create"), wxDefaultPosition, wxDefaultSize, 0);
+						
+						st_create->SetForegroundColour(wxColour(0, 120, 215));
+						st_create->Wrap(-1);
+						st_create->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
-				wxBoxSizer* sizerCreateItem = new wxBoxSizer(wxVERTICAL);
-				m_hyperlink1 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerCreateItem->Add(m_hyperlink1, 0, wxALL, 5);
+						sizerCreate->Add(st_create, 0, wxALL | wxEXPAND, 5);
 
-				m_hyperlink2 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerCreateItem->Add(m_hyperlink2, 0, wxALL, 5);
+						wxBoxSizer* sizerCreateSpacer = new wxBoxSizer(wxHORIZONTAL);
+						sizerCreateSpacer->Add(20, 0, 0, wxEXPAND, 5);
 
-				m_hyperlink3 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerCreateItem->Add(m_hyperlink3, 0, wxALL, 5);
+						wxBoxSizer* sizerCreateItem = new wxBoxSizer(wxVERTICAL);
 
-				sizerCreateSpacer->Add(sizerCreateItem, 1, wxEXPAND, 5);
-				sizerCreate->Add(sizerCreateSpacer, 1, wxEXPAND, 5);
-				sizerRight->Add(sizerCreate, 0, wxEXPAND, 5);
+						for (const auto object : array) {
 
-				wxBoxSizer* sizerReport = new wxBoxSizer(wxVERTICAL);
+							wxButton* df = new wxButton(this, object->GetMetaID(), object->GetSynonym(),
+								wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
 
-				m_staticReport = new wxStaticText(this, wxID_ANY, _("Report"), wxDefaultPosition, wxDefaultSize, 0);
-				m_staticReport->Wrap(-1);
-				m_staticReport->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+							df->SetBitmap(object->GetIcon());
+							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
-				sizerReport->Add(m_staticReport, 0, wxALL | wxEXPAND, 5);
+							df->SetBackgroundColour(*wxWHITE);
+							df->SetForegroundColour(GetForegroundColour());
+							df->SetCursor(wxCURSOR_HAND);
+							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Create));
 
-				wxBoxSizer* sizerReportSpacer = new wxBoxSizer(wxHORIZONTAL);
-				sizerReportSpacer->Add(20, 0, 0, wxEXPAND, 5);
+							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
-				wxBoxSizer* sizerReportItem = new wxBoxSizer(wxVERTICAL);
+							sizerCreateItem->Add(df, 0, wxEXPAND, 5);
+						}
 
-				m_hyperlink4 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerReportItem->Add(m_hyperlink4, 0, wxALL, 5);
-				sizerReportSpacer->Add(sizerReportItem, 1, wxEXPAND, 5);
-				sizerReport->Add(sizerReportSpacer, 1, wxEXPAND, 5);
-				sizerRight->Add(sizerReport, 0, wxEXPAND, 5);
+						sizerCreateSpacer->Add(sizerCreateItem, 1, wxEXPAND, 5);
+						sizerCreate->Add(sizerCreateSpacer, 1, wxEXPAND, 5);
+						sizerRight->Add(sizerCreate, 0, wxEXPAND, 5);
+					}
+				}
 
-				wxBoxSizer* sizerService = new wxBoxSizer(wxVERTICAL);
+				if (metaObject != nullptr) {
 
-				m_staticService = new wxStaticText(this, wxID_ANY, _("Service"), wxDefaultPosition, wxDefaultSize, 0);
-				m_staticService->Wrap(-1);
-				m_staticService->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+					std::vector<IMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, array)) {
 
-				sizerService->Add(m_staticService, 0, wxALL | wxEXPAND, 5);
+						wxBoxSizer* sizerReport = new wxBoxSizer(wxVERTICAL);
+						wxStaticText* st_report = new wxStaticText(this, wxID_ANY, _("Report"), wxDefaultPosition, wxDefaultSize, 0);
+						
+						st_report->SetForegroundColour(wxColour(0, 120, 215));
+						st_report->Wrap(-1);
+						st_report->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
-				wxBoxSizer* sizerServiceSpacer = new wxBoxSizer(wxHORIZONTAL);
-				sizerServiceSpacer->Add(20, 0, 0, wxEXPAND, 1);
-				wxBoxSizer* sizerServiceItem = new wxBoxSizer(wxVERTICAL);
+						sizerReport->Add(st_report, 0, wxALL | wxEXPAND, 5);
 
-				m_hyperlink7 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Websitedfgijlk;"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerServiceItem->Add(m_hyperlink7, 0, wxALL, 5);
+						wxBoxSizer* sizerReportSpacer = new wxBoxSizer(wxHORIZONTAL);
+						sizerReportSpacer->Add(20, 0, 0, wxEXPAND, 5);
 
-				m_hyperlink19 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Websiteqwe5tyiuytwertyuiytrewrtywqw5r6tyres"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
-				sizerServiceItem->Add(m_hyperlink19, 0, wxALL, 5);
+						wxBoxSizer* sizerReportItem = new wxBoxSizer(wxVERTICAL);
 
-				m_hyperlink20 = new wxHyperlinkCtrl(this, wxID_ANY, _("wxFB Website"), wxT("http://www.wxformbuilder.org"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE);
+						for (const auto object : array) {
 
-				sizerServiceItem->Add(m_hyperlink20, 0, wxALL, 5);
-				sizerServiceSpacer->Add(sizerServiceItem, 1, wxEXPAND, 5);
-				sizerService->Add(sizerServiceSpacer, 1, wxEXPAND, 5);
-				sizerRight->Add(sizerService, 0, wxEXPAND, 5);
+							wxButton* df = new wxButton(this, object->GetMetaID(), object->GetSynonym(),
+								wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
+
+							df->SetBitmap(object->GetIcon());
+							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
+
+							df->SetBackgroundColour(*wxWHITE);
+							df->SetForegroundColour(GetForegroundColour());
+							df->SetCursor(wxCURSOR_HAND);
+							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Report));
+
+							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
+
+							sizerReportItem->Add(df, 0, wxEXPAND, 5);
+						}
+
+						sizerReportSpacer->Add(sizerReportItem, 1, wxEXPAND, 5);
+						sizerReport->Add(sizerReportSpacer, 1, wxEXPAND, 5);
+
+						sizerRight->Add(sizerReport, 0, wxEXPAND, 5);
+					}
+				}
+
+				if (metaObject != nullptr) {
+					std::vector<IMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, array)) {
+
+						wxBoxSizer* sizerService = new wxBoxSizer(wxVERTICAL);
+						wxStaticText* st_service = new wxStaticText(this, wxID_ANY, _("Service"), wxDefaultPosition, wxDefaultSize, 0);
+						
+						st_service->SetForegroundColour(wxColour(0, 120, 215));
+						st_service->Wrap(-1);
+						st_service->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
+
+						sizerService->Add(st_service, 0, wxALL | wxEXPAND, 5);
+
+						wxBoxSizer* sizerServiceSpacer = new wxBoxSizer(wxHORIZONTAL);
+						sizerServiceSpacer->Add(20, 0, 0, wxEXPAND, 1);
+						wxBoxSizer* sizerServiceItem = new wxBoxSizer(wxVERTICAL);
+
+						for (const auto object : array) {
+
+							wxButton* df = new wxButton(this, object->GetMetaID(), object->GetSynonym(),
+								wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxBU_LEFT);
+
+							df->SetBitmap(object->GetIcon());
+							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
+
+							df->SetBackgroundColour(*wxWHITE);
+							df->SetForegroundColour(GetForegroundColour());
+							df->SetCursor(wxCURSOR_HAND);
+							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Service));
+
+							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
+
+							sizerServiceItem->Add(df, 0, wxEXPAND, 5);
+						}
+
+						sizerServiceSpacer->Add(sizerServiceItem, 1, wxEXPAND, 5);
+						sizerService->Add(sizerServiceSpacer, 1, wxEXPAND, 5);
+						sizerRight->Add(sizerService, 0, wxEXPAND, 5);
+					}
+				}
+
 				sizerMain->Add(sizerRight, 0, 0, 5);
 
 				SetSizer(sizerMain);
 				Layout();
+
+				SetBackgroundColour(*wxWHITE);
 			}
 
 		private:
 
-			wxHyperlinkCtrl* m_hyperlink16;
-			wxHyperlinkCtrl* m_hyperlink17;
-			wxStaticText* m_staticSubSystem;
-			wxHyperlinkCtrl* m_hyperlink11;
-			wxHyperlinkCtrl* m_hyperlink12;
-			wxHyperlinkCtrl* m_hyperlink13;
-			wxHyperlinkCtrl* m_hyperlink14;
-			wxHyperlinkCtrl* m_hyperlink15;
-			wxStaticText* m_staticCreate;
-			wxHyperlinkCtrl* m_hyperlink1;
-			wxHyperlinkCtrl* m_hyperlink2;
-			wxHyperlinkCtrl* m_hyperlink3;
-			wxStaticText* m_staticReport;
-			wxHyperlinkCtrl* m_hyperlink4;
-			wxStaticText* m_staticService;
-			wxHyperlinkCtrl* m_hyperlink7;
-			wxHyperlinkCtrl* m_hyperlink19;
-			wxHyperlinkCtrl* m_hyperlink20;
+			EInterfaceCommandType GetCommandType(const EInterfaceCommandSection section) const {
+				
+				if (section == EInterfaceCommandSection::EInterfaceCommandSection_Create)
+					return EInterfaceCommandType::EInterfaceCommandType_Create;
+				else if (section == EInterfaceCommandSection::EInterfaceCommandSection_Service)
+					return EInterfaceCommandType::EInterfaceCommandType_Create;
+				else if (section == EInterfaceCommandSection::EInterfaceCommandSection_Report)
+					return EInterfaceCommandType::EInterfaceCommandType_Create;
+
+				return EInterfaceCommandType::EInterfaceCommandType_Default;
+			}
+
+			void OnMenuItemClicked(wxCommandEvent& event) {
+
+				CScrolledSubWindowSectionRefData* refData =
+					dynamic_cast<CScrolledSubWindowSectionRefData*>(event.GetEventObject()->GetRefData());
+
+				const EInterfaceCommandSection section = refData != nullptr ?
+					refData->GetSection() : EInterfaceCommandSection::EInterfaceCommandSection_Default;
+
+				IBackendCommandItem* cmdItem =
+					dynamic_cast<IBackendCommandItem*>(activeMetaData->FindAnyObjectByFilter(event.GetId()));
+
+				if (cmdItem != nullptr &&
+					cmdItem->ShowFormByCommandType(GetCommandType(section)))
+					event.Skip();
+			}
+
+			CPopupSubWindow* m_popupWindow;
 		};
 
 	public:
+
+		const CMetaObjectInterface* GetMetaObject() const { return m_currentButton->GetMetaObject(); }
+
 		// ctors
-		wxPopupSubWindow() : m_currentButton(nullptr) {}
-		wxPopupSubWindow(wxWindow* parent, wxSubSystemButton* btn, int style = wxBORDER_NONE)
+		CPopupSubWindow() : m_currentButton(nullptr) {}
+		CPopupSubWindow(wxWindow* parent, CSubSystemButton* btn, const wxPoint& point, const wxSize& size, int style = wxBORDER_NONE)
 			: wxPopupTransientWindow(parent, style), m_currentButton(btn) {
 
+			wxPopupTransientWindow::SetPosition(point);
+			wxPopupTransientWindow::SetSize(size);
 			wxPopupTransientWindow::SetBackgroundColour(THEME_COLOUR_MAIN);
 
 			wxBoxSizer* bSizer1 = new wxBoxSizer(wxHORIZONTAL);
@@ -597,7 +696,7 @@ class wxSubSystemWindow : public wxWindow {
 			m_staticLine->SetMinSize(wxSize(1, -1));
 			bSizer1->Add(m_staticLine, 0, wxEXPAND | wxALL, 0);
 
-			m_mainWindow = new wxScrolledSubWindow(this, wxID_ANY, wxPoint(-1, -1), wxDefaultSize, wxBORDER_SUNKEN | wxHSCROLL | wxVSCROLL);
+			m_mainWindow = new CScrolledSubWindow(this, wxID_ANY);
 			m_mainWindow->SetScrollRate(5, 5);
 
 			m_mainWindow->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
@@ -609,61 +708,50 @@ class wxSubSystemWindow : public wxWindow {
 			Layout();
 		}
 
+		// Implement base class pure virtuals.
+		virtual void Popup(wxWindow* focus = nullptr) override {
+			m_currentButton->SetPopupWindow(this);
+			wxPopupTransientWindow::Popup(focus);
+		}
+
 		virtual void Dismiss() override {
-			m_currentButton->SetActiveButton(false);
+			m_currentButton->SetPopupWindow(nullptr);
 			wxPopupTransientWindow::Dismiss();
 		}
 
 	private:
 		wxWindow* m_staticLine;
-		wxSubSystemButton* m_currentButton;
+		CSubSystemButton* m_currentButton;
 		wxScrolledWindow* m_mainWindow;
-
 	};
 
-	wxSubSystemButton* CreateSubMenu() {
-		return m_arrayStaticText.emplace_back(
-			new wxSubSystemButton(this, wxID_ANY, "submenu rocks!"));
+	CSubSystemButton* CreateSubMenu(const CMetaObjectInterface* object) {
+		return m_arrayPageButton.emplace_back(
+			new CSubSystemButton(this, wxID_ANY, object));
 	}
 
 public:
 
-	wxSubSystemWindow() : wxWindow() {}
-	wxSubSystemWindow(wxWindow* parent,
+	CSubSystemWindow() : wxWindow(), m_activeButton(nullptr) {}
+	CSubSystemWindow(wxWindow* parent,
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = 0,
-		const wxString& name = wxASCII_STR(wxPanelNameStr))
-		:
-		wxWindow(parent, id, pos, size, style, name)
+		const wxString& name = wxASCII_STR(wxPanelNameStr)) : wxWindow(parent, id, pos, size, style, name), m_activeButton(nullptr)
 	{
-		wxWindow::SetBackgroundColour(wxAUI_DEFAULT_COLOUR);
-		FillSubMenu();
-	}
-
-	void FillSubMenu() {
-
-		CreateSubMenu();
-		CreateSubMenu();
-		CreateSubMenu();
-		CreateSubMenu();
-		CreateSubMenu();
-		CreateSubMenu();
-		CreateSubMenu();
-	}
-
-	void FocusSubMenu() {
-		for (auto& staticText : m_arrayStaticText) {
-			staticText->SetActiveButton(false);
+		for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectInterface>(g_metaInterfaceCLSID)) {
+			if (object->AccessRight_Use()) CreateSubMenu(object);
 		}
+
+		wxWindow::SetBackgroundColour(wxAUI_DEFAULT_COLOUR.ChangeLightness(85));
 	}
 
 protected:
 
 	void OnEventSize(wxSizeEvent& event) {
 		unsigned int text_height_total = 0;
-		for (auto& staticText : m_arrayStaticText) {
+		for (auto& staticText : m_arrayPageButton) {
 			staticText->SetSize(0, text_height_total, event.m_size.x, ms_text_height);
 			text_height_total += ms_text_height;
 		}
@@ -672,9 +760,13 @@ protected:
 
 	void OnEventButton(wxCommandEvent& event) {
 
-		auto it = std::find(m_arrayStaticText.begin(), m_arrayStaticText.end(),
-			event.GetEventObject()
-		);
+		auto iterator = std::find(
+			m_arrayPageButton.begin(), m_arrayPageButton.end(), event.GetEventObject());
+
+		if (iterator != m_arrayPageButton.end())
+			m_activeButton = *iterator;
+		else
+			m_activeButton = nullptr;
 
 		if (event.GetExtraLong()) {
 
@@ -683,11 +775,13 @@ protected:
 
 			const wxSize& main_size = mainFrame->GetSize();
 
-			wxPopupSubWindow* sub = new wxPopupSubWindow(this, *it);
-			sub->SetPosition(wxPoint(pos.x + size.x - 5, pos.y + 1));
-			sub->SetSize(wxSize(main_size.x - size.x - 20, size.y - 5));
+			CPopupSubWindow* subWindow = new CPopupSubWindow(this,
+				m_activeButton,
+				{ pos.x + size.x - 5, pos.y + 1 },
+				{ main_size.x - size.x - 20, size.y - 5 }
+			);
 
-			sub->Popup();
+			subWindow->Popup();
 		}
 
 		event.Skip();
@@ -695,38 +789,53 @@ protected:
 
 private:
 
+	CSubSystemButton* m_activeButton;
+
 	static const int ms_text_height = 30;
 	static const int ms_text_width = 200;
 
-	std::vector<wxSubSystemButton*> m_arrayStaticText;
+	std::vector<CSubSystemButton*> m_arrayPageButton;
 
 	wxDECLARE_EVENT_TABLE();
 };
 
-wxBEGIN_EVENT_TABLE(wxSubSystemWindow::wxSubSystemButton, wxControl)
-EVT_LEFT_UP(wxSubSystemWindow::wxSubSystemButton::OnLeftUp)
-EVT_PAINT(wxSubSystemWindow::wxSubSystemButton::OnPaint)
+wxBEGIN_EVENT_TABLE(CSubSystemWindow::CSubSystemButton, wxControl)
+EVT_LEFT_UP(CSubSystemWindow::CSubSystemButton::OnLeftUp)
+EVT_PAINT(CSubSystemWindow::CSubSystemButton::OnPaint)
 wxEND_EVENT_TABLE()
 
-wxBEGIN_EVENT_TABLE(wxSubSystemWindow, wxWindow)
-EVT_BUTTON(wxID_ANY, wxSubSystemWindow::OnEventButton)
-EVT_SIZE(wxSubSystemWindow::OnEventSize)
+wxBEGIN_EVENT_TABLE(CSubSystemWindow, wxWindow)
+EVT_BUTTON(wxID_ANY, CSubSystemWindow::OnEventButton)
+EVT_SIZE(CSubSystemWindow::OnEventSize)
 wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////////////
 
 void CDocEnterpriseMDIFrame::CreateSubSystem()
 {
-	//wxAuiPaneInfo m_infoAdditional1;
-	//m_infoAdditional1.Name(wxT("additional1"));
-	//m_infoAdditional1.Left();
-	//m_infoAdditional1.CaptionVisible(false);
-	//m_infoAdditional1.MinSize(200, 25);
-	//m_infoAdditional1.Movable(false);
-	//m_infoAdditional1.Dockable(false);
-	//m_infoAdditional1.Fixed();
+	bool hasInterface = false;
 
-	//m_mgr.AddPane(new wxSubSystemWindow(this, wxID_ANY), m_infoAdditional1);
+	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectInterface>(g_metaInterfaceCLSID)) {
+		if (object->AccessRight_Use()) {
+			hasInterface = true;
+			break;
+		}
+	}
+
+	if (hasInterface) {
+
+		wxAuiPaneInfo m_infoSection;
+		m_infoSection.Name(wxT("section"));
+		m_infoSection.Left();
+		m_infoSection.CaptionVisible(false);
+		m_infoSection.MinSize(200, 25);
+		m_infoSection.Movable(false);
+		m_infoSection.Dockable(false);
+		m_infoSection.Fixed();
+
+		m_mgr.AddPane(
+			new CSubSystemWindow(this, wxID_ANY), m_infoSection);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////

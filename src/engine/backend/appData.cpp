@@ -243,7 +243,7 @@ bool CApplicationData::InitLocale(const wxString& locale)
 {
 	if (m_locale_lang == wxLanguage::wxLANGUAGE_UNKNOWN) {
 
-#ifdef WXDEBUG
+#ifdef DEBUG_TRANSLATE
 		wxLog::AddTraceMask(wxS("i18n"));
 #endif // WXDEBUG
 

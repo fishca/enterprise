@@ -6,7 +6,7 @@ CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
 	wxWindowID winid, IMetaObject* metaObject) :
 	wxWindow(parent, winid, wxDefaultPosition, wxDefaultSize), m_metaInterface(metaObject)
 {
-	m_interfaceCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
+	m_interfaceCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
 	m_interfaceCtrl->SetDoubleBuffered(true);
 	m_interfaceCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CInterfaceEditor::OnCheckItem, this);
 

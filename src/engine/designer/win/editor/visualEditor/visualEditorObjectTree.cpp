@@ -260,7 +260,7 @@ CVisualEditorNotebook::CVisualEditor::CVisualEditorObjectTree::CVisualEditorObje
 	wxPanel(parent, id),
 	m_formHandler(handler)
 {
-	m_tcObjects = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxSIMPLE_BORDER | wxTR_TWIST_BUTTONS);
+	m_tcObjects = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_NO_LINES | wxSIMPLE_BORDER | wxTR_TWIST_BUTTONS);
 
 	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
 	sizerMain->Add(m_tcObjects, 1, wxEXPAND, 0);

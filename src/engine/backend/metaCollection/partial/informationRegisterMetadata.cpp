@@ -38,7 +38,7 @@ IMetaObjectForm* CMetaObjectInformationRegister::GetDefaultFormByID(const form_i
 }
 
 #pragma region _form_builder_h_
-IBackendValueForm* CMetaObjectInformationRegister::GetRecordForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniquePairKey& formGuid)
+IBackendValueForm* CMetaObjectInformationRegister::GetRecordForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
 	return IMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
@@ -58,19 +58,6 @@ IBackendValueForm* CMetaObjectInformationRegister::GetListForm(const wxString& s
 	);
 }
 #pragma endregion
-
-//***************************************************************************
-//*								form record								    *
-//***************************************************************************
-
-IBackendValueForm* CMetaObjectInformationRegister::GetRecordForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
-{
-	const IMetaObjectForm* defList = FindFormObjectByFilter(id);
-
-	return GetListForm(defList ? defList->GetName() : wxEmptyString,
-		ownerControl, formGuid
-	);
-}
 
 //***************************************************************************
 //*                       Save & load metaData                              *

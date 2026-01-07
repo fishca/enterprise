@@ -17,12 +17,10 @@
 
 bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
 {
-	IBackendValueForm* valueForm = GetFormByCommandType(cmdType);
-
-	if (valueForm == nullptr)
-		return false;
+	IBackendValueForm *valueForm = nullptr;
 
 	try {
+		valueForm = GetFormByCommandType(cmdType);
 		valueForm->ShowForm();
 	}
 	catch (const CBackendException* err) {

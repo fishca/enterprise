@@ -89,7 +89,7 @@ public:
 
 #pragma region _form_builder_h_
 	//support form 
-	virtual IBackendValueForm* GetRecordForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniquePairKey& formGuid = wxNullUniquePairKey);
+	virtual IBackendValueForm* GetRecordForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 	virtual IBackendValueForm* GetListForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 #pragma endregion
 
@@ -160,9 +160,6 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 protected:
-
-	//support form 
-	virtual IBackendValueForm* GetRecordForm(const meta_identifier_t& id, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid);
 
 	//get default form 
 	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {

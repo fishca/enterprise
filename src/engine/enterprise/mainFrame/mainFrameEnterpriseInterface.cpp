@@ -442,12 +442,19 @@ class CSubSystemWindow : public wxWindow {
 				for (const auto child : metaObject->GetInterfaceArrayObject()) {
 
 					std::vector<IMetaObject*> array;
-					if (child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array)) {
+
+					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array);
+
+					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, array);
+					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, array);
+					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, array);
+
+					if (array.size() > 0) {
 
 						wxBoxSizer* sizerSubsystem = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st = new wxStaticText(this, wxID_ANY, child->GetSynonym());
 
-						st->SetBackgroundColour(wxDefaultStypeBGColour);
+						st->SetBackgroundColour(*wxWHITE);
 						st->SetForegroundColour(wxDefaultStypeFGColour);
 						st->Wrap(-1);
 						st->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
@@ -459,10 +466,19 @@ class CSubSystemWindow : public wxWindow {
 						wxBoxSizer* sizerSubSystemItem = new wxBoxSizer(wxVERTICAL);
 
 						struct CSubWindowConstructor {
+
 							static void NextChildConstruct(wxBoxSizer* sizerSubSystemItem, const CMetaObjectInterface* parent, CScrolledSubWindow* wnd) {
+
 								for (const auto child : parent->GetInterfaceArrayObject()) {
+
 									std::vector<IMetaObject*> subArray;
-									if (child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, subArray)) {
+
+									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, subArray);
+									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, subArray);
+									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, subArray);
+									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, subArray);
+
+									if (subArray.size() > 0) {
 
 										for (const auto object : subArray) {
 
@@ -502,9 +518,9 @@ class CSubSystemWindow : public wxWindow {
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
 							sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
-
-							CSubWindowConstructor::NextChildConstruct(sizerSubSystemItem, child, this);
 						}
+
+						CSubWindowConstructor::NextChildConstruct(sizerSubSystemItem, child, this);
 
 						sizerSubsystemSpacer->Add(sizerSubSystemItem, 1, wxEXPAND, 5);
 						sizerSubsystem->Add(sizerSubsystemSpacer, 1, wxEXPAND, 5);

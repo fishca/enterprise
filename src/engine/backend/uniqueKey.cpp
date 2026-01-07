@@ -80,7 +80,7 @@ CUniqueKey::CUniqueKey(const CGuid& guid) : CUniqueKey(enUniqueData::enUniqueGui
 	m_keyValues = {};
 }
 
-CUniquePairKey::CUniquePairKey(IMetaObjectRegisterData* metaObject) : CUniqueKey(enUniqueData::enUniqueKey)
+CUniquePairKey::CUniquePairKey(const IMetaObjectRegisterData* metaObject) : CUniqueKey(enUniqueData::enUniqueKey)
 {
 	m_objGuid = wxNewUniqueGuid;
 	m_metaObject = metaObject;
@@ -96,7 +96,7 @@ CUniquePairKey::CUniquePairKey(IMetaObjectRegisterData* metaObject) : CUniqueKey
 	}
 }
 
-CUniquePairKey::CUniquePairKey(IMetaObjectRegisterData* metaObject, const valueArray_t& keyValues) : CUniqueKey(enUniqueData::enUniqueKey)
+CUniquePairKey::CUniquePairKey(const IMetaObjectRegisterData* metaObject, const valueArray_t& keyValues) : CUniqueKey(enUniqueData::enUniqueKey)
 {
 	m_objGuid = wxNewUniqueGuid;
 	m_metaObject = metaObject;

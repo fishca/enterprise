@@ -12,6 +12,7 @@ class BACKEND_API IMetaObjectRegisterData;
 //class keys 
 class BACKEND_API CUniqueKey {
 protected:
+
 	enum class enUniqueData {
 		enUniqueKey = 10,
 		enUniqueGuid
@@ -22,9 +23,7 @@ public:
 	bool isValid() const;
 	void reset();
 
-	CGuid GetGuid() const {
-		return m_objGuid;
-	}
+	CGuid GetGuid() const { return m_objGuid; }
 
 	CUniqueKey();
 	CUniqueKey(const CGuid& guid);
@@ -45,17 +44,9 @@ public:
 	virtual bool operator==(const CGuid& other) const;
 	virtual bool operator!=(const CGuid& other) const;
 
-	operator wxString() const {
-		return GetGuid().str();
-	}
-
-	operator CGuid() const {
-		return GetGuid();
-	}
-
-	operator guid_t() const {
-		return GetGuid();
-	}
+	operator wxString() const { return GetGuid().str(); }
+	operator CGuid() const { return GetGuid(); }
+	operator guid_t() const { return GetGuid(); }
 
 protected:
 
@@ -64,21 +55,21 @@ protected:
 protected:
 
 	CGuid m_objGuid;
-	IMetaObjectRegisterData* m_metaObject;
+	const IMetaObjectRegisterData* m_metaObject;
 	valueArray_t m_keyValues;
 };
 
 class BACKEND_API CUniquePairKey : public CUniqueKey {
 public:
 
-	CUniquePairKey(IMetaObjectRegisterData* metaObject = nullptr);
-	CUniquePairKey(IMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
+	CUniquePairKey(const IMetaObjectRegisterData* metaObject = nullptr);
+	CUniquePairKey(const IMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
 
 	bool IsOk() const {
 		return m_metaObject != nullptr && m_keyValues.size() > 0;
 	}
 
-	void SetKeyPair(IMetaObjectRegisterData* metaObject,
+	void SetKeyPair(const IMetaObjectRegisterData* metaObject,
 		valueArray_t& keys) {
 		m_metaObject = metaObject; m_keyValues = keys;
 	}
@@ -95,9 +86,7 @@ public:
 		return CValue();
 	}
 
-	operator valueArray_t() const {
-		return m_keyValues;
-	}
+	operator valueArray_t() const { return m_keyValues; }
 };
 
 #define wxNullUniqueKey CUniqueKey()

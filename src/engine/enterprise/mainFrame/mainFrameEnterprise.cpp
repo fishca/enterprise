@@ -61,9 +61,6 @@ void CDocEnterpriseMDIFrame::BackendError(const wxString& strFileName, const wxS
 
 	//close window
 	if (retCode > 2) {
-		appDataDestroy();
-		std::exit(EXIT_SUCCESS);
-
 		CApplicationData::ForceExit();
 	}
 

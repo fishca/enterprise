@@ -61,18 +61,6 @@ class BACKEND_API CSourceExplorer;
 //*                                  Factory & metaData                                      *
 //********************************************************************************************
 
-class BACKEND_API IBackendCommandItem {
-public:
-
-	virtual ~IBackendCommandItem() {}
-	virtual bool ShowFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default);
-
-protected:
-
-	//get default form 
-	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) = 0;
-};
-
 class BACKEND_API CFormTypeList {
 
 	struct CFormTypeItem {

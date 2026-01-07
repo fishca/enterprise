@@ -15,27 +15,6 @@
 //*								 metaData                               * 
 //***********************************************************************
 
-bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType) {
-
-	IBackendValueForm* valueForm = GetFormByCommandType(cmdType);
-
-	if (valueForm == nullptr)
-		return false;
-
-	try {
-		valueForm->ShowForm();
-	}
-	catch (const CBackendException* err) {
-		wxDELETE(valueForm);
-		CSystemFunction::Alert(err->what());
-		return false;
-	}
-
-	return true;
-}
-
-//***********************************************************************
-
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectGenericData, IMetaObjectCompositeData);
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRegisterData, IMetaObjectGenericData);
 

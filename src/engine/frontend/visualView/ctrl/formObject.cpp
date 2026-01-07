@@ -250,7 +250,7 @@ bool CValueForm::InitializeFormModule()
 {
 	if (m_metaFormObject != nullptr) {
 
-		if (!m_metaFormObject->AccessRight_Use()) {
+		if (!m_metaFormObject->AccessRight_Show()) {
 			CSystemFunction::Raise(_("Not enough access rights for this user!"));
 			return false;
 		}

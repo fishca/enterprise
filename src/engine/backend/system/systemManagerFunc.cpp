@@ -964,22 +964,11 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 {
 	if (!strFormName.IsEmpty()) {
 
-		const IMetaObjectForm* creator = 
-			activeMetaData->FindAnyObjectByFilter<IMetaObjectForm>(strFormName, g_metaCommonFormCLSID);
-		
-		if (creator != nullptr) {
+		const CMetaObjectCommonForm* creator =
+			activeMetaData->FindAnyObjectByFilter<CMetaObjectCommonForm>(strFormName, g_metaCommonFormCLSID);
 
-			if (!creator->AccessRight_Use()) {
-				CSystemFunction::Raise(_("Not enough access rights for this user!"));
-				return false;
-			}
-
-			return IMetaObjectForm::CreateAndBuildForm(
-				creator,
-				ownerControl,
-				nullptr, unique ? ((CGuid)*unique) : CGuid()
-			);
-		}
+		if (creator != nullptr)
+			return creator->GetObjectForm(ownerControl, unique ? ((CGuid)*unique) : CGuid());
 	}
 
 	CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
@@ -990,9 +979,9 @@ void CSystemFunction::ShowCommonForm(const wxString& strFormName, IBackendContro
 {
 	if (CBackendException::IsEvalMode())
 		return;
-	
+
 	const CValue& cValue = GetCommonForm(strFormName, ownerControl, unique);
-	
+
 	IBackendValueForm* valueForm = dynamic_cast<IBackendValueForm*>(cValue.GetRef());
 	if (valueForm != nullptr) valueForm->ShowForm();
 }

@@ -13,6 +13,8 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/metaCollection/metaInterfaceObject.h"
 
+#include "frontend/visualView/ctrl/frame.h"
+
 class CSubSystemWindow : public wxWindow {
 
 	// ----------------------------------------------------------------------------
@@ -59,6 +61,12 @@ class CSubSystemWindow : public wxWindow {
 			CSubSystemButton::Update();
 		}
 
+		void DismissPopupWindow() {
+
+			if (m_popupWindow != nullptr)
+				m_popupWindow->Dismiss();
+		}
+
 		const CMetaObjectInterface* GetMetaObject() const { return m_metaObject; }
 
 		CSubSystemButton(CSubSystemWindow* mainWindow, wxWindowID id, const CMetaObjectInterface* object)
@@ -96,6 +104,8 @@ class CSubSystemWindow : public wxWindow {
 		void OnLeftUp(wxMouseEvent& event) {
 
 			if (m_mainWindow->m_activeButton != this) {
+
+				DismissPopupWindow();
 
 				wxCommandEvent event(m_eventType, m_mainWindow->GetId());
 
@@ -414,9 +424,9 @@ class CSubSystemWindow : public wxWindow {
 
 							df->SetBitmap(object->GetIcon());
 							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
-
 							df->SetBackgroundColour(*wxWHITE);
-							df->SetForegroundColour(GetForegroundColour());
+							df->SetForegroundColour(wxDefaultStypeFGColour);
+
 							df->SetCursor(wxCURSOR_HAND);
 							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
@@ -436,8 +446,9 @@ class CSubSystemWindow : public wxWindow {
 
 						wxBoxSizer* sizerSubsystem = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st = new wxStaticText(this, wxID_ANY, child->GetSynonym());
-						
-						st->SetForegroundColour(wxColour(0, 120, 215));
+
+						st->SetBackgroundColour(wxDefaultStypeBGColour);
+						st->SetForegroundColour(wxDefaultStypeFGColour);
 						st->Wrap(-1);
 						st->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
@@ -462,7 +473,7 @@ class CSubSystemWindow : public wxWindow {
 											df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
 											df->SetBackgroundColour(*wxWHITE);
-											df->SetForegroundColour(wnd->GetForegroundColour());
+											df->SetForegroundColour(wxDefaultStypeFGColour);
 											df->SetCursor(wxCURSOR_HAND);
 											df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
 											df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, wnd);
@@ -485,7 +496,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
 							df->SetBackgroundColour(*wxWHITE);
-							df->SetForegroundColour(GetForegroundColour());
+							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
 							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
@@ -514,8 +525,9 @@ class CSubSystemWindow : public wxWindow {
 
 						wxBoxSizer* sizerCreate = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_create = new wxStaticText(this, wxID_ANY, _("Create"), wxDefaultPosition, wxDefaultSize, 0);
-						
-						st_create->SetForegroundColour(wxColour(0, 120, 215));
+
+						st_create->SetBackgroundColour(*wxWHITE);
+						st_create->SetForegroundColour(wxDefaultStypeFGColour);
 						st_create->Wrap(-1);
 						st_create->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
@@ -535,7 +547,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
 							df->SetBackgroundColour(*wxWHITE);
-							df->SetForegroundColour(GetForegroundColour());
+							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
 							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Create));
 
@@ -557,8 +569,9 @@ class CSubSystemWindow : public wxWindow {
 
 						wxBoxSizer* sizerReport = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_report = new wxStaticText(this, wxID_ANY, _("Report"), wxDefaultPosition, wxDefaultSize, 0);
-						
-						st_report->SetForegroundColour(wxColour(0, 120, 215));
+
+						st_report->SetBackgroundColour(*wxWHITE);
+						st_report->SetForegroundColour(wxDefaultStypeFGColour);
 						st_report->Wrap(-1);
 						st_report->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
@@ -578,7 +591,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
 							df->SetBackgroundColour(*wxWHITE);
-							df->SetForegroundColour(GetForegroundColour());
+							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
 							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Report));
 
@@ -600,8 +613,9 @@ class CSubSystemWindow : public wxWindow {
 
 						wxBoxSizer* sizerService = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_service = new wxStaticText(this, wxID_ANY, _("Service"), wxDefaultPosition, wxDefaultSize, 0);
-						
-						st_service->SetForegroundColour(wxColour(0, 120, 215));
+
+						st_service->SetBackgroundColour(*wxWHITE);
+						st_service->SetForegroundColour(wxDefaultStypeFGColour);
 						st_service->Wrap(-1);
 						st_service->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Arial")));
 
@@ -620,7 +634,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetFont(wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxEmptyString));
 
 							df->SetBackgroundColour(*wxWHITE);
-							df->SetForegroundColour(GetForegroundColour());
+							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
 							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Service));
 
@@ -641,12 +655,13 @@ class CSubSystemWindow : public wxWindow {
 				Layout();
 
 				SetBackgroundColour(*wxWHITE);
+				SetForegroundColour(wxDefaultStypeFGColour);
 			}
 
 		private:
 
 			EInterfaceCommandType GetCommandType(const EInterfaceCommandSection section) const {
-				
+
 				if (section == EInterfaceCommandSection::EInterfaceCommandSection_Create)
 					return EInterfaceCommandType::EInterfaceCommandType_Create;
 				else if (section == EInterfaceCommandSection::EInterfaceCommandSection_Service)
@@ -682,7 +697,7 @@ class CSubSystemWindow : public wxWindow {
 
 		// ctors
 		CPopupSubWindow() : m_currentButton(nullptr) {}
-		CPopupSubWindow(wxWindow* parent, CSubSystemButton* btn, const wxPoint& point, const wxSize& size, int style = wxBORDER_NONE)
+		CPopupSubWindow(wxWindow* parent, CSubSystemButton* btn, const wxPoint& point, const wxSize& size, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS)
 			: wxPopupTransientWindow(parent, style), m_currentButton(btn) {
 
 			wxPopupTransientWindow::SetPosition(point);
@@ -712,14 +727,17 @@ class CSubSystemWindow : public wxWindow {
 		virtual void Popup(wxWindow* focus = nullptr) override {
 			m_currentButton->SetPopupWindow(this);
 			wxPopupTransientWindow::Popup(focus);
+			wxLogDebug(wxT("wxPopupTransientWindow::Popup"));
 		}
 
 		virtual void Dismiss() override {
 			m_currentButton->SetPopupWindow(nullptr);
 			wxPopupTransientWindow::Dismiss();
+			wxLogDebug(wxT("wxPopupTransientWindow::Dismiss"));
 		}
 
 	private:
+
 		wxWindow* m_staticLine;
 		CSubSystemButton* m_currentButton;
 		wxScrolledWindow* m_mainWindow;
@@ -791,7 +809,7 @@ private:
 
 	CSubSystemButton* m_activeButton;
 
-	static const int ms_text_height = 30;
+	static const int ms_text_height = 35;
 	static const int ms_text_width = 200;
 
 	std::vector<CSubSystemButton*> m_arrayPageButton;

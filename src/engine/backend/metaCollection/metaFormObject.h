@@ -7,6 +7,26 @@
 #define defaultFormType wxNOT_FOUND
 #define formDefaultName _("Form")
 
+// -----------------------------------------------------------------------
+// IBackendCommandItem
+// -----------------------------------------------------------------------
+
+class BACKEND_API IBackendCommandItem {
+public:
+
+	virtual ~IBackendCommandItem() {}
+	virtual bool ShowFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default);
+
+protected:
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) = 0;
+};
+
+// -----------------------------------------------------------------------
+// IMetaObjectForm
+// -----------------------------------------------------------------------
+
 class BACKEND_API ISourceDataObject;
 
 class BACKEND_API IMetaObjectForm : public IMetaObjectModule {
@@ -20,8 +40,8 @@ private:
 
 public:
 
-#pragma region access
-	virtual bool AccessRight_Use() const { return true; }
+#pragma region access_generic
+	virtual bool AccessRight_Show() const { return true; }
 #pragma endregion
 
 	IMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
@@ -67,6 +87,10 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader) = 0;
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) = 0;
 };
+
+// -----------------------------------------------------------------------
+// CMetaObjectForm
+// -----------------------------------------------------------------------
 
 class BACKEND_API CMetaObjectForm : public IMetaObjectForm {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectForm);
@@ -135,12 +159,21 @@ private:
 	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::FillFormType);
 };
 
-class BACKEND_API CMetaObjectCommonForm : public IMetaObjectForm {
+// -----------------------------------------------------------------------
+// CMetaObjectCommonForm
+// -----------------------------------------------------------------------
+
+class BACKEND_API CMetaObjectCommonForm :
+	public IMetaObjectForm, public IBackendCommandItem {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonForm);
 public:
 
+#pragma region access_generic
+	virtual bool AccessRight_Show() const { return AccessRight_Use(); }
+#pragma endregion
+
 #pragma region access
-	virtual bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
+	bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
 	CMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
@@ -175,10 +208,24 @@ public:
 	*/
 	virtual form_identifier_t GetTypeForm() const { return defaultFormType; }
 
+#pragma region _form_builder_h_
+	//support form 
+	IBackendValueForm* GetObjectForm(IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) const;
+#pragma endregion 
+
 protected:
 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+
+	//get default form 
+	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+
+		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Default)
+			return GetObjectForm();
+
+		return GetObjectForm();
+	}
 
 private:
 

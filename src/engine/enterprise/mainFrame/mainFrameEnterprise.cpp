@@ -24,7 +24,7 @@ CDocEnterpriseMDIFrame* CDocEnterpriseMDIFrame::GetFrame() {
 CDocEnterpriseMDIFrame::CDocEnterpriseMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) :
-	CDocMDIFrame(title, pos, size), m_startMainModule(false)
+	CDocMDIFrame(title, pos, size)
 {
 	m_docManager = new CEnterpriseDocManager;
 }
@@ -91,20 +91,18 @@ bool CDocEnterpriseMDIFrame::Show(bool show)
 
 bool CDocEnterpriseMDIFrame::AllowRun() const
 {
-	if (!m_startMainModule) {
-		m_startMainModule = true;
-		return activeMetaData->StartMainModule();
-	}
+	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
+		return true;
+
 	return false;
 }
 
 bool CDocEnterpriseMDIFrame::AllowClose() const
 {
-	if (m_startMainModule) {
-		m_startMainModule = false;
-		return activeMetaData->ExitMainModule();
-	}
-	return false; 
+	if (activeMetaData != nullptr && activeMetaData->ExitMainModule())
+		return true;
+
+	return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////

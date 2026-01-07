@@ -241,14 +241,18 @@ void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
 
 bool CDocDesignerMDIFrame::AllowRun() const
 {
-	return activeMetaData != nullptr ? 
-		activeMetaData->StartMainModule() : false;
+	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
+		return true;
+
+	return false;
 }
 
 bool CDocDesignerMDIFrame::AllowClose() const
 {
-	if (activeMetaData != nullptr) {	
+	if (activeMetaData != nullptr) {
+
 		bool allowClose = true;	
+		
 		if (IsModified()) {
 			const int answer = wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
 			if (answer == wxYES) {
@@ -261,6 +265,7 @@ bool CDocDesignerMDIFrame::AllowClose() const
 				allowClose = true;
 			}
 		}	
+		
 		return allowClose && activeMetaData->ExitMainModule();
 	}
 

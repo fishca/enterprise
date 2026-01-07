@@ -9,9 +9,34 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
 
-//***********************************************************************
-//*                             IMetaObjectForm metaData                *
-//***********************************************************************
+// -----------------------------------------------------------------------
+// IBackendCommandItem
+// -----------------------------------------------------------------------
+
+#include "backend/system/systemManager.h"
+
+bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
+{
+	IBackendValueForm* valueForm = GetFormByCommandType(cmdType);
+
+	if (valueForm == nullptr)
+		return false;
+
+	try {
+		valueForm->ShowForm();
+	}
+	catch (const CBackendException* err) {
+		wxDELETE(valueForm);
+		CSystemFunction::Alert(err->what());
+		return false;
+	}
+
+	return true;
+}
+
+// -----------------------------------------------------------------------
+// IMetaObjectForm
+// -----------------------------------------------------------------------
 
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectForm, CMetaObjectModule);
 
@@ -285,6 +310,23 @@ bool CMetaObjectCommonForm::LoadData(CMemoryReader& reader)
 bool CMetaObjectCommonForm::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyForm->SaveData(writer);
+}
+
+#include "backend/system/systemManager.h"
+
+IBackendValueForm* CMetaObjectCommonForm::GetObjectForm(IBackendControlFrame* ownerControl, const CUniqueKey& formGuid) const
+{
+	if (!AccessRight_Use()) {
+		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		return false;
+	}
+
+	return IMetaObjectForm::CreateAndBuildForm(
+		this,
+		ownerControl,
+		nullptr,
+		formGuid
+	);
 }
 
 //***********************************************************************

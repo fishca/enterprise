@@ -30,26 +30,15 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 	}
 }
 
-#include <wx/display.h>
-
 bool CDocMDIFrame::ShowFrame()
 {
 	if (s_instance != nullptr && !s_instance->IsShown() && !CApplicationData::IsForceExit()) {
 
 		s_instance->CreateGUI();
 
-		// Get the primary display
-		wxDisplay display;
-
-		// Get the PPI (pixels per inch)
-		const wxRect clientArea = display.GetClientArea();
-
-		s_instance->SetSize(
-			clientArea.GetWidth() - 100,
-			clientArea.GetHeight() - 100
-		);
-
+		s_instance->SetSize(800, 600);
 		s_instance->SetFocus();
+		
 		s_instance->Center();
 
 		if (s_instance->Show()) {

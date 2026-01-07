@@ -317,7 +317,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		case enUserName: pvarRetValue = UserName(); return true;
 		case enUserPassword: pvarRetValue = UserPassword(); return true;
 		case enExclusiveMode: pvarRetValue = ExclusiveMode(); return true;
-		case enGeneralLanguage: pvarRetValue = GeneralLanguage();
+		case enGeneralLanguage: pvarRetValue = GeneralLanguage(); return true;
 		case enEndJob: EndJob(paParams[0]->GetInteger()); return true;
 		case enUserInterruptProcessing: UserInterruptProcessing(); return true;
 		case enAccessRight:

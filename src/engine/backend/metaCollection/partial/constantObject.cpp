@@ -157,10 +157,13 @@ void CRecordDataObjectConstant::ShowFormValue()
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* const valueForm = GetFormValue();
+	IBackendValueForm* const valueForm = 
+		GetFormValue();
 
-	valueForm->Modify(false);
-	valueForm->ShowForm();
+	if (valueForm != nullptr) {
+		valueForm->Modify(false);
+		valueForm->ShowForm();
+	}
 }
 
 IBackendValueForm* CRecordDataObjectConstant::GetFormValue()

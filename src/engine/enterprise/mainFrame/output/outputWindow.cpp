@@ -32,7 +32,7 @@ wxEND_EVENT_TABLE()
 #define DEF_LINENUMBER_ID 0
 #define DEF_IMAGE_ID 1
 
-COutputWindow::COutputWindow(wxWindow* parent, wxWindowID winid)
+COutputWindow::COutputWindow(class CDocMDIFrame* parent, wxWindowID winid)
 	: wxStyledTextCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	// initialize styles
@@ -56,7 +56,8 @@ COutputWindow::COutputWindow(wxWindow* parent, wxWindowID winid)
 	wxAcceleratorTable accel(2, entries);
 	SetAcceleratorTable(accel);
 
-	SetFontColorSettings(mainFrame->GetFontColorSettings());
+	if (parent != nullptr)
+		SetFontColorSettings(parent->GetFontColorSettings());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,7 +66,7 @@ COutputWindow* COutputWindow::GetOutputWindow()
 {
 	if (CDocEnterpriseMDIFrame::GetFrame())
 		return mainFrame->GetOutputWindow();
-	return nullptr; 
+	return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ void COutputWindow::SharedOutput(const wxString& message, eStatusMessage status,
 		ShowPosition(GetLastPosition());
 		ScrollLines(-1);
 	}
-	
+
 	if (mainFrame->IsShown()) {
 		wxStyledTextCtrl::SetFocus();
 	}

@@ -1350,50 +1350,49 @@ void CTranslateCode::OnSetParent(CTranslateCode* setParent)
 
 size_t CTranslateCode::CalcAllocSize() const {
 
-#ifdef UTF8_LEXEM_TRANSLATE
-	unsigned int store_line = m_currentLine,
-		store_pos = m_currentPos, store_pos_utf8 = m_currentUtf8Pos;
-	m_currentPos = m_currentLine = m_currentUtf8Pos = 0;
-#else 
-	unsigned int store_line = m_currentLine,
-		store_pos = m_currentPos;
-	m_currentPos = m_currentLine = 0;
-#endif
+	CTranslateCode translate;
+
+	translate.Clear();
+
+	translate.m_strBuffer.assign(m_strBuffer);
+	translate.m_strBUFFER.assign(m_strBUFFER);
+
+	translate.m_bufferSize = m_bufferSize;
 
 	size_t alloc_size = 1;
 
-	while (!IsEnd()) {
-		if (IsWord()) {
+	while (!translate.IsEnd()) {
+		if (translate.IsWord()) {
 			try {
-				(void)GetWord();
+				(void)translate.GetWord();
 				alloc_size++;
 			}
 			catch (...)
 			{
 			}
 		}
-		else if (IsNumber() || IsString() || IsDate()) {
-			if (IsNumber()) {
+		else if (translate.IsNumber() || translate.IsString() || translate.IsDate()) {
+			if (translate.IsNumber()) {
 				try {
-					(void)GetNumber();
+					(void)translate.GetNumber();
 					alloc_size++;
 				}
 				catch (...)
 				{
 				}
 			}
-			else if (IsString()) {
+			else if (translate.IsString()) {
 				try {
-					(void)GetString();
+					(void)translate.GetString();
 					alloc_size++;
 				}
 				catch (...)
 				{
 				}
 			}
-			else if (IsDate()) {
+			else if (translate.IsDate()) {
 				try {
-					(void)GetDate();
+					(void)translate.GetDate();
 					alloc_size++;
 				}
 				catch (...)
@@ -1403,7 +1402,7 @@ size_t CTranslateCode::CalcAllocSize() const {
 		}
 		else {
 			try {
-				(void)GetByte();
+				(void)translate.GetByte();
 				alloc_size++;
 			}
 			catch (...)
@@ -1412,11 +1411,6 @@ size_t CTranslateCode::CalcAllocSize() const {
 		}
 	}
 
-#ifdef UTF8_LEXEM_TRANSLATE
-	m_currentLine = store_line; m_currentPos = store_pos; m_currentUtf8Pos = store_pos_utf8;
-#else
-	m_currentLine = store_line; m_currentPos = store_pos;
-#endif
 	return alloc_size;
 }
 

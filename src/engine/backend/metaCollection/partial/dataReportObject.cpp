@@ -28,11 +28,13 @@ void CRecordDataObjectReport::ShowFormValue(const wxString& strFormName, IBacken
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm =
+	IBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
-	valueForm->Modify(false);
-	valueForm->ShowForm();
+	if (valueForm != nullptr) {
+		valueForm->Modify(false);
+		valueForm->ShowForm();
+	}
 }
 
 IBackendValueForm* CRecordDataObjectReport::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)

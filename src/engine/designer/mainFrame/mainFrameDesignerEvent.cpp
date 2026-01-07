@@ -143,7 +143,7 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 	}
 
 	success = success && activeMetaData->RoolbackDatabase()
-		&& m_metadataTree->Load();
+		&& m_metaWindow->Load();
 
 	client_window->Thaw();
 
@@ -226,7 +226,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 
 		// proceed loading the file chosen by the user;
 		if (activeMetaData->LoadFromFile(openFileDialog.GetPath())) {
-			if (m_metadataTree->Load()) {
+			if (m_metaWindow->Load()) {
 				if (activeMetaData->IsModified()) {
 					if (wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
 						OnUpdateConfiguration(event);

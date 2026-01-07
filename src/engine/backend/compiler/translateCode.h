@@ -222,7 +222,7 @@ class BACKEND_API CTranslateCode {
 		void SetDefine(const wxString& strName, const wxString& strValue);
 
 	private:
-		
+
 		std::map<wxString, CLexemList*> m_defineList;//contains arrays of lexemes	
 		CDefineCollection* m_parentDefine;
 	};
@@ -250,7 +250,7 @@ public:
 	void RemoveModule(CTranslateCode* module);
 
 	virtual void OnSetParent(CTranslateCode* setParent);
-	
+
 	virtual void Clear();
 	void ClearLexem() { m_listLexem.resize(0); } // resetting and free data to reuse an object
 

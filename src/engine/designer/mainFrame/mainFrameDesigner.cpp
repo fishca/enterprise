@@ -32,8 +32,13 @@ CDocDesignerMDIFrame* CDocDesignerMDIFrame::GetFrame() {
 CDocDesignerMDIFrame::CDocDesignerMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) : CDocMDIFrame(title, pos, size),
-	m_metadataTree(nullptr),
-	m_outputWindow(nullptr), m_stackWindow(nullptr), m_watchWindow(nullptr)
+
+	m_metaWindow(nullptr),
+
+	m_outputWindow(new COutputWindow(this, wxID_ANY)),
+	m_localWindow(new CLocalWindow(this, wxID_ANY)),
+	m_stackWindow(new CStackWindow(this, wxID_ANY)),
+	m_watchWindow(new CWatchWindow(this, wxID_ANY))
 {
 	m_docManager = new CDesignerDocManager;
 }
@@ -209,7 +214,7 @@ void CDocDesignerMDIFrame::Debugger_OnLeaveLoop()
 
 bool CDocDesignerMDIFrame::Show(bool show)
 {
-	if (show && !m_metadataTree->Load())
+	if (show && !m_metaWindow->Load())
 		return false;
 
 	bool ret = CDocMDIFrame::Show(show);
@@ -251,8 +256,8 @@ bool CDocDesignerMDIFrame::AllowClose() const
 {
 	if (activeMetaData != nullptr) {
 
-		bool allowClose = true;	
-		
+		bool allowClose = true;
+
 		if (IsModified()) {
 			const int answer = wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
 			if (answer == wxYES) {
@@ -264,8 +269,8 @@ bool CDocDesignerMDIFrame::AllowClose() const
 			else {
 				allowClose = true;
 			}
-		}	
-		
+		}
+
 		return allowClose && activeMetaData->ExitMainModule();
 	}
 

@@ -165,10 +165,13 @@ void CRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strF
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm = GetFormValue(strFormName, ownerControl);
+	IBackendValueForm* const valueForm = 
+		GetFormValue(strFormName, ownerControl);
 
-	valueForm->Modify(m_recordSet->IsModified());
-	valueForm->ShowForm();
+	if (valueForm != nullptr) {
+		valueForm->Modify(m_recordSet->IsModified());
+		valueForm->ShowForm();
+	}
 }
 
 IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
@@ -185,7 +188,9 @@ IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const w
 			m_objGuid
 		);
 
-		createdForm->CloseOnOwnerClose(false);
+		if (createdForm != nullptr)
+			createdForm->CloseOnOwnerClose(false);
+
 		return createdForm;
 	}
 

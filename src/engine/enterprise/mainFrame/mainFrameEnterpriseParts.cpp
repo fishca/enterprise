@@ -95,9 +95,7 @@ void CDocEnterpriseMDIFrame::CreateBottomPane()
 	auiNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	auiNotebook->Freeze();
 
-	m_outputWindow = auiNotebook->AddPage(
-		new COutputWindow(this, wxID_ANY), _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16))
-	);
+	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
 
 	auiNotebook->SetNullSelection();
 	auiNotebook->Thaw();

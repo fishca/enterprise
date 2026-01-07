@@ -5,6 +5,7 @@
 #include <wx/stc/stc.h>
 
 #include "backend/system/systemEnum.h"
+#include "frontend/frontend.h"
 
 //
 // Forward declarations.
@@ -19,7 +20,7 @@ class COutputWindow : public wxStyledTextCtrl {
 	/**
 	* Constructor.
 	*/
-	COutputWindow(wxWindow* parent, wxWindowID winid);
+	COutputWindow(class FRONTEND_API CDocMDIFrame* parent, wxWindowID winid);
 
 public:
 

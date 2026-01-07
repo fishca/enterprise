@@ -141,7 +141,7 @@ private:
 	wxMenu* m_menuAdministration;
 	wxMenu* m_menuHelp;
 
-	CMetadataTree* m_metadataTree;
+	CMetadataTree* m_metaWindow;
 
 	COutputWindow* m_outputWindow;
 	CStackWindow* m_stackWindow;

@@ -32,7 +32,7 @@ wxEND_EVENT_TABLE()
 
 #include "mainFrame/mainFrameDesigner.h"
 
-COutputWindow::COutputWindow(wxWindow* parent, wxWindowID winid)
+COutputWindow::COutputWindow(CDocMDIFrame* parent, wxWindowID winid)
 	: wxStyledTextCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	// initialize styles
@@ -56,7 +56,8 @@ COutputWindow::COutputWindow(wxWindow* parent, wxWindowID winid)
 	wxAcceleratorTable accel(2, entries);
 	SetAcceleratorTable(accel);
 
-	SetFontColorSettings(mainFrame->GetFontColorSettings());
+	if (parent != nullptr) 
+		SetFontColorSettings(parent->GetFontColorSettings());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -101,33 +102,33 @@ void COutputWindow::SetFontColorSettings(const FontColorSettings& settings)
 	SetEditable(false);
 }
 
-void COutputWindow::OutputMessage(const wxString& message,
+void COutputWindow::OutputMessage(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Information,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Information,
 		strFileName, strDocPath, currLine);
 }
 
-void COutputWindow::OutputWarning(const wxString& message,
+void COutputWindow::OutputWarning(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Warning,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Warning,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void COutputWindow::OutputError(const wxString& message,
+void COutputWindow::OutputError(const wxString& strMessage,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Error,
+	SharedOutput(strMessage, eStatusMessage::eStatusMessage_Error,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void COutputWindow::SharedOutput(const wxString& message, eStatusMessage status,
+void COutputWindow::SharedOutput(const wxString& strMessage, eStatusMessage status,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
@@ -149,7 +150,7 @@ void COutputWindow::SharedOutput(const wxString& message, eStatusMessage status,
 	}
 
 	SetEditable(true);
-	AppendText(message + '\n');
+	AppendText(strMessage + '\n');
 	SetEditable(false);
 
 	MarkerAdd(

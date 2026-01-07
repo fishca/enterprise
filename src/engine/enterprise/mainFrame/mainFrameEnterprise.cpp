@@ -24,7 +24,8 @@ CDocEnterpriseMDIFrame* CDocEnterpriseMDIFrame::GetFrame() {
 CDocEnterpriseMDIFrame::CDocEnterpriseMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size) :
-	CDocMDIFrame(title, pos, size)
+	CDocMDIFrame(title, pos, size),
+	m_outputWindow(new COutputWindow(this, wxID_ANY))
 {
 	m_docManager = new CEnterpriseDocManager;
 }
@@ -42,7 +43,7 @@ CDocEnterpriseMDIFrame::~CDocEnterpriseMDIFrame()
 void CDocEnterpriseMDIFrame::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
 	//open error dialog
-	CDialogError *errDlg = new CDialogError(mainFrame, wxID_ANY);
+	CDialogError* errDlg = new CDialogError(mainFrame, wxID_ANY);
 	errDlg->SetErrorMessage(strErrorMessage);
 	int retCode = errDlg->ShowModal();
 
@@ -55,7 +56,7 @@ void CDocEnterpriseMDIFrame::BackendError(const wxString& strFileName, const wxS
 			strErrorMessage
 		);
 	}
-	
+
 	errDlg->Destroy();
 
 	//close window

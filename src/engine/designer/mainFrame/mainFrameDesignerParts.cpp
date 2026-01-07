@@ -22,7 +22,7 @@ void CDocDesignerMDIFrame::CreateWideGui()
 	m_mainFrameToolbar->AddTool(wxID_REDO, _("Redo"), wxArtProvider::GetBitmap(wxART_REDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Redo"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddTool(wxID_UNDO, _("Undo"), wxArtProvider::GetBitmap(wxART_UNDO, wxART_FRAME_ICON, wxSize(16, 16)), _("Undo"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->AddSeparator();
-	
+
 	m_mainFrameToolbar->AddTool(wxID_DESIGNER_CONFIGURATION_UPDATE_DATABASE, _("Update database"), wxArtProvider::GetBitmap(wxART_DATABASE_APPLY, wxART_FRONTEND, wxSize(16, 16)), _("Update database"), wxItemKind::wxITEM_NORMAL);
 	m_mainFrameToolbar->Realize();
 
@@ -92,20 +92,12 @@ void CDocDesignerMDIFrame::CreateBottomPane()
 
 	auiNotebook->SetArtProvider(new wxAuiLunaTabArt());
 	auiNotebook->Freeze();
-	
-	m_outputWindow = auiNotebook->AddPage(
-		new COutputWindow(this, wxID_ANY), _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16))
-	);	
-	m_localWindow = auiNotebook->AddPage(
-		new CLocalWindow(this, wxID_ANY), _("Local variable"), false, wxArtProvider::GetBitmap(wxART_LOCAL_VARIABLE, wxART_SERVICE, wxSize(16, 16))
-	);
-	m_stackWindow = auiNotebook->AddPage(
-		new CStackWindow(this, wxID_ANY), _("Call stack"), false, wxArtProvider::GetBitmap(wxART_STACK, wxART_SERVICE, wxSize(16, 16))
-	);	
-	m_watchWindow = auiNotebook->AddPage(
-		new CWatchWindow(this, wxID_ANY), _("Watch"), false, wxArtProvider::GetBitmap(wxART_WATCH, wxART_SERVICE, wxSize(16, 16))
-	);
-	
+
+	auiNotebook->AddPage(m_outputWindow, _("Messages"), false, wxArtProvider::GetBitmap(wxART_MESSAGE, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_localWindow, _("Local variable"), false, wxArtProvider::GetBitmap(wxART_LOCAL_VARIABLE, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_stackWindow, _("Call stack"), false, wxArtProvider::GetBitmap(wxART_STACK, wxART_SERVICE, wxSize(16, 16)));
+	auiNotebook->AddPage(m_watchWindow, _("Watch"), false, wxArtProvider::GetBitmap(wxART_WATCH, wxART_SERVICE, wxSize(16, 16)));
+
 	auiNotebook->Refresh();
 	auiNotebook->SetNullSelection();
 	auiNotebook->Thaw();
@@ -118,7 +110,7 @@ void CDocDesignerMDIFrame::CreateMetadataPane()
 	if (m_mgr.GetPane(wxAUI_PANE_METADATA).IsOk())
 		return;
 
-	m_metadataTree = new CMetadataTree(this, wxID_ANY);
+	m_metaWindow = new CMetadataTree(this, wxID_ANY);
 
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxAUI_PANE_METADATA);
@@ -128,12 +120,12 @@ void CDocDesignerMDIFrame::CreateMetadataPane()
 	paneInfo.Caption(_("Configuration"));
 	paneInfo.MinSize(250, 0);
 
-	m_mgr.AddPane(m_metadataTree, paneInfo);
+	m_mgr.AddPane(m_metaWindow, paneInfo);
 }
 
 void CDocDesignerMDIFrame::UpdateEditorOptions()
 {
-	for (auto &doc : m_docManager->GetDocumentsVector())
+	for (auto& doc : m_docManager->GetDocumentsVector())
 		doc->UpdateAllViews();
 
 	m_outputWindow->SetFontColorSettings(GetFontColorSettings());

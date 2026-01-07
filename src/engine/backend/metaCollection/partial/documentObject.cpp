@@ -184,10 +184,13 @@ void CRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, IBack
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* valueForm = GetFormValue(strFormName, ownerControl);
+	IBackendValueForm* const valueForm = 
+		GetFormValue(strFormName, ownerControl);
 
-	valueForm->Modify(m_objModified);
-	valueForm->ShowForm();
+	if (valueForm != nullptr) {
+		valueForm->Modify(m_objModified);
+		valueForm->ShowForm();
+	}
 }
 
 IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
@@ -204,7 +207,9 @@ IBackendValueForm* CRecordDataObjectDocument::GetFormValue(const wxString& strFo
 			m_objGuid
 		);
 
-		createdForm->CloseOnOwnerClose(false);
+		if (createdForm != nullptr)
+			createdForm->CloseOnOwnerClose(false);
+
 		return createdForm;
 	}
 

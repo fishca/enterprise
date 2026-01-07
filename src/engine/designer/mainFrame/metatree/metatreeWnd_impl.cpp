@@ -165,7 +165,7 @@ void IMetaDataTree::EditModule(const CGuid& moduleName, int lineNumber, bool set
 	if (metaData == nullptr)
 		return;
 
-	IMetaObject* metaObject = metaData->FindAnyObjectByFilter(moduleName);
+	IMetaObject* metaObject = metaData->FindAnyObjectByFilter(moduleName, true);
 
 	if (metaObject == nullptr || metaObject->IsDeleted())
 		return;

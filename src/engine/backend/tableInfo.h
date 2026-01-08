@@ -418,7 +418,7 @@ public:
 		}
 
 		//operator '=='
-		virtual inline bool CompareValueEQ(const CValue& cParam) const override {
+		virtual bool CompareValueEQ(const CValue& cParam) const override {
 			IValueModelReturnLine* tableReturnLine = nullptr;
 			if (cParam.ConvertToValue(tableReturnLine)) {
 				if (GetOwnerModel() == tableReturnLine->GetOwnerModel()
@@ -430,7 +430,7 @@ public:
 		}
 
 		//operator '!='
-		virtual inline bool CompareValueNE(const CValue& cParam) const override {
+		virtual bool CompareValueNE(const CValue& cParam) const override {
 			IValueModelReturnLine* tableReturnLine = nullptr;
 			if (cParam.ConvertToValue(tableReturnLine)) {
 				if (GetOwnerModel() != tableReturnLine->GetOwnerModel()

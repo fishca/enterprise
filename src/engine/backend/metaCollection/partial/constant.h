@@ -197,9 +197,6 @@ public:
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
-	//operator 
-	virtual operator CValue() const { return this; }
-
 protected:
 
 	CMethodHelper* m_methodHelper;

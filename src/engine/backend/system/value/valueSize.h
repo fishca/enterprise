@@ -20,7 +20,7 @@ public:
 		return typeConv::SizeToString(m_size);
 	}
 
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return m_size == wxDefaultSize;
 	}
 

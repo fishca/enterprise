@@ -995,7 +995,7 @@ public:
 	virtual bool SaveModify() { return true; }
 
 	//standart override 
-	virtual inline bool IsEmpty() const = 0;
+	virtual bool IsEmpty() const = 0;
 
 	//standart override 
 	virtual bool IsModified() const { return false; }
@@ -1017,9 +1017,6 @@ public:
 	//counter
 	virtual void SourceIncrRef() = 0;
 	virtual void SourceDecrRef() = 0;
-
-	//operator 
-	virtual operator CValue() const = 0;
 };
 
 //********************************************************************************************
@@ -1111,7 +1108,7 @@ public:
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return CValue::IsEmpty(); }
+	virtual bool IsEmpty() const { return CValue::IsEmpty(); }
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
@@ -1173,9 +1170,6 @@ public:
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
-	//operator 
-	virtual operator CValue() const { return this; }
-
 	//Working with iterators
 	virtual bool HasIterator() const { return true; }
 	virtual CValue GetIteratorAt(unsigned int lPropNum) { CValue retValue; GetPropVal(lPropNum, retValue); return retValue; }
@@ -1207,7 +1201,7 @@ public:
 	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	//copy new object
 	virtual IRecordDataObjectExt* CopyObjectValue();
@@ -1248,7 +1242,7 @@ public:
 	virtual wxString GetString() const;
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return !m_objGuid.isValid();
 	}
 
@@ -1398,7 +1392,7 @@ public:
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
 	//check is empty
-	virtual inline bool IsEmpty() const;
+	virtual bool IsEmpty() const;
 
 	//Get unique key 
 	CUniquePairKey GetUniqueKey() { return CUniquePairKey(m_metaObject, m_keyValues); }
@@ -1538,7 +1532,7 @@ public:
 			CRecordSetObjectRegisterKeyDescriptionValue(IRecordSetObject* recordSet = nullptr, const meta_identifier_t& id = wxNOT_FOUND);
 			virtual ~CRecordSetObjectRegisterKeyDescriptionValue();
 
-			virtual inline bool IsEmpty() const { return false; }
+			virtual bool IsEmpty() const { return false; }
 
 			//****************************************************************************
 			//*                              Support methods                             *
@@ -1565,7 +1559,7 @@ public:
 		CRecordSetObjectRegisterKeyValue(IRecordSetObject* recordSet = nullptr);
 		virtual ~CRecordSetObjectRegisterKeyValue();
 
-		virtual inline bool IsEmpty() const { return false; }
+		virtual bool IsEmpty() const { return false; }
 
 		//****************************************************************************
 		//*                              Support methods                             *
@@ -1626,7 +1620,7 @@ public:
 	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	//check is empty object? 
-	virtual inline bool IsEmpty() const { return !m_selected; }
+	virtual bool IsEmpty() const { return !m_selected; }
 
 	//set modify 
 	virtual void Modify(bool mod) { m_objModified = mod; }
@@ -1684,9 +1678,6 @@ public:
 
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
-
-	//operator 
-	virtual operator CValue() const { return this; }
 
 	//Working with iterators
 	virtual bool HasIterator() const override { return true; }
@@ -1794,7 +1785,7 @@ public:
 	virtual bool DeleteRegister() = 0;
 
 	//check is empty
-	virtual inline bool IsEmpty() const;
+	virtual bool IsEmpty() const;
 
 	//set modify 
 	virtual void Modify(bool mod);
@@ -1839,9 +1830,6 @@ public:
 
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
-
-	//operator 
-	virtual operator CValue() const { return this; }
 
 	//Working with iterators
 	virtual bool HasIterator() const { return true; }

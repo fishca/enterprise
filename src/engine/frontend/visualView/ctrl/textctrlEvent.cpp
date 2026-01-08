@@ -105,7 +105,7 @@ void CValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
 				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
 					IMetaObject* metaObject = so->GetMetaObject();
-					if (metaObject != nullptr) {								
+					if (metaObject != nullptr) {
 						const meta_identifier_t& id = m_propertyChoiceForm->GetValueAsInteger();
 						if (id != wxNOT_FOUND) {
 							const IMetaData* metaData = GetMetaData();

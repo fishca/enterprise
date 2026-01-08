@@ -41,7 +41,7 @@ public:
 	virtual bool Init(CValue** paParams, const long lSizeArray);
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return m_listValue.empty();
 	}
 

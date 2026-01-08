@@ -46,7 +46,7 @@ public:
 	static CReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IMetaObjectRecordDataRef* metaObject, const CGuid& refGuid);
 
 	//operator '>'
-	virtual inline bool CompareValueGT(const CValue& cParam) const {
+	virtual bool CompareValueGT(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid > rhs->m_objGuid;
@@ -54,7 +54,7 @@ public:
 	}
 	
 	//operator '>='
-	virtual inline bool CompareValueGE(const CValue& cParam) const {
+	virtual bool CompareValueGE(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid >= rhs->m_objGuid;
@@ -62,7 +62,7 @@ public:
 	}
 
 	//operator '<'
-	virtual inline bool CompareValueLS(const CValue& cParam) const {
+	virtual bool CompareValueLS(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid < rhs->m_objGuid;
@@ -70,7 +70,7 @@ public:
 	}
 
 	//operator '<='
-	virtual inline bool CompareValueLE(const CValue& cParam) const {
+	virtual bool CompareValueLE(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid <= rhs->m_objGuid;
@@ -78,7 +78,7 @@ public:
 	}
 
 	//operator '=='
-	virtual inline bool CompareValueEQ(const CValue& cParam) const {
+	virtual bool CompareValueEQ(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid == rhs->m_objGuid;
@@ -86,7 +86,7 @@ public:
 	}
 
 	//operator '!='
-	virtual inline bool CompareValueNE(const CValue& cParam) const {
+	virtual bool CompareValueNE(const CValue& cParam) const {
 		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject != rhs->m_metaObject || m_objGuid != rhs->m_objGuid;
@@ -108,7 +108,7 @@ public:
 	virtual void ShowValue();
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return !m_objGuid.isValid();
 	}
 

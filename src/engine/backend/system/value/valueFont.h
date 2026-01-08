@@ -22,7 +22,7 @@ public:
 	}
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return !m_font.IsOk();
 	}
 

@@ -234,7 +234,7 @@ public:
 	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return GetRowCount() == 0; }
+	virtual bool IsEmpty() const { return GetRowCount() == 0; }
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();

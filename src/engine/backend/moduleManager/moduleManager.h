@@ -80,12 +80,12 @@ public:
 		}
 
 		//check is empty
-		virtual inline bool IsEmpty() const {
+		virtual bool IsEmpty() const {
 			return false;
 		}
 
 		//operator '=='
-		virtual inline bool CompareValueEQ(const CValue& cParam) const override
+		virtual bool CompareValueEQ(const CValue& cParam) const override
 		{
 			CModuleUnit* compareModule = dynamic_cast<CModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
@@ -96,7 +96,7 @@ public:
 		}
 
 		//operator '!='
-		virtual inline bool CompareValueNE(const CValue& cParam) const override
+		virtual bool CompareValueNE(const CValue& cParam) const override
 		{
 			CModuleUnit* compareModule = dynamic_cast<CModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
@@ -126,10 +126,10 @@ public:
 		IMetaData* GetMetaData() const { return m_metaData; }
 
 		//check is empty
-		virtual inline bool IsEmpty() const { return false; }
+		virtual bool IsEmpty() const { return false; }
 
 		//operator '=='
-		virtual inline bool CompareValueEQ(const CValue& cParam) const override
+		virtual bool CompareValueEQ(const CValue& cParam) const override
 		{
 			CMetadataUnit* compareMetadata = dynamic_cast<CMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
@@ -140,7 +140,7 @@ public:
 		}
 
 		//operator '!='
-		virtual inline bool CompareValueNE(const CValue& cParam) const override {
+		virtual bool CompareValueNE(const CValue& cParam) const override {
 			CMetadataUnit* compareMetadata = dynamic_cast<CMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
 				return m_metaData != compareMetadata->GetMetaData();
@@ -212,7 +212,7 @@ public:
 	virtual long FindProp(const wxString& strName) const;
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	//compile modules:
 	bool AddCompileModule(const IMetaObject* moduleObject, CValue* object);

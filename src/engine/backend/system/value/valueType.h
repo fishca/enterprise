@@ -17,7 +17,7 @@ public:
 
 	CValueType(const wxString& typeName);
 
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	virtual bool CompareValueEQ(const CValue& cParam) const {
 		const CValueType* rValue = CastValue<CValueType>(cParam);

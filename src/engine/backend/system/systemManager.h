@@ -149,7 +149,7 @@ public:
 	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
 
 	//check is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return false;
 	}
 

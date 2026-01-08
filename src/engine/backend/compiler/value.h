@@ -369,12 +369,12 @@ public:
 	const CValue& operator-(const CValue& cParam);
 
 	//Implementation of comparison operators:
-	virtual inline bool CompareValueGT(const CValue& cParam) const;
-	virtual inline bool CompareValueGE(const CValue& cParam) const;
-	virtual inline bool CompareValueLS(const CValue& cParam) const;
-	virtual inline bool CompareValueLE(const CValue& cParam) const;
-	virtual inline bool CompareValueEQ(const CValue& cParam) const;
-	virtual inline bool CompareValueNE(const CValue& cParam) const;
+	virtual bool CompareValueGT(const CValue& cParam) const;
+	virtual bool CompareValueGE(const CValue& cParam) const;
+	virtual bool CompareValueLS(const CValue& cParam) const;
+	virtual bool CompareValueLE(const CValue& cParam) const;
+	virtual bool CompareValueEQ(const CValue& cParam) const;
+	virtual bool CompareValueNE(const CValue& cParam) const;
 
 	//special converting
 	template <typename valueType> inline valueType* ConvertToType() const {
@@ -552,7 +552,7 @@ public:
 	virtual void SetType(eValueTypes type);
 	virtual eValueTypes GetType() const;
 
-	virtual inline bool IsEmpty() const;
+	virtual bool IsEmpty() const;
 
 	virtual wxString GetClassName() const;
 	virtual class_identifier_t GetClassType() const;

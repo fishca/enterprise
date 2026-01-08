@@ -12,7 +12,7 @@ public:
 	virtual bool Next() = 0;
 
 	//is empty
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return false;
 	}
 

@@ -358,7 +358,7 @@ public:
 	virtual void ProcessCommand(unsigned int id) {}
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	virtual bool Init() final override;
 	virtual bool Init(CValue** paParams, const long lSizeArray) final override;

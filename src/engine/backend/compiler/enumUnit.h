@@ -106,7 +106,7 @@ protected:
 		}
 
 		//operator '=='
-		virtual inline bool CompareValueEQ(const CValue& cParam) const override {
+		virtual bool CompareValueEQ(const CValue& cParam) const override {
 			CEnumerationVariant<valType>* compareEnumeration = dynamic_cast<CEnumerationVariant<valType> *>(cParam.GetRef());
 			if (compareEnumeration) return m_value == compareEnumeration->m_value;
 			IEnumeration<valType>* compareEnumerationOwner = dynamic_cast<IEnumeration<valType> *>(cParam.GetRef());
@@ -115,7 +115,7 @@ protected:
 		}
 
 		//operator '!='
-		virtual inline bool CompareValueNE(const CValue& cParam) const override {
+		virtual bool CompareValueNE(const CValue& cParam) const override {
 			CEnumerationVariant<valType>* compareEnumeration = dynamic_cast<CEnumerationVariant<valType> *>(cParam.GetRef());
 			if (compareEnumeration) return m_value != compareEnumeration->m_value;
 			IEnumeration<valType>* compareEnumerationOwner = dynamic_cast<IEnumeration<valType> *>(cParam.GetRef());
@@ -127,7 +127,7 @@ protected:
 		virtual class_identifier_t GetClassType() const override { return m_clsid; }
 
 		//check is empty
-		virtual inline bool IsEmpty() const { return false; }
+		virtual bool IsEmpty() const { return false; }
 
 		//type info
 		virtual wxString GetClassName() const { return CValue::GetNameObjectFromID(m_clsid); }
@@ -303,7 +303,7 @@ public:
 	}
 
 	//operator '=='
-	virtual inline bool CompareValueEQ(const CValue& cParam) const override {
+	virtual bool CompareValueEQ(const CValue& cParam) const override {
 		if (m_value != nullptr) {
 			return m_value->CompareValueEQ(cParam);
 		}
@@ -311,7 +311,7 @@ public:
 	}
 
 	//operator '!='
-	virtual inline bool CompareValueNE(const CValue& cParam) const override {
+	virtual bool CompareValueNE(const CValue& cParam) const override {
 		if (m_value != nullptr) {
 			return m_value->CompareValueNE(cParam);
 		}
@@ -319,7 +319,7 @@ public:
 	}
 
 	//check is empty
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	//type info
 	virtual wxString GetClassName() const final {

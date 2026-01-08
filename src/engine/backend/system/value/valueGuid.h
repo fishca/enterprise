@@ -22,17 +22,17 @@ public:
 	}
 
 	//check is empty
-	virtual inline bool IsEmpty() const { 
+	virtual bool IsEmpty() const { 
 		return !m_guid.isValid(); 
 	}
 
 	//operator '=='
-	virtual inline bool CompareValueEQ(const CValue &cParam) const {
+	virtual bool CompareValueEQ(const CValue &cParam) const {
 		return m_guid == cParam.GetString(); 
 	}
 	
 	//operator '!='
-	virtual inline bool CompareValueNE(const CValue &cParam) const { 
+	virtual bool CompareValueNE(const CValue &cParam) const { 
 		return m_guid != cParam.GetString(); 
 	}
 

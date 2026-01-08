@@ -11,7 +11,7 @@ public:
 	CValueEvent();
 	CValueEvent(const wxString &eventName);
 
-	virtual inline bool IsEmpty() const { return m_eventName.IsEmpty(); }
+	virtual bool IsEmpty() const { return m_eventName.IsEmpty(); }
 
 	virtual bool Init(CValue **paParams, const long lSizeArray);
 	virtual wxString GetString() const{ return m_eventName; }

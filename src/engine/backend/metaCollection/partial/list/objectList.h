@@ -182,16 +182,13 @@ public:
 	virtual void SourceIncrRef() { CValue::IncrRef(); }
 	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const = 0;
 
 	virtual wxString GetClassName() const = 0;
 	virtual wxString GetString() const = 0;
-
-	//operator 
-	virtual operator CValue() const { return this; };
 
 protected:
 	CGuid m_objGuid;
@@ -658,16 +655,13 @@ public:
 	virtual void SourceIncrRef() { CValue::IncrRef(); }
 	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const = 0;
 
 	virtual wxString GetClassName() const = 0;
 	virtual wxString GetString() const = 0;
-
-	//operator 
-	virtual operator CValue() const { return this; }
 
 protected:
 

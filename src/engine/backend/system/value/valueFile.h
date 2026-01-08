@@ -45,7 +45,7 @@ public:
 	CValueFile();
 	virtual ~CValueFile();
 
-	virtual inline bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return false; }
 
 	virtual bool Init() { return false; }
 	virtual bool Init(CValue **paParams, const long lSizeArray);

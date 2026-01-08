@@ -12,7 +12,7 @@ public:
 	CValuePicture(const CPictureDescription& pictureDesc = CPictureDescription(0));
 	virtual bool Init(CValue** paParams, const long lSizeArray);
 
-	virtual inline bool IsEmpty() const {
+	virtual bool IsEmpty() const {
 		return m_pictureDesc.IsEmptyPicture();
 	}
 

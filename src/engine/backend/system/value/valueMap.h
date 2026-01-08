@@ -22,7 +22,7 @@ public:
 	virtual bool SetAt(const CValue& varKeyValue, const CValue& cValue);
 
 	//check is empty
-	virtual inline bool IsEmpty() const { 
+	virtual bool IsEmpty() const { 
 		return m_containerValues.empty();
 	}
 

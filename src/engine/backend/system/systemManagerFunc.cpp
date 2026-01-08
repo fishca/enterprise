@@ -131,7 +131,7 @@ CValue CSystemFunction::Sqrt(const CValue& cValue)
 	if (fNumber.Sqrt() == 0)
 		return fNumber;
 
-	CSystemFunction::Raise(_("Incorrect argument value for built-in function (Sqrt)"));
+	CBackendCoreException::Error(_("Incorrect argument value for built-in function (Sqrt)"));
 	return CValue();
 }
 
@@ -597,7 +597,7 @@ void CSystemFunction::SetError(const wxString& strError)
 	if (!wxIsMainThread())
 		return;
 
-	CBackendException::Error(strError);
+	CBackendCoreException::Error(strError);
 }
 
 void CSystemFunction::Raise(const wxString& strError)
@@ -608,7 +608,8 @@ void CSystemFunction::Raise(const wxString& strError)
 	if (!wxIsMainThread())
 		return;
 
-	CProcUnit::Raise(); CBackendException::Error(strError);
+	CProcUnit::Raise();
+	CBackendCoreException::Error(strError);
 }
 
 wxString CSystemFunction::ErrorDescription()
@@ -840,14 +841,16 @@ wxString CSystemFunction::Format(CValue& cData, const wxString& fmt)
 CValue CSystemFunction::Type(const CValue& cTypeName)
 {
 	if (cTypeName.GetType() != eValueTypes::TYPE_STRING) {
-		Raise(_("Cannot convert value"));
+		CBackendCoreException::Error(_("Cannot convert value"));
 		return CValue();
 	}
-	wxString typeName = cTypeName.GetString();
-	if (!activeMetaData->IsRegisterCtor(typeName)) {
-		Raise(wxString::Format(_("Type not found '%s'"), typeName));
+
+	const wxString& strTypeName = cTypeName.GetString();
+	if (!activeMetaData->IsRegisterCtor(strTypeName)) {
+		CBackendCoreException::Error(wxString::Format(_("Type not found '%s'"), strTypeName));
 	}
-	return CValue::CreateAndPrepareValueRef<CValueType>(typeName);
+
+	return CValue::CreateAndPrepareValueRef<CValueType>(strTypeName);
 }
 
 CValue CSystemFunction::TypeOf(const CValue& cData)
@@ -867,7 +870,7 @@ int CSystemFunction::ArgCount()//ArgCount
 
 wxString CSystemFunction::ArgValue(int n)//ArgValue
 {
-	if (n<0 || n> __argc) CBackendException::Error(_("Invalid argument index"));
+	if (n<0 || n> __argc) CBackendCoreException::Error(_("Invalid argument index"));
 	return __wargv[n];
 }
 
@@ -917,14 +920,12 @@ wxString CSystemFunction::GeneralLanguage() {
 void CSystemFunction::EndJob(bool force) //EndJob
 {
 	if (force) {
-		appDataDestroy();
-		std::exit(EXIT_SUCCESS);
+		CApplicationData::ForceExit();
 	}
 	else {
 		IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 		if (moduleManager->DestroyMainModule()) {
-			appDataDestroy();
-			std::exit(EXIT_SUCCESS);
+			CApplicationData::ForceExit();
 		}
 	}
 }
@@ -932,7 +933,7 @@ void CSystemFunction::EndJob(bool force) //EndJob
 void CSystemFunction::UserInterruptProcessing()
 {
 	if (wxGetKeyState(WXK_CONTROL) && wxGetKeyState(WXK_CANCEL))
-		throw (new CBackendInterrupt());
+		CBackendInterruptException::Error();
 }
 
 bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cData)
@@ -940,7 +941,7 @@ bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cDa
 	const IMetaObject* object = cData.ConvertToType<IMetaObject>();
 	if (object == nullptr)
 		return false;
-	
+
 	return object->AccessRight(strRoleName);
 }
 
@@ -971,7 +972,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 			return creator->GetObjectForm(ownerControl, unique ? ((CGuid)*unique) : CGuid());
 	}
 
-	CSystemFunction::Raise(_("Common form not found '") + strFormName + "'");
+	CBackendCoreException::Error(_("Common form not found '") + strFormName + "'");
 	return wxEmptyValue;
 }
 

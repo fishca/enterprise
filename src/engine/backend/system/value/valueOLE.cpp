@@ -527,7 +527,7 @@ bool CValueOLE::Init(CValue** paParams, const long lSizeArray)
 	const wxString& strOleName = paParams[0]->GetString();
 #ifdef __WXMSW__
 	if (!Create(strOleName)) {
-		CBackendException::Error(_("Failed to create an instance of '%s'"), strOleName);
+		CBackendCoreException::Error(_("Failed to create an instance of '%s'"), strOleName);
 	}
 	return true;
 #else
@@ -855,7 +855,7 @@ bool CValueOLE::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	);
 
 	if (hr != S_OK) {
-		CBackendException::Error(wxT("%s:\n%s"), ExcepInfo.bstrSource, ExcepInfo.bstrDescription);
+		CBackendCoreException::Error(wxT("%s:\n%s"), ExcepInfo.bstrSource, ExcepInfo.bstrDescription);
 		return false;
 	}
 
@@ -900,40 +900,40 @@ bool CValueOLE::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue**
 		switch (hr)
 		{
 		case DISP_E_EXCEPTION:
-			CBackendException::Error(wxT("%s:\n%s"), ExcepInfo.bstrSource, ExcepInfo.bstrDescription);
+			CBackendCoreException::Error(wxT("%s:\n%s"), ExcepInfo.bstrSource, ExcepInfo.bstrDescription);
 			return false;
 		case DISP_E_BADPARAMCOUNT:
-			CBackendException::Error(_("The number of elements provided to DISPPARAMS is different from the number of arguments accepted by the method or property."));
+			CBackendCoreException::Error(_("The number of elements provided to DISPPARAMS is different from the number of arguments accepted by the method or property."));
 			return false;
 		case DISP_E_BADVARTYPE:
-			CBackendException::Error(_("One of the arguments in rgvarg is not a valid variant type. "));
+			CBackendCoreException::Error(_("One of the arguments in rgvarg is not a valid variant type. "));
 			return false;
 		case DISP_E_MEMBERNOTFOUND:
-			CBackendException::Error(_("The requested member does not exist, or the call to Invoke tried to set the value of a read-only property."));
+			CBackendCoreException::Error(_("The requested member does not exist, or the call to Invoke tried to set the value of a read-only property."));
 			return false;
 		case DISP_E_NONAMEDARGS:
-			CBackendException::Error(_("This implementation of IDispatch does not support named arguments."));
+			CBackendCoreException::Error(_("This implementation of IDispatch does not support named arguments."));
 			return false;
 		case DISP_E_OVERFLOW:
-			CBackendException::Error(_("One of the arguments in rgvarg could not be coerced to the specified type."));
+			CBackendCoreException::Error(_("One of the arguments in rgvarg could not be coerced to the specified type."));
 			return false;
 		case DISP_E_PARAMNOTFOUND:
-			CBackendException::Error(_("One of the parameter DISPIDs does not correspond to a parameter on the method. In this case, puArgErr should be set to the first argument that contains the error."));
+			CBackendCoreException::Error(_("One of the parameter DISPIDs does not correspond to a parameter on the method. In this case, puArgErr should be set to the first argument that contains the error."));
 			return false;
 		case DISP_E_TYPEMISMATCH:
-			CBackendException::Error(_("One or more of the arguments could not be coerced. The index within rgvarg of the first parameter with the incorrect type is returned in the puArgErr parameter."));
+			CBackendCoreException::Error(_("One or more of the arguments could not be coerced. The index within rgvarg of the first parameter with the incorrect type is returned in the puArgErr parameter."));
 			return false;
 		case DISP_E_UNKNOWNINTERFACE:
-			CBackendException::Error(_("The interface identifier passed in riid is not IID_NULL.)"));
+			CBackendCoreException::Error(_("The interface identifier passed in riid is not IID_NULL.)"));
 			return false;
 		case DISP_E_UNKNOWNLCID:
-			CBackendException::Error(_("The member being invoked interprets string arguments according to the LCID, and the LCID is not recognized. If the LCID is not needed to interpret arguments, this error should not be returned."));
+			CBackendCoreException::Error(_("The member being invoked interprets string arguments according to the LCID, and the LCID is not recognized. If the LCID is not needed to interpret arguments, this error should not be returned."));
 			return false;
 		case DISP_E_PARAMNOTOPTIONAL:
-			CBackendException::Error(_("A required parameter was omitted."));
+			CBackendCoreException::Error(_("A required parameter was omitted."));
 			return false;
 		default:
-			CBackendException::Error(_("Error: get method return unknown code"));
+			CBackendCoreException::Error(_("Error: get method return unknown code"));
 			return false;
 		}
 	}

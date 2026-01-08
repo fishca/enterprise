@@ -43,12 +43,21 @@ CDocEnterpriseMDIFrame::~CDocEnterpriseMDIFrame()
 void CDocEnterpriseMDIFrame::BackendError(const wxString& strFileName, const wxString& strDocPath, const long currLine, const wxString& strErrorMessage) const
 {
 	//open error dialog
-	CDialogError* errDlg = new CDialogError(mainFrame, wxID_ANY);
+	std::shared_ptr<CDialogError> errDlg(new CDialogError(mainFrame, wxID_ANY));
+	
+	//set message 
 	errDlg->SetErrorMessage(strErrorMessage);
-	int retCode = errDlg->ShowModal();
+
+	//get error code
+	const int retCode = errDlg->ShowModal();
+
+	//send message to enterprise
+	if (retCode == 1) {
+		outputWindow->OutputError(strErrorMessage);
+	}
 
 	//send error to designer
-	if (retCode > 1) {
+	if (retCode == 2) {
 		debugServer->SendErrorToClient(
 			strFileName,
 			strDocPath,
@@ -57,14 +66,10 @@ void CDocEnterpriseMDIFrame::BackendError(const wxString& strFileName, const wxS
 		);
 	}
 
-	errDlg->Destroy();
-
 	//close window
-	if (retCode > 2) {
+	if (retCode == 3) {
 		CApplicationData::ForceExit();
 	}
-
-	outputWindow->OutputError(strErrorMessage);
 }
 
 void CDocEnterpriseMDIFrame::CreateGUI()

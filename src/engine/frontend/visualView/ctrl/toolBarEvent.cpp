@@ -53,14 +53,15 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 							GetOwnerForm()
 						);
 					}
-					catch (const CBackendException* err) {
-						CSystemFunction::Message(err->what(), eStatusMessage_Error);
+					catch (const CBackendAccessException* err) {
+						CSystemFunction::Alert(err->GetErrorDescription());
+					}
+					catch (const CBackendException*) {
 					}
 				}
 				else if (strAction.Length() > 0) {
 					CallAsEvent(strAction, parentToolControl->GetValue());
 				}
-
 			}
 
 			if (g_visualHostContext != nullptr) {

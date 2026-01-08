@@ -17,7 +17,7 @@ void CFrameCodeRunner::SyntaxCheckOnButtonClick(wxCommandEvent& event)
 		CFrameCodeRunner::AppendOutput(_("No syntax errors detected!"));
 	}
 	catch (const CBackendException* err) {
-		CFrameCodeRunner::AppendOutput(err->what());
+		CFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
 
 	event.Skip();
@@ -30,8 +30,9 @@ void CFrameCodeRunner::RunCodeOnButtonClick(wxCommandEvent& event)
 		m_procUnit->Execute(m_compileCode->m_cByteCode);
 	}
 	catch (const CBackendException* err) {
-		CFrameCodeRunner::AppendOutput(err->what());
+		CFrameCodeRunner::AppendOutput(err->GetErrorDescription());
 	}
+	
 	event.Skip();
 }
 

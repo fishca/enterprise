@@ -98,7 +98,7 @@ bool IListDataObject::CDataObjectListColumnCollection::GetAt(const CValue& varKe
 	unsigned int index = varKeyValue.GetUInteger();
 
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendException::Error("Index goes beyond array");
+		CBackendCoreException::Error("Index goes beyond array");
 		return false;
 	}
 
@@ -141,7 +141,7 @@ bool ITreeDataObject::CDataObjectTreeColumnCollection::GetAt(const CValue& varKe
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendException::Error("Index goes beyond array");
+		CBackendCoreException::Error("Index goes beyond array");
 		return false;
 	}
 	auto it = m_listColumnInfo.begin();
@@ -338,9 +338,9 @@ void CListDataObjectEnumRef::ChooseValue(IBackendValueForm* srcForm)
 	if (node == nullptr)
 		return;
 	wxASSERT(srcForm);
-	CReferenceDataObject* refData = m_metaObject->FindObjectValue(node->GetGuid());
-	if (refData != nullptr) {
-		srcForm->NotifyChoice(refData->GetValue());
+	CReferenceDataObject* dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
+	if (dataValueRef != nullptr) {
+		srcForm->NotifyChoice(dataValueRef->GetValue());
 	}
 }
 
@@ -439,8 +439,14 @@ void CListDataObjectRef::AddValue(unsigned int before)
 	IMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		CValuePtr<IRecordDataObjectRef> dataValueRef(metaObject->CreateObjectValue());
-		if (dataValueRef != nullptr) dataValueRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		try {
+			CValuePtr<IRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue());
+			if (dataValueObject != nullptr)
+				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+		catch (...)
+		{
+		}
 	}
 }
 
@@ -453,8 +459,13 @@ void CListDataObjectRef::CopyValue()
 		if (node == nullptr)
 			return;
 
-		CValuePtr<IRecordDataObjectRef> dataValueRef(metaObject->CopyObjectValue(node->GetGuid()));
-		if (dataValueRef != nullptr) dataValueRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		try {
+			CValuePtr<IRecordDataObjectRef> dataValueObject(metaObject->CopyObjectValue(node->GetGuid()));
+			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+		catch (...)
+		{
+		}
 	}
 }
 
@@ -467,8 +478,13 @@ void CListDataObjectRef::EditValue()
 		if (node == nullptr)
 			return;
 
-		IRecordDataObjectRef* dataValueRef(metaObject->CreateObjectValue(node->GetGuid()));
-		if (dataValueRef != nullptr) dataValueRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		try {
+			IRecordDataObjectRef* dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
+			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+		catch (...)
+		{
+		}
 	}
 }
 
@@ -481,13 +497,16 @@ void CListDataObjectRef::DeleteValue()
 		if (node == nullptr)
 			return;
 
-		CValuePtr<IRecordDataObjectRef> dataValueRef(metaObject->CreateObjectValue(node->GetGuid()));
-		if (dataValueRef != nullptr) {
-
-			dataValueRef->DeleteObject();
-
-			IBackendValueForm* listBackendForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
-			if (listBackendForm != nullptr) listBackendForm->UpdateForm();
+		try {
+			CValuePtr<IRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
+			if (dataValueObject != nullptr)
+				dataValueObject->DeleteObject();
+			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			if (valueListForm != nullptr)
+				valueListForm->UpdateForm();
+		}
+		catch (...)
+		{
 		}
 	}
 }
@@ -501,13 +520,16 @@ void CListDataObjectRef::MarkAsDeleteValue()
 		if (node == nullptr)
 			return;
 
-		CValuePtr<IRecordDataObjectRef> dataValueRef = metaObject->CreateObjectValue(node->GetGuid());
-		if (dataValueRef != nullptr) {
-
-			dataValueRef->SetDeletionMark(true);
-			
-			IBackendValueForm* listBackendForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
-			if (listBackendForm != nullptr) listBackendForm->UpdateForm();
+		try {
+			CValuePtr<IRecordDataObjectRef> dataValueObject = metaObject->CreateObjectValue(node->GetGuid());
+			if (dataValueObject != nullptr)
+				dataValueObject->SetDeletionMark(true);
+			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			if (valueListForm != nullptr)
+				valueListForm->UpdateForm();
+		}
+		catch (...)
+		{
 		}
 	}
 }
@@ -520,8 +542,14 @@ void CListDataObjectRef::ChooseValue(IBackendValueForm* srcForm)
 
 	wxASSERT(srcForm);
 
-	CValuePtr<CReferenceDataObject> refData = m_metaObject->FindObjectValue(node->GetGuid());
-	if (refData != nullptr) srcForm->NotifyChoice(refData->GetValue());
+	try {
+		CValuePtr<CReferenceDataObject> dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
+		if (dataValueRef != nullptr)
+			srcForm->NotifyChoice(dataValueRef->GetValue());
+	}
+	catch (...)
+	{
+	}
 }
 
 class_identifier_t CListDataObjectRef::GetClassType() const
@@ -665,11 +693,11 @@ void CTreeDataObjectFolderRef::AddValue(unsigned int before)
 			node->GetValue(*m_metaObject->GetDataReference(), cParent);
 	}
 
-	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
+	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
 
-	if (dataValueFolderRef != nullptr) {
-		dataValueFolderRef->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
-		dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	if (dataValueFolderObject != nullptr) {
+		dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
+		dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
 }
 
@@ -685,11 +713,16 @@ void CTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 			node->GetValue(*m_metaObject->GetDataReference(), cParent);
 	}
 
-	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER));
+	try {
+		CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER));
+		if (dataValueFolderObject != nullptr) {
+			dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
+			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+	}
+	catch (...)
+	{
 
-	if (dataValueFolderRef != nullptr) {
-		dataValueFolderRef->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
-		dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
 }
 
@@ -702,13 +735,14 @@ void CTreeDataObjectFolderRef::CopyValue()
 	CValue isFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
-	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef = m_metaObject->CopyObjectValue(
-		isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()
-	);
-
-	wxASSERT(dataValueFolderRef);
-
-	if (dataValueFolderRef != nullptr) dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	try {
+		CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject = m_metaObject->CopyObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid());
+		if (dataValueFolderObject != nullptr)
+			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	}
+	catch (...)
+	{
+	}
 }
 
 void CTreeDataObjectFolderRef::EditValue()
@@ -720,9 +754,13 @@ void CTreeDataObjectFolderRef::EditValue()
 	CValue isFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
-	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
-	wxASSERT(dataValueFolderRef);
-	if (dataValueFolderRef != nullptr) dataValueFolderRef->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	try {
+		CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	}
+	catch (...)
+	{
+	}
 }
 
 void CTreeDataObjectFolderRef::DeleteValue()
@@ -734,14 +772,17 @@ void CTreeDataObjectFolderRef::DeleteValue()
 	CValue isFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
-	CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
-	if (dataValueFolderRef != nullptr) {
-		
-		dataValueFolderRef->DeleteObject();
-		
-		IBackendValueForm* listBackendForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
-		if (listBackendForm != nullptr) listBackendForm->UpdateForm();
+	try {
+		CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+		if (dataValueFolderObject != nullptr)
+			dataValueFolderObject->DeleteObject();
+		IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+		if (valueListForm != nullptr) valueListForm->UpdateForm();
 	}
+	catch (...)
+	{
+	}
+
 }
 
 void CTreeDataObjectFolderRef::MarkAsDeleteValue()
@@ -756,13 +797,15 @@ void CTreeDataObjectFolderRef::MarkAsDeleteValue()
 		CValue isFolder = false;
 		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
-		CValuePtr<IRecordDataObjectFolderRef> dataValueFolderRef(metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
-		if (dataValueFolderRef != nullptr) {
-			
-			dataValueFolderRef->SetDeletionMark(true);
-		
-			IBackendValueForm* listBackendForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
-			if (listBackendForm != nullptr) listBackendForm->UpdateForm();
+		try {
+			CValuePtr<IRecordDataObjectFolderRef> dataValueFolderObject(metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+			if (dataValueFolderObject != nullptr)
+				dataValueFolderObject->SetDeletionMark(true);
+			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			if (valueListForm != nullptr) valueListForm->UpdateForm();
+		}
+		catch (...)
+		{
 		}
 	}
 }
@@ -778,14 +821,18 @@ void CTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
 	CValue cIsFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), cIsFolder);
 
-	CValuePtr<CReferenceDataObject> reference(m_metaObject->FindObjectValue(node->GetGuid()));
-
-	if (m_listMode == LIST_FOLDER && cIsFolder.GetBoolean())
-		srcForm->NotifyChoice(reference->GetValue());
-	else if (m_listMode == LIST_ITEM && !cIsFolder.GetBoolean())
-		srcForm->NotifyChoice(reference->GetValue());
-	else if (m_listMode == LIST_ITEM_FOLDER)
-		srcForm->NotifyChoice(reference->GetValue());
+	try {
+		CValuePtr<CReferenceDataObject> dataValueFolderRef(m_metaObject->FindObjectValue(node->GetGuid()));
+		if (m_listMode == LIST_FOLDER && cIsFolder.GetBoolean())
+			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
+		else if (m_listMode == LIST_ITEM && !cIsFolder.GetBoolean())
+			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
+		else if (m_listMode == LIST_ITEM_FOLDER)
+			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
+	}
+	catch (...)
+	{
+	}
 }
 
 #include "backend/objCtor.h"
@@ -893,9 +940,14 @@ bool CListRegisterObject::GetModel(IValueModel*& tableValue, const meta_identifi
 void CListRegisterObject::AddValue(unsigned int before)
 {
 	if (m_metaObject != nullptr && m_metaObject->HasRecordManager()) {
-		CValuePtr<IRecordManagerObject> recordManager(m_metaObject->CreateRecordManagerObjectValue());
-		wxASSERT(recordManager);
-		recordManager->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		try {
+			CValuePtr<IRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue());
+			if (dataValueObject != nullptr)
+				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+		catch (...)
+		{
+		}
 	}
 }
 
@@ -905,9 +957,14 @@ void CListRegisterObject::CopyValue()
 		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
-			CValuePtr<IRecordManagerObject> recordManager(m_metaObject->CopyRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
-			wxASSERT(recordManager);
-			recordManager->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			try {
+				CValuePtr<IRecordManagerObject> dataValueObject(m_metaObject->CopyRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
+				if (dataValueObject != nullptr)
+					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			}
+			catch (...)
+			{
+			}
 		}
 	}
 }
@@ -918,15 +975,26 @@ void CListRegisterObject::EditValue()
 		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
-			CValuePtr<IRecordManagerObject> recordManager(m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
-			wxASSERT(recordManager);
-			recordManager->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			try {
+				CValuePtr<IRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
+				if (dataValueObject != nullptr)
+					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			}
+			catch (...)
+			{
+			}
 		}
 		else {
-			CMetaObjectAttributePredefined* recorder = m_metaObject->GetRegisterRecorder();
-			wxASSERT(recorder);
-			CValue recorderVal = node->GetTableValue(recorder->GetMetaID());
-			recorderVal.ShowValue();
+			try {
+				const CMetaObjectAttributePredefined* metaRecorder = m_metaObject->GetRegisterRecorder();
+				if (metaRecorder != nullptr) {
+					CValue recorderVal = node->GetTableValue(metaRecorder->GetMetaID());
+					recorderVal.ShowValue();
+				}
+			}
+			catch (...)
+			{
+			}
 		}
 	}
 }
@@ -937,13 +1005,16 @@ void CListRegisterObject::DeleteValue()
 		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
-
-			CValuePtr<IRecordManagerObject> recordManager = m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject));
-			wxASSERT(recordManager);
-			recordManager->DeleteRegister();
-			
-			IBackendValueForm* listBackendForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
-			if (listBackendForm != nullptr) listBackendForm->UpdateForm();
+			try {
+				CValuePtr<IRecordManagerObject> dataValueObject = m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject));
+				if (dataValueObject != nullptr)
+					dataValueObject->DeleteRegister();
+				IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+				if (valueListForm != nullptr) valueListForm->UpdateForm();
+			}
+			catch (...)
+			{
+			}
 		}
 	}
 }

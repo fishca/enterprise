@@ -85,13 +85,23 @@ static wxString gs_listErrorString[] =
 
 //////////////////////////////////////////////////////////////////////
 
-bool CBackendException::sm_evalMode = false;
+bool CBackendException::ms_evalMode = false;
 
 //////////////////////////////////////////////////////////////////////
 // Error handling
 //////////////////////////////////////////////////////////////////////
 
-CBackendException::CBackendException(const wxString& strErrorString) : std::exception(strErrorString) {}
+CBackendException::CBackendException(const wxString& strErrorDescription)
+	: m_strErrorDescription(strErrorDescription)
+{
+#ifdef DEBUG
+	wxLogDebug(strErrorDescription);
+#endif // !DEBUG
+
+	CProcUnit::Raise();
+
+	ms_strError = strErrorDescription;
+}
 
 #include "backend/metaCollection/metaModuleObject.h"
 
@@ -156,13 +166,11 @@ void CBackendException::ProcessError(const wxString& strFileName,
 
 	strErrorMessage += wxT("{") + strModuleName + wxT("(") + wxString::Format(wxT("%i"), currLine) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? CBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (sm_evalMode ? wxEmptyString : strCodeLineError);
+	strErrorMessage += (ms_evalMode ? wxEmptyString : strCodeLineError);
 
-	if (sm_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
+	if (ms_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
-	stringUtils::TrimAll(strErrorMessage);
-
-	if (!sm_evalMode && backend_mainFrame != nullptr) {
+	if (!ms_evalMode && backend_mainFrame != nullptr) {
 		backend_mainFrame->BackendError(
 			strFileName,
 			strDocPath,
@@ -176,8 +184,6 @@ void CBackendException::ProcessError(const wxString& strFileName,
 #ifdef DEBUG
 	wxLogDebug(strErrorMessage);
 #endif // !DEBUG
-
-	throw(new CBackendException(strErrorMessage));
 }
 
 const wxString& CBackendException::GetErrorDesc(int codeError)
@@ -194,13 +200,6 @@ wxString CBackendException::DoFormatWchar(const wxChar* format, ...)
 	va_start(args, format);
 	return FormatV(format, args);
 }
-
-void CBackendException::DoErrorWchar(const wxChar* format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	ErrorV(format, args);
-}
 #endif
 
 #if wxUSE_UNICODE_UTF8
@@ -213,33 +212,20 @@ wxString CBackendException::DoFormatUtf8(const wxChar* format, ...)
 	va_end(args);
 	return strFormat;
 }
-
-void CBackendException::DoErrorUtf8(const wxChar* format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	ErrorV(format, args);
-}
 #endif
 
-wxString CBackendException::FormatV(const wxString& fmt, va_list& list)
+wxString CBackendException::FormatV(const wxString& format, va_list& list)
 {
-	wxString strErrorBuffer = wxString::FormatV(_(fmt), list); va_end(list);
+	wxString strErrorBuffer =
+		wxString::FormatV(_(format), list);
+
+	va_end(list);
+
 	if (CBackendException::IsEvalMode())
 		strErrorBuffer.Replace(wxT('\n'), wxT(' '));
+
 	stringUtils::TrimAll(strErrorBuffer);
 	return strErrorBuffer;
-}
-
-//service error handling procedures
-void CBackendException::ErrorV(const wxString& fmt, va_list& list)
-{
-	const wxString& errorBuffer = FormatV(fmt, list);
-#ifdef DEBUG
-	wxLogDebug(errorBuffer);
-#endif // !DEBUG
-	ms_strError = errorBuffer;
-	throw(new CBackendException(errorBuffer));
 }
 
 wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigned int currPos)
@@ -274,3 +260,41 @@ wxString CBackendException::FindErrorCodeLine(const wxString& strBuffer, unsigne
 
 	return strError;
 }
+
+#pragma region _exception_h_
+
+//service error handling procedures
+
+#if !wxUSE_UTF8_LOCALE_ONLY
+void CBackendCoreException::DoErrorWchar(const wxChar* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	const wxString& strErrorBuffer =
+		FormatV(format, args);
+
+	throw(new CBackendCoreException(strErrorBuffer));
+}
+#endif
+
+#if wxUSE_UNICODE_UTF8
+void CBackendCoreException::DoErrorUtf8(const wxChar* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	ErrorV(format, args);
+}
+#endif
+
+void CBackendInterruptException::Error()
+{
+	throw(new CBackendInterruptException);
+}
+
+void CBackendAccessException::Error()
+{
+	throw(new CBackendAccessException);
+}
+
+#pragma endregion

@@ -93,10 +93,10 @@ void CCompileCode::InitializeCompileModule()
 void CCompileCode::Reset()
 {
 	m_cByteCode.Reset();
-	
+
 	if (m_rootContext != nullptr)
 		m_rootContext->Reset();
-	
+
 	m_listHashConst.clear();
 	m_listCallFunc.clear();
 }
@@ -206,6 +206,8 @@ void CCompileCode::DoSetError(int codeError,
 		currPos, currLine,
 		strCodeLineError, codeError, strErrorDesc
 	);
+
+	CBackendCoreException::Error(strCodeLineError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -708,7 +710,7 @@ bool CCompileCode::CompileDeclaration(CCompileContext* context)
 			if (numParent > MAX_OBJECTS_LEVEL) {
 				CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 				if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-					CBackendException::Error(_("Recursive call of modules!"));
+					CBackendCoreException::Error(_("Recursive call of modules!"));
 				}
 			}
 			std::shared_ptr<CCompileContext::CVariable> currentVariable = nullptr;
@@ -1116,7 +1118,7 @@ bool CCompileCode::CompileFunction(CCompileContext* context)
 		if (numParent > MAX_OBJECTS_LEVEL) {
 			CSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 			if (numParent > 2 * MAX_OBJECTS_LEVEL) {
-				CBackendException::Error(_("Recursive call of modules!"));
+				CBackendCoreException::Error(_("Recursive call of modules!"));
 			}
 		}
 

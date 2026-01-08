@@ -140,7 +140,7 @@ bool CDataProcessorExternalManager::CallAsFunc(const long lMethodNum, CValue& pv
 			return true; 
 		}
 		wxDELETE(metaDataProcessor);
-		CSystemFunction::Raise(
+		CBackendCoreException::Error(
 			wxString::Format("Failed to load data processor '%s'", paParams[0]->GetString())
 		);
 		return false;

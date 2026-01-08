@@ -28,14 +28,14 @@ CValue* CValue::CreateObjectRef(const class_identifier_t& clsid, CValue** paPara
 				succes = created_value->Init();
 			if (!succes) {
 				wxDELETE(created_value);
-				CBackendException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
+				CBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 			}
 			created_value->PrepareNames();
 		}
 		return created_value;
 	}
 	else {
-		CBackendException::Error(_("Error creating object '%llu'"), clsid);
+		CBackendCoreException::Error(_("Error creating object '%llu'"), clsid);
 	}
 
 	return nullptr;
@@ -48,10 +48,10 @@ void CValue::RegisterCtor(IAbstractTypeCtor* typeCtor)
 	if (typeCtor != nullptr) {
 
 		if (CValue::IsRegisterCtor(typeCtor->GetClassType())) {
-			CBackendException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
+			CBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
 		}
 		else if (CValue::IsRegisterCtor(typeCtor->GetClassName())) {
-			CBackendException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
+			CBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
 		}
 
 #ifdef DEBUG
@@ -82,7 +82,7 @@ void CValue::UnRegisterCtor(IAbstractTypeCtor*& typeCtor)
 		s_factoryCtorCountChanges++;
 	}
 	else if (typeCtor != nullptr) {
-		CBackendException::Error(_("Object '%s' is not register"), typeCtor->GetClassName());
+		CBackendCoreException::Error(_("Object '%s' is not register"), typeCtor->GetClassName());
 	}
 
 	if (s_factoryCtors->size() == 0) wxDELETE(s_factoryCtors);
@@ -93,7 +93,7 @@ void CValue::UnRegisterCtor(const wxString& className)
 	IAbstractTypeCtor* typeCtor = GetAvailableCtor(className);
 
 	if (typeCtor == nullptr) {
-		CBackendException::Error(_("Object '%s' is not exist"), className);
+		CBackendCoreException::Error(_("Object '%s' is not exist"), className);
 		return;
 	}
 
@@ -155,7 +155,7 @@ class_identifier_t CValue::GetIDObjectFromString(const wxString& className)
 	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(className);
 	if (typeCtor != nullptr)
 		return typeCtor->GetClassType();
-	CBackendException::Error(_("Object '%s' is not exist"), className);
+	CBackendCoreException::Error(_("Object '%s' is not exist"), className);
 	return 0;
 }
 
@@ -166,7 +166,7 @@ wxString CValue::GetNameObjectFromID(const class_identifier_t& clsid, bool upper
 		return upper ? typeCtor->GetClassName().Upper() :
 			typeCtor->GetClassName();
 	}
-	CBackendException::Error(_("Object with id '%llu' is not exist"), clsid);
+	CBackendCoreException::Error(_("Object with id '%llu' is not exist"), clsid);
 	return wxEmptyString;
 }
 
@@ -235,7 +235,7 @@ IAbstractTypeCtor* CValue::GetAvailableCtor(const wxString& className)
 	for (auto& typeCtor : *s_factoryCtors)
 		if (stringUtils::CompareString(className, typeCtor->GetClassName()))
 			return typeCtor;
-	//CBackendException::Error("Object '%s' is not exist", className);
+	//CBackendCoreException::Error("Object '%s' is not exist", className);
 	return nullptr;
 }
 
@@ -246,7 +246,7 @@ IAbstractTypeCtor* CValue::GetAvailableCtor(const class_identifier_t& clsid)
 	for (auto& typeCtor : *s_factoryCtors)
 		if (clsid == typeCtor->GetClassType())
 			return typeCtor;
-	//CBackendException::Error("Object id '%llu' is not exist", clsid);
+	//CBackendCoreException::Error("Object id '%llu' is not exist", clsid);
 	return nullptr;
 }
 
@@ -257,7 +257,7 @@ IAbstractTypeCtor* CValue::GetAvailableCtor(const wxClassInfo* classInfo)
 	for (auto& typeCtor : *s_factoryCtors)
 		if (classInfo == typeCtor->GetClassInfo())
 			return typeCtor;
-	//CBackendException::Error("Object '%s' is not exist", classInfo->GetClassName());
+	//CBackendCoreException::Error("Object '%s' is not exist", classInfo->GetClassName());
 	return nullptr;
 }
 

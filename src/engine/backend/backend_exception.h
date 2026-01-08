@@ -67,29 +67,13 @@ enum { //Error message numbers
 
 #include "backend/backend.h"
 
-class BACKEND_API CBackendException : public std::exception {
-	static bool sm_evalMode;
-	static wxString ms_strError;
-private:
-#if !wxUSE_UTF8_LOCALE_ONLY
-	static wxString DoFormatWchar(const wxChar* format, ...);
-	static void DoErrorWchar(const wxChar* format, ...);
-#endif
-#if wxUSE_UNICODE_UTF8
-	static wxString DoFormatWchar(const wxChar* format, ...);
-	static void DoErrorUtf8(const wxChar* format, ...);
-#endif
-	//error handling routines
-	static void ErrorV(const wxString& fmt, va_list& list);
-	static wxString FormatV(const wxString& fmt, va_list& list);
-	static const wxString& GetErrorDesc(int codeError);
-public:
+class BACKEND_API CBackendException {
+protected:
 
 	class wxFormatErrorString : public wxFormatString {
-
 	public:
 		wxFormatErrorString(int codeError)
-			: wxFormatString(GetErrorDesc(codeError)) {
+			: wxFormatString(CBackendException::GetErrorDesc(codeError)) {
 		}
 
 #ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
@@ -114,10 +98,17 @@ public:
 		wxFormatErrorString(const wxScopedWCharBuffer& str)
 			: wxFormatString(str) {
 		}
-
 	};
 
-	CBackendException(const wxString& errorString);
+	CBackendException(const wxString& strErrorDescription);
+
+public:
+
+	WX_DEFINE_VARARG_FUNC(static wxString, Format, 1, (const wxFormatErrorString&),
+		DoFormatWchar, DoFormatUtf8);
+
+	//get error description
+	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
 	//error from proc unit/compile module 
 	static void ProcessError(const struct CByteUnit& error, const wxString& strErrorDesc);
@@ -127,12 +118,6 @@ public:
 		const wxString& strCodeLineError, const int codeError, const wxString& strErrorDesc // error code from compile codule
 	);
 
-	WX_DEFINE_VARARG_FUNC(static wxString, Format, 1, (const wxFormatErrorString&),
-		DoFormatWchar, DoFormatUtf8);
-
-	WX_DEFINE_VARARG_FUNC(static void, Error, 1, (const wxFormatErrorString&),
-		DoErrorWchar, DoErrorUtf8);
-
 	static wxString FindErrorCodeLine(const wxString& sBuffer, unsigned int currPos);
 	static wxString GetLastError() {
 		const wxString strLastError = ms_strError;
@@ -140,15 +125,60 @@ public:
 		return strLastError;
 	}
 
-	static void SetEvalMode(bool mode = true) { sm_evalMode = mode; }
-	static bool IsEvalMode() { return sm_evalMode; }
+	static void SetEvalMode(bool mode = true) { ms_evalMode = mode; }
+	static bool IsEvalMode() { return ms_evalMode; }
+
+protected:
+
+	static wxString FormatV(const wxString& fmt, va_list& list);
+	static wxString ms_strError;
+
+private:
+
+	//error handling routines
+	static const wxString& GetErrorDesc(int codeError);
+
+#if !wxUSE_UTF8_LOCALE_ONLY
+	static wxString DoFormatWchar(const wxChar* format, ...);
+#endif
+#if wxUSE_UNICODE_UTF8
+	static wxString DoFormatWchar(const wxChar* format, ...);
+#endif
+
+	static bool ms_evalMode;
+	wxString m_strErrorDescription;
 };
 
-class BACKEND_API CBackendInterrupt : public CBackendException {
+#pragma region _exception_h_
+
+class BACKEND_API CBackendCoreException : public CBackendException {
+	CBackendCoreException(const wxString& strErrorDescription) : CBackendException(strErrorDescription) {}
 public:
-	CBackendInterrupt() :
-		CBackendException(_("The program was stopped by the user!")) {
-	}
+
+	WX_DEFINE_VARARG_FUNC(static void, Error, 1, (const wxFormatErrorString&),
+		DoErrorWchar, DoErrorUtf8);
+
+private:
+
+#if !wxUSE_UTF8_LOCALE_ONLY
+	static void DoErrorWchar(const wxChar* format, ...);
+#endif
+#if wxUSE_UNICODE_UTF8
+	static void DoErrorUtf8(const wxChar* format, ...);
+#endif
 };
+
+class BACKEND_API CBackendInterruptException : public CBackendException {
+	CBackendInterruptException() : CBackendException(_("The program was stopped by the user!")) {}
+public:
+	static void Error();
+};
+
+class BACKEND_API CBackendAccessException : public CBackendException {
+	CBackendAccessException() : CBackendException(_("Not enough access rights for this user!")) {}
+public:
+	static void Error();
+};
+#pragma endregion 
 
 #endif 

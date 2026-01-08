@@ -8,6 +8,7 @@ inline void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsIn
 {
 	if (!appData->DesignerMode()) {
 		wxString className = wxEmptyString;
+		
 		if (clsInfo != nullptr) {
 			const class_identifier_t& clsid = CValue::GetTypeIDByRef(clsInfo);
 			if (IMetaDataConfiguration::Get()) {
@@ -17,7 +18,8 @@ inline void ThrowErrorTypeOperation(const wxString& fromType, wxClassInfo* clsIn
 				className = CValue::GetNameObjectFromID(clsid);
 			}
 		}
-		CProcUnit::Raise(); CBackendException::Error(ERROR_TYPE_OPERATION, fromType, className);
+		
+		CBackendCoreException::Error(ERROR_TYPE_OPERATION, fromType, className);
 	}
 }
 #endif

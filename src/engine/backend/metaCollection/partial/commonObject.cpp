@@ -64,13 +64,13 @@ IBackendValueForm* IMetaObjectGenericData::CreateAndBuildForm(const wxString& st
 		creator = FindFormObjectByFilter(strFormName, form_id);
 
 		if (creator == nullptr) {
-			CSystemFunction::Raise(_("Form not found '") + strFormName + "'");
+			CBackendCoreException::Error(_("Form not found '") + strFormName + "'");
 			return nullptr;
 		}
 	}
 
 	if (!AccessRight_Show()) {
-		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		CBackendAccessException::Error();
 		return nullptr;
 	}
 
@@ -1467,7 +1467,7 @@ bool IRecordDataObjectExt::InitializeObject()
 	if (!m_metaObject->IsExternalCreate()) {
 
 		if (!m_metaObject->AccessRight_Use()) {
-			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			CBackendAccessException::Error();
 			return false;
 		}
 
@@ -1487,9 +1487,8 @@ bool IRecordDataObjectExt::InitializeObject()
 				m_compileModule->Compile();
 			}
 			catch (const CBackendException* err) {
-				if (!appData->DesignerMode()) {
-					CSystemFunction::Raise(err->what());
-				}
+				if (!appData->DesignerMode())
+					throw(err);
 				return false;
 			};
 
@@ -1536,10 +1535,8 @@ bool IRecordDataObjectExt::InitializeObject(IRecordDataObjectExt* source)
 				m_compileModule->Compile();
 			}
 			catch (const CBackendException* err) {
-				if (!appData->DesignerMode()) {
-					CSystemFunction::Raise(err->what());
-				}
-
+				if (!appData->DesignerMode())
+					throw(err);
 				return false;
 			};
 
@@ -1601,7 +1598,7 @@ IRecordDataObjectRef::~IRecordDataObjectRef()
 bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 {
 	if (!m_metaObject->AccessRight_Read()) {
-		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		CBackendAccessException::Error();
 		return false;
 	}
 
@@ -1619,9 +1616,8 @@ bool IRecordDataObjectRef::InitializeObject(const CGuid& copyGuid)
 			m_compileModule->Compile();
 		}
 		catch (const CBackendException* err) {
-			if (!appData->DesignerMode()) {
-				CSystemFunction::Raise(err->what());
-			}
+			if (!appData->DesignerMode())
+				throw(err);
 			return false;
 		};
 	}
@@ -1679,10 +1675,8 @@ bool IRecordDataObjectRef::InitializeObject(IRecordDataObjectRef* source, bool g
 			m_compileModule->Compile();
 		}
 		catch (const CBackendException* err) {
-			if (!appData->DesignerMode()) {
-				CSystemFunction::Raise(err->what());
-			}
-
+			if (!appData->DesignerMode())
+				throw(err);
 			return false;
 		};
 	}
@@ -2356,7 +2350,7 @@ void IRecordSetObject::CreateEmptyKey()
 bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool newRecord)
 {
 	if (!m_metaObject->AccessRight_Read()) {
-		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		CBackendAccessException::Error();
 		return false;
 	}
 
@@ -2377,9 +2371,8 @@ bool IRecordSetObject::InitializeObject(const IRecordSetObject* source, bool new
 			m_compileModule->Compile();
 		}
 		catch (const CBackendException* err) {
-			if (!appData->DesignerMode()) {
-				CSystemFunction::Raise(err->what());
-			}
+			if (!appData->DesignerMode())
+				throw(err);
 			return false;
 		};
 	}
@@ -2446,7 +2439,7 @@ bool IRecordSetObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {
 	long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
-		CBackendException::Error(_("Array index out of bounds"));
+		CBackendCoreException::Error(_("Array index out of bounds"));
 		return false;
 	}
 	pvarValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(index));
@@ -2617,7 +2610,7 @@ bool IRecordSetObject::CRecordSetObjectRegisterColumnCollection::GetAt(const CVa
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendException::Error(_("Index goes beyond array"));
+		CBackendCoreException::Error(_("Index goes beyond array"));
 		return false;
 	}
 

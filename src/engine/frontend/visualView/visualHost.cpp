@@ -52,47 +52,48 @@ void CVisualHost::SetCaption(const wxString& strCaption)
 		if (strCaption.IsEmpty()) {
 			const ISourceDataObject* srcObject = handler->GetSourceObject();
 			if (srcObject != nullptr) {
-				const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+				const IMetaObjectForm* creator = handler->GetFormMetaObject();
 				const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 				if (genericObject != nullptr) {
-					m_document->SetTitle(genericObject->GetSynonym() + wxT(": ") + metaFormObject->GetSynonym());
-					m_document->SetFilename(genericObject->GetSynonym() + wxT(": ") + metaFormObject->GetSynonym(), true);
+					m_document->SetTitle(genericObject->GetSynonym() + wxT(": ") + creator->GetSynonym());
+					m_document->SetFilename(genericObject->GetFileName(), true);
 				}
-				else if (metaFormObject != nullptr) {
-					m_document->SetTitle(metaFormObject->GetSynonym());
-					m_document->SetFilename(metaFormObject->GetSynonym(), true);
+				else if (creator != nullptr) {
+					m_document->SetTitle(creator->GetSynonym());
+					m_document->SetFilename(creator->GetFileName(), true);
 				}
 			}
 			else {
-				const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
-				if (metaFormObject != nullptr) {
-					m_document->SetTitle(metaFormObject->GetSynonym());
-					m_document->SetFilename(metaFormObject->GetSynonym(), true);
+				const IMetaObjectForm* creator = handler->GetFormMetaObject();
+				if (creator != nullptr) {
+					m_document->SetTitle(creator->GetSynonym());
+					m_document->SetFilename(creator->GetFileName(), true);
 				}
 			}
 		}
 		else {
 			m_document->SetTitle(strCaption);
-			m_document->SetFilename(strCaption, true);
+			m_document->SetFilename(wxEmptyString, true);
 		}
 	}
 	else if (strCaption.IsEmpty()) {
 		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 			m_document->SetTitle(srcObject->GetSourceCaption());
-			m_document->SetFilename(srcObject->GetSourceCaption(), true);
+			const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			m_document->SetFilename(genericObject->GetFileName(), true);
 		}
 		else {
-			const IMetaObjectForm* metaObject = handler->GetFormMetaObject();
-			if (metaObject != nullptr && !m_document->IsVisualDemonstrationDoc()) {
-				m_document->SetTitle(metaObject->GetSynonym());
-				m_document->SetFilename(metaObject->GetSynonym(), true);
+			const IMetaObjectForm* creator = handler->GetFormMetaObject();
+			if (creator != nullptr && !m_document->IsVisualDemonstrationDoc()) {
+				m_document->SetTitle(creator->GetSynonym());
+				m_document->SetFilename(creator->GetFileName(), true);
 			}
 		}
 	}
 	else if (m_document != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 		m_document->SetTitle(strCaption);
-		m_document->SetFilename(strCaption, true);
+		m_document->SetFilename(wxEmptyString, true);
 	}
 }
 

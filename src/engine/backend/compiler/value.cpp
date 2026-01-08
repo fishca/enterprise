@@ -153,7 +153,7 @@ CValue::~CValue()
 
 void CValue::Reset()
 {
-	if (m_typeClass != eValueTypes::TYPE_EMPTY && m_bReadOnly) CBackendException::Error(_("Attempt to assign a value to a write-denied variable"));
+	if (m_typeClass != eValueTypes::TYPE_EMPTY && m_bReadOnly) CBackendCoreException::Error(_("Attempt to assign a value to a write-denied variable"));
 
 	if (m_typeClass == eValueTypes::TYPE_REFFER && m_pRef)
 		m_pRef->DecrRef();
@@ -592,7 +592,7 @@ number_t CValue::GetNumber() const
 		strVal.MakeUpper();
 		number_t number;
 		unsigned int nSuccessful = number.FromString(strVal.ToStdWstring());
-		if (nSuccessful > 0) CBackendException::Error(_("Cannot convert string to number!"));
+		if (nSuccessful > 0) CBackendCoreException::Error(_("Cannot convert string to number!"));
 		return number;
 	}
 	case eValueTypes::TYPE_DATE:
@@ -771,7 +771,7 @@ wxString CValue::GetClassName() const
 	if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
 		return m_pRef->GetClassName();
 	const class_identifier_t& clsid = GetClassType();
-	if (clsid == 0) CBackendException::Error(_("Class not registered"));
+	if (clsid == 0) CBackendCoreException::Error(_("Class not registered"));
 	return CValue::GetNameObjectFromID(clsid);
 }
 

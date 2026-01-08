@@ -17,15 +17,19 @@
 
 bool IBackendCommandItem::ShowFormByCommandType(EInterfaceCommandType cmdType)
 {
-	IBackendValueForm *valueForm = nullptr;
+	IBackendValueForm* valueForm = nullptr;
 
 	try {
 		valueForm = GetFormByCommandType(cmdType);
 		valueForm->ShowForm();
 	}
-	catch (const CBackendException* err) {
+	catch (const CBackendAccessException* err) {
 		wxDELETE(valueForm);
-		CSystemFunction::Alert(err->what());
+		CSystemFunction::Alert(err->GetErrorDescription());
+		return false;
+	}
+	catch (const CBackendException*) {
+		wxDELETE(valueForm);
 		return false;
 	}
 
@@ -315,7 +319,7 @@ bool CMetaObjectCommonForm::SaveData(CMemoryWriter& writer)
 IBackendValueForm* CMetaObjectCommonForm::GetObjectForm(IBackendControlFrame* ownerControl, const CUniqueKey& formGuid) const
 {
 	if (!AccessRight_Use()) {
-		CSystemFunction::Raise(_("Not enough access rights for this user!"));
+		CBackendAccessException::Error();
 		return false;
 	}
 

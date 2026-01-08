@@ -14,9 +14,9 @@
 CValue CInformationRegisterManager::Get(const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
@@ -86,9 +86,9 @@ CValue CInformationRegisterManager::Get(const CValue& cFilter)
 CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
@@ -163,9 +163,9 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
@@ -342,9 +342,9 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueStructure* retTable = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
@@ -521,9 +521,9 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
@@ -711,9 +711,9 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	CValueTable* retTable = CValue::CreateAndPrepareValueRef<CValueTable>();
 	CValueTable::IValueModelColumnCollection* colCollection = retTable->GetColumnCollection();

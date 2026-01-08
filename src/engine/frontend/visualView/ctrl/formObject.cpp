@@ -251,7 +251,7 @@ bool CValueForm::InitializeFormModule()
 	if (m_metaFormObject != nullptr) {
 
 		if (!m_metaFormObject->AccessRight_Show()) {
-			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			CBackendAccessException::Error();
 			return false;
 		}
 
@@ -277,11 +277,9 @@ bool CValueForm::InitializeFormModule()
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const CBackendException*) {
-
+			catch (const CBackendException* err) {
 				if (!appData->DesignerMode())
-					throw(std::exception());
-
+					throw(err);
 				return false;
 			};
 
@@ -383,7 +381,7 @@ CValue CValueForm::CreateControl(const CValueType* clsControl, const CValue& vCo
 		return CValue();
 
 	if (!CValue::IsRegisterCtor(clsControl->GetString(), eCtorObjectType::eCtorObjectType_object_control)) {
-		CSystemFunction::Raise(_("Error occurred while trying to create a form element!"));
+		CBackendCoreException::Error(_("Error occurred while trying to create a form element!"));
 	}
 
 	//get parent obj
@@ -619,7 +617,7 @@ void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, 
 			(procedureName[i] >= 'À' && procedureName[i] <= 'ß') || (procedureName[i] >= 'à' && procedureName[i] <= 'ÿ') ||
 			(procedureName[i] >= '0' && procedureName[i] <= '9')))
 		{
-			CBackendException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
+			CBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
 			return;
 		}
 	}
@@ -646,7 +644,7 @@ void CValueForm::DetachIdleHandler(const wxString& procedureName)
 			(procedureName[i] >= 'À' && procedureName[i] <= 'ß') || (procedureName[i] >= 'à' && procedureName[i] <= 'ÿ') ||
 			(procedureName[i] >= '0' && procedureName[i] <= '9')))
 		{
-			CBackendException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
+			CBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
 			return;
 		}
 	}

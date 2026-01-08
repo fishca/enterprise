@@ -37,7 +37,7 @@ public:
 	virtual bool CanRedo() const { return false; }
 };
 
-class FRONTEND_API CVisualDocument : public CMetaDocument {
+class FRONTEND_API CVisualDocument : public IMetaDataDocument {
 public:
 
 	CVisualView* GetFirstView() const;
@@ -49,6 +49,8 @@ public:
 
 	CVisualDocument(CValueForm* valueForm);
 	virtual ~CVisualDocument();
+
+	virtual class IMetaData* GetMetaData() const;
 
 	virtual bool IsVisualDemonstrationDoc() const { return false; }
 
@@ -63,6 +65,7 @@ public:
 	virtual bool SaveAs() override { return true; }
 
 	virtual void SetDocParent(CMetaDocument* docParent) override;
+
 
 protected:
 	virtual CMetaView* DoCreateView();

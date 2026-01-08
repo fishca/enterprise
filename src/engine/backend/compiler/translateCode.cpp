@@ -104,7 +104,7 @@ bool CTranslateCode::CDefineCollection::HasDefine(const wxString& strName) const
 
 	nLevel++;
 
-	if (nLevel > MAX_OBJECTS_LEVEL) CBackendException::Error(_("Recursive module call (#3)"));
+	if (nLevel > MAX_OBJECTS_LEVEL) CBackendCoreException::Error(_("Recursive module call (#3)"));
 
 	//find in parent
 	bool result = false;

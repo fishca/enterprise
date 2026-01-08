@@ -20,7 +20,7 @@ CValue* IMetaData::CreateObjectRef(const class_identifier_t& clsid, CValue** paP
 
 		if (!succes) {
 			wxDELETE(newObject);
-			CBackendException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
+			CBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 			return nullptr;
 		}
 
@@ -38,7 +38,7 @@ void IMetaData::RegisterCtor(IMetaValueTypeCtor* typeCtor)
 	if (typeCtor != nullptr) {
 
 		if (IMetaData::IsRegisterCtor(typeCtor->GetClassType())) {
-			CBackendException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
+			CBackendCoreException::Error(_("Object '%s' is exist"), typeCtor->GetClassName());
 		}
 
 #ifdef DEBUG
@@ -68,7 +68,7 @@ void IMetaData::UnRegisterCtor(IMetaValueTypeCtor*& typeCtor)
 		wxDELETE(typeCtor);
 	}
 	else {
-		CBackendException::Error(_("Object '%s' is not exist"), typeCtor->GetClassName());
+		CBackendCoreException::Error(_("Object '%s' is not exist"), typeCtor->GetClassName());
 	}
 }
 
@@ -76,7 +76,7 @@ void IMetaData::UnRegisterCtor(const wxString& className)
 {
 	IMetaValueTypeCtor* typeCtor = GetTypeCtor(className);
 	if (typeCtor == nullptr) {
-		CBackendException::Error(_("Object '%s' is not exist"), className);
+		CBackendCoreException::Error(_("Object '%s' is not exist"), className);
 		return;
 	}
 

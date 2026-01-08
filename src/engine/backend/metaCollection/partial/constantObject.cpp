@@ -52,7 +52,8 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 		m_constValue = GetConstValue();
 	}
 	catch (const CBackendException* err) {
-		CSystemFunction::Raise(err->what());
+		if (!appData->DesignerMode())
+			throw(err);
 		return false;
 	}
 
@@ -63,7 +64,8 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 			m_compileModule->Compile();
 		}
 		catch (const CBackendException* err) {
-			CSystemFunction::Raise(err->what());
+			if (!appData->DesignerMode())
+				throw(err);
 			return false;
 		};
 		m_procUnit->Execute(m_compileModule->m_cByteCode, true);
@@ -157,7 +159,7 @@ void CRecordDataObjectConstant::ShowFormValue()
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* const valueForm = 
+	IBackendValueForm* const valueForm =
 		GetFormValue();
 
 	if (valueForm != nullptr) {
@@ -281,12 +283,12 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 	if (!appData->DesignerMode()) {
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!m_metaObject->AccessRight_Read()) {
-			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			CBackendAccessException::Error();
 			return false;
 		}
 
@@ -329,12 +331,12 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 		const CValue& constValue = m_constValue;
 
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!m_metaObject->AccessRight_Write()) {
-			CSystemFunction::Raise(_("Not enough access rights for this user!"));
+			CBackendAccessException::Error();
 			return false;
 		}
 
@@ -355,7 +357,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("failed to write object in db!")); 
+						CBackendCoreException::Error(_("failed to write object in db!"));
 						return false;
 					}
 				}
@@ -421,7 +423,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 				if (hasError) {
 					m_constValue = constValue;
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise("failed to write object in db!"); return false;
+					CBackendCoreException::Error("failed to write object in db!"); return false;
 				}
 
 				{
@@ -429,7 +431,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise("failed to write object in db!"); return false;
+						CBackendCoreException::Error("failed to write object in db!"); return false;
 					}
 				}
 

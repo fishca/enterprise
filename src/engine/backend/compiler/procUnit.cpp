@@ -44,9 +44,14 @@ CProcUnit* CProcUnit::m_currentRunModule = nullptr;
 struct CErrorPlace {
 
 	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
-	void Reset() { m_byteCode = m_skipByteCode = nullptr; m_errorLine = wxNOT_FOUND; }
+
+	void Reset() {
+		m_byteCode = m_skipByteCode = nullptr;
+		m_errorLine = wxNOT_FOUND;
+	}
 
 	long m_errorLine = wxNOT_FOUND;
+
 	CByteCode* m_byteCode = nullptr;
 	CByteCode* m_skipByteCode = nullptr;
 };
@@ -54,7 +59,8 @@ struct CErrorPlace {
 static CErrorPlace s_errorPlace;
 
 void CProcUnit::Raise() {
-	s_errorPlace.Reset(); //initialize the error place
+
+	s_errorPlace.Reset(); //initialize the error place	
 	s_errorPlace.m_skipByteCode = CProcUnit::GetCurrentByteCode(); //return back to the called module (if any)
 }
 
@@ -96,7 +102,7 @@ struct CProcStackGuard {
 					m_pByteCode->m_listCode[pLastContext->m_lCurLine].m_numLine + 1
 				);
 			}
-			CBackendException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
+			CBackendCoreException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
 		}
 		s_nRecCount++;
 		m_currentContext = runContext;
@@ -165,7 +171,7 @@ inline void SubValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		}
 	}
 	else {
-		CBackendException::Error(_("Subtraction operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		CBackendCoreException::Error(_("Subtraction operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -186,7 +192,7 @@ inline void MultValue(CValue& cValue1, const CValue& cValue2, const CValue& cVal
 		}
 	}
 	else {
-		CBackendException::Error(_("Multiplication operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		CBackendCoreException::Error(_("Multiplication operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -197,11 +203,11 @@ inline void DivValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 	if (cValue1.m_typeClass == eValueTypes::TYPE_NUMBER) {
 		const number_t& flNumber3 = cValue3.GetNumber();
 		if (flNumber3.IsZero())
-			CBackendException::Error(_("Divide by zero"));
+			CBackendCoreException::Error(_("Divide by zero"));
 		cValue1.m_fData = cValue2.GetNumber() / flNumber3;
 	}
 	else {
-		CBackendException::Error(_("Division operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		CBackendCoreException::Error(_("Division operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	};
 }
 
@@ -213,12 +219,12 @@ inline void ModValue(CValue& cValue1, const CValue& cValue2, const CValue& cValu
 		ttmath::Int<TTMATH_BITS(128)> val128_2, val128_3;
 		const number_t& flNumber3 = cValue3.GetNumber(); flNumber3.ToInt(val128_3);
 		if (val128_3.IsZero())
-			CBackendException::Error(_("Divide by zero"));
+			CBackendCoreException::Error(_("Divide by zero"));
 		const number_t& flNumber2 = cValue2.GetNumber(); flNumber2.ToInt(val128_2);
 		cValue1.m_fData = val128_2 % val128_3;
 	}
 	else {
-		CBackendException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());
+		CBackendCoreException::Error(_("Modulo operation cannot be applied for this type (%s)"), cValue2.GetClassName());
 	}
 }
 
@@ -395,9 +401,9 @@ inline void SetTypeNumber(CValue& cValue1, const number_t& fValue)
 #define CheckAndError(variable, name)\
 {\
  if(variable.m_typeClass!=eValueTypes::TYPE_REFFER)\
- CBackendException::Error(_("No attribute or method found '%s' - a variable is not an aggregate object"), name);\
+ CBackendCoreException::Error(_("No attribute or method found '%s' - a variable is not an aggregate object"), name);\
  else\
- CBackendException::Error(_("Aggregate object field not found '%s'"), name);\
+ CBackendCoreException::Error(_("Aggregate object field not found '%s'"), name);\
 }
 
 //Index arrays
@@ -478,9 +484,9 @@ void CProcUnit::Execute(CRunContext* pContext, CValue* pvarRetValue, bool bDelta
 
 #ifdef DEBUG
 	if (pContext == nullptr) {
-		CBackendException::Error(_("No execution context defined!"));
+		CBackendCoreException::Error(_("No execution context defined!"));
 		if (m_pByteCode == nullptr)
-			CBackendException::Error(_("No execution code set!"));
+			CBackendCoreException::Error(_("No execution code set!"));
 	}
 #endif
 
@@ -548,14 +554,14 @@ start_label:
 				break;
 			case OPER_FOR:
 				if (variable1.m_typeClass != eValueTypes::TYPE_NUMBER)
-					CBackendException::Error(_("Only variables with type can be used to organize the loop \"number\""));
+					CBackendCoreException::Error(_("Only variables with type can be used to organize the loop \"number\""));
 				if (variable1.m_fData == variable2.m_fData)
 					lCodeLine = index3 - 1;
 				break;
 			case OPER_FOREACH:
 			{
 				if (!variable2.HasIterator())
-					CBackendException::Error(_("Undefined value iterator"));
+					CBackendCoreException::Error(_("Undefined value iterator"));
 				if (g_valueIterator != variable3.GetClassType())
 					CopyValue(variable3, CValue(new CValueIterator(variable2)));
 				CValueIterator* iterator = variable3.ConvertToType<CValueIterator>();
@@ -608,7 +614,7 @@ start_label:
 				const wxString& strPropName = m_pByteCode->m_listConst[index2].m_sData;
 				const long lPropNum = variable1.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable1, strPropName);
-				if (!variable1.IsPropWritable(lPropNum)) CBackendException::Error(_("Object field not writable (%s)"), strPropName);
+				if (!variable1.IsPropWritable(lPropNum)) CBackendCoreException::Error(_("Object field not writable (%s)"), strPropName);
 				variable1.SetPropVal(lPropNum, GetValue(variable3));
 			} break;
 			case OPER_GET_A://get attribute
@@ -618,7 +624,7 @@ start_label:
 				const wxString& strPropName = m_pByteCode->m_listConst[index3].m_sData;
 				const long lPropNum = variable2.FindProp(strPropName);
 				if (lPropNum < 0) CheckAndError(variable2, strPropName);
-				if (!variable2.IsPropReadable(lPropNum)) CBackendException::Error(_("Object field not readable (%s)"), strPropName);
+				if (!variable2.IsPropReadable(lPropNum)) CBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
 				CValue vRet; bool result = variable2.GetPropVal(lPropNum, vRet);
 				if (result && vRet.m_typeClass == eValueTypes::TYPE_REFFER)
 					*pRetValue = vRet;
@@ -639,7 +645,7 @@ start_label:
 					lMethodNum = index4;
 #ifdef DEBUG
 					lMethodNum = pVariable2->FindMethod(funcName);
-					if (lMethodNum != index4) CBackendException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
+					if (lMethodNum != index4) CBackendCoreException::Error(_("Error value %d must %d (It is recommended to turn off method optimization)"), index4, lMethodNum);
 #endif
 				}
 				else {//there were no calls
@@ -658,9 +664,9 @@ start_label:
 				const long paramCount = pVariable2->GetNParams(lMethodNum);
 
 				if (paramCount < cRunContext.m_lParamCount)
-					CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+					CBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
 				else if (paramCount == wxNOT_FOUND && cRunContext.m_lParamCount == 0)
-					CBackendException::Error(ERROR_MANY_PARAMS, funcName, funcName);
+					CBackendCoreException::Error(ERROR_MANY_PARAMS, funcName, funcName);
 
 				//load parameters
 				for (long i = 0; i < cRunContext.m_lParamCount; i++) {
@@ -681,7 +687,7 @@ start_label:
 				else {
 					// operator =
 					if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET)
-						CBackendException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+						CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
 					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;
 			}
@@ -714,11 +720,11 @@ start_label:
 			}
 			case OPER_SET_ARRAY:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_GOTO: case OPER_ENDTRY:
 			{
@@ -735,12 +741,12 @@ start_label:
 			case OPER_TRY:
 				tryList.emplace_back(lCodeLine, index1);
 				break; //transition on error
-			case OPER_RAISE: CBackendException::Error(CBackendException::GetLastError()); break;
-			case OPER_RAISE_T: CBackendException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
+			case OPER_RAISE: CBackendCoreException::Error(CBackendException::GetLastError()); break;
+			case OPER_RAISE_T: CBackendCoreException::Error(m_pByteCode->m_listConst[index1].GetString()); break;
 			case OPER_RET:
 				if (index1 != DEF_VAR_NORET) {
 					if (pvarRetValue == nullptr)
-						CBackendException::Error(_("Cannot set return value in procedure!"));
+						CBackendCoreException::Error(_("Cannot set return value in procedure!"));
 					CopyValue(*pvarRetValue, variable1);
 				}
 			case OPER_ENDFUNC:
@@ -762,8 +768,8 @@ start_label:
 				//NUMBER
 			case OPER_ADD + TYPE_DELTA1: variable1.m_fData = variable2.m_fData + variable3.m_fData; break;
 			case OPER_SUB + TYPE_DELTA1: variable1.m_fData = variable2.m_fData - variable3.m_fData; break;
-			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
-			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
+			case OPER_DIV + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData / variable3.m_fData; break;
+			case OPER_MOD + TYPE_DELTA1: if (variable3.m_fData.IsZero()) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_fData = variable2.m_fData.Round() % variable3.m_fData.Round(); break;
 			case OPER_MULT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData * variable3.m_fData; break;
 			case OPER_LET + TYPE_DELTA1: variable1.m_fData = variable2.m_fData; break;
 			case OPER_NOT + TYPE_DELTA1: variable1.m_fData = variable2.m_fData.IsZero(); break;
@@ -776,11 +782,11 @@ start_label:
 			case OPER_LE + TYPE_DELTA1: variable1.m_fData = (variable2.m_fData <= variable3.m_fData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA1:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break;//set array value
 			case OPER_GET_ARRAY + TYPE_DELTA1:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA1: if (variable1.m_fData.IsZero()) lCodeLine = index2 - 1; break;
 				//STRING
@@ -788,18 +794,18 @@ start_label:
 			case OPER_LET + TYPE_DELTA2: variable1.m_sData = variable2.m_sData; break;
 			case OPER_SET_ARRAY + TYPE_DELTA2:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //set array value
 			case OPER_GET_ARRAY + TYPE_DELTA2:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA2: if (variable1.m_sData.IsEmpty()) lCodeLine = index2 - 1; break;
 				//DATE
 			case OPER_ADD + TYPE_DELTA3: variable1.m_dData = variable2.m_dData + variable3.m_dData; break;
 			case OPER_SUB + TYPE_DELTA3: variable1.m_dData = variable2.m_dData - variable3.m_dData; break;
-			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
-			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
+			case OPER_DIV + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = variable2.m_dData / variable3.GetInteger(); break;
+			case OPER_MOD + TYPE_DELTA3: if (variable3.m_dData == 0) { CBackendCoreException::Error(_("Divide by zero")); } variable1.m_dData = (int)variable2.m_dData % variable3.GetInteger(); break;
 			case OPER_MULT + TYPE_DELTA3: variable1.m_dData = variable2.m_dData * variable3.m_dData; break;
 			case OPER_LET + TYPE_DELTA3: variable1.m_dData = variable2.m_dData; break;
 			case OPER_NOT + TYPE_DELTA3: variable1.m_dData = ~variable2.m_dData; break;
@@ -812,11 +818,11 @@ start_label:
 			case OPER_LE + TYPE_DELTA3: variable1.m_dData = (variable2.m_dData <= variable3.m_dData); break;
 			case OPER_SET_ARRAY + TYPE_DELTA3:
 				if (!SetArrayValue(variable1, variable2, GetValue(variable3)))
-					CBackendException::Error(_("Cannot set array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot set array value '%s'"), variable3.GetString());
 				break; //setting the array value
 			case OPER_GET_ARRAY + TYPE_DELTA3:
 				if (!GetArrayValue(variable1, variable2, variable3))
-					CBackendException::Error(_("Cannot get array value '%s'"), variable3.GetString());
+					CBackendCoreException::Error(_("Cannot get array value '%s'"), variable3.GetString());
 				break; //getting the array value
 			case OPER_IF + TYPE_DELTA3: if (!variable1.m_dData) lCodeLine = index2 - 1; break;
 				//BOOLEAN
@@ -835,9 +841,9 @@ start_label:
 			lCodeLine++;
 		}
 	}
-	catch (const CBackendInterrupt* err) {
+	catch (const CBackendInterruptException* err) {
 
-		CSystemFunction::Message(err->what(),
+		CSystemFunction::Message(err->GetErrorDescription(),
 			eStatusMessage::eStatusMessage_Error);
 
 		while (lCodeLine < lFinish) {
@@ -852,12 +858,17 @@ start_label:
 				break;
 			}
 		}
+
+		s_errorPlace.Reset(); //Error is handled in this module - erase the error location
+
 	}
 	catch (const CBackendException* err) {
 
 		const long trySize = tryList.size() - 1;
 		if (trySize >= 0) {
+
 			s_errorPlace.Reset(); //Error is handled in this module - erase the error location
+
 			const long tryCodeLine = tryList[trySize].m_lEndLine;
 			tryList.resize(trySize);
 			lCodeLine = tryCodeLine;
@@ -866,15 +877,18 @@ start_label:
 
 		//there is no handler in this module - save the error location for the following modules
 		//But we don't throw an error right away, because we don't know if there are any handlers further
-		if (!s_errorPlace.m_byteCode) {
-			if (m_pByteCode != s_errorPlace.m_skipByteCode) { //the Error system function throws an exception only for child modules
-				//previously saved the original error location (i.e. the error didn't occur in this module)
-				s_errorPlace.m_byteCode = m_pByteCode;
-				s_errorPlace.m_errorLine = lCodeLine;
-			}
+		if (s_errorPlace.m_byteCode == nullptr && m_pByteCode != s_errorPlace.m_skipByteCode) { //the Error system function throws an exception only for child modules
+
+			//previously saved the original error location (i.e. the error didn't occur in this module)
+			s_errorPlace.m_byteCode = m_pByteCode;
+			s_errorPlace.m_errorLine = lCodeLine;
 		}
 
-		CBackendException::ProcessError(m_pByteCode->m_listCode[lCodeLine], err->what());
+		//show error message
+		CBackendException::ProcessError(m_pByteCode->m_listCode[lCodeLine], err->GetErrorDescription());
+
+		//throw this exception
+		throw(err);
 	}
 }
 
@@ -886,7 +900,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	Reset();
 
 	if (!cByteCode.m_bCompile)
-		CBackendException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
+		CBackendCoreException::Error(_("Module: %s not compiled!"), cByteCode.m_strModuleName);
 
 	s_nRecCount = 0;
 	m_pByteCode = &cByteCode;
@@ -894,7 +908,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	//check the conformity of modules (compiled and running)
 	if (GetParent() && GetParent()->m_pByteCode != m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendException::Error(_("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s"),
+		CBackendCoreException::Error(_("System error - compilation failed (#1)\nModule:%s\nParent1:%s\nParent2:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName,
 			GetParent()->m_pByteCode->m_strModuleName
@@ -902,7 +916,7 @@ void CProcUnit::Execute(CByteCode& cByteCode, CValue* pvarRetValue, bool bRunMod
 	}
 	else if (!GetParent() && m_pByteCode->m_parent) {
 		m_pByteCode = nullptr;
-		CBackendException::Error(_("System error - compilation failed (#2)\nModule1:%s\nParent1:%s"),
+		CBackendCoreException::Error(_("System error - compilation failed (#2)\nModule1:%s\nParent1:%s"),
 			cByteCode.m_strModuleName,
 			cByteCode.m_parent->m_strModuleName
 		);
@@ -965,7 +979,7 @@ long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExpo
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendException::Error(_("Module not compiled!"));
+		CBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -973,7 +987,7 @@ long CProcUnit::FindMethod(const wxString& strMethodName, bool bError, int bExpo
 		m_pByteCode->FindMethod(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendException::Error(_("Procedure or function \"%s\" not found!"), strMethodName);
+		CBackendCoreException::Error(_("Procedure or function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0) {
 		return lCodeLine;
@@ -993,7 +1007,7 @@ long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bEx
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendException::Error(_("Module not compiled!"));
+		CBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -1001,7 +1015,7 @@ long CProcUnit::FindFunction(const wxString& strMethodName, bool bError, int bEx
 		m_pByteCode->FindFunction(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendException::Error(_("Function \"%s\" not found!"), strMethodName);
+		CBackendCoreException::Error(_("Function \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0)
 		return lCodeLine;
@@ -1021,7 +1035,7 @@ long CProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bE
 {
 	if (m_pByteCode == nullptr ||
 		!m_pByteCode->m_bCompile) {
-		CBackendException::Error(_("Module not compiled!"));
+		CBackendCoreException::Error(_("Module not compiled!"));
 	}
 
 	long lCodeLine = bExportOnly ?
@@ -1029,7 +1043,7 @@ long CProcUnit::FindProcedure(const wxString& strMethodName, bool bError, int bE
 		m_pByteCode->FindProcedure(strMethodName);
 
 	if (bError && lCodeLine < 0)
-		CBackendException::Error(_("Procedure \"%s\" not found!"), strMethodName);
+		CBackendCoreException::Error(_("Procedure \"%s\" not found!"), strMethodName);
 
 	if (lCodeLine >= 0) {
 		return lCodeLine;
@@ -1078,12 +1092,12 @@ bool CProcUnit::CallAsFunc(const wxString& funcName, CValue& pvarRetValue, CValu
 void CProcUnit::CallAsProc(const long lCodeLine, CValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode == nullptr || !m_pByteCode->m_bCompile)
-		CBackendException::Error(_("Module not compiled!"));
+		CBackendCoreException::Error(_("Module not compiled!"));
 
 	const long lCodeSize = m_pByteCode->m_listCode.size();
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
-			CBackendException::Error(_("Error calling module procedure!"));
+			CBackendCoreException::Error(_("Error calling module procedure!"));
 		GetParent()->CallAsProc(lCodeLine - lCodeSize, ppParams, lSizeArray);
 	}
 
@@ -1105,12 +1119,12 @@ void CProcUnit::CallAsProc(const long lCodeLine, CValue** ppParams, const long l
 void CProcUnit::CallAsFunc(const long lCodeLine, CValue& pvarRetValue, CValue** ppParams, const long lSizeArray)
 {
 	if (m_pByteCode == nullptr || !m_pByteCode->m_bCompile)
-		CBackendException::Error(_("Module not compiled!"));
+		CBackendCoreException::Error(_("Module not compiled!"));
 
 	const long lCodeSize = m_pByteCode->m_listCode.size();
 	if (lCodeLine >= lCodeSize) {
 		if (!GetParent())
-			CBackendException::Error(_("Error calling module function!"));
+			CBackendCoreException::Error(_("Error calling module function!"));
 		GetParent()->CallAsFunc(lCodeLine - lCodeSize, pvarRetValue, ppParams, lSizeArray);
 	}
 

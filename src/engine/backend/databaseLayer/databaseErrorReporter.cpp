@@ -47,7 +47,7 @@ void CDatabaseErrorReporter::ThrowDatabaseException()
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 0
 	try {
 #endif
-		CBackendException::Error(GetErrorMessage());
+		CBackendCoreException::Error(GetErrorMessage());
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 0
 	}
 	catch (...) {

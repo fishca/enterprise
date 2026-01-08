@@ -146,7 +146,7 @@ void CValueContainer::Insert(const CValue& varKeyValue, const CValue& cValue)
 	std::map<const CValue, CValue>::iterator it = m_containerValues.find(varKeyValue);
 	if (it != m_containerValues.end()) {
 		if (!appData->DesignerMode())
-			CBackendException::Error(_("Key '%s' is already using!"), varKeyValue.GetString());
+			CBackendCoreException::Error(_("Key '%s' is already using!"), varKeyValue.GetString());
 		return;
 	}
 	if (m_methodHelper != nullptr) m_methodHelper->AppendProp(varKeyValue.GetString());
@@ -190,7 +190,7 @@ bool CValueContainer::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 		pvarValue = itFound->second; return true;
 	}
 	if (!appData->DesignerMode())
-		CBackendException::Error(_("Key '%s' not found!"), varKeyValue.GetString());
+		CBackendCoreException::Error(_("Key '%s' not found!"), varKeyValue.GetString());
 	return false;
 }
 
@@ -204,7 +204,7 @@ bool CValueStructure::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {
 	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode())
-			CBackendException::Error(st_error_conversion);
+			CBackendCoreException::Error(st_error_conversion);
 		return false;
 	}
 	return CValueContainer::GetAt(varKeyValue, pvarValue);
@@ -214,7 +214,7 @@ bool CValueStructure::SetAt(const CValue& varKeyValue, const CValue& cValue)
 {
 	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendException::Error(st_error_conversion);
+			CBackendCoreException::Error(st_error_conversion);
 		} return false;
 	}
 
@@ -225,7 +225,7 @@ void CValueStructure::Delete(const CValue& varKeyValue)
 {
 	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendException::Error(st_error_conversion);
+			CBackendCoreException::Error(st_error_conversion);
 		} return;
 	}
 
@@ -236,7 +236,7 @@ void CValueStructure::Insert(const CValue& varKeyValue, const CValue& cValue)
 {
 	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendException::Error(st_error_conversion);
+			CBackendCoreException::Error(st_error_conversion);
 		} return;
 	}
 
@@ -247,7 +247,7 @@ bool CValueStructure::Property(const CValue& varKeyValue, CValue& cValueFound)
 {
 	if (varKeyValue.GetType() != eValueTypes::TYPE_STRING) {
 		if (!appData->DesignerMode()) {
-			CBackendException::Error(st_error_conversion);
+			CBackendCoreException::Error(st_error_conversion);
 		}
 		return false;
 	}

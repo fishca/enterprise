@@ -700,7 +700,7 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 					if (lPropNum != wxNOT_FOUND) {
 						try {
 							if (!vResult.IsPropReadable(lPropNum))
-								CBackendException::Error(_("Object field not readable (%s)"), strPropName);
+								CBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
 							//send attribute body
 							commandChannel.w_stringZ(strPropName);
 							CValue vAttribute;
@@ -716,7 +716,7 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 							commandChannel.w_u32(vAttribute.GetNProps());
 						}
 						catch (const CBackendException* err) {
-							wxString strErrorMessage = err->what();
+							wxString strErrorMessage = err->GetErrorDescription();
 							strErrorMessage.Replace('\n', ' ');
 							//send attribute body
 							commandChannel.w_stringZ(strPropName);

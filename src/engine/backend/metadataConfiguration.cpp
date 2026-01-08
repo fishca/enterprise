@@ -626,7 +626,7 @@ bool CMetaDataConfigurationStorage::OnInitialize(const int flags)
 	if (!AccessRight_Administration()) {
 
 		try {
-			CBackendException::Error(_("Not enough access rights for this user!"));
+			CBackendCoreException::Error(_("Not enough access rights for this user!"));
 		}
 		catch (...) {
 		}

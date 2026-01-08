@@ -45,18 +45,21 @@ bool CVisualDocument::OnCreate(const wxString& path, long flags)
 	const ISourceDataObject* sourceObject = m_valueForm->GetSourceObject();
 
 	if (sourceObject != nullptr && !IsVisualDemonstrationDoc()) {
-		const IMetaObjectGenericData* metaValue = sourceObject->GetSourceMetaObject();
-		CVisualDocument::SetIcon(metaValue->GetIcon());
+		const IMetaObjectGenericData* genericObject = sourceObject->GetSourceMetaObject();
+		if (genericObject != nullptr) {
+			CVisualDocument::SetIcon(genericObject->GetIcon());
+			CVisualDocument::SetFilename(genericObject->GetFileName());
+		}
 	}
 	else {
 		const IMetaObjectForm* creator = m_valueForm->GetFormMetaObject();
 		if (creator != nullptr) {
 			CVisualDocument::SetIcon(creator->GetIcon());
 		}
+		CVisualDocument::SetFilename(creator->GetFileName());
 	}
 
 	CVisualDocument::SetTitle(m_valueForm->GetCaption());
-	CVisualDocument::SetFilename(m_valueForm->GetFormKey());
 
 	if (IsVisualDemonstrationDoc()) m_childDoc = false;
 
@@ -102,13 +105,28 @@ void CVisualDocument::Modify(bool modify)
 	}
 }
 
+#include "backend/system/systemManager.h"
+
 bool CVisualDocument::Save()
 {
-	ISourceDataObject* srcData = m_valueForm ?
+	ISourceDataObject* sourceData = m_valueForm != nullptr ?
 		m_valueForm->GetSourceObject() : nullptr;
 
-	if (srcData != nullptr &&
-		srcData->SaveModify()) {
+	bool success = true;
+
+	try {
+		success = sourceData->SaveModify();
+	}
+	catch (const CBackendAccessException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+		success = false;
+	}
+	catch (const CBackendException*) {
+		CSystemFunction::Alert(_("An error occurred while trying to write the form!"));
+		success = false;
+	}
+
+	if (success) {
 		CVisualDocument::Modify(false);
 		return true;
 	}
@@ -150,6 +168,14 @@ CVisualDocument::CVisualDocument(CValueForm* valueForm)
 CVisualDocument::~CVisualDocument()
 {
 	s_createdDocFormArray.erase(this);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+IMetaData* CVisualDocument::GetMetaData() const
+{
+	return m_valueForm != nullptr ?
+		m_valueForm->GetMetaData() : nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

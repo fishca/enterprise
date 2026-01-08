@@ -670,9 +670,9 @@ bool IRecordDataObjectRef::ReadData()
 bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_newObject && !srcGuid.isValid())
 		return false;
@@ -711,9 +711,9 @@ bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 bool IRecordDataObjectRef::SaveData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	//check fill attributes 
 	bool fillCheck = true;
@@ -806,9 +806,9 @@ bool IRecordDataObjectRef::SaveData()
 bool IRecordDataObjectRef::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_newObject)
 		return true;
@@ -912,9 +912,9 @@ void IRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 bool IRecordManagerObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	bool success = false;
 
@@ -967,9 +967,9 @@ bool IRecordManagerObject::ExistData()
 bool IRecordManagerObject::ReadData(const CUniquePairKey& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_recordSet->ReadData(key)) {
 		if (m_recordLine == nullptr) {
@@ -986,9 +986,9 @@ bool IRecordManagerObject::ReadData(const CUniquePairKey& key)
 bool IRecordManagerObject::SaveData(bool replace)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_recordSet->Selected()
 		&& !DeleteData())
@@ -1019,9 +1019,9 @@ bool IRecordManagerObject::SaveData(bool replace)
 bool IRecordManagerObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	return m_recordSet->DeleteRecordSet();
 }
 
@@ -1030,9 +1030,9 @@ bool IRecordManagerObject::DeleteData()
 bool IRecordSetObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1079,9 +1079,9 @@ bool IRecordSetObject::ExistData()
 bool IRecordSetObject::ExistData(number_t& lastNum)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1133,9 +1133,9 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	IValueTable::Clear(); int position = 1;
 
@@ -1191,9 +1191,9 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 bool IRecordSetObject::ReadData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	IValueTable::Clear(); int position = 1;
 
@@ -1249,9 +1249,9 @@ bool IRecordSetObject::ReadData()
 bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	//check fill attributes 
 	bool fillCheck = true; long currLine = 1;
@@ -1401,9 +1401,9 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 bool IRecordSetObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
@@ -1448,9 +1448,9 @@ bool IRecordSetObject::DeleteData()
 CValue IRecordDataObjectRef::GenerateNextIdentifier(IMetaObjectAttribute* attribute, const wxString& strPrefix)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendException::Error(_("Database is not open!"));
+		CBackendCoreException::Error(_("Database is not open!"));
 
 	wxASSERT(attribute);
 

@@ -234,7 +234,7 @@ bool CApplicationData::CApplicationDataSessionUpdater::VerifySessionUpdater() co
 		for (unsigned int idx = 0; idx < m_sessionArray.GetSessionCount(); idx++) {
 			if (eDESIGNER_MODE == m_sessionArray.GetSessionApplication(idx)) {
 				try {
-					CBackendException::Error(
+					CBackendCoreException::Error(
 						_("Another designer process is already running:\n%s, %s, %s"),
 						m_sessionArray.GetStartedDate(idx),
 						m_sessionArray.GetComputerName(idx),

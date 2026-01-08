@@ -13,14 +13,14 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Write()) {
-				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				CBackendAccessException::Error();
 				return false;
 			}
 
@@ -34,14 +34,14 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!SaveData(replace, clearTable)) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("Failed to write object in db!"));
+					CBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -50,7 +50,7 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -70,14 +70,14 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
 			if (!m_metaObject->AccessRight_Delete()) {
-				CSystemFunction::Raise(_("Not enough access rights for this user!"));
+				CBackendAccessException::Error();
 				return false;
 			}
 
@@ -91,14 +91,14 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("Failed to write object in db!"));
+					CBackendCoreException::Error(_("Failed to write object in db!"));
 					return false;
 				}
 
@@ -107,7 +107,7 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("Failed to write object in db!"));
+						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
 					}
 				}
@@ -203,9 +203,9 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -217,7 +217,7 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 
 				if (!SaveData()) {
 					db_query_active_transaction.RollBackTransaction();
-					CSystemFunction::Raise(_("failed to save object in db!"));
+					CBackendCoreException::Error(_("failed to save object in db!"));
 					return false;
 				}
 
@@ -243,9 +243,9 @@ bool CRecordManagerObjectInformationRegister::DeleteRegister()
 	if (!appData->DesignerMode())
 	{
 		if (db_query != nullptr && !db_query->IsOpen())
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 		else if (db_query == nullptr)
-			CBackendException::Error(_("Database is not open!"));
+			CBackendCoreException::Error(_("Database is not open!"));
 
 		if (!CBackendException::IsEvalMode())
 		{
@@ -257,7 +257,7 @@ bool CRecordManagerObjectInformationRegister::DeleteRegister()
 
 					if (!DeleteData()) {
 						db_query_active_transaction.RollBackTransaction();
-						CSystemFunction::Raise(_("Failed to delete object in db!"));
+						CBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 

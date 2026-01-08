@@ -24,7 +24,7 @@ CValue* CMetaDataDataProcessor::CreateObjectRef(const class_identifier_t& clsid,
 
 		if (!succes) {
 			wxDELETE(newObject);
-			CBackendException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
+			CBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 		}
 		newObject->PrepareNames();
 		return newObject;

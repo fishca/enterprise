@@ -139,7 +139,7 @@ bool CReportExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetVa
 			return true;
 		}
 		wxDELETE(metaReport);
-		CSystemFunction::Raise(
+		CBackendCoreException::Error(
 			wxString::Format("Failed to load report '%s'", paParams[0]->GetString())
 		);
 	}

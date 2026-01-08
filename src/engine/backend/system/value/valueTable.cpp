@@ -134,7 +134,7 @@ bool CValueTable::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {
 	const long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
-		CBackendException::Error(_("Array index out of bounds"));
+		CBackendCoreException::Error(_("Array index out of bounds"));
 		return false;
 	}
 	pvarValue = CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(index));
@@ -223,7 +223,7 @@ bool CValueTable::CValueTableColumnCollection::GetAt(const CValue& varKeyValue, 
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendException::Error(_("Index goes beyond array")); 
+		CBackendCoreException::Error(_("Index goes beyond array")); 
 		return false;
 	}
 	auto it = m_listColumnInfo.begin();

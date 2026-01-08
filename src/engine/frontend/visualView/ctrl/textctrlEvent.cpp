@@ -5,7 +5,7 @@
 
 bool CValueTextCtrl::TextProcessing(wxTextCtrl* textCtrl, const wxString& strData)
 {
-	IMetaData* metaData = GetMetaData();
+	const IMetaData* metaData = GetMetaData();
 	wxASSERT(metaData);
 	CValue selValue; GetControlValue(selValue);
 	const CValue& newValue = metaData->CreateObject(selValue.GetClassType());
@@ -52,13 +52,23 @@ void CValueTextCtrl::OnTextEnter(wxCommandEvent& event)
 	wxTextCtrl* textCtrl = wxDynamicCast(
 		event.GetEventObject(), wxTextCtrl
 	);
+
 	m_textModified = false;
 	TextProcessing(textCtrl, textCtrl->GetValue());
 	event.Skip();
 }
 
+#include "frontend/visualView/ctrl/form.h"
+
 void CValueTextCtrl::OnTextUpdated(wxCommandEvent& event)
 {
+	if (m_formOwner != nullptr) {
+		ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
+		if (sourceObject != nullptr && sourceObject->ModifiesData()) {
+			sourceObject->Modify(true);
+		}
+	}
+
 	m_textModified = true;
 	event.Skip();
 }
@@ -72,6 +82,7 @@ void CValueTextCtrl::OnKillFocus(wxFocusEvent& event)
 		m_textModified = false;
 		TextProcessing(textCtrl, textCtrl->GetValue());
 	}
+
 	event.Skip();
 }
 

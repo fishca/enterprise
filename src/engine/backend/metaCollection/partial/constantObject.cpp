@@ -77,13 +77,13 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 }
 
 CRecordDataObjectConstant::CRecordDataObjectConstant(CMetaObjectConstant* metaObject)
-	: m_metaObject(metaObject), m_methodHelper(new CMethodHelper())
+	: m_metaObject(metaObject), m_objModified(false), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject();
 }
 
 CRecordDataObjectConstant::CRecordDataObjectConstant(const CRecordDataObjectConstant& source)
-	: m_metaObject(source.m_metaObject), m_methodHelper(new CMethodHelper())
+	: m_metaObject(source.m_metaObject), m_objModified(false), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject(&source);
 }
@@ -95,9 +95,17 @@ CRecordDataObjectConstant::~CRecordDataObjectConstant()
 
 IBackendValueForm* CRecordDataObjectConstant::GetForm() const
 {
-	return IBackendValueForm::FindFormByUniqueKey(
-		m_metaObject->GetGuid()
-	);
+	return IBackendValueForm::FindFormByUniqueKey(m_metaObject->GetGuid());
+}
+
+void CRecordDataObjectConstant::Modify(bool mod)
+{
+	IBackendValueForm* const foundedForm = GetForm();
+
+	if (foundedForm != nullptr)
+		foundedForm->Modify(mod);
+
+	m_objModified = mod;
 }
 
 #include "backend/objCtor.h"

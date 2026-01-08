@@ -235,7 +235,7 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 {
 	ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 	if (!m_propertySource->IsEmptyProperty() && sourceObject != nullptr) {
-		IMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
+		const IMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		sourceObject->SetValueByMetaID(m_propertySource->GetValueAsSource(), varControlVal);
 		m_selValue = metaObject->AdjustValue(varControlVal);

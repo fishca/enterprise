@@ -992,13 +992,19 @@ public:
 
 	//override default type object 
 	virtual bool IsNewObject() const { return true; }
-	virtual bool SaveModify() { return true; }
 
 	//standart override 
 	virtual bool IsEmpty() const = 0;
 
 	//standart override 
 	virtual bool IsModified() const { return false; }
+	virtual void Modify(bool mod) {}
+
+	//save source modify  
+	virtual bool SaveModify() { return true; }
+
+	//check is changes data in db
+	virtual bool ModifiesData() { return false; }
 
 	//get unique identifier 
 	virtual CUniqueKey GetGuid() const = 0;
@@ -1194,8 +1200,8 @@ protected:
 public:
 	virtual ~IRecordDataObjectExt();
 
-	virtual bool InitializeObject();
-	virtual bool InitializeObject(IRecordDataObjectExt* source);
+	bool InitializeObject();
+	bool InitializeObject(IRecordDataObjectExt* source);
 
 	//get unique identifier 
 	virtual CUniqueKey GetGuid() const { return m_objGuid; }
@@ -1229,8 +1235,8 @@ public:
 
 	virtual ~IRecordDataObjectRef();
 
-	virtual bool InitializeObject(const CGuid& copyGuid = wxNullGuid);
-	virtual bool InitializeObject(IRecordDataObjectRef* source, bool generate = false);
+	bool InitializeObject(const CGuid& copyGuid = wxNullGuid);
+	bool InitializeObject(IRecordDataObjectRef* source, bool generate = false);
 
 	virtual bool WriteObject() = 0;
 	virtual bool DeleteObject() = 0;
@@ -1241,13 +1247,20 @@ public:
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
+	//is new object?
+	virtual bool IsNewObject() const { return m_newObject; }
+
 	//check is empty
 	virtual bool IsEmpty() const {
 		return !m_objGuid.isValid();
 	}
 
+
 	//is modified 
 	virtual bool IsModified() const { return m_objModified; }
+
+	//set modify 
+	virtual void Modify(bool mod);
 
 	//Get presentation 
 	virtual wxString GetSourceCaption() const {
@@ -1261,8 +1274,8 @@ public:
 	//get metaData from object 
 	virtual IMetaObjectRecordDataMutableRef* GetMetaObject() const { return m_metaObject; }
 
-	//set modify 
-	virtual void Modify(bool mod);
+	//check is changes data in db
+	virtual bool ModifiesData() { return true; }
 
 	//default methods
 	virtual bool Generate();
@@ -1288,9 +1301,6 @@ public:
 
 	//copy new object
 	virtual IRecordDataObjectRef* CopyObjectValue();
-
-	//is new object?
-	virtual bool IsNewObject() const { return m_newObject; }
 
 	//get reference
 	virtual class CReferenceDataObject* GetReference() const;
@@ -1587,8 +1597,8 @@ protected:
 public:
 	virtual ~IRecordSetObject();
 
-	virtual void CreateEmptyKey();
-	virtual bool InitializeObject(const IRecordSetObject* source = nullptr, bool newRecord = false);
+	void CreateEmptyKey();
+	bool InitializeObject(const IRecordSetObject* source = nullptr, bool newRecord = false);
 
 	bool FindKeyValue(const meta_identifier_t& id) const { return m_keyValues.find(id) != m_keyValues.end(); }
 	template <typename value>
@@ -1627,6 +1637,9 @@ public:
 
 	//is modified 
 	virtual bool IsModified() const { return m_objModified; }
+
+	//check is changes data in db
+	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object 
 	virtual IMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; }
@@ -1745,8 +1758,10 @@ public:
 
 	virtual void CreateEmptyKey();
 
-	virtual bool InitializeObject(const IRecordManagerObject* source = nullptr, bool newRecord = false);
-	virtual bool InitializeObject(const CUniquePairKey& key);
+	bool InitializeObject(const IRecordManagerObject* source = nullptr, bool newRecord = false);
+	bool InitializeObject(const CUniquePairKey& key);
+
+	virtual bool IsNewObject() const { return !m_recordSet->m_selected; }
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
@@ -1778,7 +1793,8 @@ public:
 	//save modify 
 	virtual bool SaveModify() override { return WriteRegister(); }
 
-	virtual bool IsNewObject() const { return !m_recordSet->m_selected; }
+	//check is changes data in db
+	virtual bool ModifiesData() { return true; }
 
 	//default methods
 	virtual bool WriteRegister(bool replace = true) = 0;

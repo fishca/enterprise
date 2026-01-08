@@ -137,8 +137,20 @@ public:
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
 
+	//override default type object 
+	virtual bool IsNewObject() const { return false; }
+
+	//is modified 
+	virtual bool IsModified() const { return m_objModified; }
+
+	//set modify 
+	virtual void Modify(bool mod);
+
 	//check is empty
 	inline virtual bool IsEmpty() const { return false; }
+
+	//check is changes data in db
+	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object 
 	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
@@ -168,8 +180,6 @@ public:
 		return (IMetaObjectGenericData*)m_metaObject;
 	};
 
-	virtual bool IsNewObject() const { return false; }
-
 	//get unique identifier 
 	virtual CUniqueKey GetGuid() const { return m_metaObject->GetGuid(); }
 	virtual bool SaveModify() override { return SetConstValue(m_constValue); }
@@ -188,9 +198,7 @@ public:
 	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
 
 	//default showing
-	virtual void ShowValue() override {
-		ShowFormValue();
-	}
+	virtual void ShowValue() override { ShowFormValue(); }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -198,6 +206,8 @@ public:
 	virtual wxString GetString() const;
 
 protected:
+
+	bool m_objModified;
 
 	CMethodHelper* m_methodHelper;
 	CMetaObjectConstant* m_metaObject;

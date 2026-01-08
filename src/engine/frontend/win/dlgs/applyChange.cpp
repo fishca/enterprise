@@ -3,10 +3,10 @@
 CDialogApplyChange::CDialogApplyChange(const CRestructureInfo& info, wxWindow* parent) :
 	wxDialog(parent, wxID_ANY, _("Design changes"), wxDefaultPosition, wxSize(500, 200), wxDEFAULT_DIALOG_STYLE)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	this->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_SCROLLBAR));
-	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_SCROLLBAR));
+	wxDialog::SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_SCROLLBAR));
+	wxDialog::SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_SCROLLBAR));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer* resultSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -40,8 +40,14 @@ CDialogApplyChange::CDialogApplyChange(const CRestructureInfo& info, wxWindow* p
 
 	mainSizer->Add(resultSizer, 1, wxEXPAND, 5);
 
-	this->SetSizer(mainSizer);
-	this->Layout();
+	wxDialog::SetSizer(mainSizer);
+	wxDialog::Layout();
 
-	this->Centre(wxBOTH);
+	wxDialog::Centre(wxBOTH);
+
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picStructureCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
 }

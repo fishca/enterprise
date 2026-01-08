@@ -67,7 +67,7 @@ bool CDialogUserItem::ReadUserData(const CGuid& userGuid, bool copy)
 CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style), m_bInitialized(false)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -179,10 +179,10 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	m_mainNotebook->SetSelection(0);
 	mainSizer->Add(m_bottom, 0, wxEXPAND, 5);
 
-	this->SetSizer(mainSizer);
-	this->Layout();
+	wxDialog::SetSizer(mainSizer);
+	wxDialog::Layout();
 
-	this->Centre(wxBOTH);
+	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
 	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserCLSID));

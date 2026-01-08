@@ -8,7 +8,7 @@
 
 CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* bSizerCtrl = new wxBoxSizer(wxHORIZONTAL);
@@ -46,10 +46,10 @@ CDialogAuthentication::CDialogAuthentication(wxWindow* parent, wxWindowID id, co
 
 	bSizer->Add(bSizerButtons, 1, wxALIGN_RIGHT, 5);
 
-	this->SetSizer(bSizer);
-	this->Layout();
+	wxDialog::SetSizer(bSizer);
+	wxDialog::Layout();
 
-	this->Centre(wxBOTH);
+	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
 	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picAuthenticationCLSID));

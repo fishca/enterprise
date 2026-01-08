@@ -93,13 +93,13 @@ struct CProcStackGuard {
 		if (s_nRecCount > MAX_REC_COUNT) { //critical error
 			wxString strError;
 			for (unsigned int i = 0; i < CProcUnit::GetCountRunContext(); i++) {
-				CRunContext* pLastContext = CProcUnit::GetRunContext(i);
-				wxASSERT(pLastContext);
-				CByteCode* m_pByteCode = pLastContext->GetByteCode();
-				wxASSERT(m_pByteCode);
-				strError += wxString::Format("\n%s (#line %d)",
-					m_pByteCode->m_strModuleName,
-					m_pByteCode->m_listCode[pLastContext->m_lCurLine].m_numLine + 1
+				const CRunContext* stackContext = CProcUnit::GetRunContext(i);
+				wxASSERT(stackContext);
+				const CByteCode* stackByteCode = stackContext->GetByteCode();
+				wxASSERT(stackByteCode);
+				strError += wxString::Format(wxT("\n%s (#line %d)"),
+					stackByteCode->m_strModuleName,
+					stackByteCode->m_listCode[stackContext->m_lCurLine].m_numLine + 1
 				);
 			}
 			CBackendCoreException::Error(_("Number of recursive calls exceeded the maximum allowed value!\nCall stack :") + strError);
@@ -884,11 +884,8 @@ start_label:
 			s_errorPlace.m_errorLine = lCodeLine;
 		}
 
-		//show error message
-		CBackendException::ProcessError(m_pByteCode->m_listCode[lCodeLine], err->GetErrorDescription());
-
-		//throw this exception
-		throw(err);
+		//show and throw error message
+		CBackendException::ProcessError(err, m_pByteCode->m_listCode[lCodeLine]);
 	}
 }
 

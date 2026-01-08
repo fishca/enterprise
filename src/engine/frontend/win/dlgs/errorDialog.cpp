@@ -9,63 +9,64 @@
 #define DEF_LINENUMBER_ID 0
 #define DEF_IMAGE_ID 1
 
-CDialogError::CDialogError(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+CDialogError::CDialogError(CDocMDIFrame* parent, wxWindowID id,
+	const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
-	wxBoxSizer* m_bSizerMain = new wxBoxSizer(wxHORIZONTAL);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxBoxSizer* bSizerMain = new wxBoxSizer(wxHORIZONTAL);
 
-	m_errorWnd = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxSize(550, 250), 0, wxEmptyString);
+	m_errorOutput = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxSize(550, 250), 0, wxEmptyString);
 
 	// initialize styles
-	m_errorWnd->StyleClearAll();
+	m_errorOutput->StyleClearAll();
 
 	//set Lexer to LEX_CONTAINER: This will trigger the styleneeded event so you can do your own highlighting
-	m_errorWnd->SetLexer(wxSTC_LEX_CONTAINER);
+	m_errorOutput->SetLexer(wxSTC_LEX_CONTAINER);
 
 	//Set margin cursor
-	for (int margin = 0; margin < m_errorWnd->GetMarginCount(); margin++)
-		m_errorWnd->SetMarginCursor(margin, wxSTC_CURSORARROW);
+	for (int margin = 0; margin < m_errorOutput->GetMarginCount(); margin++)
+		m_errorOutput->SetMarginCursor(margin, wxSTC_CURSORARROW);
 
-	m_errorWnd->SetMarginType(DEF_LINENUMBER_ID, wxSTC_MARGIN_NUMBER);
-	m_errorWnd->SetMarginWidth(DEF_LINENUMBER_ID, 0);
+	m_errorOutput->SetMarginType(DEF_LINENUMBER_ID, wxSTC_MARGIN_NUMBER);
+	m_errorOutput->SetMarginWidth(DEF_LINENUMBER_ID, 0);
 
 	// set margin as unused
-	m_errorWnd->SetMarginType(DEF_IMAGE_ID, wxSTC_MARGIN_SYMBOL);
-	m_errorWnd->SetMarginMask(DEF_IMAGE_ID, ~(1024 | 256 | 512 | 128 | 64 | wxSTC_MASK_FOLDERS));
-	m_errorWnd->StyleSetBackground(DEF_IMAGE_ID, *wxWHITE);
+	m_errorOutput->SetMarginType(DEF_IMAGE_ID, wxSTC_MARGIN_SYMBOL);
+	m_errorOutput->SetMarginMask(DEF_IMAGE_ID, ~(1024 | 256 | 512 | 128 | 64 | wxSTC_MASK_FOLDERS));
+	m_errorOutput->StyleSetBackground(DEF_IMAGE_ID, *wxWHITE);
 
-	m_errorWnd->SetMarginWidth(DEF_IMAGE_ID, FromDIP(16));
-	m_errorWnd->SetMarginSensitive(DEF_IMAGE_ID, true);
+	m_errorOutput->SetMarginWidth(DEF_IMAGE_ID, FromDIP(16));
+	m_errorOutput->SetMarginSensitive(DEF_IMAGE_ID, true);
 
-	m_bSizerMain->Add(m_errorWnd, 1, wxEXPAND | wxALL, 5);
+	bSizerMain->Add(m_errorOutput, 1, wxEXPAND | wxALL, 5);
 
 	wxBoxSizer* m_bSizerButtons = new wxBoxSizer(wxVERTICAL);
 
-	m_buttonCloseWindow = new wxButton(this, wxID_ANY, wxT("Close window"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonCloseWindow = new wxButton(this, wxID_ANY, _("Close window"), wxDefaultPosition, wxDefaultSize, 0);
 	m_bSizerButtons->Add(m_buttonCloseWindow, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonGotoDesigner = new wxButton(this, wxID_ANY, wxT("Go to designer"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonGotoDesigner = new wxButton(this, wxID_ANY, _("Go to designer"), wxDefaultPosition, wxDefaultSize, 0);
 	m_bSizerButtons->Add(m_buttonGotoDesigner, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonCloseProgram = new wxButton(this, wxID_ANY, wxT("Close program"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonCloseProgram = new wxButton(this, wxID_ANY, _("Close program"), wxDefaultPosition, wxDefaultSize, 0);
 	m_bSizerButtons->Add(m_buttonCloseProgram, 0, wxALL | wxEXPAND, 5);
 
-	m_bSizerMain->Add(m_bSizerButtons, 0, wxEXPAND, 5);
+	bSizerMain->Add(m_bSizerButtons, 0, wxEXPAND, 5);
 
-	this->SetSizer(m_bSizerMain);
-	this->Layout();
-	m_bSizerMain->Fit(this);
+	wxDialog::SetSizer(bSizerMain);
+	wxDialog::Layout();
+	bSizerMain->Fit(this);
 
-	this->Centre(wxBOTH);
+	wxDialog::Centre(wxBOTH);
 
 	// Connect Events
 	m_buttonCloseProgram->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseProgramClick), nullptr, this);
 	m_buttonGotoDesigner->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonGotoDesignerClick), nullptr, this);
 	m_buttonCloseWindow->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseWindowClick), nullptr, this);
 
-	CDialogError::SetEditorSettings(mainFrame->GetEditorSettings());
-	CDialogError::SetFontColorSettings(mainFrame->GetFontColorSettings());
+	CDialogError::SetEditorSettings(parent->GetEditorSettings());
+	CDialogError::SetFontColorSettings(parent->GetFontColorSettings());
 
 	/** Enumeration of commands and child windows. */
 	enum
@@ -80,30 +81,36 @@ CDialogError::CDialogError(wxWindow* parent, wxWindowID id, const wxString& titl
 	};
 
 	wxAcceleratorEntry entries[2];
-	entries[0].Set(wxACCEL_CTRL, (int) 'A', idcmdSelectAll);
-	entries[1].Set(wxACCEL_CTRL, (int) 'C', idcmdCopy);
+	entries[0].Set(wxACCEL_CTRL, (int)'A', idcmdSelectAll);
+	entries[1].Set(wxACCEL_CTRL, (int)'C', idcmdCopy);
 
 	wxAcceleratorTable accel(2, entries);
-	m_errorWnd->SetAcceleratorTable(accel);
+	m_errorOutput->SetAcceleratorTable(accel);
+
+	wxIcon dlg_icon;
+	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picErrorCLSID));
+
+	wxDialog::SetIcon(dlg_icon);
+	wxDialog::SetFocus();
 }
 
-void CDialogError::SetEditorSettings(const EditorSettings & settings)
+void CDialogError::SetEditorSettings(const EditorSettings& settings)
 {
 	unsigned int m_bIndentationSize = settings.GetIndentSize();
 
-	m_errorWnd->SetIndent(m_bIndentationSize);
-	m_errorWnd->SetTabWidth(m_bIndentationSize);
+	m_errorOutput->SetIndent(m_bIndentationSize);
+	m_errorOutput->SetTabWidth(m_bIndentationSize);
 
 	bool useTabs = settings.GetUseTabs();
 	bool showWhiteSpace = settings.GetShowWhiteSpace();
 
-	m_errorWnd->SetUseTabs(useTabs);
-	m_errorWnd->SetTabIndents(useTabs);
-	m_errorWnd->SetBackSpaceUnIndents(useTabs);
-	m_errorWnd->SetViewWhiteSpace(showWhiteSpace);
+	m_errorOutput->SetUseTabs(useTabs);
+	m_errorOutput->SetTabIndents(useTabs);
+	m_errorOutput->SetBackSpaceUnIndents(useTabs);
+	m_errorOutput->SetViewWhiteSpace(showWhiteSpace);
 
-	m_errorWnd->SetMarginType(DEF_LINENUMBER_ID, wxSTC_MARGIN_NUMBER);
-	m_errorWnd->SetMarginWidth(DEF_LINENUMBER_ID, 0);
+	m_errorOutput->SetMarginType(DEF_LINENUMBER_ID, wxSTC_MARGIN_NUMBER);
+	m_errorOutput->SetMarginWidth(DEF_LINENUMBER_ID, 0);
 }
 
 inline wxColour GetInverse(const wxColour& color)
@@ -115,95 +122,95 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-void CDialogError::SetFontColorSettings(const FontColorSettings &settings)
+void CDialogError::SetFontColorSettings(const FontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
 	wxFont font = settings.GetFont();
 
-	m_errorWnd->StyleClearAll();
-	m_errorWnd->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+	m_errorOutput->StyleClearAll();
+	m_errorOutput->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	m_errorWnd->SetSelForeground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).foreColor);
-	m_errorWnd->SetSelBackground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).backColor);
+	m_errorOutput->SetSelForeground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).foreColor);
+	m_errorOutput->SetSelBackground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_Default);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_DEFAULT, font);
-	m_errorWnd->StyleSetFont(wxSTC_C_IDENTIFIER, font);
+	m_errorOutput->StyleSetFont(wxSTC_C_DEFAULT, font);
+	m_errorOutput->StyleSetFont(wxSTC_C_IDENTIFIER, font);
 
-	m_errorWnd->StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
 
-	m_errorWnd->StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
 
-	m_errorWnd->StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_Comment);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_COMMENT, font);
-	m_errorWnd->StyleSetFont(wxSTC_C_COMMENTLINE, font);
-	m_errorWnd->StyleSetFont(wxSTC_C_COMMENTDOC, font);
+	m_errorOutput->StyleSetFont(wxSTC_C_COMMENT, font);
+	m_errorOutput->StyleSetFont(wxSTC_C_COMMENTLINE, font);
+	m_errorOutput->StyleSetFont(wxSTC_C_COMMENTDOC, font);
 
-	m_errorWnd->StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
 
-	m_errorWnd->StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
 
-	m_errorWnd->StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_Keyword);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_WORD, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_WORD, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_Operator);
-	m_errorWnd->StyleSetFont(wxSTC_C_OPERATOR, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_OPERATOR, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_String);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_STRING, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_STRING, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_STRINGEOL, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_STRINGEOL, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_CHARACTER, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_CHARACTER, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
 
 	font = settings.GetFont(FontColorSettings::DisplayItem_Number);
 
-	m_errorWnd->StyleSetFont(wxSTC_C_NUMBER, font);
-	m_errorWnd->StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).foreColor);
-	m_errorWnd->StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).backColor);
+	m_errorOutput->StyleSetFont(wxSTC_C_NUMBER, font);
+	m_errorOutput->StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).backColor);
 
-	m_errorWnd->StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
+	m_errorOutput->StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.
-	m_errorWnd->SetCaretForeground(GetInverse(settings.GetColors(FontColorSettings::DisplayItem_Default).backColor));
+	m_errorOutput->SetCaretForeground(GetInverse(settings.GetColors(FontColorSettings::DisplayItem_Default).backColor));
 }
 
-void CDialogError::OnButtonCloseProgramClick(wxCommandEvent & event)
+void CDialogError::OnButtonCloseProgramClick(wxCommandEvent& event)
 {
 	EndModal(3); Destroy(); event.Skip();
 }
 
-void CDialogError::OnButtonGotoDesignerClick(wxCommandEvent &event)
+void CDialogError::OnButtonGotoDesignerClick(wxCommandEvent& event)
 {
 	EndModal(2); Destroy(); event.Skip();
 }
 
-void CDialogError::OnButtonCloseWindowClick(wxCommandEvent &event)
+void CDialogError::OnButtonCloseWindowClick(wxCommandEvent& event)
 {
 	EndModal(1); Destroy(); event.Skip();
 }

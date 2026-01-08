@@ -20,14 +20,7 @@
 #include "frontend/mainFrame/settings/editorsettings.h"
 #include "frontend/mainFrame/settings/fontcolorsettings.h"
 
-class FRONTEND_API CDialogError : public wxDialog
-{
-	wxStyledTextCtrl* m_errorWnd;
-
-	wxButton* m_buttonCloseProgram;
-	wxButton* m_buttonGotoDesigner;
-	wxButton* m_buttonCloseWindow;
-
+class FRONTEND_API CDialogError : public wxDialog {
 public:
 
 	//Editor setting 
@@ -35,20 +28,28 @@ public:
 	//Font setting 
 	void SetFontColorSettings(const FontColorSettings& settings);
 
-	CDialogError(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Critical failure"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION | wxSTAY_ON_TOP);
+	CDialogError(class CDocMDIFrame* parent, wxWindowID id = wxID_ANY,
+		const wxString& title = _("Critical failure"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION | wxSYSTEM_MENU | wxCLOSE_BOX | wxSTAY_ON_TOP);
+
 	virtual ~CDialogError();
 
 	void SetErrorMessage(const wxString& strError) {
-		m_errorWnd->SetReadOnly(false);
-		m_errorWnd->SetText(strError);
-		m_errorWnd->SetReadOnly(true);
+		m_errorOutput->SetReadOnly(false);
+		m_errorOutput->SetText(strError);
+		m_errorOutput->SetReadOnly(true);
 	}
 
-protected:
+private:
 
 	void OnButtonCloseProgramClick(wxCommandEvent& event);
 	void OnButtonGotoDesignerClick(wxCommandEvent& event);
 	void OnButtonCloseWindowClick(wxCommandEvent& event);
+
+	wxStyledTextCtrl* m_errorOutput;
+
+	wxButton* m_buttonCloseProgram;
+	wxButton* m_buttonGotoDesigner;
+	wxButton* m_buttonCloseWindow;
 };
 
 #endif 

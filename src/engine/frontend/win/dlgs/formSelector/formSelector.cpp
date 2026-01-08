@@ -82,8 +82,8 @@ void CDialogSelectTypeForm::CreateSelector()
 
 	bSizerMain->Add(bSizerBottom, 0, wxEXPAND, 5);
 
-	this->SetSizer(bSizerMain);
-	this->Layout();
+	wxDialog::SetSizer(bSizerMain);
+	wxDialog::Layout();
 }
 
 void CDialogSelectTypeForm::OnTextEnter(wxCommandEvent& event)

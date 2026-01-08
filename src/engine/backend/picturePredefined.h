@@ -9,6 +9,7 @@
 
 //COMMON PICTURES
 const picture_identifier_t g_picStructureCLSID = string_to_clsid("PC_STRCT");
+const picture_identifier_t g_picErrorCLSID = string_to_clsid("PC_ERROR");
 
 const picture_identifier_t g_picCloseFormCLSID = string_to_clsid("PC_CLOSE");
 const picture_identifier_t g_picUpdateFormCLSID = string_to_clsid("PC_REFRE");

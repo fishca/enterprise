@@ -5,8 +5,8 @@
 CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
-	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INACTIVECAPTION));
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INACTIVECAPTION));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* sizerServer = new wxBoxSizer(wxHORIZONTAL);
@@ -72,9 +72,9 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 	bSizerButton->Add(m_buttonSaveConnection, 1, wxALL, 5);
 	mainSizer->Add(bSizerButton, 1, wxEXPAND, 5);
 
-	this->SetSizer(mainSizer);
-	this->Layout();
-	this->Centre(wxBOTH);
+	wxDialog::SetSizer(mainSizer);
+	wxDialog::Layout();
+	wxDialog::Centre(wxBOTH);
 
 	// Connect Events
 	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::TestConnectionOnButtonClick), NULL, this);

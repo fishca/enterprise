@@ -53,16 +53,16 @@ void CDialogActiveUser::RefreshActiveUserTable()
 CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style), m_activeTableScanner(new wxTimer)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
 	m_activeTable = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
 	mainSizer->Add(m_activeTable, 1, wxALL | wxEXPAND, 5);
 
-	this->SetSizer(mainSizer);
-	this->Layout();
-	this->Centre(wxBOTH);
+	wxDialog::SetSizer(mainSizer);
+	wxDialog::Layout();
+	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
 	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserActiveCLSID));

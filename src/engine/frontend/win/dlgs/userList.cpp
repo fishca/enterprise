@@ -75,7 +75,7 @@ enum {
 
 CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
-	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* sizerList = new wxBoxSizer(wxVERTICAL);
 
@@ -116,9 +116,9 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 
 	sizerList->Add(m_dataViewUsers, 1, wxALL | wxEXPAND, 5);
 
-	this->SetSizer(sizerList);
-	this->Layout();
-	this->Centre(wxBOTH);
+	wxDialog::SetSizer(sizerList);
+	wxDialog::Layout();
+	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
 	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserListCLSID));

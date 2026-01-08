@@ -111,11 +111,11 @@ public:
 	const wxString GetErrorDescription() const { return m_strErrorDescription; }
 
 	//error from proc unit/compile module 
-	static void ProcessError(const struct CByteUnit& error, const wxString& strErrorDesc);
+	static void ProcessError(const CBackendException* err, const struct CByteUnit& error);
 	static void ProcessError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
-		const wxString& strCodeLineError, const int codeError, const wxString& strErrorDesc // error code from compile codule
+		const wxString& strCodeLineError, const int codeError, const wxString& strErrorDesc // error code from compile module
 	);
 
 	static wxString FindErrorCodeLine(const wxString& sBuffer, unsigned int currPos);
@@ -136,7 +136,12 @@ protected:
 private:
 
 	//error handling routines
-	static const wxString& GetErrorDesc(int codeError);
+	static const wxString& GetErrorDesc(int codeError);	
+	static wxString ProcessExceptionError(const wxString& strFileName,
+		const wxString& strModuleName, const wxString& strDocPath,
+		const unsigned int currPos, const unsigned int currLine,
+		const wxString& strCodeLineError, const int codeError, const wxString& strErrorDesc // error code from compile module
+	);
 
 #if !wxUSE_UTF8_LOCALE_ONLY
 	static wxString DoFormatWchar(const wxChar* format, ...);

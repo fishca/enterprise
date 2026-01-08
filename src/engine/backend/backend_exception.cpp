@@ -105,7 +105,7 @@ CBackendException::CBackendException(const wxString& strErrorDescription)
 
 #include "backend/metaCollection/metaModuleObject.h"
 
-void CBackendException::ProcessError(const CByteUnit& error, const wxString& strErrorDesc)
+void CBackendException::ProcessError(const CBackendException* err, const CByteUnit& error)
 {
 	const bool isEvalMode = CBackendException::IsEvalMode();
 
@@ -117,65 +117,91 @@ void CBackendException::ProcessError(const CByteUnit& error, const wxString& str
 
 		wxString strModuleData;
 
-		if (!isEvalMode) {
-
-			if (strModuleData.IsEmpty() && strFileName.IsEmpty()) {
-				const CGuid& guidDocPath = error.m_strDocPath;
-				const IMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IMetaObjectModule>(guidDocPath);
-				wxASSERT(foundedDoc);
-				strModuleData = foundedDoc->GetModuleText();
-			}
-
-			if (strModuleData.IsEmpty() && !strFileName.IsEmpty()) {
-				if (backend_mainFrame != nullptr) {
-					const IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
-					wxASSERT(metadata);
-					const CGuid& guidDocPath = error.m_strDocPath;
-					const IMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IMetaObjectModule>(guidDocPath);
-					wxASSERT(foundedDoc);
-					strModuleData = foundedDoc->GetModuleText();
-				}
-			}
+		if (!isEvalMode && strFileName.IsEmpty()) {
+			const CGuid& guidDocPath = error.m_strDocPath;
+			const IMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IMetaObjectModule>(guidDocPath, true);
+			wxASSERT(foundedDoc);
+			strModuleData = foundedDoc->GetModuleText();
+		}
+		else if (!isEvalMode && !strFileName.IsEmpty() && backend_mainFrame != nullptr) {
+			const IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
+			wxASSERT(metadata);
+			const CGuid& guidDocPath = error.m_strDocPath;
+			const IMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IMetaObjectModule>(guidDocPath, true);
+			wxASSERT(foundedDoc);
+			strModuleData = foundedDoc->GetModuleText();
 		}
 
-		const wxString& strCodeLineError = isEvalMode ? wxEmptyString :
+		const wxString& strCodeError = isEvalMode ? wxEmptyString :
 			CBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
 
-		CBackendException::ProcessError(strFileName,
+		CBackendException::ProcessExceptionError(strFileName,
 			strModuleName, strDocPath,
 			error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
-			strCodeLineError, wxNOT_FOUND, strErrorDesc
+			strCodeError, wxNOT_FOUND, err->GetErrorDescription()
 		);
 	}
 	else {
 
-		CBackendException::ProcessError(strFileName,
+		CBackendException::ProcessExceptionError(strFileName,
 			strModuleName, strDocPath,
 			error.m_numString, error.m_numLine + 1,
-			wxEmptyString, wxNOT_FOUND, strErrorDesc
+			wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
 		);
 	}
+
+	//throw this exception
+	throw(err);
 }
 
 void CBackendException::ProcessError(const wxString& strFileName,
 	const wxString& strModuleName, const wxString& strDocPath,
 	const unsigned int currPos, const unsigned int currLine,
-	const wxString& strCodeLineError, const int codeError, const wxString& strErrorDesc)
+	const wxString& strCodeError, const int codeError, const wxString& strErrorDesc)
+{
+	//throw this exception
+	CBackendCoreException::Error(
+		CBackendException::ProcessExceptionError(strFileName, strModuleName, strDocPath, currPos, currLine, strCodeError, codeError, strErrorDesc));
+}
+
+////////////////////////////////////////////////////////////////////
+
+wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
+	const wxString& strModuleName, const wxString& strDocPath,
+	const unsigned int currPos, const unsigned int currLine,
+	const wxString& strCodeError, const int codeError, const wxString& strErrorDesc)
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + wxString::Format(wxT("%i"), currLine) + wxT(")}: ");
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (ms_evalMode ? wxT(" ") : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? CBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (ms_evalMode ? wxEmptyString : strCodeLineError);
+	strErrorMessage += (ms_evalMode ? wxEmptyString : strCodeError);
 
 	if (ms_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
 	if (!ms_evalMode && backend_mainFrame != nullptr) {
+
+		// set stack 
+		wxString strStackMessage;
+
+		for (unsigned int i = 0; i < CProcUnit::GetCountRunContext(); i++) {
+			const CRunContext* stackContext = CProcUnit::GetRunContext(i);
+			wxASSERT(stackContext);
+			const CByteCode* stackByteCode = stackContext->GetByteCode();
+			wxASSERT(stackByteCode);
+			strStackMessage += wxString::Format(wxT("\n%i: %s (#line %d)"),
+				i + 1,
+				stackByteCode->m_strModuleName,
+				stackByteCode->m_listCode[stackContext->m_lCurLine].m_numLine + 1
+			);
+		}
+
+		//show message
 		backend_mainFrame->BackendError(
 			strFileName,
 			strDocPath,
 			currLine,
-			strErrorMessage
+			strErrorMessage + (strStackMessage.IsEmpty() ? wxT("") : wxT("\n\nCall stack:") + strStackMessage)
 		);
 	}
 
@@ -184,7 +210,11 @@ void CBackendException::ProcessError(const wxString& strFileName,
 #ifdef DEBUG
 	wxLogDebug(strErrorMessage);
 #endif // !DEBUG
+
+	return strErrorMessage;
 }
+
+////////////////////////////////////////////////////////////////////
 
 const wxString& CBackendException::GetErrorDesc(int codeError)
 {
@@ -192,6 +222,8 @@ const wxString& CBackendException::GetErrorDesc(int codeError)
 		return gs_listErrorString[codeError];
 	return gs_listErrorString[ERROR_SYS1];
 }
+
+////////////////////////////////////////////////////////////////////
 
 #if !wxUSE_UTF8_LOCALE_ONLY
 wxString CBackendException::DoFormatWchar(const wxChar* format, ...)

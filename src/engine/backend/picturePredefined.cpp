@@ -7,6 +7,9 @@
 static const char* s_structure_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAm0lEQVR4nGNggIKK7jn/8eHa/vlXGPCBiu45/3EBkFzP3NX/ayfMv0C2Ad++//jfN3fNv9p+HIZUEDAABL58+/6/e/bKf7X9C47jNMCvaisYX3/wEoxhBqBjogzYcPAKThcR5YUN5BiwbM8tMEY24LizMxwTNMAP6gWQZhgmyYBllLqA4jDwozQW/LCkA5IMIAbgNIAUjGEAuQAAy1U9d/63FskAAAAASUVORK5CYII=";
 
 /* PNG */
+static const char* s_error_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA2klEQVR4nGNgoBX4rx/q/c8w9D8I/zcI8yJNs1Yo21/D0BswA/4ahN7+r+LBTrwBhiFlMM1wV+iHlhKnWSdC/K9B6Ad0A/4ahH76bxwoSdCAv4YhC+C2QgHcEMPQ+fhtNwo1/msY8hePAf/+GwebY9fMwMD41yD0BIq/0QyAeuXMf4Z6JmwBl4gRcFgMgAZoAqpmdT/evwahz4g14K9hyIv/xqH8yAHXja6IEP5rGNoFdXqoyl/D0B9kGPDzv26oOsj2rbgU4fICkiG7GPDZQsgAEMZrADGYYgMAj6i2/dpT62QAAAAASUVORK5CYII=";
+
+/* PNG */
 static const char* s_closeForm_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAwElEQVR4nGNgYGBgCKjZ0RpYs6OXgQiAodavaltrWOPeL2FNe7/6V29rw6cZq9qA2u01oY17vjasefY/rGnvl4Dq7X24NCOrC6rb0YpwVi1+Q/BqJmQIUZrR/di49jlI8Vf/6q3HUPn4wwgeyiCbQJqS+k7+hmr+AhJnIBb4VW07mth78nf39g//QTSIT7TmAEpc4IcWBgE1244SHQZ+OEKbqHTiRyCq8BriR2Q84zSE4rwANr1mRyux8UyKWqIAAGENJXOk4OgSAAAAAElFTkSuQmCC";
 
 /* PNG */
@@ -77,6 +80,7 @@ static const char* s_authentication_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCA
 void RegisterAllBackendPicture()
 {
 	::RegisterBackendPicture(wxT("structure"), g_picStructureCLSID, s_structure_16_png);
+	::RegisterBackendPicture(wxT("error"), g_picErrorCLSID, s_error_16_png);
 
 	::RegisterBackendPicture(wxT("closeForm"), g_picCloseFormCLSID, s_closeForm_16_png);
 	::RegisterBackendPicture(wxT("updateForm"), g_picUpdateFormCLSID, s_updateForm_16_png);

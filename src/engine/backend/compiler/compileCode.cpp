@@ -197,17 +197,15 @@ void CCompileCode::DoSetError(int codeError,
 	unsigned int currPos, unsigned int currLine,
 	const wxString& strErrorDesc) const
 {
-	const wxString& strCodeLineError =
+	const wxString& strCodeError =
 		CBackendException::FindErrorCodeLine(m_strBuffer, currPos);
 
 	CBackendException::ProcessError(
 		strFileName,
 		strModuleName, strDocPath,
 		currPos, currLine,
-		strCodeLineError, codeError, strErrorDesc
+		strCodeError, codeError, strErrorDesc
 	);
-
-	CBackendCoreException::Error(strCodeLineError);
 }
 
 //////////////////////////////////////////////////////////////////////

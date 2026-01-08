@@ -846,9 +846,8 @@ CValue CSystemFunction::Type(const CValue& cTypeName)
 	}
 
 	const wxString& strTypeName = cTypeName.GetString();
-	if (!activeMetaData->IsRegisterCtor(strTypeName)) {
-		CBackendCoreException::Error(wxString::Format(_("Type not found '%s'"), strTypeName));
-	}
+	if (!activeMetaData->IsRegisterCtor(strTypeName))
+		CBackendCoreException::Error(_("Type not found '%s'"), strTypeName);
 
 	return CValue::CreateAndPrepareValueRef<CValueType>(strTypeName);
 }
@@ -870,7 +869,8 @@ int CSystemFunction::ArgCount()//ArgCount
 
 wxString CSystemFunction::ArgValue(int n)//ArgValue
 {
-	if (n<0 || n> __argc) CBackendCoreException::Error(_("Invalid argument index"));
+	if (n<0 || n> __argc)
+		CBackendCoreException::Error(_("Invalid argument index"));
 	return __wargv[n];
 }
 
@@ -922,7 +922,7 @@ void CSystemFunction::EndJob(bool force) //EndJob
 	if (force) {
 		CApplicationData::ForceExit();
 	}
-	else {
+	else if (activeMetaData != nullptr) {
 		IModuleManager* moduleManager = activeMetaData->GetModuleManager();
 		if (moduleManager->DestroyMainModule()) {
 			CApplicationData::ForceExit();
@@ -938,22 +938,19 @@ void CSystemFunction::UserInterruptProcessing()
 
 bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cData)
 {
-	const IMetaObject* object = cData.ConvertToType<IMetaObject>();
-	if (object == nullptr)
-		return false;
-
-	return object->AccessRight(strRoleName);
+	const IMetaObject* creator = cData.ConvertToType<IMetaObject>();
+	return creator != nullptr ?
+		creator->AccessRight(strRoleName) : false;
 }
 
 bool CSystemFunction::IsInRole(const CValue& cData)
 {
-	const IMetaObject* foundedRole = activeMetaData->FindAnyObjectByFilter(
-		cData.GetString(), g_metaRoleCLSID);
+	const IMetaObject* creator = activeMetaData->FindAnyObjectByFilter(cData.GetString(), g_metaRoleCLSID);
+	if (creator == nullptr) return false;
 
-	if (foundedRole != nullptr) {
-		const role_identifier_t& rid = foundedRole->GetMetaID();
+	if (creator != nullptr) {
 		for (const auto role : appData->GetUserRoleArray()) {
-			if (rid == role.m_miRoleId)
+			if (role.m_miRoleId == creator->GetMetaID())
 				return true;
 		}
 	}
@@ -972,7 +969,7 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 			return creator->GetObjectForm(ownerControl, unique ? ((CGuid)*unique) : CGuid());
 	}
 
-	CBackendCoreException::Error(_("Common form not found '") + strFormName + "'");
+	CBackendCoreException::Error(_("Common form not found '%s'"), strFormName);
 	return wxEmptyValue;
 }
 

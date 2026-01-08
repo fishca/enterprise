@@ -160,7 +160,7 @@ bool CTextEditView::OnClose(bool deleteWindow)
 
 wxPrintout* CTextEditView::OnCreatePrintout()
 {
-	return nullptr; //new CCodeEditorPrintout(m_textEditor, this->GetViewName());
+	return nullptr; //new CCodeEditorPrintout(m_textEditor, wxDialog::GetViewName());
 }
 
 #include "backend/metaData.h"

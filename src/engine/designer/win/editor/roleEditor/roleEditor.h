@@ -60,7 +60,7 @@ private:
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);
-		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 		return m_roleCtrl->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name, imageIndex, imageIndex, nullptr);
 	}
 
@@ -68,7 +68,7 @@ private:
 		IMetaObject* metaObject) const {
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);
-		int imageIndex = imageList->Add(metaObject->GetIcon());
+		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		return m_roleCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
 	}
 

@@ -84,7 +84,7 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 			CRole* role = metaObject->GetRole(idx);
 			wxASSERT(role);
 			wxTreeItemId newItem = m_checkCtrl->AppendItem(root, role->GetLabel(), wxNOT_FOUND, wxNOT_FOUND, new wxTreeItemRoleData(role));
-			m_checkCtrl->SetItemState(newItem, wxCheckTree::UNCHECKED);
+			m_checkCtrl->SetItemState(newItem, m_metaRole->IsEditable() ? wxCheckTree::UNCHECKED : wxCheckTree::UNCHECKED_DISABLED);
 			m_checkCtrl->Check(newItem, metaObject->AccessRight(role, m_metaRole->GetMetaID()));
 		}
 	}

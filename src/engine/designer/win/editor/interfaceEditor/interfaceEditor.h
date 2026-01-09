@@ -48,7 +48,7 @@ private:
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_interfaceCtrl->GetImageList();
 		wxASSERT(imageList);
-		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 		return m_interfaceCtrl->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name, imageIndex, imageIndex, nullptr);
 	}
 
@@ -56,9 +56,14 @@ private:
 		IMetaObject* metaObject) const {
 		wxImageList* imageList = m_interfaceCtrl->GetImageList();
 		wxASSERT(imageList);
-		int imageIndex = imageList->Add(metaObject->GetIcon());
+		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		wxTreeItemId createItem = m_interfaceCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
-		m_interfaceCtrl->SetItemState(createItem, metaObject->IsSetInterface(m_metaInterface->GetMetaID()) ? wxCheckTree::CHECKED : wxCheckTree::UNCHECKED);
+		m_interfaceCtrl->SetItemState(createItem,
+			metaObject->IsSetInterface(m_metaInterface->GetMetaID()) ?
+			metaObject->IsEditable() ? wxCheckTree::CHECKED : wxCheckTree::CHECKED_DISABLED :
+			metaObject->IsEditable() ? wxCheckTree::UNCHECKED : wxCheckTree::UNCHECKED_DISABLED
+		);
+
 		return createItem;
 	}
 

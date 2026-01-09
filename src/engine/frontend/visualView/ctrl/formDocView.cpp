@@ -109,20 +109,21 @@ void CVisualDocument::Modify(bool modify)
 
 bool CVisualDocument::Save()
 {
-	ISourceDataObject* sourceData = m_valueForm != nullptr ?
+	ISourceDataObject* sourceObject = m_valueForm != nullptr ?
 		m_valueForm->GetSourceObject() : nullptr;
 
 	bool success = true;
 
 	try {
-		success = sourceData->SaveModify();
+		success = sourceObject != nullptr ?
+			sourceObject->SaveModify() : true;
 	}
 	catch (const CBackendAccessException* err) {
 		CSystemFunction::Alert(err->GetErrorDescription());
 		success = false;
 	}
 	catch (const CBackendException*) {
-		CSystemFunction::Alert(_("An error occurred while trying to write the form!"));
+		CSystemFunction::Alert(_("An error occurred while trying to save the form!"));
 		success = false;
 	}
 

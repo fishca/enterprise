@@ -1,121 +1,17 @@
 #include "dataReport.h"
 
-/* XPM */
-static const char *s_reportGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 19 1",
-	". c None",
-	"o c #C94141",
-	"% c #C54A4B",
-	"X c #C54141",
-	"; c #C84242",
-	"- c #C83F3F",
-	"+ c #C64242",
-	"> c #C74343",
-	"$ c #B0BFD2",
-	": c #C84141",
-	"* c #C64444",
-	"  c #788B9C",
-	"# c #C44141",
-	", c #CC4C4C",
-	"O c #C74242",
-	"< c #C54545",
-	"@ c #B0C1D3",
-	"= c #C64343",
-	"& c #C64040",
-	/* pixels */
-	" ...............",
-	" ...............",
-	" .............Xo",
-	" ............OO+",
-	" @.@.@#$.@.@O%&@",
-	" ....*O=-..OO&..",
-	" ...;+:OOOO=*...",
-	" ..*+*..:O>X....",
-	" .*+*....,X.....",
-	" .><............",
-	" @.@.@.@.@.@.@.@",
-	" ...............",
-	" ...............",
-	" ...............",
-	" ...............",
-	"                "
-};
-
-/* XPM */
-static const char *s_report_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 45 1",
-	"  c None",
-	"d c #517DB7",
-	"f c #517DB8",
-	"O c #FFFFFF",
-	"g c #487FB6",
-	"* c #7E8FA0",
-	"t c #4F7AB6",
-	"4 c #EFC8C8",
-	": c #CB5252",
-	"w c #87B3EC",
-	"j c #5078B5",
-	"1 c #E5A8A8",
-	"a c #517CB7",
-	"7 c #E1E9F3",
-	"< c #CA4D4D",
-	"= c #FFFEFE",
-	"5 c #CD5757",
-	"0 c #9CB5D7",
-	"& c #8D9DAC",
-	"o c #00FFFF",
-	"h c #4D79B4",
-	"# c #F6F7F8",
-	"3 c #CE5B5B",
-	"q c #758A9D",
-	". c #788B9C",
-	"8 c #4E7AB5",
-	"> c #CC5555",
-	"p c #6791CC",
-	"; c #D26969",
-	"2 c #E09797",
-	"s c #4F7BB4",
-	"% c #7E90A0",
-	"9 c #5983BB",
-	"u c #8BB7F0",
-	"+ c #8B9CAA",
-	"r c #527CB5",
-	", c #F5DDDD",
-	"$ c #8E9DAC",
-	"- c #EDC3C3",
-	"@ c #7D91A0",
-	"6 c #7D9DC9",
-	"y c #7F7F7F",
-	"i c #719ED7",
-	"X c #7D8E9F",
-	"e c #6C97CF",
-	/* pixels */
-	" .........Xo    ",
-	" .OOOOOOO.+@    ",
-	" .OOOOOOO.#$%   ",
-	" .OOOOOOO.O#&*  ",
-	" .OOOOOOO.....  ",
-	" .OOOOOOOOO=O.  ",
-	" .OOOOOOOO-;O.  ",
-	" .OOO-:-O->,O.  ",
-	" .OO-<1<2>,OO.  ",
-	" .OO34O45,67O.  ",
-	" .OOOOOOOO890q  ",
-	" .OOOOOOOO8werty",
-	" .OOOOOOOO8uui88",
-	" .OOOOOOOO8wpasy",
-	" .........8dfg  ",
-	"          hj    "
-};
+/* PNG */
+static const wxString s_report_64_png = wxT("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3b20sUURwH8C2Ceqge6qWXXnvoT+hVxQvNrCIVEci+GD0kIVTOzGZjluG6KF62iHYzrFQQRMiZVTAhJPGSpCXlXbHyXraSoeys5xczuCHuzJ7N2XVmZ/YHP5DxuM73s+cywmqxYIpyekDLLihzL1MP605atCpKY4BthKX8cvcJ0wJQUrvn2KqXx00M4BFnwvdbDs8xTQFiXViIMs831uU6ahqA+65XcsthimWfHzEFwNKPX1DyuF5uJkzvCwKlMYBYygjuqbyqqsOGBwiHUFDmHmNZ9pDhATAIozFDoHQEgEEYZln2oOEBMHvCp6gjUDoEwCAMWQAOGB5ArDBH5IApAMLvCZ5+UwBgNsbuuAegVHYCQG1RCQBPAoDaRwC1lQBwJgDA8ACb8/MQWF83HwASBJgoKYGepCToJwhYGxw0DwASBBhjWSl8sL8UFJgDAMmEF3uqosL4AEgh/MfcXBDW1vQNgAQBpqurYTAnR+qZmhrpWlTC+3yyP6MbAKRw8yMMA1t+f0zC6wYAKdx8pAh7Da8LAIQJj0NQE15zAKRw872pqVLvvi6O3bknqA2vKQBSeueTk2GlsxN+dnVBb0qK4kyIRnjNAFCY8Iutrf/GiV+L1+RmQjTCawKAwqz5ucbGkPELzc3Y/WGv4TUBmK6slA3wtbZW8SbF70UavvBZH8wu/dYvwHurNSSA+MCDK3FMJO88yfCQVeiFp62f4c+GoC+ALb8/JMBkaSkAQvi3CiFpLG7aiwDBvvKgA153zwAK8/r7PgNmXC4Ystmklh51AwF8+KBBIACTTif0pafDQHY2bC4uhozZCRDs/EfvYGR2VR8AsS45ALGtdh4cDR9gxbdhTgByuy8WtUPDm3HwC1vmAMi80yYLca3iLQyMLhsfoLhlEWzlPYoz4vLdFsh31BkXwNnmk5qun4FLxZ3yEHYObPea4HZZrXEBnG0+cPCrcP3JsOKyyLJzQNL8DVWfGqF0DBBs3LIgGH7AaufOGRbAGcmyYDhE0nyT1d5+2rAAzgiWBclw6wTNF6XleSP7gGW8AUS6LEiGmyDt3AXzAtD8OEHx5w0HYOolQOM2QYZ/kXGTOxVR8HgCMO0x6MBOd36BYLirhnwQosNMd4Lh/ATNV6WxXvX/ZEXtAtjv/t8/hgia7yBp71nVwfUKoDTdCYYbs1LeDEu0i9IZgOpjzTgA3N6OtXgrMtrHWrwVGe1jLd6KjPaxFm9FMByfSfFnYvUL/gL21Jbckw+RowAAAABJRU5ErkJggg==");
 
 wxIcon CMetaObjectReport::GetIcon() const
 {
-	return wxIcon(s_report_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectReport::GetIconGroup()
 {
-	return wxIcon(s_report_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_report_64_png, wxSize(16, 16));
+
+	return icon;
 }

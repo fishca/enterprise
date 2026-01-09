@@ -1,84 +1,17 @@
 #include "metaObjectMetadata.h"
 
-/* XPM */
-static const char *s_metadata_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 50 1",
-	"  c None",
-	"w c #EEE946",
-	"h c #DEE8A3",
-	"< c #D4E9DB",
-	"2 c #D4E9DC",
-	"1 c #DFE9A2",
-	"y c #DFE9A3",
-	". c #EFEA4C",
-	"= c #DFE9A5",
-	"r c #E2E788",
-	"9 c #EAE968",
-	"$ c #DDE9A5",
-	"# c #EFEA62",
-	"e c #FDE803",
-	"k c #E8E35E",
-	"t c #E0E79F",
-	"& c #CEE9F9",
-	"z c #DEEAA3",
-	"o c #DEE79C",
-	"O c #DEE79E",
-	"f c #EEE848",
-	"- c #E9E464",
-	"i c #D4E8DD",
-	"@ c #EFE94A",
-	"; c #E7E773",
-	"p c #E2E989",
-	"d c #D2E8E2",
-	"* c #D2E8E5",
-	"% c #D2E8E6",
-	"j c #D5E9CF",
-	"6 c #EAE866",
-	"> c #D5E9D2",
-	": c #D5E9D3",
-	"c c #E8E260",
-	"+ c #E3E789",
-	"X c #E3E78A",
-	"x c #DEE9A2",
-	"0 c #DEE9A4",
-	"q c #D1E9E4",
-	"a c #D1E9E5",
-	"s c #E9E968",
-	"g c #E9E969",
-	"8 c #FEE800",
-	"7 c #FEE802",
-	"4 c #E9E361",
-	"5 c #CFE9F3",
-	"u c #DFE79D",
-	"l c #E7E373",
-	"3 c #D5E8D0",
-	", c #EAE772",
-	/* pixels */
-	"     .XoO+@     ",
-	"   #$%&&&&*=-   ",
-	"  ;:&&&&&&&&>,  ",
-	" #>&&&<112&&&34 ",
-	" $&&56788795&&0 ",
-	".*&&68888889&&qw",
-	"X&&<7888888e2&&r",
-	"t&&188888888y&&u",
-	"u&&188888888y&&O",
-	"+&&<e888888ei&&p",
-	"@a&&9888888s&&df",
-	" =&&59788eg5&&h ",
-	" ->&&&21yi&&&jk ",
-	"  ,3&&&&&&&&jl  ",
-	"   4zq&&&&dxc   ",
-	"     frOOpf     "
-};
+/* PNG */
+static const wxString s_metadata_64_png = wxT("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");
 
 wxIcon CMetaObjectConfiguration::GetIcon() const
 {
-	return wxIcon(s_metadata_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectConfiguration::GetIconGroup()
 {
-	return wxIcon(s_metadata_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_metadata_64_png, wxSize(16, 16));
+
+	return icon;
 }

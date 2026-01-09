@@ -1,132 +1,17 @@
 #include "metaEnumObject.h"
 
-/* XPM */
-static const char* s_enumerationGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 72 1",
-	"  c None",
-	"$ c #BB75D7",
-	"3 c #A174C7",
-	"2 c #A36ECA",
-	"J c #C774E0",
-	"n c #FFB6FF",
-	"6 c #A75FD2",
-	"@ c #BD69DC",
-	"r c #FFB3FF",
-	"8 c #A956D6",
-	"C c #FFFFFF",
-	"P c #B862DC",
-	"h c #984ACE",
-	"w c #FDB0FD",
-	". c #A753D6",
-	"Z c #FFCAFF",
-	"# c #BC6DDB",
-	"+ c #BE67DD",
-	"z c #BC6ADC",
-	"B c #C672E0",
-	", c #FEB1FE",
-	"j c #A854D6",
-	"d c #B760DC",
-	"X c #BC64DD",
-	"M c #974BCD",
-	"v c #FCB1FC",
-	"y c #FFBBFF",
-	"N c #AB58D6",
-	"a c #B560DB",
-	"> c #BF68DE",
-	"* c #CE74E3",
-	"A c #C773E0",
-	"m c #C773E1",
-	"t c #FFB5FF",
-	"1 c #A564CF",
-	"< c #934BCA",
-	"- c #FFB2FF",
-	"k c #A955D7",
-	"o c #BD65DD",
-	"H c #FEC5FE",
-	"5 c #A468CD",
-	"i c #FFC9FF",
-	"x c #FBACFC",
-	": c #C36AE0",
-	"u c #FFC6FF",
-	"s c #994ACF",
-	"g c #FEB0FE",
-	"F c #FDC3FD",
-	"l c #954DCB",
-	"S c #CE76E3",
-	"L c #B55FDB",
-	"f c #BF67DE",
-	"V c #FBC3FC",
-	"e c #BF67DF",
-	"G c #FECAFD",
-	"; c #FFB1FF",
-	"& c #9F6FC7",
-	"K c #9D4FD1",
-	"U c #9B4FCF",
-	"4 c #A270C9",
-	"D c #FBB1FC",
-	"q c #BE68DE",
-	"c c #CD74E3",
-	"9 c #AA55D7",
-	"O c #BE65DD",
-	"b c #FFC5FF",
-	"7 c #A858D5",
-	"= c #FEB2FE",
-	"p c #FFC2FF",
-	"I c #B761DB",
-	"0 c #9248CB",
-	"% c #B97ED4",
-	/* pixels */
-	"                ",
-	" .XooO++@#$%&   ",
-	" *=-;;;;;;;;:   ",
-	" >,<12345678890 ",
-	" qwe,;-rtyuipta ",
-	" sdfghj9kkkkkk9l",
-	"   zxcvbbbbbbbnm",
-	"   MNBVCCCCCCCZA",
-	"     SDbbbbFFGHJ",
-	"     KLPIIIIIIPU",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
-
-/* XPM */
-static const char *s_enumeration_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 3 1",
-	"  c None",
-	"X c #E6DDFF",
-	". c #A955D7",
-	/* pixels */
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"................",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	"................",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
+/* PNG */
+static const wxString s_enumeration_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACVBMVEUAAAGpVdfm3f/kjJsEAAAAAXRSTlMAQObYZgAAABlJREFUGJVjYKAFYEQDDIxMKIA8AXRDaQEAUdAAmeJBSsoAAAAASUVORK5CYII=");
 
 wxIcon CMetaObjectEnum::GetIcon() const
 {
-	return wxIcon(s_enumeration_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectEnum::GetIconGroup()
 {
-	return wxIcon(s_enumeration_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_enumeration_16_png, wxSize(16, 16));
+
+	return icon;
 }

@@ -1,65 +1,17 @@
 #include "metaTableObject.h"
 
-/* XPM */
-static const char* s_tableGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 4 1",
-	"  c None",
-	"o c #DBF2FF",
-	". c #4788C7",
-	"X c #98CCFD",
-	/* pixels */
-	"                ",
-	"................",
-	".XXXX.XXXXXXXXX.",
-	".XXXX.XXXXXXXXX.",
-	".XXXX.XXXXXXXXX.",
-	"................",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	"................",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	"................",
-	"                "
-};
-
-/* XPM */
-static const char* s_table_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 4 1",
-	"  c None",
-	"o c #DBF2FF",
-	". c #4788C7",
-	"X c #98CCFD",
-	/* pixels */
-	"                ",
-	"................",
-	".XXXX.XXXXXXXXX.",
-	".XXXX.XXXXXXXXX.",
-	".XXXX.XXXXXXXXX.",
-	"................",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	"................",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	".oooo.ooooooooo.",
-	"................",
-	"                "
-};
+/* PNG */
+static const wxString s_table_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAADFBMVEUAAAFHiMeYzP3b8v/KNOThAAAAAXRSTlMAQObYZgAAAChJREFUGJVjYEAHjGiAgZEJCMAEGBAlgGEGMxCACTAgT4AahqKbgQ4A4aYBvhxdShsAAAAASUVORK5CYII=");
 
 wxIcon CMetaObjectTableData::GetIcon() const
 {
-	return wxIcon(s_table_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectTableData::GetIconGroup()
 {
-	return wxIcon(s_table_xpm);
+	static wxIcon icon = 
+		CBackendPicture::GetIconFromBase64(s_table_16_png, wxSize(16, 16));
+	
+	return icon;
 }

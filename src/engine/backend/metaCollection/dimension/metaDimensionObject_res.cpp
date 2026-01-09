@@ -1,131 +1,17 @@
 #include "metaDimensionObject.h"
 
-/* XPM */
-static const char* s_dimensionGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 71 1",
-	"  c None",
-	"v c #FFFFE6",
-	"O c #FDC48E",
-	"b c #FBCD99",
-	"h c #FFFFEE",
-	"j c #FFFFF1",
-	"k c #FFFFF3",
-	"c c #FFFFF4",
-	"x c #FFFFF5",
-	"L c #FDBE8A",
-	"l c #FFFFF6",
-	"z c #FFFFF7",
-	"H c #F5AA79",
-	"V c #FFFFFC",
-	"B c #FFFFFF",
-	"@ c #F8B180",
-	"= c #FEC892",
-	"q c #FEC590",
-	"P c #FEBF8B",
-	"Z c #FDD29B",
-	"7 c #FEB380",
-	"9 c #FFC68F",
-	": c #D29F7D",
-	"a c #FCB380",
-	"f c #E5CBAB",
-	"o c #FDC38D",
-	"< c #E4AF8B",
-	"I c #F0A878",
-	"2 c #D8AD91",
-	"N c #FAFAF9",
-	"s c #E9A474",
-	"n c #EEA574",
-	"C c #F7CC9A",
-	"+ c #FEC48E",
-	"A c #FBFBE7",
-	"- c #DABEA3",
-	"t c #EFA675",
-	". c #F9B181",
-	"G c #F8CD9A",
-	"p c #FEB27F",
-	"g c #FCFCE4",
-	"y c #FFBF8A",
-	"X c #FDC28D",
-	"d c #FDFDD5",
-	"K c #FDBF8B",
-	"J c #FDBC89",
-	"8 c #AC988C",
-	"M c #F9CB98",
-	"S c #FDFDF3",
-	"6 c #FDB380",
-	"0 c #FEFECE",
-	"u c #FEFECF",
-	"w c #FEFED0",
-	"$ c #FEFED7",
-	"; c #FEFEDD",
-	"1 c #DEAE8E",
-	"5 c #E3AF8C",
-	"F c #FEFEED",
-	", c #E8B089",
-	"D c #FEFEF2",
-	"m c #FEB481",
-	"i c #EFA574",
-	"3 c #D0AC95",
-	"e c #FFFFD0",
-	"> c #E6B08B",
-	"4 c #D5AD92",
-	"* c #FFFFD6",
-	"% c #FFFFD9",
-	"& c #FFFFDA",
-	"r c #E9BA93",
-	"# c #F6CF9F",
-	/* pixels */
-	"                ",
-	" .XoooOOO+++@   ",
-	" #$%%%%%%&&*=   ",
-	" -;:>,<12345678 ",
-	" 90qweeeeeeeeer ",
-	" ty9uip77666a66s",
-	"   Odfghjklzxcvb",
-	"   nmMNBBBBBBBVC",
-	"     ZAcxxxSSDFG",
-	"     HJKLLLLLLPI",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
-
-/* XPM */
-static const char* s_dimension_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 3 1",
-	"  c None",
-	"X c #FFDFC1",
-	". c #FDB380",
-	/* pixels */
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"................",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	"................",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
+/* PNG */
+static const wxString s_dimension_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACVBMVEUAAAH9s4D/38FifTNXAAAAAXRSTlMAQObYZgAAABlJREFUGJVjYKAFYEQDDIxMKIA8AXRDaQEAUdAAmeJBSsoAAAAASUVORK5CYII=");
 
 wxIcon CMetaObjectDimension::GetIcon() const
 {
-	return wxIcon(s_dimension_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectDimension::GetIconGroup()
 {
-	return wxIcon(s_dimension_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_dimension_16_png, wxSize(16, 16));
+
+	return icon;
 }

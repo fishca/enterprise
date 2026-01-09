@@ -21,7 +21,7 @@ public:
 	wxBitmap GetPictureAsBitmap() const {
 		if (!m_propertyPicture->IsEmptyProperty())
 			return m_propertyPicture->GetValueAsBitmap();
-		return CBackendPicture::CreatePicture(g_picStructureCLSID);
+		return CBackendPicture::CreatePicture(g_metaCommonMetadataCLSID);
 	}
 
 	virtual bool FilterChild(const class_identifier_t& clsid) const {

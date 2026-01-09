@@ -1,170 +1,7 @@
 #include "metaPictureObject.h"
 
-/* XPM */
-static const char* s_pictureGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 60 1",
-	"  c None",
-	"p c #68C9CF",
-	": c #CCF9FF",
-	"5 c #93EDD3",
-	"c c #B0C9CA",
-	"> c #FAFEFF",
-	"g c #67CAA0",
-	"d c #A2EDB8",
-	"l c #99E685",
-	"& c #BEF7FF",
-	"- c #FFFFFF",
-	"f c #7FDF69",
-	"x c #81D1D4",
-	"i c #5ABEC2",
-	"# c #B0F5FF",
-	"w c #6ECED5",
-	"2 c #84E37F",
-	"@ c #B8C8CB",
-	"3 c #94EED6",
-	", c #BAF7FF",
-	"z c #68CB9F",
-	". c #9AA1A4",
-	"4 c #9BF2FE",
-	"u c #60C3C8",
-	"% c #A5F4FF",
-	"v c #7EE068",
-	"1 c #97EFE4",
-	"n c #7BCBCE",
-	"a c #97EFFA",
-	"X c #9BA2A6",
-	"< c #9CF3FE",
-	"$ c #9CF3FF",
-	"6 c #81E16F",
-	"= c #E2FCFF",
-	"q c #6BCCD2",
-	"O c #CFF9FF",
-	"b c #6ACD9A",
-	"V c #9CD8DA",
-	"y c #88E5C5",
-	"s c #B6CACA",
-	"+ c #C4F8FF",
-	"m c #A8C8CB",
-	"e c #99F1FD",
-	"j c #AAF1FA",
-	"k c #AED0B9",
-	"Z c #9BA4A6",
-	"9 c #93EED1",
-	"M c #C1F0B6",
-	"o c #B7C8CB",
-	"h c #66C7CD",
-	"7 c #7FE067",
-	"t c #7FE068",
-	"C c #AFE0E2",
-	"r c #8FEBBD",
-	"* c #9FF3FF",
-	"B c #A7E3BF",
-	"0 c #96EFFA",
-	"8 c #80E16B",
-	"N c #B2ECA4",
-	"; c #CEF9FF",
-	/* pixels */
-	"                ",
-	".XXXXXXXXXXXXXX.",
-	"oO++++++++++++O@",
-	"o#$$$$$$$$$%&*#@",
-	"o#$$$$$$$$$=-;#@",
-	"o#$$$$$$$$$:>,#@",
-	"o#$$$<$$$$$$$$#@",
-	"o#$$123$$$44$$#@",
-	"o#$56789$0qwe$#@",
-	"o#rt7778yuiipa#@",
-	"sd777777fgiiihj@",
-	"kl7777777tziiixc",
-	"kl77777777vbiinm",
-	"kMNNNNNNNNNNBVCm",
-	".ZZZZZZZZZZZZZZ.",
-	"                "
-};
-
-/* XPM */
-static const char* s_picture_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 60 1",
-	"  c None",
-	"p c #68C9CF",
-	": c #CCF9FF",
-	"5 c #93EDD3",
-	"c c #B0C9CA",
-	"> c #FAFEFF",
-	"g c #67CAA0",
-	"d c #A2EDB8",
-	"l c #99E685",
-	"& c #BEF7FF",
-	"- c #FFFFFF",
-	"f c #7FDF69",
-	"x c #81D1D4",
-	"i c #5ABEC2",
-	"# c #B0F5FF",
-	"w c #6ECED5",
-	"2 c #84E37F",
-	"@ c #B8C8CB",
-	"3 c #94EED6",
-	", c #BAF7FF",
-	"z c #68CB9F",
-	". c #9AA1A4",
-	"4 c #9BF2FE",
-	"u c #60C3C8",
-	"% c #A5F4FF",
-	"v c #7EE068",
-	"1 c #97EFE4",
-	"n c #7BCBCE",
-	"a c #97EFFA",
-	"X c #9BA2A6",
-	"< c #9CF3FE",
-	"$ c #9CF3FF",
-	"6 c #81E16F",
-	"= c #E2FCFF",
-	"q c #6BCCD2",
-	"O c #CFF9FF",
-	"b c #6ACD9A",
-	"V c #9CD8DA",
-	"y c #88E5C5",
-	"s c #B6CACA",
-	"+ c #C4F8FF",
-	"m c #A8C8CB",
-	"e c #99F1FD",
-	"j c #AAF1FA",
-	"k c #AED0B9",
-	"Z c #9BA4A6",
-	"9 c #93EED1",
-	"M c #C1F0B6",
-	"o c #B7C8CB",
-	"h c #66C7CD",
-	"7 c #7FE067",
-	"t c #7FE068",
-	"C c #AFE0E2",
-	"r c #8FEBBD",
-	"* c #9FF3FF",
-	"B c #A7E3BF",
-	"0 c #96EFFA",
-	"8 c #80E16B",
-	"N c #B2ECA4",
-	"; c #CEF9FF",
-	/* pixels */
-	"                ",
-	".XXXXXXXXXXXXXX.",
-	"oO++++++++++++O@",
-	"o#$$$$$$$$$%&*#@",
-	"o#$$$$$$$$$=-;#@",
-	"o#$$$$$$$$$:>,#@",
-	"o#$$$<$$$$$$$$#@",
-	"o#$$123$$$44$$#@",
-	"o#$56789$0qwe$#@",
-	"o#rt7778yuiipa#@",
-	"sd777777fgiiihj@",
-	"kl7777777tziiixc",
-	"kl77777777vbiinm",
-	"kMNNNNNNNNNNBVCm",
-	".ZZZZZZZZZZZZZZ.",
-	"                "
-};
+/* PNG */
+static const wxString s_picture_64_png = wxT("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC7klEQVR4nO3W3U4TQRwF8PWBvALeA/RFSqDKV6cUKBQKpQTCCls+FkujgIlBTFTUoCYoVIsI5YIuV16oiRpqAqQBeswsbAFLsdsuDJ2dSc5Ntxf/8+vMbCVJLLHEsvVSVRV2jsR6ANaRWA/AOhLrAa4dQDp6k+uo6rgAUAWAKgDUfAE2ECrpCICoAIAAiHIGkEj1IqlV4SBWpieZqIS257cHQCLVi/2Viqw592Pl+jPuAZJaVc5X3LZWxT/AQawsJwB9ZnOAcv4BkonKnAD0eHAPoO359Qsv6xJcqYC2180/wMbxm2Bbu6VveZrtrdvYTAXP/S6XABsmIgCiAgBMAJZ/DtoX4PlqDzz11Yg8abUfwON3nXDfcYA4jzI524p4WuEfIH4YwsSjlkzx06Gfs0K4EoAvqWHII03nls8gzHiKQlg/UPDyQwBrKeV6AXxKyugN1l1Y3og6Q3eC+fKrO0OYjngx0unCQ7UNq7vD1wNg8dsAfF5nXuWNjE+bQ4h+H0RYbtbLG4mEWrDyZ4gtwOvNIFpdNabKZxCm6HH4//Bv430Y63GfKW8kLHsQ+y2zAZhb6kJzXXVB5Y2MTLqxfqjkvFCfLXSfW/x0Jgaa8fGHfHUA8bSCqRftRRX/F4GWPXPed4cx/eDovOeT8aAbS18HLh9gbV/BaMRtWXkjofAJAv01w/c8eZc3MhYgWNzqvzyAzztD6JcbLS9vRLnvxht63gPEdHkjo34XFtb6rAdY/jWI7q67l1beiK+xFiFfYeVPQvAqGrAWwOsp7KYvJB2WILgw/77HOgByReWtRng679dftSUHQAyEIgFoZud8pQlALNwJJQtAKEJDLRSfjQGI04H2xpqiEEoegDgd8DbUINTZZF8AQndCgQjZAGOlCUDoTqg3fxy4AiDHx8EMAncAxNgJHU32BSBOB9ryRCgaIM1ZBIAqACAA1AsAVP2fEs8521fKBrBXJNYDsI7EegDWkQDcsHMkscSSbL3+AqmLREqRmuxoAAAAAElFTkSuQmCC");
 
 wxIcon CMetaObjectPicture::GetIcon() const
 {
@@ -173,11 +10,14 @@ wxIcon CMetaObjectPicture::GetIcon() const
 	//	icon.CopyFromBitmap(m_propertyPicture->GetValueAsBitmap());
 	//	return icon;
 	//}
-	
-	return wxIcon(s_picture_xpm);
+
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectPicture::GetIconGroup()
 {
-	return wxIcon(s_picture_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_picture_64_png, wxSize(16, 16));
+
+	return icon;
 }

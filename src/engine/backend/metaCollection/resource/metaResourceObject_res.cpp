@@ -1,138 +1,17 @@
 #include "metaResourceObject.h"
 
-/* XPM */
-static const char* s_resourceGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 78 1",
-	"  c None",
-	"x c #FDFFC9",
-	"z c #FDFFCA",
-	"$ c #A8CC70",
-	"5 c #7CAF4F",
-	"> c #A9D35F",
-	"= c #B8DF64",
-	"A c #B8DF68",
-	"g c #F7FC96",
-	"m c #F7FC97",
-	"* c #90BC5E",
-	"e c #9FC865",
-	"2 c #93C059",
-	"D c #FAFD99",
-	"F c #FAFD9A",
-	". c #91BD5B",
-	"T c #A2C66F",
-	"4 c #94C157",
-	"a c #80B154",
-	"O c #A8D15F",
-	"I c #A2C376",
-	"c c #B2D968",
-	"- c #FBFE99",
-	"G c #FBFE9B",
-	"H c #FBFE9C",
-	"9 c #FBFE9D",
-	"# c #A8CE6A",
-	"E c #A1CA63",
-	"P c #A3C76F",
-	"b c #95C258",
-	"v c #81B254",
-	"y c #A9D260",
-	"8 c #A9D262",
-	"R c #A1C76C",
-	"; c #FCFF9A",
-	"q c #FCFF9B",
-	"w c #FCFF9C",
-	"0 c #FCFF9E",
-	"s c #A7D25E",
-	"n c #B1DA63",
-	"h c #FCFFA7",
-	"1 c #93BF5B",
-	"< c #93BF5C",
-	"W c #A2CB61",
-	"L c #9FC46C",
-	"u c #82B351",
-	"Z c #FEFFD9",
-	"N c #FEFFE1",
-	"B c #FEFFE2",
-	"V c #FEFFEA",
-	"C c #FEFFEC",
-	"6 c #A8D35E",
-	"J c #B2DB67",
-	"d c #F6FC95",
-	"+ c #A8D063",
-	"Y c #A2C279",
-	"U c #A2C27A",
-	"i c #92C056",
-	"X c #A6D05E",
-	", c #7EAD57",
-	"Q c #86B25C",
-	"3 c #93C157",
-	"p c #93C158",
-	"o c #A7D15E",
-	"& c #A9CE6C",
-	"7 c #FAFE98",
-	"K c #89B068",
-	": c #ADD660",
-	"f c #B7DE67",
-	"S c #F6FB97",
-	"M c #FDFFB2",
-	"% c #AACC71",
-	"@ c #A8CF66",
-	"j c #FDFFBA",
-	"k c #FDFFBC",
-	"r c #83B355",
-	"t c #A1CB5F",
-	"l c #FDFFC7",
-	/* pixels */
-	"                ",
-	" .XooO+@#$%&*   ",
-	" =-;;;;;;;;;:   ",
-	" >-,<1233333345 ",
-	" 67890;;;qq;;we ",
-	" rty-ui4ppp3334a",
-	"   sdfghjjjklzxc",
-	"   vbnmMNBBBVCZc",
-	"     ASqqqqDFGHJ",
-	"     KLPIUYTREWQ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
-
-/* XPM */
-static const char* s_resource_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 3 1",
-	"  c None",
-	"X c #DBF2FF",
-	". c #93C158",
-	/* pixels */
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"................",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	".XXXXXXXXXXXXXX.",
-	"................",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
+/* PNG */
+static const wxString s_resource_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACVBMVEUAAAGTwVjb8v/uftbcAAAAAXRSTlMAQObYZgAAABlJREFUGJVjYKAFYEQDDIxMKIA8AXRDaQEAUdAAmeJBSsoAAAAASUVORK5CYII=");
 
 wxIcon CMetaObjectResource::GetIcon() const
 {
-	return wxIcon(s_resource_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectResource::GetIconGroup()
 {
-	return wxIcon(s_resource_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_resource_16_png, wxSize(16, 16));
+
+	return icon;
 }

@@ -1,39 +1,19 @@
 #include "value.h"
 
-/* XPM */
-static const char* s_value_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 5 1",
-	"  c None",
-	"O c #FFFFFF",
-	". c #7496C4",
-	"o c #DBF2FF",
-	"X c #788B9C",
-	/* pixels */
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"..........XXXXXX",
-	".oooooooo.OOOOOX",
-	".oooooooo.OOOOOX",
-	".oooooooo.OOOOOX",
-	".oooooooo.OOOOOX",
-	"..........XXXXXX",
-	"                ",
-	"                ",
-	"                ",
-	"                ",
-	"                "
-};
+/* PNG */
+static const wxString s_value_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAAD1BMVEUAAAF0lsR4i5zb8v////8M1jp0AAAAAXRSTlMAQObYZgAAAB9JREFUGJVjYKAFYIQDJjBgYGSGAkYWECBPAN1QWgAAfcgA7YtkuHgAAAAASUVORK5CYII=");
 
 wxIcon CValue::GetIcon() const
 {
-	return wxIcon(s_value_xpm);
+	return GetIconGroup();
 }
+
+#include "backend/backend_picture.h"
 
 wxIcon CValue::GetIconGroup()
 {
-	return wxIcon(s_value_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_value_16_png, wxSize(16, 16));
+
+	return icon;
 }

@@ -1,146 +1,17 @@
 #include "metaRoleObject.h"
 
-/* XPM */
-static const char* s_roleGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 45 1",
-	"- c #EFC881",
-	"  c None",
-	"o c #987B45",
-	"> c #DA3B22",
-	"f c #CAA968",
-	"X c #9B7F47",
-	": c #967843",
-	"a c #C3A262",
-	"d c #C3A263",
-	"3 c #D24A2C",
-	"0 c #997C46",
-	"u c #A3844D",
-	"< c #D5B270",
-	"i c #9C8048",
-	"w c #A1844B",
-	"6 c #ECC67E",
-	"e c #ECC67F",
-	"t c #9A7D46",
-	"q c #9A7D47",
-	"r c #A4854D",
-	"$ c #D6B370",
-	"# c #9D8149",
-	"8 c #EDC780",
-	"y c #967A44",
-	", c #D64327",
-	"@ c #9B7E47",
-	"O c #9B7E48",
-	"& c #D7B471",
-	". c #947A43",
-	"j c #977B43",
-	"7 c #977B46",
-	"1 c #9C7F48",
-	"= c #9A7F47",
-	"% c #F1C981",
-	"h c #9A7C47",
-	"2 c #D34729",
-	"5 c #987C45",
-	"s c #987C47",
-	"4 c #F0CA82",
-	"; c #F5CE85",
-	"9 c #A3854C",
-	"p c #977746",
-	"g c #9A7E46",
-	"+ c #957A45",
-	"* c #9F824B",
-	/* pixels */
-	"  .XooO+        ",
-	" @#$%%&*=       ",
-	".#-;;;;-#:      ",
-	"X$;>,;;;<1      ",
-	"o%;23;;;45      ",
-	"o%;;;;;;67      ",
-	"O&;;;;;;&@      ",
-	"+*-;;;;;890     ",
-	" =#<46&8;890    ",
-	"  :1o7O98;890   ",
-	"       qwe;8rt  ",
-	"        @yy;8u0 ",
-	"          y8;8ip",
-	"          @yy;as",
-	"            ydfg",
-	"            phtj"
-};
-
-/* XPM */
-static const char* s_role_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 44 1",
-	"- c #EFC881",
-	"  c None",
-	"o c #987B45",
-	"d c #CAA968",
-	"X c #9B7F47",
-	": c #967843",
-	"p c #C3A262",
-	"s c #C3A263",
-	"9 c #997C46",
-	"y c #A3844D",
-	"< c #D5B270",
-	"u c #9C8048",
-	"q c #A1844B",
-	"5 c #ECC67E",
-	"w c #ECC67F",
-	"r c #9A7D46",
-	"0 c #9A7D47",
-	"e c #A4854D",
-	"$ c #D6B370",
-	"# c #9D8149",
-	"> c #AC8D53",
-	"7 c #EDC780",
-	"t c #967A44",
-	"@ c #9B7E47",
-	"O c #9B7E48",
-	"& c #D7B471",
-	". c #947A43",
-	"2 c #AD8E54",
-	"h c #977B43",
-	"6 c #977B46",
-	"1 c #9C7F48",
-	"= c #9A7F47",
-	"% c #F1C981",
-	"g c #9A7C47",
-	"4 c #987C45",
-	"a c #987C47",
-	"3 c #F0CA82",
-	"; c #F5CE85",
-	"8 c #A3854C",
-	", c #AD8D53",
-	"i c #977746",
-	"f c #9A7E46",
-	"+ c #957A45",
-	"* c #9F824B",
-	/* pixels */
-	"  .XooO+        ",
-	" @#$%%&*=       ",
-	".#-;;;;-#:      ",
-	"X$;>,;;;<1      ",
-	"o%;,2;;;34      ",
-	"o%;;;;;;56      ",
-	"O&;;;;;;&@      ",
-	"+*-;;;;;789     ",
-	" =#<35&7;789    ",
-	"  :1o6O87;789   ",
-	"       0qw;7er  ",
-	"        @tt;7y9 ",
-	"          t7;7ui",
-	"          @tt;pa",
-	"            tsdf",
-	"            igrh"
-};
+/* PNG */
+static const wxString s_role_64_png = wxT("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFZElEQVR4nO1bX2xTVRg/AXzhRTNjohHfjC8++GBi8Klx56xbFoxGHLJheHMmYPRF155Ttjs2/mmcZKHndKWLJopI2GqMwanZNCIgTupmCLxggjiJU3REwEYxxmt+dxu0p+2l7e297V33JV/SdHc75/vd78/v+84ZIWXI4ba2lUNh+qjiTChBk1Kws0rQy1Kwf6D4rDg7M/8zypVgaw3DWEH8LjISvE9xukdydlEJZpaoP0nBdg92BdYQv8kgb7lLcRaXnF4vw/Asxd+Qgql9YXon8YMozjokp3NODc+jv8sIfYbUqsQ7H75NcpooZMD+nhbzk1iH+V3yBfPHiZA5d7LXvJbqtxSf8d306Fbz49gm69mCQHAaM4zAKlJLEjfWrZacjeXb8Ft9rebU6Fbzyql+Mz21syjFswDqwK7HC4DAjmBNUjtvnuUYv7+72Tz57nPmH9/0FW24rvCOyfeeN+Pdwbwg1IQnyDxujzd38QtRtuG6/jDeZb7Z15qbIAVTVTU+FqGb9E0deu1JK6YrZfyiXjrRYx589YkcEGKcbahaqZNatsebd8P4GyAc787xBMnZbwkj2OA5AIqzuB7zlXR7u3DQc4IUNOo5w5MayUHCc9v4RZ082KmFAv07Jhrv9QwAxekevdTZZXvE70ey3arv0CPRjebs0UjZAFxL7TDf2amVSM52eWL84ba2lTq3R523M364N5fY4DvEdLkggDRpBGnGkwZqCF2dxvDsSA7efCFWN6baywYAHpfoac6uCKLxEdcBUFZLe3NR0Fu7jdrRWhjgJBeMqQ49DMLuAyBoMnNRUNayATBaHAEwndTCQLAR9wHgGFzcXBRNjN0mkfAKAYDwcALAhYmQ7gGnXQdAauTn8tf2xAfZvlASnP1ymyMAQLp0UuQFANczF0VJutVGke2R8BDzULx5p8ZDr57qz+EDNQlA2iW9Mrm9KgDMlRICbiq8yPMQUCUmQTf1/Kev6B6Q8rwMTtuwQLcV/YfWFL3tOgByfm5/Y1HM8KoFQHJgvQ7AZtcBUIKtLYUKu6XIPUORpszp0H9x0XyP6wAYhrEChxalsEE3dGpki5YA6TnilUjBduuTIAwwvQTg/b1P55AryWmvJwAMdgXW6HwA01svAQANRi9RNRCkYCpzYYypMK6qGxASRrBBCXopc2EMLDEA8RKEmc/DeXsNTK1cB0Hxxo36whhdew1CVT1BcRrTF4Yn1E04GEZgFY6p9IWREzC99bJZqhoIcWPd6nwgQDG9BV0u5YwQJAd1HqUORvnGE6RWGTIVcwDM8KZHt1ibnD8e32EB8/PRiNXYgNuPvrE+i+HBmFIbrqrmhBhnG9CWFgKiHPUdCAkj2IDjKgwo6hYECI6rcGKDQ4tSjEVjA26/JEBYbKBwaIG5PUbXmN5ismRdgLIUIUNT6OfR0kZfDtyN38Mm84Hgm8RYCVGChSoBwsxnVWSMTmUZBLIMgiXLIJD8INhp3YOQrndPSNd7OKSXek7QpRwA7ECIhYIPkXoAIF0IBM4GiJ8BuFBiiTzzwYu6F8zWxJ3kYsUpT7ia6jeHtb4hFmatxC+iKsATJoY362FwiPhJlEOecH68K+sZydlfe43AHcRP4ognfJvnJqqgncRv4oQnfHUg5+7BcbIUpFgAfj3WbaqM4Sx0X5g+QJYaAEh4iHm4vQ7CyOtP6WGwnfhdCoUCjvjh9r8cm7/AffbDl7LG8wsAfE/8LrdMjJEmc2Qg+2xiIQf8G42wduJ3iW577MGF/3eYLbZUwnjJm54lS0msqz4RyjCJVoL+WVfG6xIPsdsxjlecjeNMoq6MJ5pEw8H7ke2R8HD/QX/gf4loJe/vcBlSAAAAAElFTkSuQmCC");
 
 wxIcon CMetaObjectRole::GetIcon() const
 {
-	return wxIcon(s_role_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectRole::GetIconGroup()
 {
-	return wxIcon(s_role_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_role_64_png, wxSize(16, 16));
+
+	return icon;
 }

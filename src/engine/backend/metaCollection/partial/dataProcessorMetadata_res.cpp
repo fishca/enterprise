@@ -1,137 +1,17 @@
 #include "dataProcessor.h"
 
-/* XPM */
-static const char *s_dataProcessorGroup_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 40 1",
-	"& c #EFC881",
-	"  c None",
-	"5 c #373E49",
-	"i c #E37171",
-	"% c #EDC880",
-	"< c #94C5A0",
-	"7 c #353E4B",
-	"- c #33444C",
-	"p c #D25F5F",
-	"> c #364848",
-	"O c #C6A664",
-	"$ c #C6A364",
-	"0 c #D35D5D",
-	". c #82BA8F",
-	"r c #EF8181",
-	"o c #82B78F",
-	"# c #A7D3AF",
-	"t c #F78F8F",
-	"8 c #6C99D2",
-	"2 c #85B892",
-	"+ c #A8D4B0",
-	"q c #E67171",
-	"3 c #A8D1B0",
-	"9 c #77A2DC",
-	"a c #EE7F7F",
-	"u c #E47171",
-	"6 c #36414C",
-	"1 c #EEC881",
-	"* c #C7A666",
-	"4 c #96C6A2",
-	"e c #8BB7F0",
-	", c #F5CE85",
-	"y c #EE8181",
-	"w c #D75B5B",
-	"X c #95C7A1",
-	"= c #95C4A0",
-	"@ c #BAE0BD",
-	": c #34404B",
-	"s c #E57171",
-	"; c #37414B",
-	/* pixels */
-	" .XXo       OO  ",
-	".+@@#o     $%&* ",
-	"=@@@@X-;:>$%,,&*",
-	"X@@@@<-;:>$%,,1*",
-	"2#@@3o     $%1* ",
-	" o44o       OO  ",
-	"  56        --  ",
-	"  77        ;;  ",
-	"  ;;        77  ",
-	"  --        56  ",
-	"899998     0qqw ",
-	"9eeee9    0rttyw",
-	"9eeee9    uttttq",
-	"9eeee9    qtttti",
-	"9eeee9    pyttaw",
-	"899998     wssw "
-};
-
-/* XPM */
-static const char *s_dataProcessor_xpm[] = {
-	/* columns rows colors chars-per-pixel */
-	"16 16 40 1",
-	"& c #EFC881",
-	"  c None",
-	"5 c #373E49",
-	"i c #E37171",
-	"% c #EDC880",
-	"< c #94C5A0",
-	"7 c #353E4B",
-	"- c #33444C",
-	"p c #D25F5F",
-	"> c #364848",
-	"O c #C6A664",
-	"$ c #C6A364",
-	"0 c #D35D5D",
-	". c #82BA8F",
-	"r c #EF8181",
-	"o c #82B78F",
-	"# c #A7D3AF",
-	"t c #F78F8F",
-	"8 c #6C99D2",
-	"2 c #85B892",
-	"+ c #A8D4B0",
-	"q c #E67171",
-	"3 c #A8D1B0",
-	"9 c #77A2DC",
-	"a c #EE7F7F",
-	"u c #E47171",
-	"6 c #36414C",
-	"1 c #EEC881",
-	"* c #C7A666",
-	"4 c #96C6A2",
-	"e c #8BB7F0",
-	", c #F5CE85",
-	"y c #EE8181",
-	"w c #D75B5B",
-	"X c #95C7A1",
-	"= c #95C4A0",
-	"@ c #BAE0BD",
-	": c #34404B",
-	"s c #E57171",
-	"; c #37414B",
-	/* pixels */
-	" .XXo       OO  ",
-	".+@@#o     $%&* ",
-	"=@@@@X-;:>$%,,&*",
-	"X@@@@<-;:>$%,,1*",
-	"2#@@3o     $%1* ",
-	" o44o       OO  ",
-	"  56        --  ",
-	"  77        ;;  ",
-	"  ;;        77  ",
-	"  --        56  ",
-	"899998     0qqw ",
-	"9eeee9    0rttyw",
-	"9eeee9    uttttq",
-	"9eeee9    qtttti",
-	"9eeee9    pyttaw",
-	"899998     wssw "
-};
+/* PNG */
+static const wxString s_dataProcessor_64_png = wxT("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEOklEQVR4nO2b32vTUBTHg8P9Q0Kf5d4MBqNVnNleTDa2Mf0DTLoVbCs40XWwB9eBS+aLs+pAt5epK+qbyQQRdAM72sHw2YnSDR+vnGzVNMmS27RZmzQHDlzuLqPfT84595z+YJgQWH4aZxen8T2mGy0P4lMs0b3bIOSN4rsNQt5OfKsgcKuZXl4Wh3lFKgiyVBJk6fDES/resjQEZ5hOFN8shBHl5iAvi3uCIhEn5xWpwsvSFaYDxMuZft3N+3CW+h9zq1yPoEhzbsItIGQxl8lkzjFtFL//Nkm+v58iSrbfeyQIHsT/jwbxfjvFH32e0d0zhBHl5qBZ1OijKTJTzJPC1xfk1V5Rd1jPbC6Q0eWkBcI1RbzcTvGeIXDHBa8u5288TpPnO+ukuP/O1p9vr+ln6iGIZT8KYyPiPUHgZXHY/OSdxNf82fa6JRJ4ReTaLb5hCDxcawYREPZu4ms+s/nAVBCllU4Q3xAEQRF3jSKefn1JDaDw5UV9GshSySwkdjFOnNwv8dQQBEWsGkVsVIrUAOCsqQ5UmwXQSvFUEIRmAOxtmiPgd7MAFlNssuUA3p0CIMVmLCkAVx0tgCc+pUArITiKtyuCdzfpi+CdNwu+FcFWQHAVDwaDjeUa3F6juAbXrA3RknSVaaE1A4FK/L9GSJEqlkbIAQKIv/74lqURmnw4eZ5psXmBQC2+ZjDVWVrh5aTe9kKeQ2EEhzWEvV0rzC8lLzE+WSMQGhZfM5jqPA9DsuT7uzA0EDyLB4ORVpClWS+T4FmNw04QmhJvNJjqIJ/dxYtlP8P+zN8QMRoUMxhs4FrjFfHbcbMkVmENe1Dt/Sh4zURC008+aOYCIdziXSB0h/hTIHSX+JpBsfNc8NyMZngJtcUiAPEIQCwCEO9YAL6/vlgEIB4BiEUA4hGAWAQgHgGIdSOAyCKLLNyWSG2QVvpZvOYdjuvVMB7WMC5oGJdUhA7BYQ17KssOwZlQAtAwHlQR2tMwJi5e0Vj2SmgArHJcj4rxHIXwOlcxzhGnD24SAQHgRbzBT/8eY8IkIPf6V0N+FgAg7M2iPvb1kcrEBDlIp8nR3JzusIa9LZa1QPiA0OVAAtjhuF5zzn8aGCA/b98mf+bnbR3+BmdMEMq2hTHR4QBOqn3dk3cSb4RgjgQVIS6IAApGERDibuJrXh4fr48ChFYCB0BFaNco4iCToQYAZ01pUAocAA3jqlHEYS5HDQDOmgBUuxqAitDv4KdAOk0N4Ec6HYoUKNQVwfFx+iI4NhaCIsiyQ56uwWzWcg1uIXQ1cAB2jie/SkONUDZr2wh9unDhfOAAgMFUZ25t4elCTwB5DsUOHNYQ9nat8BbGl4I+DOW8DkMqdvjRVCIgAGCk1RCa9TIJhmIcrhlMdZDPFMLLp4Z9kAEwDMNAMYPBBq41DaFvJ81SVV8jtALV3rbg2dhfrZoh6SYfjhwAAAAASUVORK5CYII=");
 
 wxIcon CMetaObjectDataProcessor::GetIcon() const
 {
-	return wxIcon(s_dataProcessor_xpm);
+	return GetIconGroup();
 }
 
 wxIcon CMetaObjectDataProcessor::GetIconGroup()
 {
-	return wxIcon(s_dataProcessor_xpm);
+	static wxIcon icon =
+		CBackendPicture::GetIconFromBase64(s_dataProcessor_64_png, wxSize(16, 16));
+
+	return icon;
 }

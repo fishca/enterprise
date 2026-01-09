@@ -38,7 +38,7 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 	m_objectTree = new CVisualEditorObjectTree(this, m_splitter);
 
 	m_splitter->SplitHorizontally(m_visualEditor, 
-		CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), -300);
+		CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 200);
 
 	SetSizer(sizerMain);
 

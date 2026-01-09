@@ -308,6 +308,7 @@
     <ClInclude Include="mainFrame\settings\statictextex.h" />
     <ClInclude Include="mainFrame\settings\stlutility.h" />
     <ClInclude Include="mainFrame\settings\xmlutility.h" />
+    <ClInclude Include="res\resource.h" />
     <ClInclude Include="visualView\controlCtor.h" />
     <ClInclude Include="visualView\ctrl\chartBox.h" />
     <ClInclude Include="visualView\ctrl\control.h" />
@@ -488,6 +489,9 @@
     <None Include="win\ctrls\res\unchecked_d.xpm" />
     <None Include="win\ctrls\res\unchecked_ld.xpm" />
     <None Include="win\ctrls\res\unchecked_mo.xpm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\frontend.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -231,6 +231,7 @@
     <ClInclude Include="propertyManager\property\variant\variantRecord.h" />
     <ClInclude Include="propertyManager\property\variant\variantSource.h" />
     <ClInclude Include="propertyManager\property\variant\variantType.h" />
+    <ClInclude Include="res\resource.h" />
     <ClInclude Include="roleHelper.h" />
     <ClInclude Include="srcExplorer.h" />
     <ClInclude Include="srcObject.h" />
@@ -790,6 +791,9 @@
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked_d.xpm" />
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked_ld.xpm" />
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked_mo.xpm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\backend.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -1368,6 +1368,9 @@
     <ClInclude Include="artProvider\private\picturePredefined.h">
       <Filter>artProvider\private</Filter>
     </ClInclude>
+    <ClInclude Include="res\resource.h">
+      <Filter>res</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1436,6 +1439,9 @@
     <Filter Include="artProvider\private">
       <UniqueIdentifier>{531fb9e2-c07f-4ce7-a206-811961ef7263}</UniqueIdentifier>
     </Filter>
+    <Filter Include="res">
+      <UniqueIdentifier>{eacc6bf8-598e-4edd-a4cf-e8c9f6d83303}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="win\ctrls\res\checked_d.xpm">
@@ -1462,5 +1468,10 @@
     <None Include="win\ctrls\res\unchecked2.xpm">
       <Filter>win\ctrl\res</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\frontend.rc">
+      <Filter>res</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

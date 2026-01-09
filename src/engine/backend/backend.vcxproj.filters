@@ -653,6 +653,9 @@
       <Filter>propertyManager\property\advprop</Filter>
     </ClInclude>
     <ClInclude Include="backend_localization.h" />
+    <ClInclude Include="res\resource.h">
+      <Filter>res</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1592,6 +1595,9 @@
     <Filter Include="metaCollection\attribute">
       <UniqueIdentifier>{1658db8e-2fb5-4db1-8bac-a0bc5589a6c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="res">
+      <UniqueIdentifier>{a0483170-54a9-48af-976d-9a8f5c30d00b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="databaseLayer\postgres\engine\dll\libcrypto-3-x64.dll">
@@ -1698,5 +1704,10 @@
     <None Include="propertyManager\property\advprop\ctrl\res\unchecked2.xpm">
       <Filter>propertyManager\property\advprop\ctrl\res</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\backend.rc">
+      <Filter>res</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

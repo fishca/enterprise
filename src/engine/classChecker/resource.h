@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Включаемый файл, созданный в Microsoft Visual C++.
-// Используется launcher.rc
+// Используется classChecker.rc
 //
 #define wxUSE_NO_MANIFEST               0
 #define SW_HIDE                         0
@@ -216,10 +216,10 @@
 #define SORT_HUNGARIAN_TECHNICAL        0x1
 #define SORT_GEORGIAN_MODERN            0x1
 #define __drv_typeCond                  1
-#define VS_VERSION_INFO                 1
 #define VFFF_ISSHAREDFILE               0x0001
 #define VFF_CURNEDEST                   0x0001
 #define VIFF_FORCEINSTALL               0x0001
+#define VS_VERSION_INFO                 1
 #define WINAPI_FAMILY_PC_APP            2
 #define ISOLATIONAWARE_MANIFEST_RESOURCE_ID 2
 #define SW_SHOWMINIMIZED                2

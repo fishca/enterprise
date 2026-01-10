@@ -489,7 +489,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 				break;
 			}
 		}
-		
+
 		if (removeReference) {
 			retCode = db_query->RunQuery("ALTER TABLE %s DROP %s_RTRef;", tableName, fieldName);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -726,54 +726,71 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 
 		const CValue& defValue = metaAttr->CreateValue();
 		const IAbstractTypeCtor* so = metaData->GetAvailableCtor(defValue.GetClassType());
-		wxASSERT(so);
 
-		CValue enumVariant(resultSet->GetResultInt(fieldName));
-		CValue* ppParams[] = { &enumVariant };
+		if (so != nullptr) {
 
-		try {
-			std::shared_ptr<IEnumerationWrapper> enumVal(
-				metaData->CreateAndConvertObjectRef<IEnumerationWrapper>(so->GetClassName(), ppParams, 1)
-			);
-			retValue = enumVal->GetEnumVariantValue();
+			CValue enumVariant(resultSet->GetResultInt(fieldName));
+			CValue* ppParams[] = { &enumVariant };
+
+			try {
+				CValuePtr<IEnumerationWrapper> creator(
+					metaData->CreateAndConvertObjectRef<IEnumerationWrapper>(so->GetClassName(), ppParams, 1));
+				retValue = creator->GetEnumVariantValue();
+			}
+			catch (...) {
+				retValue = defValue;
+				return false;
+			}
+
+			return true;
 		}
-		catch (...) {
 
-			retValue = defValue;
-			return false;
-		}
-
-		return true;
+		retValue = defValue;
+		return false;
 	}
 	case eFieldTypes_Reference:
 	{
 		IMetaData* metaData = metaAttr->GetMetaData();
 		wxASSERT(metaData);
 		const class_identifier_t& refType = resultSet->GetResultLong(fieldName + wxT("_RTRef"));
+
 		wxMemoryBuffer bufferData;
 		resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);
 		if (!bufferData.IsEmpty()) {
+
 			if (createData) {
-				retValue = CReferenceDataObject::CreateFromPtr(
-					metaData, bufferData.GetData()
-				);
-				return true;
+
+				CValuePtr<CReferenceDataObject> created_reference =
+					CReferenceDataObject::CreateFromPtr(metaData, bufferData.GetData());
+
+				retValue = created_reference;
+				return created_reference != nullptr;
 			}
-			retValue = CReferenceDataObject::Create(
-				metaData, bufferData.GetData()
-			);
-			return true;
+
+			CValuePtr<CReferenceDataObject> created_reference =
+				CReferenceDataObject::Create(metaData, bufferData.GetData());
+
+			retValue = created_reference;
+			return created_reference != nullptr;
 		}
 		else if (refType > 0) {
+
 			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(refType);
-			wxASSERT(typeCtor);
-			IMetaObject* metaObject = typeCtor->GetMetaObject();
-			wxASSERT(metaObject);
-			retValue = CReferenceDataObject::Create(
-				metaData, metaObject->GetMetaID()
-			);
-			return true;
+			if (typeCtor != nullptr) {
+
+				const IMetaObject* metaObject = typeCtor->GetMetaObject();
+				wxASSERT(metaObject);
+
+				CValuePtr<CReferenceDataObject> created_reference =
+					CReferenceDataObject::Create(metaData, metaObject->GetMetaID());
+
+				retValue = created_reference;
+				return created_reference != nullptr;
+			}
+
+			return false;
 		}
+
 		break;
 	}
 	}

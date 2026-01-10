@@ -20,8 +20,8 @@ public:
 	//CValueEnumAccumulationRegisterType(eRegisterType mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eRegisterType::eBalances, wxT("balances"));
-		AddEnumeration(eRegisterType::eTurnovers, wxT("turnovers"));
+		AddEnumeration(eRegisterType::eBalances, wxT("balances"), _("Balances"));
+		AddEnumeration(eRegisterType::eTurnovers, wxT("turnovers"), _("Turnovers"));
 	}
 };
 class CValueEnumAccumulationRegisterRecordType : public IEnumeration<eRecordType> {
@@ -30,13 +30,13 @@ public:
 	static CValue CreateDefEnumValue() {
 		return CValue::CreateEnumObject<CValueEnumAccumulationRegisterRecordType>(eRecordType::eExpense);
 	}
-	
+
 	CValueEnumAccumulationRegisterRecordType() : IEnumeration() {}
 	//CValueEnumAccumulationRegisterRecordType(eRecordType recordType) : IEnumeration(recordType) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eExpense, wxT("expense"));
-		AddEnumeration(eReceipt, wxT("receipt"));
+		AddEnumeration(eExpense, wxT("expense"), _("Expense"));
+		AddEnumeration(eReceipt, wxT("receipt"), _("Receipt"));
 	}
 };
 const class_identifier_t g_enumRecordTypeCLSID = string_to_clsid("EN_RETP");

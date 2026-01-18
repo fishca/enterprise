@@ -69,7 +69,7 @@ wxString wxTranslateStringProperty::ValueToString(wxVariant& value, int argFlags
 
 bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
 {
-	std::vector<CBackendLocalizationEntry> array;
+	CBackendLocalizationEntryArray array;
 
 	if (CBackendLocalization::CreateLocalizationArray(variant.GetString(), array)) {
 		const wxString& strLangCode = CBackendLocalization::GetUserLanguage();
@@ -152,7 +152,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 
 			wxBoxSizer* rowsizer = new wxBoxSizer(wxVERTICAL);
 
-			std::vector<CBackendLocalizationEntry> array;
+			CBackendLocalizationEntryArray array;
 			CBackendLocalization::CreateLocalizationArray(
 				m_value.GetString(), array);
 

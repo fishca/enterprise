@@ -393,7 +393,7 @@ class CSubSystemWindow : public wxWindow {
 
 			class CScrolledSubWindowSectionRefData : public wxRefCounter {
 			public:
-				EInterfaceCommandSection GetSection() const { return m_section; }
+				EInterfaceCommandSection GetArea() const { return m_section; }
 				CScrolledSubWindowSectionRefData(EInterfaceCommandSection s) : m_section(s) {}
 			private:
 				EInterfaceCommandSection m_section;
@@ -694,7 +694,7 @@ class CSubSystemWindow : public wxWindow {
 					dynamic_cast<CScrolledSubWindowSectionRefData*>(event.GetEventObject()->GetRefData());
 
 				const EInterfaceCommandSection section = refData != nullptr ?
-					refData->GetSection() : EInterfaceCommandSection::EInterfaceCommandSection_Default;
+					refData->GetArea() : EInterfaceCommandSection::EInterfaceCommandSection_Default;
 
 				IBackendCommandItem* cmdItem =
 					dynamic_cast<IBackendCommandItem*>(activeMetaData->FindAnyObjectByFilter(event.GetId()));

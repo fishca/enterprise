@@ -46,10 +46,19 @@ EVT_UPDATE_UI(wxID_SAVEAS, CMetaDocManager::OnUpdateFileSaveAs)
 EVT_UPDATE_UI(wxID_UNDO, CMetaDocManager::OnUpdateUndo)
 EVT_UPDATE_UI(wxID_REDO, CMetaDocManager::OnUpdateRedo)
 
-//EVT_UPDATE_UI(wxID_DESIGNER_CONFIGURATION_RETURN_DATABASE, CMetaDocManager::OnUpdateSaveMetadata)
-//EVT_UPDATE_UI(wxID_DESIGNER_UPDATE_METADATA, CMetaDocManager::OnUpdateSaveMetadata)
+#if wxUSE_PRINTING_ARCHITECTURE
+EVT_MENU(wxID_PRINT, CMetaDocManager::OnPrint)
+EVT_MENU(wxID_PREVIEW, CMetaDocManager::OnPreview)
+EVT_MENU(wxID_PRINT_SETUP, CMetaDocManager::OnPageSetup)
+
+EVT_UPDATE_UI(wxID_PRINT, CMetaDocManager::OnUpdateDisableIfNoDoc)
+EVT_UPDATE_UI(wxID_PREVIEW, CMetaDocManager::OnUpdateDisableIfNoDoc)
+// NB: we keep "Print setup" menu item always enabled as it can be used
+//     even without an active document
+#endif // wxUSE_PRINTING_ARCHITECTURE
 
 EVT_MENU(wxID_FIND, CMetaDocManager::OnFindDialog)
+
 wxEND_EVENT_TABLE()
 
 wxIMPLEMENT_DYNAMIC_CLASS(CMetaDocManager, wxDocManager);
@@ -97,7 +106,7 @@ CMetaDocManager::CMetaDocManager()
 	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView), wxTEMPLATE_VISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
-	
+
 	// initialize print data and setup
 	wxPrintData printData;
 
@@ -156,10 +165,10 @@ void CMetaDocManager::OnFileSave(wxCommandEvent& WXUNUSED(event))
 	CMetaDocument* doc = GetCurrentDocument();
 
 	if (!doc) {
-		
-		if (activeMetaData != nullptr && activeMetaData->IsModified()) 
+
+		if (activeMetaData != nullptr && activeMetaData->IsModified())
 			activeMetaData->SaveDatabase();
-		
+
 		return;
 	}
 
@@ -193,56 +202,21 @@ void CMetaDocManager::OnMRUFile(wxCommandEvent& event)
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
-void CMetaDocManager::OnPrint(wxCommandEvent& WXUNUSED(event))
+void CMetaDocManager::OnPrint(wxCommandEvent& event)
 {
-	wxView* view = GetAnyUsableView();
-	if (!view)
-		return;
-
-	wxPrintout* printout = view->OnCreatePrintout();
-	if (printout) {
-		wxPrintDialogData printDialogData(m_pageSetupDialogData.GetPrintData());
-		wxPrinter printer(&printDialogData);
-		printer.Print(view->GetFrame(), printout, true);
-
-		delete printout;
-	}
+	wxDocManager::OnPrint(event);
 }
 
-void CMetaDocManager::OnPreview(wxCommandEvent& WXUNUSED(event))
+void CMetaDocManager::OnPreview(wxCommandEvent& event)
 {
-	wxBusyCursor busy;
-	wxView* view = GetAnyUsableView();
-	if (!view)
-		return;
-
-	wxPrintout* printout = view->OnCreatePrintout();
-	if (printout) {
-		wxPrintDialogData printDialogData(m_pageSetupDialogData.GetPrintData());
-
-		// Pass two printout objects: for preview, and possible printing.
-		wxPrintPreviewBase*
-			preview = new wxPrintPreview(printout,
-				view->OnCreatePrintout(),
-				&printDialogData);
-
-		if (!preview->IsOk()) {
-			delete preview;
-			wxLogError(wxT("Print preview creation failed."));
-			return;
-		}
-
-		wxPreviewFrame* frame = CreatePreviewFrame(preview,
-			wxTheApp->GetTopWindow(),
-			_("Print Preview"));
-		
-		wxCHECK_RET(frame, "should create a print preview frame");
-
-		frame->Centre(wxBOTH);
-		frame->Initialize();
-		frame->Show(true);
-	}
+	wxDocManager::OnPreview(event);
 }
+
+void CMetaDocManager::OnPageSetup(wxCommandEvent& event)
+{
+	wxDocManager::OnPageSetup(event);
+}
+
 #endif // wxUSE_PRINTING_ARCHITECTURE
 
 void CMetaDocManager::OnUndo(wxCommandEvent& event)
@@ -796,7 +770,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 					wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
 					if (cmdProc != nullptr)
 						newDocument->SetCommandProcessor(cmdProc);
-					
+
 					//newDocument->UpdateAllViews();
 					//newDocument->Activate();
 					return newDocument;

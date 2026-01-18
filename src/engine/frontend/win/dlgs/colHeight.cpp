@@ -1,7 +1,7 @@
 #include "colHeight.h"
-#include "frontend/mainFrame/grid/gridCommon.h"
+#include "frontend/mainFrame/grid/gridWindow.h"
 
-CColWidthWnd::CColWidthWnd(CGrid* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+CDialogColWidth::CDialogColWidth(CGridExtCtrl* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -47,6 +47,6 @@ CColWidthWnd::CColWidthWnd(CGrid* parent, wxWindowID id, const wxString& title, 
 	wxDialog::Centre(wxBOTH);
 }
 
-CColWidthWnd::~CColWidthWnd()
+CDialogColWidth::~CDialogColWidth()
 {
 }

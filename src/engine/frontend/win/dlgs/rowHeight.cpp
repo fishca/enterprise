@@ -1,7 +1,7 @@
 #include "rowHeight.h"
-#include "frontend/mainFrame/grid/gridCommon.h"
+#include "frontend/mainFrame/grid/gridWindow.h"
 
-CRowHeightWnd::CRowHeightWnd(CGrid* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : 
+CDialogRowHeight::CDialogRowHeight(CGridExtCtrl* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : 
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -47,6 +47,6 @@ CRowHeightWnd::CRowHeightWnd(CGrid* parent, wxWindowID id, const wxString& title
 	wxDialog::Centre(wxBOTH);
 }
 
-CRowHeightWnd::~CRowHeightWnd()
+CDialogRowHeight::~CDialogRowHeight()
 {
 }

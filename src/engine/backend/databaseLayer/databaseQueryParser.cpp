@@ -19,9 +19,9 @@ bool IsEmptyQuery(const wxString& strQuery)
 wxArrayString ParseQueries(const wxString& strQuery)
 {
 	static wxArrayString arrString; arrString.Empty();
-	static wxString strRaw; bool bInQuote = false;
+	static wxString strRaw; static bool bInQuote = false;
 
-	for (auto& c : strQuery) {
+	for (const auto& c : strQuery) {
 
 		strRaw += c;
 
@@ -39,7 +39,7 @@ wxArrayString ParseQueries(const wxString& strQuery)
 
 	if (!strRaw.IsEmpty()) {
 
-		wxString str;
+		static wxString str; str.Clear();
 		str << strRaw << wxT(";");
 		if (!IsEmptyQuery(str))
 			arrString.Add(str);

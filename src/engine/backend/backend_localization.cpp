@@ -1,6 +1,7 @@
 #include "backend_localization.h"
 #include "appData.h" 
 
+static wxString ms_strEmptyLanguage;
 static wxString ms_strUserLanguage = wxT("en");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,30 +23,60 @@ wxString CBackendLocalization::GetUserLanguage()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale,
-	std::vector<CBackendLocalizationEntry>& array)
+bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale, CBackendLocalizationEntryArray& array)
 {
-	bool openText = false,
-		openSymbol = false;
+	bool open_text = false,
+		open_symbol = false;
 
-	CBackendLocalizationEntry entry;
+#pragma region _calc_count_h_
 
-	for (const auto c : strRawLocale) {
+	static size_t reserve_count = 0;
 
-		if ((!openText && (c == wxT(' ') || c == wxT('\n'))) || c == wxT('\'')) {
-			if (openText && c == wxT('\''))
-				openSymbol = !openSymbol;
+	for (const auto& c : strRawLocale.ToStdWstring()) {
+
+		if ((!open_text && (c == wxT(' ') || c == wxT('\n'))) || c == wxT('\'')) {
+			if (open_text && c == wxT('\''))
+				open_symbol = !open_symbol;
 			continue;
 		}
-		else if (!openText && !openSymbol && c == wxT('=')) {
-			openText = true;
+		else if (!open_text && !open_symbol && c == wxT('=')) {
+			open_text = true;
 			continue;
 		}
-		else if (openText && !openSymbol && c == wxT(';')) {
+		else if (open_text && !open_symbol && c == wxT(';')) {
+			reserve_count++;
+			open_text = open_symbol = false;
+			continue;
+		}
+	}
 
-			auto iterator = std::find_if(array.begin(), array.end(),
-				[entry](const CBackendLocalizationEntry& e) {
-					return stringUtils::CompareString(e.m_code, entry.m_code); });
+	open_text = open_symbol = false;
+
+	array.clear();
+	array.reserve(reserve_count);
+
+	reserve_count = 0;
+
+#pragma endregion
+
+	static CBackendLocalizationEntry entry;
+
+	for (const auto& c : strRawLocale.ToStdWstring()) {
+
+		if ((!open_text && (c == wxT(' ') || c == wxT('\n'))) || c == wxT('\'')) {
+			if (open_text && c == wxT('\''))
+				open_symbol = !open_symbol;
+			continue;
+		}
+		else if (!open_text && !open_symbol && c == wxT('=')) {
+			open_text = true;
+			continue;
+		}
+		else if (open_text && !open_symbol && c == wxT(';')) {
+			const wxString& code = entry.m_code;
+			const auto iterator = std::find_if(array.begin(), array.end(),
+				[code](const CBackendLocalizationEntry& e) {
+					return stringUtils::CompareString(code, e.m_code); });
 
 			if (iterator == array.end()) {
 				array.emplace_back(std::move(entry));
@@ -54,13 +85,13 @@ bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale,
 				*iterator = std::move(entry);
 			}
 
-			openText = openSymbol = false;
+			open_text = open_symbol = false;
 			continue;
 		}
 
-		if (openText && openSymbol)
+		if (open_text && open_symbol)
 			entry.m_data += c;
-		else if (!openText && !openSymbol)
+		else if (!open_text && !open_symbol)
 			entry.m_code += c;
 	}
 
@@ -69,7 +100,7 @@ bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale,
 
 wxString CBackendLocalization::CreateLocalizationRawLocText(const wxString& strLocale)
 {
-	std::vector<CBackendLocalizationEntry> array;
+	static CBackendLocalizationEntryArray array;
 	if (CreateLocalizationArray(strLocale, array))
 		return GetTranslateFromArray(ms_strUserLanguage, array);
 
@@ -77,18 +108,98 @@ wxString CBackendLocalization::CreateLocalizationRawLocText(const wxString& strL
 		ms_strUserLanguage, strLocale);
 }
 
-wxString CBackendLocalization::GetRawLocText(const std::vector<CBackendLocalizationEntry>& array)
+bool CBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 {
-	wxString strRawTranslate;
+	bool open_text = false,
+		open_symbol = false;
+
+	bool success = false;
+
+	for (const auto& c : strRawLocale.ToStdWstring()) {
+
+		if ((!open_text && (c == wxT(' ') || c == wxT('\n'))) || c == wxT('\'')) {
+			if (open_text && c == wxT('\''))
+				open_symbol = !open_symbol;
+			success = false;
+			continue;
+		}
+		else if (!open_text && !open_symbol && c == wxT('=')) {
+			open_text = true;
+			success = false;
+			continue;
+		}
+		else if (open_text && !open_symbol && c == wxT(';')) {
+			open_text = open_symbol = false;
+			success = true;
+			continue;
+		}
+	}
+
+	return success;
+}
+
+wxString CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArray& array)
+{
+	static wxString strRawTranslate;
 	for (const auto pair : array) {
 		strRawTranslate += wxString::Format(
 			wxT("%s = '%s';"), pair.m_code, pair.m_data);
 	}
-
-	return strRawTranslate;
+	return std::move(strRawTranslate);
 }
 
-bool CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const std::vector<CBackendLocalizationEntry>& array, wxString& strResult)
+bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale, wxString& strResult)
+{
+	return GetTranslateGetRawLocText(ms_strUserLanguage, strRawLocale, strResult);
+}
+
+bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
+{
+	static CBackendLocalizationEntryArray array;
+	if (CreateLocalizationArray(strRawLocale, array))
+		return GetTranslateFromArray(strLangCode, array, strResult);
+	return false;
+}
+
+wxString CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale)
+{
+	static wxString strResult;
+	if (GetTranslateGetRawLocText(strRawLocale, strResult))
+		return std::move(strResult);
+	return ms_strEmptyLanguage;
+}
+
+wxString CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale)
+{
+	static wxString strResult;
+	if (GetTranslateGetRawLocText(strLangCode, strRawLocale, strResult))
+		return std::move(strResult);
+	return ms_strEmptyLanguage;
+}
+
+void CBackendLocalization::SetArrayTranslate(CBackendLocalizationEntryArray& array, const wxString& strResult)
+{
+	SetArrayTranslate(ms_strUserLanguage, array, strResult);
+}
+
+void CBackendLocalization::SetArrayTranslate(const wxString& strLangCode, CBackendLocalizationEntryArray& array, const wxString& strResult)
+{
+	for (auto& entry : array) {
+		if (entry.m_code == strLangCode) {
+			entry.m_data = strResult;
+			break;
+		}
+	}
+}
+
+wxString CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const CBackendLocalizationEntryArray& array)
+{
+	static wxString result;
+	GetTranslateFromArray(strLangCode, array, result);
+	return std::move(result);
+}
+
+bool CBackendLocalization::GetTranslateFromArray(const wxString& strLangCode, const CBackendLocalizationEntryArray& array, wxString& strResult)
 {
 	if (!strLangCode.IsEmpty()) {
 		auto iterator = std::find_if(array.begin(), array.end(),

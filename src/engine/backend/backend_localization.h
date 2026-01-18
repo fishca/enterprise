@@ -8,6 +8,8 @@ struct CBackendLocalizationEntry {
 	wxString m_data;
 };
 
+typedef std::vector<CBackendLocalizationEntry> CBackendLocalizationEntryArray;
+
 class BACKEND_API CBackendLocalization {
 	CBackendLocalization() = delete;
 public:
@@ -16,49 +18,27 @@ public:
 	static wxString GetUserLanguage();
 	
 	static bool CreateLocalizationArray(const wxString& strRawTranslate,
-		std::vector<CBackendLocalizationEntry>& array);
-	static wxString CreateLocalizationRawLocText(const wxString& strLocale);
+		CBackendLocalizationEntryArray& array);
 
-	static wxString GetRawLocText(
-		const std::vector<CBackendLocalizationEntry>& array);
+	static wxString CreateLocalizationRawLocText(const wxString& strLocale);
+	static bool IsLocalizationString(const wxString& strRawLocale);
+	static wxString GetRawLocText(const CBackendLocalizationEntryArray& array);
+
+	static void SetArrayTranslate(CBackendLocalizationEntryArray& array, const wxString &strResult);
+	static void SetArrayTranslate(const wxString& strLangCode, CBackendLocalizationEntryArray& array, const wxString& strResult);
 
 	static bool GetTranslateFromArray(const wxString& strLangCode,
-		const std::vector<CBackendLocalizationEntry>& array, wxString& strResult);
-	
+		const CBackendLocalizationEntryArray& array, wxString& strResult);
 	static wxString GetTranslateFromArray(const wxString& strLangCode,
-		const std::vector<CBackendLocalizationEntry>& array) {
-		wxString result;
-		GetTranslateFromArray(strLangCode, array, result);
-		return result;
-	}
-
+		const CBackendLocalizationEntryArray& array);
+	
 	static bool GetTranslateGetRawLocText(
-		const wxString& strRawLocale, wxString& strResult) {
-		const wxString& strUserLanguage = GetUserLanguage();
-		return GetTranslateGetRawLocText(strUserLanguage, strRawLocale, strResult);
-	}
-
+		const wxString& strRawLocale, wxString& strResult);
 	static bool GetTranslateGetRawLocText(
-		const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult) {
-		std::vector<CBackendLocalizationEntry> array;
-		if (CreateLocalizationArray(strRawLocale, array))
-			return GetTranslateFromArray(strLangCode, array, strResult);
-		return false;
-	}
+		const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult);
 
-	static wxString GetTranslateGetRawLocText(const wxString& strRawLocale) {
-		wxString strResult;
-		if (GetTranslateGetRawLocText(strRawLocale, strResult))
-			return strResult;
-		return wxEmptyString;
-	}
-
-	static wxString GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale) {
-		wxString strResult;
-		if (GetTranslateGetRawLocText(strLangCode, strRawLocale, strResult))
-			return strResult;
-		return wxEmptyString;
-	}
+	static wxString GetTranslateGetRawLocText(const wxString& strRawLocale);
+	static wxString GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale);
 };
 
 #endif 

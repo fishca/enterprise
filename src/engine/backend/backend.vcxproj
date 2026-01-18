@@ -22,6 +22,7 @@
     <ClInclude Include="actionInfo.h" />
     <ClInclude Include="appData.h" />
     <ClInclude Include="backend.h" />
+    <ClInclude Include="backend_cell.h" />
     <ClInclude Include="backend_exception.h" />
     <ClInclude Include="backend_core.h" />
     <ClInclude Include="backend_mainFrame.h" />

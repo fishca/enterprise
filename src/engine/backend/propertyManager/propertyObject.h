@@ -356,7 +356,7 @@ public:
 	/**
 	* Devuelve la profundidad  del objeto en el arbol.
 	*/
-	virtual int GetComponentType() const = 0;
+	virtual int GetComponentType() const { return COMPONENT_TYPE_ABSTRACT; }
 
 	/**
 	* IProperty events

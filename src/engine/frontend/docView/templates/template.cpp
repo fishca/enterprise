@@ -3,7 +3,7 @@
 
 enum
 {
-	wxID_MERGE_CELLS = wxID_HIGHEST + 100,
+	wxID_MERGE_CELLS = wxID_HIGHEST + 150,
 	wxID_SECTION_ADD,
 	wxID_SECTION_REMOVE,
 	wxID_SHOW_CELLS,
@@ -29,6 +29,7 @@ EVT_MENU(wxID_SECTION_ADD, CGridEditView::OnMenuEvent)
 EVT_MENU(wxID_SECTION_REMOVE, CGridEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_CELLS, CGridEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_HEADERS, CGridEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_SECTIONS, CGridEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDERS, CGridEditView::OnMenuEvent)
 EVT_MENU(wxID_DOCK_TABLE, CGridEditView::OnMenuEvent)
 
@@ -36,7 +37,7 @@ wxEND_EVENT_TABLE()
 
 bool CGridEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_gridEditor = new CGrid(m_viewFrame, wxID_ANY);
+	m_gridEditor = new CGridExtCtrl(m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
 
 	return CMetaView::OnCreate(doc, flags);
@@ -52,11 +53,11 @@ void CGridEditView::OnDraw(wxDC* WXUNUSED(dc))
 	// nothing to do here, wxGrid draws itself
 }
 
-#include "frontend/mainFrame/grid/printout/gridPrintout.h"
+#include "frontend/mainFrame/grid/gridPrintout.h"
 
 wxPrintout* CGridEditView::OnCreatePrintout()
 {
-	return new CGridPrintout(m_gridEditor, wxGP_SHOW_NONE);
+	return new CGridExtPrintout(m_gridEditor, wxGP_SHOW_NONE);
 }
 
 #include "frontend/artProvider/artProvider.h"
@@ -105,10 +106,10 @@ void CGridEditView::OnMenuEvent(wxCommandEvent& event)
 		m_gridEditor->MergeCells();
 		break;
 	case wxID_SECTION_ADD:
-		m_gridEditor->AddSection();
+		m_gridEditor->AddArea();
 		break;
 	case wxID_SECTION_REMOVE:
-		m_gridEditor->RemoveSection();
+		m_gridEditor->RemoveArea();
 		break;
 	case wxID_SHOW_CELLS:
 		m_gridEditor->ShowCells();
@@ -117,7 +118,7 @@ void CGridEditView::OnMenuEvent(wxCommandEvent& event)
 		m_gridEditor->ShowHeader();
 		break;
 	case wxID_SHOW_SECTIONS:
-		m_gridEditor->ShowSection();
+		m_gridEditor->ShowArea();
 		break;
 	case wxID_DOCK_TABLE:
 		m_gridEditor->DockTable();
@@ -169,7 +170,7 @@ void CGridDocument::Modify(bool modified)
 
 wxIMPLEMENT_DYNAMIC_CLASS(CGridEditDocument, CMetaDocument);
 
-wxGrid* CGridEditDocument::GetGridCtrl() const
+wxGridExt* CGridEditDocument::GetGridCtrl() const
 {
 	wxView* view = GetFirstView();
 	return view ? wxDynamicCast(view, CGridEditView)->GetGridCtrl() : nullptr;

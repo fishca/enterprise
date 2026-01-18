@@ -2,7 +2,7 @@
 #define _GRID_H__
 
 #include "window.h"
-#include "mainFrame/grid/gridCommon.h"
+#include "mainFrame/grid/gridWindow.h"
 
 class CValueGridBox : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueGridBox);

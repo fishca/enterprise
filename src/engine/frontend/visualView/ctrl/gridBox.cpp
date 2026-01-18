@@ -11,36 +11,42 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueGridBox, IValueWindow);
 //***********************************************************************************
 
 CValueGridBox::CValueGridBox() : IValueWindow()
-{	
+{
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(300, 100));
 }
 
-wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost *visualHost)
+wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	return new CGrid(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	CGridExtCtrl* gridWindow = new CGridExtCtrl(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	
+	gridWindow->EnableProperty(!visualHost->IsDesignerHost());
+	gridWindow->EnableGridArea(false);
+	gridWindow->EnableGridLines(false);
+	
+	return gridWindow;
 }
 
-void CValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost *visualHost, bool first—reated)
+void CValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	CGrid *m_grid = dynamic_cast<CGrid *>(wxobject);
+	CGridExtCtrl* gridWindow = dynamic_cast<CGridExtCtrl*>(wxobject);
 }
 
 void CValueGridBox::OnSelected(wxObject* wxobject)
 {
 }
 
-void CValueGridBox::Update(wxObject* wxobject, IVisualHost *visualHost)
+void CValueGridBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	CGrid *m_grid = dynamic_cast<CGrid *>(wxobject);
+	CGridExtCtrl* gridWindow = dynamic_cast<CGridExtCtrl*>(wxobject);
 
-	if (m_grid) {
+	if (gridWindow) {
 	}
 
-	UpdateWindow(m_grid);
+	UpdateWindow(gridWindow);
 }
 
-void CValueGridBox::Cleanup(wxObject* wxobject, IVisualHost *visualHost)
+void CValueGridBox::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
 }
 
@@ -48,12 +54,12 @@ void CValueGridBox::Cleanup(wxObject* wxobject, IVisualHost *visualHost)
 //*                                   Data										   *
 //**********************************************************************************
 
-bool CValueGridBox::LoadData(CMemoryReader &reader)
+bool CValueGridBox::LoadData(CMemoryReader& reader)
 {
 	return IValueWindow::LoadData(reader);
 }
 
-bool CValueGridBox::SaveData(CMemoryWriter &writer)
+bool CValueGridBox::SaveData(CMemoryWriter& writer)
 {
 	return IValueWindow::SaveData(writer);
 }

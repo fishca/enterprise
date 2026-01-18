@@ -1,0 +1,379 @@
+#ifndef __GRID_EXT_COMMON_H__
+#define __GRID_EXT_COMMON_H__
+
+#include "frontend/frontend.h"
+
+#include "backend/backend_cell.h"
+#include "backend/propertyManager/propertyManager.h"
+
+static const wxArrayString wxEmptyArrayString;
+
+#include "frontend/win/ctrls/grid/gridextctrl.h"
+#include "frontend/win/ctrls/grid/gridexteditors.h"
+
+#include "frontend/visualView/special/enum/valueEnum.h"
+
+class FRONTEND_API CGridExtCtrl : public wxGridExt {
+
+	// the editor for string/text data
+	class CGridExtCellTextEditor : public wxGridExtCellEditor
+	{
+	public:
+		explicit CGridExtCellTextEditor(size_t maxChars = 0)
+			: wxGridExtCellEditor(),
+			m_maxChars(maxChars)
+		{
+		}
+
+		CGridExtCellTextEditor(const CGridExtCellTextEditor& other);
+
+		virtual void Create(wxWindow* parent,
+			wxWindowID id,
+			wxEvtHandler* evtHandler) override;
+
+		virtual void SetSize(const wxRect& rect) override;
+
+		virtual bool IsAcceptedKey(wxKeyEvent& event) override;
+		virtual void BeginEdit(int row, int col, wxGridExt* grid) override;
+		virtual bool EndEdit(int row, int col, const wxGridExt* grid,
+			const wxString& oldval, wxString* newval) override;
+		virtual void ApplyEdit(int row, int col, wxGridExt* grid) override;
+
+		virtual void Reset() override;
+		virtual void StartingKey(wxKeyEvent& event) override;
+		virtual void HandleReturn(wxKeyEvent& event) override;
+
+		// parameters string format is "max_width"
+		virtual void SetParameters(const wxString& params) override;
+#if wxUSE_VALIDATORS
+		virtual void SetValidator(const wxValidator& validator);
+#endif
+
+		virtual wxGridExtCellEditor* Clone() const override {
+			return new CGridExtCellTextEditor(*this);
+		}
+
+		// added GetValue so we can get the value which is in the control
+		virtual wxString GetValue() const override;
+
+	protected:
+		wxTextCtrl* Text() const { return (wxTextCtrl*)m_control; }
+
+		// parts of our virtual functions reused by the derived classes
+		void DoCreate(wxWindow* parent, wxWindowID id, wxEvtHandler* evtHandler,
+			long style = 0);
+		void DoBeginEdit(const wxString& startValue);
+		void DoReset(const wxString& startValue);
+
+	private:
+		size_t                   m_maxChars;        // max number of chars allowed
+#if wxUSE_VALIDATORS
+		wxScopedPtr<wxValidator> m_validator;
+#endif
+		wxString                 m_value;
+	};
+
+	class CGridExtStringTable : public wxGridExtStringTable {
+	public:
+
+		CGridExtStringTable() : wxGridExtStringTable() {}
+		CGridExtStringTable(int numRows, int numCols) : wxGridExtStringTable(numRows, numCols) {}
+
+		virtual bool IsEmptyCell(int row, int col)
+		{
+			wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
+				(col >= 0 && col < GetNumberCols()),
+				wxEmptyString,
+				wxT("invalid row or column index in wxGridExtStringTable"));
+
+			static wxString translate;
+
+			if (CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], translate))
+			{
+				return translate.IsEmpty();
+			}
+
+			return true;
+		}
+
+		virtual wxString GetValue(int row, int col) override
+		{
+			static wxString translate;
+			CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], translate);
+			return std::move(translate);
+		}
+
+		virtual void SetValue(int row, int col, const wxString& s) override
+		{
+			if (CBackendLocalization::IsLocalizationString(s))
+			{
+				wxGridExtStringTable::SetValue(row, col, s);
+			}
+			else if (CBackendLocalization::IsLocalizationString(m_data[row][col]))
+			{
+				static CBackendLocalizationEntryArray array;
+				if (CBackendLocalization::CreateLocalizationArray(m_data[row][col], array))
+				{
+					CBackendLocalization::SetArrayTranslate(array, s);
+					wxGridExtStringTable::SetValue(row, col, 
+						CBackendLocalization::GetRawLocText(array));
+				}
+			}
+			else
+			{
+				wxGridExtStringTable::SetValue(row, col, CBackendLocalization::CreateLocalizationRawLocText(s));
+			}
+		}
+
+		// For user defined types
+		virtual void* GetValueAsCustom(int row, int col, const wxString& typeName)
+		{
+			CBackendLocalizationEntryArray* array =
+				new CBackendLocalizationEntryArray();
+			CBackendLocalization::CreateLocalizationArray(m_data[row][col], *array);
+			return array;
+		}
+
+		// overridden functions from wxGridExtTableBase
+		//
+		virtual wxString GetColLabelValue(int col) override {
+			wxString s;
+			s << col + 1;
+			return s;
+		}
+	};
+
+	// the property of grid 
+	class CGridExtCellProperty : public IPropertyObject {
+	public:
+
+		void SetView(CGridExtCtrl* view) { m_view = view; }
+		CGridExtCtrl* GetView(CGridExtCtrl* view) const { return m_view; }
+
+		CGridExtCellProperty() : m_view(nullptr) {}
+
+		virtual bool IsEditable() const { return m_view->IsEditable(); }
+
+		//system override 
+		virtual wxString GetObjectTypeName() const override { return wxT("extGridProperty"); }
+		virtual wxString GetClassName() const { return wxT("extGridProperty"); }
+
+		/// Gets the metadata object
+		virtual IMetaData* GetMetaData() const;
+
+		/**
+		* Property events
+		*/
+		virtual void OnPropertyCreated(IProperty* property);
+		virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+
+	private:
+
+		void ClearSelectedCell() { m_currentSelection.clear(); }
+
+		void OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords);
+		void OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords);
+
+		void AddSelectedCell(const wxGridExtBlockCoords& coords, bool afterErase = false);
+		void ShowProperty();
+
+		CGridExtCtrl* m_view;
+
+		std::vector<wxGridExtBlockCoords> m_currentSelection;
+
+		CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("general"), _("General"));
+		CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("name"), _("Name"), wxEmptyString);
+		CPropertyTString* m_propertyText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryGeneral, wxT("text"), _("Text"), wxEmptyString);
+
+		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("Template"));
+		CPropertyEnum<CValueEnumBorder>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryTemplate, wxT("fillType"), _("Fill type"), wxPENSTYLE_TRANSPARENT);
+		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("parameter"), _("Parameter"), wxEmptyString);
+
+		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("Alignment"));
+		CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), wxAlignment::wxALIGN_LEFT);
+		CPropertyEnum<CValueEnumVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVerticalAlignment>>(m_categoryAlignment, wxT("align_vert"), _("Vertical"), wxAlignment::wxALIGN_CENTER);
+		CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryAlignment, wxT("orient_text"), _("Orientation text"), wxOrientation::wxVERTICAL);
+
+		CPropertyCategory* m_categoryAppearance = IPropertyObject::CreatePropertyCategory(wxT("appearance"), _("Appearance"));
+		CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryAppearance, wxT("font"), _("Font"));
+		CPropertyColour* m_propertyBackgroundColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("background_colour"), _("Background colour"), wxNullColour);
+		CPropertyColour* m_propertyTextColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("text_colour"), _("Text colour"), wxNullColour);
+
+		CPropertyCategory* m_categoryBorder = IPropertyObject::CreatePropertyCategory(wxT("border"), _("Border"));
+		CPropertyEnum<CValueEnumBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("left_border"), _("Left"), wxPENSTYLE_TRANSPARENT);
+		CPropertyEnum<CValueEnumBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("right_border"), _("Right"), wxPENSTYLE_TRANSPARENT);
+		CPropertyEnum<CValueEnumBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("top_border"), _("Top"), wxPENSTYLE_TRANSPARENT);
+		CPropertyEnum<CValueEnumBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("bottom_border"), _("Bottom"), wxPENSTYLE_TRANSPARENT);
+		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("border_colour"), _("Colour"), wxNullColour);
+
+		friend class CGridExtCtrl;
+	};
+
+public:
+
+	void ActivateEditor();
+
+	void SendPropertyModify() {
+		wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, m_currentCellCoords);
+	}
+
+	void SendPropertyModify(const wxGridExtCellCoords& coords) {
+		wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, coords);
+	}
+
+	void EnableProperty(bool enable = true) { m_enableProperty = enable; }
+
+	////////////////////////////////////////////////////////////
+
+	// ctor and Create() create the grid window, as with the other controls
+	CGridExtCtrl();
+	CGridExtCtrl(wxWindow* parent,
+		wxWindowID id, const wxPoint& pos = wxDefaultPosition,
+		const wxSize& size = wxDefaultSize);
+
+	virtual ~CGridExtCtrl();
+
+#pragma region area
+
+	void AddArea();
+	void RemoveArea();
+
+#pragma endregion
+
+	void ShowCells() { wxGridExt::EnableGridLines(!m_gridLinesEnabled); }
+
+	void ShowHeader() {
+		if (m_rowLabelWidth > 0) {
+			wxGridExt::EnableGridArea(false);
+			wxGridExt::SetRowLabelSize(0);
+			wxGridExt::SetColLabelSize(0);
+		}
+		else {
+			wxGridExt::EnableGridArea(true);
+			wxGridExt::SetRowLabelSize(WXGRID_DEFAULT_ROW_LABEL_WIDTH - 42);
+			wxGridExt::SetColLabelSize(WXGRID_MIN_COL_WIDTH);
+		}
+	}
+
+	void ShowArea() {
+		wxGridExt::EnableGridArea(!m_areaEnabled);
+	}
+
+	void MergeCells();
+	void DockTable();
+
+	void Copy();
+	void Paste();
+
+protected:
+
+	const wxString m_GRID_VALUE_STRING = wxGRID_VALUE_STRING;
+
+#pragma region string_utils
+
+	static void ParseLines(const wxString& strLine, wxArrayString& arrString) {
+
+		static wxString strRaw; static bool bInQuote = false;
+		{
+			arrString.resize(0);
+		}
+
+		for (const auto& c : strLine.ToStdWstring()) {
+			strRaw += c;
+			if (c == wxT('\'')) {
+				bInQuote = !bInQuote;
+			}
+			else if (c == wxT('\n') && !bInQuote) {
+				if (!IsEmptyLine(strRaw))
+					arrString.Add(strRaw);
+				strRaw.Clear();
+			}
+		}
+		if (!strRaw.IsEmpty()) {
+			if (!IsEmptyLine(strRaw))
+				arrString.Add(strRaw);
+			strRaw.Clear();
+		}
+	}
+
+	static bool IsEmptyLine(const wxString& strLine) { return strLine.IsEmpty(); }
+
+#pragma endregion
+
+	//events:
+	void OnMouseRightDown(wxGridExtEvent& event);
+
+	// This seems to be required for wxMotif/wxGTK otherwise the mouse
+	// cursor must be in the cell edit control to get key events
+	//
+	void OnKeyDown(wxKeyEvent& event);
+
+	void OnSelectCell(wxGridExtEvent& event);
+	void OnSelectCells(wxGridExtRangeSelectEvent& event);
+
+	void OnGridColSize(wxGridExtSizeEvent& event);
+	void OnGridRowSize(wxGridExtSizeEvent& event);
+
+	void OnGridEditorHidden(wxGridExtEvent& event);
+
+	void OnCopy(wxCommandEvent& event);
+	void OnPaste(wxCommandEvent& event);
+	void OnDelete(wxCommandEvent& event);
+
+	void OnRowHeight(wxCommandEvent& event);
+	void OnColWidth(wxCommandEvent& event);
+	void OnHideCell(wxCommandEvent& event);
+	void OnShowCell(wxCommandEvent& event);
+
+	void OnProperties(wxCommandEvent& event);
+
+	void OnScroll(wxScrollWinEvent& event);
+
+	void OnIdle(wxIdleEvent& event);
+	void OnSize(wxSizeEvent& event);
+
+private:
+
+	class CGridExtDrawHelper {
+	public:
+
+		static void GetTextBoxSize(const wxDC& dc,
+			const wxArrayString& lines,
+			wxArrayInt& arrWidth, wxArrayInt& arrHeight,
+			long* width, long* height);
+
+		static wxArrayString GetTextLines(wxDC& dc,
+			const wxString& data,
+			const wxFont& font, const wxRect& rect);
+
+		static void DrawTextRectangle(wxDC& dc,
+			const wxArrayString& lines,
+			const wxRect& rect,
+			int horizAlign,
+			int vertAlign,
+			int textOrientation);
+
+	private:
+
+		// the margin between a cell vertical line and a cell text
+		static const int GRID_TEXT_MARGIN = 0;
+	};
+
+	friend class CGridExtRowHeaderRenderer;
+	friend class CGridExtColumnHeaderRenderer;
+	friend class CGridExtCornerHeaderRenderer;
+
+	friend class CGridExtPrintout;
+
+	bool m_enableProperty;
+
+	// the margin between a cell vertical line and a cell text
+	const int GRID_TEXT_MARGIN = 1;
+
+	//property grid
+	CGridExtCellProperty* m_cellProperty;
+
+	wxDECLARE_EVENT_TABLE();
+};
+
+#endif 

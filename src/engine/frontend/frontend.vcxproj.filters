@@ -43,20 +43,8 @@
     <ClCompile Include="win\dlgs\about.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridCommon.cpp">
+    <ClCompile Include="mainFrame\grid\gridWindow.cpp">
       <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridSections.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridUtils.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\printout\gridPrintout.cpp">
-      <Filter>mainFrame\grid\printout</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\property\gridProperty.cpp">
-      <Filter>mainFrame\grid\property</Filter>
     </ClCompile>
     <ClCompile Include="docView\docViewCmd.cpp">
       <Filter>docView</Filter>
@@ -779,6 +767,30 @@
     <ClCompile Include="win\dlgs\formEditor.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
+    <ClCompile Include="mainFrame\grid\gridEditor.cpp">
+      <Filter>mainFrame\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\grid\gridAttr.cpp">
+      <Filter>mainFrame\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\grid\gridProperty.cpp">
+      <Filter>mainFrame\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\grid\gridPrintout.cpp">
+      <Filter>mainFrame\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\grid\gridext.cpp">
+      <Filter>win\ctrl\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\grid\gridextctrl.cpp">
+      <Filter>win\ctrl\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\grid\gridexteditors.cpp">
+      <Filter>win\ctrl\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\grid\gridextsel.cpp">
+      <Filter>win\ctrl\grid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -820,20 +832,8 @@
     <ClInclude Include="win\dlgs\about.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
-    <ClInclude Include="mainFrame\grid\gridCommon.h">
+    <ClInclude Include="mainFrame\grid\gridWindow.h">
       <Filter>mainFrame\grid</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\grid\gridSections.h">
-      <Filter>mainFrame\grid</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\grid\gridUtils.h">
-      <Filter>mainFrame\grid</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\grid\printout\gridPrintout.h">
-      <Filter>mainFrame\grid\printout</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\grid\property\gridProperty.h">
-      <Filter>mainFrame\grid\property</Filter>
     </ClInclude>
     <ClInclude Include="docView\docManager.h">
       <Filter>docView</Filter>
@@ -1371,6 +1371,24 @@
     <ClInclude Include="res\resource.h">
       <Filter>res</Filter>
     </ClInclude>
+    <ClInclude Include="mainFrame\grid\gridPrintout.h">
+      <Filter>mainFrame\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\grid\gridext.h">
+      <Filter>win\ctrl\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\grid\gridextctrl.h">
+      <Filter>win\ctrl\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\grid\gridexteditors.h">
+      <Filter>win\ctrl\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\grid\gridextprivate.h">
+      <Filter>win\ctrl\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\grid\gridextsel.h">
+      <Filter>win\ctrl\grid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1384,12 +1402,6 @@
     </Filter>
     <Filter Include="mainFrame\grid">
       <UniqueIdentifier>{e1c211f2-aceb-4018-893d-1ed8d653bd3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mainFrame\grid\printout">
-      <UniqueIdentifier>{5d6896ad-7709-4658-b400-b47cdaed64a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mainFrame\grid\property">
-      <UniqueIdentifier>{6c51148e-13b0-4583-8408-bc97036e74aa}</UniqueIdentifier>
     </Filter>
     <Filter Include="docView">
       <UniqueIdentifier>{442f0471-db57-440c-aa5f-f6a20e933269}</UniqueIdentifier>
@@ -1441,6 +1453,9 @@
     </Filter>
     <Filter Include="res">
       <UniqueIdentifier>{eacc6bf8-598e-4edd-a4cf-e8c9f6d83303}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\ctrl\grid">
+      <UniqueIdentifier>{74f76230-0788-4572-9a4e-b34c3c84a99a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

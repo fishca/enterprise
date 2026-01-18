@@ -1,8 +1,8 @@
-#ifndef _GRID_H__
-#define _GRID_H__
+#ifndef __GRID_H__
+#define __GRID_H__
 
 #include "frontend/docView/docView.h"
-#include "frontend/mainFrame/grid/gridCommon.h"
+#include "frontend/mainFrame/grid/gridWindow.h"
 
 // ----------------------------------------------------------------------------
 // Edit form classes
@@ -19,7 +19,7 @@ public:
 	virtual void OnDraw(wxDC *dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	wxGrid *GetGridCtrl() const { return m_gridEditor; }
+	wxGridExt *GetGridCtrl() const { return m_gridEditor; }
 
 private:
 
@@ -32,7 +32,7 @@ private:
 
 	void OnMenuEvent(wxCommandEvent &event);
 
-	CGrid *m_gridEditor;
+	CGridExtCtrl *m_gridEditor;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(CGridEditView);
@@ -51,7 +51,7 @@ public:
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 
-	virtual wxGrid *GetGridCtrl() const = 0;
+	virtual wxGridExt *GetGridCtrl() const = 0;
 
 	virtual bool IsModified() const override;
 	virtual void Modify(bool mod) override;
@@ -72,7 +72,7 @@ protected:
 class FRONTEND_API CGridEditDocument : public CGridDocument {
 public:
 	CGridEditDocument() : CGridDocument() { }
-	virtual wxGrid *GetGridCtrl()  const override;
+	virtual wxGridExt *GetGridCtrl()  const override;
 
 	wxDECLARE_NO_COPY_CLASS(CGridEditDocument);
 	wxDECLARE_DYNAMIC_CLASS(CGridEditDocument);

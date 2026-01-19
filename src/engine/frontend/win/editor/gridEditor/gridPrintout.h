@@ -8,7 +8,7 @@
 #include <wx/tokenzr.h>
 #include <wx/textfile.h>
 
-#include "gridWindow.h"
+#include "gridEditor.h"
 
 #define wxGP_SHOW_NONE		0x0000 //never show row or column labels
 #define wxGP_SHOW_CL		0x0001 //show column labels on first page/s
@@ -17,14 +17,14 @@
 #define wxGP_SHOW_RL_ALWAYS 0x0008 //show row labels on all pages
 #define wxGP_DEFAULT		0x0010 //default, shows all labels on all the pages.
 
-class FRONTEND_API CGridExtPrintout : public wxPrintout {
+class FRONTEND_API CGridEditorPrintout : public wxPrintout {
 public:
 
-	CGridExtPrintout(const wxString& title = wxT("CGridExtPrintout"));
-	CGridExtPrintout(CGridExtCtrl* view, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridExtPrintout"));
+	CGridEditorPrintout(const wxString& title = wxT("CGridEditorPrintout"));
+	CGridEditorPrintout(CGridEditor* view, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
 
-	void SetGrid(CGridExtCtrl* view);
-	CGridExtCtrl* GetGrid() const;
+	void SetGrid(CGridEditor* view);
+	CGridEditor* GetGrid() const;
 	void SetStyle(int style);
 	int GetStyle() const;
 	void SetUserScale(float scale);
@@ -65,7 +65,7 @@ protected:
 
 private:
 
-	CGridExtCtrl* m_view;
+	CGridEditor* m_view;
 	int m_style;
 
 	int m_minPage;

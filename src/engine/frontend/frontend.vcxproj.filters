@@ -43,9 +43,6 @@
     <ClCompile Include="win\dlgs\about.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridWindow.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
     <ClCompile Include="docView\docViewCmd.cpp">
       <Filter>docView</Filter>
     </ClCompile>
@@ -767,18 +764,6 @@
     <ClCompile Include="win\dlgs\formEditor.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridEditor.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridAttr.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridProperty.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\grid\gridPrintout.cpp">
-      <Filter>mainFrame\grid</Filter>
-    </ClCompile>
     <ClCompile Include="win\ctrls\grid\gridext.cpp">
       <Filter>win\ctrl\grid</Filter>
     </ClCompile>
@@ -790,6 +775,21 @@
     </ClCompile>
     <ClCompile Include="win\ctrls\grid\gridextsel.cpp">
       <Filter>win\ctrl\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridAttr.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridPrintout.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridProperty.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridCellEditor.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridEditor.cpp">
+      <Filter>win\editor\gridEditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -831,9 +831,6 @@
     </ClInclude>
     <ClInclude Include="win\dlgs\about.h">
       <Filter>win\dlg</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\grid\gridWindow.h">
-      <Filter>mainFrame\grid</Filter>
     </ClInclude>
     <ClInclude Include="docView\docManager.h">
       <Filter>docView</Filter>
@@ -1371,9 +1368,6 @@
     <ClInclude Include="res\resource.h">
       <Filter>res</Filter>
     </ClInclude>
-    <ClInclude Include="mainFrame\grid\gridPrintout.h">
-      <Filter>mainFrame\grid</Filter>
-    </ClInclude>
     <ClInclude Include="win\ctrls\grid\gridext.h">
       <Filter>win\ctrl\grid</Filter>
     </ClInclude>
@@ -1389,6 +1383,12 @@
     <ClInclude Include="win\ctrls\grid\gridextsel.h">
       <Filter>win\ctrl\grid</Filter>
     </ClInclude>
+    <ClInclude Include="win\editor\gridEditor\gridPrintout.h">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="win\editor\gridEditor\gridEditor.h">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1399,9 +1399,6 @@
     </Filter>
     <Filter Include="mainFrame\objinspect">
       <UniqueIdentifier>{5b008341-e88f-4993-8e8d-7caa98ba8c3e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mainFrame\grid">
-      <UniqueIdentifier>{e1c211f2-aceb-4018-893d-1ed8d653bd3d}</UniqueIdentifier>
     </Filter>
     <Filter Include="docView">
       <UniqueIdentifier>{442f0471-db57-440c-aa5f-f6a20e933269}</UniqueIdentifier>
@@ -1456,6 +1453,12 @@
     </Filter>
     <Filter Include="win\ctrl\grid">
       <UniqueIdentifier>{74f76230-0788-4572-9a4e-b34c3c84a99a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\editor">
+      <UniqueIdentifier>{3398c0ae-f246-48c2-869c-1d87020ca085}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\editor\gridEditor">
+      <UniqueIdentifier>{7ea6a336-7602-4dd1-b415-44dfa406e2f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

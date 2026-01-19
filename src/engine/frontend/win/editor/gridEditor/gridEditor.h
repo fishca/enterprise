@@ -13,19 +13,19 @@ static const wxArrayString wxEmptyArrayString;
 
 #include "frontend/visualView/special/enum/valueEnum.h"
 
-class FRONTEND_API CGridExtCtrl : public wxGridExt {
+class FRONTEND_API CGridEditor : public wxGridExt {
 
 	// the editor for string/text data
-	class CGridExtCellTextEditor : public wxGridExtCellEditor
+	class CGridEditorCellTextEditor : public wxGridExtCellEditor
 	{
 	public:
-		explicit CGridExtCellTextEditor(size_t maxChars = 0)
+		explicit CGridEditorCellTextEditor(size_t maxChars = 0)
 			: wxGridExtCellEditor(),
 			m_maxChars(maxChars)
 		{
 		}
 
-		CGridExtCellTextEditor(const CGridExtCellTextEditor& other);
+		CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other);
 
 		virtual void Create(wxWindow* parent,
 			wxWindowID id,
@@ -50,7 +50,7 @@ class FRONTEND_API CGridExtCtrl : public wxGridExt {
 #endif
 
 		virtual wxGridExtCellEditor* Clone() const override {
-			return new CGridExtCellTextEditor(*this);
+			return new CGridEditorCellTextEditor(*this);
 		}
 
 		// added GetValue so we can get the value which is in the control
@@ -73,11 +73,11 @@ class FRONTEND_API CGridExtCtrl : public wxGridExt {
 		wxString                 m_value;
 	};
 
-	class CGridExtStringTable : public wxGridExtStringTable {
+	class CGridEditorStringTable : public wxGridExtStringTable {
 	public:
 
-		CGridExtStringTable() : wxGridExtStringTable() {}
-		CGridExtStringTable(int numRows, int numCols) : wxGridExtStringTable(numRows, numCols) {}
+		CGridEditorStringTable() : wxGridExtStringTable() {}
+		CGridEditorStringTable(int numRows, int numCols) : wxGridExtStringTable(numRows, numCols) {}
 
 		virtual bool IsEmptyCell(int row, int col)
 		{
@@ -144,13 +144,13 @@ class FRONTEND_API CGridExtCtrl : public wxGridExt {
 	};
 
 	// the property of grid 
-	class CGridExtCellProperty : public IPropertyObject {
+	class CGridEditorCellProperty : public IPropertyObject {
 	public:
 
-		void SetView(CGridExtCtrl* view) { m_view = view; }
-		CGridExtCtrl* GetView(CGridExtCtrl* view) const { return m_view; }
+		void SetView(CGridEditor* view) { m_view = view; }
+		CGridEditor* GetView(CGridEditor* view) const { return m_view; }
 
-		CGridExtCellProperty() : m_view(nullptr) {}
+		CGridEditorCellProperty() : m_view(nullptr) {}
 
 		virtual bool IsEditable() const { return m_view->IsEditable(); }
 
@@ -177,7 +177,7 @@ class FRONTEND_API CGridExtCtrl : public wxGridExt {
 		void AddSelectedCell(const wxGridExtBlockCoords& coords, bool afterErase = false);
 		void ShowProperty();
 
-		CGridExtCtrl* m_view;
+		CGridEditor* m_view;
 
 		std::vector<wxGridExtBlockCoords> m_currentSelection;
 
@@ -206,7 +206,7 @@ class FRONTEND_API CGridExtCtrl : public wxGridExt {
 		CPropertyEnum<CValueEnumBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("bottom_border"), _("Bottom"), wxPENSTYLE_TRANSPARENT);
 		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("border_colour"), _("Colour"), wxNullColour);
 
-		friend class CGridExtCtrl;
+		friend class CGridEditor;
 	};
 
 public:
@@ -226,12 +226,12 @@ public:
 	////////////////////////////////////////////////////////////
 
 	// ctor and Create() create the grid window, as with the other controls
-	CGridExtCtrl();
-	CGridExtCtrl(wxWindow* parent,
+	CGridEditor();
+	CGridEditor(wxWindow* parent,
 		wxWindowID id, const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
-	virtual ~CGridExtCtrl();
+	virtual ~CGridEditor();
 
 #pragma region area
 
@@ -334,7 +334,7 @@ protected:
 
 private:
 
-	class CGridExtDrawHelper {
+	class CGridEditorDrawHelper {
 	public:
 
 		static void GetTextBoxSize(const wxDC& dc,
@@ -359,11 +359,11 @@ private:
 		static const int GRID_TEXT_MARGIN = 0;
 	};
 
-	friend class CGridExtRowHeaderRenderer;
-	friend class CGridExtColumnHeaderRenderer;
-	friend class CGridExtCornerHeaderRenderer;
+	friend class CGridEditorRowHeaderRenderer;
+	friend class CGridEditorColumnHeaderRenderer;
+	friend class CGridEditorCornerHeaderRenderer;
 
-	friend class CGridExtPrintout;
+	friend class CGridEditorPrintout;
 
 	bool m_enableProperty;
 
@@ -371,7 +371,7 @@ private:
 	const int GRID_TEXT_MARGIN = 1;
 
 	//property grid
-	CGridExtCellProperty* m_cellProperty;
+	CGridEditorCellProperty* m_cellProperty;
 
 	wxDECLARE_EVENT_TABLE();
 };

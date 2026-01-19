@@ -37,7 +37,7 @@ wxEND_EVENT_TABLE()
 
 bool CGridEditView::OnCreate(CMetaDocument* doc, long flags)
 {
-	m_gridEditor = new CGridExtCtrl(m_viewFrame, wxID_ANY);
+	m_gridEditor = new CGridEditor(m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
 
 	return CMetaView::OnCreate(doc, flags);
@@ -53,11 +53,11 @@ void CGridEditView::OnDraw(wxDC* WXUNUSED(dc))
 	// nothing to do here, wxGrid draws itself
 }
 
-#include "frontend/mainFrame/grid/gridPrintout.h"
+#include "frontend/win/editor/gridEditor/gridPrintout.h"
 
 wxPrintout* CGridEditView::OnCreatePrintout()
 {
-	return new CGridExtPrintout(m_gridEditor, wxGP_SHOW_NONE);
+	return new CGridEditorPrintout(m_gridEditor, wxGP_SHOW_NONE);
 }
 
 #include "frontend/artProvider/artProvider.h"

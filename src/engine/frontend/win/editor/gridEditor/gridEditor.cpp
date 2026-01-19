@@ -3,7 +3,7 @@
 //	Description : grid window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "gridWindow.h"
+#include "gridEditor.h"
 #include "frontend/win/ctrls/grid/gridextprivate.h"
 
 enum
@@ -15,45 +15,45 @@ enum
 	wxID_SHOW_CELL
 };
 
-wxBEGIN_EVENT_TABLE(CGridExtCtrl, wxGridExt)
-EVT_GRID_CELL_RIGHT_CLICK(CGridExtCtrl::OnMouseRightDown)
-EVT_GRID_LABEL_RIGHT_CLICK(CGridExtCtrl::OnMouseRightDown)
-EVT_KEY_DOWN(CGridExtCtrl::OnKeyDown)
-EVT_GRID_SELECT_CELL(CGridExtCtrl::OnSelectCell)
-EVT_GRID_RANGE_SELECT(CGridExtCtrl::OnSelectCells)
-EVT_GRID_COL_SIZE(CGridExtCtrl::OnGridColSize)
-EVT_GRID_ROW_SIZE(CGridExtCtrl::OnGridRowSize)
-EVT_GRID_EDITOR_HIDDEN(CGridExtCtrl::OnGridEditorHidden)
-EVT_SCROLLWIN(CGridExtCtrl::OnScroll)
-EVT_IDLE(CGridExtCtrl::OnIdle)
-EVT_SIZE(CGridExtCtrl::OnSize)
-EVT_MENU(wxID_COPY, CGridExtCtrl::OnCopy)
-EVT_MENU(wxID_PASTE, CGridExtCtrl::OnPaste)
-EVT_MENU(wxID_DELETE, CGridExtCtrl::OnDelete)
-EVT_MENU(wxID_ROW_HEIGHT, CGridExtCtrl::OnRowHeight)
-EVT_MENU(wxID_COL_WIDTH, CGridExtCtrl::OnColWidth)
-EVT_MENU(wxID_HIDE_CELL, CGridExtCtrl::OnHideCell)
-EVT_MENU(wxID_SHOW_CELL, CGridExtCtrl::OnShowCell)
-EVT_MENU(wxID_PROPERTIES, CGridExtCtrl::OnProperties)
+wxBEGIN_EVENT_TABLE(CGridEditor, wxGridExt)
+EVT_GRID_CELL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
+EVT_GRID_LABEL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
+EVT_KEY_DOWN(CGridEditor::OnKeyDown)
+EVT_GRID_SELECT_CELL(CGridEditor::OnSelectCell)
+EVT_GRID_RANGE_SELECT(CGridEditor::OnSelectCells)
+EVT_GRID_COL_SIZE(CGridEditor::OnGridColSize)
+EVT_GRID_ROW_SIZE(CGridEditor::OnGridRowSize)
+EVT_GRID_EDITOR_HIDDEN(CGridEditor::OnGridEditorHidden)
+EVT_SCROLLWIN(CGridEditor::OnScroll)
+EVT_IDLE(CGridEditor::OnIdle)
+EVT_SIZE(CGridEditor::OnSize)
+EVT_MENU(wxID_COPY, CGridEditor::OnCopy)
+EVT_MENU(wxID_PASTE, CGridEditor::OnPaste)
+EVT_MENU(wxID_DELETE, CGridEditor::OnDelete)
+EVT_MENU(wxID_ROW_HEIGHT, CGridEditor::OnRowHeight)
+EVT_MENU(wxID_COL_WIDTH, CGridEditor::OnColWidth)
+EVT_MENU(wxID_HIDE_CELL, CGridEditor::OnHideCell)
+EVT_MENU(wxID_SHOW_CELL, CGridEditor::OnShowCell)
+EVT_MENU(wxID_PROPERTIES, CGridEditor::OnProperties)
 wxEND_EVENT_TABLE()
 
 ////////////////////////////////////////////////////////////////////
 
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
-void CGridExtCtrl::ActivateEditor()
+void CGridEditor::ActivateEditor()
 {
 	if (m_enableProperty)
 		objectInspector->SelectObject(m_cellProperty, true);
 }
 
 // ctor and Create() create the grid window, as with the other controls
-CGridExtCtrl::CGridExtCtrl() : wxGridExt(),
+CGridEditor::CGridEditor() : wxGridExt(),
 m_cellProperty(nullptr), m_enableProperty(true)
 {
 }
 
-CGridExtCtrl::CGridExtCtrl(wxWindow* parent,
+CGridEditor::CGridEditor(wxWindow* parent,
 	wxWindowID id, const wxPoint& pos,
 	const wxSize& size) : wxGridExt(parent, id, pos, size),
 	m_cellProperty(nullptr), m_enableProperty(true)
@@ -71,7 +71,7 @@ CGridExtCtrl::CGridExtCtrl(wxWindow* parent,
 	wxGridExt::SetMargins(0, 0);
 
 	// Create property
-	m_cellProperty = new CGridExtCellProperty();
+	m_cellProperty = new CGridEditorCellProperty();
 	m_cellProperty->SetView(this);
 
 	// Native col 
@@ -80,7 +80,7 @@ CGridExtCtrl::CGridExtCtrl(wxWindow* parent,
 
 	// Cell Defaults
 	wxGridExt::SetDefaultCellAlignment(wxAlignment::wxALIGN_LEFT, wxAlignment::wxALIGN_BOTTOM);
-	wxGridExt::SetTable(new CGridExtStringTable, true);
+	wxGridExt::SetTable(new CGridEditorStringTable, true);
 
 	m_selectionBackground.Set(211, 217, 239);
 	m_selectionForeground.Set(0, 0, 0);
@@ -88,7 +88,7 @@ CGridExtCtrl::CGridExtCtrl(wxWindow* parent,
 	wxGridExt::SetDefaultCellFont(
 		wxFont(8, wxFontFamily::wxFONTFAMILY_DEFAULT, wxFontStyle::wxFONTSTYLE_NORMAL, wxFontWeight::wxFONTWEIGHT_NORMAL));
 
-	wxGridExt::SetDefaultEditor(new CGridExtCellTextEditor);
+	wxGridExt::SetDefaultEditor(new CGridEditorCellTextEditor);
 
 	wxAcceleratorEntry entries[4];
 	entries[0].Set(wxACCEL_CTRL, (int)'A', wxID_SELECTALL);
@@ -101,13 +101,13 @@ CGridExtCtrl::CGridExtCtrl(wxWindow* parent,
 	SetAcceleratorTable(accel);
 }
 
-CGridExtCtrl::~CGridExtCtrl()
+CGridEditor::~CGridEditor()
 {
 	//delete property
 	wxDELETE(m_cellProperty);
 }
 
-void CGridExtCtrl::AddArea()
+void CGridEditor::AddArea()
 {
 	if (!wxGridExt::IsEditable())
 		return;
@@ -115,7 +115,7 @@ void CGridExtCtrl::AddArea()
 	wxGridExt::AddArea();
 }
 
-void CGridExtCtrl::RemoveArea()
+void CGridEditor::RemoveArea()
 {
 	if (!wxGridExt::IsEditable())
 		return;
@@ -123,7 +123,7 @@ void CGridExtCtrl::RemoveArea()
 	wxGridExt::RemoveArea();
 }
 
-void CGridExtCtrl::MergeCells()
+void CGridEditor::MergeCells()
 {
 	if (!wxGridExt::IsEditable())
 		return;
@@ -138,18 +138,18 @@ void CGridExtCtrl::MergeCells()
 	//wxGridExt::ForceRefresh();
 }
 
-void CGridExtCtrl::DockTable()
+void CGridEditor::DockTable()
 {
 	if (!wxGridExt::IsEditable())
 		return;
 
 	const wxGridExtBlockCoords& cellRange = GetSelectedCellRange();
-	CGridExtCtrl::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
+	CGridEditor::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
 }
 
 #include <wx/clipbrd.h>
 
-void CGridExtCtrl::Copy()
+void CGridEditor::Copy()
 {
 	wxString copy_data;
 	bool something_in_this_line;
@@ -180,7 +180,7 @@ void CGridExtCtrl::Copy()
 	}
 }
 
-void CGridExtCtrl::Paste()
+void CGridEditor::Paste()
 {
 	wxString copy_data, cur_field, cur_line;
 
@@ -216,7 +216,7 @@ void CGridExtCtrl::Paste()
 
 #include "frontend/artProvider/artProvider.h"
 
-void CGridExtCtrl::OnMouseRightDown(wxGridExtEvent& event)
+void CGridEditor::OnMouseRightDown(wxGridExtEvent& event)
 {
 	if (event.GetRow() == wxNOT_FOUND &&
 		event.GetCol() == wxNOT_FOUND) {
@@ -297,7 +297,7 @@ void CGridExtCtrl::OnMouseRightDown(wxGridExtEvent& event)
 // This seems to be required for wxMotif/wxGTK otherwise the mouse
 // cursor must be in the cell edit control to get key events
 //
-void CGridExtCtrl::OnKeyDown(wxKeyEvent& event)
+void CGridEditor::OnKeyDown(wxKeyEvent& event)
 {
 	const int code = event.GetKeyCode();
 
@@ -346,7 +346,7 @@ void CGridExtCtrl::OnKeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnSelectCell(wxGridExtEvent& event)
+void CGridEditor::OnSelectCell(wxGridExtEvent& event)
 {
 	if (m_enableProperty) {
 		if (event.Selecting()) {
@@ -365,7 +365,7 @@ void CGridExtCtrl::OnSelectCell(wxGridExtEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnSelectCells(wxGridExtRangeSelectEvent& event)
+void CGridEditor::OnSelectCells(wxGridExtRangeSelectEvent& event)
 {
 	if (m_enableProperty) {
 		if (event.Selecting()) {
@@ -384,7 +384,7 @@ void CGridExtCtrl::OnSelectCells(wxGridExtRangeSelectEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnGridColSize(wxGridExtSizeEvent& event)
+void CGridEditor::OnGridColSize(wxGridExtSizeEvent& event)
 {
 	//CalcSection();
 	wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtCellCoords{ m_currentCellCoords.GetCol(), event.GetRowOrCol() });
@@ -392,7 +392,7 @@ void CGridExtCtrl::OnGridColSize(wxGridExtSizeEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnGridRowSize(wxGridExtSizeEvent& event)
+void CGridEditor::OnGridRowSize(wxGridExtSizeEvent& event)
 {
 	//CalcSection();
 	wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtCellCoords{ event.GetRowOrCol(), m_currentCellCoords.GetCol() });
@@ -400,7 +400,7 @@ void CGridExtCtrl::OnGridRowSize(wxGridExtSizeEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnGridEditorHidden(wxGridExtEvent& event)
+void CGridEditor::OnGridEditorHidden(wxGridExtEvent& event)
 {
 	int col = event.GetCol(),
 		row = event.GetRow();
@@ -423,7 +423,7 @@ void CGridExtCtrl::OnGridEditorHidden(wxGridExtEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnScroll(wxScrollWinEvent& event)
+void CGridEditor::OnScroll(wxScrollWinEvent& event)
 {
 	int ux, uy,
 		sx, sy;
@@ -533,12 +533,12 @@ void CGridExtCtrl::OnScroll(wxScrollWinEvent& event)
 	event.Skip();
 }
 
-void CGridExtCtrl::OnIdle(wxIdleEvent& event)
+void CGridEditor::OnIdle(wxIdleEvent& event)
 {
 	event.Skip();
 }
 
-void CGridExtCtrl::OnSize(wxSizeEvent& event)
+void CGridEditor::OnSize(wxSizeEvent& event)
 {
 	int ux, uy,
 		sx, sy;
@@ -591,17 +591,17 @@ void CGridExtCtrl::OnSize(wxSizeEvent& event)
 #pragma endregion
 
 #pragma region context_menu
-void CGridExtCtrl::OnCopy(wxCommandEvent& event)
+void CGridEditor::OnCopy(wxCommandEvent& event)
 {
 	Copy();
 }
 
-void CGridExtCtrl::OnPaste(wxCommandEvent& event)
+void CGridEditor::OnPaste(wxCommandEvent& event)
 {
 	Paste();
 }
 
-void CGridExtCtrl::OnDelete(wxCommandEvent& event)
+void CGridEditor::OnDelete(wxCommandEvent& event)
 {
 	//for (auto cell : wxGridExt::GetSelectedBlocks()) {
 	//	for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
@@ -627,8 +627,8 @@ void CGridExtCtrl::OnDelete(wxCommandEvent& event)
 	//				wxGridExt::SetCellSize(row, col, 1, 1);
 	//			}
 
-	//			CGridExtCtrl::SetCellTextOrientation(row, col, wxOrientation::wxHORIZONTAL);
-	//			CGridExtCtrl::SetCellBorder(row, col,
+	//			CGridEditor::SetCellTextOrientation(row, col, wxOrientation::wxHORIZONTAL);
+	//			CGridEditor::SetCellBorder(row, col,
 	//				wxPenStyle::wxPENSTYLE_TRANSPARENT,
 	//				wxPenStyle::wxPENSTYLE_TRANSPARENT,
 	//				wxPenStyle::wxPENSTYLE_TRANSPARENT,
@@ -640,7 +640,7 @@ void CGridExtCtrl::OnDelete(wxCommandEvent& event)
 	//		}
 	//	}
 
-	//	int rangeFrom = 0, rangeTo = 0; CGridExtArea* gridSection = nullptr;
+	//	int rangeFrom = 0, rangeTo = 0; CGridEditorArea* gridSection = nullptr;
 	//	if (GetWorkSection(rangeFrom, rangeTo, gridSection)) {
 	//		gridSection->Remove(rangeFrom, rangeTo);
 	//	}
@@ -678,7 +678,7 @@ void CGridExtCtrl::OnDelete(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/rowHeight.h"
 
-void CGridExtCtrl::OnRowHeight(wxCommandEvent& event)
+void CGridEditor::OnRowHeight(wxCommandEvent& event)
 {
 	std::shared_ptr <CDialogRowHeight> rowHeight(new CDialogRowHeight(this));
 	const int result = rowHeight->ShowModal();
@@ -693,7 +693,7 @@ void CGridExtCtrl::OnRowHeight(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/colHeight.h"
 
-void CGridExtCtrl::OnColWidth(wxCommandEvent& event)
+void CGridEditor::OnColWidth(wxCommandEvent& event)
 {
 	std::shared_ptr<CDialogColWidth> colWidth(new CDialogColWidth(this));
 	const int result = colWidth->ShowModal();
@@ -706,7 +706,7 @@ void CGridExtCtrl::OnColWidth(wxCommandEvent& event)
 	}
 }
 
-void CGridExtCtrl::OnHideCell(wxCommandEvent& event)
+void CGridEditor::OnHideCell(wxCommandEvent& event)
 {
 	for (auto cell : wxGridExt::GetSelectedBlocks()) {
 		if (cell.GetLeftCol() > 0 &&
@@ -737,7 +737,7 @@ void CGridExtCtrl::OnHideCell(wxCommandEvent& event)
 	}
 }
 
-void CGridExtCtrl::OnShowCell(wxCommandEvent& event)
+void CGridEditor::OnShowCell(wxCommandEvent& event)
 {
 	for (auto cell : wxGridExt::GetSelectedBlocks()) {
 		if (cell.GetLeftCol() > 0 &&
@@ -778,7 +778,7 @@ void CGridExtCtrl::OnShowCell(wxCommandEvent& event)
 	}
 }
 
-void CGridExtCtrl::OnProperties(wxCommandEvent& event)
+void CGridEditor::OnProperties(wxCommandEvent& event)
 {
 	m_cellProperty->ShowProperty();
 }

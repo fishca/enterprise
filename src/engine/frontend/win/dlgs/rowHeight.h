@@ -15,7 +15,7 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 
-class CGridExtCtrl;
+class CGridEditor;
 
 class CDialogRowHeight : public wxDialog {
 	wxCheckBox* m_maximumRow;
@@ -29,7 +29,7 @@ public:
 		return m_spinCtrlHeight->GetValue(); 
 	}
 
-	CDialogRowHeight(CGridExtCtrl* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Row height"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
+	CDialogRowHeight(CGridEditor* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Row height"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
 	virtual ~CDialogRowHeight();
 };
 

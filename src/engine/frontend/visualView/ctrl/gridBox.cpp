@@ -18,7 +18,7 @@ CValueGridBox::CValueGridBox() : IValueWindow()
 
 wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	CGridExtCtrl* gridWindow = new CGridExtCtrl(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	CGridEditor* gridWindow = new CGridEditor(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	
 	gridWindow->EnableProperty(!visualHost->IsDesignerHost());
 	gridWindow->EnableGridArea(false);
@@ -29,7 +29,7 @@ wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 
 void CValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	CGridExtCtrl* gridWindow = dynamic_cast<CGridExtCtrl*>(wxobject);
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
 }
 
 void CValueGridBox::OnSelected(wxObject* wxobject)
@@ -38,7 +38,7 @@ void CValueGridBox::OnSelected(wxObject* wxobject)
 
 void CValueGridBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	CGridExtCtrl* gridWindow = dynamic_cast<CGridExtCtrl*>(wxobject);
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
 
 	if (gridWindow) {
 	}

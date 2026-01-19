@@ -15,7 +15,7 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 
-class CGridExtCtrl;
+class CGridEditor;
 
 class CDialogColWidth : public wxDialog {
 	wxCheckBox* m_maximumCol;
@@ -29,7 +29,7 @@ public:
 		return m_spinCtrlWidth->GetValue();
 	}
 
-	CDialogColWidth(CGridExtCtrl* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Column width"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
+	CDialogColWidth(CGridEditor* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Column width"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
 	virtual ~CDialogColWidth();
 };
 

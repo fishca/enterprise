@@ -1,7 +1,7 @@
 #include "rowHeight.h"
-#include "frontend/mainFrame/grid/gridWindow.h"
+#include "frontend/win/editor/gridEditor/gridEditor.h"
 
-CDialogRowHeight::CDialogRowHeight(CGridExtCtrl* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : 
+CDialogRowHeight::CDialogRowHeight(CGridEditor* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : 
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);

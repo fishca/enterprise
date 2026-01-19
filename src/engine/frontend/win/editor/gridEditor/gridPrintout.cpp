@@ -5,7 +5,7 @@
 
 #include "gridPrintout.h"
 
-CGridExtPrintout::CGridExtPrintout(const wxString& title) : wxPrintout(title)
+CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(title)
 {
 	m_view = nullptr;
 	SetStyle(wxGP_SHOW_NONE);
@@ -22,7 +22,7 @@ CGridExtPrintout::CGridExtPrintout(const wxString& title) : wxPrintout(title)
 	m_rightMargin = 50;
 }
 
-CGridExtPrintout::CGridExtPrintout(CGridExtCtrl* gridCtrl, int style, const wxString& title) : wxPrintout(title)
+CGridEditorPrintout::CGridEditorPrintout(CGridEditor* gridCtrl, int style, const wxString& title) : wxPrintout(title)
 {
 	m_view = gridCtrl;
 	SetStyle(style);
@@ -39,17 +39,17 @@ CGridExtPrintout::CGridExtPrintout(CGridExtCtrl* gridCtrl, int style, const wxSt
 	m_rightMargin = 50;
 }
 
-void CGridExtPrintout::SetGrid(CGridExtCtrl* gridCtrl)
+void CGridEditorPrintout::SetGrid(CGridEditor* gridCtrl)
 {
 	m_view = gridCtrl;
 }
 
-CGridExtCtrl* CGridExtPrintout::GetGrid() const
+CGridEditor* CGridEditorPrintout::GetGrid() const
 {
 	return m_view;
 }
 
-void CGridExtPrintout::SetStyle(int style)
+void CGridEditorPrintout::SetStyle(int style)
 {
 	m_style = style;
 
@@ -76,12 +76,12 @@ void CGridExtPrintout::SetStyle(int style)
 		m_showRlAlways = true;
 }
 
-int CGridExtPrintout::GetStyle() const
+int CGridEditorPrintout::GetStyle() const
 {
 	return m_style;
 }
 
-bool CGridExtPrintout::OnPrintPage(int page)
+bool CGridEditorPrintout::OnPrintPage(int page)
 {
 	wxDC* dc = GetDC();
 
@@ -98,12 +98,12 @@ bool CGridExtPrintout::OnPrintPage(int page)
 	return DrawPage(dc, page);
 }
 
-bool CGridExtPrintout::HasPage(int page)
+bool CGridEditorPrintout::HasPage(int page)
 {
 	return true;
 }
 
-void CGridExtPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
+void CGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
 {
 	*minPage = m_minPage;
 	*maxPage = m_maxPage;
@@ -111,7 +111,7 @@ void CGridExtPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom,
 	*selPageTo = m_selPageTo;
 }
 
-bool CGridExtPrintout::DrawPage(wxDC* dc, int page)
+bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 {
 	int columnPages = m_colsPerPage.Count();
 	int rowPages = m_rowsPerPage.Count();
@@ -289,7 +289,7 @@ bool CGridExtPrintout::DrawPage(wxDC* dc, int page)
 	return true;
 }
 
-void CGridExtPrintout::OnPreparePrinting()
+void CGridEditorPrintout::OnPreparePrinting()
 {
 	wxDC* dc = GetDC();
 	CalculateScale(dc);
@@ -349,7 +349,7 @@ void CGridExtPrintout::OnPreparePrinting()
 	m_maxPage = m_rowsPerPage.GetCount() * m_colsPerPage.GetCount();
 }
 
-void CGridExtPrintout::CalculateScale(wxDC* dc)
+void CGridEditorPrintout::CalculateScale(wxDC* dc)
 {
 	// You might use THIS code to set the printer DC to roughly
 	// reflect the screen text size. This page also draws lines of
@@ -380,23 +380,23 @@ void CGridExtPrintout::CalculateScale(wxDC* dc)
 	m_screenScale = screenScale;
 }
 
-void CGridExtPrintout::SetUserScale(float scale)
+void CGridEditorPrintout::SetUserScale(float scale)
 {
 	m_userScale = scale;
 	m_overallScale = m_screenScale * m_userScale;
 }
 
-void CGridExtPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
+void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
 	int horizAlign, int vertAlign, int textOrientation)
 {
 	wxArrayString lines, naturalLines;
-	CGridExtCtrl::ParseLines(strValue, naturalLines);
+	CGridEditor::ParseLines(strValue, naturalLines);
 
 	rect.x += 2;
 	rect.width -= 2;
 
 	for (unsigned int i = 0; i < naturalLines.Count(); i++) {
-		wxArrayString wrappedLines = CGridExtCtrl::CGridExtDrawHelper::GetTextLines(dc, naturalLines.Item(i), font, rect);
+		wxArrayString wrappedLines = CGridEditor::CGridEditorDrawHelper::GetTextLines(dc, naturalLines.Item(i), font, rect);
 		for (unsigned int j = 0; j < wrappedLines.Count(); j++) {
 			lines.Add(wrappedLines.Item(j));
 		}
@@ -407,6 +407,6 @@ void CGridExtPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, w
 
 	dc.SetFont(font);
 
-	CGridExtCtrl::CGridExtDrawHelper::DrawTextRectangle(dc,
+	CGridEditor::CGridEditorDrawHelper::DrawTextRectangle(dc,
 		lines, rect, horizAlign, vertAlign, textOrientation);
 }

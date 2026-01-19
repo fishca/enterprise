@@ -3,12 +3,12 @@
 //	Description : grid property
 ////////////////////////////////////////////////////////////////////////////
 
-#include "gridWindow.h"
+#include "gridEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
 
 static const wxString strTranslateType = wxT("translate");
 
-void CGridExtCtrl::CGridExtCellProperty::AddSelectedCell(const wxGridExtBlockCoords& coords, bool afterErase)
+void CGridEditor::CGridEditorCellProperty::AddSelectedCell(const wxGridExtBlockCoords& coords, bool afterErase)
 {
 	if (afterErase) ClearSelectedCell();
 
@@ -18,9 +18,9 @@ void CGridExtCtrl::CGridExtCellProperty::AddSelectedCell(const wxGridExtBlockCoo
 	m_view->ForceRefresh();
 }
 
-void CGridExtCtrl::CGridExtCellProperty::ShowProperty()
+void CGridEditor::CGridEditorCellProperty::ShowProperty()
 {
-	CGridExtCellProperty::ClearSelectedCell(); bool hasBlocks = false;
+	CGridEditorCellProperty::ClearSelectedCell(); bool hasBlocks = false;
 
 	for (auto& coords : m_view->GetSelectedBlocks()) {
 		m_currentSelection.push_back(coords); hasBlocks = true;
@@ -39,7 +39,7 @@ void CGridExtCtrl::CGridExtCellProperty::ShowProperty()
 	objectInspector->SelectObject(this, true);
 }
 
-void CGridExtCtrl::CGridExtCellProperty::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
+void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
 {
 	if (m_propertyName == property) {
 		if (coords.GetTopLeft() != coords.GetBottomRight()) {
@@ -103,7 +103,7 @@ void CGridExtCtrl::CGridExtCellProperty::OnPropertyCreated(IProperty* property, 
 	}
 }
 
-void CGridExtCtrl::CGridExtCellProperty::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
+void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
 {
 	for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++) {
@@ -138,19 +138,19 @@ void CGridExtCtrl::CGridExtCellProperty::OnPropertyChanged(IProperty* property, 
 
 #include "backend/metadataConfiguration.h"
 
-IMetaData* CGridExtCtrl::CGridExtCellProperty::GetMetaData() const
+IMetaData* CGridEditor::CGridEditorCellProperty::GetMetaData() const
 {
 	return IMetaDataConfiguration::Get();
 }
 
-void CGridExtCtrl::CGridExtCellProperty::OnPropertyCreated(IProperty* property)
+void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property)
 {
 	for (auto coords : m_currentSelection) {
-		CGridExtCellProperty::OnPropertyCreated(property, coords);
+		CGridEditorCellProperty::OnPropertyCreated(property, coords);
 	}
 }
 
-void CGridExtCtrl::CGridExtCellProperty::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	int maxRow = m_view->GetGridCursorRow(), maxCol = m_view->GetGridCursorCol();
 
@@ -162,7 +162,7 @@ void CGridExtCtrl::CGridExtCellProperty::OnPropertyChanged(IProperty* property, 
 		if (maxCol < coords.GetRightCol())
 			maxCol = coords.GetRightCol();
 
-		CGridExtCellProperty::OnPropertyChanged(property, coords);
+		CGridEditorCellProperty::OnPropertyChanged(property, coords);
 	}
 
 	m_view->SendPropertyModify({ maxRow, maxCol });

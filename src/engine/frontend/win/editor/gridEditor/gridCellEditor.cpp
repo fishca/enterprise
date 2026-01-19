@@ -1,12 +1,12 @@
-#include "gridWindow.h"
+#include "gridEditor.h"
 
 #if wxUSE_TEXTCTRL
 
 // ----------------------------------------------------------------------------
-// CGridExtCtrl::CGridExtCellTextEditor
+// CGridEditor::CGridEditorCellTextEditor
 // ----------------------------------------------------------------------------
 
-CGridExtCtrl::CGridExtCellTextEditor::CGridExtCellTextEditor(const CGridExtCellTextEditor& other)
+CGridEditor::CGridEditorCellTextEditor::CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other)
 	: wxGridExtCellEditor(other),
 	m_maxChars(other.m_maxChars),
 	m_value(other.m_value)
@@ -19,14 +19,14 @@ CGridExtCtrl::CGridExtCellTextEditor::CGridExtCellTextEditor(const CGridExtCellT
 #endif
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::Create(wxWindow* parent,
+void CGridEditor::CGridEditorCellTextEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
 	DoCreate(parent, id, evtHandler);
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::DoCreate(wxWindow* parent,
+void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler,
 	long style)
@@ -108,7 +108,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::DoCreate(wxWindow* parent,
 	wxGridExtCellEditor::Create(parent, id, evtHandler);
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::SetSize(const wxRect& rectOrig)
+void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
 {
 	wxRect rect(rectOrig);
 
@@ -154,7 +154,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::SetSize(const wxRect& rectOrig)
 	wxGridExtCellEditor::SetSize(rect);
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void CGridEditor::CGridEditorCellTextEditor::BeginEdit(int row, int col, wxGridExt* grid)
 {
 	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
 
@@ -163,7 +163,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::BeginEdit(int row, int col, wxGridExt
 	DoBeginEdit(m_value);
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::DoBeginEdit(const wxString& startValue)
+void CGridEditor::CGridEditorCellTextEditor::DoBeginEdit(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
@@ -171,14 +171,14 @@ void CGridExtCtrl::CGridExtCellTextEditor::DoBeginEdit(const wxString& startValu
 	Text()->SetFocus();
 }
 
-bool CGridExtCtrl::CGridExtCellTextEditor::EndEdit(int WXUNUSED(row),
+bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
 	const wxGridExt* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
 	wxCHECK_MSG(m_control, false,
-		"CGridExtCtrl::CGridExtCellTextEditor must be created first!");
+		"CGridEditor::CGridEditorCellTextEditor must be created first!");
 
 	const wxString value = Text()->GetValue();
 	if (value == m_value)
@@ -192,7 +192,7 @@ bool CGridExtCtrl::CGridExtCellTextEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
 {
 	const wxString& strValue = Text()->GetValue();
 
@@ -212,20 +212,20 @@ void CGridExtCtrl::CGridExtCellTextEditor::ApplyEdit(int row, int col, wxGridExt
 	m_value.clear();
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::Reset()
+void CGridEditor::CGridEditorCellTextEditor::Reset()
 {
-	wxASSERT_MSG(m_control, "CGridExtCtrl::CGridExtCellTextEditor must be created first!");
+	wxASSERT_MSG(m_control, "CGridEditor::CGridEditorCellTextEditor must be created first!");
 
 	DoReset(m_value);
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::DoReset(const wxString& startValue)
+void CGridEditor::CGridEditorCellTextEditor::DoReset(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
 }
 
-bool CGridExtCtrl::CGridExtCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
+bool CGridEditor::CGridEditorCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode())
 	{
@@ -237,7 +237,7 @@ bool CGridExtCtrl::CGridExtCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 	}
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::StartingKey(wxKeyEvent& event)
+void CGridEditor::CGridEditorCellTextEditor::StartingKey(wxKeyEvent& event)
 {
 	// Since this is now happening in the EVT_CHAR event EmulateKeyPress is no
 	// longer an appropriate way to get the character into the text control.
@@ -282,7 +282,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::StartingKey(wxKeyEvent& event)
 	}
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::HandleReturn(wxKeyEvent& event)
+void CGridEditor::CGridEditorCellTextEditor::HandleReturn(wxKeyEvent& event)
 {
 #if defined(__WXMOTIF__) || defined(__WXGTK__)
 	// wxMotif needs a little extra help...
@@ -298,7 +298,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::HandleReturn(wxKeyEvent& event)
 #endif
 }
 
-void CGridExtCtrl::CGridExtCellTextEditor::SetParameters(const wxString& params)
+void CGridEditor::CGridEditorCellTextEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -314,13 +314,13 @@ void CGridExtCtrl::CGridExtCellTextEditor::SetParameters(const wxString& params)
 		}
 		else
 		{
-			wxLogDebug(wxT("Invalid CGridExtCtrl::CGridExtCellTextEditor parameter string '%s' ignored"), params);
+			wxLogDebug(wxT("Invalid CGridEditor::CGridEditorCellTextEditor parameter string '%s' ignored"), params);
 		}
 	}
 }
 
 #if wxUSE_VALIDATORS
-void CGridExtCtrl::CGridExtCellTextEditor::SetValidator(const wxValidator& validator)
+void CGridEditor::CGridEditorCellTextEditor::SetValidator(const wxValidator& validator)
 {
 	m_validator.reset(static_cast<wxValidator*>(validator.Clone()));
 	if (m_validator && IsCreated())
@@ -329,7 +329,7 @@ void CGridExtCtrl::CGridExtCellTextEditor::SetValidator(const wxValidator& valid
 #endif
 
 // return the value in the text control
-wxString CGridExtCtrl::CGridExtCellTextEditor::GetValue() const
+wxString CGridEditor::CGridEditorCellTextEditor::GetValue() const
 {
 	return Text()->GetValue();
 }

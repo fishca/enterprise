@@ -2,7 +2,7 @@
 #define __GRID_H__
 
 #include "frontend/docView/docView.h"
-#include "frontend/mainFrame/grid/gridWindow.h"
+#include "frontend/win/editor/gridEditor/gridEditor.h"
 
 // ----------------------------------------------------------------------------
 // Edit form classes
@@ -32,7 +32,7 @@ private:
 
 	void OnMenuEvent(wxCommandEvent &event);
 
-	CGridExtCtrl *m_gridEditor;
+	CGridEditor *m_gridEditor;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(CGridEditView);

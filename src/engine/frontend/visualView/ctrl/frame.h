@@ -295,6 +295,9 @@ public:
 
 	IVisualEditorNotebook* FindVisualEditor() const;
 
+	//support printing 
+	virtual wxPrintout* CreatePrintout() const { return nullptr; }
+
 public:
 
 	//support actionData 

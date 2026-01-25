@@ -1,5 +1,5 @@
 #include "widgets.h"
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controltextEditor.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metaData.h"
 

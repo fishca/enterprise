@@ -39,7 +39,10 @@ public:
 
 class BACKEND_API IBackendValueForm : public IBackendValue {
 public:
-	
+
+#pragma region _frontend_call_h__
+
+	// Form entry creator 
 	static IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator = nullptr, IBackendControlFrame* ownerControl = nullptr,
 		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 
@@ -54,6 +57,8 @@ public:
 	static IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid);
 
 	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
+
+#pragma endregion 
 
 	///////////////////////////////////////////////////////////////////////////
 	virtual ~IBackendValueForm() {}
@@ -98,7 +103,7 @@ public:
 	//support close form
 	virtual void CloseOnChoice(bool close = true) = 0;
 	virtual bool IsCloseOnChoice() const = 0;
-	
+
 	virtual void CloseOnOwnerClose(bool close = true) = 0;
 	virtual bool IsCloseOnOwnerClose() const = 0;
 };

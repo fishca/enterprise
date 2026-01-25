@@ -16,14 +16,16 @@ CValueGridBox::CValueGridBox() : IValueWindow()
 	m_propertyMinSize->SetValue(wxSize(300, 100));
 }
 
+#include "frontend/visualView/ctrl/form.h"
+
 wxObject* CValueGridBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	CGridEditor* gridWindow = new CGridEditor(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	
+	CGridEditor* gridWindow = new CGridEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+
 	gridWindow->EnableProperty(!visualHost->IsDesignerHost());
 	gridWindow->EnableGridArea(false);
 	gridWindow->EnableGridLines(false);
-	
+
 	return gridWindow;
 }
 
@@ -48,6 +50,19 @@ void CValueGridBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 
 void CValueGridBox::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 {
+}
+
+//**********************************************************************************
+
+#include "frontend/win/editor/gridEditor/gridPrintout.h"
+
+wxPrintout* CValueGridBox::CreatePrintout() const
+{
+	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
+	if (gridWindow != nullptr)
+		return new CGridEditorPrintout(gridWindow);
+
+	return nullptr;
 }
 
 //**********************************************************************************

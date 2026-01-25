@@ -52,19 +52,10 @@
     <ClCompile Include="docView\docManager.cpp">
       <Filter>docView</Filter>
     </ClCompile>
-    <ClCompile Include="docView\templates\text.cpp">
-      <Filter>docView\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docView\templates\template.cpp">
-      <Filter>docView\templates</Filter>
-    </ClCompile>
     <ClCompile Include="win\ctrls\checktree.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
     <ClCompile Include="win\ctrls\dataView.cpp">
-      <Filter>win\ctrl</Filter>
-    </ClCompile>
-    <ClCompile Include="win\ctrls\textEditor.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
     <ClCompile Include="win\ctrls\treelistctrl.cpp">
@@ -755,9 +746,6 @@
     <ClCompile Include="win\dlgs\applyChange.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
-    <ClCompile Include="win\ctrls\checkboxEditor.cpp">
-      <Filter>win\ctrl</Filter>
-    </ClCompile>
     <ClCompile Include="win\ctrls\dynamicBorder.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
@@ -790,6 +778,24 @@
     </ClCompile>
     <ClCompile Include="win\editor\gridEditor\gridEditor.cpp">
       <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\textEditor\textEditorPrintOut.cpp">
+      <Filter>win\editor\textEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\textEditor\textEditor.cpp">
+      <Filter>win\editor\textEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\controlTextEditor.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp">
+      <Filter>win\ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="docView\templates\docViewSpreadsheet.cpp">
+      <Filter>docView\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docView\templates\docViewText.cpp">
+      <Filter>docView\templates</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -838,15 +844,6 @@
     <ClInclude Include="docView\docView.h">
       <Filter>docView</Filter>
     </ClInclude>
-    <ClInclude Include="docView\templates\template.h">
-      <Filter>docView\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docView\templates\text.h">
-      <Filter>docView\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="win\ctrls\checkboxEditor.h">
-      <Filter>win\ctrl</Filter>
-    </ClInclude>
     <ClInclude Include="win\ctrls\checktree.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
@@ -857,9 +854,6 @@
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="win\ctrls\floatingNotebook.h">
-      <Filter>win\ctrl</Filter>
-    </ClInclude>
-    <ClInclude Include="win\ctrls\textEditor.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="win\ctrls\toolBar.h">
@@ -1389,6 +1383,24 @@
     <ClInclude Include="win\editor\gridEditor\gridEditor.h">
       <Filter>win\editor\gridEditor</Filter>
     </ClInclude>
+    <ClInclude Include="win\editor\textEditor\textEditor.h">
+      <Filter>win\editor\textEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="win\editor\textEditor\textEditorPrintOut.h">
+      <Filter>win\editor\textEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\controlTextEditor.h">
+      <Filter>win\ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\controlCheckboxEditor.h">
+      <Filter>win\ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="docView\templates\docViewSpreadsheet.h">
+      <Filter>docView\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docView\templates\docViewText.h">
+      <Filter>docView\templates</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1459,6 +1471,9 @@
     </Filter>
     <Filter Include="win\editor\gridEditor">
       <UniqueIdentifier>{7ea6a336-7602-4dd1-b415-44dfa406e2f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\editor\textEditor">
+      <UniqueIdentifier>{565679ce-6d59-49c5-b8b4-b681aca12170}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

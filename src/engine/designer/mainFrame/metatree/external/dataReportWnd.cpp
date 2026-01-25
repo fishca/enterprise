@@ -8,7 +8,7 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
-#include "docManager/templates/dataReportFile.h"
+#include "docManager/templates/docViewDataReportFile.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CDataReportTree, wxPanel);
 

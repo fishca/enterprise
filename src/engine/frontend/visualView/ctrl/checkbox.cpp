@@ -1,5 +1,5 @@
 #include "widgets.h"
-#include "frontend/win/ctrls/checkBoxEditor.h"
+#include "frontend/win/ctrls/controlCheckboxEditor.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueCheckbox, IValueWindow)
 

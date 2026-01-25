@@ -8,7 +8,7 @@
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
-#include "docManager/templates/dataProcessorFile.h"
+#include "docManager/templates/docViewDataProcessorFile.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorTree, wxPanel);
 

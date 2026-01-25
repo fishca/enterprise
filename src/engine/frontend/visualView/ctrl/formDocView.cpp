@@ -184,7 +184,20 @@ IMetaData* CVisualDocument::GetMetaData() const
 #define runFlag 0x000000
 #define demoFlag 0x000001
 
-wxPrintout* CVisualView::OnCreatePrintout() { return nullptr; }
+wxPrintout* CVisualView::OnCreatePrintout()
+{
+	wxWindow* focusedWindow = wxWindow::FindFocus();
+	while (focusedWindow != nullptr) {
+			
+		IValueFrame* currentFrame = m_visualHost->GetObjectBase(focusedWindow);
+		if (currentFrame != nullptr)
+			return currentFrame->CreatePrintout();
+
+		focusedWindow = focusedWindow->GetParent();
+	}
+
+	return nullptr;
+}
 
 bool CVisualView::OnCreate(CMetaDocument* doc, long flags)
 {

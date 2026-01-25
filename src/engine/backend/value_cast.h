@@ -34,6 +34,7 @@ static inline T* CastValue(U* ptr) {
 
 template <typename T, typename U>
 static inline T* CastValue(const U* ptr) {
+	
 	if (ptr != nullptr) {
 		if (ptr->m_typeClass == eValueTypes::TYPE_REFFER) {
 			T* cast_value = dynamic_cast<T*>(ptr->GetRef());
@@ -43,13 +44,15 @@ static inline T* CastValue(const U* ptr) {
 			T* cast_value = dynamic_cast<T*>(const_cast<U*>(ptr));
 			if (cast_value != nullptr) return cast_value;
 		}
-	}
+
 #if defined(_USE_CONTROL_VALUECAST)
-	ThrowErrorTypeOperation(
-		ptr ? ptr->GetClassName() : wxEmptyString,
-		CLASSINFO(T)
-	);
+		ThrowErrorTypeOperation(
+			ptr ? ptr->GetClassName() : wxEmptyString,
+			CLASSINFO(T)
+		);
 #endif
+	}
+
 	return nullptr;
 };
 

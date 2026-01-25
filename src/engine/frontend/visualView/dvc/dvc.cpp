@@ -1,7 +1,8 @@
 #include "dvc.h"
 
-#include "frontend/win/ctrls/checkBoxEditor.h"
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controlCheckboxEditor.h"
+#include "frontend/win/ctrls/controlTextEditor.h"
+
 #include "frontend/visualView/ctrl/tableBox.h"
 #include "backend/appData.h"
 

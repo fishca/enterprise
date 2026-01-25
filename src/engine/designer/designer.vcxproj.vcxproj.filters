@@ -18,27 +18,6 @@
     <ClCompile Include="docManager\docManager.cpp">
       <Filter>docManager</Filter>
     </ClCompile>
-    <ClCompile Include="docManager\templates\dataProcessorFile.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\dataReportFile.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\formEditor.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\interface.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\metaFile.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\moduleEditor.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\role.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
     <ClCompile Include="mainFrame\debugger\debugClientImpl.cpp">
       <Filter>mainFrame\debugger</Filter>
     </ClCompile>
@@ -162,6 +141,27 @@
     <ClCompile Include="mainFrame\watch\watchctrl.cpp">
       <Filter>mainFrame\watch</Filter>
     </ClCompile>
+    <ClCompile Include="docManager\templates\docViewDataProcessorFile.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewDataReportFile.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewFormEditor.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewInterface.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewMetaFile.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewModuleEditor.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewRole.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainApp.h" />
@@ -173,27 +173,6 @@
     </ClInclude>
     <ClInclude Include="docManager\docManager.h">
       <Filter>docManager</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\role.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\dataProcessorFile.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\dataReportFile.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\formEditor.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\interface.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\metaFile.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\moduleEditor.h">
-      <Filter>docManager\templates</Filter>
     </ClInclude>
     <ClInclude Include="mainFrame\debugger\debugClientImpl.h">
       <Filter>mainFrame\debugger</Filter>
@@ -287,6 +266,27 @@
     </ClInclude>
     <ClInclude Include="mainFrame\watch\watchWindow.h">
       <Filter>mainFrame\watch</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewDataProcessorFile.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewDataReportFile.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewFormEditor.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewInterface.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewMetaFile.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewModuleEditor.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewRole.h">
+      <Filter>docManager\templates</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

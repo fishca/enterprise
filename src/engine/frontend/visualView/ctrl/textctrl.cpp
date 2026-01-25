@@ -1,5 +1,5 @@
 ﻿#include "widgets.h"
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controlTextEditor.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
 

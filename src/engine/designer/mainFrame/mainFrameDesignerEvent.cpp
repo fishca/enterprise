@@ -66,7 +66,7 @@ void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
 #include "docManager/docManager.h"
-#include "docManager/templates/metaFile.h"
+#include "docManager/templates/docViewMetaFile.h"
 
 void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 {
@@ -97,12 +97,7 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 		newDocument->SetMetaObject(metaObject);
 
 		if (newDocument->OnCreate(metaObject->GetModuleName(), wxDOC_NEW)) {
-
-			wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
-
-			if (cmdProc != nullptr)
-				newDocument->SetCommandProcessor(cmdProc);
-
+			newDocument->SetCommandProcessor(newDocument->OnCreateCommandProcessor());
 			//newDocument->UpdateAllViews();
 		}
 		else {
@@ -215,7 +210,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 	if (wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE == event.GetId())
 	{
 		wxFileDialog openFileDialog(this, _("Open configuration file"), "", "",
-			"Configuration files (*.conf)|*.conf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			"Configuration files (*.mcf)|*.mcf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
@@ -239,7 +234,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 	else if (wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE == event.GetId())
 	{
 		wxFileDialog saveFileDialog(this, _("Save configuration file"), "", "",
-			"Configuration files (*.conf)|*.conf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+			"Configuration files (*.mcf)|*.mcf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 

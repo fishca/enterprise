@@ -18,12 +18,6 @@
     <ClCompile Include="docManager\docManager.cpp">
       <Filter>docManager</Filter>
     </ClCompile>
-    <ClCompile Include="docManager\templates\dataProcessorFile.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
-    <ClCompile Include="docManager\templates\dataReportFile.cpp">
-      <Filter>docManager\templates</Filter>
-    </ClCompile>
     <ClCompile Include="win\dlg\functionAll.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
@@ -35,6 +29,12 @@
     </ClCompile>
     <ClCompile Include="mainFrame\mainFrameEnterpriseInterface.cpp">
       <Filter>mainFrame</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewDataReportFile.cpp">
+      <Filter>docManager\templates</Filter>
+    </ClCompile>
+    <ClCompile Include="docManager\templates\docViewDataProcessorFile.cpp">
+      <Filter>docManager\templates</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -48,12 +48,6 @@
     <ClInclude Include="docManager\docManager.h">
       <Filter>docManager</Filter>
     </ClInclude>
-    <ClInclude Include="docManager\templates\dataProcessorFile.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
-    <ClInclude Include="docManager\templates\dataReportFile.h">
-      <Filter>docManager\templates</Filter>
-    </ClInclude>
     <ClInclude Include="win\dlg\enterpriseOption.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
@@ -62,6 +56,12 @@
     </ClInclude>
     <ClInclude Include="mainFrame\output\outputWindow.h">
       <Filter>mainFrame\output</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewDataProcessorFile.h">
+      <Filter>docManager\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docManager\templates\docViewDataReportFile.h">
+      <Filter>docManager\templates</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

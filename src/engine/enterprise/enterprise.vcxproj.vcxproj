@@ -188,8 +188,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="docManager\docManager.cpp" />
-    <ClCompile Include="docManager\templates\dataProcessorFile.cpp" />
-    <ClCompile Include="docManager\templates\dataReportFile.cpp" />
+    <ClCompile Include="docManager\templates\docViewDataProcessorFile.cpp" />
+    <ClCompile Include="docManager\templates\docViewDataReportFile.cpp" />
     <ClCompile Include="mainApp.cpp" />
     <ClCompile Include="mainAppEvent.cpp" />
     <ClCompile Include="mainFrame\mainFrameEnterprise.cpp" />
@@ -203,8 +203,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="docManager\docManager.h" />
-    <ClInclude Include="docManager\templates\dataProcessorFile.h" />
-    <ClInclude Include="docManager\templates\dataReportFile.h" />
+    <ClInclude Include="docManager\templates\docViewDataProcessorFile.h" />
+    <ClInclude Include="docManager\templates\docViewDataReportFile.h" />
     <ClInclude Include="mainApp.h" />
     <ClInclude Include="mainFrame\mainFrameEnterprise.h" />
     <ClInclude Include="mainFrame\output\outputWindow.h" />

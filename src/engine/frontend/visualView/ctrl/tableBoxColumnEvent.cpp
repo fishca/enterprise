@@ -31,7 +31,7 @@ bool CValueTableBoxColumn::TextProcessing(wxTextCtrl* textCtrl, const wxString& 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 #include "frontend/visualView/dvc/dvc.h"
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controlTextEditor.h"
 
 void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 {

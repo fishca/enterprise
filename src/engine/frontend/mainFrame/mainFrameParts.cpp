@@ -70,7 +70,7 @@ void CDocMDIFrame::ActivateView(CMetaView* view, bool activate) {
 			wxFrame* viewFrame = dynamic_cast<wxFrame*>(view->GetFrame());
 			if (viewFrame != nullptr)
 				viewFrame->SetMenuBar(view->CreateMenuBar());
-			else 
+			else
 				SetChildMenuBar(nullptr);
 #endif
 			m_docToolbar->Thaw();
@@ -137,6 +137,9 @@ IMetaData* CDocMDIFrame::FindMetadataByPath(const wxString& strFileName) const
 	return nullptr;
 }
 
+#pragma region _frontend_call_h__
+
+// Form support
 IBackendValueForm* CDocMDIFrame::ActiveWindow() const {
 
 	if (CDocMDIFrame::GetFrame()) {
@@ -189,11 +192,51 @@ bool CDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 	return CValueForm::UpdateFormUniqueKey(guid);
 }
 
+#include "frontend/docView/templates/docViewSpreadsheet.h"
+
+// Grid support
+bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, const CBackendSpreadSheetDocument& spreadSheetDocument)
+{
+	class CSpreadsheetMDIFileDocument : public CSpreadsheetFileDocument {
+	public:
+		CSpreadsheetMDIFileDocument(const CBackendSpreadSheetDocument& spreadSheetDocument) : CSpreadsheetFileDocument(spreadSheetDocument) {}
+	private:
+		virtual CMetaView* DoCreateView() { return new CSpreadsheetEditView; }
+	};
+
+	CSpreadsheetMDIFileDocument* createdDoc = new CSpreadsheetMDIFileDocument(spreadSheetDocument);
+	createdDoc->SetTitle(strTitle);
+
+	if (createdDoc->OnCreate(wxEmptyString, 0)) {
+		docManager->AddDocument(createdDoc);
+		return true;
+	}
+
+	// The document may be already destroyed, this happens if its view
+	// creation fails as then the view being created is destroyed
+	// triggering the destruction of the document as this first view is
+	// also the last one. However if OnCreate() fails for any reason other
+	// than view creation failure, the document is still alive and we need
+	// to clean it up ourselves to avoid having a zombie document.
+
+	createdDoc->DeleteAllViews();
+	return false;
+}
+
+bool CDocMDIFrame::PrintSpreadSheetDocument(const CBackendSpreadSheetDocument& doc)
+{
+
+
+	return false;
+}
+
+#pragma endregion 
+
 IPropertyObject* CDocMDIFrame::GetProperty() const
 {
 	if (m_objectInspector != nullptr)
 		return m_objectInspector->GetSelectedObject();
-	
+
 	return nullptr;
 }
 
@@ -203,6 +246,6 @@ bool CDocMDIFrame::SetProperty(IPropertyObject* prop)
 		m_objectInspector->SelectObject(prop);
 		return true;
 	}
-	
+
 	return false;
 }

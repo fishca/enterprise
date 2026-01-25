@@ -191,7 +191,7 @@ bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_i
 }
 
 #include "frontend/visualView/dvc/dvc.h"
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controlTextEditor.h"
 
 bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 {

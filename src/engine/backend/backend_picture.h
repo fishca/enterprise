@@ -26,6 +26,7 @@ public:
 #pragma region __picture_factory_h__
 	static bool IsRegisterPicture(const picture_identifier_t& id);
 	static wxBitmap GetPicture(const picture_identifier_t& id);
+	static wxIcon GetPictureAsIcon(const picture_identifier_t& id);
 	static std::vector<CBackendPictureEntry> GetArrayPicture();
 #pragma endregion 
 

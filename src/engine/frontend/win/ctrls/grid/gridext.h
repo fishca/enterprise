@@ -851,6 +851,8 @@ public:
 	bool HasOverflowMode() const { return m_fitMode.IsSpecified(); }
 	bool HasSize() const { return m_sizeRows != 1 || m_sizeCols != 1; }
 
+	bool HasAnyBorder() const { return HasBorderLeft() || HasBorderRight() || HasBorderRight() || HasBorderBottom(); }
+
 	bool HasBorderLeft() const { return m_borderLeft.m_style != wxPenStyle::wxPENSTYLE_INVALID; }
 	bool HasBorderRight() const { return m_borderRight.m_style != wxPenStyle::wxPENSTYLE_INVALID; }
 	bool HasBorderTop() const { return m_borderTop.m_style != wxPenStyle::wxPENSTYLE_INVALID; }
@@ -1702,7 +1704,6 @@ public:
 
 	wxGridExtTableBase* GetTable() const { return m_table; }
 
-
 	void SetSelectionMode(wxGridExtSelectionModes selmode);
 	wxGridExtSelectionModes GetSelectionMode() const;
 
@@ -2454,333 +2455,19 @@ public:
 
 	// ------ cell area accessors
 	//
-	void AddAreaRow(int start, int end)
-	{
-		for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++) {
+	void AddAreaRow(int start, int end);
+	void AddAreaCol(int start, int end);
 
-			wxGridExtCellArea& item = m_rowAreaAt[idx];
+	void AddArea();
 
-			if (start >= item.m_start && start <= item.m_end) {
-				if (end > item.m_end) { //expand the bottom border
-					item.m_end = end;
-					SetRowBrake(end);
-					return;
-				}
-			}
-			else if (end >= item.m_start && end <= item.m_end) {
+	void DeleteAreaRow(int start, int end);
+	void DeleteAreaCol(int start, int end);
 
-				if (start < item.m_start) { //extending the upper bound
-					item.m_start = start;
-					return;
-				}
-			}
-
-			if (start >= item.m_start && start <= item.m_end)
-				return;
-
-			if (end >= item.m_start && end <= item.m_end)
-				return;
-		}
-
-		unsigned int countRec = 1;
-
-		//adding a new section
-		wxGridExtCellArea entry;
-
-		entry.m_start = start;
-		entry.m_end = end;
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
-
-		while (countRec > 0)
-		{
-
-			bool foundedName = false;
-
-			for (unsigned int idx = 0; idx < m_rowAreaAt.Count(); idx++)
-			{
-				if (entry.m_areaLabel == m_rowAreaAt[idx].m_areaLabel)
-				{
-					foundedName = true;
-					break;
-				}
-			}
-
-			if (!foundedName)
-				break;
-
-			entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
-		}
-
-		if (MakeRowAreaLabel(&entry))
-		{
-			m_rowAreaAt.Add(entry);
-			SetRowBrake(end);
-			CalcDimensions();
-		}
-	}
-
-	void AddAreaCol(int start, int end)
-	{
-		for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++) {
-
-			wxGridExtCellArea& item = m_colAreaAt[idx];
-
-			if (start >= item.m_start && start <= item.m_end) {
-				if (end > item.m_end) {//expand the bottom border
-					item.m_end = end;
-					SetColBrake(end);
-					return;
-				}
-			}
-			else if (end >= item.m_start && end <= item.m_end) {
-
-				if (start < item.m_start) { //extending the upper bound
-					item.m_start = start;
-					return;
-				}
-			}
-
-			if (start >= item.m_start && start <= item.m_end)
-				return;
-
-			if (end >= item.m_start && end <= item.m_end)
-				return;
-		}
-
-		unsigned int countRec = 1;
-
-		//adding a new section
-		wxGridExtCellArea entry;
-
-		entry.m_start = start;
-		entry.m_end = end;
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
-
-		while (countRec > 0) {
-
-			bool foundedName = false;
-
-			for (unsigned int idx = 0; idx < m_colAreaAt.Count(); idx++)
-			{
-				if (entry.m_areaLabel == m_colAreaAt[idx].m_areaLabel)
-				{
-					foundedName = true;
-					break;
-				}
-			}
-
-			if (!foundedName)
-				break;
-
-			entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
-		}
-
-		if (MakeColAreaName(&entry))
-		{
-			m_colAreaAt.Add(entry);
-			CalcDimensions();
-			SetColBrake(end);
-		}
-	}
-
-	void AddArea()
-	{
-		if (m_selection != NULL)
-		{
-			int row1 = m_numRows, col1 = m_numCols,
-				row2 = 0, col2 = 0; bool hasBlocks = false;
-
-			for (const auto coords : GetSelectedBlocks()) {
-				if (row1 > coords.GetTopRow()) row1 = coords.GetTopRow();
-				if (col1 > coords.GetLeftCol()) col1 = coords.GetLeftCol();
-				if (row2 < coords.GetBottomRow()) row2 = coords.GetBottomRow();
-				if (col2 < coords.GetRightCol()) col2 = coords.GetRightCol();
-				hasBlocks = true;
-			}
-
-			if (!hasBlocks) {
-				if (row1 > GetGridCursorRow()) row1 = GetGridCursorRow();
-				if (col1 > GetGridCursorCol()) col1 = GetGridCursorCol();
-				if (row2 < GetGridCursorRow()) row2 = GetGridCursorRow();
-				if (col2 < GetGridCursorCol()) col2 = GetGridCursorCol();
-			}
-
-			if (col2 == m_numCols - 1 && row2 != m_numRows - 1) {
-				AddAreaRow(row1, row2); //horzontal
-			}
-			else if (col2 != m_numCols - 1 && row2 == m_numRows - 1) {
-				AddAreaCol(col1, col2); //vertical
-			}
-		}
-	}
-
-	void DeleteAreaRow(int start, int end)
-	{
-		for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++)
-		{
-			wxGridExtCellArea& item = m_rowAreaAt[idx];
-
-			if (start == item.m_start && end == item.m_end) { //deleting a section
-				m_rowAreaAt.Detach(idx);
-			}
-			else if (start >= item.m_start && start <= item.m_end) {
-				if (end >= item.m_end) { //removing the bottom border		
-					item.m_end = start - 1;
-				}
-			}
-			else if (end >= item.m_start && end <= item.m_end) {
-				if (start <= item.m_start) { //removing the top border
-					item.m_start = end + 1;
-				}
-			}
-		}
-
-		CalcDimensions();
-	}
-
-	void DeleteAreaCol(int start, int end)
-	{
-		for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++)
-		{
-			wxGridExtCellArea& item = m_colAreaAt[idx];
-
-			if (start == item.m_start && end == item.m_end) { //deleting a section
-				m_colAreaAt.Detach(idx);
-			}
-			else if (start >= item.m_start && start <= item.m_end) {
-				if (end >= item.m_end) { //removing the bottom border		
-					item.m_end = start - 1;
-				}
-			}
-			else if (end >= item.m_start && end <= item.m_end) {
-				if (start <= item.m_start) { //removing the top border
-					item.m_start = end + 1;
-				}
-			}
-		}
-
-		CalcDimensions();
-	}
-
-	void RemoveArea()
-	{
-		if (m_selection != NULL)
-		{
-			int row1 = m_numRows, col1 = m_numCols,
-				row2 = 0, col2 = 0; bool hasBlocks = false;
-
-			for (const auto coords : GetSelectedBlocks()) {
-				if (row1 > coords.GetTopRow()) row1 = coords.GetTopRow();
-				if (col1 > coords.GetLeftCol()) col1 = coords.GetLeftCol();
-				if (row2 < coords.GetBottomRow()) row2 = coords.GetBottomRow();
-				if (col2 < coords.GetRightCol()) col2 = coords.GetRightCol();
-				hasBlocks = true;
-			}
-
-			if (!hasBlocks) {
-				if (row1 > GetGridCursorRow()) row1 = GetGridCursorRow();
-				if (col1 > GetGridCursorCol()) col1 = GetGridCursorCol();
-				if (row2 < GetGridCursorRow()) row2 = GetGridCursorRow();
-				if (col2 < GetGridCursorCol()) col2 = GetGridCursorCol();
-			}
-
-			if (col2 == m_numCols - 1 && row2 != m_numRows - 1) {
-				DeleteAreaRow(row1, row2); //horzontal
-			}
-			else if (col2 != m_numCols - 1 && row2 == m_numRows - 1) {
-				DeleteAreaCol(col1, col2); //vertical
-			}
-		}
-	}
+	void DeleteArea();
 
 	//make new name
-	bool MakeRowAreaLabel(wxGridExtCellArea* rowArea)
-	{
-		if (rowArea != NULL)
-		{
-			wxGridExtDialogInputArea dlg(this);
-			dlg.SetAreaLabel(rowArea->m_areaLabel);
-
-			if (dlg.ShowModal() == wxID_OK)
-			{
-				const wxString& areaLabel = dlg.GetAreaLabel();
-
-				for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++)
-				{
-					if (rowArea != &m_rowAreaAt[idx] && areaLabel == m_rowAreaAt[idx].m_areaLabel)
-					{
-						wxMessageBox(_("Wrong area name!"), _("Grid editor"));
-						return false;
-					}
-				}
-
-				bool valid_area = true;
-
-				for (const auto c : areaLabel)
-				{
-					if (c == wxT('_') || iswalpha(c) || isdigit(c))
-						continue;
-
-					valid_area = false;
-					break;
-				}
-
-				if (valid_area)
-				{
-					rowArea->m_areaLabel = areaLabel;
-					return true;
-				}
-
-				wxMessageBox(_("Wrong area name!"), _("Grid editor"));
-			}
-		}
-
-		return false;
-	}
-
-	bool MakeColAreaName(wxGridExtCellArea* colArea)
-	{
-		if (colArea != NULL)
-		{
-			wxGridExtDialogInputArea dlg(this);
-			dlg.SetAreaLabel(colArea->m_areaLabel);
-
-			if (dlg.ShowModal() == wxID_OK)
-			{
-				const wxString& areaLabel = dlg.GetAreaLabel();
-
-				for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++)
-				{
-					if (colArea != &m_colAreaAt[idx] && areaLabel == m_colAreaAt[idx].m_areaLabel)
-					{
-						wxMessageBox(_("Wrong area name!"), _("Grid editor"), wxOK | wxCENTRE, this);
-						return false;
-					}
-				}
-
-				bool valid_area = true;
-
-				for (const auto c : areaLabel)
-				{
-					if (c == wxT('_') || iswalpha(c) || isdigit(c))
-						continue;
-
-					valid_area = false;
-					break;
-				}
-
-				if (valid_area)
-				{
-					colArea->m_areaLabel = areaLabel;
-					return true;
-				}
-
-				wxMessageBox(_("Wrong area name!"), _("Grid editor"), wxOK | wxCENTRE, this);
-			}
-		}
-
-		return false;
-	}
+	bool MakeRowAreaLabel(wxGridExtCellArea* rowArea);
+	bool MakeColAreaName(wxGridExtCellArea* colArea);
 
 	// ------ cell brake accessors
 	//
@@ -4226,6 +3913,7 @@ wxDECLARE_EVENT(wxEVT_GRID_CELL_BEGIN_DRAG, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_SORT, wxGridExtEvent);
+wxDECLARE_EVENT(wxEVT_GRID_CHANGED, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
 typedef void (wxEvtHandler::* wxGridExtEventFunction)(wxGridExtEvent&);
@@ -4280,6 +3968,7 @@ typedef void (wxEvtHandler::* wxGridExtEditorCreatedEventFunction)(wxGridExtEdit
 #define EVT_GRID_CMD_EDITOR_HIDDEN(id, fn)       wx__DECLARE_GRIDEVT(EDITOR_HIDDEN, id, fn)
 #define EVT_GRID_CMD_EDITOR_CREATED(id, fn)      wx__DECLARE_GRIDEDITOREVT(EDITOR_CREATED, id, fn)
 #define EVT_GRID_CMD_CELL_BEGIN_DRAG(id, fn)     wx__DECLARE_GRIDEVT(CELL_BEGIN_DRAG, id, fn)
+#define EVT_GRID_CMD_CHANGED(id, fn)             wx__DECLARE_GRIDEVT(CHANGED, id, fn)
 #define EVT_GRID_CMD_TABBING(id, fn)             wx__DECLARE_GRIDEVT(TABBING, id, fn)
 
 // same as above but for any id (exists mainly for backwards compatibility but
@@ -4307,6 +3996,7 @@ typedef void (wxEvtHandler::* wxGridExtEditorCreatedEventFunction)(wxGridExtEdit
 #define EVT_GRID_EDITOR_HIDDEN(fn)       EVT_GRID_CMD_EDITOR_HIDDEN(wxID_ANY, fn)
 #define EVT_GRID_EDITOR_CREATED(fn)      EVT_GRID_CMD_EDITOR_CREATED(wxID_ANY, fn)
 #define EVT_GRID_CELL_BEGIN_DRAG(fn)     EVT_GRID_CMD_CELL_BEGIN_DRAG(wxID_ANY, fn)
+#define EVT_GRID_CHANGED(fn)             EVT_GRID_CMD_CHANGED(wxID_ANY, fn)
 #define EVT_GRID_TABBING(fn)             EVT_GRID_CMD_TABBING(wxID_ANY, fn)
 
 // we used to have a single wxEVT_GRID_CELL_CHANGE event but it was split into

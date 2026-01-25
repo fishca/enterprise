@@ -23,8 +23,8 @@
     <ClCompile Include="docView\docManager.cpp" />
     <ClCompile Include="docView\docView.cpp" />
     <ClCompile Include="docView\docViewCmd.cpp" />
-    <ClCompile Include="docView\templates\template.cpp" />
-    <ClCompile Include="docView\templates\text.cpp" />
+    <ClCompile Include="docView\templates\docViewSpreadsheet.cpp" />
+    <ClCompile Include="docView\templates\docViewText.cpp" />
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="mainFrame\mainFrame.cpp" />
     <ClCompile Include="mainFrame\mainFrameChild.cpp" />
@@ -251,15 +251,15 @@
     <ClCompile Include="win\ctrls\charts\wxtimeserieschart.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartctrl.cpp" />
     <ClCompile Include="win\ctrls\charts\wxtimeserieschartoptions.cpp" />
-    <ClCompile Include="win\ctrls\checkboxEditor.cpp" />
     <ClCompile Include="win\ctrls\checktree.cpp" />
+    <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
+    <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
     <ClCompile Include="win\ctrls\dataView.cpp" />
     <ClCompile Include="win\ctrls\dynamicBorder.cpp" />
     <ClCompile Include="win\ctrls\grid\gridext.cpp" />
     <ClCompile Include="win\ctrls\grid\gridextctrl.cpp" />
     <ClCompile Include="win\ctrls\grid\gridexteditors.cpp" />
     <ClCompile Include="win\ctrls\grid\gridextsel.cpp" />
-    <ClCompile Include="win\ctrls\textEditor.cpp" />
     <ClCompile Include="win\ctrls\treelistctrl.cpp" />
     <ClCompile Include="win\dlgs\about.cpp" />
     <ClCompile Include="win\dlgs\activeUser.cpp" />
@@ -280,6 +280,8 @@
     <ClCompile Include="win\editor\gridEditor\gridEditor.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridPrintout.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridProperty.cpp" />
+    <ClCompile Include="win\editor\textEditor\textEditor.cpp" />
+    <ClCompile Include="win\editor\textEditor\textEditorPrintOut.cpp" />
     <ClCompile Include="win\theme\luna_dockart.cpp" />
     <ClCompile Include="win\theme\luna_tabart.cpp" />
     <ClCompile Include="win\theme\luna_toolbarart.cpp" />
@@ -289,8 +291,8 @@
     <ClInclude Include="artProvider\private\picturePredefined.h" />
     <ClInclude Include="docView\docManager.h" />
     <ClInclude Include="docView\docView.h" />
-    <ClInclude Include="docView\templates\template.h" />
-    <ClInclude Include="docView\templates\text.h" />
+    <ClInclude Include="docView\templates\docViewSpreadsheet.h" />
+    <ClInclude Include="docView\templates\docViewText.h" />
     <ClInclude Include="frontend.h" />
     <ClInclude Include="mainFrame\mainFrame.h" />
     <ClInclude Include="mainFrame\mainFrameChild.h" />
@@ -453,8 +455,9 @@
     <ClInclude Include="win\ctrls\charts\wxtimeserieschart.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartctrl.h" />
     <ClInclude Include="win\ctrls\charts\wxtimeserieschartoptions.h" />
-    <ClInclude Include="win\ctrls\checkboxEditor.h" />
     <ClInclude Include="win\ctrls\checktree.h" />
+    <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
+    <ClInclude Include="win\ctrls\controlTextEditor.h" />
     <ClInclude Include="win\ctrls\dataView.h" />
     <ClInclude Include="win\ctrls\dynamicBorder.h" />
     <ClInclude Include="win\ctrls\floatingNotebook.h" />
@@ -463,7 +466,6 @@
     <ClInclude Include="win\ctrls\grid\gridexteditors.h" />
     <ClInclude Include="win\ctrls\grid\gridextprivate.h" />
     <ClInclude Include="win\ctrls\grid\gridextsel.h" />
-    <ClInclude Include="win\ctrls\textEditor.h" />
     <ClInclude Include="win\ctrls\toolBar.h" />
     <ClInclude Include="win\ctrls\treelistctrl.h" />
     <ClInclude Include="win\dlgs\about.h" />
@@ -482,6 +484,8 @@
     <ClInclude Include="win\dlgs\userItem.h" />
     <ClInclude Include="win\editor\gridEditor\gridEditor.h" />
     <ClInclude Include="win\editor\gridEditor\gridPrintout.h" />
+    <ClInclude Include="win\editor\textEditor\textEditor.h" />
+    <ClInclude Include="win\editor\textEditor\textEditorPrintOut.h" />
     <ClInclude Include="win\theme\luna_dockart.h" />
     <ClInclude Include="win\theme\luna_tabart.h" />
     <ClInclude Include="win\theme\luna_toolbarart.h" />

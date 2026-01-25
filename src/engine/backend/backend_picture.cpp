@@ -167,8 +167,26 @@ wxBitmap CBackendPicture::GetPicture(const picture_identifier_t& id)
 	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
 	if (so != nullptr)
 		return so->GetClassIcon();
-
+	
 	return wxNullBitmap;
+}
+
+wxIcon CBackendPicture::GetPictureAsIcon(const picture_identifier_t& id)
+{
+	auto iterator = std::find_if(s_arrayPicture.begin(), s_arrayPicture.end(),
+		[id](const auto entry) { return entry.m_id == id; });
+
+	if (iterator != s_arrayPicture.end()) {	
+		wxIcon icon; 
+		icon.CopyFromBitmap(iterator->m_data);
+		return icon;
+	}
+
+	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
+	if (so != nullptr)
+		return so->GetClassIcon();
+	
+	return wxNullIcon;
 }
 
 std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()

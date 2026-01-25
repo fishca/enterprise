@@ -39,7 +39,7 @@ bool wxDataModelViewCtrl::AssociateModel(wxDataViewModel* model)
 #include <wx/dialog.h>
 #include <wx/button.h>
 
-#include "frontend/win/ctrls/textEditor.h"
+#include "frontend/win/ctrls/controlTextEditor.h"
 
 #include "frontend/visualView/ctrl/typeControl.h"
 #include "frontend/visualView/ctrl/form.h"

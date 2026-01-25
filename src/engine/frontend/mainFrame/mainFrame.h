@@ -52,6 +52,9 @@ public:
 
 	virtual IMetaData* FindMetadataByPath(const wxString& strFileName) const;
 
+#pragma region _frontend_call_h__
+
+	// Form support
 	virtual IBackendValueForm* ActiveWindow() const override;
 	virtual IBackendValueForm* CreateNewForm(const IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
 		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) override;
@@ -67,6 +70,12 @@ public:
 	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) override;
 
 	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
+
+	// Grid support
+	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, const CBackendSpreadSheetDocument& spreadSheetDocument) override;
+	virtual bool PrintSpreadSheetDocument(const CBackendSpreadSheetDocument& doc) override;
+
+#pragma endregion 
 
 	virtual void RefreshFrame() override;
 	virtual void RaiseFrame() override;

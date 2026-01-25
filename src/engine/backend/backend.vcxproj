@@ -22,12 +22,13 @@
     <ClInclude Include="actionInfo.h" />
     <ClInclude Include="appData.h" />
     <ClInclude Include="backend.h" />
-    <ClInclude Include="backend_cell.h" />
+    <ClInclude Include="backend_spreadsheet.h" />
     <ClInclude Include="backend_exception.h" />
     <ClInclude Include="backend_core.h" />
     <ClInclude Include="backend_mainFrame.h" />
     <ClInclude Include="backend_picture.h" />
     <ClInclude Include="backend_type.h" />
+    <ClInclude Include="spreadsheetDescription.h" />
     <ClInclude Include="clsid.h" />
     <ClInclude Include="compiler\byteCode.h" />
     <ClInclude Include="compiler\codeDef.h" />
@@ -137,7 +138,7 @@
     <ClInclude Include="metaCollection\metaInterfaceObject.h" />
     <ClInclude Include="metaCollection\metaObjectComposite.h" />
     <ClInclude Include="metaCollection\metaFormObject.h" />
-    <ClInclude Include="metaCollection\metaGridObject.h" />
+    <ClInclude Include="metaCollection\metaSpreadsheetObject.h" />
     <ClInclude Include="metaCollection\metaModuleObject.h" />
     <ClInclude Include="metaCollection\metaObject.h" />
     <ClInclude Include="metaCollection\metaObjectMetadata.h" />
@@ -220,7 +221,7 @@
     <ClInclude Include="propertyManager\property\propertySize.h" />
     <ClInclude Include="propertyManager\property\propertySource.h" />
     <ClInclude Include="propertyManager\property\propertyString.h" />
-    <ClInclude Include="propertyManager\property\propertyTemplate.h" />
+    <ClInclude Include="propertyManager\property\propertySpreadsheet.h" />
     <ClInclude Include="propertyManager\property\propertyType.h" />
     <ClInclude Include="propertyManager\property\variant\variantAction.h" />
     <ClInclude Include="propertyManager\property\variant\variantForm.h" />
@@ -231,6 +232,7 @@
     <ClInclude Include="propertyManager\property\variant\variantPicture.h" />
     <ClInclude Include="propertyManager\property\variant\variantRecord.h" />
     <ClInclude Include="propertyManager\property\variant\variantSource.h" />
+    <ClInclude Include="propertyManager\property\variant\variantSpreadsheet.h" />
     <ClInclude Include="propertyManager\property\variant\variantType.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="roleHelper.h" />
@@ -252,6 +254,7 @@
     <ClInclude Include="system\value\valuePicture.h" />
     <ClInclude Include="system\value\valuePoint.h" />
     <ClInclude Include="system\value\valueSize.h" />
+    <ClInclude Include="system\value\valueSpreadsheet.h" />
     <ClInclude Include="system\value\valueTable.h" />
     <ClInclude Include="system\value\valueType.h" />
     <ClInclude Include="tableInfo.h" />
@@ -266,11 +269,13 @@
     <ClCompile Include="appData.cpp" />
     <ClCompile Include="appDataQuery.cpp" />
     <ClCompile Include="backend.cpp" />
+    <ClCompile Include="backend_spreadsheet.cpp" />
     <ClCompile Include="backend_exception.cpp" />
     <ClCompile Include="backend_core.cpp" />
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
+    <ClCompile Include="spreadsheetDescription.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject_res.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject.cpp" />
@@ -356,9 +361,9 @@
     <ClCompile Include="metaCollection\metaFormObjectMenu.cpp" />
     <ClCompile Include="metaCollection\metaFormObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaFormObject_res.cpp" />
-    <ClCompile Include="metaCollection\metaGridObject.cpp" />
-    <ClCompile Include="metaCollection\metaGridObjectMenu.cpp" />
-    <ClCompile Include="metaCollection\metaGridObject_res.cpp" />
+    <ClCompile Include="metaCollection\metaSpreadsheetObject.cpp" />
+    <ClCompile Include="metaCollection\metaSpreadsheetObjectMenu.cpp" />
+    <ClCompile Include="metaCollection\metaSpreadsheetObject_res.cpp" />
     <ClCompile Include="metaCollection\metaInterfaceObject.cpp" />
     <ClCompile Include="metaCollection\metaInterfaceObjectMenu.cpp" />
     <ClCompile Include="metaCollection\metaInterfaceObject_res.cpp" />
@@ -513,7 +518,7 @@
     <ClCompile Include="propertyManager\property\propertySource.cpp" />
     <ClCompile Include="propertyManager\property\propertyString.cpp" />
     <ClCompile Include="propertyManager\property\propertyStringExt.cpp" />
-    <ClCompile Include="propertyManager\property\propertyTemplate.cpp" />
+    <ClCompile Include="propertyManager\property\propertySpreadsheet.cpp" />
     <ClCompile Include="propertyManager\property\propertyType.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantAction.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantForm.cpp" />
@@ -524,6 +529,7 @@
     <ClCompile Include="propertyManager\property\variant\variantPicture.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantRecord.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantSource.cpp" />
+    <ClCompile Include="propertyManager\property\variant\variantSpreadsheet.cpp" />
     <ClCompile Include="propertyManager\property\variant\variantType.cpp" />
     <ClCompile Include="roleHelper.cpp" />
     <ClCompile Include="interfaceHelper.cpp" />
@@ -541,6 +547,7 @@
     <ClCompile Include="system\value\valuePicture.cpp" />
     <ClCompile Include="system\value\valuePoint.cpp" />
     <ClCompile Include="system\value\valueSize.cpp" />
+    <ClCompile Include="system\value\valueSpreadsheet.cpp" />
     <ClCompile Include="system\value\valueTable.cpp" />
     <ClCompile Include="system\value\valueTableModel.cpp" />
     <ClCompile Include="system\value\valueTable_res.cpp" />

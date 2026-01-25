@@ -188,13 +188,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="docManager\docManager.cpp" />
-    <ClCompile Include="docManager\templates\dataProcessorFile.cpp" />
-    <ClCompile Include="docManager\templates\dataReportFile.cpp" />
-    <ClCompile Include="docManager\templates\formEditor.cpp" />
-    <ClCompile Include="docManager\templates\interface.cpp" />
-    <ClCompile Include="docManager\templates\metaFile.cpp" />
-    <ClCompile Include="docManager\templates\moduleEditor.cpp" />
-    <ClCompile Include="docManager\templates\role.cpp" />
+    <ClCompile Include="docManager\templates\docViewDataProcessorFile.cpp" />
+    <ClCompile Include="docManager\templates\docViewDataReportFile.cpp" />
+    <ClCompile Include="docManager\templates\docViewFormEditor.cpp" />
+    <ClCompile Include="docManager\templates\docViewInterface.cpp" />
+    <ClCompile Include="docManager\templates\docViewMetaFile.cpp" />
+    <ClCompile Include="docManager\templates\docViewModuleEditor.cpp" />
+    <ClCompile Include="docManager\templates\docViewRole.cpp" />
     <ClCompile Include="mainApp.cpp" />
     <ClCompile Include="mainAppEvent.cpp" />
     <ClCompile Include="mainFrame\debugger\debugClientImpl.cpp" />
@@ -245,13 +245,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="docManager\docManager.h" />
-    <ClInclude Include="docManager\templates\dataProcessorFile.h" />
-    <ClInclude Include="docManager\templates\dataReportFile.h" />
-    <ClInclude Include="docManager\templates\formEditor.h" />
-    <ClInclude Include="docManager\templates\interface.h" />
-    <ClInclude Include="docManager\templates\metaFile.h" />
-    <ClInclude Include="docManager\templates\moduleEditor.h" />
-    <ClInclude Include="docManager\templates\role.h" />
+    <ClInclude Include="docManager\templates\docViewDataProcessorFile.h" />
+    <ClInclude Include="docManager\templates\docViewDataReportFile.h" />
+    <ClInclude Include="docManager\templates\docViewFormEditor.h" />
+    <ClInclude Include="docManager\templates\docViewInterface.h" />
+    <ClInclude Include="docManager\templates\docViewMetaFile.h" />
+    <ClInclude Include="docManager\templates\docViewModuleEditor.h" />
+    <ClInclude Include="docManager\templates\docViewRole.h" />
     <ClInclude Include="mainApp.h" />
     <ClInclude Include="mainFrame\debugger\debugClientImpl.h" />
     <ClInclude Include="mainFrame\local\localWindow.h" />

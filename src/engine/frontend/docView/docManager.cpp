@@ -14,8 +14,8 @@
 #include "docManager.h"
 
 //common templates 
-#include "frontend/docView/templates/text.h"
-#include "frontend/docView/templates/template.h"
+#include "frontend/docView/templates/docViewText.h"
+#include "frontend/docView/templates/docViewSpreadsheet.h"
 
 #include "backend/metadataConfiguration.h"
 
@@ -74,10 +74,11 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 		doc->SetFilename(path);
 		doc->SetDocumentTemplate(this);
 		GetDocumentManager()->AddDocument(doc);
-		doc->SetCommandProcessor(doc->OnCreateCommandProcessor());
 
-		if (doc->OnCreate(path, flags))
+		if (doc->OnCreate(path, flags)) {
+			doc->SetCommandProcessor(doc->OnCreateCommandProcessor());
 			return true;
+		}
 
 		// The document may be already destroyed, this happens if its view
 		// creation fails as then the view being created is destroyed
@@ -102,8 +103,8 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 CMetaDocManager::CMetaDocManager()
 	: wxDocManager(), m_findDialog(nullptr)
 {
-	AddDocTemplate(_("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextEditDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CGridEditDocument), CLASSINFO(CGridEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(_("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
@@ -766,13 +767,8 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 
 				newDocument->SetIcon(metaObject->GetIcon());
 
-				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {
-					wxCommandProcessor* cmdProc = newDocument->CreateCommandProcessor();
-					if (cmdProc != nullptr)
-						newDocument->SetCommandProcessor(cmdProc);
-
-					//newDocument->UpdateAllViews();
-					//newDocument->Activate();
+				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {			
+					newDocument->SetCommandProcessor(newDocument->OnCreateCommandProcessor());
 					return newDocument;
 				}
 
@@ -793,6 +789,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 			return nullptr;
 		}
 	}
+
 	return nullptr;
 }
 

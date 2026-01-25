@@ -16,6 +16,9 @@ public:
 	virtual void Update(wxObject* wxobject, IVisualHost *visualHost) override;
 	virtual void Cleanup(wxObject* obj, IVisualHost *visualHost) override;
 
+	//support printing 
+	virtual wxPrintout* CreatePrintout() const;
+
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();

@@ -6,7 +6,7 @@
 //special object 
 #include "backend/metaCollection/metaModuleObject.h"
 #include "backend/metaCollection/metaFormObject.h"
-#include "backend/metaCollection/metaGridObject.h"
+#include "backend/metaCollection/metaSpreadsheetObject.h"
 
 //interface
 #include "backend/metaCollection/metaInterfaceObject.h"
@@ -182,9 +182,9 @@ public:
 	}
 
 	//grid
-	std::vector<IMetaObjectGrid*> GetTemplateArrayObject(
-		std::vector<IMetaObjectGrid*> array = std::vector<IMetaObjectGrid*>()) const {
-		FillArrayObjectByFilter<IMetaObjectGrid>(array, { g_metaTemplateCLSID });
+	std::vector<IMetaObjectSpreadsheet*> GetTemplateArrayObject(
+		std::vector<IMetaObjectSpreadsheet*> array = std::vector<IMetaObjectSpreadsheet*>()) const {
+		FillArrayObjectByFilter<IMetaObjectSpreadsheet>(array, { g_metaTemplateCLSID });
 		return array;
 	}
 
@@ -202,8 +202,8 @@ public:
 
 	//grid
 	template <typename _T1>
-	IMetaObjectGrid* FindGridObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectGrid>(id, { g_metaCommonTemplateCLSID, g_metaTemplateCLSID });
+	IMetaObjectSpreadsheet* FindGridObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IMetaObjectSpreadsheet>(id, { g_metaCommonTemplateCLSID, g_metaTemplateCLSID });
 	}
 
 #pragma endregion 

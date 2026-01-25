@@ -2,6 +2,7 @@
 #define __MAIN_FRAME_CORE_H__
 
 #include "backend/uniqueKey.h"
+#include "backend/backend_spreadsheet.h"
 #include "backend/system/systemEnum.h"
 
 #define backend_mainFrame \
@@ -20,8 +21,11 @@ public:
 	virtual class IMetaData* FindMetadataByPath(const wxString& strFileName) const { return nullptr; }
 	virtual void BackendError(const wxString& strFileName, const wxString& strDocPath, const long line, const wxString& strErrorMessage) const {}
 
+#pragma region _frontend_call_h__
+
+	// Form support
 	virtual class IBackendValueForm* ActiveWindow() const { return nullptr; }
-	virtual class IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr, 
+	virtual class IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
 		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) {
 		return nullptr;
 	}
@@ -41,6 +45,12 @@ public:
 	virtual class IBackendValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid) { return nullptr; }
 
 	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) { return nullptr; }
+
+	// Grid support
+	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, const CBackendSpreadSheetDocument& doc) { return false; }
+	virtual bool PrintSpreadSheetDocument(const CBackendSpreadSheetDocument& doc) { return false; }
+
+#pragma endregion 
 
 #pragma region property
 	virtual class BACKEND_API IPropertyObject* GetProperty() const { return nullptr; }

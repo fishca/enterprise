@@ -89,8 +89,6 @@ public:
 	virtual bool IsCloseOnOwnerClose() const { return true; }
 
 	virtual wxDList<CMetaDocument> GetChild() const { return m_childDocs; }
-	virtual wxCommandProcessor* CreateCommandProcessor() const { return nullptr; }
-
 	virtual wxDocManager* GetDocumentManager() const override {
 		// For child documents we use the same document manager as the parent, even
 		// though we don't have our own template (as children are not opened/saved

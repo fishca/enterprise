@@ -3,7 +3,7 @@
 
 #include "frontend/frontend.h"
 
-#include "backend/backend_cell.h"
+#include "backend/backend_spreadsheet.h"
 #include "backend/propertyManager/propertyManager.h"
 
 static const wxArrayString wxEmptyArrayString;
@@ -115,7 +115,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 				if (CBackendLocalization::CreateLocalizationArray(m_data[row][col], array))
 				{
 					CBackendLocalization::SetArrayTranslate(array, s);
-					wxGridExtStringTable::SetValue(row, col, 
+					wxGridExtStringTable::SetValue(row, col,
 						CBackendLocalization::GetRawLocText(array));
 				}
 			}
@@ -227,7 +227,7 @@ public:
 
 	// ctor and Create() create the grid window, as with the other controls
 	CGridEditor();
-	CGridEditor(wxWindow* parent,
+	CGridEditor(class CMetaDocument* document, wxWindow* parent,
 		wxWindowID id, const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
@@ -236,7 +236,7 @@ public:
 #pragma region area
 
 	void AddArea();
-	void RemoveArea();
+	void DeleteArea();
 
 #pragma endregion
 
@@ -264,6 +264,13 @@ public:
 
 	void Copy();
 	void Paste();
+
+#pragma region file
+
+	bool LoadDocument(const CBackendSpreadSheetDocument& doc);
+	bool SaveDocument(CBackendSpreadSheetDocument& doc) const;
+
+#pragma endregion 
 
 protected:
 
@@ -332,6 +339,8 @@ protected:
 	void OnIdle(wxIdleEvent& event);
 	void OnSize(wxSizeEvent& event);
 
+	void OnGridChange(wxGridExtEvent& event);
+
 private:
 
 	class CGridEditorDrawHelper {
@@ -372,6 +381,9 @@ private:
 
 	//property grid
 	CGridEditorCellProperty* m_cellProperty;
+
+	//document 
+	CMetaDocument* m_document;
 
 	wxDECLARE_EVENT_TABLE();
 };

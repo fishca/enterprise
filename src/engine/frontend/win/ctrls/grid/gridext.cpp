@@ -7558,20 +7558,23 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 			dc.DrawLine(left, bot, right, bot);
 		}
 
-		//draw area 
-		const int flagRowSection = GetRowAreaValue(i);
+		if (GridRowAreaEnabled())
+		{
+			//draw area 
+			const int flagRowSection = GetRowAreaValue(i);
 
-		// top line
-		if (flagRowSection & 2) {
-			int rowTop = GetRowTop(i) - 1;
-			dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
-			dc.DrawLine(left, rowTop, right, rowTop);
-		}
+			// top line
+			if (flagRowSection & 2) {
+				int rowTop = GetRowTop(i) - 1;
+				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
+				dc.DrawLine(left, rowTop, right, rowTop);
+			}
 
-		// bottom line
-		if (flagRowSection & 4) {
-			dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
-			dc.DrawLine(left, bot, right, bot);
+			// bottom line
+			if (flagRowSection & 4) {
+				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
+				dc.DrawLine(left, bot, right, bot);
+			}
 		}
 	}
 
@@ -7594,19 +7597,22 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 			dc.DrawLine(colRight, top, colRight, bottom);
 		}
 
-		const int flagColSection = GetColAreaValue(i);
+		if (GridColAreaEnabled())
+		{
+			const int flagColSection = GetColAreaValue(i);
 
-		// left hand line
-		if (flagColSection & 2) {
-			int colLeft = GetColLeft(i) - 1;
-			dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
-			dc.DrawLine(colLeft, top, colLeft, bottom);
-		}
+			// left hand line
+			if (flagColSection & 2) {
+				int colLeft = GetColLeft(i) - 1;
+				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
+				dc.DrawLine(colLeft, top, colLeft, bottom);
+			}
 
-		// right hand line
-		if (flagColSection & 4) {
-			dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
-			dc.DrawLine(colRight, top, colRight, bottom);
+			// right hand line
+			if (flagColSection & 4) {
+				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
+				dc.DrawLine(colRight, top, colRight, bottom);
+			}
 		}
 	}
 }
@@ -10453,6 +10459,8 @@ void wxGridExt::AddAreaRow(int start, int end)
 		SetRowBrake(end);
 		CalcDimensions();
 	}
+
+	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::AddAreaCol(int start, int end)
@@ -10517,6 +10525,8 @@ void wxGridExt::AddAreaCol(int start, int end)
 		CalcDimensions();
 		SetColBrake(end);
 	}
+
+	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::AddArea()
@@ -10666,7 +10676,9 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 			if (valid_area)
 			{
 				rowArea->m_areaLabel = areaLabel;
-				SendEvent(wxEVT_GRID_CHANGED);
+				const int founded = m_rowAreaAt.Index(*rowArea);
+				if (founded != wxNOT_FOUND)
+					SendEvent(wxEVT_GRID_CHANGED);
 				return true;
 			}
 
@@ -10711,7 +10723,10 @@ bool wxGridExt::MakeColAreaName(wxGridExtCellArea* colArea)
 			if (valid_area)
 			{
 				colArea->m_areaLabel = areaLabel;
-				SendEvent(wxEVT_GRID_CHANGED);
+
+				const int founded = m_colAreaAt.Index(*colArea);
+				if (founded != wxNOT_FOUND)
+					SendEvent(wxEVT_GRID_CHANGED);
 				return true;
 			}
 

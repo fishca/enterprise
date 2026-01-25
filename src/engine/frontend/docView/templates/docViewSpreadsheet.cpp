@@ -40,6 +40,7 @@ bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
 {
 	m_gridEditor = new CGridEditor(doc, m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
+	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<IMetaObjectSpreadsheet>());
 
 	return CMetaView::OnCreate(doc, flags);
 }

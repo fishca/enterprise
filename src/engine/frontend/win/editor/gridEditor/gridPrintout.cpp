@@ -205,29 +205,25 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
-					dc->DrawLine(rect.GetLeft() - borderLeft.m_width, rect.GetTop() - borderLeft.m_width,
-						rect.GetLeft() - borderLeft.m_width, rect.GetBottom() + borderLeft.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetLeft(), rect.GetBottom());
 				}
 
 				wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
-					dc->DrawLine(rect.GetRight() + borderRight.m_width, rect.GetTop() - borderRight.m_width,
-						rect.GetRight() + borderRight.m_width, rect.GetBottom() + borderRight.m_width);
+					dc->DrawLine(rect.GetRight(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 				}
 
 				wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
-					dc->DrawLine(rect.GetLeft() - borderTop.m_width, rect.GetTop() - borderTop.m_width,
-						rect.GetRight() + borderTop.m_width, rect.GetTop() - borderTop.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetTop());
 				}
 
 				wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
-					dc->DrawLine(rect.GetLeft() - borderBottom.m_width, rect.GetBottom() + borderBottom.m_width,
-						rect.GetRight() + borderBottom.m_width, rect.GetBottom() + borderBottom.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetBottom(), rect.GetRight(), rect.GetBottom());
 				}
 			}
 			else if (m_view->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
@@ -248,29 +244,25 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
-					dc->DrawLine(rect.GetLeft() - borderLeft.m_width, rect.GetTop() - borderLeft.m_width,
-						rect.GetLeft() - borderLeft.m_width, rect.GetBottom() + borderLeft.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetLeft(), rect.GetBottom());
 				}
 
 				wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
-					dc->DrawLine(rect.GetRight() + borderRight.m_width, rect.GetTop() - borderRight.m_width,
-						rect.GetRight() + borderRight.m_width, rect.GetBottom() + borderRight.m_width);
+					dc->DrawLine(rect.GetRight(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 				}
 
 				wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
-					dc->DrawLine(rect.GetLeft() - borderTop.m_width, rect.GetTop() - borderTop.m_width,
-						rect.GetRight() + borderTop.m_width, rect.GetTop() - borderTop.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetTop());
 				}
 
 				wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
-					dc->DrawLine(rect.GetLeft() - borderBottom.m_width, rect.GetBottom() + borderBottom.m_width,
-						rect.GetRight() + borderBottom.m_width, rect.GetBottom() + borderBottom.m_width);
+					dc->DrawLine(rect.GetLeft(), rect.GetBottom(), rect.GetRight(), rect.GetBottom());
 				}
 			}
 			
@@ -396,7 +388,7 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 	rect.width -= 2;
 
 	for (unsigned int i = 0; i < naturalLines.Count(); i++) {
-		wxArrayString wrappedLines = CGridEditor::CGridEditorDrawHelper::GetTextLines(dc, naturalLines.Item(i), font, rect);
+		wxArrayString wrappedLines = GetTextLines(dc, naturalLines.Item(i), font, rect);
 		for (unsigned int j = 0; j < wrappedLines.Count(); j++) {
 			lines.Add(wrappedLines.Item(j));
 		}
@@ -407,6 +399,48 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 
 	dc.SetFont(font);
 
-	CGridEditor::CGridEditorDrawHelper::DrawTextRectangle(dc,
+	CGridEditor::DrawTextRectangle(dc,
 		lines, rect, horizAlign, vertAlign, textOrientation);
+}
+
+wxArrayString CGridEditorPrintout::GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect)
+{
+	wxArrayString lines;
+
+	wxCoord x = 0, y = 0, curr_x = 0;
+	wxCoord max_x = rect.GetWidth();
+
+	dc.SetFont(font);
+
+	//wxStringTokenizer tk(data, _T(" \n\t\r"));
+	//wxString thisline = wxEmptyString;
+
+	//while (tk.HasMoreTokens())
+	//{
+	//	wxString tok = tk.GetNextToken();
+	//	//FIXME: this causes us to print an extra unnecesary
+	//	//       space at the end of the line. But it
+	//	//       is invisible , simplifies the size calculation
+	//	//       and ensures tokens are separated in the display
+	//	tok += _T(" ");
+
+	//	dc.GetTextExtent(tok, &x, &y);
+	//	if (curr_x + x > max_x)
+	//	{
+	//		lines.Add(wxString(thisline));
+	//		thisline = tok;
+	//		curr_x = x;
+	//	}
+	//	else
+	//	{
+	//		thisline += tok;
+	//		curr_x += x;
+	//	}
+	//}
+	//
+	////Add last line
+	//lines.Add(wxString(thisline));
+
+	lines.Add(data);
+	return lines;
 }

@@ -764,9 +764,6 @@
     <ClCompile Include="win\ctrls\grid\gridextsel.cpp">
       <Filter>win\ctrl\grid</Filter>
     </ClCompile>
-    <ClCompile Include="win\editor\gridEditor\gridAttr.cpp">
-      <Filter>win\editor\gridEditor</Filter>
-    </ClCompile>
     <ClCompile Include="win\editor\gridEditor\gridPrintout.cpp">
       <Filter>win\editor\gridEditor</Filter>
     </ClCompile>

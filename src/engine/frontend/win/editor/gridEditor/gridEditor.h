@@ -276,37 +276,6 @@ protected:
 
 	const wxString m_GRID_VALUE_STRING = wxGRID_VALUE_STRING;
 
-#pragma region string_utils
-
-	static void ParseLines(const wxString& strLine, wxArrayString& arrString) {
-
-		static wxString strRaw; static bool bInQuote = false;
-		{
-			arrString.resize(0);
-		}
-
-		for (const auto& c : strLine.ToStdWstring()) {
-			strRaw += c;
-			if (c == wxT('\'')) {
-				bInQuote = !bInQuote;
-			}
-			else if (c == wxT('\n') && !bInQuote) {
-				if (!IsEmptyLine(strRaw))
-					arrString.Add(strRaw);
-				strRaw.Clear();
-			}
-		}
-		if (!strRaw.IsEmpty()) {
-			if (!IsEmptyLine(strRaw))
-				arrString.Add(strRaw);
-			strRaw.Clear();
-		}
-	}
-
-	static bool IsEmptyLine(const wxString& strLine) { return strLine.IsEmpty(); }
-
-#pragma endregion
-
 	//events:
 	void OnMouseRightDown(wxGridExtEvent& event);
 
@@ -342,31 +311,6 @@ protected:
 	void OnGridChange(wxGridExtEvent& event);
 
 private:
-
-	class CGridEditorDrawHelper {
-	public:
-
-		static void GetTextBoxSize(const wxDC& dc,
-			const wxArrayString& lines,
-			wxArrayInt& arrWidth, wxArrayInt& arrHeight,
-			long* width, long* height);
-
-		static wxArrayString GetTextLines(wxDC& dc,
-			const wxString& data,
-			const wxFont& font, const wxRect& rect);
-
-		static void DrawTextRectangle(wxDC& dc,
-			const wxArrayString& lines,
-			const wxRect& rect,
-			int horizAlign,
-			int vertAlign,
-			int textOrientation);
-
-	private:
-
-		// the margin between a cell vertical line and a cell text
-		static const int GRID_TEXT_MARGIN = 0;
-	};
 
 	friend class CGridEditorRowHeaderRenderer;
 	friend class CGridEditorColumnHeaderRenderer;

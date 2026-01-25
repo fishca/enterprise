@@ -275,7 +275,6 @@
     <ClCompile Include="win\dlgs\selectData.cpp" />
     <ClCompile Include="win\dlgs\userList.cpp" />
     <ClCompile Include="win\dlgs\userItem.cpp" />
-    <ClCompile Include="win\editor\gridEditor\gridAttr.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridCellEditor.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridEditor.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridPrintout.cpp" />

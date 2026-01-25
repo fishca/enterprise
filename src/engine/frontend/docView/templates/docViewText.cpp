@@ -51,7 +51,7 @@ bool CTextEditView::OnClose(bool deleteWindow)
 
 wxPrintout* CTextEditView::OnCreatePrintout()
 {
-	return new CTextEditorPrintout(m_textEditor, this->GetViewName());
+	return new CTextEditorPrintout(m_textEditor, m_viewDocument->GetTitle());
 }
 
 void CTextEditView::OnFind(wxFindDialogEvent& event)

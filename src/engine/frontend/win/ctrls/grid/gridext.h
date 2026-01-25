@@ -1801,22 +1801,22 @@ public:
 
 	// ------ Cell text drawing functions
 	//
-	void DrawTextRectangle(wxDC& dc, const wxString&, const wxRect&,
+	static void DrawTextRectangle(wxDC& dc, const wxString&, const wxRect&,
 		int horizontalAlignment = wxALIGN_LEFT,
 		int verticalAlignment = wxALIGN_TOP,
-		int textOrientation = wxHORIZONTAL) const;
+		int textOrientation = wxHORIZONTAL);
 
-	void DrawTextRectangle(wxDC& dc, const wxArrayString& lines, const wxRect&,
+	static void DrawTextRectangle(wxDC& dc, const wxArrayString& lines, const wxRect&,
 		int horizontalAlignment = wxALIGN_LEFT,
 		int verticalAlignment = wxALIGN_TOP,
-		int textOrientation = wxHORIZONTAL) const;
+		int textOrientation = wxHORIZONTAL);
 
-	void DrawTextRectangle(wxDC& dc,
+	static void DrawTextRectangle(wxDC& dc,
 		const wxString& text,
 		const wxRect& rect,
 		const wxGridExtCellAttr& attr,
 		int defaultHAlign = wxALIGN_INVALID,
-		int defaultVAlign = wxALIGN_INVALID) const;
+		int defaultVAlign = wxALIGN_INVALID);
 
 	// ------ grid render function for printing
 	//
@@ -1830,11 +1830,10 @@ public:
 	// Split a string containing newline characters into an array of
 	// strings and return the number of lines
 	//
-	void StringToLines(const wxString& value, wxArrayString& lines) const;
-
-	void GetTextBoxSize(const wxDC& dc,
+	static void ParseLines(const wxString& value, wxArrayString& lines);
+	static void GetTextBoxSize(const wxDC& dc,
 		const wxArrayString& lines,
-		long* width, long* height) const;
+		long* width, long* height);
 
 	// If bottomRight is invalid, i.e. == wxGridExtNoCellCoords, it defaults to
 	// topLeft. If topLeft itself is invalid, the function simply returns.

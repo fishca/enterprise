@@ -7,10 +7,10 @@
 class CFormPrintout : public wxPrintout
 {
 	wxMemoryDC m_formMemoryDC;
-	IVisualHost *m_visualHost;
+	IVisualHost* m_visualHost;
 
 public:
-	CFormPrintout(IVisualHost *visualHost) : wxPrintout(visualHost->GetLabel()),
+	CFormPrintout(IVisualHost* visualHost, const wxString& title) : wxPrintout(title),
 		m_visualHost(visualHost)
 	{
 		// save the display before it is clobbered by the print preview

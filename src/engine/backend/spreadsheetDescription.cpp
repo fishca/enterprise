@@ -43,21 +43,21 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 		cell.m_cellBackgroundColour = typeConv::StringToColour(cellReader.r_stringZ());
 		cell.m_cellTextColour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[0].m_borderStyle = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[0].m_borderWidth = cellReader.r_s32();
-		cell.m_borderAt[0].m_borderColour = typeConv::StringToColour(cellReader.r_stringZ());
+		cell.m_borderAt[0].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+		cell.m_borderAt[0].m_width = cellReader.r_s32();
+		cell.m_borderAt[0].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[1].m_borderStyle = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[1].m_borderWidth = cellReader.r_s32();
-		cell.m_borderAt[1].m_borderColour = typeConv::StringToColour(cellReader.r_stringZ());
+		cell.m_borderAt[1].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+		cell.m_borderAt[1].m_width = cellReader.r_s32();
+		cell.m_borderAt[1].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[2].m_borderStyle = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[2].m_borderWidth = cellReader.r_s32();
-		cell.m_borderAt[2].m_borderColour = typeConv::StringToColour(cellReader.r_stringZ());
+		cell.m_borderAt[2].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+		cell.m_borderAt[2].m_width = cellReader.r_s32();
+		cell.m_borderAt[2].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[3].m_borderStyle = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[3].m_borderWidth = cellReader.r_s32();
-		cell.m_borderAt[3].m_borderColour = typeConv::StringToColour(cellReader.r_stringZ());
+		cell.m_borderAt[3].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+		cell.m_borderAt[3].m_width = cellReader.r_s32();
+		cell.m_borderAt[3].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
 		cell.m_row_size = cellReader.r_s32();
 		cell.m_col_size = cellReader.r_s32();
@@ -71,14 +71,14 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 	spreadsheetDesc.m_rowAreaAt.reserve(areaReader.r_u64());
 	for (u64 c = 0; c < spreadsheetDesc.m_rowAreaAt.capacity(); c++) {
 		CSpreadsheetAreaChunk& area = spreadsheetDesc.m_rowAreaAt.emplace_back();
-		area.m_strAreaName = areaReader.r_stringZ();
+		area.m_strLabel = areaReader.r_stringZ();
 		area.m_start = areaReader.r_s32();
 		area.m_end = areaReader.r_s32();
 	}
 	spreadsheetDesc.m_colAreaAt.reserve(areaReader.r_u64());
 	for (u64 c = 0; c < spreadsheetDesc.m_colAreaAt.capacity(); c++) {
 		CSpreadsheetAreaChunk& area = spreadsheetDesc.m_colAreaAt.emplace_back();
-		area.m_strAreaName = areaReader.r_stringZ();
+		area.m_strLabel = areaReader.r_stringZ();
 		area.m_start = areaReader.r_s32();
 		area.m_end = areaReader.r_s32();
 	}
@@ -139,21 +139,21 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 		cellWritter.w_stringZ(typeConv::ColourToString(c.m_cellBackgroundColour));
 		cellWritter.w_stringZ(typeConv::ColourToString(c.m_cellTextColour));
 
-		cellWritter.w_s32(c.m_borderAt[0].m_borderStyle);
-		cellWritter.w_s32(c.m_borderAt[0].m_borderWidth);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[0].m_borderColour));
+		cellWritter.w_s32(c.m_borderAt[0].m_style);
+		cellWritter.w_s32(c.m_borderAt[0].m_width);
+		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[0].m_colour));
 
-		cellWritter.w_s32(c.m_borderAt[1].m_borderStyle);
-		cellWritter.w_s32(c.m_borderAt[1].m_borderWidth);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[1].m_borderColour));
+		cellWritter.w_s32(c.m_borderAt[1].m_style);
+		cellWritter.w_s32(c.m_borderAt[1].m_width);
+		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[1].m_colour));
 
-		cellWritter.w_s32(c.m_borderAt[2].m_borderStyle);
-		cellWritter.w_s32(c.m_borderAt[2].m_borderWidth);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[2].m_borderColour));
+		cellWritter.w_s32(c.m_borderAt[2].m_style);
+		cellWritter.w_s32(c.m_borderAt[2].m_width);
+		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[2].m_colour));
 
-		cellWritter.w_s32(c.m_borderAt[3].m_borderStyle);
-		cellWritter.w_s32(c.m_borderAt[3].m_borderWidth);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[3].m_borderColour));
+		cellWritter.w_s32(c.m_borderAt[3].m_style);
+		cellWritter.w_s32(c.m_borderAt[3].m_width);
+		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[3].m_colour));
 
 		cellWritter.w_s32(c.m_row_size);
 		cellWritter.w_s32(c.m_col_size);
@@ -164,14 +164,14 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 	areaWritter.w_u64(spreadsheetDesc.m_rowAreaAt.size());
 	for (const auto& c : spreadsheetDesc.m_rowAreaAt)
 	{
-		areaWritter.w_stringZ(c.m_strAreaName);
+		areaWritter.w_stringZ(c.m_strLabel);
 		areaWritter.w_s32(c.m_start);
 		areaWritter.w_s32(c.m_end);
 	}
 	areaWritter.w_u64(spreadsheetDesc.m_colAreaAt.size());
 	for (const auto& c : spreadsheetDesc.m_colAreaAt)
 	{
-		areaWritter.w_stringZ(c.m_strAreaName);
+		areaWritter.w_stringZ(c.m_strLabel);
 		areaWritter.w_s32(c.m_start);
 		areaWritter.w_s32(c.m_end);
 	}

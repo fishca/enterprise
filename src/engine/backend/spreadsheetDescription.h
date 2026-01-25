@@ -6,13 +6,13 @@
 struct CSpreadsheetBorderChunk {
 
 	bool operator == (const CSpreadsheetBorderChunk& rhs) const {
-		return m_borderStyle == rhs.m_borderStyle &&
-			m_borderWidth == rhs.m_borderWidth && m_borderColour == rhs.m_borderColour;
+		return m_style == rhs.m_style &&
+			m_width == rhs.m_width && m_colour == rhs.m_colour;
 	}
 
-	wxPenStyle m_borderStyle;
-	unsigned int m_borderWidth;
-	wxColour m_borderColour;
+	wxPenStyle m_style;
+	unsigned int m_width;
+	wxColour m_colour;
 };
 
 struct CSpreadsheetAttrChunk {
@@ -44,11 +44,11 @@ struct CSpreadsheetAttrChunk {
 struct CSpreadsheetAreaChunk {
 	
 	bool operator == (const CSpreadsheetAreaChunk& rhs) const {
-		return m_strAreaName == rhs.m_strAreaName &&
+		return m_strLabel == rhs.m_strLabel &&
 			m_start == rhs.m_start && m_end == rhs.m_end;
 	}
 
-	wxString m_strAreaName;
+	wxString m_strLabel;
 	unsigned int m_start, m_end;
 };
 

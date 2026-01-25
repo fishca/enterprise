@@ -120,7 +120,7 @@ public:
 		unsigned int start, unsigned int end)
 	{
 		CSpreadsheetAreaChunk entry;
-		entry.m_strAreaName = strAreaName;
+		entry.m_strLabel = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
 
@@ -131,7 +131,7 @@ public:
 		unsigned int start, unsigned int end)
 	{
 		CSpreadsheetAreaChunk entry;
-		entry.m_strAreaName = strAreaName;
+		entry.m_strLabel = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
 
@@ -146,7 +146,7 @@ public:
 
 	const CSpreadsheetAreaChunk* GetAreaRow(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_spreadsheetDesc.m_rowAreaAt.begin(), m_spreadsheetDesc.m_rowAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_strAreaName == strAreaName; });
+			[strAreaName](const auto& v) { return v.m_strLabel == strAreaName; });
 		if (iterator != m_spreadsheetDesc.m_rowAreaAt.end())
 			return &*iterator;
 		return nullptr;
@@ -160,7 +160,7 @@ public:
 
 	const CSpreadsheetAreaChunk* GetAreaCol(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_spreadsheetDesc.m_colAreaAt.begin(), m_spreadsheetDesc.m_colAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_strAreaName == strAreaName; });
+			[strAreaName](const auto& v) { return v.m_strLabel == strAreaName; });
 		if (iterator != m_spreadsheetDesc.m_colAreaAt.end())
 			return &*iterator;
 		return nullptr;

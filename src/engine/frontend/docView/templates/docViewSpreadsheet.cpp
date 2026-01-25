@@ -57,8 +57,8 @@ void CSpreadsheetEditView::OnDraw(wxDC* WXUNUSED(dc))
 #include "frontend/win/editor/gridEditor/gridPrintout.h"
 
 wxPrintout* CSpreadsheetEditView::OnCreatePrintout()
-{
-	return new CGridEditorPrintout(m_gridEditor, wxGP_SHOW_NONE);
+{	
+	return new CGridEditorPrintout(m_gridEditor, wxGP_SHOW_NONE, m_viewDocument->GetTitle());
 }
 
 #include "frontend/artProvider/artProvider.h"

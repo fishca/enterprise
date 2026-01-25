@@ -7198,12 +7198,6 @@ wxPen wxGridExt::GetColGridLinePen(int WXUNUSED(col))
 
 void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCoordsArray& cells)
 {
-	if (IsCellEditControlShown())
-	{
-		// don't show highlight when the edit control is shown
-		return;
-	}
-
 	// if the active cell was repainted, repaint its highlight too because it
 	// might have been damaged by the grid lines
 	size_t count = cells.GetCount();
@@ -7972,10 +7966,10 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	const wxRect& rect,
 	int horizAlign,
 	int vertAlign,
-	int textOrientation) const
+	int textOrientation)
 {
 	static wxArrayString lines;
-	StringToLines(value, lines);
+	ParseLines(value, lines);
 	DrawTextRectangle(dc, lines, rect, horizAlign, vertAlign, textOrientation);
 }
 
@@ -7984,7 +7978,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	const wxRect& rect,
 	int horizAlign,
 	int vertAlign,
-	int textOrientation) const
+	int textOrientation)
 {
 	if (lines.empty())
 		return;
@@ -8085,7 +8079,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	const wxRect& rect,
 	const wxGridExtCellAttr& attr,
 	int hAlign,
-	int vAlign) const
+	int vAlign)
 {
 	attr.GetNonDefaultAlignment(&hAlign, &vAlign);
 
@@ -8114,7 +8108,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 // Any existing contents of the string array are preserved.
 //
 // TODO: refactor wxTextFile::Read() and reuse the same code from here
-void wxGridExt::StringToLines(const wxString& value, wxArrayString& lines) const
+void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
 {
 	lines.Empty();
 
@@ -8146,7 +8140,7 @@ void wxGridExt::StringToLines(const wxString& value, wxArrayString& lines) const
 
 void wxGridExt::GetTextBoxSize(const wxDC& dc,
 	const wxArrayString& lines,
-	long* width, long* height) const
+	long* width, long* height)
 {
 	wxCoord w = 0;
 	wxCoord h = 0;
@@ -11311,7 +11305,7 @@ void wxGridExt::SetRowSize(int row, int height)
 		wxArrayString lines;
 		wxClientDC dc(m_rowLabelWin);
 		dc.SetFont(GetLabelFont());
-		StringToLines(GetRowLabelValue(row), lines);
+		ParseLines(GetRowLabelValue(row), lines);
 		GetTextBoxSize(dc, lines, &w, &h);
 
 		// As with the columns, don't make the row smaller than minimal height.
@@ -11485,7 +11479,7 @@ void wxGridExt::SetColSize(int col, int width)
 			wxArrayString lines;
 			wxClientDC dc(m_colLabelWin);
 			dc.SetFont(GetLabelFont());
-			StringToLines(GetColLabelValue(col), lines);
+			ParseLines(GetColLabelValue(col), lines);
 			if (GetColLabelTextOrientation() == wxHORIZONTAL)
 				GetTextBoxSize(dc, lines, &w, &h);
 			else
@@ -11992,7 +11986,7 @@ wxCoord wxGridExt::CalcColOrRowLabelAreaMinSize(wxGridExtDirection direction)
 
 		wxString label = calcRows ? GetRowLabelValue(rowOrCol)
 			: GetColLabelValue(rowOrCol);
-		StringToLines(label, lines);
+		ParseLines(label, lines);
 
 		long w, h;
 		GetTextBoxSize(dc, lines, &w, &h);

@@ -239,6 +239,11 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 				attr->SetFont(cell->m_cellFont);
 				attr->SetBackgroundColour(cell->m_cellBackgroundColour);
 				attr->SetTextColour(cell->m_cellTextColour);
+
+				attr->SetBorderLeft(cell->m_borderAt[0].m_style, cell->m_borderAt[0].m_colour, cell->m_borderAt[0].m_width);
+				attr->SetBorderRight(cell->m_borderAt[1].m_style, cell->m_borderAt[1].m_colour, cell->m_borderAt[1].m_width);
+				attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
+				attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 			}
 		}
 
@@ -256,7 +261,7 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
-			entry.m_areaLabel = area->m_strAreaName;
+			entry.m_areaLabel = area->m_strLabel;
 
 			m_rowAreaAt.push_back(entry);
 		}
@@ -275,7 +280,7 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
-			entry.m_areaLabel = area->m_strAreaName;
+			entry.m_areaLabel = area->m_strLabel;
 
 			m_colAreaAt.push_back(entry);
 		}
@@ -330,7 +335,27 @@ bool CGridEditor::SaveDocument(CBackendSpreadSheetDocument& doc) const
 			int num_rows, num_cols;
 			attr->GetSize(&num_rows, &num_cols);
 
-			const CSpreadsheetBorderChunk borderAt[4] = {};
+			CSpreadsheetBorderChunk borderAt[4] = {};
+
+			const wxGridExtCellBorder& borderLeft = attr->GetBorderLeft();
+			borderAt[0].m_colour = borderLeft.m_colour;
+			borderAt[0].m_style = borderLeft.m_style;
+			borderAt[0].m_width = borderLeft.m_width;
+
+			const wxGridExtCellBorder& borderRight = attr->GetBorderRight();
+			borderAt[1].m_colour = borderRight.m_colour;
+			borderAt[1].m_style = borderRight.m_style;
+			borderAt[1].m_width = borderRight.m_width;
+
+			const wxGridExtCellBorder& borderTop = attr->GetBorderTop();
+			borderAt[2].m_colour = borderTop.m_colour;
+			borderAt[2].m_style = borderTop.m_style;
+			borderAt[2].m_width = borderTop.m_width;
+
+			const wxGridExtCellBorder& borderBottom = attr->GetBorderBottom();
+			borderAt[3].m_colour = borderBottom.m_colour;
+			borderAt[3].m_style = borderBottom.m_style;
+			borderAt[3].m_width = borderBottom.m_width;
 
 			doc.AppendCell(row, col, GetCellValue(row, col),
 				hAlign, vAlign, attr->GetTextOrient(),

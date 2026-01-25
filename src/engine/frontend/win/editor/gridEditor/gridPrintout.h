@@ -58,10 +58,7 @@ protected:
 protected:
 
 	static void DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr, int horizAlign = wxALIGN_LEFT, int vertAlign = wxALIGN_TOP, int textOrientation = wxHORIZONTAL);
-	//static void DrawTextRectangle(wxDC& dc, const wxArrayString& lines, const wxRect& rect, int horizAlign = wxALIGN_LEFT, int vertAlign = wxALIGN_TOP, int textOrientation = wxHORIZONTAL);
-	//static void GetTextBoxSize(wxDC& dc, const wxArrayString& lines, long* width, long* height);
-	//static void StringToLines(const wxString& value, wxArrayString& lines);
-	//static wxArrayString GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect);
+	static wxArrayString GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect);
 
 private:
 

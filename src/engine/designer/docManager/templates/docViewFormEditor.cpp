@@ -133,13 +133,9 @@ bool CFormEditView::OnClose(bool deleteWindow)
 
 wxPrintout* CFormEditView::OnCreatePrintout()
 {
-	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
-		return new CCodeEditorPrintout(
-			m_visualNotebook->GetCodeEditor(), this->GetViewName()
-		);
-	}
-
-	return new CFormPrintout(m_visualNotebook->GetVisualHost());
+	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) 
+		return new CCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
+	return new CFormPrintout(m_visualNotebook->GetVisualHost(), m_viewDocument->GetTitle());
 }
 
 void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)

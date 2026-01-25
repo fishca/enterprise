@@ -28,14 +28,14 @@ public:
 		entry.m_row = row;
 		entry.m_col = col;
 
-		entry.m_strCellValue = strCellValue;
-		entry.m_cellAlignHorz = cellAlignHorz;
-		entry.m_cellAlignVert = cellAlignVert;
+		entry.m_value = strCellValue;
+		entry.m_alignHorz = cellAlignHorz;
+		entry.m_alignVert = cellAlignVert;
 		entry.m_textOrient = textOrient;
 
-		entry.m_cellFont = cellFont;
-		entry.m_cellBackgroundColour = cellBackgroundColour;
-		entry.m_cellTextColour = cellTextColour;
+		entry.m_font = cellFont;
+		entry.m_backgroundColour = cellBackgroundColour;
+		entry.m_textColour = cellTextColour;
 
 		entry.m_borderAt[0] = borderAt[0];
 		entry.m_borderAt[1] = borderAt[1];
@@ -120,7 +120,7 @@ public:
 		unsigned int start, unsigned int end)
 	{
 		CSpreadsheetAreaChunk entry;
-		entry.m_strLabel = strAreaName;
+		entry.m_label = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
 
@@ -131,7 +131,7 @@ public:
 		unsigned int start, unsigned int end)
 	{
 		CSpreadsheetAreaChunk entry;
-		entry.m_strLabel = strAreaName;
+		entry.m_label = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
 
@@ -146,7 +146,7 @@ public:
 
 	const CSpreadsheetAreaChunk* GetAreaRow(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_spreadsheetDesc.m_rowAreaAt.begin(), m_spreadsheetDesc.m_rowAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_strLabel == strAreaName; });
+			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
 		if (iterator != m_spreadsheetDesc.m_rowAreaAt.end())
 			return &*iterator;
 		return nullptr;
@@ -160,7 +160,7 @@ public:
 
 	const CSpreadsheetAreaChunk* GetAreaCol(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_spreadsheetDesc.m_colAreaAt.begin(), m_spreadsheetDesc.m_colAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_strLabel == strAreaName; });
+			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
 		if (iterator != m_spreadsheetDesc.m_colAreaAt.end())
 			return &*iterator;
 		return nullptr;

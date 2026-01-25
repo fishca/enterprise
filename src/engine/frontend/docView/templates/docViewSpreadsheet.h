@@ -109,6 +109,11 @@ public:
 	CSpreadsheetEditDocument() : ISpreadsheetDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
+	virtual bool SaveAs() override;
+
+protected:
+
+	virtual bool DoSaveDocument(const wxString& filename) override;
 
 private:
 

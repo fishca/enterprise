@@ -228,17 +228,17 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 					continue;
 
 				wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
-				attr->SetAlignment(cell->m_cellAlignHorz, cell->m_cellAlignVert);
+				attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
 				if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
 					SetCellSize(row, col, cell->m_row_size, cell->m_col_size);
 
-				SetCellValue(row, col, cell->m_strCellValue);
+				SetCellValue(row, col, cell->m_value);
 
 				attr->SetTextOrient(cell->m_textOrient);
-				attr->SetFont(cell->m_cellFont);
-				attr->SetBackgroundColour(cell->m_cellBackgroundColour);
-				attr->SetTextColour(cell->m_cellTextColour);
+				attr->SetFont(cell->m_font);
+				attr->SetBackgroundColour(cell->m_backgroundColour);
+				attr->SetTextColour(cell->m_textColour);
 
 				attr->SetBorderLeft(cell->m_borderAt[0].m_style, cell->m_borderAt[0].m_colour, cell->m_borderAt[0].m_width);
 				attr->SetBorderRight(cell->m_borderAt[1].m_style, cell->m_borderAt[1].m_colour, cell->m_borderAt[1].m_width);
@@ -261,7 +261,7 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
-			entry.m_areaLabel = area->m_strLabel;
+			entry.m_areaLabel = area->m_label;
 
 			m_rowAreaAt.push_back(entry);
 		}
@@ -280,7 +280,7 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 
 			entry.m_start = area->m_start;
 			entry.m_end = area->m_end;
-			entry.m_areaLabel = area->m_strLabel;
+			entry.m_areaLabel = area->m_label;
 
 			m_colAreaAt.push_back(entry);
 		}

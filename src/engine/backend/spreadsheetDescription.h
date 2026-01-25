@@ -19,24 +19,24 @@ struct CSpreadsheetAttrChunk {
 
 	bool operator == (const CSpreadsheetAttrChunk& rhs) const {
 		return m_row == rhs.m_row && m_col == rhs.m_col 
-			&& m_cellAlignHorz == rhs.m_cellAlignHorz 
-			&& m_cellAlignVert == rhs.m_cellAlignVert 
+			&& m_alignHorz == rhs.m_alignHorz 
+			&& m_alignVert == rhs.m_alignVert 
 			&& m_textOrient == rhs.m_textOrient 
-			&& m_cellFont == rhs.m_cellFont 
-			&& m_cellBackgroundColour == rhs.m_cellBackgroundColour 
-			&& m_cellTextColour == rhs.m_cellTextColour
+			&& m_font == rhs.m_font 
+			&& m_backgroundColour == rhs.m_backgroundColour 
+			&& m_textColour == rhs.m_textColour
 			&& m_borderAt == rhs.m_borderAt
 			&& m_row_size == rhs.m_row_size && m_col_size == rhs.m_col_size;
 	}
 
 	unsigned int m_row, m_col;
-	wxString m_strCellValue;
-	int m_cellAlignHorz;
-	int m_cellAlignVert;
+	wxString m_value;
+	int m_alignHorz;
+	int m_alignVert;
 	int m_textOrient;
-	wxFont m_cellFont;
-	wxColour m_cellBackgroundColour;
-	wxColour m_cellTextColour;
+	wxFont m_font;
+	wxColour m_backgroundColour;
+	wxColour m_textColour;
 	CSpreadsheetBorderChunk m_borderAt[4]; //left, right, top, bottom
 	int m_row_size = 1, m_col_size = 1;
 };
@@ -44,11 +44,11 @@ struct CSpreadsheetAttrChunk {
 struct CSpreadsheetAreaChunk {
 	
 	bool operator == (const CSpreadsheetAreaChunk& rhs) const {
-		return m_strLabel == rhs.m_strLabel &&
+		return m_label == rhs.m_label &&
 			m_start == rhs.m_start && m_end == rhs.m_end;
 	}
 
-	wxString m_strLabel;
+	wxString m_label;
 	unsigned int m_start, m_end;
 };
 

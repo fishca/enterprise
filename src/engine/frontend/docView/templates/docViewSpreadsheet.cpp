@@ -189,3 +189,91 @@ bool CSpreadsheetEditDocument::OnCreate(const wxString& path, long flags)
 
 	return false;
 }
+
+bool CSpreadsheetEditDocument::SaveAs()
+{
+	wxDocTemplate* docTemplate = GetDocumentTemplate();
+	if (!docTemplate)
+		return false;
+
+	const IMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IMetaObjectSpreadsheet>();
+	if (creator == nullptr)
+		return false;
+
+#ifdef wxHAS_MULTIPLE_FILEDLG_FILTERS
+	wxString filter = docTemplate->GetDescription() + wxT(" (") +
+		docTemplate->GetFileFilter() + wxT(")|") +
+		docTemplate->GetFileFilter();
+
+	// Now see if there are some other template with identical view and document
+	// classes, whose filters may also be used.
+	if (docTemplate->GetViewClassInfo() && docTemplate->GetDocClassInfo())
+	{
+		wxList::compatibility_iterator
+			node = docTemplate->GetDocumentManager()->GetTemplates().GetFirst();
+		while (node)
+		{
+			wxDocTemplate* t = (wxDocTemplate*)node->GetData();
+
+			if (t->IsVisible() && t != docTemplate &&
+				t->GetViewClassInfo() == docTemplate->GetViewClassInfo() &&
+				t->GetDocClassInfo() == docTemplate->GetDocClassInfo())
+			{
+				// add a '|' to separate this filter from the previous one
+				if (!filter.empty())
+					filter << wxT('|');
+
+				filter << t->GetDescription()
+					<< wxT(" (") << t->GetFileFilter() << wxT(") |")
+					<< t->GetFileFilter();
+			}
+
+			node = node->GetNext();
+		}
+	}
+#else
+	wxString filter = docTemplate->GetFileFilter();
+#endif
+
+	wxString defaultDir = docTemplate->GetDirectory();
+	if (defaultDir.empty())
+	{
+		defaultDir = wxPathOnly(creator->GetName());
+		if (defaultDir.empty())
+			defaultDir = GetDocumentManager()->GetLastDirectory();
+	}
+
+	wxString fileName = wxFileSelector(_("Save As"),
+		defaultDir,
+		wxFileNameFromPath(creator->GetName()),
+		docTemplate->GetDefaultExtension(),
+		filter,
+		wxFD_SAVE | wxFD_OVERWRITE_PROMPT,
+		GetDocumentWindow());
+
+	if (fileName.empty())
+		return false; // cancelled by user
+
+	// Files that were not saved correctly are not added to the FileHistory.
+	if (!DoSaveDocument(fileName))
+		return false;
+
+	// A file that doesn't use the default extension of its document template
+	// cannot be opened via the FileHistory, so we do not add it.
+	if (docTemplate->FileMatchesTemplate(fileName))
+	{
+		GetDocumentManager()->AddFileToHistory(fileName);
+	}
+	//else: the user will probably not be able to open the file again, so we
+	//      could warn about the wrong file-extension here
+
+	return true;
+}
+
+bool CSpreadsheetEditDocument::DoSaveDocument(const wxString& filename)
+{
+	CBackendSpreadSheetDocument spreadSheetDocument;
+	if (!GetGridCtrl()->SaveDocument(spreadSheetDocument))
+		return false;
+	return spreadSheetDocument.SaveToFile(filename);
+}

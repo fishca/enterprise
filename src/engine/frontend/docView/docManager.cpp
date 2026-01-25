@@ -321,7 +321,16 @@ void CMetaDocManager::OnUpdateFileSave(wxUpdateUIEvent& event)
 void CMetaDocManager::OnUpdateFileSaveAs(wxUpdateUIEvent& event)
 {
 	CMetaDocument* const doc = GetCurrentDocument();
-	event.Enable(doc && !doc->IsChildDocument());
+	wxDocTemplate* const docTemplate = doc != nullptr ?
+		doc->GetDocumentTemplate() : nullptr;
+
+	bool enable_save_as = doc && !doc->IsChildDocument();
+
+	if (docTemplate != nullptr &&
+		(docTemplate->GetFlags() & wxTEMPLATE_SAVE_AS_FILE) != 0)
+		enable_save_as = true;
+
+	event.Enable(enable_save_as);
 }
 
 void CMetaDocManager::OnUpdateUndo(wxUpdateUIEvent& event)
@@ -690,24 +699,23 @@ CGuid CMetaDocManager::AddDocTemplate(
 	return data.m_guidTemplate;
 }
 
-CGuid CMetaDocManager::AddDocTemplate(
-	const class_identifier_t& clsid,
-	wxClassInfo* docClassInfo,
-	wxClassInfo* viewClassInfo)
+CGuid CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
+	const wxString& filter, const wxString& ext,
+	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo)
 {
 	CDocElement data;
 	data.m_clsid = clsid;
 	data.m_docTemplate = new CMetaDocTemplate(
 		this,
 		wxEmptyString,
+		filter,
 		wxEmptyString,
-		wxEmptyString,
-		wxEmptyString,
+		ext,
 		wxEmptyString,
 		wxEmptyString,
 		docClassInfo,
 		viewClassInfo,
-		wxTEMPLATE_INVISIBLE
+		wxTEMPLATE_INVISIBLE | (!ext.IsEmpty() ? wxTEMPLATE_SAVE_AS_FILE : 0)
 	);
 
 	data.m_guidTemplate = wxNewUniqueGuid;
@@ -767,7 +775,7 @@ CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument*
 
 				newDocument->SetIcon(metaObject->GetIcon());
 
-				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {			
+				if (newDocument->OnCreate(metaObject->GetModuleName(), flags | wxDOC_NEW)) {
 					newDocument->SetCommandProcessor(newDocument->OnCreateCommandProcessor());
 					return newDocument;
 				}

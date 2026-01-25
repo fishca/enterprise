@@ -10,7 +10,8 @@
 // Document template flags
 enum
 {
-	wxTEMPLATE_ONLY_OPEN = wxTEMPLATE_INVISIBLE + 1
+	wxTEMPLATE_ONLY_OPEN = 4, 
+	wxTEMPLATE_SAVE_AS_FILE = 8
 };
 
 class FRONTEND_API CMetaDocManager : public wxDocManager {
@@ -135,7 +136,15 @@ public:
 		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
+	CGuid AddDocTemplate(const class_identifier_t& id,
+		const wxString& filter,
+		const wxString& ext,
+		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
+
+	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo)  {
+		return AddDocTemplate(id, 
+			wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo);
+	}
 
 	CMetaDocument* GetCurrentDocument() const;
 

@@ -24,6 +24,8 @@ public:
 	static bool IsLocalizationString(const wxString& strRawLocale);
 	static wxString GetRawLocText(const CBackendLocalizationEntryArray& array);
 
+	static bool IsEmptyLocalizationString(const wxString& strRawLocale);
+
 	static void SetArrayTranslate(CBackendLocalizationEntryArray& array, const wxString &strResult);
 	static void SetArrayTranslate(const wxString& strLangCode, CBackendLocalizationEntryArray& array, const wxString& strResult);
 

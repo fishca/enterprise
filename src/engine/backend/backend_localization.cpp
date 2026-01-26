@@ -28,6 +28,9 @@ bool CBackendLocalization::CreateLocalizationArray(const wxString& strRawLocale,
 	bool open_text = false,
 		open_symbol = false;
 
+	if (!IsLocalizationString(strRawLocale))
+		return false;
+
 #pragma region _calc_count_h_
 
 	static size_t reserve_count = 0;
@@ -110,6 +113,9 @@ wxString CBackendLocalization::CreateLocalizationRawLocText(const wxString& strL
 
 bool CBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 {
+	if (strRawLocale.IsEmpty())
+		return false;
+
 	bool open_text = false,
 		open_symbol = false;
 
@@ -148,6 +154,52 @@ wxString CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArra
 	return std::move(strRawTranslate);
 }
 
+bool CBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLocale)
+{
+	if (strRawLocale.IsEmpty())
+		return true;
+
+	bool open_text = false,
+		open_symbol = false;
+
+	bool success = false;
+
+	static wxString code, data;
+	code.Clear(); data.Clear();
+
+	for (const auto& c : strRawLocale.ToStdWstring()) {
+
+		if ((!open_text && (c == wxT(' ') || c == wxT('\n'))) || c == wxT('\'')) {
+			if (open_text && c == wxT('\''))
+				open_symbol = !open_symbol;
+			success = false;
+			continue;
+		}
+		else if (!open_text && !open_symbol && c == wxT('=')) {
+			open_text = true;
+			success = false;
+			continue;
+		}
+		else if (open_text && !open_symbol && c == wxT(';')) {		
+			open_text = open_symbol = false;
+			success = true;
+			if (stringUtils::CompareString(ms_strUserLanguage, code))
+				break;
+			continue;
+		}
+
+		if (open_text && open_symbol)
+			data += c;
+		else if (!open_text && !open_symbol)
+			code += c;
+	}
+
+	if (success && stringUtils::CompareString(ms_strUserLanguage, code))
+		return data.IsEmpty();
+	
+	return true; 
+}
+
 bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocale, wxString& strResult)
 {
 	return GetTranslateGetRawLocText(ms_strUserLanguage, strRawLocale, strResult);
@@ -158,6 +210,8 @@ bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode
 	static CBackendLocalizationEntryArray array;
 	if (CreateLocalizationArray(strRawLocale, array))
 		return GetTranslateFromArray(strLangCode, array, strResult);
+	
+	strResult.Clear();
 	return false;
 }
 

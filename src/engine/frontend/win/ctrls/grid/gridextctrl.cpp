@@ -657,7 +657,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 					grid.GetCellSize(j, i, &c_rows, &c_cols);
 					if (c_rows > 0)
 						c_rows = 0;
-					if (!grid.GetTable()->IsEmptyCell(j + c_rows, i))
+					if (!grid.IsEmptyCell(j + c_rows, i))
 					{
 						is_empty = false;
 						break;
@@ -704,7 +704,8 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 				SetTextColoursAndFont(grid, attr, dc,
 					grid.IsInSelection(row, i));
 
-				grid.DrawTextRectangle(dc, grid.GetCellValue(row, col),
+				grid.GetCellValue(row, col, m_cacheString);
+				grid.DrawTextRectangle(dc, m_cacheString,
 					rect, hAlign, vAlign);
 				clip.x += grid.GetColSize(i) - 1;
 			}
@@ -718,7 +719,8 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 	// now we only have to draw the text
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
 
-	grid.DrawTextRectangle(dc, grid.GetCellValue(row, col),
+	grid.GetCellValue(row, col, m_cacheString);
+	grid.DrawTextRectangle(dc, m_cacheString,
 		rect, attr);
 }
 

@@ -19,7 +19,7 @@
 #define wxGRID_VALUE_DATETIME     wxT("datetime")
 
 
-	// the default renderer for the cells containing string data
+// the default renderer for the cells containing string data
 class wxGridExtCellStringRenderer : public wxGridExtCellRenderer
 {
 public:
@@ -57,6 +57,10 @@ protected:
 	wxSize DoGetBestSize(const wxGridExtCellAttr& attr,
 		wxDC& dc,
 		const wxString& text);
+
+private:
+
+	wxString m_cacheString;
 };
 
 // the default renderer for the cells containing numeric (long) data

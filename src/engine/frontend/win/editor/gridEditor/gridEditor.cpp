@@ -230,10 +230,10 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 				wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 				attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
 
+				SetCellValue(row, col, cell->m_value);
+
 				if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
 					SetCellSize(row, col, cell->m_row_size, cell->m_col_size);
-
-				SetCellValue(row, col, cell->m_value);
 
 				attr->SetTextOrient(cell->m_textOrient);
 				attr->SetFont(cell->m_font);
@@ -357,7 +357,15 @@ bool CGridEditor::SaveDocument(CBackendSpreadSheetDocument& doc) const
 			borderAt[3].m_style = borderBottom.m_style;
 			borderAt[3].m_width = borderBottom.m_width;
 
-			doc.AppendCell(row, col, GetCellValue(row, col),
+			wxString value;
+
+			void* tempval = m_table->GetValueAsCustom(row, col, wxT("translate"));
+			if (tempval != nullptr) {
+				value = CBackendLocalization::GetRawLocText(*((CBackendLocalizationEntryArray*)tempval));
+				delete (CBackendLocalizationEntryArray*)tempval;
+			}
+			
+			doc.AppendCell(row, col, value,
 				hAlign, vAlign, attr->GetTextOrient(),
 				attr->GetFont(), attr->GetBackgroundColour(), attr->GetTextColour(),
 				borderAt,

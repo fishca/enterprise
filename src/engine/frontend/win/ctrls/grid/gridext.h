@@ -1051,6 +1051,16 @@ private:
 	int m_col;
 };
 
+// ----------------------------------------------------------------------------
+// wxGridExtCellCache: location of a cell in the grid
+// ----------------------------------------------------------------------------
+
+struct wxGridExtCellCache
+{
+	wxGridExtCellCoords m_coords;
+	wxRect m_rect;
+	wxGridExtCellAttrPtr m_attr;
+};
 
 // ----------------------------------------------------------------------------
 // wxGridExtBlockCoords: location of a block of cells in the grid
@@ -1332,6 +1342,11 @@ extern wxRect wxGridExtNoCellRect;
 WX_DECLARE_OBJARRAY_WITH_DECL(wxGridExtCellCoords, wxGridExtCellCoordsArray,
 	class);
 
+// An array of cell params...
+//
+WX_DECLARE_OBJARRAY_WITH_DECL(wxGridExtCellCache, wxGridExtCellCacheArray,
+	class);
+
 // ----------------------------------------------------------------------------
 // Grid table classes
 // ----------------------------------------------------------------------------
@@ -1367,7 +1382,9 @@ public:
 
 	virtual bool IsEmptyCell(int row, int col)
 	{
-		return GetValue(row, col).empty();
+		wxString result; 
+		GetValue(row, col, result);
+		return result.IsEmpty();
 	}
 
 	bool IsEmpty(const wxGridExtCellCoords& coord)
@@ -1375,7 +1392,13 @@ public:
 		return IsEmptyCell(coord.GetRow(), coord.GetCol());
 	}
 
-	virtual wxString GetValue(int row, int col) = 0;
+	wxString GetValue(int row, int col) {
+		wxString result; 
+		GetValue(row, col, result);
+		return result;
+	}
+
+	virtual void GetValue(int row, int col, wxString& value) = 0;
 	virtual void SetValue(int row, int col, const wxString& value) = 0;
 
 	// Data type determination and value access
@@ -1463,7 +1486,6 @@ private:
 	wxDECLARE_NO_COPY_CLASS(wxGridExtTableBase);
 };
 
-
 // ----------------------------------------------------------------------------
 // wxGridExtTableMessage
 // ----------------------------------------------------------------------------
@@ -1549,7 +1571,7 @@ public:
 		return m_data[row][col].IsEmpty();
 	}
 
-	virtual wxString GetValue(int row, int col) wxOVERRIDE;
+	virtual void GetValue(int row, int col, wxString& s) wxOVERRIDE;
 	virtual void SetValue(int row, int col, const wxString& s) wxOVERRIDE;
 
 	// overridden functions from wxGridExtTableBase
@@ -1766,12 +1788,12 @@ public:
 
 	bool IsFrozen() const;
 
-	void DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells);
+	void DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells, wxGridExtCellCacheArray& params = wxGridExtCellCacheArray());
 	void DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow);
 	void DrawAllGridLines();
 	void DrawAllGridWindowLines(wxDC& dc, const wxRegion& reg, wxGridExtWindow* gridWindow);
-	void DrawCell(wxDC& dc, const wxGridExtCellCoords&);
-	void DrawBorder(wxDC& dc, const wxGridExtCellCoordsArray& cells);
+	void DrawCell(wxDC& dc, const wxGridExtCellCoords&, wxGridExtCellCache& param = wxGridExtCellCache());
+	void DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& params);
 	void DrawHighlight(wxDC& dc, const wxGridExtCellCoordsArray& cells);
 	void DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow);
 	void DrawLabelFrozenBorder(wxDC& dc, wxWindow* window, bool isRow);
@@ -1782,7 +1804,7 @@ public:
 
 	// this function is called when the current cell highlight must be redrawn
 	// and may be overridden by the user
-	virtual void DrawCellBorder(wxDC& dc, int row, int col, const wxGridExtCellAttr* attr);
+	virtual void DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, const wxRect& rect, const wxGridExtCellAttr* attr);
 	virtual void DrawCellHighlight(wxDC& dc, int row, int col, const wxGridExtCellAttr* attr);
 
 	virtual void DrawRowAreas(wxDC& dc, const wxArrayInt& rows);
@@ -2534,7 +2556,9 @@ public:
 	{
 		if (m_table)
 		{
-			return m_table->GetValue(row, col);
+			wxString text;
+			m_table->GetValue(row, col, text);
+			return text;
 		}
 		else
 		{
@@ -2542,9 +2566,28 @@ public:
 		}
 	}
 
+	void GetCellValue(int row, int col, wxString &s) const
+	{
+		if (m_table)
+		{
+			m_table->GetValue(row, col, s);
+		}
+		else
+		{
+			s = wxEmptyString;
+		}
+	}
+
 	wxString GetCellValue(const wxGridExtCellCoords& coords) const
 	{
-		return GetCellValue(coords.GetRow(), coords.GetCol());
+		wxString text;
+		GetCellValue(coords.GetRow(), coords.GetCol(), text);
+		return text;
+	}
+
+	void GetCellValue(const wxGridExtCellCoords& coords, wxString& s) const
+	{
+		GetCellValue(coords.GetRow(), coords.GetCol(), s);
 	}
 
 	void SetCellValue(int row, int col, const wxString& s);

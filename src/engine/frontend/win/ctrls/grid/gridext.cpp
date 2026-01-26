@@ -124,6 +124,7 @@ namespace
 
 
 WX_DEFINE_OBJARRAY(wxGridExtCellCoordsArray)
+WX_DEFINE_OBJARRAY(wxGridExtCellCacheArray)
 WX_DEFINE_OBJARRAY(wxGridExtCellAreaArray)
 
 // ----------------------------------------------------------------------------
@@ -340,7 +341,9 @@ void wxGridExtRowHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+	static wxPen shadowPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
+
+	dc.SetPen(shadowPen);
 	dc.DrawLine(rect.GetRight(), rect.GetTop(),
 		rect.GetRight(), rect.GetBottom());
 
@@ -359,7 +362,9 @@ void wxGridExtRowHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 		ofs = 1;
 	}
 
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
+	static wxPen lightPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT));
+
+	dc.SetPen(lightPen);
 	dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop(),
 		rect.GetLeft() + ofs, rect.GetBottom());
 	dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop(),
@@ -372,7 +377,9 @@ void wxGridExtColumnHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+	static wxPen shadowPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
+
+	dc.SetPen(shadowPen);
 	dc.DrawLine(rect.GetRight(), rect.GetTop(),
 		rect.GetRight(), rect.GetBottom());
 	dc.DrawLine(rect.GetLeft(), rect.GetBottom(),
@@ -388,7 +395,9 @@ void wxGridExtColumnHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 		ofs = 1;
 	}
 
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
+	static wxPen lightPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT));
+
+	dc.SetPen(lightPen);
 	dc.DrawLine(rect.GetLeft(), rect.GetTop() + ofs,
 		rect.GetLeft(), rect.GetBottom());
 	dc.DrawLine(rect.GetLeft(), rect.GetTop() + ofs,
@@ -401,7 +410,9 @@ void wxGridExtCornerHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 	wxDC& dc,
 	wxRect& rect) const
 {
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+	static wxPen shadowPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
+
+	dc.SetPen(shadowPen);
 	dc.DrawLine(rect.GetRight() - 1, rect.GetBottom() - 1,
 		rect.GetRight() - 1, rect.GetTop());
 	dc.DrawLine(rect.GetRight() - 1, rect.GetBottom() - 1,
@@ -420,7 +431,9 @@ void wxGridExtCornerHeaderRendererDefault::DrawBorder(const wxGridExt& grid,
 		ofs = 1;
 	}
 
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT)));
+	static wxPen lightPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT));
+
+	dc.SetPen(lightPen);
 	dc.DrawLine(rect.GetLeft() + 1, rect.GetTop() + ofs,
 		rect.GetRight() - 1, rect.GetTop() + ofs);
 	dc.DrawLine(rect.GetLeft() + ofs, rect.GetTop() + ofs,
@@ -1965,14 +1978,14 @@ wxGridExtStringTable::wxGridExtStringTable(int numRows, int numCols)
 	m_data.Add(sa, numRows);
 }
 
-wxString wxGridExtStringTable::GetValue(int row, int col)
+void wxGridExtStringTable::GetValue(int row, int col, wxString& value)
 {
-	wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
+	wxCHECK2_MSG((row >= 0 && row < GetNumberRows()) &&
 		(col >= 0 && col < GetNumberCols()),
-		wxEmptyString,
+		,
 		wxT("invalid row or column index in wxGridExtStringTable"));
 
-	return m_data[row][col];
+	value = m_data[row][col];
 }
 
 void wxGridExtStringTable::SetValue(int row, int col, const wxString& value)
@@ -2534,16 +2547,17 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	m_owner->PrepareDCFor(dc, this);
 	wxRegion reg = GetUpdateRegion();
 
+	wxGridExtCellCacheArray storage;
 	wxGridExtCellCoordsArray dirtyCells = m_owner->CalcCellsExposed(reg, this);
 
 	m_owner->DrawGridSpace(dc, this);
-	m_owner->DrawGridCellArea(dc, dirtyCells);
+	m_owner->DrawGridCellArea(dc, dirtyCells, storage);
 	m_owner->DrawAllGridWindowLines(dc, reg, this);
 
 	if (m_type != wxGridExtWindow::wxGridExtWindowNormal)
 		m_owner->DrawFrozenBorder(dc, this);
 
-	m_owner->DrawBorder(dc, dirtyCells);
+	m_owner->DrawBorder(dc, storage);
 	m_owner->DrawHighlight(dc, dirtyCells);
 }
 
@@ -6911,13 +6925,15 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 // exposed cells (usually set from the update region by
 // CalcExposedCells)
 //
-void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells)
+void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells, wxGridExtCellCacheArray& storage)
 {
 	if (!m_numRows || !m_numCols)
 		return;
 
 	int i, numCells = cells.GetCount();
 	wxGridExtCellCoordsArray redrawCells;
+
+	storage.reserve(numCells);
 
 	for (i = numCells - 1; i >= 0; i--)
 	{
@@ -7023,14 +7039,18 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 			}
 		}
 
-		DrawCell(dc, cells[i]);
+		wxGridExtCellCache entry;
+		DrawCell(dc, cells[i], entry);
+		storage.Add(entry);
 	}
 
 	numCells = redrawCells.GetCount();
 
 	for (i = numCells - 1; i >= 0; i--)
 	{
-		DrawCell(dc, redrawCells[i]);
+		wxGridExtCellCache entry;
+		DrawCell(dc, redrawCells[i], entry);
+		storage.Add(entry);
 	}
 }
 
@@ -7066,41 +7086,40 @@ void wxGridExt::DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow)
 	}
 }
 
-void wxGridExt::DrawCell(wxDC& dc, const wxGridExtCellCoords& coords)
+void wxGridExt::DrawCell(wxDC& dc, const wxGridExtCellCoords& coords, wxGridExtCellCache& cache)
 {
 	int row = coords.GetRow();
 	int col = coords.GetCol();
 
+	cache.m_coords = coords;
+
 	if (GetColWidth(col) <= 0 || GetRowHeight(row) <= 0)
 		return;
 
-	// we draw the cell border ourselves
-	wxGridExtCellAttrPtr attr = GetCellAttrPtr(row, col);
-
 	bool isCurrent = coords == m_currentCellCoords;
 
-	wxRect rect = CellToRect(row, col);
+	// we draw the cell border ourselves
+	cache.m_attr = GetCellAttrPtr(row, col);
+	cache.m_rect = CellToRect(row, col);
 
 	// if the editor is shown, we should use it and not the renderer
 	// Note: However, only if it is really _shown_, i.e. not hidden!
 	if (isCurrent && IsCellEditControlShown())
 	{
-		attr->GetEditorPtr(this, row, col)->PaintBackground(dc, rect, *attr);
+		cache.m_attr->GetEditorPtr(this, row, col)->PaintBackground(dc, cache.m_rect, *cache.m_attr);
 	}
 	else
 	{
 		// but all the rest is drawn by the cell renderer and hence may be customized
-		attr->GetRendererPtr(this, row, col)
-			->Draw(*this, *attr, dc, rect, row, col, IsInSelection(coords));
+		cache.m_attr->GetRendererPtr(this, row, col)
+			->Draw(*this, *cache.m_attr, dc, cache.m_rect, row, col, IsInSelection(coords));
 	}
 }
 
-void wxGridExt::DrawCellBorder(wxDC& dc, int row, int col, const wxGridExtCellAttr* attr)
+void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, const wxRect& rect, const wxGridExtCellAttr* attr)
 {
-	if (GetColWidth(col) <= 0 || GetRowHeight(row) <= 0)
+	if (GetColWidth(coords.GetCol()) <= 0 || GetRowHeight(coords.GetRow()) <= 0)
 		return;
-
-	wxRect rect = CellToRect(row, col);
 
 	//draw border  
 	wxGridExtCellBorder borderLeft = attr->GetBorderLeft();
@@ -7196,19 +7215,19 @@ wxPen wxGridExt::GetColGridLinePen(int WXUNUSED(col))
 	return GetDefaultGridLinePen();
 }
 
-void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCoordsArray& cells)
+void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& storage)
 {
 	// if the active cell was repainted, repaint its highlight too because it
 	// might have been damaged by the grid lines
-	size_t count = cells.GetCount();
+	size_t count = storage.GetCount();
 	for (size_t n = 0; n < count; n++)
 	{
-		const wxGridExtCellCoords& cell = cells[n];
-		wxGridExtCellAttrPtr attr = GetCellAttrPtr(cells[n]);
+		const wxGridExtCellCache& cache = storage[n];
+		const wxGridExtCellAttrPtr& attr = cache.m_attr;
 
 		if (attr->HasAnyBorder())
 		{
-			DrawCellBorder(dc, cell.GetRow(), cell.GetCol(), attr.get());
+			DrawCellBorder(dc, cache.m_coords, cache.m_rect, attr.get());
 		}
 	}
 }
@@ -8120,7 +8139,7 @@ void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
 
 	if (!value.IsEmpty()) {
 
-		static wxString strRaw; 
+		static wxString strRaw;
 		static bool bInQuote = false;
 
 		for (const auto& c : value.ToStdWstring()) {
@@ -8129,17 +8148,17 @@ void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
 				bInQuote = !bInQuote;
 			}
 			else if (c == wxT('\n') && !bInQuote) {
-				
+
 				if (!strRaw.IsEmpty())
 					lines.Add(strRaw);
-				
+
 				strRaw.Clear();
 			}
 		}
 
 		if (!strRaw.IsEmpty())
 			lines.Add(strRaw);
-		
+
 		strRaw.Clear();
 	}
 }
@@ -8606,7 +8625,7 @@ void wxGridExt::DoSaveEditControlValue()
 
 	case Event_Unhandled:
 	case Event_Handled:
-		
+
 		editor->ApplyEdit(row, col, this);
 
 		// for compatibility reasons dating back to wx 2.8 when this event
@@ -10008,7 +10027,7 @@ void wxGridExt::SetCellHighlightColour(const wxColour& colour)
 		m_cellHighlightColour = colour;
 
 		RefreshBlock(m_currentCellCoords, m_currentCellCoords);
-		
+
 		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }

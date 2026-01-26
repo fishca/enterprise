@@ -83,45 +83,41 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		{
 			wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
 				(col >= 0 && col < GetNumberCols()),
-				wxEmptyString,
+				true,
 				wxT("invalid row or column index in wxGridExtStringTable"));
 
-			static wxString translate;
-
-			if (CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], translate))
-			{
-				return translate.IsEmpty();
-			}
-
-			return true;
+			return CBackendLocalization::IsEmptyLocalizationString(m_data[row][col]);
 		}
 
-		virtual wxString GetValue(int row, int col) override
+		virtual void GetValue(int row, int col, wxString& s) override
 		{
-			static wxString translate;
-			CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], translate);
-			return std::move(translate);
+			CBackendLocalization::GetTranslateGetRawLocText(m_data[row][col], s);
 		}
 
 		virtual void SetValue(int row, int col, const wxString& s) override
 		{
-			if (CBackendLocalization::IsLocalizationString(s))
+			const wxString& value = m_data[row][col];
+
+			if (s != value) 
 			{
-				wxGridExtStringTable::SetValue(row, col, s);
-			}
-			else if (CBackendLocalization::IsLocalizationString(m_data[row][col]))
-			{
-				static CBackendLocalizationEntryArray array;
-				if (CBackendLocalization::CreateLocalizationArray(m_data[row][col], array))
+				if (CBackendLocalization::IsLocalizationString(s))
 				{
-					CBackendLocalization::SetArrayTranslate(array, s);
-					wxGridExtStringTable::SetValue(row, col,
-						CBackendLocalization::GetRawLocText(array));
+					wxGridExtStringTable::SetValue(row, col, s);
 				}
-			}
-			else
-			{
-				wxGridExtStringTable::SetValue(row, col, CBackendLocalization::CreateLocalizationRawLocText(s));
+				else if (CBackendLocalization::IsLocalizationString(value))
+				{
+					static CBackendLocalizationEntryArray array;
+					if (CBackendLocalization::CreateLocalizationArray(value, array))
+					{
+						CBackendLocalization::SetArrayTranslate(array, s);
+						wxGridExtStringTable::SetValue(row, col,
+							CBackendLocalization::GetRawLocText(array));
+					}
+				}
+				else
+				{
+					wxGridExtStringTable::SetValue(row, col, CBackendLocalization::CreateLocalizationRawLocText(s));
+				}
 			}
 		}
 
@@ -136,10 +132,14 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		// overridden functions from wxGridExtTableBase
 		//
+		wxString GetRowLabelValue(int row) {
+			// RD: Starting the rows at zero confuses users,
+			// no matter how much it makes sense to us geeks.
+			return stringUtils::IntToStr(row + 1);
+		}
+
 		virtual wxString GetColLabelValue(int col) override {
-			wxString s;
-			s << col + 1;
-			return s;
+			return stringUtils::IntToStr(col + 1);
 		}
 	};
 

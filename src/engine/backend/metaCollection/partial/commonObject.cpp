@@ -23,7 +23,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataExt, IMetaObjectRecordData);
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataRef, IMetaObjectRecordData);
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataEnumRef, IMetaObjectRecordDataRef);
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataMutableRef, IMetaObjectRecordDataRef);
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataFolderMutableRef, IMetaObjectRecordDataMutableRef);
+wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectRecordDataHierarchyMutableRef, IMetaObjectRecordDataMutableRef);
 
 //***********************************************************************
 //*							IMetaObjectGenericData				        *
@@ -611,15 +611,15 @@ IRecordDataObject* IMetaObjectRecordDataMutableRef::CreateRecordDataObject()
 }
 
 //***********************************************************************
-//*						IMetaObjectRecordDataFolderMutableRef			*
+//*						IMetaObjectRecordDataHierarchyMutableRef			*
 //***********************************************************************
 
-IMetaObjectRecordDataFolderMutableRef::IMetaObjectRecordDataFolderMutableRef()
+IMetaObjectRecordDataHierarchyMutableRef::IMetaObjectRecordDataHierarchyMutableRef()
 	: IMetaObjectRecordDataMutableRef()
 {
 }
 
-IMetaObjectRecordDataFolderMutableRef::~IMetaObjectRecordDataFolderMutableRef()
+IMetaObjectRecordDataHierarchyMutableRef::~IMetaObjectRecordDataHierarchyMutableRef()
 {
 	//wxDELETE(m_propertyAttributeCode);
 	//wxDELETE(m_propertyAttributeDescription);
@@ -629,7 +629,7 @@ IMetaObjectRecordDataFolderMutableRef::~IMetaObjectRecordDataFolderMutableRef()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectValue(eObjectMode mode)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject()) {
@@ -639,7 +639,7 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectV
 	return createdValue;
 }
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectValue(eObjectMode mode, const CGuid& guid)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, const CGuid& guid)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode, guid);
 	if (createdValue && !createdValue->InitializeObject()) {
@@ -649,7 +649,7 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectV
 	return createdValue;
 }
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectValue(eObjectMode mode, IRecordDataObjectRef* objSrc, bool generate)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, IRecordDataObjectRef* objSrc, bool generate)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject(objSrc, generate)) {
@@ -659,7 +659,7 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectV
 	return createdValue;
 }
 
-IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CopyObjectValue(eObjectMode mode, const CGuid& srcGuid)
+IRecordDataObjectFolderRef* IMetaObjectRecordDataHierarchyMutableRef::CopyObjectValue(eObjectMode mode, const CGuid& srcGuid)
 {
 	IRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject(srcGuid)) {
@@ -669,13 +669,34 @@ IRecordDataObjectFolderRef* IMetaObjectRecordDataFolderMutableRef::CopyObjectVal
 	return createdValue;
 }
 
+#define predefinedBlock 0x1234532
+
 //***************************************************************************
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool IMetaObjectRecordDataFolderMutableRef::LoadData(CMemoryReader& dataReader)
+bool IMetaObjectRecordDataHierarchyMutableRef::LoadData(CMemoryReader& dataReader)
 {
+	//load predefined value 
+	wxMemoryBuffer predefined_buffer;
+	if (!dataReader.r_chunk(predefinedBlock, predefined_buffer))
+		return false;
+
+	CMemoryReader predefinedReader(predefined_buffer);
+
+	unsigned int size = predefinedReader.r_u32();
+	for (unsigned int i = 0; i < size; i++)
+	{
+		CPredefinedObjectValue& predefined = m_predefinedObjectVector.emplace_back();
+		predefined.m_valueGuid = predefinedReader.r_stringZ();
+
+		predefined.m_valueCode = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		predefined.m_valueDescription = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		predefined.m_valueIsFolder = m_metaData->Deserialize(predefinedReader.r_stringZ());
+	}
+
 	//load default attributes:
+	(*m_propertyAttributePredefinedName)->LoadMeta(dataReader);
 	(*m_propertyAttributeCode)->LoadMeta(dataReader);
 	(*m_propertyAttributeDescription)->LoadMeta(dataReader);
 	(*m_propertyAttributeParent)->LoadMeta(dataReader);
@@ -684,9 +705,25 @@ bool IMetaObjectRecordDataFolderMutableRef::LoadData(CMemoryReader& dataReader)
 	return IMetaObjectRecordDataMutableRef::LoadData(dataReader);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::SaveData(CMemoryWriter& dataWritter)
+bool IMetaObjectRecordDataHierarchyMutableRef::SaveData(CMemoryWriter& dataWritter)
 {
+	//save predefined value 
+	CMemoryWriter predefinedWritter;
+	predefinedWritter.w_u32(m_predefinedObjectVector.size());
+
+	for (const CPredefinedObjectValue& predefined : m_predefinedObjectVector)
+	{
+		predefinedWritter.w_stringZ(predefined.m_valueGuid);
+
+		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueCode));
+		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueDescription));
+		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueIsFolder));
+	}
+
+	dataWritter.w_chunk(predefinedBlock, predefinedWritter.buffer());
+
 	//save default attributes:
+	(*m_propertyAttributePredefinedName)->SaveMeta(dataWritter);
 	(*m_propertyAttributeCode)->SaveMeta(dataWritter);
 	(*m_propertyAttributeDescription)->SaveMeta(dataWritter);
 	(*m_propertyAttributeParent)->SaveMeta(dataWritter);
@@ -700,19 +737,23 @@ bool IMetaObjectRecordDataFolderMutableRef::SaveData(CMemoryWriter& dataWritter)
 //*                           read & save events                        *
 //***********************************************************************
 
-bool IMetaObjectRecordDataFolderMutableRef::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool IMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return (*m_propertyAttributeCode)->OnCreateMetaObject(metaData, flags) &&
+	return (*m_propertyAttributePredefinedName)->OnCreateMetaObject(metaData, flags) &&
+		(*m_propertyAttributeCode)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeDescription)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeParent)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeIsFolder)->OnCreateMetaObject(metaData, flags);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(IMetaData* metaData)
+bool IMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(IMetaData* metaData)
 {
+	if (!(*m_propertyAttributePredefinedName)->OnLoadMetaObject(metaData))
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnLoadMetaObject(metaData))
 		return false;
 
@@ -728,8 +769,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(IMetaData* metaData
 	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject(int flags)
+bool IMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(int flags)
 {
+	if (!(*m_propertyAttributePredefinedName)->OnSaveMetaObject(flags))
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnSaveMetaObject(flags))
 		return false;
 
@@ -745,8 +789,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject(int flags)
 	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject(flags);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject()
+bool IMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject()
 {
+	if (!(*m_propertyAttributePredefinedName)->OnDeleteMetaObject())
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnDeleteMetaObject())
 		return false;
 
@@ -762,8 +809,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject()
 	return IMetaObjectRecordDataMutableRef::OnDeleteMetaObject();
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(int flags)
+bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(int flags)
 {
+	if (!(*m_propertyAttributePredefinedName)->OnBeforeRunMetaObject(flags))
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnBeforeRunMetaObject(flags))
 		return false;
 
@@ -782,8 +832,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(int flags)
 	return true;
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(int flags)
+bool IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(int flags)
 {
+	if (!(*m_propertyAttributePredefinedName)->OnAfterRunMetaObject(flags))
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnAfterRunMetaObject(flags))
 		return false;
 
@@ -799,8 +852,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(int flags)
 	return IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags);
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject()
+bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject()
 {
+	if (!(*m_propertyAttributePredefinedName)->OnBeforeCloseMetaObject())
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnBeforeCloseMetaObject())
 		return false;
 
@@ -816,8 +872,11 @@ bool IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject()
 	return IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject();
 }
 
-bool IMetaObjectRecordDataFolderMutableRef::OnAfterCloseMetaObject()
+bool IMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject()
 {
+	if (!(*m_propertyAttributePredefinedName)->OnAfterCloseMetaObject())
+		return false;
+
 	if (!(*m_propertyAttributeCode)->OnAfterCloseMetaObject())
 		return false;
 
@@ -835,7 +894,7 @@ bool IMetaObjectRecordDataFolderMutableRef::OnAfterCloseMetaObject()
 
 //////////////////////////////////////////////////////////////////////
 
-bool IMetaObjectRecordDataFolderMutableRef::ProcessChoice(IBackendControlFrame* ownerValue, const wxString& strFormName, eSelectMode selMode)
+bool IMetaObjectRecordDataHierarchyMutableRef::ProcessChoice(IBackendControlFrame* ownerValue, const wxString& strFormName, eSelectMode selMode)
 {
 	if (ownerValue == nullptr)
 		return false;
@@ -858,7 +917,7 @@ bool IMetaObjectRecordDataFolderMutableRef::ProcessChoice(IBackendControlFrame* 
 
 //////////////////////////////////////////////////////////////////////
 
-IRecordDataObjectRef* IMetaObjectRecordDataFolderMutableRef::CreateObjectRefValue(const CGuid& objGuid)
+IRecordDataObjectRef* IMetaObjectRecordDataHierarchyMutableRef::CreateObjectRefValue(const CGuid& objGuid)
 {
 	return CreateObjectRefValue(eObjectMode::OBJECT_ITEM, objGuid);
 }
@@ -1880,7 +1939,7 @@ CReferenceDataObject* IRecordDataObjectRef::GetReference() const
 
 wxIMPLEMENT_ABSTRACT_CLASS(IRecordDataObjectFolderRef, IRecordDataObjectRef);
 
-IRecordDataObjectFolderRef::IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode)
+IRecordDataObjectFolderRef::IRecordDataObjectFolderRef(IMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode)
 	: IRecordDataObjectRef(metaObject, objGuid), m_objMode(objMode)
 {
 }
@@ -1954,7 +2013,7 @@ bool IRecordDataObjectFolderRef::GetModel(IValueModel*& tableValue, const meta_i
 
 IRecordDataObjectRef* IRecordDataObjectFolderRef::CopyObjectValue()
 {
-	return ((IMetaObjectRecordDataFolderMutableRef*)m_metaObject)->CreateObjectValue(m_objMode, this);
+	return ((IMetaObjectRecordDataHierarchyMutableRef*)m_metaObject)->CreateObjectValue(m_objMode, this);
 }
 
 bool IRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
@@ -2002,7 +2061,7 @@ void IRecordDataObjectFolderRef::PrepareEmptyObject()
 			}
 		}
 	}
-	IMetaObjectRecordDataFolderMutableRef* metaFolder = GetMetaObject();
+	IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 	wxASSERT(metaFolder);
 	if (m_objMode == eObjectMode::OBJECT_ITEM) {
 		m_listObjectValue.insert_or_assign(*metaFolder->GetDataIsFolder(), false);
@@ -2055,7 +2114,7 @@ void IRecordDataObjectFolderRef::PrepareEmptyObject(const IRecordDataObjectRef* 
 			source->GetValueByMetaID(object->GetMetaID(), m_listObjectValue[object->GetMetaID()]);
 		}
 	}
-	IMetaObjectRecordDataFolderMutableRef* metaFolder = GetMetaObject();
+	IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 	wxASSERT(metaFolder);
 	if (m_objMode == eObjectMode::OBJECT_ITEM) {
 		m_listObjectValue.insert_or_assign(*metaFolder->GetDataIsFolder(), false);

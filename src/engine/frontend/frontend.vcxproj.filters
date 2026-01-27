@@ -794,6 +794,9 @@
     <ClCompile Include="docView\templates\docViewText.cpp">
       <Filter>docView\templates</Filter>
     </ClCompile>
+    <ClCompile Include="docView\templates\docViewHelp.cpp">
+      <Filter>docView\templates</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -1396,6 +1399,9 @@
       <Filter>docView\templates</Filter>
     </ClInclude>
     <ClInclude Include="docView\templates\docViewText.h">
+      <Filter>docView\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="docView\templates\docViewHelp.h">
       <Filter>docView\templates</Filter>
     </ClInclude>
   </ItemGroup>

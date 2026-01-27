@@ -699,7 +699,7 @@ public:
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
-	CTreeDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject = nullptr,
+	CTreeDataObjectFolderRef(IMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
 		const form_identifier_t& formType = wxNOT_FOUND, int listMode = LIST_ITEM, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
@@ -741,7 +741,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataFolderMutableRef* GetMetaObject() const { return m_metaObject; }
+	virtual IMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -774,7 +774,7 @@ private:
 private:
 
 	bool m_choiceMode; int m_listMode;
-	IMetaObjectRecordDataFolderMutableRef* m_metaObject;
+	IMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
 };
 
 #endif 

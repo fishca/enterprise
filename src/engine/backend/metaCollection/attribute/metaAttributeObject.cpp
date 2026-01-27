@@ -48,8 +48,8 @@ bool IMetaObjectAttribute::ContainMetaType(eCtorMetaType type) const
 /////////////////////////////////////////////////////////////////////////
 
 eItemMode CMetaObjectAttribute::GetItemMode() const {
-	IMetaObjectRecordDataFolderMutableRef* metaObject =
-		dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(m_parent);
+	IMetaObjectRecordDataHierarchyMutableRef* metaObject =
+		dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 	if (metaObject != nullptr)
 		return m_propertyItemMode->GetValueAsEnum();
 	return eItemMode::eItemMode_Item;
@@ -61,7 +61,7 @@ eSelectMode CMetaObjectAttribute::GetSelectMode() const
 		return eSelectMode::eSelectMode_Items;
 	const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
 	if (so != nullptr) {
-		IMetaObjectRecordDataFolderMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(so->GetMetaObject());
+		IMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 		if (so->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference && metaObject != nullptr)
 			return (eSelectMode)m_propertySelectMode->GetValueAsInteger();
 		return eSelectMode::eSelectMode_Items;

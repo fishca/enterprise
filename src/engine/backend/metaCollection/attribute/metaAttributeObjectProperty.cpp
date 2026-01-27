@@ -26,7 +26,7 @@ void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 		else {
 			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				IMetaObjectRecordDataFolderMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(so->GetMetaObject());
+				IMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)
 					pg->HideProperty(pgProperty, true);
 				else if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
@@ -40,7 +40,7 @@ void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 		}
 	}
 	else if (m_propertyItemMode == property) {
-		IMetaObjectRecordDataFolderMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataFolderMutableRef*>(m_parent);
+		IMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 		pg->HideProperty(pgProperty, metaObject == nullptr);
 	}
 }

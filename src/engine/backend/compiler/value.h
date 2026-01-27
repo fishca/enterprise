@@ -548,6 +548,11 @@ public:
 	void FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour, unsigned short& nMinute, unsigned short& nSecond) const;
 	void FromDate(int& nYear, int& nMonth, int& nDay, int& DayOfWeek, int& DayOfYear, int& WeekOfYear) const;
 
+#pragma region serialization
+	bool Serialize(wxString& strValue) const { return DoSerialize(strValue); }
+	bool Deserialize(const wxString& strValue) { return DoDeserialize(strValue); }
+#pragma endregion
+
 	//Virtual methods:
 	virtual void SetType(eValueTypes type);
 	virtual eValueTypes GetType() const;
@@ -736,8 +741,6 @@ public:
 
 public:
 
-#pragma endregion
-
 	CValue* GetThis() { return this; }
 
 	//support icons
@@ -758,6 +761,13 @@ public:
 	virtual CValue GetIteratorEmpty();
 	virtual CValue GetIteratorAt(unsigned int idx);
 	virtual unsigned int GetIteratorCount() const;
+#pragma endregion
+
+protected:
+
+#pragma region serialization
+	virtual bool DoSerialize(wxString& strValue) const;
+	virtual bool DoDeserialize(const wxString& strValue);
 #pragma endregion
 
 private:

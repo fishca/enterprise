@@ -12,13 +12,13 @@
 //*										 metaData											 * 
 //********************************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCatalog, IMetaObjectRecordDataFolderMutableRef);
+wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCatalog, IMetaObjectRecordDataHierarchyMutableRef);
 
 //********************************************************************************************
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataFolderMutableRef()
+CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataHierarchyMutableRef()
 {
 	//set default proc
 	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
@@ -178,7 +178,7 @@ bool CMetaObjectCatalog::LoadData(CMemoryReader& dataReader)
 	if (!m_propertyOwner->LoadData(dataReader))
 		return false;
 
-	return IMetaObjectRecordDataFolderMutableRef::LoadData(dataReader);
+	return IMetaObjectRecordDataHierarchyMutableRef::LoadData(dataReader);
 }
 
 bool CMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
@@ -200,7 +200,7 @@ bool CMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
 		return false;
 
 	//create or update table:
-	return IMetaObjectRecordDataFolderMutableRef::SaveData(dataWritter);
+	return IMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);
 }
 
 //***********************************************************************
@@ -209,7 +209,7 @@ bool CMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
 
 bool CMetaObjectCatalog::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObjectRecordDataFolderMutableRef::OnCreateMetaObject(metaData, flags))
+	if (!IMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (*m_propertyAttributeOwner)->OnCreateMetaObject(metaData, flags) &&
@@ -228,7 +228,7 @@ bool CMetaObjectCatalog::OnLoadMetaObject(IMetaData* metaData)
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	return IMetaObjectRecordDataFolderMutableRef::OnLoadMetaObject(metaData);
+	return IMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
 }
 
 bool CMetaObjectCatalog::OnSaveMetaObject(int flags)
@@ -242,7 +242,7 @@ bool CMetaObjectCatalog::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataFolderMutableRef::OnSaveMetaObject(flags);
+	return IMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
 }
 
 bool CMetaObjectCatalog::OnDeleteMetaObject()
@@ -256,7 +256,7 @@ bool CMetaObjectCatalog::OnDeleteMetaObject()
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataFolderMutableRef::OnDeleteMetaObject();
+	return IMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
 }
 
 bool CMetaObjectCatalog::OnReloadMetaObject()
@@ -290,7 +290,7 @@ bool CMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 
 	registerSelection();
 
-	if (!IMetaObjectRecordDataFolderMutableRef::OnBeforeRunMetaObject(flags))
+	if (!IMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(flags))
 		return false;
 
 	const IMetaValueTypeCtor* typeCtor =
@@ -336,13 +336,13 @@ bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(flags))
+		if (IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(eObjectMode::OBJECT_ITEM));
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataFolderMutableRef::OnAfterRunMetaObject(flags);
+	return IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags);
 }
 
 bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
@@ -371,13 +371,13 @@ bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject())
+		if (IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
 			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataFolderMutableRef::OnBeforeCloseMetaObject();
+	return IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject();
 }
 
 bool CMetaObjectCatalog::OnAfterCloseMetaObject()
@@ -393,7 +393,7 @@ bool CMetaObjectCatalog::OnAfterCloseMetaObject()
 
 	unregisterSelection();
 
-	return IMetaObjectRecordDataFolderMutableRef::OnAfterCloseMetaObject();
+	return IMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************

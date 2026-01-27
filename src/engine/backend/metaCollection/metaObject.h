@@ -179,10 +179,14 @@ public:
 		return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) :
 			m_propertySynonym->GetValueAsTranslateString();
 	}
+	
 	void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
 
 	wxString GetComment() const { return m_propertyComment->GetValueAsString(); }
 	void SetComment(const wxString& comment) { m_propertyComment->SetValue(comment); }
+
+	wxString GetHelpContent() const { return m_strHelpContent; }
+	void SetHelpContent(const wxString& strHelpContent) { m_strHelpContent = strHelpContent; }
 
 	virtual void SetMetaData(IMetaData* metaData) { m_metaData = metaData; }
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
@@ -367,7 +371,7 @@ public:
 	virtual bool IsEditable() const;
 
 	//compare object 
-	virtual bool CompareObject(IMetaObject* metaObject) const;
+	virtual bool CompareObject(const IMetaObject* metaObject) const;
 
 	/**
 	* Property events
@@ -639,6 +643,8 @@ protected:
 
 	IMetaData* m_metaData;
 	CMethodHelper* m_methodHelper;
+
+	wxString m_strHelpContent;
 
 protected:
 

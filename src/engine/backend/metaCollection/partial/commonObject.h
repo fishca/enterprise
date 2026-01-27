@@ -573,7 +573,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//process default query
-	int ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum);
+	int ProcessEnumeration(const wxString& tableName, const CMetaObjectEnum* srcEnum, const CMetaObjectEnum* dstEnum);
 
 private:
 
@@ -655,8 +655,8 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//process default query
-	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable);
+	int ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
+	int ProcessTable(const wxString& tabularName, const CMetaObjectTableData* srcTable, const CMetaObjectTableData* dstTable);
 
 	//create empty object
 	virtual IRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
@@ -677,8 +677,19 @@ private:
 };
 
 //metaObject with reference and deletion mark and group/object type
-class BACKEND_API IMetaObjectRecordDataFolderMutableRef : public IMetaObjectRecordDataMutableRef {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataFolderMutableRef);
+class BACKEND_API IMetaObjectRecordDataHierarchyMutableRef : public IMetaObjectRecordDataMutableRef {
+
+	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordDataHierarchyMutableRef);
+
+	struct CPredefinedObjectValue {
+
+		CGuid m_valueGuid;
+
+		CValue m_valueCode;
+		CValue m_valueDescription;
+		CValue m_valueIsFolder;
+	};
+
 public:
 
 	CMetaObjectAttributePredefined* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
@@ -695,8 +706,8 @@ public:
 
 	virtual bool HasQuickChoice() const { return m_propertyQuickChoice->GetValueAsBoolean(); }
 
-	IMetaObjectRecordDataFolderMutableRef();
-	virtual ~IMetaObjectRecordDataFolderMutableRef();
+	IMetaObjectRecordDataHierarchyMutableRef();
+	virtual ~IMetaObjectRecordDataHierarchyMutableRef();
 
 	//process choice 
 	virtual bool ProcessChoice(IBackendControlFrame* ownerValue,
@@ -722,6 +733,9 @@ public:
 	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
 
+	//is predefined value? 
+	bool IsPredefinedValue(const CGuid& valueGuid) const { return FindPredefinedValue(valueGuid) != nullptr; }
+
 	//create associate value 	
 	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode);
 	IRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, const CGuid& guid);
@@ -743,6 +757,9 @@ protected:
 	*/
 	virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IProperty* property);
 
+	//create and update table 
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
@@ -754,10 +771,29 @@ protected:
 protected:
 
 	//create default attributes
+	CPropertyInnerAttribute<>* m_propertyAttributePredefinedName = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
 	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
+
+	//find predefined value
+	const CPredefinedObjectValue* FindPredefinedValue(const CGuid& valueGuid) const {
+
+		auto iterator = std::find_if(m_predefinedObjectVector.begin(), m_predefinedObjectVector.end(),
+			[valueGuid](const auto& value) { return value.m_valueGuid == valueGuid; });
+
+		if (iterator != m_predefinedObjectVector.end())
+			return &(*iterator);
+
+		return nullptr;
+	}
+
+	//process default query
+	int ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined);
+
+	//predefinded vector
+	std::vector<CPredefinedObjectValue> m_predefinedObjectVector;
 };
 
 //metaObject with key   
@@ -953,9 +989,9 @@ protected:
 	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
 
 	//process default query
-	int ProcessDimension(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessResource(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
-	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
+	int ProcessDimension(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
+	int ProcessResource(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
+	int ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -1336,7 +1372,7 @@ protected:
 class BACKEND_API IRecordDataObjectFolderRef : public IRecordDataObjectRef {
 	wxDECLARE_ABSTRACT_CLASS(IRecordDataObjectFolderRef);
 protected:
-	IRecordDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+	IRecordDataObjectFolderRef(IMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
 	IRecordDataObjectFolderRef(const IRecordDataObjectFolderRef& src);
 public:
 	virtual ~IRecordDataObjectFolderRef();
@@ -1351,8 +1387,8 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataFolderMutableRef* GetMetaObject() const {
-		return (IMetaObjectRecordDataFolderMutableRef*)m_metaObject;
+	virtual IMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const {
+		return (IMetaObjectRecordDataHierarchyMutableRef*)m_metaObject;
 	};
 
 	//copy new object

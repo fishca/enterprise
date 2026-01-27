@@ -13,6 +13,7 @@
 wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue);
 
 #define metaBlock 0x200222
+#define helpBlock 0x200224
 
 //*****************************************************************************************
 //*                                  MetaObject                                           *
@@ -116,15 +117,22 @@ bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 		return false;
 
 	//load meta 
-	wxMemoryBuffer buffer_chunk;
-	if (!dataReader.r_chunk(metaBlock, buffer_chunk))
+	wxMemoryBuffer meta_buffer;
+	if (!dataReader.r_chunk(metaBlock, meta_buffer))
 		return false;
 
-	CMemoryReader dataObjectReader(buffer_chunk);
-	dataObjectReader.r_u32(); //reserved flags
-	if (!LoadData(dataObjectReader))
+	CMemoryReader metaObjectReader(meta_buffer);
+	metaObjectReader.r_u32(); //reserved flags
+	if (!LoadData(metaObjectReader))
 		return false;
 
+	//load help 
+	wxMemoryBuffer help_buffer;
+	if (!dataReader.r_chunk(helpBlock, help_buffer))
+		return false;
+	
+	CMemoryReader helpReader(help_buffer);
+	m_strHelpContent = helpReader.r_stringZ();
 	return true;
 }
 
@@ -156,12 +164,17 @@ bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 		return false;
 
 	//save meta 
-	CMemoryWriter dataObjectWritter;
-	dataObjectWritter.w_u32(0); //reserved flags
-	if (!SaveData(dataObjectWritter))
+	CMemoryWriter metaObjectWritter;
+	metaObjectWritter.w_u32(0); //reserved flags
+	if (!SaveData(metaObjectWritter))
 		return false;
 
-	dataWritter.w_chunk(metaBlock, dataObjectWritter.buffer());
+	dataWritter.w_chunk(metaBlock, metaObjectWritter.buffer());
+
+	//save help 
+	CMemoryWriter helpWritter;
+	helpWritter.w_stringZ(m_strHelpContent);
+	dataWritter.w_chunk(helpBlock, helpWritter.buffer());
 	return true;
 }
 
@@ -323,7 +336,7 @@ bool IMetaObject::IsEditable() const
 		m_parent->IsEditable() : true;
 }
 
-bool IMetaObject::CompareObject(IMetaObject* compareObject) const
+bool IMetaObject::CompareObject(const IMetaObject* compareObject) const
 {
 #pragma region _compare_fill_h_
 	class CControlComparator {

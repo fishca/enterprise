@@ -638,7 +638,7 @@ wxDataViewItem CTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* ret
 	return wxDataViewItem(nullptr);
 }
 
-CTreeDataObjectFolderRef::CTreeDataObjectFolderRef(IMetaObjectRecordDataFolderMutableRef* metaObject, const form_identifier_t& formType,
+CTreeDataObjectFolderRef::CTreeDataObjectFolderRef(IMetaObjectRecordDataHierarchyMutableRef* metaObject, const form_identifier_t& formType,
 	int listMode, bool choiceMode) : ITreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
@@ -787,7 +787,7 @@ void CTreeDataObjectFolderRef::DeleteValue()
 
 void CTreeDataObjectFolderRef::MarkAsDeleteValue()
 {
-	IMetaObjectRecordDataFolderMutableRef* metaObject = nullptr;
+	IMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
 		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());

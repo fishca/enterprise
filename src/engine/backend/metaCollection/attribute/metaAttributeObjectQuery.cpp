@@ -250,7 +250,7 @@ IMetaObjectAttribute::sqlField_t IMetaObjectAttribute::GetSQLFieldData(const IMe
 #include "backend/valueInfo.h"
 
 int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
-	IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+	const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
 {
 	int retCode = 1;
 	//is null - create
@@ -700,7 +700,7 @@ void IMetaObjectAttribute::SetValueAttribute(const IMetaObjectAttribute* metaAtt
 #include "backend/compiler/enumUnit.h"
 
 bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	const eFieldTypes& fieldType, IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+	const eFieldTypes& fieldType, const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	switch (fieldType)
 	{
@@ -799,7 +799,7 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 }
 
 bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+	const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	eFieldTypes fieldType =
 		static_cast<eFieldTypes>(resultSet->GetResultInt(fieldName + wxT("_TYPE")));
@@ -829,7 +829,7 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	return false;
 }
 
-bool IMetaObjectAttribute::GetValueAttribute(IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool IMetaObjectAttribute::GetValueAttribute(const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	return IMetaObjectAttribute::GetValueAttribute(
 		metaAttr->GetFieldNameDB(),

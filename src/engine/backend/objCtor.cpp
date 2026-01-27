@@ -18,7 +18,7 @@ CValue* CMetaValueRefTypeCtor::CreateObject() const
 //list class 
 wxClassInfo* CMetaValueListRefTypeCtor::GetClassInfo() const
 {
-	IMetaObjectRecordDataFolderMutableRef* folderRef = nullptr;
+	IMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
 	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
 	if (m_metaObject->ConvertToValue(folderRef)) {
 		return CLASSINFO(CTreeDataObjectFolderRef);
@@ -31,7 +31,7 @@ wxClassInfo* CMetaValueListRefTypeCtor::GetClassInfo() const
 
 CValue* CMetaValueListRefTypeCtor::CreateObject() const
 {
-	IMetaObjectRecordDataFolderMutableRef* folderRef = nullptr;
+	IMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
 	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
 	
 	if (m_metaObject->ConvertToValue(folderRef)) {

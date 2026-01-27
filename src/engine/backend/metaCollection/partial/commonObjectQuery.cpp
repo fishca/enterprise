@@ -23,7 +23,7 @@ wxString IMetaObjectRecordDataRef::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -42,7 +42,7 @@ int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName,
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, CMetaObjectTableData* srcTable, CMetaObjectTableData* dstTable)
+int IMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, const CMetaObjectTableData* srcTable, const CMetaObjectTableData* dstTable)
 {
 	int retCode = 1;
 	//is null - create
@@ -247,7 +247,7 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, CMetaObjectEnum* srcEnum, CMetaObjectEnum* dstEnum)
+int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, const CMetaObjectEnum* srcEnum, const CMetaObjectEnum* dstEnum)
 {
 	int retCode = 1;
 
@@ -382,6 +382,111 @@ bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int IMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined)
+{
+	int retCode = 1;
+
+	//is null - create
+	if (dstPredefined == nullptr) {
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcPredefined->m_valueGuid.str());
+		else
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcPredefined->m_valueGuid.str());
+	}
+	// update 
+	else if (srcPredefined != nullptr) {
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			retCode = db_query->RunQuery("INSERT INTO %s (uuid) VALUES ('%s') ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;", tableName, srcPredefined->m_valueGuid.str());
+		else
+			retCode = db_query->RunQuery("UPDATE OR INSERT INTO %s (uuid) VALUES ('%s') MATCHING(uuid);", tableName, srcPredefined->m_valueGuid.str());
+	}
+	//delete 
+	else if (srcPredefined == nullptr) {
+
+		retCode = db_query->RunQuery("DELETE FROM %s WHERE uuid = '%s' ;", tableName, dstPredefined->m_valueGuid.str());
+	}
+
+	return retCode;
+}
+
+bool IMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+{
+	if (!IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags))
+		return false;
+
+	const wxString& tableName = GetTableNameDB(); int retCode = 1;
+
+	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
+
+		if ((flags & createMetaTable) != 0) {
+
+			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
+
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+
+				for (const auto& object : m_predefinedObjectVector) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessPredefinedValue(tableName,
+						&object, nullptr);
+				}
+			}
+
+			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+				return false;
+		}
+		else if ((flags & repairMetaTable) != 0) {
+
+			if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+				retCode = 1;
+				for (const auto object : m_predefinedObjectVector) {
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+					retCode = ProcessPredefinedValue(tableName,
+						&object, nullptr);
+				}
+			}
+		}
+	}
+	else if ((flags & updateMetaTable) != 0) {
+
+		//if src is null then delete
+		IMetaObjectRecordDataHierarchyMutableRef* dstValue = nullptr;
+		if (srcMetaObject->ConvertToValue(dstValue)) {
+
+			//enums from dst 
+			for (const auto object : dstValue->m_predefinedObjectVector) {
+				const CPredefinedObjectValue* predefinedValue =
+					IMetaObjectRecordDataHierarchyMutableRef::FindPredefinedValue(object.m_valueGuid);
+				if (predefinedValue == nullptr) {
+					retCode = ProcessPredefinedValue(tableName,
+						nullptr, &object);
+					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+						return false;
+				}
+			}
+			//enums current
+			for (const auto object : m_predefinedObjectVector) {
+				retCode = ProcessPredefinedValue(tableName,
+					&object, dstValue->FindPredefinedValue(object.m_valueGuid)
+				);
+				if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+					return false;
+			}
+		}
+	}
+
+	if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
+		return false;
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 wxString IMetaObjectRegisterData::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
@@ -390,7 +495,7 @@ wxString IMetaObjectRegisterData::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -409,7 +514,7 @@ int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, IMetaOb
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -428,7 +533,7 @@ int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, IMetaObj
 	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -864,7 +969,7 @@ bool IRecordDataObjectRef::ResetUniqueIdentifier()
 bool IRecordDataObjectFolderRef::ReadData()
 {
 	if (IRecordDataObjectRef::ReadData()) {
-		IMetaObjectRecordDataFolderMutableRef* metaFolder = GetMetaObject();
+		IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
 		CValue isFolder; IRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
@@ -879,7 +984,7 @@ bool IRecordDataObjectFolderRef::ReadData()
 bool IRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
 {
 	if (IRecordDataObjectRef::ReadData(srcGuid)) {
-		IMetaObjectRecordDataFolderMutableRef* metaFolder = GetMetaObject();
+		IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
 		CValue isFolder; IRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())

@@ -8,7 +8,7 @@
 //*                                  Factory & metaData                                      *
 //********************************************************************************************
 
-class CMetaObjectCatalog : public IMetaObjectRecordDataFolderMutableRef {
+class CMetaObjectCatalog : public IMetaObjectRecordDataHierarchyMutableRef {
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCatalog);
 private:
 	enum

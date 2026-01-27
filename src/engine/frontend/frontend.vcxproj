@@ -23,6 +23,7 @@
     <ClCompile Include="docView\docManager.cpp" />
     <ClCompile Include="docView\docView.cpp" />
     <ClCompile Include="docView\docViewCmd.cpp" />
+    <ClCompile Include="docView\templates\docViewHelp.cpp" />
     <ClCompile Include="docView\templates\docViewSpreadsheet.cpp" />
     <ClCompile Include="docView\templates\docViewText.cpp" />
     <ClCompile Include="frontend.cpp" />
@@ -290,6 +291,7 @@
     <ClInclude Include="artProvider\private\picturePredefined.h" />
     <ClInclude Include="docView\docManager.h" />
     <ClInclude Include="docView\docView.h" />
+    <ClInclude Include="docView\templates\docViewHelp.h" />
     <ClInclude Include="docView\templates\docViewSpreadsheet.h" />
     <ClInclude Include="docView\templates\docViewText.h" />
     <ClInclude Include="frontend.h" />

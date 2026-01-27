@@ -16,6 +16,7 @@
 //common templates 
 #include "frontend/docView/templates/docViewText.h"
 #include "frontend/docView/templates/docViewSpreadsheet.h"
+#include "frontend/docView/templates/docViewHelp.h"
 
 #include "backend/metadataConfiguration.h"
 
@@ -105,6 +106,7 @@ CMetaDocManager::CMetaDocManager()
 {
 	AddDocTemplate(_("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
 	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(_("Help document"), wxT("*.hle"), wxEmptyString, wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_VISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
 

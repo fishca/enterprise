@@ -275,6 +275,8 @@
     <ClCompile Include="backend_mainFrame.cpp" />
     <ClCompile Include="backend_picture.cpp" />
     <ClCompile Include="backend_localization.cpp" />
+    <ClCompile Include="compiler\valueSerialization.cpp" />
+    <ClCompile Include="metadataSerialization.cpp" />
     <ClCompile Include="spreadsheetDescription.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObjectProperty.cpp" />
     <ClCompile Include="metaCollection\metaLanguageObject_res.cpp" />

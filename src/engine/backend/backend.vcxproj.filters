@@ -1477,6 +1477,10 @@
     <ClCompile Include="propertyManager\property\variant\variantSpreadsheet.cpp">
       <Filter>propertyManager\property\variant</Filter>
     </ClCompile>
+    <ClCompile Include="compiler\valueSerialization.cpp">
+      <Filter>compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="metadataSerialization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

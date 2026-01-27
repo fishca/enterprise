@@ -24,6 +24,6 @@ void IMetaObjectRecordDataMutableRef::OnPropertyChanged(IProperty* property, con
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IMetaObjectRecordDataFolderMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
+void IMetaObjectRecordDataHierarchyMutableRef::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 }

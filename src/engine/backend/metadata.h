@@ -191,6 +191,13 @@ public:
 	wxString GetNewName(const class_identifier_t& clsid,
 		IMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
 
+#pragma region serialization
+
+	wxString Serialize(const CValue& cValue);
+	CValue Deserialize(const wxString& strValue);
+
+#pragma endregion
+
 protected:
 
 #pragma region __array_h__

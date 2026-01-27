@@ -128,15 +128,15 @@ public:
 	static sqlField_t GetSQLFieldData(const IMetaObjectAttribute* metaAttr);
 
 	//process default query
-	static int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
+	static int ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
 
 	//set value attribute 
 	static void SetValueAttribute(const IMetaObjectAttribute* attribute, const CValue& cValue, class IPreparedStatement* statement, int& position);
 
 	//get value from attribute
-	static bool GetValueAttribute(const wxString& fieldName, const eFieldTypes& fldType, IMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
-	static bool GetValueAttribute(const wxString& fieldName, IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
-	static bool GetValueAttribute(IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const wxString& fieldName, const eFieldTypes& fldType, const IMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const wxString& fieldName, const IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
 
 	//contain type
 	bool ContainType(const eValueTypes& valType) const;

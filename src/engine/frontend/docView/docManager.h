@@ -10,7 +10,7 @@
 // Document template flags
 enum
 {
-	wxTEMPLATE_ONLY_OPEN = 4, 
+	wxTEMPLATE_ONLY_OPEN = 4,
 	wxTEMPLATE_SAVE_AS_FILE = 8
 };
 
@@ -49,28 +49,16 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 			long flags = 0);
 	};
 
-	struct CDocElement {
+	struct CMetaDocManagerItem {
 		class_identifier_t m_clsid;
 		wxString m_className;
 		wxString m_classDescr;
 		CGuid m_guidTemplate;
 		CMetaDocTemplate* m_docTemplate;
-	public:
-
-		CDocElement() : m_clsid(0), m_docTemplate(nullptr)
-		{
-		}
-
-		CDocElement(const CDocElement& src) :
-			m_clsid(src.m_clsid),
-			m_className(src.m_className),
-			m_classDescr(src.m_classDescr),
-			m_docTemplate(src.m_docTemplate)
-		{
-		}
+		wxIcon m_classIcon;
 	};
 
-	std::vector <CDocElement> m_metaTemplates;
+	std::vector <CMetaDocManagerItem> m_templateVector;
 
 	wxFindReplaceData m_findData;
 	wxFindReplaceDialog* m_findDialog;
@@ -126,7 +114,7 @@ public:
 	CMetaDocManager();
 	virtual ~CMetaDocManager();
 
-	CGuid AddDocTemplate(const wxString& descr,
+	CGuid AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
 		const wxString& filter,
 		const wxString& dir,
 		const wxString& ext,
@@ -137,13 +125,14 @@ public:
 	);
 
 	CGuid AddDocTemplate(const class_identifier_t& id,
+		const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
 		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
 
-	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo)  {
-		return AddDocTemplate(id, 
-			wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo);
+	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo) {
+		return AddDocTemplate(id,
+			wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo);
 	}
 
 	CMetaDocument* GetCurrentDocument() const;

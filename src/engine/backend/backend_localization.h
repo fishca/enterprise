@@ -23,6 +23,7 @@ public:
 	static wxString CreateLocalizationRawLocText(const wxString& strLocale);
 	static bool IsLocalizationString(const wxString& strRawLocale);
 	static wxString GetRawLocText(const CBackendLocalizationEntryArray& array);
+	static bool GetRawLocText(const CBackendLocalizationEntryArray& array, wxString& strResult);
 
 	static bool IsEmptyLocalizationString(const wxString& strRawLocale);
 

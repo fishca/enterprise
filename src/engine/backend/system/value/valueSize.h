@@ -7,10 +7,6 @@ class BACKEND_API CValueSize : public CValue {
 	wxDECLARE_DYNAMIC_CLASS(CValueSize);
 public:
 
-	wxSize m_size;
-
-public:
-
 	CValueSize();
 	CValueSize(const wxSize& size);
 	virtual ~CValueSize() {}
@@ -35,11 +31,10 @@ public:
 	}
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
-	operator wxSize() const {
-		return m_size;
-	}
+	operator wxSize() const { return m_size; }
 
-
+public:
+	wxSize m_size;
 };
 
 #endif

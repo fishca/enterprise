@@ -8,9 +8,9 @@ class BACKEND_API IPropertyString : public IProperty {
 public:
 
 	wxString GetValueAsString() const {
-		wxString result;
+		static wxString result;
 		GetValueAsString(result);
-		return result;
+		return std::move(result);
 	}
 
 	bool GetValueAsString(wxString& result) const {
@@ -102,9 +102,9 @@ class BACKEND_API CPropertyTString : public IPropertyString {
 public:
 
 	wxString GetValueAsTranslateString() const {
-		wxString result;
+		static wxString result;
 		GetValueAsTranslateString(result);
-		return result;
+		return std::move(result);
 	}
 
 	bool CPropertyTString::GetValueAsTranslateString(wxString& result) const {

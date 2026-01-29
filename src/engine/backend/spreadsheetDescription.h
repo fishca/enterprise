@@ -66,8 +66,9 @@ struct CSpreadsheetColSizeChunk
 
 struct CSpreadsheetDescription {
 
-	void ResetSpreadsheet() {
+	void ResetSpreadsheet(int count) {
 		
+		m_cellAt.reserve(count);
 		m_cellAt.clear(); 
 		
 		m_rowBrakeAt.clear();

@@ -47,7 +47,7 @@ void wxGridExtCellRenderer::Draw(wxGridExt& grid,
 	dc.SetBackgroundMode(wxBRUSHSTYLE_SOLID);
 
 	static wxBrush clr;
-	
+
 	if (grid.IsThisEnabled())
 	{
 		if (isSelected)

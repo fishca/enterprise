@@ -1404,6 +1404,9 @@
     <ClInclude Include="docView\templates\docViewHelp.h">
       <Filter>docView\templates</Filter>
     </ClInclude>
+    <ClInclude Include="win\dlgs\choiceTemplate.h">
+      <Filter>win\dlg</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">

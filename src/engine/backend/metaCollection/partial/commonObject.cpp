@@ -687,16 +687,19 @@ bool IMetaObjectRecordDataHierarchyMutableRef::LoadData(CMemoryReader& dataReade
 	unsigned int size = predefinedReader.r_u32();
 	for (unsigned int i = 0; i < size; i++)
 	{
-		CPredefinedObjectValue& predefined = m_predefinedObjectVector.emplace_back();
-		predefined.m_valueGuid = predefinedReader.r_stringZ();
+		CPredefinedObjectValue entry;
 
-		predefined.m_valueCode = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		predefined.m_valueDescription = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		predefined.m_valueIsFolder = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		entry.m_valueGuid = predefinedReader.r_stringZ();
+
+		entry.m_valueCode = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		entry.m_valueDescription = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		entry.m_valueIsFolder = m_metaData->Deserialize(predefinedReader.r_stringZ());
+
+		m_predefinedObjectVector.emplace_back(std::move(entry));
 	}
 
 	//load default attributes:
-	(*m_propertyAttributePredefinedName)->LoadMeta(dataReader);
+	(*m_propertyAttributePredefined)->LoadMeta(dataReader);
 	(*m_propertyAttributeCode)->LoadMeta(dataReader);
 	(*m_propertyAttributeDescription)->LoadMeta(dataReader);
 	(*m_propertyAttributeParent)->LoadMeta(dataReader);
@@ -711,19 +714,19 @@ bool IMetaObjectRecordDataHierarchyMutableRef::SaveData(CMemoryWriter& dataWritt
 	CMemoryWriter predefinedWritter;
 	predefinedWritter.w_u32(m_predefinedObjectVector.size());
 
-	for (const CPredefinedObjectValue& predefined : m_predefinedObjectVector)
+	for (const CPredefinedObjectValue& value : m_predefinedObjectVector)
 	{
-		predefinedWritter.w_stringZ(predefined.m_valueGuid);
+		predefinedWritter.w_stringZ(value.m_valueGuid);
 
-		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueCode));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueDescription));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(predefined.m_valueIsFolder));
+		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueCode));
+		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueDescription));
+		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueIsFolder));
 	}
 
 	dataWritter.w_chunk(predefinedBlock, predefinedWritter.buffer());
 
 	//save default attributes:
-	(*m_propertyAttributePredefinedName)->SaveMeta(dataWritter);
+	(*m_propertyAttributePredefined)->SaveMeta(dataWritter);
 	(*m_propertyAttributeCode)->SaveMeta(dataWritter);
 	(*m_propertyAttributeDescription)->SaveMeta(dataWritter);
 	(*m_propertyAttributeParent)->SaveMeta(dataWritter);
@@ -742,7 +745,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(IMetaData* met
 	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
-	return (*m_propertyAttributePredefinedName)->OnCreateMetaObject(metaData, flags) &&
+	return (*m_propertyAttributePredefined)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeCode)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeDescription)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeParent)->OnCreateMetaObject(metaData, flags) &&
@@ -751,7 +754,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(IMetaData* met
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(IMetaData* metaData)
 {
-	if (!(*m_propertyAttributePredefinedName)->OnLoadMetaObject(metaData))
+	if (!(*m_propertyAttributePredefined)->OnLoadMetaObject(metaData))
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnLoadMetaObject(metaData))
@@ -771,7 +774,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(IMetaData* metaD
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(int flags)
 {
-	if (!(*m_propertyAttributePredefinedName)->OnSaveMetaObject(flags))
+	if (!(*m_propertyAttributePredefined)->OnSaveMetaObject(flags))
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnSaveMetaObject(flags))
@@ -791,7 +794,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(int flags)
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject()
 {
-	if (!(*m_propertyAttributePredefinedName)->OnDeleteMetaObject())
+	if (!(*m_propertyAttributePredefined)->OnDeleteMetaObject())
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnDeleteMetaObject())
@@ -811,7 +814,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject()
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(int flags)
 {
-	if (!(*m_propertyAttributePredefinedName)->OnBeforeRunMetaObject(flags))
+	if (!(*m_propertyAttributePredefined)->OnBeforeRunMetaObject(flags))
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnBeforeRunMetaObject(flags))
@@ -834,7 +837,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(int flags)
 {
-	if (!(*m_propertyAttributePredefinedName)->OnAfterRunMetaObject(flags))
+	if (!(*m_propertyAttributePredefined)->OnAfterRunMetaObject(flags))
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnAfterRunMetaObject(flags))
@@ -854,7 +857,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(int flags)
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject()
 {
-	if (!(*m_propertyAttributePredefinedName)->OnBeforeCloseMetaObject())
+	if (!(*m_propertyAttributePredefined)->OnBeforeCloseMetaObject())
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnBeforeCloseMetaObject())
@@ -874,7 +877,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject()
 
 bool IMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject()
 {
-	if (!(*m_propertyAttributePredefinedName)->OnAfterCloseMetaObject())
+	if (!(*m_propertyAttributePredefined)->OnAfterCloseMetaObject())
 		return false;
 
 	if (!(*m_propertyAttributeCode)->OnAfterCloseMetaObject())

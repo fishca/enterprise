@@ -6,13 +6,13 @@
 class BACKEND_API CBackendSpreadSheetDocument {
 public:
 
-	CBackendSpreadSheetDocument() {}
-	CBackendSpreadSheetDocument(const CSpreadsheetDescription& spreadsheetDesc) : m_spreadsheetDesc(spreadsheetDesc) {}
+	CBackendSpreadSheetDocument() : m_docGuid(wxNewUniqueGuid) {}
+	CBackendSpreadSheetDocument(const CSpreadsheetDescription& spreadsheetDesc) : m_spreadsheetDesc(spreadsheetDesc), m_docGuid(wxNewUniqueGuid) {}
 
 	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDesc; }
 
 	//cell 
-	void ResetSpreadsheet() { m_spreadsheetDesc.ResetSpreadsheet(); }
+	void ResetSpreadsheet(int count = 0) { m_spreadsheetDesc.ResetSpreadsheet(count); }
 	bool IsEmptySpreadsheet() const { return m_spreadsheetDesc.IsEmptySpreadsheet(); }
 
 	int GetNumberRows() const { return m_spreadsheetDesc.GetNumberRows(); }
@@ -23,7 +23,7 @@ public:
 		const wxFont& cellFont = wxNullFont, wxColour cellBackgroundColour = *wxWHITE, wxColour cellTextColour = *wxBLACK,
 		const CSpreadsheetBorderChunk borderAt[4] = {}, int row_size = 1, int col_size = 1)
 	{
-		CSpreadsheetAttrChunk entry;
+		CSpreadsheetAttrChunk& entry = m_spreadsheetDesc.m_cellAt.emplace_back();
 
 		entry.m_row = row;
 		entry.m_col = col;
@@ -44,8 +44,6 @@ public:
 
 		entry.m_row_size = row_size;
 		entry.m_col_size = col_size;
-
-		m_spreadsheetDesc.m_cellAt.push_back(entry);
 	}
 
 	const CSpreadsheetAttrChunk* GetCell(int row, int col) const
@@ -80,10 +78,11 @@ public:
 
 	//size 
 	void SetSizeRow(int row, int height = 0) {
-		CSpreadsheetRowSizeChunk entry;
+
+		CSpreadsheetRowSizeChunk& entry = m_spreadsheetDesc.m_rowHeightAt.emplace_back();
+
 		entry.m_row = row;
 		entry.m_height = height;
-		m_spreadsheetDesc.m_rowHeightAt.push_back(entry);
 	}
 
 	const CSpreadsheetRowSizeChunk* GetSizeRow(size_t idx) const {
@@ -91,12 +90,13 @@ public:
 			return nullptr;
 		return &m_spreadsheetDesc.m_rowHeightAt[idx];
 	}
-	
+
 	void SetSizeCol(int col, int width = 0) {
-		CSpreadsheetColSizeChunk entry;
+
+		CSpreadsheetColSizeChunk& entry = m_spreadsheetDesc.m_colWidthAt.emplace_back();
+
 		entry.m_col = col;
 		entry.m_width = width;
-		m_spreadsheetDesc.m_colWidthAt.push_back(entry);
 	}
 
 	const CSpreadsheetColSizeChunk* GetSizeCol(size_t idx) const {
@@ -119,23 +119,21 @@ public:
 	void AppendAreaRow(const wxString& strAreaName,
 		unsigned int start, unsigned int end)
 	{
-		CSpreadsheetAreaChunk entry;
+		CSpreadsheetAreaChunk& entry = m_spreadsheetDesc.m_rowAreaAt.emplace_back();
+
 		entry.m_label = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
-
-		m_spreadsheetDesc.m_rowAreaAt.push_back(entry);
 	}
 
 	void AppendAreaCol(const wxString& strAreaName,
 		unsigned int start, unsigned int end)
 	{
-		CSpreadsheetAreaChunk entry;
+		CSpreadsheetAreaChunk& entry = m_spreadsheetDesc.m_colAreaAt.emplace_back();
+
 		entry.m_label = strAreaName;
 		entry.m_start = start;
 		entry.m_end = end;
-
-		m_spreadsheetDesc.m_colAreaAt.push_back(entry);
 	}
 
 	const CSpreadsheetAreaChunk* GetAreaRow(size_t idx) const {
@@ -169,13 +167,19 @@ public:
 	int GetAreaNumberRows() const { return m_spreadsheetDesc.m_rowAreaAt.size(); }
 	int GetAreaNumberCols() const { return m_spreadsheetDesc.m_colAreaAt.size(); }
 
+	//guid 
+	CGuid GetDocGuid() const { return m_docGuid; }
+
 	//load/save form file
 	bool LoadFromFile(const wxString& strFileName);
 	bool SaveToFile(const wxString& strFileName);
 
 private:
 
-	//cell
+	//assoc with unique id
+	CGuid m_docGuid;
+
+	//cell desc
 	CSpreadsheetDescription m_spreadsheetDesc;
 };
 

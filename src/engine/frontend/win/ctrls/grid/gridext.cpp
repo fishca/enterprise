@@ -2358,8 +2358,12 @@ void wxGridExtRowAreaWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtRowAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Thaw();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2402,8 +2406,12 @@ void wxGridExtRowLabelWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtRowLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Thaw();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2451,8 +2459,12 @@ void wxGridExtColAreaWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtColAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Thaw();
 }
 
 wxBEGIN_EVENT_TABLE(wxGridExtColLabelWindow, wxGridExtSubwindow)
@@ -2498,8 +2510,12 @@ void wxGridExtColLabelWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtColLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Freeze();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2524,8 +2540,12 @@ void wxGridExtCornerLabelWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtCornerLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Thaw();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2547,8 +2567,11 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	m_owner->PrepareDCFor(dc, this);
 	wxRegion reg = GetUpdateRegion();
 
-	wxGridExtCellCacheArray storage;
-	wxGridExtCellCoordsArray dirtyCells = m_owner->CalcCellsExposed(reg, this);
+	static wxGridExtCellCoordsArray dirtyCells;
+	
+	m_owner->CalcCellsExposed(reg, dirtyCells, this);
+
+	static wxGridExtCellCacheArray storage;
 
 	m_owner->DrawGridSpace(dc, this);
 	m_owner->DrawGridCellArea(dc, dirtyCells, storage);
@@ -2559,6 +2582,9 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	m_owner->DrawBorder(dc, storage);
 	m_owner->DrawHighlight(dc, dirtyCells);
+
+	((wxBaseArray<wxGridExtCellCoords*>&)dirtyCells).SetCount(0);
+	((wxBaseArray<wxGridExtCellCache*>&)storage).SetCount(0);
 }
 
 void wxGridExt::Render(wxDC& dc,
@@ -2882,8 +2908,12 @@ void wxGridExtWindow::OnMouseEvent(wxMouseEvent& event)
 
 void wxGridExtWindow::OnMouseWheel(wxMouseEvent& event)
 {
+	m_owner->Freeze();
+
 	if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
+
+	m_owner->Thaw();
 }
 
 // This seems to be required for wxMotif/wxGTK otherwise the mouse
@@ -4036,7 +4066,11 @@ wxArrayInt wxGridExt::CalcRowLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 		if (rowFirst == wxNOT_FOUND)
 			continue;
 
-		for (int rowPos = GetRowPos(rowFirst); rowPos < m_numRows; rowPos++)
+		int rowPos = GetRowPos(rowFirst);
+		
+		rowlabels.Alloc(m_numRows - rowPos);
+		
+		for (; rowPos < m_numRows; rowPos++)
 		{
 			int row;
 			row = GetRowAt(rowPos);
@@ -4091,7 +4125,11 @@ wxArrayInt wxGridExt::CalcColLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 		if (colFirst == wxNOT_FOUND)
 			continue;
 
-		for (int colPos = GetColPos(colFirst); colPos < m_numCols; colPos++)
+		int colPos = GetColPos(colFirst);
+
+		colLabels.Alloc(m_numCols - colPos);
+
+		for (; colPos < m_numCols; colPos++)
 		{
 			int col;
 			col = GetColAt(colPos);
@@ -4109,12 +4147,10 @@ wxArrayInt wxGridExt::CalcColLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 	return colLabels;
 }
 
-wxGridExtCellCoordsArray wxGridExt::CalcCellsExposed(const wxRegion& reg,
-	wxGridExtWindow* gridWindow) const
+void wxGridExt::CalcCellsExposed(const wxRegion& reg,
+	wxGridExtCellCoordsArray& cellsExposed, wxGridExtWindow* gridWindow) const
 {
 	wxRect r;
-
-	wxGridExtCellCoordsArray  cellsExposed;
 
 	int left, top, right, bottom;
 	for (wxRegionIterator iter(reg); iter; ++iter)
@@ -4172,8 +4208,13 @@ wxGridExtCellCoordsArray wxGridExt::CalcCellsExposed(const wxRegion& reg,
 			// for the first dirty row and then reuse for all the next ones
 			if (cols.empty())
 			{
+				int pos = XToPos(left, gridWindow);
+				int end = XToPos(right, gridWindow);
+
+				cols.Alloc(end - pos);
+
 				// do determine the dirty columns
-				for (int pos = XToPos(left, gridWindow); pos <= XToPos(right, gridWindow); pos++)
+				for (; pos <= end; pos++)
 					cols.push_back(GetColAt(pos));
 
 				// if there are no dirty columns at all, nothing to do
@@ -4182,13 +4223,15 @@ wxGridExtCellCoordsArray wxGridExt::CalcCellsExposed(const wxRegion& reg,
 			}
 
 			const size_t count = cols.size();
-			cellsExposed.Alloc(count + cellsExposed.size());
-			for (size_t n = 0; n < count; n++)
-				cellsExposed.Add(wxGridExtCellCoords(row, cols[n]));
+			cellsExposed.Alloc(count);
+			
+			wxGridExtCellCoords coords;
+			for (size_t n = 0; n < count; n++) {	
+				coords.Set(row, cols[n]);
+				cellsExposed.Add(coords);
+			}
 		}
 	}
-
-	return cellsExposed;
 }
 
 void wxGridExt::PrepareDCFor(wxDC& dc, wxGridExtWindow* gridWindow)
@@ -6886,7 +6929,8 @@ bool wxGridExt::SetCurrentCell(const wxGridExtCellCoords& coords)
 				r.height++;
 			}
 
-			wxGridExtCellCoordsArray cells = CalcCellsExposed(r, prevGridWindow);
+			wxGridExtCellCoordsArray cells;
+			CalcCellsExposed(r, cells, prevGridWindow);
 
 			// Otherwise refresh redraws the highlight!
 			m_currentCellCoords = coords;
@@ -6933,7 +6977,7 @@ void wxGridExt::DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells
 	int i, numCells = cells.GetCount();
 	wxGridExtCellCoordsArray redrawCells;
 
-	storage.reserve(numCells);
+	storage.Alloc(numCells);
 
 	for (i = numCells - 1; i >= 0; i--)
 	{
@@ -8008,15 +8052,17 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	if (lines.empty())
 		return;
 
-	wxDCClipper clip(dc, rect);
+	//wxDCClipper clip(dc, rect);
 
 	long textWidth,
 		textHeight;
 
+	static wxArrayInt arrRow, arrCol;
+
 	if (textOrientation == wxHORIZONTAL)
-		GetTextBoxSize(dc, lines, &textWidth, &textHeight);
+		GetTextBoxSize(dc, lines, &arrRow, &arrCol, &textWidth, &textHeight);
 	else
-		GetTextBoxSize(dc, lines, &textHeight, &textWidth);
+		GetTextBoxSize(dc, lines, &arrRow, &arrCol, &textHeight, &textWidth);
 
 	int x = 0,
 		y = 0;
@@ -8057,9 +8103,10 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 			continue;
 		}
 
-		wxCoord lineWidth = 0,
-			lineHeight = 0;
-		dc.GetTextExtent(line, &lineWidth, &lineHeight);
+		wxCoord lineWidth = arrRow.Item(l),
+			lineHeight = arrCol.Item(l);
+
+		//dc.GetTextExtent(line, &lineWidth, &lineHeight);
 
 		switch (horizAlign)
 		{
@@ -8165,6 +8212,7 @@ void wxGridExt::ParseLines(const wxString& value, wxArrayString& lines)
 
 void wxGridExt::GetTextBoxSize(const wxDC& dc,
 	const wxArrayString& lines,
+	wxArrayInt* arrRow, wxArrayInt* arrCol,
 	long* width, long* height)
 {
 	wxCoord w = 0;
@@ -8172,19 +8220,41 @@ void wxGridExt::GetTextBoxSize(const wxDC& dc,
 	wxCoord lineW = 0, lineH = 0;
 
 	size_t i;
-	for (i = 0; i < lines.GetCount(); i++)
+	size_t count = lines.GetCount();
+
+	if (arrRow) 
+	{
+		arrRow->SetCount(0);
+		arrRow->Alloc(count);
+	}
+	
+	if (arrCol) 
+	{
+		arrCol->SetCount(0);
+		arrCol->Alloc(count);
+	}
+
+	for (i = 0; i < count; i++)
 	{
 		if (lines[i].empty())
 		{
+			const int char_height = dc.GetCharHeight();
+
 			// GetTextExtent() would return 0 for empty lines, but we still
 			// need to account for their height.
-			h += dc.GetCharHeight();
+			h += char_height;
+
+			if (arrRow) arrRow->Add(0);
+			if (arrCol) arrCol->Add(char_height);
 		}
 		else
 		{
 			dc.GetTextExtent(lines[i], &lineW, &lineH);
 			w = wxMax(w, lineW);
 			h += lineH;
+
+			if (arrRow) arrRow->Add(w);
+			if (arrCol) arrCol->Add(lineH);
 		}
 	}
 

@@ -126,7 +126,6 @@ protected:
 		return true;
 	}
 
-
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 

@@ -76,6 +76,7 @@ IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const
 m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaultFlag), m_metaId(0)
 {
 	m_propertyName->SetValue(strName);
+	//m_propertySynonym->SetValue(CBackendLocalization::CreateLocalizationRawLocText(synonym));
 	m_propertySynonym->SetValue(synonym);
 	m_propertyComment->SetValue(comment);
 }

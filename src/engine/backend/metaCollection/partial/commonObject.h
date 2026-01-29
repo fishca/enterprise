@@ -499,9 +499,7 @@ protected:
 	}
 
 	//searched array 
-	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
-		return true;
-	}
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const { return true; }
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -564,6 +562,15 @@ public:
 #pragma endregion 
 
 protected:
+
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+		array = { m_propertyAttributeReference->GetMetaObject() };
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const { return true; }
 
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
@@ -639,6 +646,20 @@ public:
 
 protected:
 
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+
+		array = {
+			m_propertyAttributeReference->GetMetaObject(),
+			m_propertyAttributeDeletionMark->GetMetaObject()
+		};
+
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const { return true; }
+
 	/**
 	* Property events
 	*/
@@ -691,6 +712,9 @@ class BACKEND_API IMetaObjectRecordDataHierarchyMutableRef : public IMetaObjectR
 	};
 
 public:
+
+	CMetaObjectAttributePredefined* GetDataPredefinedName() const { return m_propertyAttributePredefined->GetMetaObject(); }
+	virtual bool IsDataPredefinedName(const meta_identifier_t& id) const { return id == (*m_propertyAttributePredefined)->GetMetaID(); }
 
 	CMetaObjectAttributePredefined* GetDataCode() const { return m_propertyAttributeCode->GetMetaObject(); }
 	virtual bool IsDataCode(const meta_identifier_t& id) const { return id == (*m_propertyAttributeCode)->GetMetaID(); }
@@ -770,12 +794,32 @@ protected:
 
 protected:
 
-	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributePredefinedName = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
-	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
+	//predefined array 
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+
+		array = {
+			m_propertyAttributePredefined->GetMetaObject(),
+			m_propertyAttributeCode->GetMetaObject(),
+			m_propertyAttributeDescription->GetMetaObject(),
+			m_propertyAttributeParent->GetMetaObject(),
+			m_propertyAttributeIsFolder->GetMetaObject(),
+			m_propertyAttributeReference->GetMetaObject(),
+			m_propertyAttributeDeletionMark->GetMetaObject(),
+		};
+
+		return true;
+	}
+
+	//searched array 
+	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+
+		array = {
+			m_propertyAttributeCode->GetMetaObject(),
+			m_propertyAttributeDescription->GetMetaObject(),
+		};
+
+		return true;
+	}
 
 	//find predefined value
 	const CPredefinedObjectValue* FindPredefinedValue(const CGuid& valueGuid) const {
@@ -791,6 +835,13 @@ protected:
 
 	//process default query
 	int ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined);
+
+	//create default attributes
+	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 
 	//predefinded vector
 	std::vector<CPredefinedObjectValue> m_predefinedObjectVector;
@@ -975,9 +1026,16 @@ protected:
 
 	///////////////////////////////////////////////////////////////////
 
+	//get default attributes
+	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+		return false;
+	}
+
+	//get dimension keys 
 	virtual bool FillArrayObjectByDimention(
 		std::vector<IMetaObjectAttribute*>& array) const {
-		return false;
+		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaDimensionCLSID });
+		return true;
 	}
 
 	///////////////////////////////////////////////////////////////////

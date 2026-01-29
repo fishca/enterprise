@@ -660,6 +660,8 @@ CSourceExplorer CTreeDataObjectFolderRef::GetSourceExplorer() const
 			srcHelper.AppendSource(object, true, false);
 		else if (m_metaObject->IsDataDeletionMark(object->GetMetaID()))
 			srcHelper.AppendSource(object, true, false);
+		else if (m_metaObject->IsDataPredefinedName(object->GetMetaID()))
+			srcHelper.AppendSource(object, true, false);
 		else if (m_metaObject->IsDataParent(object->GetMetaID()))
 			srcHelper.AppendSource(object, true, false);
 		else if (m_metaObject->IsDataFolder(object->GetMetaID()))

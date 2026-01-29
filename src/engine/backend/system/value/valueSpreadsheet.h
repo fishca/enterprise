@@ -8,11 +8,12 @@ class BACKEND_API CValueSpreadsheet : public CValue {
 	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheet);
 public:
 
-	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDesc; }
+	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDoc.GetSpreadsheetDesc(); }
 
-	CValueSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc = CSpreadsheetDescription()) : CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDesc(spreadsheetDesc) {}
+	CValueSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc = CSpreadsheetDescription()) : 
+		CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDoc(spreadsheetDesc) {}
 
-	virtual bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const { return m_spreadsheetDoc.IsEmptySpreadsheet(); }
 
 	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
 	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
@@ -28,7 +29,7 @@ public:
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 private:
-	CSpreadsheetDescription m_spreadsheetDesc;
+	CBackendSpreadSheetDocument m_spreadsheetDoc;
 	static CMethodHelper m_methodHelper;
 };
 #endif 

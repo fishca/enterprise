@@ -107,6 +107,7 @@ protected:
 		const CMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
 		if (metaObjectAttributeOwner != nullptr && metaObjectAttributeOwner->GetClsidCount() > 0) {
 			array = {
+				m_propertyAttributePredefined->GetMetaObject(),
 				m_propertyAttributeCode->GetMetaObject(),
 				m_propertyAttributeDescription->GetMetaObject(),
 				m_propertyAttributeOwner->GetMetaObject(),
@@ -118,6 +119,7 @@ protected:
 		}
 		else {
 			array = {
+				m_propertyAttributePredefined->GetMetaObject(),
 				m_propertyAttributeCode->GetMetaObject(),
 				m_propertyAttributeDescription->GetMetaObject(),
 				m_propertyAttributeParent->GetMetaObject(),

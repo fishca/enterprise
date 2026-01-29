@@ -321,7 +321,9 @@ bool CGridEditor::LoadDocument(const CBackendSpreadSheetDocument& doc)
 
 bool CGridEditor::SaveDocument(CBackendSpreadSheetDocument& doc) const
 {
-	doc.ResetSpreadsheet();
+	doc.ResetSpreadsheet((GetMaxRowBrake() + 1) * (GetMaxColBrake() + 1));
+
+	static wxString value;
 
 	for (int row = 0; row < GetMaxRowBrake() + 1; row++)
 	{
@@ -357,14 +359,18 @@ bool CGridEditor::SaveDocument(CBackendSpreadSheetDocument& doc) const
 			borderAt[3].m_style = borderBottom.m_style;
 			borderAt[3].m_width = borderBottom.m_width;
 
-			wxString value;
-
 			void* tempval = m_table->GetValueAsCustom(row, col, wxT("translate"));
 			if (tempval != nullptr) {
-				value = CBackendLocalization::GetRawLocText(*((CBackendLocalizationEntryArray*)tempval));
-				delete (CBackendLocalizationEntryArray*)tempval;
+				const CBackendLocalizationEntryArray* array = static_cast<CBackendLocalizationEntryArray*>(tempval);
+				if (array != nullptr) {
+					CBackendLocalization::GetRawLocText(*array, value);
+					wxDELETE(array);
+				}
 			}
-			
+			else {
+				value.Clear();
+			}
+
 			doc.AppendCell(row, col, value,
 				hAlign, vAlign, attr->GetTextOrient(),
 				attr->GetFont(), attr->GetBackgroundColour(), attr->GetTextColour(),
@@ -786,7 +792,7 @@ void CGridEditor::OnGridChange(wxGridExtEvent& event)
 		IMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IMetaObjectSpreadsheet>();
 		if (creator != nullptr) {
 
-			CBackendSpreadSheetDocument spreadsheetDescription;
+			static CBackendSpreadSheetDocument spreadsheetDescription;
 			SaveDocument(spreadsheetDescription);
 			creator->SetSpreadsheetDesc(spreadsheetDescription.GetSpreadsheetDesc());
 		}

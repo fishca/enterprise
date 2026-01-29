@@ -147,11 +147,18 @@ bool CBackendLocalization::IsLocalizationString(const wxString& strRawLocale)
 wxString CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArray& array)
 {
 	static wxString strRawTranslate;
+	GetRawLocText(array, strRawTranslate);
+	return std::move(strRawTranslate);
+}
+
+bool CBackendLocalization::GetRawLocText(const CBackendLocalizationEntryArray& array, wxString& strResult)
+{
+	strResult.Clear();
 	for (const auto pair : array) {
-		strRawTranslate += wxString::Format(
+		strResult += wxString::Format(
 			wxT("%s = '%s';"), pair.m_code, pair.m_data);
 	}
-	return std::move(strRawTranslate);
+	return array.size() > 0;
 }
 
 bool CBackendLocalization::IsEmptyLocalizationString(const wxString& strRawLocale)
@@ -208,10 +215,13 @@ bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strRawLocal
 bool CBackendLocalization::GetTranslateGetRawLocText(const wxString& strLangCode, const wxString& strRawLocale, wxString& strResult)
 {
 	static CBackendLocalizationEntryArray array;
-	if (CreateLocalizationArray(strRawLocale, array))
-		return GetTranslateFromArray(strLangCode, array, strResult);
+	
+	if (CreateLocalizationArray(strRawLocale, array) && 
+		GetTranslateFromArray(strLangCode, array, strResult))
+		return true; 
 	
 	strResult.Clear();
+	//strResult = strRawLocale;
 	return false;
 }
 

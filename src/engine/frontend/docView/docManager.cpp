@@ -104,9 +104,9 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 CMetaDocManager::CMetaDocManager()
 	: wxDocManager(), m_findDialog(nullptr)
 {
-	AddDocTemplate(_("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(_("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(_("Help document"), wxT("*.hle"), wxEmptyString, wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(g_metaModuleCLSID, _("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(g_metaTemplateCLSID, _("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
+	AddDocTemplate(g_metaInterfaceCLSID, _("Help document"), wxT("*.hle"), wxEmptyString, wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_INVISIBLE);
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
@@ -378,7 +378,7 @@ wxDocument* CMetaDocManager::CreateDocument(const wxString& pathOrig, long flags
 	// breaking user code overriding them
 	wxDocTemplateVector templates;  //(GetVisibleTemplates(m_templates));
 
-	for (auto docTempl : m_metaTemplates)
+	for (auto docTempl : m_templateVector)
 	{
 		if (!docTempl.m_docTemplate->IsVisible())
 			continue;
@@ -589,14 +589,14 @@ wxDocTemplate* CMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, in
 	return theTemplate;
 }
 
-#include <wx/scopedarray.h>
+#include "frontend/win/dlgs/choiceTemplate.h"
 
 wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, int noTemplates, bool sort)
 {
-	wxArrayString strings;
-	wxScopedArray<wxDocTemplate*> data(noTemplates);
 	int i;
 	int n = 0;
+
+	wxVector<CChoiceTemplateItem> choices;
 
 	for (i = 0; i < noTemplates; i++)
 	{
@@ -608,17 +608,29 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 			for (j = 0; j < n; j++)
 			{
 				//filter out NOT unique documents + view combinations
-				if (templates[i]->GetDocumentName() == data[j]->GetDocumentName() &&
-					templates[i]->GetViewName() == data[j]->GetViewName()
+				if (templates[i]->GetDocumentName() == choices[j].m_template->GetDocumentName() &&
+					templates[i]->GetViewName() == choices[j].m_template->GetViewName()
 					)
 					want = false;
 			}
 
 			if (want)
 			{
-				strings.Add(templates[i]->GetDescription());
+				wxDocTemplate* docTemplate = templates[i];
+				auto iterator = std::find_if(m_templateVector.begin(), m_templateVector.end(),
+					[docTemplate](const CMetaDocManagerItem& value) { return value.m_docTemplate == docTemplate; });
 
-				data[n] = templates[i];
+				if (iterator != m_templateVector.end())
+				{
+					CChoiceTemplateItem entry;
+
+					entry.m_template = docTemplate;
+					entry.m_description = docTemplate->GetDescription();
+					entry.m_icon = iterator->m_classIcon;
+
+					choices.push_back(entry);
+				}
+
 				n++;
 			}
 		}
@@ -626,22 +638,15 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 
 	if (sort)
 	{
-		strings.Sort(); // ascending sort
+		// ascending sort
 		// Yes, this will be slow, but template lists
 		// are typically short.
-		int j;
-		n = strings.Count();
-		for (i = 0; i < n; i++)
-		{
-			for (j = 0; j < noTemplates; j++)
-			{
-				if (strings[i] == templates[j]->GetDescription())
-					data[i] = templates[j];
-			}
-		}
+		std::sort(choices.begin(), choices.end(),
+			[](const CChoiceTemplateItem& item1, const CChoiceTemplateItem& item2) {
+				return item1.m_description < item2.m_description; });
 	}
 
-	wxDocTemplate* theTemplate;
+	wxDocTemplate* theTemplate = NULL;
 
 	switch (n)
 	{
@@ -652,24 +657,22 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 
 	case 1:
 		// don't propose the user to choose if he has no choice
-		theTemplate = data[0];
+		theTemplate = choices[0].m_template;
 		break;
 
 	default:
+
 		// propose the user to choose one of several
-		theTemplate = (wxDocTemplate*)wxGetSingleChoiceData
-		(
-			_("Templates:"),
-			_("Select document type"),
-			strings,
-			(void**)data.get()
-		);
+		CDialogChoiceTemplate dlg(choices);
+		theTemplate = dlg.ShowModal() == wxID_OK ?
+			dlg.GetSelectionData() : NULL;
 	}
 
 	return theTemplate;
 }
 
 CGuid CMetaDocManager::AddDocTemplate(
+	const picture_identifier_t& id,
 	const wxString& descr,
 	const wxString& filter,
 	const wxString& dir,
@@ -679,10 +682,11 @@ CGuid CMetaDocManager::AddDocTemplate(
 	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
 	long flags)
 {
-	CDocElement data;
-	data.m_className = docTypeName;
-	data.m_classDescr = descr;
-	data.m_docTemplate = new CMetaDocTemplate(
+	CMetaDocManagerItem entry;
+
+	entry.m_className = docTypeName;
+	entry.m_classDescr = descr;
+	entry.m_docTemplate = new CMetaDocTemplate(
 		this,
 		descr,
 		filter,
@@ -695,21 +699,25 @@ CGuid CMetaDocManager::AddDocTemplate(
 		flags
 	);
 
-	data.m_guidTemplate = wxNewUniqueGuid;
-	m_metaTemplates.push_back(data);
+	const CGuid& guidTemplate = wxNewUniqueGuid;
 
-	return data.m_guidTemplate;
+	entry.m_guidTemplate = guidTemplate;
+	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(id);
+
+	m_templateVector.emplace_back(std::move(entry));
+	return guidTemplate;
 }
 
 CGuid CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
-	const wxString& filter, const wxString& ext,
+	const wxString& descr, const wxString& filter, const wxString& ext,
 	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo)
 {
-	CDocElement data;
-	data.m_clsid = clsid;
-	data.m_docTemplate = new CMetaDocTemplate(
+	CMetaDocManagerItem entry;
+
+	entry.m_clsid = clsid;
+	entry.m_docTemplate = new CMetaDocTemplate(
 		this,
-		wxEmptyString,
+		descr,
 		filter,
 		wxEmptyString,
 		ext,
@@ -720,10 +728,13 @@ CGuid CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
 		wxTEMPLATE_INVISIBLE | (!ext.IsEmpty() ? wxTEMPLATE_SAVE_AS_FILE : 0)
 	);
 
-	data.m_guidTemplate = wxNewUniqueGuid;
-	m_metaTemplates.push_back(data);
+	const CGuid& guidTemplate = wxNewUniqueGuid;
 
-	return data.m_guidTemplate;
+	entry.m_guidTemplate = guidTemplate;
+	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(clsid);
+
+	m_templateVector.push_back(std::move(entry));
+	return guidTemplate;
 }
 
 CMetaDocument* CMetaDocManager::GetCurrentDocument() const
@@ -745,7 +756,7 @@ CMetaDocument* CMetaDocManager::OpenFormMDI(IMetaObject* metaObject, CMetaDocume
 
 CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument* docParent, long flags)
 {
-	for (auto currTemplate : m_metaTemplates) {
+	for (auto currTemplate : m_templateVector) {
 
 		if (currTemplate.m_clsid == metaObject->GetClassType()) {
 

@@ -1382,7 +1382,7 @@ public:
 
 	virtual bool IsEmptyCell(int row, int col)
 	{
-		wxString result; 
+		wxString result;
 		GetValue(row, col, result);
 		return result.IsEmpty();
 	}
@@ -1393,7 +1393,7 @@ public:
 	}
 
 	wxString GetValue(int row, int col) {
-		wxString result; 
+		wxString result;
 		GetValue(row, col, result);
 		return result;
 	}
@@ -1743,7 +1743,7 @@ public:
 		wxGridExtWindow* gridWindow = NULL) const;
 	wxArrayInt CalcColLabelsExposed(const wxRegion& reg,
 		wxGridExtWindow* gridWindow = NULL) const;
-	wxGridExtCellCoordsArray CalcCellsExposed(const wxRegion& reg,
+	void CalcCellsExposed(const wxRegion& reg, wxGridExtCellCoordsArray& cellsExposed,
 		wxGridExtWindow* gridWindow = NULL) const;
 
 	void PrepareDCFor(wxDC& dc, wxGridExtWindow* gridWindow);
@@ -1788,12 +1788,12 @@ public:
 
 	bool IsFrozen() const;
 
-	void DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells, wxGridExtCellCacheArray& params = wxGridExtCellCacheArray());
+	void DrawGridCellArea(wxDC& dc, const wxGridExtCellCoordsArray& cells, wxGridExtCellCacheArray& storage = wxGridExtCellCacheArray());
 	void DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow);
 	void DrawAllGridLines();
 	void DrawAllGridWindowLines(wxDC& dc, const wxRegion& reg, wxGridExtWindow* gridWindow);
 	void DrawCell(wxDC& dc, const wxGridExtCellCoords&, wxGridExtCellCache& param = wxGridExtCellCache());
-	void DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& params);
+	void DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& storage);
 	void DrawHighlight(wxDC& dc, const wxGridExtCellCoordsArray& cells);
 	void DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow);
 	void DrawLabelFrozenBorder(wxDC& dc, wxWindow* window, bool isRow);
@@ -1855,7 +1855,15 @@ public:
 	static void ParseLines(const wxString& value, wxArrayString& lines);
 	static void GetTextBoxSize(const wxDC& dc,
 		const wxArrayString& lines,
+		wxArrayInt* arrRow, wxArrayInt* arrCol,
 		long* width, long* height);
+
+	static void GetTextBoxSize(const wxDC& dc,
+		const wxArrayString& lines,
+		long* width, long* height)
+	{
+		GetTextBoxSize(dc, lines, NULL, NULL, width, height);
+	}
 
 	// If bottomRight is invalid, i.e. == wxGridExtNoCellCoords, it defaults to
 	// topLeft. If topLeft itself is invalid, the function simply returns.
@@ -2566,7 +2574,7 @@ public:
 		}
 	}
 
-	void GetCellValue(int row, int col, wxString &s) const
+	void GetCellValue(int row, int col, wxString& s) const
 	{
 		if (m_table)
 		{

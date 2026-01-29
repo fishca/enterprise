@@ -113,31 +113,35 @@ public:
 
 	// overridden base class virtuals
 	virtual bool SetBackgroundColour(const wxColour& colour) {
-		
-		if (m_label != nullptr && m_parent != nullptr) 
+
+		if (m_label != nullptr && m_parent != nullptr)
 			m_label->SetBackgroundColour(m_parent->GetBackgroundColour());
 		else if (m_label != nullptr)
 			m_label->SetBackgroundColour(colour);
-		
-		if (m_parent != nullptr) 
+
+		if (m_parent != nullptr)
 			m_checkBox->SetBackgroundColour(m_parent->GetBackgroundColour());
 		else
 			m_checkBox->SetBackgroundColour(colour);
-		
+
 		if (m_parent != nullptr)
-			return wxCompositeWindow::SetBackgroundColour(m_parent->GetBackgroundColour());	
+			return wxCompositeWindow::SetBackgroundColour(m_parent->GetBackgroundColour());
 		return wxCompositeWindow::SetBackgroundColour(colour);
 	}
 
 	virtual bool SetForegroundColour(const wxColour& colour) {
-		m_label->SetForegroundColour(colour);
-		m_checkBox->SetForegroundColour(colour);
+		if (m_label != nullptr) 
+			m_label->SetForegroundColour(colour);
+		if (m_checkBox != nullptr)
+			m_checkBox->SetForegroundColour(colour);
 		return wxCompositeWindow::SetForegroundColour(colour);
 	}
 
 	virtual bool SetFont(const wxFont& font) {
-		m_label->SetFont(font);
-		m_checkBox->SetFont(font);
+		if (m_label != nullptr)
+			m_label->SetFont(font);
+		if (m_checkBox != nullptr)
+			m_checkBox->SetFont(font);
 		return wxCompositeWindow::SetFont(font);
 	}
 

@@ -35,7 +35,7 @@ CValueNotebook::CValueNotebook() : IValueWindow(), m_activePage(nullptr)
 wxObject* CValueNotebook::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
 	long style = m_propertyOrient->GetValueAsInteger() |
-		wxAUI_NB_TAB_MOVE |
+		wxAUI_NB_TAB_MOVE | 
 		wxAUI_NB_SCROLL_BUTTONS;
 	if (!visualHost->IsDesignerHost())
 		style |= wxAUI_NB_TAB_SPLIT;

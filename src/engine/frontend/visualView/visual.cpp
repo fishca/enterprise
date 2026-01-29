@@ -196,12 +196,12 @@ wxObject* IVisualHost::GetWxObject(const IValueFrame* baseobject) const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated)
+void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
 {
 	class CControlCreator
 	{
 	public:
-		static void CreateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject, bool firstCreated)
+		static void CreateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
 		{
 			// Create Object
 			wxObject* createdObject = visualHost->Create(obj, wxparent);
@@ -270,40 +270,29 @@ void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject
 		}
 	};
 
-	CControlCreator::CreateControl(this, obj, wxparent, parentObject, firstCreated);
+	CControlCreator::CreateControl(this, obj, wxparent, parent, firstCreated);
 }
 
-void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject)
+void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject* parent)
 {
 	class CControlUpdater
 	{
 	public:
-		static void UpdateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parentObject)
+		static void UpdateControl(IVisualHost* visualHost, IValueFrame* obj, wxWindow* wxparent, wxObject* parent)
 		{
 			// Create Object
 			wxObject* createdObject = visualHost->GetWxObject(obj);
 			wxWindow* createdWindow = nullptr;
 			wxSizer* createdSizer = nullptr;
 
-			wxWindow* parentObj = wxparent;
+			wxWindow* parentWindow = wxparent;
 
 			switch (obj->GetComponentType())
 			{
 			case COMPONENT_TYPE_WINDOW:
 			{
-				if (obj->GetClassName() == wxT("notebookPage")) {
-					CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
-					if (pageWindow)
-					{
-						createdWindow = pageWindow;
-						createdSizer = pageWindow->GetSizer();
-
-						parentObj = pageWindow;
-					}
-				}
-				else {
-					createdWindow = wxDynamicCast(createdObject, wxWindow);
-				} break;
+				createdWindow = wxDynamicCast(createdObject, wxWindow);
+				break;
 			}
 			case COMPONENT_TYPE_SIZER:
 			case COMPONENT_TYPE_SIZERITEM:
@@ -344,23 +333,23 @@ void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject*
 
 			// If the created object is a sizer and the parent object is a window, set the sizer to the window
 			if (
-				(createdSizer != nullptr && nullptr != wxDynamicCast(parentObject, wxWindow))
+				(createdSizer != nullptr && nullptr != wxDynamicCast(parent, wxWindow))
 				||
-				(nullptr == parentObject && createdSizer != nullptr)
+				(nullptr == parent && createdSizer != nullptr)
 				)
 			{
-				parentObj->SetSizer(createdSizer);
+				parentWindow->SetSizer(createdSizer);
 
-				if (parentObject)
-					createdSizer->SetSizeHints(parentObj);
+				if (parent)
+					createdSizer->SetSizeHints(parentWindow);
 
-				parentObj->SetAutoLayout(true);
-				parentObj->Layout();
+				parentWindow->SetAutoLayout(true);
+				parentWindow->Layout();
 			}
 		}
 	};
 
-	CControlUpdater::UpdateControl(this, obj, wxparent, parentObject);
+	CControlUpdater::UpdateControl(this, obj, wxparent, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

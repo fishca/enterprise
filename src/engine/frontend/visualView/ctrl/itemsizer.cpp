@@ -8,21 +8,19 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueSizerItem, IValueSizer)
 //*                            Support item                                          *
 //************************************************************************************
 
-inline wxObject* GetParentFormVisualEditor(IVisualHost* visualEdit, wxObject* wxobject)
+inline wxObject* GetParentFormVisualEditor(IVisualHost* visualEdit, IValueFrame* object)
 {
-	IValueFrame* obj = visualEdit->GetObjectBase(wxobject);
-	IValueFrame* objParent = obj->GetParent();
+	IValueFrame* parent = object->GetParent();
+	wxASSERT(parent);
 
-	wxASSERT(objParent);
-
-	wxObject* objItem = visualEdit->GetWxObject(objParent);
-
-	if (objParent->GetClassName() == wxT("notebookPage")) {
-		CPanelPage* objPage = dynamic_cast<CPanelPage*>(objItem);
-		wxASSERT(objPage);
-		return objPage->GetSizer();
+	wxObject* wxparent_object = visualEdit->GetWxObject(parent);
+	if (parent->GetClassName() == wxT("notebookPage")) {
+		CPanelPage* objPage =
+			dynamic_cast<CPanelPage*>(wxparent_object);
+		return objPage != nullptr ? objPage->GetSizer() : nullptr;
 	}
-	return objItem;
+
+	return wxparent_object;
 }
 
 inline wxObject* GetChildFormVisualEditor(IVisualHost* visualEdit, wxObject* wxobject, unsigned int childIndex)
@@ -43,9 +41,10 @@ CValueSizerItem::CValueSizerItem() : IValueFrame()
 
 void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstÑreated)
 {
+	IValueFrame* object = visualHost->GetObjectBase(wxobject);
+
 	// Get parent sizer
-	wxObject* parent = GetParentFormVisualEditor(visualHost, wxobject);
-	wxSizer* sizer = wxDynamicCast(parent, wxSizer);
+	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
 
 	// Get child window
 	wxObject* child = GetChildFormVisualEditor(visualHost, wxobject, 0);
@@ -55,7 +54,7 @@ void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 	}
 
 	// Get IObject for property access
-	CValueSizerItem* obj = wxDynamicCast(visualHost->GetObjectBase(wxobject), CValueSizerItem);
+	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
 
 	// Add the child ( window or sizer ) to the sizer
 	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
@@ -67,6 +66,8 @@ void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 			obj->GetProportion(),
 			obj->GetFlagBorder() | obj->GetFlagState(),
 			obj->GetBorder());
+
+		windowChild->Layout();
 	}
 	else if (sizerChild != nullptr) {
 		sizer->Detach(sizerChild);
@@ -74,14 +75,17 @@ void CValueSizerItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 			obj->GetProportion(),
 			obj->GetFlagBorder() | obj->GetFlagState(),
 			obj->GetBorder());
+
+		sizerChild->Layout();
 	}
 }
 
 void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
+	IValueFrame* object = visualHost->GetObjectBase(wxobject);
+
 	// Get parent sizer
-	wxObject* parent = GetParentFormVisualEditor(visualHost, wxobject);
-	wxSizer* sizer = wxDynamicCast(parent, wxSizer);
+	wxSizer* sizer = wxDynamicCast(GetParentFormVisualEditor(visualHost, object), wxSizer);
 
 	// Get child window
 	wxObject* child = GetChildFormVisualEditor(visualHost, wxobject, 0);
@@ -91,7 +95,7 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 	}
 
 	// Get IObject for property access
-	CValueSizerItem* obj = wxDynamicCast(visualHost->GetObjectBase(wxobject), CValueSizerItem);
+	CValueSizerItem* obj = wxDynamicCast(object, CValueSizerItem);
 
 	// Add the child ( window or sizer ) to the sizer
 	wxWindow* windowChild = wxDynamicCast(child, wxWindow);
@@ -108,6 +112,7 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 	}
 
 	if (windowChild != nullptr) {
+
 		if (idx == wxNOT_FOUND) {
 			sizer->Detach(windowChild);
 			sizer->Add(windowChild,
@@ -122,8 +127,10 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 				obj->GetFlagBorder() | obj->GetFlagState(),
 				obj->GetBorder());
 		}
+
 	}
 	else if (sizerChild != nullptr) {
+
 		if (idx == wxNOT_FOUND) {
 			sizer->Detach(sizerChild);
 			sizer->Add(sizerChild,
@@ -138,6 +145,14 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 				obj->GetFlagBorder() | obj->GetFlagState(),
 				obj->GetBorder());
 		}
+	}
+
+	const IValueFrame* parent = object->GetParent();
+	if (parent->GetClassName() == wxT("notebookPage")) {
+		wxObject* wxparent_object = visualHost->GetWxObject(parent);
+		CPanelPage* objPage =
+			dynamic_cast<CPanelPage*>(wxparent_object);
+		objPage->Layout();
 	}
 }
 
@@ -178,7 +193,7 @@ form_identifier_t CValueSizerItem::GetTypeForm() const
 	const IMetaObjectForm* metaFormObj =
 		m_formOwner->GetFormMetaObject();
 	wxASSERT(metaFormObj);
-	
+
 	return metaFormObj->GetTypeForm();
 }
 
@@ -205,7 +220,7 @@ bool CValueSizerItem::LoadData(CMemoryReader& reader)
 
 	m_propertyProportion->LoadData(reader);
 	//m_propertyFlagBorder->LoadData(reader);
-	
+
 	m_propertyFlagBorderLeft->LoadData(reader);
 	m_propertyFlagBorderRight->LoadData(reader);
 	m_propertyFlagBorderTop->LoadData(reader);

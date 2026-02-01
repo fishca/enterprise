@@ -7182,7 +7182,7 @@ void wxGridExt::DrawBorder(wxDC& dc, const wxGridExtCellCacheArray& storage)
 		const wxGridExtCellCache& cache = storage[n];
 		const wxGridExtCellAttrPtr& attr = cache.m_attr;
 
-		if (attr->HasAnyBorder())
+		if (attr && attr->HasAnyBorder())
 		{
 			DrawCellBorder(dc, cache.m_coords, cache.m_rect, attr.get());
 		}
@@ -12186,10 +12186,15 @@ const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
 	int total = 0;
 	for (const auto& height : m_rowHeights) {
 		int row_h = wxCalcGridScale(height, scale);
-		if (row_h < 0)
-			continue;
-		total += row_h;
-		m_rowBottoms.Add(total);
+		if (row_h > 0) 
+		{
+			total += row_h;
+			m_rowBottoms.Add(total);
+		}
+		else 
+		{
+			m_rowBottoms.Add(0);
+		}
 	}
 
 	return m_rowBottoms;
@@ -12203,10 +12208,15 @@ const wxArrayInt& wxGridExt::GetColRights(float scale) const
 	int total = 0;
 	for (const auto& width : m_colWidths) {
 		int col_w = wxCalcGridScale(width, scale);
-		if (col_w < 0)
-			continue;
-		total += col_w;
-		m_colRights.Add(total);
+		if (col_w > 0) 
+		{
+			total += col_w;
+			m_colRights.Add(total);
+		}
+		else
+		{
+			m_colRights.Add(0);
+		}
 	}
 
 	return m_colRights;

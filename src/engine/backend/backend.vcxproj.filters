@@ -664,6 +664,9 @@
     <ClInclude Include="propertyManager\property\variant\variantSpreadsheet.h">
       <Filter>propertyManager\property\variant</Filter>
     </ClInclude>
+    <ClInclude Include="system\value\valueDatabase.h">
+      <Filter>system\value</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1481,6 +1484,15 @@
       <Filter>compiler</Filter>
     </ClCompile>
     <ClCompile Include="metadataSerialization.cpp" />
+    <ClCompile Include="system\value\valueDatabaseLayer.cpp">
+      <Filter>system\value</Filter>
+    </ClCompile>
+    <ClCompile Include="system\value\valueDatabasePrepareStatement.cpp">
+      <Filter>system\value</Filter>
+    </ClCompile>
+    <ClCompile Include="system\value\valueDatabaseResultSet.cpp">
+      <Filter>system\value</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

@@ -255,6 +255,7 @@
     <ClInclude Include="system\value\valuePoint.h" />
     <ClInclude Include="system\value\valueSize.h" />
     <ClInclude Include="system\value\valueSpreadsheet.h" />
+    <ClInclude Include="system\value\valueDatabase.h" />
     <ClInclude Include="system\value\valueTable.h" />
     <ClInclude Include="system\value\valueType.h" />
     <ClInclude Include="tableInfo.h" />
@@ -540,6 +541,8 @@
     <ClCompile Include="system\systemManagerFunc.cpp" />
     <ClCompile Include="system\value\valueArray.cpp" />
     <ClCompile Include="system\value\valueColour.cpp" />
+    <ClCompile Include="system\value\valueDatabasePrepareStatement.cpp" />
+    <ClCompile Include="system\value\valueDatabaseResultSet.cpp" />
     <ClCompile Include="system\value\valueEvent.cpp" />
     <ClCompile Include="system\value\valueFile.cpp" />
     <ClCompile Include="system\value\valueFont.cpp" />
@@ -550,6 +553,7 @@
     <ClCompile Include="system\value\valuePoint.cpp" />
     <ClCompile Include="system\value\valueSize.cpp" />
     <ClCompile Include="system\value\valueSpreadsheet.cpp" />
+    <ClCompile Include="system\value\valueDatabaseLayer.cpp" />
     <ClCompile Include="system\value\valueTable.cpp" />
     <ClCompile Include="system\value\valueTableModel.cpp" />
     <ClCompile Include="system\value\valueTable_res.cpp" />

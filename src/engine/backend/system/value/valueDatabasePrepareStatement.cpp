@@ -64,8 +64,19 @@ bool CValuePreparedStatement::CallAsFunc(const long lMethodNum, CValue& pvarRetV
 
 bool CValuePreparedStatement::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) //procudre call
 {
-	if (lMethodNum == eSetParam)
+	if (m_preparedStatement != nullptr && lMethodNum == eSetParam )
 	{
+		if (paParams[1]->GetType() == eValueTypes::TYPE_BOOLEAN)
+			m_preparedStatement->SetParamBool(paParams[0]->GetInteger(), paParams[1]->GetBoolean());
+		else if (paParams[1]->GetType() == eValueTypes::TYPE_NUMBER)
+			m_preparedStatement->SetParamNumber(paParams[0]->GetInteger(), paParams[1]->GetNumber());
+		else if (paParams[1]->GetType() == eValueTypes::TYPE_DATE)
+			m_preparedStatement->SetParamDate(paParams[0]->GetInteger(), paParams[1]->GetDateTime());
+		else if (paParams[1]->GetType() == eValueTypes::TYPE_STRING)
+			m_preparedStatement->SetParamDate(paParams[0]->GetInteger(), paParams[1]->GetDateTime());
+		else 
+			m_preparedStatement->SetParamNull(paParams[0]->GetInteger());
+
 		return true;
 	}
 

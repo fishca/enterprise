@@ -309,6 +309,7 @@ protected:
 	void OnSize(wxSizeEvent& event);
 
 	void OnGridChange(wxGridExtEvent& event);
+	void OnGridZoom(wxGridExtEvent& event);
 
 private:
 

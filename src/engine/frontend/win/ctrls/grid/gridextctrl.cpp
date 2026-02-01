@@ -106,7 +106,9 @@ void wxGridExtCellRenderer::SetTextColoursAndFont(const wxGridExt& grid,
 		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
 	}
 
-	dc.SetFont(attr.GetFont());
+	// We need to adjust the font size by the ratio between the scale factor we
+	// use and the default/global scale factor used when creating fonts.
+	dc.SetFont(attr.GetFont(grid.GetGridZoom()));
 }
 
 // ----------------------------------------------------------------------------
@@ -605,9 +607,10 @@ wxGridExtCellAutoWrapStringRenderer::GetBestWidth(wxGridExt& grid,
 
 wxSize wxGridExtCellStringRenderer::DoGetBestSize(const wxGridExtCellAttr& attr,
 	wxDC& dc,
-	const wxString& text)
+	const wxString& text,
+	float scale)
 {
-	dc.SetFont(attr.GetFont());
+	dc.SetFont(attr.GetFont(scale));
 	return dc.GetMultiLineTextExtent(text);
 }
 
@@ -619,7 +622,7 @@ wxSize wxGridExtCellStringRenderer::GetBestSize(wxGridExt& grid,
 	if (grid.IsEmptyCell(row, col))
 		return wxSize(0, 0);
 
-	return DoGetBestSize(attr, dc, grid.GetCellValue(row, col));
+	return DoGetBestSize(attr, dc, grid.GetCellValue(row, col), grid.GetGridZoom());
 }
 
 void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
@@ -666,7 +669,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 
 				if (is_empty)
 				{
-					rect.width += grid.GetColSize(i);
+					rect.width += grid.GetColSize(i, grid.GetGridZoom());
 				}
 				else
 				{
@@ -698,7 +701,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 				wxGridExtCellCoords coords(row, i);
 				grid.DrawCell(dc, coords);
 
-				clip.width = grid.GetColSize(i) - 1;
+				clip.width = grid.GetColSize(i, grid.GetGridZoom()) - 1;
 				wxDCClipper clipper(dc, clip);
 
 				SetTextColoursAndFont(grid, attr, dc,
@@ -707,7 +710,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 				grid.GetCellValue(row, col, m_cacheString);
 				grid.DrawTextRectangle(dc, m_cacheString,
 					rect, hAlign, vAlign);
-				clip.x += grid.GetColSize(i) - 1;
+				clip.x += grid.GetColSize(i, grid.GetGridZoom()) - 1;
 			}
 
 			rect = rectCell;

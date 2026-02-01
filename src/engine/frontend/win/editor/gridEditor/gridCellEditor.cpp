@@ -89,7 +89,7 @@ void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 				dc.GetMultiLineTextExtent(strValue, &intStringX, &intStringY, &intLineY);
 
 				text->GetSize(&intSizeX, &intSizeY);
-				text->SetSize(intStringX > (intSizeX - 6) ? intStringX + 6 : intSizeX, intSizeY);
+				text->SetSize(intStringX > (intSizeX - 5) ? intStringX + 5 : intSizeX + dc.GetCharWidth(), intSizeY);
 
 				e.Skip();
 				break;
@@ -120,21 +120,6 @@ void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
 
 	rect.x--;
 	rect.y--;
-
-	const wxString& strValue = Text()->GetValue();
-
-	if (!strValue.IsEmpty()) {
-
-		static wxMemoryDC dc;
-
-		dc.SetFont(m_control->GetFont());
-
-		wxCoord x = 0, y = 0;
-		dc.GetMultiLineTextExtent(strValue, &x, &y);
-
-		rect.width = x + 1;
-		rect.height = y + 1;
-	}
 
 #elif !defined(__WXGTK__)
 	int extra_x = 2;
@@ -194,17 +179,16 @@ bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 
 void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
 {
-	const wxString& strValue = Text()->GetValue();
+	if (!m_value.IsEmpty()) {
 
-	if (!strValue.IsEmpty()) {
+		wxCoord height = 0;
 
 		static wxMemoryDC dc;
-		dc.SetFont(m_control->GetFont());
+		dc.SetFont(grid->GetCellFont(row, col, grid->GetGridZoom()));
+		dc.GetMultiLineTextExtent(m_value, NULL, &height);
 
-		wxCoord x = 0, y = 0;
-		dc.GetMultiLineTextExtent(strValue, &x, &y);
-
-		grid->SetRowSize(row, y);
+		if (height > grid->GetRowSize(row, grid->GetGridZoom()))
+			grid->SetRowSize(row, height, grid->GetGridZoom());
 	}
 
 	grid->GetTable()->SetValue(row, col, m_value);

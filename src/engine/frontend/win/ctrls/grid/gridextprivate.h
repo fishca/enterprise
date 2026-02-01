@@ -795,39 +795,40 @@ public:
 	}
 	virtual int GetLineStartPos(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetRowTop(line);
+		return grid->GetRowTop(line, grid->GetGridZoom());
 	}
 	virtual int GetLineEndPos(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetRowBottom(line);
+		return grid->GetRowBottom(line, grid->GetGridZoom());
 	}
 	virtual int GetLineSize(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetRowHeight(line);
+		return grid->GetRowHeight(line, grid->GetGridZoom());
 	}
 	virtual const wxArrayInt& GetLineEnds(const wxGridExt* grid) const wxOVERRIDE
-	{
-		return grid->m_rowBottoms;
+	{		
+		return grid->GetRowBottoms(grid->GetGridZoom());
 	}
+
 	virtual int GetDefaultLineSize(const wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetDefaultRowSize();
+		return grid->GetDefaultRowSize(grid->GetGridZoom());
 	}
 	virtual int GetMinimalAcceptableLineSize(const wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetRowMinimalAcceptableHeight();
+		return grid->GetRowMinimalAcceptableHeight(grid->GetGridZoom());
 	}
 	virtual int GetMinimalLineSize(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetRowMinimalHeight(line);
+		return grid->GetRowMinimalHeight(line, grid->GetGridZoom());
 	}
 	virtual void SetLineSize(wxGridExt* grid, int line, int size) const wxOVERRIDE
 	{
-		grid->SetRowSize(line, size);
+		grid->SetRowSize(line, size, grid->GetGridZoom());
 	}
 	virtual void SetDefaultLineSize(wxGridExt* grid, int size, bool resizeExisting) const wxOVERRIDE
 	{
-		grid->SetDefaultRowSize(size, resizeExisting);
+		grid->SetDefaultRowSize(size, grid->GetGridZoom(), resizeExisting);
 	}
 	virtual void HandleLineAutosize(wxGridExt* grid, int line, const wxMouseEvent& event) const wxOVERRIDE
 	{
@@ -855,7 +856,7 @@ public:
 	}
 	virtual int GetHeaderWindowSize(wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetRowLabelSize();
+		return grid->GetRowLabelSize(grid->GetGridZoom());
 	}
 
 	virtual wxGridExtWindow* GetFrozenGrid(wxGridExt* grid) const wxOVERRIDE
@@ -899,7 +900,7 @@ public:
 	virtual void SelectArea(wxGridExt* grid, int line, wxMouseEvent& event) const
 	{
 		wxGridExtCellArea* rowArea = grid->GetRowArea(line);
-		if (rowArea != NULL) 
+		if (rowArea != NULL)
 		{
 			grid->m_selection->ClearSelection();
 			grid->m_selection->SelectBlock(rowArea->m_start, 0, rowArea->m_end, grid->GetNumberCols() - 1, event);
@@ -922,7 +923,7 @@ public:
 
 	virtual void MakeAreaName(wxGridExt* grid, int line, wxMouseEvent& event) const wxOVERRIDE
 	{
-		grid->MakeRowAreaLabel(grid->GetRowArea(line));		
+		grid->MakeRowAreaLabel(grid->GetRowArea(line));
 	}
 
 	virtual wxGridExt::EventResult SendEvent(wxGridExt* grid, wxEventType eventType,
@@ -1037,39 +1038,40 @@ public:
 	}
 	virtual int GetLineStartPos(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetColLeft(line);
+		return grid->GetColLeft(line, grid->GetGridZoom());
 	}
 	virtual int GetLineEndPos(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetColRight(line);
+		return grid->GetColRight(line, grid->GetGridZoom());
 	}
 	virtual int GetLineSize(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetColWidth(line);
+		return grid->GetColWidth(line, grid->GetGridZoom());
 	}
 	virtual const wxArrayInt& GetLineEnds(const wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->m_colRights;
+		return grid->GetColRights(grid->GetGridZoom());
+
 	}
 	virtual int GetDefaultLineSize(const wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetDefaultColSize();
+		return grid->GetDefaultColSize(grid->GetGridZoom());
 	}
 	virtual int GetMinimalAcceptableLineSize(const wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetColMinimalAcceptableWidth();
+		return grid->GetColMinimalAcceptableWidth(grid->GetGridZoom());
 	}
 	virtual int GetMinimalLineSize(const wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		return grid->GetColMinimalWidth(line);
+		return grid->GetColMinimalWidth(line, grid->GetGridZoom());
 	}
 	virtual void SetLineSize(wxGridExt* grid, int line, int size) const wxOVERRIDE
 	{
-		grid->SetColSize(line, size);
+		grid->SetColSize(line, size, grid->GetGridZoom());
 	}
 	virtual void SetDefaultLineSize(wxGridExt* grid, int size, bool resizeExisting) const wxOVERRIDE
 	{
-		grid->SetDefaultColSize(size, resizeExisting);
+		grid->SetDefaultColSize(size, grid->GetGridZoom(), resizeExisting);
 	}
 	virtual void HandleLineAutosize(wxGridExt* grid, int line, const wxMouseEvent& event) const wxOVERRIDE
 	{
@@ -1097,7 +1099,7 @@ public:
 	}
 	virtual int GetHeaderWindowSize(wxGridExt* grid) const wxOVERRIDE
 	{
-		return grid->GetColLabelSize();
+		return grid->GetColLabelSize(grid->GetGridZoom());
 	}
 
 	virtual wxGridExtWindow* GetFrozenGrid(wxGridExt* grid) const wxOVERRIDE
@@ -1164,7 +1166,7 @@ public:
 
 	virtual void MakeAreaName(wxGridExt* grid, int line, wxMouseEvent& event) const wxOVERRIDE
 	{
-		grid->MakeColAreaName(grid->GetColArea(line));	
+		grid->MakeColAreaName(grid->GetColArea(line));
 	}
 
 	virtual wxGridExt::EventResult SendEvent(wxGridExt* grid, wxEventType eventType,

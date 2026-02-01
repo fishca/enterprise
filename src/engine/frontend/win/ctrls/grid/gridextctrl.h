@@ -56,7 +56,8 @@ protected:
 	// calc the string extent for given string/font
 	wxSize DoGetBestSize(const wxGridExtCellAttr& attr,
 		wxDC& dc,
-		const wxString& text);
+		const wxString& text, 
+		float scale = 1.0f);
 
 private:
 

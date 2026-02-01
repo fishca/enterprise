@@ -299,7 +299,7 @@ public:
 		wxEvtHandler* evtHandler) wxOVERRIDE;
 
 	virtual void SetSize(const wxRect& rect) wxOVERRIDE;
-	virtual void Show(bool show, wxGridExtCellAttr* attr = NULL) wxOVERRIDE;
+	virtual void Show(bool show, wxGridExtCellAttr* attr = NULL, float scale = 1.0f) wxOVERRIDE;
 
 	virtual bool IsAcceptedKey(wxKeyEvent& event) wxOVERRIDE;
 	virtual void BeginEdit(int row, int col, wxGridExt* grid) wxOVERRIDE;

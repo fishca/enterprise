@@ -23,9 +23,9 @@
 #include <iterator>
 #endif
 
-	// ----------------------------------------------------------------------------
-	// constants
-	// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// constants
+// ----------------------------------------------------------------------------
 
 extern const char wxGridExtNameStr[];
 
@@ -123,13 +123,38 @@ class wxGridExtRowOperations;
 class wxGridExtColumnOperations;
 class wxGridExtDirectionOperations;
 
-
 // ----------------------------------------------------------------------------
 // macros
 // ----------------------------------------------------------------------------
 
 #define wxSafeIncRef(p) if ( p ) (p)->IncRef()
 #define wxSafeDecRef(p) if ( p ) (p)->DecRef()
+
+// ----------------------------------------------------------------------------
+// global grid scale 
+// ----------------------------------------------------------------------------
+
+inline int wxCalcGridScale(int v, float s)
+{
+	const float scale = v * s;
+	const float scale_int = int(scale);
+
+	if (scale_int + 0.5f <= scale)
+		return scale_int + 1;
+
+	return scale_int;
+}
+
+inline int wxRestoreGridScale(int v, float s)
+{
+	const float scale = v / s;
+	const float scale_int = int(scale);
+
+	if (scale_int + 0.5f <= scale)
+		return scale_int + 1;
+
+	return scale_int;
+}
 
 // ----------------------------------------------------------------------------
 // wxGridExtCellWorker: common base class for wxGridExtCellRenderer and
@@ -254,7 +279,6 @@ protected:
 
 // Smart pointer to wxGridExtCellRenderer, calling DecRef() on it automatically.
 typedef wxObjectDataPtr<wxGridExtCellRenderer> wxGridExtCellRendererPtr;
-
 
 // ----------------------------------------------------------------------------
 // Helper classes used by wxGridExtCellEditor::TryActivate() and DoActivate().
@@ -417,7 +441,7 @@ public:
 
 	// Show or hide the edit control, use the specified attributes to set
 	// colours/fonts for it
-	virtual void Show(bool show, wxGridExtCellAttr* attr = NULL);
+	virtual void Show(bool show, wxGridExtCellAttr* attr = NULL, float scale = 1.0f);
 
 	// Draws the part of the cell not occupied by the control: the base class
 	// version just fills it with background colour from the attribute
@@ -762,6 +786,7 @@ class wxGridExtCellAttr : public wxSharedClientDataContainer,
 	public wxRefCounter
 {
 public:
+
 	enum wxAttrKind
 	{
 		Any,
@@ -786,7 +811,7 @@ public:
 		const wxFont& font,
 		int hAlign,
 		int vAlign)
-		: m_colText(colText), m_colBack(colBack), m_font(font)
+		: m_colText(colText), m_colBack(colBack), m_font(font), m_scaledFont(font)
 	{
 		Init();
 		SetAlignment(hAlign, vAlign);
@@ -800,7 +825,8 @@ public:
 	void SetTextColour(const wxColour& colText) { m_colText = colText; }
 	void SetTextOrient(int orient) { m_orientText = orient; }
 	void SetBackgroundColour(const wxColour& colBack) { m_colBack = colBack; }
-	void SetFont(const wxFont& font) { m_font = font; }
+	void SetFont(const wxFont& font) { m_font = m_scaledFont = font; }
+
 	void SetAlignment(int hAlign, int vAlign)
 	{
 		m_hAlign = hAlign;
@@ -861,7 +887,7 @@ public:
 	const wxColour& GetTextColour() const;
 	const int GetTextOrient() const;
 	const wxColour& GetBackgroundColour() const;
-	const wxFont& GetFont() const;
+	const wxFont& GetFont(float scale = 1.0f) const;
 	void GetAlignment(int* hAlign, int* vAlign) const;
 
 	// unlike GetAlignment() which always overwrites its output arguments with
@@ -930,6 +956,8 @@ private:
 		m_vAlign;
 	int      m_sizeRows,
 		m_sizeCols;
+
+	mutable wxFont m_scaledFont; // mutable so it can be modified in const method
 
 	wxGridExtCellBorder m_borderLeft;
 	wxGridExtCellBorder	m_borderRight;
@@ -2029,16 +2057,15 @@ public:
 
 	void SetTabBehaviour(TabBehaviour behaviour) { m_tabBehaviour = behaviour; }
 
-
 	// ------ label and gridline formatting
 	//
-	int      GetDefaultRowLabelSize() const { return FromDIP(WXGRID_DEFAULT_ROW_LABEL_WIDTH); }
-	int      GetRowLabelSize() const { return m_rowLabelWidth; }
-	int      GetDefaultColLabelSize() const { return FromDIP(WXGRID_DEFAULT_COL_LABEL_HEIGHT); }
-	int      GetColLabelSize() const { return m_colLabelHeight; }
+	int      GetDefaultRowLabelSize(float scale = 1.0f) const { return wxCalcGridScale(FromDIP(WXGRID_DEFAULT_ROW_LABEL_WIDTH), scale); }
+	int      GetRowLabelSize(float scale = 1.0f) const { return wxCalcGridScale(m_rowLabelWidth, scale); }
+	int      GetDefaultColLabelSize(float scale = 1.0f) const { return wxCalcGridScale(FromDIP(WXGRID_DEFAULT_COL_LABEL_HEIGHT), scale); }
+	int      GetColLabelSize(float scale = 1.0f) const { return wxCalcGridScale(m_colLabelHeight, scale); }
 	wxColour GetLabelBackgroundColour() const { return m_labelBackgroundColour; }
 	wxColour GetLabelTextColour() const { return m_labelTextColour; }
-	wxFont   GetLabelFont() const { return m_labelFont; }
+	wxFont   GetLabelFont(float scale = 1.0f) const { return scale != 1 ? m_labelFont.Scaled(scale) : m_labelFont; }
 	void     GetRowLabelAlignment(int* horiz, int* vert) const;
 	void     GetColLabelAlignment(int* horiz, int* vert) const;
 	void     GetCornerLabelAlignment(int* horiz, int* vert) const;
@@ -2056,6 +2083,8 @@ public:
 	int      GetCellHighlightROPenWidth() const { return m_cellHighlightROPenWidth; }
 	wxColor  GetGridFrozenBorderColour() const { return m_gridFrozenBorderColour; }
 	int      GetGridFrozenBorderPenWidth() const { return m_gridFrozenBorderPenWidth; }
+
+	float	 GetGridZoom() const { return m_zoomScale; }
 
 	// this one will use wxHeaderCtrl for the column labels
 	bool UseNativeColHeader(bool native = true);
@@ -2084,6 +2113,12 @@ public:
 	void     SetCellHighlightROPenWidth(int width);
 	void     SetGridFrozenBorderColour(const wxColour&);
 	void     SetGridFrozenBorderPenWidth(int width);
+
+	// set grid zoom
+	void	 SetGridZoomIn(int point = 1) { SetGridZoom(point); }
+	void	 SetGridZoomOut(int point = 1) { SetGridZoom(-point); }
+
+	void	 SetGridZoom(int point = 1);
 
 	// interactive grid mouse operations control
 	// -----------------------------------------
@@ -2243,11 +2278,11 @@ public:
 
 	// ------ row and col formatting
 	//
-	int			GetDefaultRowSize() const;
-	int			GetRowSize(int row) const;
+	int			GetDefaultRowSize(float scale = 1.0f) const;
+	int			GetRowSize(int row, float scale = 1.0f) const;
 	bool		IsRowShown(int row) const { return GetRowSize(row) != 0; }
-	int			GetDefaultColSize() const;
-	int			GetColSize(int col) const;
+	int			GetDefaultColSize(float scale = 1.0f) const;
+	int			GetColSize(int col, float scale = 1.0f) const;
 	bool		IsColShown(int col) const { return GetColSize(col) != 0; }
 	wxColour	GetDefaultCellBackgroundColour() const;
 	wxColour	GetCellBackgroundColour(int row, int col) const;
@@ -2255,7 +2290,7 @@ public:
 	wxColour	GetCellTextColour(int row, int col) const;
 	int			GetCellTextOrient(int row, int col) const;
 	wxFont		GetDefaultCellFont() const;
-	wxFont		GetCellFont(int row, int col) const;
+	wxFont		GetCellFont(int row, int col, float scale = 1.0f) const;
 	void		GetDefaultCellAlignment(int* horiz, int* vert) const;
 	void		GetCellAlignment(int row, int col, int* horiz, int* vert) const;
 
@@ -2308,13 +2343,13 @@ public:
 	}
 
 	// ------ row and col sizes
-	void     SetDefaultRowSize(int height, bool resizeExistingRows = false);
-	void     SetRowSize(int row, int height);
+	void     SetDefaultRowSize(int height, float scale = 1.0f, bool resizeExistingRows = false);
+	void     SetRowSize(int row, int height, float scale = 1.0f);
 	void     HideRow(int row) { DoSetRowSize(row, 0); }
 	void     ShowRow(int row) { DoSetRowSize(row, -1); }
 
-	void     SetDefaultColSize(int width, bool resizeExistingCols = false);
-	void     SetColSize(int col, int width);
+	void     SetDefaultColSize(int width, float scale = 1.0f, bool resizeExistingCols = false);
+	void     SetColSize(int col, int width, float scale = 1.0f);
 	void     HideCol(int col) { DoSetColSize(col, 0); }
 	void     ShowCol(int col) { DoSetColSize(col, -1); }
 
@@ -2420,8 +2455,8 @@ public:
 	// column won't be resized to be lesser width - this must be called during
 	// the grid creation because it won't resize the column if it's already
 	// narrower than the minimal width
-	void     SetColMinimalWidth(int col, int width);
-	void     SetRowMinimalHeight(int row, int width);
+	void     SetColMinimalWidth(int col, int width, float scale = 1.0f);
+	void     SetRowMinimalHeight(int row, int width, float scale = 1.0f);
 
 	/*  These members can be used to query and modify the minimal
 	 *  acceptable size of grid rows and columns. Call this function in
@@ -2430,10 +2465,10 @@ public:
 	 *  Like the members SetColMinimalWidth and SetRowMinimalWidth,
 	 *  the existing rows or columns will not be checked/resized.
 	 */
-	void     SetColMinimalAcceptableWidth(int width);
-	void     SetRowMinimalAcceptableHeight(int width);
-	int      GetColMinimalAcceptableWidth() const;
-	int      GetRowMinimalAcceptableHeight() const;
+	void     SetColMinimalAcceptableWidth(int width, float scale = 1.0f);
+	void     SetRowMinimalAcceptableHeight(int width, float scale = 1.0f);
+	int      GetColMinimalAcceptableWidth(float scale = 1.0f) const;
+	int      GetRowMinimalAcceptableHeight(float scale = 1.0f) const;
 
 	void     SetDefaultCellBackgroundColour(const wxColour&);
 	void     SetCellBackgroundColour(int row, int col, const wxColour&);
@@ -2969,12 +3004,16 @@ public:
 #endif // WXWIN_COMPATIBILITY_2_8
 
 
-		// override some base class functions
-		virtual void Fit() wxOVERRIDE;
+	// override some base class functions
+	virtual void Fit() wxOVERRIDE;
 	virtual void SetFocus() wxOVERRIDE;
 
 	// implementation only
 	void CancelMouseCapture();
+
+	//Get line bottoms and rights
+	const wxArrayInt& GetRowBottoms(float scale = 1.0f) const;
+	const wxArrayInt& GetColRights(float scale = 1.0f) const;
 
 protected:
 	virtual wxSize DoGetBestSize() const wxOVERRIDE;
@@ -3049,7 +3088,7 @@ protected:
 	int        m_defaultRowHeight;
 	int        m_minAcceptableRowHeight;
 	wxArrayInt m_rowHeights;
-	wxArrayInt m_rowBottoms;
+	mutable wxArrayInt m_rowBottoms;
 
 	// init the m_colWidths/Rights arrays
 	void InitColWidths();
@@ -3057,7 +3096,7 @@ protected:
 	int        m_defaultColWidth;
 	int        m_minAcceptableColWidth;
 	wxArrayInt m_colWidths;
-	wxArrayInt m_colRights;
+	mutable wxArrayInt m_colRights;
 
 	int m_sortCol;
 	bool m_sortIsAscending;
@@ -3066,17 +3105,20 @@ protected:
 		m_nativeColumnLabels;
 
 	// get the col/row coords
-	int GetColWidth(int col) const;
-	int GetColLeft(int col) const;
-	int GetColRight(int col) const;
+	int GetColWidth(int col, float scale = 1.0f) const;
+	int GetColLeft(int col, float scale = 1.0f) const;
+	int GetColRight(int col, float scale = 1.0f) const;
 
 	// this function must be public for compatibility...
 public:
-	int GetRowHeight(int row) const;
+	int GetRowHeight(int row, float scale = 1.0f) const;
+
 protected:
 
-	int GetRowTop(int row) const;
-	int GetRowBottom(int row) const;
+	int GetRowTop(int row, float scale = 1.0f) const;
+	int GetRowBottom(int row, float scale = 1.0f) const;
+
+	float m_zoomScale;
 
 	int m_rowAreaWidth;
 	int m_rowLabelWidth;
@@ -3125,8 +3167,8 @@ protected:
 		m_rowMinHeights;
 
 	// get the minimal width of the given column/row
-	int GetColMinimalWidth(int col) const;
-	int GetRowMinimalHeight(int col) const;
+	int GetColMinimalWidth(int col, float scale = 1.0f) const;
+	int GetRowMinimalHeight(int col, float scale = 1.0f) const;
 
 	// do we have some place to store attributes in?
 	bool CanHaveAttributes() const;
@@ -3964,6 +4006,7 @@ wxDECLARE_EVENT(wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_SORT, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_CHANGED, wxGridExtEvent);
+wxDECLARE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
 typedef void (wxEvtHandler::* wxGridExtEventFunction)(wxGridExtEvent&);
@@ -4020,6 +4063,7 @@ typedef void (wxEvtHandler::* wxGridExtEditorCreatedEventFunction)(wxGridExtEdit
 #define EVT_GRID_CMD_CELL_BEGIN_DRAG(id, fn)     wx__DECLARE_GRIDEVT(CELL_BEGIN_DRAG, id, fn)
 #define EVT_GRID_CMD_CHANGED(id, fn)             wx__DECLARE_GRIDEVT(CHANGED, id, fn)
 #define EVT_GRID_CMD_TABBING(id, fn)             wx__DECLARE_GRIDEVT(TABBING, id, fn)
+#define EVT_GRID_CMD_ZOOM(id, fn)				 wx__DECLARE_GRIDEVT(ZOOM, id, fn)
 
 // same as above but for any id (exists mainly for backwards compatibility but
 // then it's also true that you rarely have multiple grid in the same window)
@@ -4048,6 +4092,7 @@ typedef void (wxEvtHandler::* wxGridExtEditorCreatedEventFunction)(wxGridExtEdit
 #define EVT_GRID_CELL_BEGIN_DRAG(fn)     EVT_GRID_CMD_CELL_BEGIN_DRAG(wxID_ANY, fn)
 #define EVT_GRID_CHANGED(fn)             EVT_GRID_CMD_CHANGED(wxID_ANY, fn)
 #define EVT_GRID_TABBING(fn)             EVT_GRID_CMD_TABBING(wxID_ANY, fn)
+#define EVT_GRID_ZOOM(fn)				 EVT_GRID_CMD_ZOOM(wxID_ANY, fn)
 
 // we used to have a single wxEVT_GRID_CELL_CHANGE event but it was split into
 // wxEVT_GRID_CELL_CHANGING and CHANGED ones in wx 2.9.0, however the CHANGED

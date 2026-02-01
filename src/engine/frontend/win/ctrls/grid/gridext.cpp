@@ -156,6 +156,7 @@ wxDEFINE_EVENT(wxEVT_GRID_EDITOR_SHOWN, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
 wxDEFINE_EVENT(wxEVT_GRID_CHANGED, wxGridExtEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
 // ============================================================================
@@ -304,7 +305,7 @@ void wxGridExtHeaderLabelsRenderer::DrawLabel(const wxGridExt& grid,
 	int textOrientation) const
 {
 	dc.SetBackgroundMode(wxBRUSHSTYLE_TRANSPARENT);
-	dc.SetFont(grid.GetLabelFont());
+	dc.SetFont(grid.GetLabelFont(grid.GetGridZoom()));
 
 	// Draw text in a different colour and with a shadow when the control
 	// is disabled.
@@ -665,15 +666,25 @@ const wxColour& wxGridExtCellAttr::GetBackgroundColour() const
 	}
 }
 
-const wxFont& wxGridExtCellAttr::GetFont() const
+const wxFont& wxGridExtCellAttr::GetFont(float scale) const
 {
 	if (HasFont())
 	{
-		return m_font;
+		if (scale == 1.0f)
+			return m_font;
+
+		const double fractionalPointSize = m_scaledFont.GetFractionalPointSize();
+		const float fractionalScale = fractionalPointSize / m_font.GetPointSize();
+
+		if (fractionalScale == scale)
+			return m_scaledFont;
+
+		m_scaledFont = m_font.Scaled(scale);
+		return m_scaledFont;
 	}
 	else if (m_defGridAttr && m_defGridAttr != this)
 	{
-		return m_defGridAttr->GetFont();
+		return m_defGridAttr->GetFont(scale);
 	}
 	else
 	{
@@ -2360,7 +2371,9 @@ void wxGridExtRowAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
 	m_owner->Thaw();
@@ -2408,7 +2421,9 @@ void wxGridExtRowLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
 	m_owner->Thaw();
@@ -2461,7 +2476,9 @@ void wxGridExtColAreaWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
 	m_owner->Thaw();
@@ -2512,10 +2529,12 @@ void wxGridExtColLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
-	m_owner->Freeze();
+	m_owner->Thaw();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2542,7 +2561,9 @@ void wxGridExtCornerLabelWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
 	m_owner->Thaw();
@@ -2568,7 +2589,7 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	wxRegion reg = GetUpdateRegion();
 
 	static wxGridExtCellCoordsArray dirtyCells;
-	
+
 	m_owner->CalcCellsExposed(reg, dirtyCells, this);
 
 	static wxGridExtCellCacheArray storage;
@@ -2910,7 +2931,9 @@ void wxGridExtWindow::OnMouseWheel(wxMouseEvent& event)
 {
 	m_owner->Freeze();
 
-	if (!m_owner->ProcessWindowEvent(event))
+	if (event.ControlDown())
+		m_owner->SetGridZoom(event.m_wheelRotation > 0 ? 1 : -1);
+	else if (!m_owner->ProcessWindowEvent(event))
 		event.Skip();
 
 	m_owner->Thaw();
@@ -3247,9 +3270,7 @@ wxGridExt::SetTable(wxGridExtTableBase* table,
 
 		// kill row and column size arrays
 		m_colWidths.Empty();
-		m_colRights.Empty();
 		m_rowHeights.Empty();
-		m_rowBottoms.Empty();
 	}
 
 	if (table)
@@ -3321,7 +3342,7 @@ void wxGridExt::Init()
 	m_attrCache.attr = NULL;
 
 	m_labelFont = GetFont();
-	m_labelFont.SetWeight(wxFONTWEIGHT_BOLD);
+	//m_labelFont.SetWeight(wxFONTWEIGHT_BOLD);
 
 	m_rowLabelHorizAlign = wxALIGN_CENTRE;
 	m_rowLabelVertAlign = wxALIGN_CENTRE;
@@ -3343,6 +3364,8 @@ void wxGridExt::Init()
 
 	m_minAcceptableColWidth =
 		m_minAcceptableRowHeight = 0;
+
+	m_zoomScale = 1.0f;
 
 	m_gridLineColour = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
 	m_gridLinesEnabled = true;
@@ -3421,82 +3444,110 @@ void wxGridExt::Init()
 void wxGridExt::InitRowHeights()
 {
 	m_rowHeights.Empty();
-	m_rowBottoms.Empty();
-
 	m_rowHeights.Alloc(m_numRows);
-	m_rowBottoms.Alloc(m_numRows);
-
 	m_rowHeights.Add(m_defaultRowHeight, m_numRows);
-
-	for (int i = 0; i < m_numRows; i++)
-	{
-		int rowBottom = (GetRowPos(i) + 1) * m_defaultRowHeight;;
-		m_rowBottoms.Add(rowBottom);
-	}
 }
 
 void wxGridExt::InitColWidths()
 {
 	m_colWidths.Empty();
-	m_colRights.Empty();
-
 	m_colWidths.Alloc(m_numCols);
-	m_colRights.Alloc(m_numCols);
-
 	m_colWidths.Add(m_defaultColWidth, m_numCols);
-
-	for (int i = 0; i < m_numCols; i++)
-	{
-		int colRight = (GetColPos(i) + 1) * m_defaultColWidth;
-		m_colRights.Add(colRight);
-	}
 }
 
-int wxGridExt::GetColWidth(int col) const
+int wxGridExt::GetColWidth(int col, float scale) const
 {
 	if (m_colWidths.IsEmpty())
-		return m_defaultColWidth;
+		return wxCalcGridScale(m_defaultColWidth, scale);
+
+	const int width = m_colWidths[col];
 
 	// a negative width indicates a hidden column
-	return m_colWidths[col] > 0 ? m_colWidths[col] : 0;
+	return width > 0 ? (width * scale) : 0;
 }
 
-int wxGridExt::GetColLeft(int col) const
+int wxGridExt::GetColLeft(int col, float scale) const
 {
-	if (m_colRights.IsEmpty())
-		return GetColPos(col) * m_defaultColWidth;
+	if (m_colWidths.IsEmpty())
+		return GetColPos(col) * wxCalcGridScale(m_defaultColWidth, scale);
 
-	return m_colRights[col] - GetColWidth(col);
+	int width = 0;
+
+	for (int idx = 0; idx < col; idx++)
+	{
+		const int& w_col = *(m_colWidths.begin() + idx);
+		if (w_col < 0)
+			continue;
+		width += (w_col * scale);
+	}
+
+	return width;
 }
 
-int wxGridExt::GetColRight(int col) const
+int wxGridExt::GetColRight(int col, float scale) const
 {
-	return m_colRights.IsEmpty() ? (GetColPos(col) + 1) * m_defaultColWidth
-		: m_colRights[col];
+	if (m_colWidths.IsEmpty())
+		return (GetColPos(col) + 1) * wxCalcGridScale(m_defaultColWidth, scale);
+
+	int width = 0;
+
+	for (int idx = 0; idx <= col; idx++)
+	{
+		const int& w_col = *(m_colWidths.begin() + idx);
+		if (w_col < 0)
+			continue;
+		width += (w_col * scale);
+	}
+
+	return width;
 }
 
-int wxGridExt::GetRowHeight(int row) const
+int wxGridExt::GetRowHeight(int row, float scale) const
 {
 	// no custom heights / hidden rows
 	if (m_rowHeights.IsEmpty())
-		return m_defaultRowHeight;
+		return wxCalcGridScale(m_defaultRowHeight, scale);
+
+	const int height = m_rowHeights[row];
 
 	// a negative height indicates a hidden row
-	return m_rowHeights[row] > 0 ? m_rowHeights[row] : 0;
+	return height > 0 ? wxCalcGridScale(height, scale) : 0;
 }
 
-int wxGridExt::GetRowTop(int row) const
+int wxGridExt::GetRowTop(int row, float scale) const
 {
-	if (m_rowBottoms.IsEmpty())
-		return GetRowPos(row) * m_defaultRowHeight;
+	if (m_rowHeights.IsEmpty())
+		return GetRowPos(row) * wxCalcGridScale(m_defaultRowHeight, scale);
 
-	return m_rowBottoms[row] - GetRowHeight(row);
+	int height = 0;
+
+	for (int idx = 0; idx < row; idx++)
+	{
+		const int& h_row = *(m_rowHeights.begin() + idx);
+		if (h_row < 0)
+			continue;
+		height += wxCalcGridScale(h_row, scale);
+	}
+
+	return height;
 }
 
-int wxGridExt::GetRowBottom(int row) const
+int wxGridExt::GetRowBottom(int row, float scale) const
 {
-	return m_rowBottoms.IsEmpty() ? (GetRowPos(row) + 1) * m_defaultRowHeight
-		: m_rowBottoms[row];
+	if (m_rowHeights.IsEmpty())
+		return (GetRowPos(row) + 1) * wxCalcGridScale(m_defaultRowHeight, scale);
+
+	int height = 0;
+
+	for (int idx = 0; idx <= row; idx++)
+	{
+		const int& h_row = *(m_rowHeights.begin() + idx);
+		if (h_row < 0)
+			continue;
+		height += wxCalcGridScale(h_row, scale);
+	}
+
+	return height;
 }
 
 void wxGridExt::CalcDimensions()
@@ -3510,8 +3561,8 @@ void wxGridExt::CalcDimensions()
 	CalcWindowSizes();
 
 	// compute the size of the scrollable area
-	int w = m_numCols > 0 ? GetColRight(GetColAt(m_numCols - 1)) : 0;
-	int h = m_numRows > 0 ? GetRowBottom(m_numRows - 1) : 0;
+	int w = m_numCols > 0 ? GetColRight(GetColAt(m_numCols - 1), GetGridZoom()) : 0;
+	int h = m_numRows > 0 ? GetRowBottom(m_numRows - 1, GetGridZoom()) : 0;
 
 	w += m_extraWidth;
 	h += m_extraHeight;
@@ -3550,8 +3601,8 @@ wxSize wxGridExt::GetSizeAvailableForScrollTarget(const wxSize& size)
 {
 	wxPoint offset = GetGridWindowOffset(m_gridWin);
 	wxSize sizeGridWin(size);
-	sizeGridWin.x -= (GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth + offset.x;
-	sizeGridWin.y -= (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight + offset.y;
+	sizeGridWin.x -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + offset.x;
+	sizeGridWin.y -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + offset.y;
 
 	return sizeGridWin;
 }
@@ -3569,21 +3620,21 @@ void wxGridExt::CalcWindowSizes()
 	int fgw = 0, fgh = 0;
 
 	for (int i = 0; i < m_numFrozenRows; i++)
-		fgh += GetRowHeight(i);
+		fgh += GetRowHeight(i, GetGridZoom());
 
 	for (int i = 0; i < m_numFrozenCols; i++)
-		fgw += GetColWidth(i);
+		fgw += GetColWidth(i, GetGridZoom());
 
 	const int rowAreaWidth =
-		(GridRowAreaEnabled() ? m_rowAreaWidth : 0);
+		(GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0);
 
 	const int colAreaHeight =
-		(GridColAreaEnabled() ? m_colAreaHeight : 0);
+		(GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0);
 
 	// the grid may be too small to have enough space for the labels yet, don't
 	// size the windows to negative sizes in this case
-	int gw = cw - m_rowLabelWidth - fgw;
-	int gh = ch - m_colLabelHeight - fgh;
+	int gw = cw - wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - fgw;
+	int gh = ch - wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - fgh;
 
 	if (gw < 0)
 		gw = 0;
@@ -3591,43 +3642,43 @@ void wxGridExt::CalcWindowSizes()
 		gh = 0;
 
 	if (m_frozenCornerGridWin && m_frozenCornerGridWin->IsShown())
-		m_frozenCornerGridWin->SetSize(rowAreaWidth + m_rowLabelWidth, colAreaHeight + m_colLabelHeight, fgw, fgh);
+		m_frozenCornerGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), fgw, fgh);
 
 	if (m_cornerLabelWin && m_cornerLabelWin->IsShown())
-		m_cornerLabelWin->SetSize(rowAreaWidth, colAreaHeight, m_rowLabelWidth, m_colLabelHeight);
+		m_cornerLabelWin->SetSize(rowAreaWidth, colAreaHeight, wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
 
 	if (m_colAreaWin && m_colAreaWin->IsShown())
-		m_colAreaWin->SetSize(rowAreaWidth + m_rowLabelWidth + fgw, 0, gw, colAreaHeight);
+		m_colAreaWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, 0, gw, colAreaHeight);
 
 	if (m_colFrozenAreaWin && m_colFrozenAreaWin->IsShown())
-		m_colFrozenAreaWin->SetSize(rowAreaWidth + m_rowLabelWidth, 0, rowAreaWidth + m_rowLabelWidth + fgw, colAreaHeight);
+		m_colFrozenAreaWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), 0, rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight);
 
 	if (m_colFrozenLabelWin && m_colFrozenLabelWin->IsShown())
-		m_colFrozenLabelWin->SetSize(rowAreaWidth + m_rowLabelWidth, colAreaHeight, fgw, m_colLabelHeight);
+		m_colFrozenLabelWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight, fgw, wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
 
 	if (m_frozenColGridWin && m_frozenColGridWin->IsShown())
-		m_frozenColGridWin->SetSize(rowAreaWidth + m_rowLabelWidth, colAreaHeight + m_colLabelHeight + fgh, fgw, gh);
+		m_frozenColGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, fgw, gh);
 
 	if (m_colLabelWin && m_colLabelWin->IsShown())
-		m_colLabelWin->SetSize(rowAreaWidth + m_rowLabelWidth + fgw, colAreaHeight, gw, m_colLabelHeight);
+		m_colLabelWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight, gw, wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
 
 	if (m_rowAreaWin && m_rowAreaWin->IsShown())
-		m_rowAreaWin->SetSize(0, colAreaHeight + m_colLabelHeight + fgh, rowAreaWidth, gh);
+		m_rowAreaWin->SetSize(0, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, rowAreaWidth, gh);
 
 	if (m_rowFrozenAreaWin && m_rowFrozenAreaWin->IsShown())
-		m_rowFrozenAreaWin->SetSize(0, colAreaHeight + m_colLabelHeight, rowAreaWidth, fgh);
+		m_rowFrozenAreaWin->SetSize(0, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), rowAreaWidth, fgh);
 
 	if (m_rowFrozenLabelWin && m_rowFrozenLabelWin->IsShown())
-		m_rowFrozenLabelWin->SetSize(rowAreaWidth, colAreaHeight + m_colLabelHeight, m_rowLabelWidth, fgh);
+		m_rowFrozenLabelWin->SetSize(rowAreaWidth, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), fgh);
 
 	if (m_rowLabelWin && m_rowLabelWin->IsShown())
-		m_rowLabelWin->SetSize(rowAreaWidth, colAreaHeight + m_colLabelHeight + fgh, m_rowLabelWidth, gh);
+		m_rowLabelWin->SetSize(rowAreaWidth, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), gh);
 
 	if (m_frozenRowGridWin && m_frozenRowGridWin->IsShown())
-		m_frozenRowGridWin->SetSize(rowAreaWidth + m_rowLabelWidth + fgw, colAreaHeight + m_colLabelHeight, gw, fgh);
+		m_frozenRowGridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()), gw, fgh);
 
 	if (m_gridWin && m_gridWin->IsShown())
-		m_gridWin->SetSize(rowAreaWidth + m_rowLabelWidth + fgw, colAreaHeight + m_colLabelHeight + fgh, gw, gh);
+		m_gridWin->SetSize(rowAreaWidth + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + fgw, colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + fgh, gw, gh);
 }
 
 // this is called when the grid table sends a message
@@ -3676,23 +3727,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_rowHeights.IsEmpty())
-		{
 			m_rowHeights.Insert(m_defaultRowHeight, pos, numRows);
-			m_rowBottoms.Insert(0, pos, numRows);
-
-			int bottom = 0;
-			if (pos > 0)
-				bottom = m_rowBottoms[GetRowAt(pos - 1)];
-
-			int rowPos;
-			for (rowPos = pos; rowPos < m_numRows; rowPos++)
-			{
-				i = GetRowAt(rowPos);
-
-				bottom += GetRowHeight(i);
-				m_rowBottoms[i] = bottom;
-			}
-		}
 
 		UpdateCurrentCellOnRedim();
 
@@ -3730,23 +3765,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_rowHeights.IsEmpty())
-		{
 			m_rowHeights.Add(m_defaultRowHeight, numRows);
-			m_rowBottoms.Add(0, numRows);
-
-			int bottom = 0;
-			if (oldNumRows > 0)
-				bottom = m_rowBottoms[oldNumRows - 1];
-
-			int rowPos;
-			for (rowPos = oldNumRows; rowPos < m_numRows; rowPos++)
-			{
-				i = GetRowAt(rowPos);
-
-				bottom += GetRowHeight(i);
-				m_rowBottoms[i] = bottom;
-			}
-		}
 
 		UpdateCurrentCellOnRedim();
 
@@ -3782,20 +3801,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_rowHeights.IsEmpty())
-		{
 			m_rowHeights.RemoveAt(pos, numRows);
-			m_rowBottoms.RemoveAt(pos, numRows);
-
-			int h = 0;
-			int rowPos;
-			for (rowPos = 0; rowPos < m_numRows; rowPos++)
-			{
-				i = GetRowAt(rowPos);
-
-				h += GetRowHeight(i);
-				m_rowBottoms[i] = h;
-			}
-		}
 
 		UpdateCurrentCellOnRedim();
 
@@ -3853,23 +3859,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_colWidths.IsEmpty())
-		{
 			m_colWidths.Insert(m_defaultColWidth, pos, numCols);
-			m_colRights.Insert(0, pos, numCols);
-
-			int right = 0;
-			if (pos > 0)
-				right = m_colRights[GetColAt(pos - 1)];
-
-			int colPos;
-			for (colPos = pos; colPos < m_numCols; colPos++)
-			{
-				i = GetColAt(colPos);
-
-				right += GetColWidth(i);
-				m_colRights[i] = right;
-			}
-		}
 
 		// See comment for wxGRIDTABLE_NOTIFY_COLS_APPENDED case explaining
 		// why this has to be done here and not before.
@@ -3912,23 +3902,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_colWidths.IsEmpty())
-		{
 			m_colWidths.Add(m_defaultColWidth, numCols);
-			m_colRights.Add(0, numCols);
-
-			int right = 0;
-			if (oldNumCols > 0)
-				right = m_colRights[GetColAt(oldNumCols - 1)];
-
-			int colPos;
-			for (colPos = oldNumCols; colPos < m_numCols; colPos++)
-			{
-				i = GetColAt(colPos);
-
-				right += GetColWidth(i);
-				m_colRights[i] = right;
-			}
-		}
 
 		// Notice that this must be called after updating m_colWidths above
 		// as the native grid control will check whether the new columns
@@ -3970,20 +3944,7 @@ bool wxGridExt::Redimension(wxGridExtTableMessage& msg)
 		}
 
 		if (!m_colWidths.IsEmpty())
-		{
 			m_colWidths.RemoveAt(pos, numCols);
-			m_colRights.RemoveAt(pos, numCols);
-
-			int w = 0;
-			int colPos;
-			for (colPos = 0; colPos < m_numCols; colPos++)
-			{
-				i = GetColAt(colPos);
-
-				w += GetColWidth(i);
-				m_colRights[i] = w;
-			}
-		}
 
 		// See comment for wxGRIDTABLE_NOTIFY_COLS_APPENDED case explaining
 		// why this has to be done here and not before.
@@ -4067,18 +4028,18 @@ wxArrayInt wxGridExt::CalcRowLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 			continue;
 
 		int rowPos = GetRowPos(rowFirst);
-		
+
 		rowlabels.Alloc(m_numRows - rowPos);
-		
+
 		for (; rowPos < m_numRows; rowPos++)
 		{
 			int row;
 			row = GetRowAt(rowPos);
 
-			if (GetRowBottom(row) < top)
+			if (GetRowBottom(row, GetGridZoom()) < top)
 				continue;
 
-			if (GetRowTop(row) > bottom)
+			if (GetRowTop(row, GetGridZoom()) > bottom)
 				break;
 
 			rowlabels.Add(row);
@@ -4134,10 +4095,10 @@ wxArrayInt wxGridExt::CalcColLabelsExposed(const wxRegion& reg, wxGridExtWindow*
 			int col;
 			col = GetColAt(colPos);
 
-			if (GetColRight(col) < left)
+			if (GetColRight(col, GetGridZoom()) < left)
 				continue;
 
-			if (GetColLeft(col) > right)
+			if (GetColLeft(col, GetGridZoom()) > right)
 				break;
 
 			colLabels.Add(col);
@@ -4197,10 +4158,10 @@ void wxGridExt::CalcCellsExposed(const wxRegion& reg,
 		{
 			const int row = GetRowAt(rowPos);
 
-			if (GetRowBottom(row) <= top)
+			if (GetRowBottom(row, GetGridZoom()) <= top)
 				continue;
 
-			if (GetRowTop(row) > bottom)
+			if (GetRowTop(row, GetGridZoom()) > bottom)
 				break;
 
 			// add all dirty cells in this row: notice that the columns which
@@ -4224,11 +4185,9 @@ void wxGridExt::CalcCellsExposed(const wxRegion& reg,
 
 			const size_t count = cols.size();
 			cellsExposed.Alloc(count);
-			
-			wxGridExtCellCoords coords;
-			for (size_t n = 0; n < count; n++) {	
-				coords.Set(row, cols[n]);
-				cellsExposed.Add(coords);
+
+			for (size_t n = 0; n < count; n++) {
+				cellsExposed.Add(wxGridExtCellCoords(row, cols[n]));
 			}
 		}
 	}
@@ -5391,7 +5350,7 @@ void wxGridExt::ProcessGridCellMouseEvent(wxMouseEvent& event, wxGridExtWindow* 
 	const wxPoint posEvent = event.GetPosition();
 
 	event.SetPosition(posEvent + eventGridWindow->GetPosition() -
-		wxPoint((GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth, (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight));
+		wxPoint((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom())));
 
 	wxPoint pos = CalcGridWindowUnscrolledPosition(event.GetPosition(), gridWindow);
 
@@ -5544,7 +5503,7 @@ wxPoint wxGridExt::GetPositionForResizeEvent(int width) const
 	// wxGridExtHeaderCtrl is incompatible with using frozen rows/columns.
 	// This would need to be changed if they're allowed to be used together.
 	int x;
-	CalcGridWindowScrolledPosition(GetColLeft(m_dragRowOrCol) + width, 0,
+	CalcGridWindowScrolledPosition(GetColLeft(m_dragRowOrCol, GetGridZoom()) + width, 0,
 		&x, NULL,
 		m_gridWin);
 
@@ -5620,25 +5579,6 @@ void wxGridExt::DoEndMoveRow(int pos)
 
 void wxGridExt::RefreshAfterRowPosChange()
 {
-	// recalculate the row bottoms as the row positions have changed,
-	// unless we calculate them dynamically because all rows heights are the
-	// same and it's easy to do
-	if (!m_rowHeights.empty())
-	{
-		int rowBottom = 0;
-		for (int rowPos = 0; rowPos < m_numRows; rowPos++)
-		{
-			int rowID = GetRowAt(rowPos);
-
-			// Ignore the currently hidden rows.
-			const int height = m_rowHeights[rowID];
-			if (height > 0)
-				rowBottom += height;
-
-			m_rowBottoms[rowID] = rowBottom;
-		}
-	}
-
 	// and make the changes visible
 	m_rowAreaWin->Refresh();
 	m_rowLabelWin->Refresh();
@@ -5722,25 +5662,6 @@ void wxGridExt::DoEndMoveCol(int pos)
 
 void wxGridExt::RefreshAfterColPosChange()
 {
-	// recalculate the column rights as the column positions have changed,
-	// unless we calculate them dynamically because all columns widths are the
-	// same and it's easy to do
-	if (!m_colWidths.empty())
-	{
-		int colRight = 0;
-		for (int colPos = 0; colPos < m_numCols; colPos++)
-		{
-			int colID = GetColAt(colPos);
-
-			// Ignore the currently hidden columns.
-			const int width = m_colWidths[colID];
-			if (width > 0)
-				colRight += width;
-
-			m_colRights[colID] = colRight;
-		}
-	}
-
 	// and make the changes visible
 	if (m_useNativeHeader)
 	{
@@ -5752,6 +5673,7 @@ void wxGridExt::RefreshAfterColPosChange()
 		m_colAreaWin->Refresh();
 		m_colLabelWin->Refresh();
 	}
+
 	m_gridWin->Refresh();
 }
 
@@ -5920,11 +5842,11 @@ bool wxGridExt::FreezeTo(int row, int col)
 		int cw, ch;
 		GetClientSize(&cw, &ch);
 
-		cw -= (GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth;
-		ch -= (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight;
+		cw -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
+		ch -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
 
-		if ((row > 0 && GetRowBottom(row - 1) >= ch) ||
-			(col > 0 && GetColRight(col - 1) >= cw))
+		if ((row > 0 && GetRowBottom(row - 1, GetGridZoom()) >= ch) ||
+			(col > 0 && GetColRight(col - 1, GetGridZoom()) >= cw))
 			return false;
 
 		// check all involved cells for merged ones
@@ -6069,8 +5991,8 @@ wxGridExt::SendGridSizeEvent(wxEventType type,
 		type,
 		this,
 		rowOrCol,
-		mouseEv.GetX() + GetRowLabelSize(),
-		mouseEv.GetY() + GetColLabelSize(),
+		mouseEv.GetX() + wxCalcGridScale(GetRowLabelSize(), GetGridZoom()),
+		mouseEv.GetY() + wxCalcGridScale(GetColLabelSize(), GetGridZoom()),
 		mouseEv);
 
 	return ProcessWindowEvent(gridEvt);
@@ -6110,9 +6032,9 @@ wxGridExt::SendEvent(wxEventType type,
 		wxPoint pos = mouseEv.GetPosition();
 
 		if (mouseEv.GetEventObject() == GetGridRowLabelWindow())
-			pos.y += GetColLabelSize();
+			pos.y += wxCalcGridScale(GetColLabelSize(), GetGridZoom());
 		if (mouseEv.GetEventObject() == GetGridColLabelWindow())
-			pos.x += GetRowLabelSize();
+			pos.x += wxCalcGridScale(GetRowLabelSize(), GetGridZoom());
 
 		wxGridExtEvent gridEvt(GetId(),
 			type,
@@ -6131,8 +6053,8 @@ wxGridExt::SendEvent(wxEventType type,
 			type,
 			this,
 			row, col,
-			mouseEv.GetX() + GetRowLabelSize(),
-			mouseEv.GetY() + GetColLabelSize(),
+			mouseEv.GetX() + wxCalcGridScale(GetRowLabelSize(), GetGridZoom()),
+			mouseEv.GetY() + wxCalcGridScale(GetColLabelSize(), GetGridZoom()),
 			false,
 			mouseEv);
 
@@ -6179,34 +6101,34 @@ void wxGridExt::Refresh(bool eraseb, const wxRect* rect)
 			rectWidth = rect->GetWidth();
 			rectHeight = rect->GetHeight();
 
-			width_label = (GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth - rect_x;
+			width_label = (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x;
 			if (width_label > rectWidth)
 				width_label = rectWidth;
 
-			height_label = (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight - rect_y;
+			height_label = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y;
 			if (height_label > rectHeight)
 				height_label = rectHeight;
 
-			if (rect_x > (GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth)
+			if (rect_x > (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()))
 			{
-				x = rect_x - (GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth;
+				x = rect_x - (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
 				width_cell = rectWidth;
 			}
 			else
 			{
 				x = 0;
-				width_cell = rectWidth - ((GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth - rect_x);
+				width_cell = rectWidth - ((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) - rect_x);
 			}
 
-			if (rect_y > (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight)
+			if (rect_y > (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()))
 			{
-				y = rect_y - m_colAreaHeight + m_colLabelHeight;
+				y = rect_y - m_colAreaHeight + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
 				height_cell = rectHeight;
 			}
 			else
 			{
 				y = 0;
-				height_cell = rectHeight - ((GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight - rect_y);
+				height_cell = rectHeight - ((GridColAreaEnabled() ? (m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) - rect_y);
 			}
 
 			// Paint corner label part intersecting rect.
@@ -6385,7 +6307,6 @@ void wxGridExt::OnDPIChanged(wxDPIChangedEvent& event)
 	// inside InitPixelFields() above).
 	if (!m_rowHeights.empty())
 	{
-		int total = 0;
 		for (unsigned i = 0; i < m_rowHeights.size(); ++i)
 		{
 			int height = m_rowHeights[i];
@@ -6394,11 +6315,7 @@ void wxGridExt::OnDPIChanged(wxDPIChangedEvent& event)
 			if (height <= 0)
 				continue;
 
-			height = event.ScaleY(height);
-			total += height;
-
-			m_rowHeights[i] = height;
-			m_rowBottoms[i] = total;
+			m_rowHeights[i] = event.ScaleY(height);
 		}
 	}
 
@@ -6417,11 +6334,7 @@ void wxGridExt::OnDPIChanged(wxDPIChangedEvent& event)
 			if (width <= 0)
 				continue;
 
-			width = event.ScaleX(width);
-			total += width;
-
-			m_colWidths[i] = width;
-			m_colRights[i] = total;
+			m_colWidths[i] = event.ScaleX(width);
 
 			if (colHeader)
 				colHeader->UpdateColumn(i);
@@ -7107,8 +7020,8 @@ void wxGridExt::DrawGridSpace(wxDC& dc, wxGridExtWindow* gridWindow)
 	wxPoint offset = GetGridWindowOffset(gridWindow);
 	CalcGridWindowUnscrolledPosition(cw + offset.x, ch + offset.y, &right, &bottom, gridWindow);
 
-	int rightCol = m_numCols > 0 ? GetColRight(GetColAt(m_numCols - 1)) : 0;
-	int bottomRow = m_numRows > 0 ? GetRowBottom(GetRowAt(m_numRows - 1)) : 0;
+	int rightCol = m_numCols > 0 ? GetColRight(GetColAt(m_numCols - 1), GetGridZoom()) : 0;
+	int bottomRow = m_numRows > 0 ? GetRowBottom(GetRowAt(m_numRows - 1), GetGridZoom()) : 0;
 
 	if (right > rightCol || bottom > bottomRow)
 	{
@@ -7320,7 +7233,7 @@ void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
 
 		if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenRow)
 		{
-			right = wxMin(right, GetColRight(m_numCols - 1));
+			right = wxMin(right, GetColRight(m_numCols - 1, GetGridZoom()));
 
 			dc.SetPen(wxPen(m_gridFrozenBorderColour,
 				m_gridFrozenBorderPenWidth));
@@ -7329,7 +7242,7 @@ void wxGridExt::DrawFrozenBorder(wxDC& dc, wxGridExtWindow* gridWindow)
 
 		if (gridWindow->GetType() & wxGridExtWindow::wxGridExtWindowFrozenCol)
 		{
-			bottom = wxMin(bottom, GetRowBottom(m_numRows - 1));
+			bottom = wxMin(bottom, GetRowBottom(m_numRows - 1, GetGridZoom()));
 
 			dc.SetPen(wxPen(m_gridFrozenBorderColour,
 				m_gridFrozenBorderPenWidth));
@@ -7449,7 +7362,7 @@ void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), 
 		if (!m_numCols)
 			return;
 
-		const int lastColRight = GetColRight(GetColAt(m_numCols - 1));
+		const int lastColRight = GetColRight(GetColAt(m_numCols - 1), GetGridZoom());
 		if (right > lastColRight)
 			right = lastColRight;
 	}
@@ -7459,7 +7372,7 @@ void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), 
 		if (!m_numRows)
 			return;
 
-		const int lastRowBottom = GetRowBottom(GetRowAt(m_numRows - 1));
+		const int lastRowBottom = GetRowBottom(GetRowAt(m_numRows - 1), GetGridZoom());
 		if (bottom > lastRowBottom)
 			bottom = lastRowBottom;
 	}
@@ -7566,7 +7479,7 @@ wxGridExt::DoDrawGridLines(wxDC& dc,
 	for (int rowPos = topRow; rowPos < bottomRow; rowPos++)
 	{
 		int i = GetRowAt(rowPos);
-		int bot = GetRowBottom(i) - 1;
+		int bot = GetRowBottom(i, GetGridZoom()) - 1;
 
 		if (bot > bottom)
 			break;
@@ -7583,7 +7496,7 @@ wxGridExt::DoDrawGridLines(wxDC& dc,
 	{
 		int i = GetColAt(colPos);
 
-		int colRight = GetColRight(i);
+		int colRight = GetColRight(i, GetGridZoom());
 
 #if defined(__WXGTK__) || defined(__WXQT__)
 		if (GetLayoutDirection() != wxLayout_RightToLeft)
@@ -7612,7 +7525,7 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 	for (int rowPos = topRow; rowPos < bottomRow; rowPos++)
 	{
 		int i = GetRowAt(rowPos);
-		int bot = GetRowBottom(i) - 1;
+		int bot = GetRowBottom(i, GetGridZoom()) - 1;
 
 		//draw col print brake
 		if (IsRowBrake(i))
@@ -7628,7 +7541,7 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 
 			// top line
 			if (flagRowSection & 2) {
-				int rowTop = GetRowTop(i) - 1;
+				int rowTop = GetRowTop(i, GetGridZoom()) - 1;
 				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
 				dc.DrawLine(left, rowTop, right, rowTop);
 			}
@@ -7646,7 +7559,7 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 	{
 		int i = GetColAt(colPos);
 
-		int colRight = GetColRight(i);
+		int colRight = GetColRight(i, GetGridZoom());
 
 #if defined(__WXGTK__) || defined(__WXQT__)
 		if (GetLayoutDirection() != wxLayout_RightToLeft)
@@ -7666,7 +7579,7 @@ wxGridExt::DoDrawGridNonClippingRegionLines(wxDC& dc,
 
 			// left hand line
 			if (flagColSection & 2) {
-				int colLeft = GetColLeft(i) - 1;
+				int colLeft = GetColLeft(i, GetGridZoom()) - 1;
 				dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
 				dc.DrawLine(colLeft, top, colLeft, bottom);
 			}
@@ -7703,7 +7616,7 @@ void wxGridExt::DrawRowAreas(wxDC& dc, const wxArrayInt& rows)
 
 		const wxGridExtCellArea& entry = m_rowAreaAt[pos];
 		for (int row = entry.m_start; row <= entry.m_end; row++) {
-			rowHeight += wxGridExt::GetRowHeight(row);
+			rowHeight += wxGridExt::GetRowHeight(row, GetGridZoom());
 		}
 
 		// notice that an explicit static_cast is needed to avoid a compilation
@@ -7714,7 +7627,7 @@ void wxGridExt::DrawRowAreas(wxDC& dc, const wxArrayInt& rows)
 			: static_cast<const wxGridExtRowHeaderRenderer&>
 			(gs_defaultHeaderRenderers.rowRenderer);
 
-		wxRect rect(0, GetRowTop(entry.m_start), (GridRowAreaEnabled() ? m_rowAreaWidth : 0), rowHeight);
+		wxRect rect(0, GetRowTop(entry.m_start, GetGridZoom()), ((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0)), rowHeight);
 		rend.DrawLabel(*this, dc, entry.m_areaLabel,
 			rect, hAlign, vAlign, wxHORIZONTAL);
 	}
@@ -7726,7 +7639,7 @@ void wxGridExt::DrawRowArea(wxDC& dc, int row)
 
 		static wxPen sectionPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
 
-		wxRect rect(0, GetRowTop(row), (GridRowAreaEnabled() ? m_rowAreaWidth : 0), GetRowHeight(row));
+		wxRect rect(0, GetRowTop(row, GetGridZoom()), (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0), GetRowHeight(row, GetGridZoom()));
 		const int flagSection = GetRowAreaValue(row);
 
 		if (flagSection & 2) {
@@ -7774,7 +7687,7 @@ void wxGridExt::DrawRowLabel(wxDC& dc, int row)
 		: static_cast<const wxGridExtRowHeaderRenderer&>
 		(gs_defaultHeaderRenderers.rowRenderer);
 
-	wxRect rect(0, GetRowTop(row), m_rowLabelWidth, GetRowHeight(row));
+	wxRect rect(0, GetRowTop(row, GetGridZoom()), wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), GetRowHeight(row, GetGridZoom()));
 
 	if (m_cursorMode == WXGRID_CURSOR_MOVE_ROW)
 	{
@@ -7826,7 +7739,7 @@ bool wxGridExt::UseNativeColHeader(bool native)
 		wxHeaderCtrl* const colHeader = GetGridColHeader();
 		colHeader->SetBackgroundColour(GetLabelBackgroundColour());
 		colHeader->SetForegroundColour(GetLabelTextColour());
-		colHeader->SetFont(GetLabelFont());
+		colHeader->SetFont(GetLabelFont(GetGridZoom()));
 	}
 
 	CalcWindowSizes();
@@ -7875,7 +7788,7 @@ void wxGridExt::DrawColAreas(wxDC& dc, const wxArrayInt& cols)
 
 			const wxGridExtCellArea& entry = m_colAreaAt[pos];
 			for (int col = entry.m_start; col <= entry.m_end; col++) {
-				colWidth += wxGridExt::GetColWidth(col);
+				colWidth += wxGridExt::GetColWidth(col, GetGridZoom());
 			}
 
 			const wxGridExtColumnHeaderRenderer&
@@ -7883,7 +7796,7 @@ void wxGridExt::DrawColAreas(wxDC& dc, const wxArrayInt& cols)
 				: static_cast<wxGridExtColumnHeaderRenderer&>
 				(gs_defaultHeaderRenderers.colRenderer);
 
-			wxRect rect(GetColLeft(entry.m_start), 0, colWidth, (GridColAreaEnabled() ? m_colAreaHeight : 0));
+			wxRect rect(GetColLeft(entry.m_start, GetGridZoom()), 0, colWidth, (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
 			rend.DrawLabel(*this, dc, entry.m_areaLabel,
 				rect, hAlign, vAlign, wxHORIZONTAL);
 		}
@@ -7896,7 +7809,7 @@ void wxGridExt::DrawColArea(wxDC& dc, int col)
 
 		static wxPen sectionPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW));
 
-		wxRect rect(GetColLeft(col), 0, GetColWidth(col), (GridColAreaEnabled() ? m_colAreaHeight : 0));
+		wxRect rect(GetColLeft(col, GetGridZoom()), 0, GetColWidth(col, GetGridZoom()), (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0));
 		const int flagSection = GetColAreaValue(col);
 
 		if (flagSection & 2) {
@@ -7930,7 +7843,7 @@ void wxGridExt::DrawColLabels(wxDC& dc, const wxArrayInt& cols)
 
 void wxGridExt::DrawCornerLabel(wxDC& dc)
 {
-	wxRect rect(wxSize(m_rowLabelWidth, m_colLabelHeight));
+	wxRect rect(wxSize(wxCalcGridScale(m_rowLabelWidth, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom())));
 
 	wxGridExtCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
@@ -7969,9 +7882,10 @@ void wxGridExt::DrawColLabel(wxDC& dc, int col)
 	if (GetColWidth(col) <= 0 || m_colLabelHeight <= 0)
 		return;
 
-	int colLeft = GetColLeft(col);
+	int colLeft = GetColLeft(col, GetGridZoom());
 
-	wxRect rect(colLeft, 0, GetColWidth(col), m_colLabelHeight);
+	wxRect rect(colLeft, 0, GetColWidth(col, GetGridZoom()), wxCalcGridScale(m_colLabelHeight, GetGridZoom()));
+
 	wxGridExtCellAttrProvider* const
 		attrProvider = m_table ? m_table->GetAttrProvider() : NULL;
 	const wxGridExtColumnHeaderRenderer&
@@ -8052,7 +7966,7 @@ void wxGridExt::DrawTextRectangle(wxDC& dc,
 	if (lines.empty())
 		return;
 
-	//wxDCClipper clip(dc, rect);
+	wxDCClipper clip(dc, rect);
 
 	long textWidth,
 		textHeight;
@@ -8222,13 +8136,13 @@ void wxGridExt::GetTextBoxSize(const wxDC& dc,
 	size_t i;
 	size_t count = lines.GetCount();
 
-	if (arrRow) 
+	if (arrRow)
 	{
 		arrRow->SetCount(0);
 		arrRow->Alloc(count);
 	}
-	
-	if (arrCol) 
+
+	if (arrCol)
 	{
 		arrCol->SetCount(0);
 		arrCol->Alloc(count);
@@ -8509,6 +8423,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 			row,
 			col,
 			editorWindow);
+
 		ProcessWindowEvent(evt);
 	}
 	else if (editor->GetWindow() &&
@@ -8517,20 +8432,27 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 		editor->GetWindow()->Reparent(gridWindow);
 	}
 
+
 	// resize editor to overflow into righthand cells if allowed
-	int maxWidth = rect.width;
+	int maxWidth = rect.width, maxHeight = rect.height;
 	wxString value = GetCellValue(row, col);
 	if (!value.empty() && attr->GetOverflow())
 	{
-		int y;
-		GetTextExtent(value, &maxWidth, &y, NULL, NULL, &attr->GetFont());
+		static wxMemoryDC dc;
+
+		dc.GetMultiLineTextExtent(value, &maxWidth, &maxHeight, NULL, &attr->GetFont(GetGridZoom()));
+
 		if (maxWidth < rect.width)
 			maxWidth = rect.width;
+
+		if (maxHeight < rect.height)
+			maxHeight = rect.height;
 	}
 
 	if ((maxWidth > rect.width) && (col < m_numCols) && m_table)
 	{
 		GetCellSize(row, col, &cell_rows, &cell_cols);
+
 		// may have changed earlier
 		for (int i = col + cell_cols; i < m_numCols; i++)
 		{
@@ -8541,7 +8463,28 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 			if (m_table->IsEmptyCell(row, i) &&
 				(rect.width < maxWidth) && (c_rows == 1))
 			{
-				rect.width += GetColWidth(i);
+				rect.width += GetColWidth(i, GetGridZoom());
+			}
+			else
+				break;
+		}
+	}
+
+	if ((maxHeight > rect.height) && (row < m_numRows) && m_table)
+	{
+		GetCellSize(row, col, &cell_rows, &cell_cols);
+
+		// may have changed earlier
+		for (int i = row + cell_rows; i < m_numRows; i++)
+		{
+			int c_rows, c_cols;
+			GetCellSize(i, col, &c_rows, &c_cols);
+
+			// looks weird going over a multicell
+			if (m_table->IsEmptyCell(i, col) &&
+				(rect.height < maxHeight) && (c_cols == 1))
+			{
+				rect.height += GetRowHeight(i, GetGridZoom());
 			}
 			else
 				break;
@@ -8550,6 +8493,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 
 	editor->SetCellAttr(attr.get());
 	editor->SetSize(rect);
+
 
 	// Note that the actual rectangle used by the editor could be
 	// different from the one we proposed.
@@ -8575,7 +8519,7 @@ bool wxGridExt::DoShowCellEditControl(const wxGridExtActivationSource& actSource
 		editor->GetWindow()->Move(rect.x, rect.y);
 	}
 
-	editor->Show(true, attr.get());
+	editor->Show(true, attr.get(), GetGridZoom());
 
 	// recalc dimensions in case we need to
 	// expand the scrolled window to account for editor
@@ -8900,12 +8844,13 @@ wxRect wxGridExt::CellToRect(int row, int col) const
 			GetCellSize(row, col, &cell_rows, &cell_cols);
 		}
 
-		rect.x = GetColLeft(col);
-		rect.y = GetRowTop(row);
+		rect.x = GetColLeft(col, GetGridZoom());
+		rect.y = GetRowTop(row, GetGridZoom());
+
 		for (i = col; i < col + cell_cols; i++)
-			rect.width += GetColWidth(i);
+			rect.width += GetColWidth(i, GetGridZoom());
 		for (i = row; i < row + cell_rows; i++)
-			rect.height += GetRowHeight(i);
+			rect.height += GetRowHeight(i, GetGridZoom());
 
 #ifndef __WXQT__
 		// if grid lines are enabled, then the area of the cell is a bit smaller
@@ -9090,16 +9035,16 @@ void wxGridExt::MakeCellVisible(int row, int col)
 	}
 	else if (processRow)
 	{
-		r.SetTop(GetRowTop(row));
-		r.SetHeight(GetRowHeight(row));
+		r.SetTop(GetRowTop(row, GetGridZoom()));
+		r.SetHeight(GetRowHeight(row, GetGridZoom()));
 		gridWindow = row < m_numFrozenRows
 			? m_frozenRowGridWin
 			: m_gridWin;
 	}
 	else if (processCol)
 	{
-		r.SetLeft(GetColLeft(col));
-		r.SetWidth(GetColWidth(col));
+		r.SetLeft(GetColLeft(col, GetGridZoom()));
+		r.SetWidth(GetColWidth(col, GetGridZoom()));
 		gridWindow = col < m_numFrozenCols
 			? m_frozenColGridWin
 			: m_gridWin;
@@ -9134,7 +9079,7 @@ void wxGridExt::MakeCellVisible(int row, int col)
 			int i;
 			for (i = row - 1; i >= 0; i--)
 			{
-				int rowHeight = GetRowHeight(i);
+				int rowHeight = GetRowHeight(i, GetGridZoom());
 				if (h + rowHeight > ch)
 					break;
 
@@ -9214,7 +9159,7 @@ int wxGridExt::GetFirstFullyVisibleRow() const
 
 		// If the row is not fully visible (if only 2 pixels is hidden
 		// the row still looks fully visible).
-		if (GetRowTop(row) + 2 < y)
+		if (GetRowTop(row, GetGridZoom()) + 2 < y)
 		{
 			// Use the next visible row.
 			for (;; )
@@ -9252,7 +9197,7 @@ int wxGridExt::GetFirstFullyVisibleColumn() const
 		col = internalXToCol(x, m_gridWin);
 
 		// If the column is not fully visible.
-		if (GetColLeft(col) < x)
+		if (GetColLeft(col, GetGridZoom()) < x)
 		{
 			// Use the next visible column.
 			for (;; )
@@ -9729,7 +9674,7 @@ void wxGridExt::SetRowLabelSize(int width)
 		width = CalcColOrRowLabelAreaMinSize(wxGRID_ROW);
 	}
 
-	if (width != m_rowLabelWidth)
+	if (width != wxCalcGridScale(m_rowLabelWidth, GetGridZoom()))
 	{
 		if (width == 0)
 		{
@@ -9737,7 +9682,7 @@ void wxGridExt::SetRowLabelSize(int width)
 			m_rowLabelWin->Show(false);
 			m_cornerLabelWin->Show(false);
 		}
-		else if (m_rowLabelWidth == 0)
+		else if (wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) == 0)
 		{
 			if (GridRowAreaEnabled())
 				m_rowAreaWin->Show(true);
@@ -9779,7 +9724,7 @@ void wxGridExt::SetColLabelSize(int height)
 
 			m_colLabelWin->Show(true);
 
-			if (m_rowLabelWidth > 0)
+			if (wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) > 0)
 				m_cornerLabelWin->Show(true);
 		}
 
@@ -9978,6 +9923,28 @@ void wxGridExt::SetCornerLabelAlignment(int horiz, int vert)
 	SendEvent(wxEVT_GRID_CHANGED);
 }
 
+void wxGridExt::SetGridZoom(int point)
+{
+	const float zoomScale = m_zoomScale + (point * 0.25f);
+
+	if (zoomScale <= 2.25f && zoomScale >= 0.5f)
+	{
+		// By the same reasoning, the editor should be dismissed if columns are
+		// added or removed. And for consistency, it should IMHO always be
+		// removed, not only if the cell "underneath" it actually changes.
+		// For now, I intentionally do not save the editor's content as the
+		// cell it might want to save that stuff to might no longer exist.
+		HideCellEditControl();
+
+		m_zoomScale = zoomScale;
+
+		InvalidateBestSize();
+		CalcDimensions();
+
+		SendEvent(wxEVT_GRID_ZOOM);
+	}
+}
+
 // Note: under MSW, the default column label font must be changed because it
 //       does not support vertical printing
 //
@@ -10023,7 +9990,7 @@ void wxGridExt::SetRowLabelValue(int row, const wxString& s)
 				CalcScrolledPosition(0, rect.y, &rect.x, &rect.y);
 
 				rect.x = 0;
-				rect.width = m_rowLabelWidth;
+				rect.width = wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
 
 				m_rowAreaWin->Refresh(true, &rect);
 				m_rowLabelWin->Refresh(true, &rect);
@@ -10052,7 +10019,7 @@ void wxGridExt::SetColLabelValue(int col, const wxString& s)
 				{
 					CalcScrolledPosition(rect.x, 0, &rect.x, &rect.y);
 					rect.y = 0;
-					rect.height = (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight;
+					rect.height = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
 					GetColLabelWindow()->Refresh(true, &rect);
 				}
 			}
@@ -10218,28 +10185,28 @@ void wxGridExt::DoClipGridLines(bool& var, bool clip)
 	}
 }
 
-int wxGridExt::GetDefaultRowSize() const
+int wxGridExt::GetDefaultRowSize(float scale) const
 {
-	return m_defaultRowHeight;
+	return wxCalcGridScale(m_defaultRowHeight, scale);
 }
 
-int wxGridExt::GetRowSize(int row) const
+int wxGridExt::GetRowSize(int row, float scale) const
 {
 	wxCHECK_MSG(row >= 0 && row < m_numRows, 0, wxT("invalid row index"));
 
-	return GetRowHeight(row);
+	return GetRowHeight(row, scale);
 }
 
-int wxGridExt::GetDefaultColSize() const
+int wxGridExt::GetDefaultColSize(float scale) const
 {
-	return m_defaultColWidth;
+	return wxCalcGridScale(m_defaultColWidth, scale);
 }
 
-int wxGridExt::GetColSize(int col) const
+int wxGridExt::GetColSize(int col, float scale) const
 {
 	wxCHECK_MSG(col >= 0 && col < m_numCols, 0, wxT("invalid column index"));
 
-	return GetColWidth(col);
+	return GetColWidth(col, scale);
 }
 
 // ============================================================================
@@ -10401,9 +10368,9 @@ int wxGridExt::GetCellTextOrient(int row, int col) const
 	return GetCellAttrPtr(row, col)->GetTextOrient();
 }
 
-wxFont wxGridExt::GetCellFont(int row, int col) const
+wxFont wxGridExt::GetCellFont(int row, int col, float scale) const
 {
-	return  GetCellAttrPtr(row, col)->GetFont();
+	return GetCellAttrPtr(row, col)->GetFont(scale);
 }
 
 void wxGridExt::GetCellAlignment(int row, int col, int* horiz, int* vert) const
@@ -11321,9 +11288,9 @@ void wxGridExt::EnableDragCell(bool enable)
 	m_canDragCell = enable;
 }
 
-void wxGridExt::SetDefaultRowSize(int height, bool resizeExistingRows)
+void wxGridExt::SetDefaultRowSize(int height, float scale, bool resizeExistingRows)
 {
-	m_defaultRowHeight = wxMax(height, m_minAcceptableRowHeight);
+	m_defaultRowHeight = wxMax(wxRestoreGridScale(height, scale), m_minAcceptableRowHeight);
 
 	if (resizeExistingRows)
 	{
@@ -11332,7 +11299,7 @@ void wxGridExt::SetDefaultRowSize(int height, bool resizeExistingRows)
 		// arrays (which also allows us to take advantage of
 		// some speed optimisations)
 		m_rowHeights.Empty();
-		m_rowBottoms.Empty();
+
 		CalcDimensions();
 	}
 }
@@ -11395,8 +11362,10 @@ namespace
 
 } // anonymous namespace
 
-void wxGridExt::SetRowSize(int row, int height)
+void wxGridExt::SetRowSize(int row, int height, float scale)
 {
+	height = wxRestoreGridScale(height, scale);
+
 	// See comment in SetColSize
 	if (height > 0 && height < GetRowMinimalAcceptableHeight())
 		return;
@@ -11433,11 +11402,6 @@ void wxGridExt::DoSetRowSize(int row, int height)
 	if (!diff)
 		return;
 
-
-	for (int rowPos = GetRowPos(row); rowPos < m_numRows; rowPos++)
-	{
-		m_rowBottoms[GetRowAt(rowPos)] += diff;
-	}
 
 	InvalidateBestSize();
 
@@ -11498,7 +11462,7 @@ void wxGridExt::DoSetRowSize(int row, int height)
 		};
 
 		int y;
-		CalcScrolledPosition(0, GetRowTop(topRow), NULL, &y);
+		CalcScrolledPosition(0, GetRowTop(topRow, GetGridZoom()), NULL, &y);
 
 		if (topRow < m_numFrozenRows)
 		{
@@ -11537,10 +11501,10 @@ void wxGridExt::DoSetRowSize(int row, int height)
 	SendEvent(wxEVT_GRID_CHANGED);
 }
 
-void wxGridExt::SetDefaultColSize(int width, bool resizeExistingCols)
+void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCols)
 {
 	// we dont allow zero default column width
-	m_defaultColWidth = wxMax(wxMax(width, m_minAcceptableColWidth), 1);
+	m_defaultColWidth = wxMax(wxMax(wxRestoreGridScale(width, scale), m_minAcceptableColWidth), 1);
 
 	if (resizeExistingCols)
 	{
@@ -11549,14 +11513,15 @@ void wxGridExt::SetDefaultColSize(int width, bool resizeExistingCols)
 		// arrays (which also allows us to take advantage of
 		// some speed optimisations)
 		m_colWidths.Empty();
-		m_colRights.Empty();
 
 		CalcDimensions();
 	}
 }
 
-void wxGridExt::SetColSize(int col, int width)
+void wxGridExt::SetColSize(int col, int width, float scale)
 {
+	width = wxRestoreGridScale(width, scale);
+
 	// we intentionally don't test whether the width is less than
 	// GetColMinimalWidth() here but we do compare it with
 	// GetColMinimalAcceptableWidth() as otherwise things currently break (see
@@ -11630,11 +11595,6 @@ void wxGridExt::DoSetColSize(int col, int width)
 	}
 	//else: will be refreshed when the header is redrawn
 
-	for (int colPos = GetColPos(col); colPos < m_numCols; colPos++)
-	{
-		m_colRights[GetColAt(colPos)] += diff;
-	}
-
 	InvalidateBestSize();
 
 	CalcDimensions();
@@ -11692,7 +11652,7 @@ void wxGridExt::DoSetColSize(int col, int width)
 		};
 
 		int x;
-		CalcScrolledPosition(GetColLeft(leftCol), 0, &x, NULL);
+		CalcScrolledPosition(GetColLeft(leftCol, GetGridZoom()), 0, &x, NULL);
 
 		if (leftCol < m_numFrozenCols)
 		{
@@ -11729,64 +11689,64 @@ void wxGridExt::DoSetColSize(int col, int width)
 	SendEvent(wxEVT_GRID_CHANGED);
 }
 
-void wxGridExt::SetColMinimalWidth(int col, int width)
+void wxGridExt::SetColMinimalWidth(int col, int width, float scale)
 {
 	if (width > GetColMinimalAcceptableWidth())
 	{
 		wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)col;
-		m_colMinWidths[key] = width;
+		m_colMinWidths[key] = wxRestoreGridScale(width, scale);
 	}
 }
 
-void wxGridExt::SetRowMinimalHeight(int row, int width)
+void wxGridExt::SetRowMinimalHeight(int row, int width, float scale)
 {
 	if (width > GetRowMinimalAcceptableHeight())
 	{
 		wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)row;
-		m_rowMinHeights[key] = width;
+		m_rowMinHeights[key] = wxRestoreGridScale(width, scale);
 	}
 }
 
-int wxGridExt::GetColMinimalWidth(int col) const
+int wxGridExt::GetColMinimalWidth(int col, float scale) const
 {
 	wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)col;
 	wxLongToLongHashMap::const_iterator it = m_colMinWidths.find(key);
 
-	return it != m_colMinWidths.end() ? (int)it->second : m_minAcceptableColWidth;
+	return it != m_colMinWidths.end() ? wxCalcGridScale(it->second, scale) : wxCalcGridScale(m_minAcceptableColWidth, scale);
 }
 
-int wxGridExt::GetRowMinimalHeight(int row) const
+int wxGridExt::GetRowMinimalHeight(int row, float scale) const
 {
 	wxLongToLongHashMap::key_type key = (wxLongToLongHashMap::key_type)row;
 	wxLongToLongHashMap::const_iterator it = m_rowMinHeights.find(key);
 
-	return it != m_rowMinHeights.end() ? (int)it->second : m_minAcceptableRowHeight;
+	return it != m_rowMinHeights.end() ? wxCalcGridScale(it->second, scale) : wxCalcGridScale(m_minAcceptableRowHeight, scale);
 }
 
-void wxGridExt::SetColMinimalAcceptableWidth(int width)
+void wxGridExt::SetColMinimalAcceptableWidth(int width, float scale)
 {
 	// We do allow a width of 0 since this gives us
 	// an easy way to temporarily hiding columns.
 	if (width >= 0)
-		m_minAcceptableColWidth = width;
+		m_minAcceptableColWidth = wxRestoreGridScale(width, scale);
 }
 
-void wxGridExt::SetRowMinimalAcceptableHeight(int height)
+void wxGridExt::SetRowMinimalAcceptableHeight(int height, float scale)
 {
 	// We do allow a height of 0 since this gives us
 	// an easy way to temporarily hiding rows.
 	if (height >= 0)
-		m_minAcceptableRowHeight = height;
+		m_minAcceptableRowHeight = wxRestoreGridScale(height, scale);
 }
 
-int  wxGridExt::GetColMinimalAcceptableWidth() const
+int  wxGridExt::GetColMinimalAcceptableWidth(float scale) const
 {
-	return m_minAcceptableColWidth;
+	return wxCalcGridScale(m_minAcceptableColWidth, scale);
 }
 
-int  wxGridExt::GetRowMinimalAcceptableHeight() const
+int  wxGridExt::GetRowMinimalAcceptableHeight(float scale) const
 {
-	return m_minAcceptableRowHeight;
+	return wxCalcGridScale(m_minAcceptableRowHeight, scale);
 }
 
 void wxGridExt::SetNativeHeaderColCount()
@@ -11920,9 +11880,9 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 		{
 			extent = column
 				? renderer->GetBestWidth(*this, *attr, dc, row, col,
-					GetRowHeight(row))
+					GetRowHeight(row, GetGridZoom()))
 				: renderer->GetBestHeight(*this, *attr, dc, row, col,
-					GetColWidth(col));
+					GetColWidth(col, GetGridZoom()));
 
 			if (span != CellSpan_None)
 			{
@@ -11943,7 +11903,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 
 	// now also compare with the column label extent
 	wxCoord extentLabel;
-	dc.SetFont(GetLabelFont());
+	dc.SetFont(GetLabelFont(GetGridZoom()));
 
 	// We add some margin around text for better readability.
 	const int margin = FromDIP(column ? 10 : 6);
@@ -12026,7 +11986,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 				rect.y = 0;
 				CalcScrolledPosition(rect.x, 0, &rect.x, &dummy);
 				rect.width = cw - rect.x;
-				rect.height = (GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight;
+				rect.height = (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
 				GetColLabelWindow()->Refresh(true, &rect);
 			}
 		}
@@ -12047,7 +12007,7 @@ wxGridExt::AutoSizeColOrRow(int colOrRow, bool setAsMin, wxGridExtDirection dire
 			wxRect rect(CellToRect(colOrRow, 0));
 			rect.x = 0;
 			CalcScrolledPosition(0, rect.y, &dummy, &rect.y);
-			rect.width = m_rowLabelWidth;
+			rect.width = wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
 			rect.height = ch - rect.y;
 
 			m_rowAreaWin->Refresh(true, &rect);
@@ -12175,27 +12135,27 @@ void wxGridExt::AutoSizeColLabelSize(int col)
 
 wxSize wxGridExt::DoGetBestSize() const
 {
-	wxSize size((GridRowAreaEnabled() ? m_rowAreaWidth : 0) + m_rowLabelWidth + m_extraWidth,
-		(GridColAreaEnabled() ? m_colAreaHeight : 0) + m_colLabelHeight + m_extraHeight);
+	wxSize size((GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom()) + m_extraWidth,
+		(GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom()) + m_extraHeight);
 
 	if (m_colWidths.empty())
 	{
-		size.x += m_defaultColWidth * m_numCols;
+		size.x += wxCalcGridScale(m_defaultColWidth, GetGridZoom()) * m_numRows * m_numCols;
 	}
 	else
 	{
 		for (int col = 0; col < m_numCols; col++)
-			size.x += GetColWidth(col);
+			size.x += GetColWidth(col, GetGridZoom());
 	}
 
 	if (m_rowHeights.empty())
 	{
-		size.y += m_defaultRowHeight * m_numRows;
+		size.y += wxCalcGridScale(m_defaultRowHeight, GetGridZoom()) * m_numRows;
 	}
 	else
 	{
 		for (int row = 0; row < m_numRows; row++)
-			size.y += GetRowHeight(row);
+			size.y += GetRowHeight(row, GetGridZoom());
 	}
 
 	return size + GetWindowBorderSize();
@@ -12217,6 +12177,40 @@ wxPen& wxGridExt::GetDividerPen() const
 	return wxNullPen;
 }
 #endif // WXWIN_COMPATIBILITY_2_8
+
+const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
+{
+	m_rowBottoms.Alloc(m_rowHeights.Count());
+	m_rowBottoms.SetCount(0);
+
+	int total = 0;
+	for (const auto& height : m_rowHeights) {
+		int row_h = wxCalcGridScale(height, scale);
+		if (row_h < 0)
+			continue;
+		total += row_h;
+		m_rowBottoms.Add(total);
+	}
+
+	return m_rowBottoms;
+}
+
+const wxArrayInt& wxGridExt::GetColRights(float scale) const
+{
+	m_colRights.Alloc(m_colWidths.Count());
+	m_colRights.SetCount(0);
+
+	int total = 0;
+	for (const auto& width : m_colWidths) {
+		int col_w = wxCalcGridScale(width, scale);
+		if (col_w < 0)
+			continue;
+		total += col_w;
+		m_colRights.Add(total);
+	}
+
+	return m_colRights;
+}
 
 // ----------------------------------------------------------------------------
 // cell value accessor functions

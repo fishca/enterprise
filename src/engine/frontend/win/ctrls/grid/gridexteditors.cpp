@@ -150,7 +150,7 @@ void wxGridExtCellEditorEvtHandler::OnChar(wxKeyEvent& event)
 		int colXPos = 0;
 		for (int i = 0; i < col; i++)
 		{
-			colXPos += m_grid->GetColSize(i);
+			colXPos += m_grid->GetColSize(i, m_grid->GetGridZoom());
 		}
 
 		int xUnit = 1, yUnit = 1;
@@ -204,7 +204,7 @@ void wxGridExtCellEditorEvtHandler::OnChar(wxKeyEvent& event)
 		int colXPos = 0;
 		for (int i = 0; i < col; i++)
 		{
-			colXPos += m_grid->GetColSize(i);
+			colXPos += m_grid->GetColSize(i, m_grid->GetGridZoom());
 		}
 
 		// and add the (modified) text width of the cell contents
@@ -272,7 +272,7 @@ void wxGridExtCellEditor::Destroy()
 	}
 }
 
-void wxGridExtCellEditor::Show(bool show, wxGridExtCellAttr* attr)
+void wxGridExtCellEditor::Show(bool show, wxGridExtCellAttr* attr, float scale)
 {
 	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
 
@@ -292,7 +292,7 @@ void wxGridExtCellEditor::Show(bool show, wxGridExtCellAttr* attr)
 			// Workaround for GTK+1 font setting problem on some platforms
 #if !defined(__WXGTK__) || defined(__WXGTK20__)
 			m_fontOld = m_control->GetFont();
-			m_control->SetFont(attr->GetFont());
+			m_control->SetFont(attr->GetFont(scale));
 #endif
 
 			// can't do anything more in the base class version, the other
@@ -1290,7 +1290,7 @@ void wxGridExtCellBoolEditor::SetSize(const wxRect& r)
 	m_control->Move(checkBoxRect.GetPosition());
 }
 
-void wxGridExtCellBoolEditor::Show(bool show, wxGridExtCellAttr* attr)
+void wxGridExtCellBoolEditor::Show(bool show, wxGridExtCellAttr* attr, float scale)
 {
 	m_control->Show(show);
 

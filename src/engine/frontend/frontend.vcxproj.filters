@@ -797,6 +797,9 @@
     <ClCompile Include="docView\templates\docViewHelp.cpp">
       <Filter>docView\templates</Filter>
     </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridEditorDoc.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">

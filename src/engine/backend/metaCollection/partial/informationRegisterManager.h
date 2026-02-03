@@ -2,11 +2,10 @@
 #define _INFO_REGISTER_MANAGER_H__
 
 #include "informationRegister.h"
-#include "backend/managerInfo.h"
 
-class CInformationRegisterManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CInformationRegisterManager);
+class CManagerDataObjectInformationRegister :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectInformationRegister);
 public:
 
 	CValue Get(const CValue& cFilter = CValue());
@@ -18,10 +17,11 @@ public:
 	CValue SliceFirst(const CValue& cPeriod, const CValue& cFilter = CValue());
 	CValue SliceLast(const CValue& cPeriod, const CValue& cFilter = CValue());
 
-	CInformationRegisterManager(CMetaObjectInformationRegister* metaObject = nullptr);
-	virtual ~CInformationRegisterManager();
+	CManagerDataObjectInformationRegister(CMetaObjectInformationRegister* metaObject = nullptr);
+	virtual ~CManagerDataObjectInformationRegister();
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectInformationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 

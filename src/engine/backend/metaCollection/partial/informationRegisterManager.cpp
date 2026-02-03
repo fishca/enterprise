@@ -8,25 +8,25 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CInformationRegisterManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectInformationRegister, CValue);
 
-CInformationRegisterManager::CInformationRegisterManager(CMetaObjectInformationRegister* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CManagerDataObjectInformationRegister::CManagerDataObjectInformationRegister(CMetaObjectInformationRegister* metaObject) : 
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CInformationRegisterManager::~CInformationRegisterManager()
+CManagerDataObjectInformationRegister::~CManagerDataObjectInformationRegister()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CInformationRegisterManager::GetModuleManager() const {
+CMetaObjectCommonModule* CManagerDataObjectInformationRegister::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CInformationRegisterManager::GetClassType() const
+class_identifier_t CManagerDataObjectInformationRegister::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -34,7 +34,7 @@ class_identifier_t CInformationRegisterManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CInformationRegisterManager::GetClassName() const
+wxString CManagerDataObjectInformationRegister::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -42,7 +42,7 @@ wxString CInformationRegisterManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CInformationRegisterManager::GetString() const
+wxString CManagerDataObjectInformationRegister::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -65,7 +65,7 @@ enum {
 	eGetListForm,
 };
 
-void CInformationRegisterManager::PrepareNames() const
+void CManagerDataObjectInformationRegister::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -97,7 +97,7 @@ void CInformationRegisterManager::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CInformationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -115,29 +115,29 @@ bool CInformationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pvar
 		return true;
 	case eGet:
 		pvarRetValue = lSizeArray > 1 ?
-			CInformationRegisterManager::Get(*paParams[0], *paParams[1])
+			CManagerDataObjectInformationRegister::Get(*paParams[0], *paParams[1])
 			: lSizeArray > 0 ?
-			CInformationRegisterManager::Get(*paParams[0]) :
-			CInformationRegisterManager::Get();
+			CManagerDataObjectInformationRegister::Get(*paParams[0]) :
+			CManagerDataObjectInformationRegister::Get();
 		return true;
 	case eGetFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			CInformationRegisterManager::GetFirst(*paParams[0], *paParams[1])
-			: CInformationRegisterManager::GetFirst(*paParams[0]);
+			CManagerDataObjectInformationRegister::GetFirst(*paParams[0], *paParams[1])
+			: CManagerDataObjectInformationRegister::GetFirst(*paParams[0]);
 		return true;
 	case eGetLast:
 		pvarRetValue = lSizeArray > 1 ?
-			CInformationRegisterManager::GetLast(*paParams[0], *paParams[1])
-			: CInformationRegisterManager::GetLast(*paParams[0]);
+			CManagerDataObjectInformationRegister::GetLast(*paParams[0], *paParams[1])
+			: CManagerDataObjectInformationRegister::GetLast(*paParams[0]);
 		return true;
 	case eSliceFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			CInformationRegisterManager::SliceFirst(*paParams[0], *paParams[1])
-			: CInformationRegisterManager::SliceFirst(*paParams[0]);
+			CManagerDataObjectInformationRegister::SliceFirst(*paParams[0], *paParams[1])
+			: CManagerDataObjectInformationRegister::SliceFirst(*paParams[0]);
 	case eSliceLast:
 		pvarRetValue = lSizeArray > 1 ?
-			CInformationRegisterManager::SliceLast(*paParams[0], *paParams[1])
-			: CInformationRegisterManager::SliceLast(*paParams[0]);
+			CManagerDataObjectInformationRegister::SliceLast(*paParams[0], *paParams[1])
+			: CManagerDataObjectInformationRegister::SliceLast(*paParams[0]);
 		return true;
 	case eSelect:
 		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);

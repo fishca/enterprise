@@ -8,7 +8,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
-CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const 
+CReferenceDataObject* CManagerDataObjectCatalog::FindByCode(const CValue& cParam) const 
 {
 	if (!appData->DesignerMode()) {
 
@@ -47,7 +47,7 @@ CReferenceDataObject* CCatalogManager::FindByCode(const CValue& cParam) const
 	return CReferenceDataObject::Create(m_metaObject);
 }
 
-CReferenceDataObject* CCatalogManager::FindByDescription(const CValue& cParam) const
+CReferenceDataObject* CManagerDataObjectCatalog::FindByDescription(const CValue& cParam) const
 {
 	if (!appData->DesignerMode()) {
 

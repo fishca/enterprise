@@ -7,23 +7,23 @@
 #include "backend/metaData.h"
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectReport, CValue);
 
-CReportManager::CReportManager(CMetaObjectReport* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CManagerDataObjectReport::CManagerDataObjectReport(CMetaObjectReport* metaObject) :
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CReportManager::~CReportManager()
+CManagerDataObjectReport::~CManagerDataObjectReport()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CReportManager::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
+CMetaObjectCommonModule* CManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CReportManager::GetClassType() const
+class_identifier_t CManagerDataObjectReport::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -31,7 +31,7 @@ class_identifier_t CReportManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CReportManager::GetClassName() const
+wxString CManagerDataObjectReport::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -39,7 +39,7 @@ wxString CReportManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CReportManager::GetString() const
+wxString CManagerDataObjectReport::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -49,14 +49,14 @@ wxString CReportManager::GetString() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CReportExternalManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectExternalReport, CValue);
 
-CReportExternalManager::CReportExternalManager() : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper())
+CManagerDataObjectExternalReport::CManagerDataObjectExternalReport() :
+	m_methodHelper(new CMethodHelper())
 {
 }
 
-CReportExternalManager::~CReportExternalManager()
+CManagerDataObjectExternalReport::~CManagerDataObjectExternalReport()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -68,7 +68,7 @@ enum Func {
 	eGetForm
 };
 
-void CReportManager::PrepareNames() const
+void CManagerDataObjectReport::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -88,7 +88,7 @@ void CReportManager::PrepareNames() const
 	}
 }
 
-bool CReportManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -116,16 +116,16 @@ bool CReportManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CVa
 	return false;
 }
 
-void CReportExternalManager::PrepareNames() const
+void CManagerDataObjectExternalReport::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("create", "create(fullPath)");
+	m_methodHelper->AppendFunc("create", 1, "create(fullPath)");
 }
 
 #include "backend/system/systemManager.h"
 #include "backend/metadataReport.h"
 
-bool CReportExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	CValue ret;
 	switch (lMethodNum)
@@ -139,9 +139,7 @@ bool CReportExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetVa
 			return true;
 		}
 		wxDELETE(metaReport);
-		CBackendCoreException::Error(
-			wxString::Format("Failed to load report '%s'", paParams[0]->GetString())
-		);
+		CBackendCoreException::Error("Failed to load report '%s'", paParams[0]->GetString());
 	}
 	}
 	return false;
@@ -151,4 +149,4 @@ bool CReportExternalManager::CallAsFunc(const long lMethodNum, CValue& pvarRetVa
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CReportExternalManager, "externalManagerReport", string_to_clsid("MG_EXTR"));
+SYSTEM_TYPE_REGISTER(CManagerDataObjectExternalReport, "externalManagerReport", string_to_clsid("MG_EXTR"));

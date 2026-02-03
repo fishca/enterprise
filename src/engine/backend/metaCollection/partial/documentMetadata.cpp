@@ -66,20 +66,11 @@ IMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* metaObject)
-{
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormObject: return CreateObjectValue(); break;
-	case eFormList:
-		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm());
-		break;
-	case eFormSelect:
-		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm(), true);
-		break;
-	}
+#include "documentManager.h"
 
-	return nullptr;
+IManagerDataObject* CMetaObjectDocument::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectDocument>(this);
 }
 
 #include "backend/appData.h"
@@ -98,6 +89,22 @@ IRecordDataObjectRef* CMetaObjectDocument::CreateObjectRefValue(const CGuid& obj
 	}
 
 	return pDataRef;
+}
+
+ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormObject: return CreateObjectValue(); break;
+	case eFormList:
+		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm());
+		break;
+	case eFormSelect:
+		return CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm(), true);
+		break;
+	}
+
+	return nullptr;
 }
 
 #pragma region _form_builder_h_

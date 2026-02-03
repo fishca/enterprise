@@ -2,17 +2,17 @@
 #define _MANAGER_DATAPROCESSOR_H__
 
 #include "dataProcessor.h"
-#include "backend/managerInfo.h"
 
-class CDataProcessorManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorManager);
+class CManagerDataObjectDataProcessor :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectDataProcessor);
 public:
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
 
-	CDataProcessorManager(CMetaObjectDataProcessor* metaObject = nullptr);
-	virtual ~CDataProcessorManager();
+	CManagerDataObjectDataProcessor(CMetaObjectDataProcessor* metaObject = nullptr);
+	virtual ~CManagerDataObjectDataProcessor();
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
@@ -34,16 +34,21 @@ protected:
 	CMetaObjectDataProcessor* m_metaObject;
 };
 
-class CDataProcessorExternalManager : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorExternalManager);
+class CManagerDataObjectExternalDataProcessor :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectExternalDataProcessor);
 public:
-	CDataProcessorExternalManager();
-	virtual ~CDataProcessorExternalManager();
+	
+	CManagerDataObjectExternalDataProcessor();
+	virtual ~CManagerDataObjectExternalDataProcessor();
+
+	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual CMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
-		return m_methodHelper; 
-	} 
+		return m_methodHelper;
+	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 

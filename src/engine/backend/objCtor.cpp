@@ -1,6 +1,5 @@
 #include "backend/metaCollection/partial/reference/reference.h"
 #include "backend/metaCollection/partial/list/objectList.h"
-#include "backend/metaCollection/partial/constant.h"
 
 #include "objCtor.h"
 
@@ -33,15 +32,15 @@ CValue* CMetaValueListRefTypeCtor::CreateObject() const
 {
 	IMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
 	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
-	
+
 	if (m_metaObject->ConvertToValue(folderRef)) {
 		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(folderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
 		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(enumRef);
 	}
-	
-	return CValue::CreateAndPrepareValueRef<CListDataObjectRef>((IMetaObjectRecordDataMutableRef *)m_metaObject);
+
+	return CValue::CreateAndPrepareValueRef<CListDataObjectRef>((IMetaObjectRecordDataMutableRef*)m_metaObject);
 }
 
 wxClassInfo* CMetaValueListRegisterTypeCtor::GetClassInfo() const
@@ -57,29 +56,27 @@ CValue* CMetaValueListRegisterTypeCtor::CreateObject() const
 //object class
 wxClassInfo* CMetaValueObjectTypeCtor::GetClassInfo() const
 {
-	IRecordDataObject* dataObject = m_metaObject->CreateRecordDataObject();
-	wxASSERT(dataObject); wxClassInfo* classInfo = dataObject->GetClassInfo();
-	wxDELETE(dataObject); return classInfo;
+	CValuePtr<IRecordDataObject> recordDataObjectValue = 
+		m_metaObject->CreateRecordDataObjectValue();
+	return recordDataObjectValue->GetClassInfo();
 }
 
 CValue* CMetaValueObjectTypeCtor::CreateObject() const
 {
-	return m_metaObject->CreateRecordDataObject();
+	return m_metaObject->CreateRecordDataObjectValue();
 }
 
-//const-object class
-wxClassInfo* CMetaValueConstantObjectTypeCtor::GetClassInfo() const
+//manager class
+wxClassInfo* CMetaValueManagerTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CRecordDataObjectConstant);
+	CValuePtr<IManagerDataObject> managerDataObject = 
+		m_metaObject->CreateManagerDataObjectValue();
+	return managerDataObject->GetClassInfo();
 }
 
-CValue* CMetaValueConstantObjectTypeCtor::CreateObject() const
+CValue* CMetaValueManagerTypeCtor::CreateObject() const
 {
-	CMetaObjectConstant* metaConstValue = nullptr;
-	if (ConvertToMetaValue(metaConstValue))
-		return metaConstValue->CreateObjectValue();
-	wxASSERT(metaConstValue == nullptr);
-	return nullptr;
+	return m_metaObject->CreateManagerDataObjectValue();
 }
 
 //object record key
@@ -96,9 +93,9 @@ CValue* CMetaValueRecordKeyTypeCtor::CreateObject() const
 //object record manager
 wxClassInfo* CMetaValueRecordManagerTypeCtor::GetClassInfo() const
 {
-	IRecordManagerObject* dataObject = m_metaObject->CreateRecordManagerObjectValue();
-	wxASSERT(dataObject); wxClassInfo* classInfo = dataObject->GetClassInfo();
-	wxDELETE(dataObject); return classInfo;
+	CValuePtr<IRecordManagerObject> recordManagerObject = 
+		m_metaObject->CreateRecordManagerObjectValue();
+	return recordManagerObject->GetClassInfo();
 }
 
 CValue* CMetaValueRecordManagerTypeCtor::CreateObject() const
@@ -109,9 +106,9 @@ CValue* CMetaValueRecordManagerTypeCtor::CreateObject() const
 //object record set
 wxClassInfo* CMetaValueRecordSetTypeCtor::GetClassInfo() const
 {
-	IRecordSetObject* dataObject = m_metaObject->CreateRecordSetObjectValue();
-	wxASSERT(dataObject); wxClassInfo* classInfo = dataObject->GetClassInfo();
-	wxDELETE(dataObject); return classInfo;
+	CValuePtr<IRecordSetObject> recordSetObject = 
+		m_metaObject->CreateRecordSetObjectValue();
+	return recordSetObject->GetClassInfo();
 }
 
 CValue* CMetaValueRecordSetTypeCtor::CreateObject() const

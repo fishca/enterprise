@@ -157,7 +157,7 @@ IRecordDataObjectExt* IMetaObjectRecordDataExt::CreateObjectValue(IRecordDataObj
 	return createdValue;
 }
 
-IRecordDataObject* IMetaObjectRecordDataExt::CreateRecordDataObject()
+IRecordDataObject* IMetaObjectRecordDataExt::CreateRecordDataObjectValue()
 {
 	return CreateObjectValue();
 }
@@ -605,7 +605,7 @@ IRecordDataObjectRef* IMetaObjectRecordDataMutableRef::CopyObjectValue(const CGu
 	return createdValue;
 }
 
-IRecordDataObject* IMetaObjectRecordDataMutableRef::CreateRecordDataObject()
+IRecordDataObject* IMetaObjectRecordDataMutableRef::CreateRecordDataObjectValue()
 {
 	return CreateObjectValue();
 }

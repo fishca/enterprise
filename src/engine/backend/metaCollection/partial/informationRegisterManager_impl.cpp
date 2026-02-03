@@ -11,7 +11,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-CValue CInformationRegisterManager::Get(const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::Get(const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -83,7 +83,7 @@ CValue CInformationRegisterManager::Get(const CValue& cFilter)
 	return retTable;
 }
 
-CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::Get(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -160,7 +160,7 @@ CValue CInformationRegisterManager::Get(const CValue& cPeriod, const CValue& cFi
 	return retTable;
 }
 
-CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::GetFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -339,7 +339,7 @@ CValue CInformationRegisterManager::GetFirst(const CValue& cPeriod, const CValue
 	return retTable;
 }
 
-CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::GetLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -518,7 +518,7 @@ CValue CInformationRegisterManager::GetLast(const CValue& cPeriod, const CValue&
 	return retTable;
 }
 
-CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::SliceFirst(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -708,7 +708,7 @@ CValue CInformationRegisterManager::SliceFirst(const CValue& cPeriod, const CVal
 	return retTable;
 }
 
-CValue CInformationRegisterManager::SliceLast(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectInformationRegister::SliceLast(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));

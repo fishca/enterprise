@@ -8,25 +8,25 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CAccumulationRegisterManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectAccumulationRegister, CValue);
 
-CAccumulationRegisterManager::CAccumulationRegisterManager(CMetaObjectAccumulationRegister* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CManagerDataObjectAccumulationRegister::CManagerDataObjectAccumulationRegister(CMetaObjectAccumulationRegister* metaObject) :
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CAccumulationRegisterManager::~CAccumulationRegisterManager()
+CManagerDataObjectAccumulationRegister::~CManagerDataObjectAccumulationRegister()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CAccumulationRegisterManager::GetModuleManager() const { 
-	return m_metaObject->GetModuleManager(); 
+CMetaObjectCommonModule* CManagerDataObjectAccumulationRegister::GetModuleManager() const {
+	return m_metaObject->GetModuleManager();
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CAccumulationRegisterManager::GetClassType() const
+class_identifier_t CManagerDataObjectAccumulationRegister::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -34,7 +34,7 @@ class_identifier_t CAccumulationRegisterManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CAccumulationRegisterManager::GetClassName() const
+wxString CManagerDataObjectAccumulationRegister::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -42,7 +42,7 @@ wxString CAccumulationRegisterManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CAccumulationRegisterManager::GetString() const
+wxString CManagerDataObjectAccumulationRegister::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -60,7 +60,7 @@ enum Func {
 	eGetListForm,
 };
 
-void CAccumulationRegisterManager::PrepareNames() const
+void CManagerDataObjectAccumulationRegister::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -88,7 +88,7 @@ void CAccumulationRegisterManager::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CAccumulationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -102,10 +102,10 @@ bool CAccumulationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pva
 		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordKeyObject>(m_metaObject);
 		return true;
 	case eBalance: pvarRetValue = lSizeArray > 1 ?
-		CAccumulationRegisterManager::Balance(*paParams[0], *paParams[1]) : CAccumulationRegisterManager::Balance(*paParams[0]);
+		CManagerDataObjectAccumulationRegister::Balance(*paParams[0], *paParams[1]) : CManagerDataObjectAccumulationRegister::Balance(*paParams[0]);
 		return true;
 	case eTurnover: pvarRetValue = lSizeArray > 2 ?
-		CAccumulationRegisterManager::Turnovers(*paParams[0], paParams[1], paParams[2]) : CAccumulationRegisterManager::Turnovers(*paParams[0], *paParams[1]);
+		CManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], paParams[1], paParams[2]) : CManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], *paParams[1]);
 		return true;
 	case eSelect:
 		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);
@@ -132,7 +132,7 @@ bool CAccumulationRegisterManager::CallAsFunc(const long lMethodNum, CValue& pva
 	wxASSERT(moduleManager);
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr) 
+	if (pRefData != nullptr)
 		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	return false;
 }

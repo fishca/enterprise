@@ -13,7 +13,7 @@
 //*                           constant value                            *
 //***********************************************************************
 
-CRecordDataObjectConstant* CMetaObjectConstant::CreateObjectValue()
+CRecordDataObjectConstant* CMetaObjectConstant::CreateRecordDataObjectValue()
 {
 	IModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);

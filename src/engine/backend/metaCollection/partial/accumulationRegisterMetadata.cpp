@@ -277,16 +277,11 @@ void CMetaObjectAccumulationRegister::OnRemoveMetaForm(IMetaObjectForm* metaForm
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
 }
+#include "accumulationRegisterManager.h"
 
-ISourceDataObject* CMetaObjectAccumulationRegister::CreateSourceObject(IMetaObjectForm* metaObject)
+IManagerDataObject* CMetaObjectAccumulationRegister::CreateManagerDataObjectValue()
 {
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormList:
-		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
-	}
-
-	return nullptr;
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectAccumulationRegister>(this);
 }
 
 IRecordSetObject* CMetaObjectAccumulationRegister::CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey)
@@ -301,6 +296,17 @@ IRecordSetObject* CMetaObjectAccumulationRegister::CreateRecordSetObjectRegValue
 		return pDataRef;
 	}
 	return CValue::CreateAndPrepareValueRef<CRecordSetObjectAccumulationRegister>(this, uniqueKey);
+}
+
+ISourceDataObject* CMetaObjectAccumulationRegister::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormList:
+		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
+	}
+
+	return nullptr;
 }
 
 //***********************************************************************

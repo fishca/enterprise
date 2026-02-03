@@ -329,9 +329,6 @@
     <ClInclude Include="metaCollection\partial\constantManager.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
-    <ClInclude Include="metaCollection\partial\contextManager.h">
-      <Filter>metaCollection\partial</Filter>
-    </ClInclude>
     <ClInclude Include="metaCollection\partial\dataProcessor.h">
       <Filter>metaCollection\partial</Filter>
     </ClInclude>
@@ -666,6 +663,10 @@
     </ClInclude>
     <ClInclude Include="system\value\valueDatabase.h">
       <Filter>system\value</Filter>
+    </ClInclude>
+    <ClInclude Include="constantCtor.h" />
+    <ClInclude Include="moduleManager\globalContextManager.h">
+      <Filter>moduleManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1042,9 +1043,6 @@
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\constantObject.cpp">
-      <Filter>metaCollection\partial</Filter>
-    </ClCompile>
-    <ClCompile Include="metaCollection\partial\contextManager.cpp">
       <Filter>metaCollection\partial</Filter>
     </ClCompile>
     <ClCompile Include="metaCollection\partial\dataProcessorAction.cpp">
@@ -1492,6 +1490,10 @@
     </ClCompile>
     <ClCompile Include="system\value\valueDatabaseResultSet.cpp">
       <Filter>system\value</Filter>
+    </ClCompile>
+    <ClCompile Include="constantCtor.cpp" />
+    <ClCompile Include="moduleManager\globalContextManager.cpp">
+      <Filter>moduleManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

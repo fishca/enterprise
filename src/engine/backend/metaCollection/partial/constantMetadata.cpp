@@ -91,7 +91,7 @@ bool CMetaObjectConstant::OnDeleteMetaObject()
 	return CMetaObjectAttribute::OnDeleteMetaObject();
 }
 
-#include "backend/objCtor.h"
+#include "backend/constantCtor.h"
 
 bool CMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 {
@@ -99,7 +99,7 @@ bool CMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	registerConstObject();
-	registerManager();
+	registerConstManager();
 
 	return CMetaObjectAttribute::OnBeforeRunMetaObject(flags);
 }
@@ -115,7 +115,7 @@ bool CMetaObjectConstant::OnAfterRunMetaObject(int flags)
 	if (appData->DesignerMode()) {
 
 		if (CMetaObjectAttribute::OnAfterRunMetaObject(flags))
-			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateObjectValue());
+			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateRecordDataObjectValue());
 
 		return false;
 	}
@@ -148,7 +148,7 @@ bool CMetaObjectConstant::OnAfterCloseMetaObject()
 		return false;
 
 	unregisterConstObject();
-	unregisterManager();
+	unregisterConstManager();
 
 	return CMetaObjectAttribute::OnAfterCloseMetaObject();
 }
@@ -159,7 +159,7 @@ IBackendValueForm* CMetaObjectConstant::GetObjectForm()
 {
 	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
 	if (foundedForm == nullptr)
-		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateObjectValue(), m_metaGuid);
+		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateRecordDataObjectValue(), m_metaGuid);
 	return foundedForm;
 }
 

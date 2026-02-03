@@ -43,6 +43,8 @@ class BACKEND_API IMetaObjectRegisterData;
 
 class BACKEND_API ISourceDataObject;
 
+class BACKEND_API IManagerDataObject;
+
 class BACKEND_API IRecordDataObject;
 class BACKEND_API IRecordDataObjectExt;
 class BACKEND_API IRecordDataObjectRef;
@@ -243,6 +245,8 @@ public:
 	);
 #pragma endregion
 
+	virtual IManagerDataObject* CreateManagerDataObjectValue() = 0;
+
 protected:
 
 	//create object data with meta form
@@ -251,6 +255,7 @@ protected:
 
 class BACKEND_API IMetaObjectRecordData
 	: public IMetaObjectGenericData {
+
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectRecordData);
 
 public:
@@ -342,7 +347,7 @@ public:
 #pragma endregion 
 
 	//create single object
-	virtual IRecordDataObject* CreateRecordDataObject() = 0;
+	virtual IRecordDataObject* CreateRecordDataObjectValue() = 0;
 
 #pragma region _form_builder_h_
 	//support form 
@@ -394,7 +399,7 @@ public:
 	IRecordDataObjectExt* CreateObjectValue(IRecordDataObjectExt* objSrc);
 
 	//create single object
-	virtual IRecordDataObject* CreateRecordDataObject();
+	virtual IRecordDataObject* CreateRecordDataObjectValue();
 
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Service; }
@@ -445,8 +450,8 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//create single object
-	virtual IRecordDataObject* CreateRecordDataObject() {
-		wxASSERT_MSG(false, "IMetaObjectRecordDataRef::CreateRecordDataObject");
+	virtual IRecordDataObject* CreateRecordDataObjectValue() {
+		wxASSERT_MSG(false, "IMetaObjectRecordDataRef::CreateRecordDataObjectValue");
 		return nullptr;
 	}
 
@@ -639,7 +644,7 @@ public:
 	IRecordDataObjectRef* CopyObjectValue(const CGuid& guid);
 
 	//create single object
-	virtual IRecordDataObject* CreateRecordDataObject();
+	virtual IRecordDataObject* CreateRecordDataObjectValue();
 
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
@@ -837,10 +842,10 @@ protected:
 	int ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined);
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, eItemMode::eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
 	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, false, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
 	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 
 	//predefinded vector
@@ -1160,8 +1165,22 @@ private:
 
 #pragma endregion 
 
-#pragma region objects 
+// Manager with metaobject 
+#pragma region managers
+class BACKEND_API IManagerDataObject :
+	public CValue {
+public:
+
+	IManagerDataObject() : CValue(eValueTypes::TYPE_VALUE, true) {}
+	virtual ~IManagerDataObject() {}
+
+	virtual CMetaObjectCommonModule* GetModuleManager() const = 0;
+	virtual IMetaObject* GetMetaObject() const = 0;
+};
+#pragma endregion 
+
 //Object with metaobject 
+#pragma region objects 
 class BACKEND_API IRecordDataObject : public CValue, public IActionDataObject,
 	public ISourceDataObject, public IValueDataObject, public IModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(IRecordDataObject);

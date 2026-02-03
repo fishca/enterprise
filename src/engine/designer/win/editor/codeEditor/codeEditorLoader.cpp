@@ -4,12 +4,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "codeEditor.h"
-#include "backend/debugger/debugClient.h"
-#include "frontend/docView/docView.h"
-#include "backend/managerInfo.h"
-
 #include "codeEditorParser.h"
-#include "backend/metaCollection/metaModuleObject.h"
+
+#include "backend/debugger/debugClient.h"
+#include "backend/metaCollection/partial/commonObject.h"
+
+#include "frontend/docView/docView.h"
 
 void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 {
@@ -38,9 +38,9 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 				wxEmptyString
 			);
 		}
-		IModuleDataObject* moduleInfo = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
-		if (moduleInfo != nullptr) {
-			const IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
+		IModuleDataObject* moduleDataObject = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
+		if (moduleDataObject != nullptr) {
+			const IMetaObjectModule* computeModuleObject = moduleDataObject->GetMetaObject();
 			if (computeModuleObject != nullptr) {
 				CParserModule cParser;
 				if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -70,9 +70,9 @@ void CCodeEditor::AddKeywordFromObject(const CValue& vObject)
 				}
 			}
 		}
-		IMetaManagerInfo* metaManager = dynamic_cast<IMetaManagerInfo*>(vObject.GetRef());
-		if (metaManager != nullptr) {
-			CMetaObjectCommonModule* computeManagerModule = metaManager->GetModuleManager();
+		IManagerDataObject* managerDataObject = dynamic_cast<IManagerDataObject*>(vObject.GetRef());
+		if (managerDataObject != nullptr) {
+			CMetaObjectCommonModule* computeManagerModule = managerDataObject->GetModuleManager();
 			if (computeManagerModule != nullptr) {
 				CParserModule cParser;
 				if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
@@ -539,9 +539,9 @@ void CCodeEditor::LoadCallTip()
 					}
 				}
 
-				IModuleDataObject* moduleInfo = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
-				if (moduleInfo) {
-					const IMetaObjectModule* computeModuleObject = moduleInfo->GetMetaObject();
+				IModuleDataObject* moduleDataObject = dynamic_cast<IModuleDataObject*>(vObject.GetRef());
+				if (moduleDataObject) {
+					const IMetaObjectModule* computeModuleObject = moduleDataObject->GetMetaObject();
 					if (computeModuleObject) {
 						CParserModule cParser;
 						if (cParser.ParseModule(computeModuleObject->GetModuleText())) {
@@ -557,9 +557,9 @@ void CCodeEditor::LoadCallTip()
 					}
 				}
 
-				IMetaManagerInfo* metaManager = dynamic_cast<IMetaManagerInfo*>(vObject.GetRef());
-				if (metaManager) {
-					CMetaObjectCommonModule* computeManagerModule = metaManager->GetModuleManager();
+				IManagerDataObject* managerDataObject = dynamic_cast<IManagerDataObject*>(vObject.GetRef());
+				if (managerDataObject) {
+					CMetaObjectCommonModule* computeManagerModule = managerDataObject->GetModuleManager();
 					if (computeManagerModule) {
 						CParserModule cParser;
 						if (cParser.ParseModule(computeManagerModule->GetModuleText())) {
@@ -582,9 +582,9 @@ void CCodeEditor::LoadCallTip()
 			if (m_precompileModule->Compile()) {
 				CPrecompileContext* m_pContext = m_precompileModule->GetContext();
 				for (auto function : m_pContext->cFunctions) {
-					CPrecompileFunction* m_functionContext = function.second;
+					CPrecompileFunction* functionContext = function.second;
 					if (stringUtils::CompareString(function.first, strCurWord)) {
-						sDescription = m_functionContext->strShortDescription;
+						sDescription = functionContext->strShortDescription;
 						break;
 					}
 				}
@@ -639,20 +639,20 @@ void CCodeEditor::LoadSysKeyword()
 		}
 
 		for (auto function : m_pContext->cFunctions) {
-			CPrecompileFunction* m_functionContext = function.second;
-			if (m_functionContext->m_pContext) {
-				if (m_functionContext->m_pContext->nReturn == RETURN_FUNCTION) {
-					m_ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
+			CPrecompileFunction* functionContext = function.second;
+			if (functionContext->m_pContext) {
+				if (functionContext->m_pContext->nReturn == RETURN_FUNCTION) {
+					m_ac.Append(functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, functionContext->strRealName, functionContext->strShortDescription);
 				}
 				else {
-					m_ac.Append(m_functionContext->bExport ? eContentType::eExportProcedure : eContentType::eProcedure, m_functionContext->strRealName, m_functionContext->strShortDescription);
+					m_ac.Append(functionContext->bExport ? eContentType::eExportProcedure : eContentType::eProcedure, functionContext->strRealName, functionContext->strShortDescription);
 				}
 			}
 			else {
-				m_ac.Append(m_functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, m_functionContext->strRealName, m_functionContext->strShortDescription);
+				m_ac.Append(functionContext->bExport ? eContentType::eExportFunction : eContentType::eFunction, functionContext->strRealName, functionContext->strShortDescription);
 			}
 
-			if (m_precompileModule->m_pCurrentContext && m_precompileModule->m_pCurrentContext == m_functionContext->m_pContext) {
+			if (m_precompileModule->m_pCurrentContext && m_precompileModule->m_pCurrentContext == functionContext->m_pContext) {
 				for (auto variable : m_precompileModule->m_pCurrentContext->cVariables) {
 					CPrecompileVariable m_variable = variable.second;
 					if (m_variable.bTempVar)

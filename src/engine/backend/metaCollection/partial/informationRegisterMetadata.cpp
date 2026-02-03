@@ -294,17 +294,11 @@ void CMetaObjectInformationRegister::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 	}
 }
 
-ISourceDataObject* CMetaObjectInformationRegister::CreateSourceObject(IMetaObjectForm* metaObject)
-{
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormRecord:
-		return CreateRecordManagerObjectValue();
-	case eFormList:
-		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
-	}
+#include "informationRegisterManager.h"
 
-	return nullptr;
+IManagerDataObject* CMetaObjectInformationRegister::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectInformationRegister>(this);
 }
 
 IRecordSetObject* CMetaObjectInformationRegister::CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey)
@@ -336,6 +330,19 @@ IRecordManagerObject* CMetaObjectInformationRegister::CreateRecordManagerObjectR
 		return pDataRef;
 	}
 	return CValue::CreateAndPrepareValueRef<CRecordManagerObjectInformationRegister>(this, uniqueKey);
+}
+
+ISourceDataObject* CMetaObjectInformationRegister::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormRecord:
+		return CreateRecordManagerObjectValue();
+	case eFormList:
+		return CValue::CreateAndPrepareValueRef<CListRegisterObject>(this, metaObject->GetTypeForm());
+	}
+
+	return nullptr;
 }
 
 //***********************************************************************

@@ -2,17 +2,17 @@
 #define _ENUMERATION_MANAGER_H__
 
 #include "enumeration.h"
-#include "backend/managerInfo.h"
 
-class CEnumerationManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CEnumerationManager);
+class CManagerDataObjectEnumeration : 
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectEnumeration);
 public:
 
-	CEnumerationManager(CMetaObjectEnumeration *metaObject = nullptr);
-	virtual ~CEnumerationManager();
+	CManagerDataObjectEnumeration(CMetaObjectEnumeration *metaObject = nullptr);
+	virtual ~CManagerDataObjectEnumeration();
 
 	virtual CMetaObjectCommonModule *GetModuleManager() const;
+	virtual CMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 

@@ -30,15 +30,11 @@ IMetaObjectForm* CMetaObjectDataProcessor::GetDefaultFormByID(const form_identif
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectDataProcessor::CreateSourceObject(IMetaObjectForm* metaObject)
-{
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormDataProcessor:
-		return CreateObjectValue(); 
-	}
+#include "dataProcessorManager.h"
 
-	return nullptr;
+IManagerDataObject* CMetaObjectDataProcessor::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectDataProcessor>(this);
 }
 
 #include "backend/appData.h"
@@ -69,14 +65,25 @@ IRecordDataObjectExt* CMetaObjectDataProcessor::CreateObjectExtValue()
 	return pDataRef;
 }
 
+ISourceDataObject* CMetaObjectDataProcessor::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormDataProcessor:
+		return CreateObjectValue();
+	}
+
+	return nullptr;
+}
+
 #pragma region _form_builder_h_
 IBackendValueForm* CMetaObjectDataProcessor::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
 	return IMetaObjectGenericData::CreateAndBuildForm(
-		strFormName, 
-		CMetaObjectDataProcessor::eFormDataProcessor, 
-		ownerControl, 
-		CreateObjectValue(), 
+		strFormName,
+		CMetaObjectDataProcessor::eFormDataProcessor,
+		ownerControl,
+		CreateObjectValue(),
 		formGuid
 	);
 }

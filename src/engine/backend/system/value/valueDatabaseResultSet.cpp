@@ -1,5 +1,6 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
+#include "backend/appData.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueResultSet, CValue);
 
@@ -16,8 +17,8 @@ CValueResultSet::CValueResultSet(IDatabaseResultSet* resultSet)
 CValueResultSet::~CValueResultSet()
 {
 	if (m_resultSet != nullptr)
-		m_resultSet->Close();
-	
+		db_query->CloseResultSet(m_resultSet);
+
 	wxDELETE(m_methodHelper);
 }
 

@@ -1215,6 +1215,7 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 	//////////////////////////////////////////////////
 	std::vector<wxValueTreeListNode*> arrTree;
 	//////////////////////////////////////////////////
+	
 	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	while (resultSet->Next()) {
 
@@ -1229,24 +1230,28 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 			IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
 		rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+		
 		//////////////////////////////////////////////////
 		arrTree.push_back(rowData);
 		//////////////////////////////////////////////////
 	};
 
 	/* wxDataViewModel::*/ m_modelProvider->BeforeReset();
+
 	static CValue cReference;
-	for (auto& node : arrTree) {
+	for (const auto node : arrTree) {
+		
 		CReferenceDataObject* reference = NULL;
 		if (node->GetValue(*m_metaObject->GetDataParent(), cReference)) {
 			if (cReference.ConvertToValue(reference)) {
-				auto it = std::find_if(arrTree.begin(), arrTree.end(), [reference](wxValueTreeListNode* node)
-					{
-						return reference->GetGuid() == node->GetGuid();
-					}
-				);
-				if (it != arrTree.end()) node->SetParent(*it);
-				else node->SetParent(GetRoot());
+				
+				auto iterator = std::find_if(arrTree.begin(), arrTree.end(),
+					[reference](wxValueTreeListNode* node) { return reference->GetGuid() == node->GetGuid(); });
+
+				if (iterator != arrTree.end())
+					node->SetParent(*iterator);
+				else
+					node->SetParent(GetRoot());
 			}
 		}
 	}

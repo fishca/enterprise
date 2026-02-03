@@ -38,7 +38,7 @@ bool CValueArray::Init(CValue** paParams, const long lSizeArray)
 void CValueArray::CheckIndex(unsigned int index) const //array index must start from 1
 {
 	if ((index < 0 || index >= m_listValue.size() && !appData->DesignerMode()))
-		CBackendCoreException::Error("Index goes beyond array");
+		CBackendCoreException::Error(_("Index goes beyond array"));
 }
 
 //working with an array as an aggregate object

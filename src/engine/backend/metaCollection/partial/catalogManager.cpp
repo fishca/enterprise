@@ -8,30 +8,30 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CCatalogManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectCatalog, CValue);
 
-CCatalogManager::CCatalogManager(CMetaObjectCatalog* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CManagerDataObjectCatalog::CManagerDataObjectCatalog(CMetaObjectCatalog* metaObject) : 
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CCatalogManager::~CCatalogManager()
+CManagerDataObjectCatalog::~CManagerDataObjectCatalog()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CCatalogManager::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CMetaObjectCommonModule* CManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 #include "reference/reference.h"
 
-CReferenceDataObject* CCatalogManager::EmptyRef() const 
+CReferenceDataObject* CManagerDataObjectCatalog::EmptyRef() const 
 {
 	return CReferenceDataObject::Create(m_metaObject);
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CCatalogManager::GetClassType() const
+class_identifier_t CManagerDataObjectCatalog::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -39,7 +39,7 @@ class_identifier_t CCatalogManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CCatalogManager::GetClassName() const
+wxString CManagerDataObjectCatalog::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -47,7 +47,7 @@ wxString CCatalogManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CCatalogManager::GetString() const
+wxString CManagerDataObjectCatalog::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -67,7 +67,7 @@ enum Func {
 	eEmptyRef
 };
 
-void CCatalogManager::PrepareNames() const
+void CManagerDataObjectCatalog::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -96,7 +96,7 @@ void CCatalogManager::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CCatalogManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);

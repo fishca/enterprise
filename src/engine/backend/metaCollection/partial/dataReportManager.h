@@ -2,22 +2,22 @@
 #define _MANAGER_REPORT_H__
 
 #include "dataReport.h"
-#include "backend/managerInfo.h"
 
-class CReportManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CReportManager);
+class CManagerDataObjectReport :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectReport);
 public:
 
-	CReportManager(CMetaObjectReport* metaObject = nullptr);
-	virtual ~CReportManager();
+	CManagerDataObjectReport(CMetaObjectReport* metaObject = nullptr);
+	virtual ~CManagerDataObjectReport();
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectReport* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
-		return m_methodHelper; 
-	} 
+		return m_methodHelper;
+	}
 
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
@@ -34,17 +34,21 @@ protected:
 	CMethodHelper* m_methodHelper;
 };
 
-class CReportExternalManager : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CReportExternalManager);
+class CManagerDataObjectExternalReport :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectExternalReport);
 public:
-	CReportExternalManager();
-	virtual ~CReportExternalManager();
+	CManagerDataObjectExternalReport();
+	virtual ~CManagerDataObjectExternalReport();
+
+	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual CMetaObjectReport* GetMetaObject() const { return nullptr; }
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
-	
+
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 

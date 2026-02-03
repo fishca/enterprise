@@ -47,7 +47,7 @@ bool CValueDatabaseLayer::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 		{
 			IPreparedStatement* preparedStatement = db_query->PrepareStatement(paParams[0]->GetString());
 			if (preparedStatement == nullptr) {
-				CBackendCoreException::Error(db_query->GetErrorMessage());
+				CBackendCoreException::Error(CBackendCoreException::GetLastError());
 				return false;
 			}
 			pvarRetValue = CValue::CreateAndPrepareValueRef<CValuePreparedStatement>(preparedStatement);

@@ -2,18 +2,17 @@
 #define _MANAGER_DOCUMENT_H__
 
 #include "document.h"
-#include "backend/managerInfo.h"
 
-class CDocumentManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CDocumentManager);
-
+class CManagerDataObjectDocument :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectDocument);
 public:
 
-	CDocumentManager(CMetaObjectDocument* metaObject = nullptr);
-	virtual ~CDocumentManager();
+	CManagerDataObjectDocument(CMetaObjectDocument* metaObject = nullptr);
+	virtual ~CManagerDataObjectDocument();
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectDocument* GetMetaObject() const { return m_metaObject; }
 
 	CReferenceDataObject* FindByNumber(const CValue& vCode, const CValue& vPeriod);
 	CReferenceDataObject* EmptyRef();

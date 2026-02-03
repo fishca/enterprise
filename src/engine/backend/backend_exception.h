@@ -136,7 +136,7 @@ protected:
 private:
 
 	//error handling routines
-	static const wxString& GetErrorDesc(int codeError);	
+	static const wxString& GetErrorDesc(int codeError);
 	static wxString ProcessExceptionError(const wxString& strFileName,
 		const wxString& strModuleName, const wxString& strDocPath,
 		const unsigned int currPos, const unsigned int currLine,
@@ -157,6 +157,7 @@ private:
 #pragma region _exception_h_
 
 class BACKEND_API CBackendCoreException : public CBackendException {
+protected:
 	CBackendCoreException(const wxString& strErrorDescription) : CBackendException(strErrorDescription) {}
 public:
 
@@ -184,6 +185,7 @@ class BACKEND_API CBackendAccessException : public CBackendException {
 public:
 	static void Error();
 };
+
 #pragma endregion 
 
 #endif 

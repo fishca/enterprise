@@ -8,29 +8,30 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDocumentManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectDocument, CValue);
 
-CDocumentManager::CDocumentManager(CMetaObjectDocument* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject) {
+CManagerDataObjectDocument::CManagerDataObjectDocument(CMetaObjectDocument* metaObject) : 
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject) 
+{
 }
 
-CDocumentManager::~CDocumentManager() {
+CManagerDataObjectDocument::~CManagerDataObjectDocument() {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CDocumentManager::GetModuleManager() const {
+CMetaObjectCommonModule* CManagerDataObjectDocument::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
 #include "reference/reference.h"
 
-CReferenceDataObject* CDocumentManager::EmptyRef() {
+CReferenceDataObject* CManagerDataObjectDocument::EmptyRef() {
 	return CReferenceDataObject::Create(m_metaObject);
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CDocumentManager::GetClassType() const
+class_identifier_t CManagerDataObjectDocument::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -38,7 +39,7 @@ class_identifier_t CDocumentManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CDocumentManager::GetClassName() const
+wxString CManagerDataObjectDocument::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -46,7 +47,7 @@ wxString CDocumentManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CDocumentManager::GetString() const
+wxString CManagerDataObjectDocument::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -66,7 +67,7 @@ enum Func {
 
 #include "backend/metaData.h"
 
-void CDocumentManager::PrepareNames() const
+void CManagerDataObjectDocument::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -93,7 +94,7 @@ void CDocumentManager::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CDocumentManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);

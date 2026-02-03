@@ -11,7 +11,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue& cFilter)
+CValue CManagerDataObjectAccumulationRegister::Balance(const CValue& cPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -182,7 +182,7 @@ CValue CAccumulationRegisterManager::Balance(const CValue& cPeriod, const CValue
 	return retTable;
 }
 
-CValue CAccumulationRegisterManager::Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter)
+CValue CManagerDataObjectAccumulationRegister::Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));

@@ -83,11 +83,14 @@ public:
 
 protected:
 
-	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+	//create manager
+	virtual IManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
 	virtual IRecordDataObjectExt* CreateObjectExtValue();  //create object 
+
+	//create object data with meta form
+	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);

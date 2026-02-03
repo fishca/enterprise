@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "moduleManager.h"
-#include "backend/metaCollection/partial/contextManager.h"
+#include "globalContextManager.h"
 
 #include "backend/appData.h"
 
@@ -15,11 +15,9 @@
 //*                                   Singleton class "moduleManager"                                     *
 //*********************************************************************************************************
 
-#include "backend/metadataConfiguration.h"
-
 IModuleManager::IModuleManager(IMetaData* metadata, CMetaObjectModule* obj) :
 	CValue(eValueTypes::TYPE_VALUE), IModuleDataObject(new CCompileModule(obj)),
-	m_objectManager(new CContextSystemManager(metadata)),
+	m_objectManager(new CValueGlobalContextManager(metadata)),
 	m_metaManager(new CMetadataUnit(metadata)),
 	m_methodHelper(new CMethodHelper()),
 	m_initialized(false)
@@ -323,21 +321,21 @@ bool CModuleManagerConfiguration::DestroyMainModule()
 //main module - initialize
 bool CModuleManagerConfiguration::StartMainModule(bool force)
 {
-	if (force) 
+	if (force)
 		return true;
 
-	if (!m_initialized) 
+	if (!m_initialized)
 		return false;
 
-	bool result = false; 
+	bool result = false;
 	if (BeforeStart()) {
-		OnStart(); 
+		OnStart();
 		result = true;
 	}
 
 	if (CApplicationData::IsForceExit())
 		return false;
-	
+
 	return result;
 }
 
@@ -357,7 +355,7 @@ bool CModuleManagerConfiguration::ExitMainModule(bool force)
 
 	if (CApplicationData::IsForceExit())
 		return false;
-	
+
 	return result;
 }
 

@@ -7,7 +7,7 @@
 #include "backend/appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-CReferenceDataObject* CDocumentManager::FindByNumber(const CValue& vNumber, const CValue& vPeriod)
+CReferenceDataObject* CManagerDataObjectDocument::FindByNumber(const CValue& vNumber, const CValue& vPeriod)
 {
 	if (!appData->DesignerMode()) {
 	

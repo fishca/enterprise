@@ -93,6 +93,9 @@ protected:
 		return true;
 	}
 
+	//create manager
+	virtual IManagerDataObject* CreateManagerDataObjectValue();
+
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
 

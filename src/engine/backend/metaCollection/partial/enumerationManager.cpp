@@ -9,23 +9,23 @@
 #include "commonObject.h"
 #include "reference/reference.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CEnumerationManager, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectEnumeration, CValue);
 
-CEnumerationManager::CEnumerationManager(CMetaObjectEnumeration* metaObject) : CValue(eValueTypes::TYPE_VALUE, true),
-m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CManagerDataObjectEnumeration::CManagerDataObjectEnumeration(CMetaObjectEnumeration* metaObject) :
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CEnumerationManager::~CEnumerationManager()
+CManagerDataObjectEnumeration::~CManagerDataObjectEnumeration()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CEnumerationManager::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CMetaObjectCommonModule* CManagerDataObjectEnumeration::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CEnumerationManager::GetClassType() const
+class_identifier_t CManagerDataObjectEnumeration::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -33,7 +33,7 @@ class_identifier_t CEnumerationManager::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CEnumerationManager::GetClassName() const
+wxString CManagerDataObjectEnumeration::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -41,7 +41,7 @@ wxString CEnumerationManager::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CEnumerationManager::GetString() const
+wxString CManagerDataObjectEnumeration::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -55,7 +55,7 @@ enum Func {
 	eGetSelectForm,
 };
 
-void CEnumerationManager::PrepareNames() const
+void CManagerDataObjectEnumeration::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -94,18 +94,18 @@ void CEnumerationManager::PrepareNames() const
 //****************************************************************************
 //*                              Override attribute                          *
 //****************************************************************************
-bool CEnumerationManager::SetPropVal(const long lPropNum, CValue& cValue) {
+bool CManagerDataObjectEnumeration::SetPropVal(const long lPropNum, CValue& cValue) {
 	return false;
 }
 
-bool CEnumerationManager::GetPropVal(const long lPropNum, CValue& pvarPropVal) {
+bool CManagerDataObjectEnumeration::GetPropVal(const long lPropNum, CValue& pvarPropVal) {
 	pvarPropVal = CReferenceDataObject::Create(m_metaObject,
 		m_metaObject->GetEnumObjectArray()[lPropNum]->GetGuid()
 	);
 	return true;
 }
 
-bool CEnumerationManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CManagerDataObjectEnumeration::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);

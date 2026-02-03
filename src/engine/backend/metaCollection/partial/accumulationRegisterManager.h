@@ -2,20 +2,20 @@
 #define _ACC_REGISTER_MANAGER_H__
 
 #include "accumulationRegister.h"
-#include "backend/managerInfo.h"
 
-class CAccumulationRegisterManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CAccumulationRegisterManager);
+class CManagerDataObjectAccumulationRegister : 
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectAccumulationRegister);
 public:
 
 	CValue Balance(const CValue& cPeriod, const CValue& cFilter = CValue());
 	CValue Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter = CValue());
 
-	CAccumulationRegisterManager(CMetaObjectAccumulationRegister* metaObject = nullptr);
-	virtual ~CAccumulationRegisterManager();
+	CManagerDataObjectAccumulationRegister(CMetaObjectAccumulationRegister* metaObject = nullptr);
+	virtual ~CManagerDataObjectAccumulationRegister();
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectAccumulationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 

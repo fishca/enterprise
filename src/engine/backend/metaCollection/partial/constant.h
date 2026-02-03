@@ -5,9 +5,10 @@
 
 class BACKEND_API CRecordDataObjectConstant;
 
-class BACKEND_API CMetaObjectConstant : public CMetaObjectAttribute, public IBackendCommandItem {
+class BACKEND_API CMetaObjectConstant : 
+	public CMetaObjectAttribute, public IBackendCommandItem {
+	
 	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
-
 protected:
 	enum
 	{
@@ -47,7 +48,7 @@ public:
 	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
 
 	//create empty object
-	virtual CRecordDataObjectConstant* CreateObjectValue();
+	virtual CRecordDataObjectConstant* CreateRecordDataObjectValue();
 
 	//support form 
 	virtual IBackendValueForm* GetObjectForm();

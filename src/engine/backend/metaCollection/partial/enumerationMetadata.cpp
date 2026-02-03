@@ -39,15 +39,21 @@ IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifie
 	return nullptr;
 }
 
+#include "enumerationManager.h"
+
+IManagerDataObject* CMetaObjectEnumeration::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectEnumeration>(this);
+}
+
 ISourceDataObject* CMetaObjectEnumeration::CreateSourceObject(IMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
-	case eFormList: return
-		new CListDataObjectEnumRef(this, metaObject->GetTypeForm()); break;
-	case eFormSelect: return
-		new CListDataObjectEnumRef(this, metaObject->GetTypeForm(), true);
-		break;
+	case eFormList: 
+		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, metaObject->GetTypeForm());
+	case eFormSelect: 
+		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
 	}
 
 	return nullptr;

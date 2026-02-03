@@ -5,17 +5,6 @@
 
 #include "metaData.h"
 
-#include "backend/compiler/enumFactory.h"
-#include "backend/metaCollection/partial/contextManager.h"
-#include "backend/system/systemManager.h"
-#include "backend/debugger/debugServer.h"
-#include "backend/debugger/debugClient.h"
-
-#include "backend/databaseLayer/databaseLayer.h"
-#include "backend/databaseLayer/databaseErrorCodes.h"
-
-#include "backend/appData.h"
-
 //**************************************************************************************************
 //*                                          IMetaData											   *
 //**************************************************************************************************

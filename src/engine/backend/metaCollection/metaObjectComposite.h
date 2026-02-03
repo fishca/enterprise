@@ -65,6 +65,7 @@ class IMetaValueTypeCtor;
 //*                                  Factory & metadata                                      *
 //********************************************************************************************
 
+
 class BACKEND_API IMetaObjectCompositeData
 	: public IMetaObject {
 	wxDECLARE_ABSTRACT_CLASS(IMetaObjectCompositeData);

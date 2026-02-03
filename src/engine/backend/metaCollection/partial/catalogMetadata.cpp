@@ -58,23 +58,11 @@ IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t&
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaObject)
-{
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormObject:
-		return CreateObjectValue(eObjectMode::OBJECT_ITEM);
-	case eFormFolder:
-		return CreateObjectValue(eObjectMode::OBJECT_FOLDER);
-	case eFormList:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
-	case eFormSelect:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
-	case eFormFolderSelect:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true);
-	}
+#include "catalogManager.h"
 
-	return nullptr;
+IManagerDataObject* CMetaObjectCatalog::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectCatalog>(this);
 }
 
 #include "backend/appData.h"
@@ -94,6 +82,25 @@ IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode
 	}
 
 	return pDataRef;
+}
+
+ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormObject:
+		return CreateObjectValue(eObjectMode::OBJECT_ITEM);
+	case eFormFolder:
+		return CreateObjectValue(eObjectMode::OBJECT_FOLDER);
+	case eFormList:
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
+	case eFormSelect:
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
+	case eFormFolderSelect:
+		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true);
+	}
+
+	return nullptr;
 }
 
 #pragma region _form_builder_h_

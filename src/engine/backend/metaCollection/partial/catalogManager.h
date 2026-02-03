@@ -2,17 +2,17 @@
 #define _MANAGER_CATALOG_H__
 
 #include "catalog.h"
-#include "backend/managerInfo.h"
 
-class CCatalogManager : public CValue,
-	public IMetaManagerInfo {
-	wxDECLARE_DYNAMIC_CLASS(CCatalogManager);
+class CManagerDataObjectCatalog :
+	public IManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectCatalog);
 public:
 
-	CCatalogManager(CMetaObjectCatalog* metaObject = nullptr);
-	virtual ~CCatalogManager();
+	CManagerDataObjectCatalog(CMetaObjectCatalog* metaObject = nullptr);
+	virtual ~CManagerDataObjectCatalog();
 
 	virtual CMetaObjectCommonModule* GetModuleManager() const;
+	virtual CMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
 
 	CReferenceDataObject* FindByCode(const CValue& vCode) const;
 	CReferenceDataObject* FindByDescription(const CValue& cParam) const;

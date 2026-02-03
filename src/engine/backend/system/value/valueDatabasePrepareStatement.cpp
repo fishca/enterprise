@@ -1,5 +1,6 @@
 #include "valueDatabase.h"
 #include "backend/databaseLayer/databaseLayer.h"
+#include "backend/appData.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValuePreparedStatement, CValue);
 
@@ -12,18 +13,17 @@ enum
 	eRunQueryWithResults,
 };
 
-CValuePreparedStatement::CValuePreparedStatement(IPreparedStatement* preparedStatement) : 
-	CValue(eValueTypes::TYPE_VALUE), m_preparedStatement(preparedStatement) 
+CValuePreparedStatement::CValuePreparedStatement(IPreparedStatement* preparedStatement) :
+	CValue(eValueTypes::TYPE_VALUE), m_preparedStatement(preparedStatement)
 {
 }
 
 CValuePreparedStatement::~CValuePreparedStatement()
 {
 	if (m_preparedStatement != nullptr)
-		m_preparedStatement->Close();
-
-	wxDELETE(m_preparedStatement);
+		db_query->CloseStatement(m_preparedStatement);
 }
+
 void CValuePreparedStatement::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
@@ -48,7 +48,7 @@ bool CValuePreparedStatement::CallAsFunc(const long lMethodNum, CValue& pvarRetV
 		if (m_preparedStatement != nullptr) {
 			IDatabaseResultSet* resultSet = m_preparedStatement->RunQueryWithResults();
 			if (resultSet == nullptr) {
-				CBackendCoreException::Error(m_preparedStatement->GetErrorMessage());
+				CBackendCoreException::Error(CBackendCoreException::GetLastError());
 				return false;
 			}
 			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueResultSet>(resultSet);
@@ -64,18 +64,24 @@ bool CValuePreparedStatement::CallAsFunc(const long lMethodNum, CValue& pvarRetV
 
 bool CValuePreparedStatement::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) //procudre call
 {
-	if (m_preparedStatement != nullptr && lMethodNum == eSetParam )
+	if (m_preparedStatement != nullptr && lMethodNum == eSetParam)
 	{
+		const int position = paParams[0]->GetInteger();
+		if (position == 0 || position > m_preparedStatement->GetParameterCount()) {
+			CBackendCoreException::Error(_("Index goes beyond statement"));
+			return false;
+		}
+
 		if (paParams[1]->GetType() == eValueTypes::TYPE_BOOLEAN)
-			m_preparedStatement->SetParamBool(paParams[0]->GetInteger(), paParams[1]->GetBoolean());
+			m_preparedStatement->SetParamBool(position, paParams[1]->GetBoolean());
 		else if (paParams[1]->GetType() == eValueTypes::TYPE_NUMBER)
-			m_preparedStatement->SetParamNumber(paParams[0]->GetInteger(), paParams[1]->GetNumber());
+			m_preparedStatement->SetParamNumber(position, paParams[1]->GetNumber());
 		else if (paParams[1]->GetType() == eValueTypes::TYPE_DATE)
-			m_preparedStatement->SetParamDate(paParams[0]->GetInteger(), paParams[1]->GetDateTime());
+			m_preparedStatement->SetParamDate(position, paParams[1]->GetDateTime());
 		else if (paParams[1]->GetType() == eValueTypes::TYPE_STRING)
-			m_preparedStatement->SetParamDate(paParams[0]->GetInteger(), paParams[1]->GetDateTime());
-		else 
-			m_preparedStatement->SetParamNull(paParams[0]->GetInteger());
+			m_preparedStatement->SetParamString(position, paParams[1]->GetString());
+		else
+			m_preparedStatement->SetParamNull(position);
 
 		return true;
 	}

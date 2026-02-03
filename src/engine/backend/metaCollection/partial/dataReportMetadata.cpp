@@ -30,15 +30,11 @@ IMetaObjectForm* CMetaObjectReport::GetDefaultFormByID(const form_identifier_t& 
 	return nullptr;
 }
 
-ISourceDataObject* CMetaObjectReport::CreateSourceObject(IMetaObjectForm* metaObject)
-{
-	switch (metaObject->GetTypeForm())
-	{
-	case eFormReport:
-		return CreateObjectValue();
-	}
+#include "dataReportManager.h"
 
-	return nullptr;
+IManagerDataObject* CMetaObjectReport::CreateManagerDataObjectValue()
+{
+	return CValue::CreateAndPrepareValueRef<CManagerDataObjectReport>(this);
 }
 
 #include "backend/appData.h"
@@ -77,6 +73,17 @@ IRecordDataObjectExt* CMetaObjectReport::CreateObjectExtValue()
 	}
 
 	return pDataRef;
+}
+
+ISourceDataObject* CMetaObjectReport::CreateSourceObject(IMetaObjectForm* metaObject)
+{
+	switch (metaObject->GetTypeForm())
+	{
+	case eFormReport:
+		return CreateObjectValue();
+	}
+
+	return nullptr;
 }
 
 #pragma region _form_builder_h_

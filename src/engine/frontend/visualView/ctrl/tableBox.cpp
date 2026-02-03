@@ -69,11 +69,11 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
 		return;
-	
+
 	wxDataViewCtrl* tc = dataViewCtrl ?
 		dataViewCtrl : dynamic_cast<wxDataViewCtrl*>(GetWxObject());
 	wxASSERT(tc);
-	
+
 	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
 	//clear all controls 
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
@@ -87,17 +87,17 @@ void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
 		}
 
 		RemoveChild(childColumn);
-		
+
 		childColumn->SetParent(nullptr);
 		childColumn->DecrRef();
 	}
-	
+
 	//clear all children
 	RemoveAllChildren();
-	
+
 	//clear all old columns
 	tc->ClearColumns();
-	
+
 	//create new columns
 	IValueModel::IValueModelColumnCollection* tableColumns = m_tableModel->GetColumnCollection();
 	wxASSERT(tableColumns);
@@ -246,7 +246,9 @@ void CValueTableBox::CalculateColumnPos()
 		wxHeaderCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
 		if (headerCtrl != nullptr) {
 
-			bool need_reset_columns_order = false; ;
+			bool need_reset_columns_order = false;
+
+			dataViewCtrl->SetExpanderColumn(nullptr);
 
 			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 
@@ -264,6 +266,10 @@ void CValueTableBox::CalculateColumnPos()
 					dataViewCtrl->DeleteColumn(column);
 					dataViewCtrl->InsertColumn(real_column_index, column);
 					need_reset_columns_order = true;
+				}
+
+				if (column->IsShown() && dataViewCtrl->GetExpanderColumn() == nullptr) {
+					dataViewCtrl->SetExpanderColumn(column);
 				}
 			}
 

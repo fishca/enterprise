@@ -1051,7 +1051,6 @@ public:
 	virtual const wxArrayInt& GetLineEnds(const wxGridExt* grid) const wxOVERRIDE
 	{
 		return grid->GetColRights(grid->GetGridZoom());
-
 	}
 	virtual int GetDefaultLineSize(const wxGridExt* grid) const wxOVERRIDE
 	{

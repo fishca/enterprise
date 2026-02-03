@@ -3463,7 +3463,7 @@ int wxGridExt::GetColWidth(int col, float scale) const
 	const int width = m_colWidths[col];
 
 	// a negative width indicates a hidden column
-	return width > 0 ? (width * scale) : 0;
+	return width > 0 ? wxCalcGridScale(width, scale) : 0;
 }
 
 int wxGridExt::GetColLeft(int col, float scale) const
@@ -3471,17 +3471,15 @@ int wxGridExt::GetColLeft(int col, float scale) const
 	if (m_colWidths.IsEmpty())
 		return GetColPos(col) * wxCalcGridScale(m_defaultColWidth, scale);
 
-	int width = 0;
+	int total_width = 0;
 
 	for (int idx = 0; idx < col; idx++)
 	{
-		const int& w_col = *(m_colWidths.begin() + idx);
-		if (w_col < 0)
-			continue;
-		width += (w_col * scale);
+		const int& width = *(m_colWidths.begin() + idx);
+		if (width > 0) total_width += wxCalcGridScale(width, scale);
 	}
 
-	return width;
+	return total_width;
 }
 
 int wxGridExt::GetColRight(int col, float scale) const
@@ -3489,17 +3487,15 @@ int wxGridExt::GetColRight(int col, float scale) const
 	if (m_colWidths.IsEmpty())
 		return (GetColPos(col) + 1) * wxCalcGridScale(m_defaultColWidth, scale);
 
-	int width = 0;
+	int total_width = 0;
 
 	for (int idx = 0; idx <= col; idx++)
 	{
-		const int& w_col = *(m_colWidths.begin() + idx);
-		if (w_col < 0)
-			continue;
-		width += (w_col * scale);
+		const int& width = *(m_colWidths.begin() + idx);
+		if (width > 0) total_width += wxCalcGridScale(width, scale);
 	}
 
-	return width;
+	return total_width;
 }
 
 int wxGridExt::GetRowHeight(int row, float scale) const
@@ -3519,17 +3515,15 @@ int wxGridExt::GetRowTop(int row, float scale) const
 	if (m_rowHeights.IsEmpty())
 		return GetRowPos(row) * wxCalcGridScale(m_defaultRowHeight, scale);
 
-	int height = 0;
+	int total_height = 0;
 
 	for (int idx = 0; idx < row; idx++)
 	{
-		const int& h_row = *(m_rowHeights.begin() + idx);
-		if (h_row < 0)
-			continue;
-		height += wxCalcGridScale(h_row, scale);
+		const int& height = *(m_rowHeights.begin() + idx);
+		if (height > 0) total_height += wxCalcGridScale(height, scale);
 	}
 
-	return height;
+	return total_height;
 }
 
 int wxGridExt::GetRowBottom(int row, float scale) const
@@ -3537,17 +3531,15 @@ int wxGridExt::GetRowBottom(int row, float scale) const
 	if (m_rowHeights.IsEmpty())
 		return (GetRowPos(row) + 1) * wxCalcGridScale(m_defaultRowHeight, scale);
 
-	int height = 0;
+	int total_height = 0;
 
 	for (int idx = 0; idx <= row; idx++)
 	{
-		const int& h_row = *(m_rowHeights.begin() + idx);
-		if (h_row < 0)
-			continue;
-		height += wxCalcGridScale(h_row, scale);
+		const int& height = *(m_rowHeights.begin() + idx);
+		if (height > 0) total_height += wxCalcGridScale(height, scale);
 	}
 
-	return height;
+	return total_height;
 }
 
 void wxGridExt::CalcDimensions()
@@ -12183,17 +12175,18 @@ const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
 	m_rowBottoms.Alloc(m_rowHeights.Count());
 	m_rowBottoms.SetCount(0);
 
-	int total = 0;
-	for (const auto& height : m_rowHeights) {
-		int row_h = wxCalcGridScale(height, scale);
-		if (row_h > 0) 
+	int total_height = 0;
+	for (const int& height : m_rowHeights) {
+		const int scaled_height = wxCalcGridScale(height, scale);
+		if (height > 0)
 		{
-			total += row_h;
-			m_rowBottoms.Add(total);
+			total_height += scaled_height;
+			m_rowBottoms.Add(total_height);
 		}
-		else 
+		else
 		{
-			m_rowBottoms.Add(0);
+			//total_height += scaled_height;
+			m_rowBottoms.Add(total_height);
 		}
 	}
 
@@ -12205,17 +12198,18 @@ const wxArrayInt& wxGridExt::GetColRights(float scale) const
 	m_colRights.Alloc(m_colWidths.Count());
 	m_colRights.SetCount(0);
 
-	int total = 0;
-	for (const auto& width : m_colWidths) {
-		int col_w = wxCalcGridScale(width, scale);
-		if (col_w > 0) 
+	int total_width = 0;
+	for (const int& width : m_colWidths) {
+		const int scaled_width = wxCalcGridScale(width, scale);
+		if (width > 0)
 		{
-			total += col_w;
-			m_colRights.Add(total);
+			total_width += scaled_width;
+			m_colRights.Add(total_width);
 		}
 		else
 		{
-			m_colRights.Add(0);
+			//total_width += scaled_width;
+			m_colRights.Add(total_width);
 		}
 	}
 

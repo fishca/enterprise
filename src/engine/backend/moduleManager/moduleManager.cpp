@@ -18,7 +18,7 @@
 IValueModuleManager::IValueModuleManager(IMetaData* metadata, CValueMetaObjectModule* obj) :
 	CValue(eValueTypes::TYPE_VALUE), IModuleDataObject(new CCompileModule(obj)),
 	m_objectManager(new CValueGlobalContextManager(metadata)),
-	m_metaManager(new CMetadataUnit(metadata)),
+	m_metaManager(new CValueMetadataUnit(metadata)),
 	m_methodHelper(new CMethodHelper()),
 	m_initialized(false)
 {
@@ -366,4 +366,4 @@ bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
 SYSTEM_TYPE_REGISTER(CValueModuleManagerConfiguration, "configModuleManager", string_to_clsid("SO_COMM"));
 
 SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueModuleUnit, "moduleManager", string_to_clsid("SO_MODL"));
-SYSTEM_TYPE_REGISTER(IValueModuleManager::CMetadataUnit, "metadata", string_to_clsid("SO_METD"));
+SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueMetadataUnit, "metadata", string_to_clsid("SO_METD"));

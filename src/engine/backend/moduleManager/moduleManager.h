@@ -111,14 +111,14 @@ public:
 		CMethodHelper* m_methodHelper;
 	};
 
-	class BACKEND_API CMetadataUnit :
+	class BACKEND_API CValueMetadataUnit :
 		public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CMetadataUnit);
+		wxDECLARE_DYNAMIC_CLASS(CValueMetadataUnit);
 	public:
 
-		CMetadataUnit() {}
-		CMetadataUnit(IMetaData* metaData);
-		virtual ~CMetadataUnit();
+		CValueMetadataUnit() {}
+		CValueMetadataUnit(IMetaData* metaData);
+		virtual ~CValueMetadataUnit();
 
 		//get common module 
 		IMetaData* GetMetaData() const { return m_metaData; }
@@ -129,7 +129,7 @@ public:
 		//operator '=='
 		virtual bool CompareValueEQ(const CValue& cParam) const override
 		{
-			CMetadataUnit* compareMetadata = dynamic_cast<CMetadataUnit*>(cParam.GetRef());
+			CValueMetadataUnit* compareMetadata = dynamic_cast<CValueMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
 				return m_metaData == compareMetadata->GetMetaData();
 			}
@@ -139,7 +139,7 @@ public:
 
 		//operator '!='
 		virtual bool CompareValueNE(const CValue& cParam) const override {
-			CMetadataUnit* compareMetadata = dynamic_cast<CMetadataUnit*>(cParam.GetRef());
+			CValueMetadataUnit* compareMetadata = dynamic_cast<CValueMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
 				return m_metaData != compareMetadata->GetMetaData();
 			}
@@ -243,7 +243,7 @@ public:
 
 	//system object:
 	CValue* GetObjectManager() const { return m_objectManager; }
-	CMetadataUnit* GetMetaManager() const { return m_metaManager; }
+	CValueMetadataUnit* GetMetaManager() const { return m_metaManager; }
 
 	virtual std::vector<CValuePtr<CValueModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
 
@@ -262,7 +262,7 @@ protected:
 	CValuePtr<CValue> m_objectManager;
 
 	// global metamanager
-	CValuePtr<CMetadataUnit> m_metaManager;
+	CValuePtr<CValueMetadataUnit> m_metaManager;
 
 	//map with compile data
 	std::map<const IValueMetaObject*, CValuePtr<CValue>> m_listCommonModuleValue;

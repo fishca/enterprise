@@ -8,15 +8,15 @@
 
 #include "backend/system/value/valueMap.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CMetadataUnit, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueMetadataUnit, CValue);
 
-IValueModuleManager::CMetadataUnit::CMetadataUnit(IMetaData* metaData) :
+IValueModuleManager::CValueMetadataUnit::CValueMetadataUnit(IMetaData* metaData) :
 	CValue(eValueTypes::TYPE_VALUE, true),
 	m_methodHelper(new CMethodHelper()), m_metaData(metaData)
 {
 }
 
-IValueModuleManager::CMetadataUnit::~CMetadataUnit()
+IValueModuleManager::CValueMetadataUnit::~CValueMetadataUnit()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -36,7 +36,7 @@ enum
 	enAccumulationRegisters,
 };
 
-void IValueModuleManager::CMetadataUnit::PrepareNames() const
+void IValueModuleManager::CValueMetadataUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp("commonModules", true, false, g_metaCommonModuleCLSID);
@@ -56,12 +56,12 @@ void IValueModuleManager::CMetadataUnit::PrepareNames() const
 //*                              Override attribute                          *
 //****************************************************************************
 
-bool IValueModuleManager::CMetadataUnit::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool IValueModuleManager::CValueMetadataUnit::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueModuleManager::CMetadataUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal)//attribute value
+bool IValueModuleManager::CValueMetadataUnit::GetPropVal(const long lPropNum, CValue& pvarPropVal)//attribute value
 {
 	CValueStructure* valStruct = CValue::CreateAndPrepareValueRef<CValueStructure>();
 	switch (lPropNum)

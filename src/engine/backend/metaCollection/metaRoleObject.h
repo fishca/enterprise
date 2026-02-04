@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CMetaObjectRole : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectRole);
+class BACKEND_API CValueMetaObjectRole : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectRole);
 protected:
 	enum
 	{
@@ -12,7 +12,7 @@ protected:
 	};
 public:
 
-	CMetaObjectRole(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectRole(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;

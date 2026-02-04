@@ -40,7 +40,7 @@ bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
 {
 	m_gridEditor = new CGridEditor(doc, m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
-	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<IMetaObjectSpreadsheet>());
+	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>());
 
 	return CMetaView::OnCreate(doc, flags);
 }
@@ -184,7 +184,7 @@ bool CSpreadsheetEditDocument::OnCreate(const wxString& path, long flags)
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	const IMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IMetaObjectSpreadsheet>();
+	const IValueMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IValueMetaObjectSpreadsheet>();
 	if (creator != nullptr)
 		return GetGridCtrl()->LoadDocument(creator->GetSpreadsheetDesc());
 
@@ -197,7 +197,7 @@ bool CSpreadsheetEditDocument::SaveAs()
 	if (!docTemplate)
 		return false;
 
-	const IMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IMetaObjectSpreadsheet>();
+	const IValueMetaObjectSpreadsheet* creator = m_metaObject->ConvertToType<IValueMetaObjectSpreadsheet>();
 	if (creator == nullptr)
 		return false;
 

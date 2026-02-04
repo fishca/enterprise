@@ -86,11 +86,11 @@ CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID i
 
 CCodeEditor::~CCodeEditor()
 {
-	const IMetaObject* metaObject = m_document->GetMetaObject();
+	const IValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
 	const IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IModuleManager* moduleManager = metaData->GetModuleManager();
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	IModuleDataObject* dataRef = nullptr;
@@ -318,7 +318,7 @@ bool CCodeEditor::LoadModule()
 	wxDELETE(m_precompileModule);
 
 	if (m_document != nullptr) {
-		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 		if (moduleObject != nullptr) {
 			m_precompileModule = new CPrecompileCode(moduleObject);
 
@@ -354,7 +354,7 @@ bool CCodeEditor::SaveModule()
 {
 	if (m_document != nullptr) {
 
-		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 
 		if (moduleObject != nullptr) {
 			moduleObject->SetModuleText(GetText());
@@ -392,7 +392,7 @@ void CCodeEditor::ActivateEditor()
 {
 	if (m_document != nullptr) {
 	
-		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();	
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();	
 		if (moduleObject != nullptr && (moduleObject->GetClassType() == g_metaModuleCLSID || moduleObject->GetClassType() == g_metaManagerCLSID))
 			objectInspector->SelectObject(moduleObject->GetParent());
 		else
@@ -458,11 +458,11 @@ void CCodeEditor::ShowMethods()
 
 bool CCodeEditor::SyntaxControl(bool throwMessage) const
 {
-	const IMetaObject* metaObject = m_document->GetMetaObject();
+	const IValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
 	const IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IModuleManager* moduleManager = metaData->GetModuleManager();
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	IModuleDataObject* dataRef = nullptr;
@@ -654,7 +654,7 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 	if (m_bInitialized) {
 
-		IMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IMetaObjectModule>();
+		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
 
 		if (moduleObject != nullptr) {
 
@@ -711,7 +711,7 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				IMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
 
-				IModuleManager* moduleManager = metaData->GetModuleManager();
+				IValueModuleManager* moduleManager = metaData->GetModuleManager();
 				wxASSERT(moduleManager);
 				IModuleDataObject* pRefData = nullptr;
 				if (moduleManager->FindCompileModule(m_document->GetMetaObject(), pRefData)) {

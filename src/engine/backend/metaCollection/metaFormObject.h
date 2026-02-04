@@ -24,13 +24,13 @@ protected:
 };
 
 // -----------------------------------------------------------------------
-// IMetaObjectForm
+// IValueMetaObjectForm
 // -----------------------------------------------------------------------
 
 class BACKEND_API ISourceDataObject;
 
-class BACKEND_API IMetaObjectForm : public IMetaObjectModule {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectForm);
+class BACKEND_API IValueMetaObjectForm : public IValueMetaObjectModule {
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectForm);
 private:
 
 	enum
@@ -44,18 +44,18 @@ public:
 	virtual bool AccessRight_Show() const { return true; }
 #pragma endregion
 
-	IMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	IValueMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	bool LoadFormData(IBackendValueForm* value) const;
 	bool SaveFormData(IBackendValueForm* value);
 
 #pragma region _form_creator_h_
 
-	static IBackendValueForm* CreateAndBuildForm(const IMetaObjectForm* creator,
+	static IBackendValueForm* CreateAndBuildForm(const IValueMetaObjectForm* creator,
 		IBackendControlFrame* ownerControl = nullptr,
 		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
 
-	static IBackendValueForm* CreateAndBuildForm(const IMetaObjectForm* creator, const form_identifier_t& form_id = defaultFormType,
+	static IBackendValueForm* CreateAndBuildForm(const IValueMetaObjectForm* creator, const form_identifier_t& form_id = defaultFormType,
 		IBackendControlFrame* ownerControl = nullptr,
 		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
 
@@ -89,15 +89,15 @@ protected:
 };
 
 // -----------------------------------------------------------------------
-// CMetaObjectForm
+// CValueMetaObjectForm
 // -----------------------------------------------------------------------
 
-class BACKEND_API CMetaObjectForm : public IMetaObjectForm {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectForm);
+class BACKEND_API CValueMetaObjectForm : public IValueMetaObjectForm {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectForm);
 
 public:
 
-	CMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -156,16 +156,16 @@ private:
 
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CMetaObjectForm::FillFormType);
+	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CValueMetaObjectForm::FillFormType);
 };
 
 // -----------------------------------------------------------------------
-// CMetaObjectCommonForm
+// CValueMetaObjectCommonForm
 // -----------------------------------------------------------------------
 
-class BACKEND_API CMetaObjectCommonForm :
-	public IMetaObjectForm, public IBackendCommandItem {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonForm);
+class BACKEND_API CValueMetaObjectCommonForm :
+	public IValueMetaObjectForm, public IBackendCommandItem {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonForm);
 public:
 
 #pragma region access_generic
@@ -176,7 +176,7 @@ public:
 	bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
-	CMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -232,7 +232,7 @@ private:
 	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
 
 #pragma region role
-	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
+	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("use"), _("Use"));
 #pragma endregion
 };
 

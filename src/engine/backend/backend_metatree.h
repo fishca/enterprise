@@ -4,7 +4,7 @@
 #include "backend_form.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-class BACKEND_API IMetaObject;
+class BACKEND_API IValueMetaObject;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API IBackendMetadataTree {
@@ -12,7 +12,7 @@ public:
 
 	virtual ~IBackendMetadataTree() {}
 
-	virtual form_identifier_t SelectFormType(class CMetaObjectForm* metaObject) const = 0;
+	virtual form_identifier_t SelectFormType(class CValueMetaObjectForm* metaObject) const = 0;
 	virtual void Activate() = 0;
 
 	virtual void SetReadOnly(bool readOnly = true) = 0;
@@ -21,14 +21,14 @@ public:
 	virtual void Modify(bool modify) = 0;
 	virtual void EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine = true) = 0;
 
-	virtual bool OpenFormMDI(IMetaObject* obj) = 0;
-	virtual bool OpenFormMDI(IMetaObject* obj, IBackendMetaDocument*& foundedDoc) = 0;
-	virtual bool CloseFormMDI(IMetaObject* obj) = 0;
+	virtual bool OpenFormMDI(IValueMetaObject* obj) = 0;
+	virtual bool OpenFormMDI(IValueMetaObject* obj, IBackendMetaDocument*& foundedDoc) = 0;
+	virtual bool CloseFormMDI(IValueMetaObject* obj) = 0;
 
-	virtual IBackendMetaDocument* GetDocument(IMetaObject* obj) const = 0;
+	virtual IBackendMetaDocument* GetDocument(IValueMetaObject* obj) const = 0;
 
-	virtual bool RenameMetaObject(IMetaObject* obj, const wxString& strNewName) = 0;
-	virtual void CloseMetaObject(IMetaObject* obj) = 0;
+	virtual bool RenameMetaObject(IValueMetaObject* obj, const wxString& strNewName) = 0;
+	virtual void CloseMetaObject(IValueMetaObject* obj) = 0;
 
 	virtual void UpdateChoiceSelection() {}
 
@@ -47,9 +47,9 @@ protected:
 	};
 
 	struct CTreeDataMetaItem : CTreeData {
-		IMetaObject* m_metaObject; //тип элемента
+		IValueMetaObject* m_metaObject; //тип элемента
 	public:
-		CTreeDataMetaItem(IMetaObject* metaObject) :
+		CTreeDataMetaItem(IValueMetaObject* metaObject) :
 			m_metaObject(metaObject) {
 		}
 	};

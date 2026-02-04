@@ -7,23 +7,23 @@
 #include "backend/metaData.h"
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectReport, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectReport, CValue);
 
-CManagerDataObjectReport::CManagerDataObjectReport(CMetaObjectReport* metaObject) :
+CValueManagerDataObjectReport::CValueManagerDataObjectReport(CValueMetaObjectReport* metaObject) :
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CManagerDataObjectReport::~CManagerDataObjectReport()
+CValueManagerDataObjectReport::~CValueManagerDataObjectReport()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectReport::GetClassType() const
+class_identifier_t CValueManagerDataObjectReport::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -31,7 +31,7 @@ class_identifier_t CManagerDataObjectReport::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectReport::GetClassName() const
+wxString CValueManagerDataObjectReport::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -39,7 +39,7 @@ wxString CManagerDataObjectReport::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectReport::GetString() const
+wxString CValueManagerDataObjectReport::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -49,14 +49,14 @@ wxString CManagerDataObjectReport::GetString() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectExternalReport, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectExternalReport, CValue);
 
-CManagerDataObjectExternalReport::CManagerDataObjectExternalReport() :
+CValueManagerDataObjectExternalReport::CValueManagerDataObjectExternalReport() :
 	m_methodHelper(new CMethodHelper())
 {
 }
 
-CManagerDataObjectExternalReport::~CManagerDataObjectExternalReport()
+CValueManagerDataObjectExternalReport::~CValueManagerDataObjectExternalReport()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -68,11 +68,11 @@ enum Func {
 	eGetForm
 };
 
-void CManagerDataObjectReport::PrepareNames() const
+void CValueManagerDataObjectReport::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -88,7 +88,7 @@ void CManagerDataObjectReport::PrepareNames() const
 	}
 }
 
-bool CManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -107,7 +107,7 @@ bool CManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRet
 	}
 	}
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
@@ -116,7 +116,7 @@ bool CManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRet
 	return false;
 }
 
-void CManagerDataObjectExternalReport::PrepareNames() const
+void CValueManagerDataObjectExternalReport::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc("create", 1, "create(fullPath)");
@@ -125,7 +125,7 @@ void CManagerDataObjectExternalReport::PrepareNames() const
 #include "backend/system/systemManager.h"
 #include "backend/metadataReport.h"
 
-bool CManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	CValue ret;
 	switch (lMethodNum)
@@ -134,7 +134,7 @@ bool CManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue&
 	{
 		CMetaDataReport* metaReport = new CMetaDataReport();
 		if (metaReport->LoadFromFile(paParams[0]->GetString())) {
-			CModuleManagerExternalReport* moduleManager = metaReport->GetModuleManager();
+			CValueModuleManagerExternalReport* moduleManager = metaReport->GetModuleManager();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}
@@ -149,4 +149,4 @@ bool CManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CValue&
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CManagerDataObjectExternalReport, "externalManagerReport", string_to_clsid("MG_EXTR"));
+SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalReport, "externalManagerReport", string_to_clsid("MG_EXTR"));

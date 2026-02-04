@@ -25,7 +25,7 @@ class CInterfaceEditor : public wxWindow {
 	wxTreeItemId m_treeINFORMATION_REGISTERS;
 	wxTreeItemId m_treeACCUMULATION_REGISTERS;
 
-	IMetaObject* m_metaInterface;
+	IValueMetaObject* m_metaInterface;
 
 	class wxTreeItemMetaData : public wxTreeItemData {
 		IInterfaceObject* m_metaObject; //тип элемента
@@ -53,7 +53,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		IMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_interfaceCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -85,7 +85,7 @@ public:
 
 	CInterfaceEditor(wxWindow* parent,
 		wxWindowID winid = wxID_ANY,
-		IMetaObject* metaObject = nullptr
+		IValueMetaObject* metaObject = nullptr
 	);
 };
 

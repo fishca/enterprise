@@ -130,7 +130,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 
 	const wxTreeItemId& root = m_choiceRole->AddRoot(wxT(""));
 
-	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectRole>(g_metaRoleCLSID)) {
+	for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectRole>(g_metaRoleCLSID)) {
 		CDataUserRole entry;
 		entry.m_strRoleGuid = object->GetDocPath();
 		entry.m_strRoleName = object->GetName();
@@ -142,7 +142,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	}
 
 	m_choiceLanguage = new wxChoice(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	for (const auto object : activeMetaData->GetAnyArrayObject<CMetaObjectLanguage>(g_metaLanguageCLSID)) {
+	for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID)) {
 
 		CDataUserLanguageItem entry;
 		entry.m_strLanguageGuid = object->GetDocPath();
@@ -232,7 +232,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 			userInfo.m_strUserFullName = m_textFullName->GetValue();
 			userInfo.m_strUserPassword = m_strUserPassword;
 
-			const CMetaObjectConfiguration* commonObject = activeMetaData->GetCommonMetaObject();
+			const CValueMetaObjectConfiguration* commonObject = activeMetaData->GetCommonMetaObject();
 			wxASSERT(commonObject);
 
 			const int selection = m_choiceLanguage->GetSelection();

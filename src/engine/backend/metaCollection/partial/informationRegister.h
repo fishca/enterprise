@@ -4,8 +4,8 @@
 #include "commonObject.h"
 #include "informationRegisterEnum.h"
 
-class CMetaObjectInformationRegister : public IMetaObjectRegisterData {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectInformationRegister);
+class CValueMetaObjectInformationRegister : public IValueMetaObjectRegisterData {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectInformationRegister);
 private:
 	enum
 	{
@@ -27,16 +27,16 @@ private:
 	};
 
 public:
-	class CMetaObjectRecordManager : public IMetaObject {
-		wxDECLARE_DYNAMIC_CLASS(CMetaObjectRecordManager);
+	class CValueMetaObjectRecordManager : public IValueMetaObject {
+		wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectRecordManager);
 	public:
-		CMetaObjectRecordManager() : IMetaObject() {}
+		CValueMetaObjectRecordManager() : IValueMetaObject() {}
 	};
 
 public:
 
-	CMetaObjectInformationRegister();
-	virtual ~CMetaObjectInformationRegister();
+	CValueMetaObjectInformationRegister();
+	virtual ~CValueMetaObjectInformationRegister();
 
 	eWriteRegisterMode GetWriteRegisterMode() const {
 		return m_propertyWriteMode->GetValueAsEnum();
@@ -46,8 +46,8 @@ public:
 		return m_propertyPeriodicity->GetValueAsEnum();
 	}
 
-	bool CreateAndUpdateSliceFirstTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
-	bool CreateAndUpdateSliceLastTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateSliceFirstTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateSliceLastTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -70,8 +70,8 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//has record manager 
 	virtual bool HasRecordManager() const { return GetWriteRegisterMode() == eWriteRegisterMode::eIndependent; }
@@ -81,11 +81,11 @@ public:
 	virtual bool HasRecorder() const { return GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder; }
 
 	//get module object in compose object 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//create associate value 
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
@@ -98,7 +98,7 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	/**
 	* Property events
@@ -108,7 +108,7 @@ public:
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 
 		if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 			array.emplace_back(m_propertyAttributeLineActive->GetMetaObject());
@@ -129,7 +129,7 @@ protected:
 
 	//get dimension keys 
 	virtual bool FillArrayObjectByDimention(
-		std::vector<IMetaObjectAttribute*>& array) const {
+		std::vector<IValueMetaObjectAttribute*>& array) const {
 
 		if (GetWriteRegisterMode() != eWriteRegisterMode::eSubordinateRecorder) {
 
@@ -137,7 +137,7 @@ protected:
 				array.emplace_back(m_propertyAttributePeriod->GetMetaObject());
 			}
 
-			FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaDimensionCLSID });
+			FillArrayObjectByFilter<IValueMetaObjectAttribute>(array, { g_metaDimensionCLSID });
 		}
 		else {
 			array = { m_propertyAttributeRecorder->GetMetaObject() };
@@ -146,14 +146,14 @@ protected:
 	}
 
 	//create manager
-	virtual IManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create record set
-	virtual IRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
-	virtual IRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
+	virtual IValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
+	virtual IValueRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
@@ -205,21 +205,21 @@ private:
 		return true;
 	}
 
-	CMetaObjectRecordManager* m_metaRecordManager;
+	CValueMetaObjectRecordManager* m_metaRecordManager;
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CMetaObjectInformationRegister::FillFormRecord);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectInformationRegister::FillFormList);
+	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CValueMetaObjectInformationRegister::FillFormRecord);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectInformationRegister::FillFormList);
 
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
 	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
 	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("writeMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
 
-	friend class CRecordSetObjectInformationRegister;
-	friend class CRecordManagerObjectInformationRegister;
+	friend class CValueRecordSetObjectInformationRegister;
+	friend class CValueRecordManagerObjectInformationRegister;
 
 	friend class IMetaData;
 };
@@ -228,18 +228,18 @@ private:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CRecordSetObjectInformationRegister : public IRecordSetObject {
-	CRecordSetObjectInformationRegister(CMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
-		IRecordSetObject(metaObject, uniqueKey) {
+class CValueRecordSetObjectInformationRegister : public IValueRecordSetObject {
+	CValueRecordSetObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+		IValueRecordSetObject(metaObject, uniqueKey) {
 	}
-	CRecordSetObjectInformationRegister(const CRecordSetObjectInformationRegister& source) :
-		IRecordSetObject(source) {
+	CValueRecordSetObjectInformationRegister(const CValueRecordSetObjectInformationRegister& source) :
+		IValueRecordSetObject(source) {
 	}
 public:
 
 	//default methods
-	virtual IRecordSetObject* CopyRegisterValue() {
-		return new CRecordSetObjectInformationRegister(*this);
+	virtual IValueRecordSetObject* CopyRegisterValue() {
+		return new CValueRecordSetObjectInformationRegister(*this);
 	}
 
 	virtual bool WriteRecordSet(bool replace = true, bool clearTable = true);
@@ -261,21 +261,21 @@ public:
 
 protected:
 	friend class CValue;
-	friend class CMetaObjectInformationRegister;
+	friend class CValueMetaObjectInformationRegister;
 };
 
-class CRecordManagerObjectInformationRegister : public IRecordManagerObject {
+class CValueRecordManagerObjectInformationRegister : public IValueRecordManagerObject {
 public:
-	CRecordManagerObjectInformationRegister(CMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
-		IRecordManagerObject(metaObject, uniqueKey)
+	CValueRecordManagerObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+		IValueRecordManagerObject(metaObject, uniqueKey)
 	{
 	}
-	CRecordManagerObjectInformationRegister(const CRecordManagerObjectInformationRegister& source) :
-		IRecordManagerObject(source)
+	CValueRecordManagerObjectInformationRegister(const CValueRecordManagerObjectInformationRegister& source) :
+		IValueRecordManagerObject(source)
 	{
 	}
-	virtual IRecordManagerObject* CopyRegister(bool showValue = false) {
-		IRecordManagerObject* objectRef = CopyRegisterValue();
+	virtual IValueRecordManagerObject* CopyRegister(bool showValue = false) {
+		IValueRecordManagerObject* objectRef = CopyRegisterValue();
 		if (objectRef != nullptr && showValue)
 			objectRef->ShowFormValue();
 		return objectRef;
@@ -312,7 +312,7 @@ public:
 
 protected:
 	friend class CValue;
-	friend class CMetaObjectInformationRegister;
+	friend class CValueMetaObjectInformationRegister;
 };
 
 #endif 

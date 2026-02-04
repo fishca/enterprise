@@ -12,42 +12,42 @@
 //*                         metaData                                    * 
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectConstant, CMetaObjectAttribute)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectConstant, CValueMetaObjectAttribute)
 
 //***********************************************************************
 //*                         Attributes                                  * 
 //***********************************************************************
 
-CMetaObjectConstant::CMetaObjectConstant() : CMetaObjectAttribute()
+CValueMetaObjectConstant::CValueMetaObjectConstant() : CValueMetaObjectAttribute()
 {
 	//set default proc
 	m_propertyModule->GetMetaObject()->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
 	m_propertyModule->GetMetaObject()->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
 }
 
-CMetaObjectConstant::~CMetaObjectConstant()
+CValueMetaObjectConstant::~CValueMetaObjectConstant()
 {
 }
 
-bool CMetaObjectConstant::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectConstant::LoadData(CMemoryReader& dataReader)
 {
 	//load object module
 	m_propertyModule->GetMetaObject()->LoadMeta(dataReader);
 
-	return CMetaObjectAttribute::LoadData(dataReader);
+	return CValueMetaObjectAttribute::LoadData(dataReader);
 }
 
-bool CMetaObjectConstant::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectConstant::SaveData(CMemoryWriter& dataWritter)
 {
 	//save object module
 	m_propertyModule->GetMetaObject()->SaveMeta(dataWritter);
 
-	return CMetaObjectAttribute::SaveData(dataWritter);
+	return CValueMetaObjectAttribute::SaveData(dataWritter);
 }
 
-bool CMetaObjectConstant::DeleteData()
+bool CValueMetaObjectConstant::DeleteData()
 {
-	return CMetaObjectAttribute::DeleteData();
+	return CValueMetaObjectAttribute::DeleteData();
 }
 
 //***********************************************************************
@@ -56,44 +56,44 @@ bool CMetaObjectConstant::DeleteData()
 
 #include "backend/appData.h"
 
-bool CMetaObjectConstant::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectConstant::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!CMetaObjectAttribute::OnCreateMetaObject(metaData, flags))
+	if (!CValueMetaObjectAttribute::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return m_propertyModule->GetMetaObject()->OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectConstant::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectConstant::OnLoadMetaObject(IMetaData* metaData)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!m_propertyModule->GetMetaObject()->OnLoadMetaObject(metaData))
 		return false;
 
-	return CMetaObjectAttribute::OnLoadMetaObject(metaData);
+	return CValueMetaObjectAttribute::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectConstant::OnSaveMetaObject(int flags)
+bool CValueMetaObjectConstant::OnSaveMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnSaveMetaObject(flags))
 		return false;
 
-	return CMetaObjectAttribute::OnSaveMetaObject(flags);
+	return CValueMetaObjectAttribute::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectConstant::OnDeleteMetaObject()
+bool CValueMetaObjectConstant::OnDeleteMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnDeleteMetaObject())
 		return false;
 
-	return CMetaObjectAttribute::OnDeleteMetaObject();
+	return CValueMetaObjectAttribute::OnDeleteMetaObject();
 }
 
 #include "backend/constantCtor.h"
 
-bool CMetaObjectConstant::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnBeforeRunMetaObject(flags))
 		return false;
@@ -101,48 +101,48 @@ bool CMetaObjectConstant::OnBeforeRunMetaObject(int flags)
 	registerConstObject();
 	registerConstManager();
 
-	return CMetaObjectAttribute::OnBeforeRunMetaObject(flags);
+	return CValueMetaObjectAttribute::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectConstant::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectConstant::OnAfterRunMetaObject(int flags)
 {
 	if (!m_propertyModule->GetMetaObject()->OnAfterRunMetaObject(flags))
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
 
-		if (CMetaObjectAttribute::OnAfterRunMetaObject(flags))
+		if (CValueMetaObjectAttribute::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModule->GetMetaObject(), CreateRecordDataObjectValue());
 
 		return false;
 	}
 
-	return CMetaObjectAttribute::OnAfterRunMetaObject(flags);
+	return CValueMetaObjectAttribute::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectConstant::OnBeforeCloseMetaObject()
+bool CValueMetaObjectConstant::OnBeforeCloseMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnBeforeCloseMetaObject())
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
 
 		if (moduleManager->RemoveCompileModule(m_propertyModule->GetMetaObject()))
-			return CMetaObjectAttribute::OnAfterCloseMetaObject();
+			return CValueMetaObjectAttribute::OnAfterCloseMetaObject();
 
 		return false;
 	}
 
-	return CMetaObjectAttribute::OnBeforeCloseMetaObject();
+	return CValueMetaObjectAttribute::OnBeforeCloseMetaObject();
 }
 
-bool CMetaObjectConstant::OnAfterCloseMetaObject()
+bool CValueMetaObjectConstant::OnAfterCloseMetaObject()
 {
 	if (!m_propertyModule->GetMetaObject()->OnAfterCloseMetaObject())
 		return false;
@@ -150,16 +150,16 @@ bool CMetaObjectConstant::OnAfterCloseMetaObject()
 	unregisterConstObject();
 	unregisterConstManager();
 
-	return CMetaObjectAttribute::OnAfterCloseMetaObject();
+	return CValueMetaObjectAttribute::OnAfterCloseMetaObject();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IBackendValueForm* CMetaObjectConstant::GetObjectForm()
+IBackendValueForm* CValueMetaObjectConstant::GetObjectForm()
 {
 	IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(nullptr, nullptr, m_metaGuid);
 	if (foundedForm == nullptr)
-		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateRecordDataObjectValue(), m_metaGuid);
+		return IValueMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, CreateRecordDataObjectValue(), m_metaGuid);
 	return foundedForm;
 }
 
@@ -167,4 +167,4 @@ IBackendValueForm* CMetaObjectConstant::GetObjectForm()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectConstant, "constant", g_metaConstantCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectConstant, "constant", g_metaConstantCLSID);

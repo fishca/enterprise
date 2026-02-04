@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CMetaObjectInterface : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectInterface);
+class BACKEND_API CValueMetaObjectInterface : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectInterface);
 protected:
 
 	enum
@@ -34,7 +34,7 @@ public:
 		return false;
 	}
 
-	CMetaObjectInterface(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectInterface(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -47,23 +47,23 @@ public:
 #pragma region __array_h__
 
 	//interface
-	std::vector<CMetaObjectInterface*> GetInterfaceArrayObject(
-		std::vector<CMetaObjectInterface*>& array = std::vector<CMetaObjectInterface*>()) const {
-		FillArrayObjectByFilter<CMetaObjectInterface>(array, { g_metaInterfaceCLSID });
+	std::vector<CValueMetaObjectInterface*> GetInterfaceArrayObject(
+		std::vector<CValueMetaObjectInterface*>& array = std::vector<CValueMetaObjectInterface*>()) const {
+		FillArrayObjectByFilter<CValueMetaObjectInterface>(array, { g_metaInterfaceCLSID });
 		return array;
 	}
 
 #pragma endregion
 
 	bool GetInterfaceItemArrayObject(EInterfaceCommandSection page,
-		std::vector<IMetaObject*>& array) const;
+		std::vector<IValueMetaObject*>& array) const;
 
 #pragma region __filter_h__
 
 	//interface
 	template <typename _T1>
-	CMetaObjectInterface* FindInterfaceObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<CMetaObjectInterface>(id, { g_metaInterfaceCLSID });
+	CValueMetaObjectInterface* FindInterfaceObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<CValueMetaObjectInterface>(id, { g_metaInterfaceCLSID });
 	}
 
 #pragma endregion 
@@ -76,7 +76,7 @@ protected:
 private:
 	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categorySecondary, wxT("picture"), _("Picture"));
 #pragma region role
-	CRole* m_roleUse = IMetaObject::CreateRole(wxT("use"), _("Use"));
+	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("use"), _("Use"));
 #pragma endregion
 };
 

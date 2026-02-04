@@ -7,7 +7,7 @@ enum
 };
 
 
-CRecordDataObjectConstant::CActionCollection CRecordDataObjectConstant::GetActionCollection(const form_identifier_t& formType)
+CValueRecordDataObjectConstant::CActionCollection CValueRecordDataObjectConstant::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection catalogActions(this);
 	catalogActions.AddAction(wxT("saveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
@@ -15,7 +15,7 @@ CRecordDataObjectConstant::CActionCollection CRecordDataObjectConstant::GetActio
 	return catalogActions;
 }
 
-void CRecordDataObjectConstant::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void CValueRecordDataObjectConstant::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{

@@ -6,7 +6,7 @@
 //const-object class
 wxClassInfo* CMetaValueConstantObjectTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CRecordDataObjectConstant);
+	return CLASSINFO(CValueRecordDataObjectConstant);
 }
 
 CValue* CMetaValueConstantObjectTypeCtor::CreateObject() const
@@ -17,10 +17,10 @@ CValue* CMetaValueConstantObjectTypeCtor::CreateObject() const
 //const-manager class
 wxClassInfo* CMetaValueConstManagerTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CManagerDataObjectConstant);
+	return CLASSINFO(CValueManagerDataObjectConstant);
 }
 
 CValue* CMetaValueConstManagerTypeCtor::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CManagerDataObjectConstant>(m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectConstant>(m_metaObject);
 }

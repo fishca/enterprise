@@ -107,8 +107,8 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
 	CMetaDataDataProcessor* metaData = ((CDataProcessorFileDocument*)docParent)->GetMetaData();
-	CMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
-	CMetaObjectModule *moduleMeta = commonMeta->GetModuleObject();
+	CValueMetaObjectDataProcessor* commonMeta = metaData->GetDataProcessor();
+	CValueMetaObjectModule *moduleMeta = commonMeta->GetModuleObject();
 
 	m_buttonModule = new wxButton(this, wxID_ANY, _("Open module"));
 	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(CDataProcessorTree::OnButtonModuleClicked), nullptr, this);
@@ -158,7 +158,7 @@ void CDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
 	m_docParent->SetFilename(systemName);
 	m_docParent->SetTitle(systemName);
 
-	CMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetName(systemName);
 	dataProcessor->SetSynonym(synonym);
@@ -174,7 +174,7 @@ void CDataProcessorTree::OnEditCaptionName(wxCommandEvent& event)
 
 void CDataProcessorTree::OnEditCaptionSynonym(wxCommandEvent& event)
 {
-	CMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetSynonym(m_synonymValue->GetValue());
 
@@ -185,7 +185,7 @@ void CDataProcessorTree::OnEditCaptionSynonym(wxCommandEvent& event)
 
 void CDataProcessorTree::OnEditCaptionComment(wxCommandEvent& event)
 {
-	CMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	dataProcessor->SetComment(m_commentValue->GetValue());
 
@@ -196,7 +196,7 @@ void CDataProcessorTree::OnEditCaptionComment(wxCommandEvent& event)
 
 void CDataProcessorTree::OnChoiceDefForm(wxCommandEvent& event)
 {
-	CMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 
 	const meta_identifier_t id = reinterpret_cast<meta_identifier_t>(event.GetClientData());
@@ -214,7 +214,7 @@ void CDataProcessorTree::OnChoiceDefForm(wxCommandEvent& event)
 
 void CDataProcessorTree::OnButtonModuleClicked(wxCommandEvent& event)
 {
-	CMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
+	CValueMetaObjectDataProcessor* dataProcessor = m_metaData->GetDataProcessor();
 	wxASSERT(dataProcessor);
 	OpenFormMDI(dataProcessor->GetModuleObject());
 }

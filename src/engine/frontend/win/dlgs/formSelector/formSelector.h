@@ -12,11 +12,11 @@
 
 #include "frontend/frontend.h"
 
-class IMetaObjectForm;
+class IValueMetaObjectForm;
 
 class FRONTEND_API CDialogSelectTypeForm : public wxDialog {
 	
-	IMetaObjectForm* m_metaObject;
+	IValueMetaObjectForm* m_metaObject;
 	wxStaticText* m_staticTextName;
 	wxStaticText* m_staticTextSynonym;
 	wxStaticText* m_staticTextComment;
@@ -42,7 +42,7 @@ class FRONTEND_API CDialogSelectTypeForm : public wxDialog {
 
 public:
 
-	CDialogSelectTypeForm(class IMetaObject* metaValue, IMetaObjectForm* metaObject);
+	CDialogSelectTypeForm(class IValueMetaObject* metaValue, IValueMetaObjectForm* metaObject);
 	virtual ~CDialogSelectTypeForm();
 
 	void CreateSelector();

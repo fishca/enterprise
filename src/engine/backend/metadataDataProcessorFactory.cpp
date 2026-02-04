@@ -100,7 +100,7 @@ IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const class_identifier_t
 	return activeMetaData->GetTypeCtor(clsid);
 }
 
-IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const IMetaObject* metaValue, eCtorMetaType refType) const
+IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const IValueMetaObject* metaValue, eCtorMetaType refType) const
 {
 	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [metaValue, refType](IMetaValueTypeCtor* typeCtor) {
 		return refType == typeCtor->GetMetaTypeCtor() &&

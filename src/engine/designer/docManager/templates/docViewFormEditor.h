@@ -66,10 +66,10 @@ private:
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class CFormDocument : public IModuleDocument {
+class CFormDocument : public IValueModuleDocument {
 public:
 
-	CFormDocument() : IModuleDocument() {}
+	CFormDocument() : IValueModuleDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnOpenDocument(const wxString& filename) override;

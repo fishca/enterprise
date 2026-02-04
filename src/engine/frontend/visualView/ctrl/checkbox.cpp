@@ -70,7 +70,7 @@ wxString CValueCheckbox::GetControlTitle() const
 		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
-		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		const IValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}

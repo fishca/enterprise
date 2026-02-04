@@ -10,7 +10,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 
 
-bool CReferenceDataObject::ReadData(bool createData)
+bool CValueReferenceDataObject::ReadData(bool createData)
 {
 	if (m_metaObject == nullptr || !m_objGuid.isValid())
 		return false;
@@ -30,7 +30,7 @@ bool CReferenceDataObject::ReadData(bool createData)
 			//load attributes 
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
-					IMetaObjectAttribute::GetValueAttribute(
+					IValueMetaObjectAttribute::GetValueAttribute(
 						object,
 						m_listObjectValue[object->GetMetaID()],
 						resultSet,
@@ -41,7 +41,7 @@ bool CReferenceDataObject::ReadData(bool createData)
 			// table is collection values 
 			//for (const auto object : m_metaObject->GetTableArrayObject()) {
 			//	m_listObjectValue.insert_or_assign(object->GetMetaID(), 
-			//		CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectRef>(this, object, true));
+			//		CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectRef>(this, object, true));
 			//}
 
 			readRef = true;
@@ -52,7 +52,7 @@ bool CReferenceDataObject::ReadData(bool createData)
 	return false;
 }
 
-bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValue>& listValue) const
+bool CValueReferenceDataObject::FindValue(const wxString& findData, std::vector<CValue>& listValue) const
 {
 	class CObjectComparatorValue : public IValueDataObject {
 		bool ReadValues() {
@@ -74,7 +74,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 					for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 						if (m_metaObject->IsDataReference(object->GetMetaID()))
 							continue;
-						IMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
+						IValueMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 					}
 				}
 				db_query->CloseResultSet(resultSet);
@@ -82,12 +82,12 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 			}
 			return false;
 		}
-		IMetaObjectRecordDataRef* m_metaObject;
+		IValueMetaObjectRecordDataRef* m_metaObject;
 	private:
-		CObjectComparatorValue(IMetaObjectRecordDataRef* metaObject, const CGuid& guid) : IValueDataObject(guid, false), m_metaObject(metaObject) {}
+		CObjectComparatorValue(IValueMetaObjectRecordDataRef* metaObject, const CGuid& guid) : IValueDataObject(guid, false), m_metaObject(metaObject) {}
 	public:
 
-		static bool CompareValue(const wxString& findData, IMetaObjectRecordDataRef* metaObject, const CGuid& guid) {
+		static bool CompareValue(const wxString& findData, IValueMetaObjectRecordDataRef* metaObject, const CGuid& guid) {
 			bool allow = false;
 			CObjectComparatorValue* comparator = new CObjectComparatorValue(metaObject, guid);
 			if (comparator->ReadValues()) {
@@ -109,7 +109,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 		}
 
 		//get metaData from object 
-		virtual IMetaObjectRecordData* GetMetaObject() const {
+		virtual IValueMetaObjectRecordData* GetMetaObject() const {
 			return m_metaObject;
 		}
 	};
@@ -122,7 +122,7 @@ bool CReferenceDataObject::FindValue(const wxString& findData, std::vector<CValu
 			const CGuid& currentGuid = resultSet->GetResultString(guidName);
 			if (CObjectComparatorValue::CompareValue(findData, m_metaObject, currentGuid)) {
 				listValue.push_back(
-					CReferenceDataObject::Create(m_metaObject, currentGuid)
+					CValueReferenceDataObject::Create(m_metaObject, currentGuid)
 				);
 			}
 		}

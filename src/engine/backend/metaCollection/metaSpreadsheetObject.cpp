@@ -6,35 +6,35 @@
 #include "metaSpreadsheetObject.h"
 #include "backend/metaData.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectSpreadsheet, IMetaObject);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectSpreadsheet, IValueMetaObject);
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectSpreadsheet, IMetaObjectSpreadsheet);
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCommonSpreadsheet, IMetaObjectSpreadsheet);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectSpreadsheet, IValueMetaObjectSpreadsheet);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectCommonSpreadsheet, IValueMetaObjectSpreadsheet);
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool IMetaObjectSpreadsheet::OnBeforeRunMetaObject(int flags)
+bool IValueMetaObjectSpreadsheet::OnBeforeRunMetaObject(int flags)
 {
-	return IMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool IMetaObjectSpreadsheet::OnAfterCloseMetaObject()
+bool IValueMetaObjectSpreadsheet::OnAfterCloseMetaObject()
 {
-	return IMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                           Spreadsheet                               *
 //***********************************************************************
 
-bool CMetaObjectSpreadsheet::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectSpreadsheet::LoadData(CMemoryReader& reader)
 {
 	return m_propertyTemplate->LoadData(reader);
 }
 
-bool CMetaObjectSpreadsheet::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectSpreadsheet::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyTemplate->SaveData(writer);
 }
@@ -43,12 +43,12 @@ bool CMetaObjectSpreadsheet::SaveData(CMemoryWriter& writer)
 //*                       Common Spreadsheet							*
 //***********************************************************************
 
-bool CMetaObjectCommonSpreadsheet::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectCommonSpreadsheet::LoadData(CMemoryReader& reader)
 {
 	return m_propertyTemplate->LoadData(reader);
 }
 
-bool CMetaObjectCommonSpreadsheet::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectCommonSpreadsheet::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyTemplate->SaveData(writer);
 }
@@ -57,5 +57,5 @@ bool CMetaObjectCommonSpreadsheet::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectSpreadsheet, "template", g_metaTemplateCLSID);
-METADATA_TYPE_REGISTER(CMetaObjectCommonSpreadsheet, "commonTemplate", g_metaCommonTemplateCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectSpreadsheet, "template", g_metaTemplateCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCommonSpreadsheet, "commonTemplate", g_metaCommonTemplateCLSID);

@@ -51,11 +51,11 @@ CMetaDataConfigurationFile::CMetaDataConfigurationFile() : IMetaDataConfiguratio
 m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 {
 	//create main metaObject
-	m_commonObject = new CMetaObjectConfiguration();
+	m_commonObject = new CValueMetaObjectConfiguration();
 	//m_commonObject->SetReadOnly(!m_metaReadOnly);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new CModuleManagerConfiguration(this, m_commonObject);
+		m_moduleManager = new CValueModuleManagerConfiguration(this, m_commonObject);
 		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
@@ -68,8 +68,8 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 
 	{
 		CValue* ppParams[] = { m_commonObject };
-		CMetaObjectLanguage* commonLanguage =
-			CValue::CreateAndConvertObjectRef<CMetaObjectLanguage>(g_metaLanguageCLSID, ppParams, 1);
+		CValueMetaObjectLanguage* commonLanguage =
+			CValue::CreateAndConvertObjectRef<CValueMetaObjectLanguage>(g_metaLanguageCLSID, ppParams, 1);
 
 		if (commonLanguage->OnCreateMetaObject(this, newObjectFlag)) {
 
@@ -189,7 +189,7 @@ bool CMetaDataConfigurationFile::RunDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataConfigurationFile::RunChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataConfigurationFile::RunChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -270,7 +270,7 @@ bool CMetaDataConfigurationFile::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataConfigurationFile::CloseChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataConfigurationFile::CloseChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -320,7 +320,7 @@ bool CMetaDataConfigurationFile::ClearDatabase()
 	return true;
 }
 
-bool CMetaDataConfigurationFile::ClearChildMetadata(IMetaObject* object)
+bool CMetaDataConfigurationFile::ClearChildMetadata(IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -448,7 +448,7 @@ bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& cl
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
+bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -472,10 +472,10 @@ bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemory
 
 			wxASSERT(clsid != 0);
 
-			IMetaObject* newMetaObject = nullptr;
+			IValueMetaObject* newMetaObject = nullptr;
 			CValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
+				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
@@ -502,7 +502,7 @@ bool CMetaDataConfigurationFile::LoadDatabase(const class_identifier_t&, CMemory
 	return true;
 }
 
-bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
+bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -526,10 +526,10 @@ bool CMetaDataConfigurationFile::LoadChildMetadata(const class_identifier_t&, CM
 
 			wxASSERT(clsid != 0);
 
-			IMetaObject* newMetaObject = nullptr;
+			IValueMetaObject* newMetaObject = nullptr;
 			CValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
+				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
@@ -573,7 +573,7 @@ bool CMetaDataConfiguration::OnInitialize(const int flags)
 
 #pragma region language  
 	// Check current language
-	const IMetaObject* foundedLanguage =
+	const IValueMetaObject* foundedLanguage =
 		IMetaData::FindAnyObjectByFilter(appData->GetUserLanguageGuid(), g_metaLanguageCLSID);
 	// Initialize localization engine  
 	CBackendLocalization::SetUserLanguage(foundedLanguage != nullptr ? appData->GetUserLanguageCode() : GetLangCode());
@@ -779,7 +779,7 @@ bool CMetaDataConfigurationStorage::SaveDatabase(const class_identifier_t&, CMem
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* object, int flags)
+bool CMetaDataConfigurationStorage::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IValueMetaObject* object, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
@@ -839,7 +839,7 @@ bool CMetaDataConfigurationStorage::DeleteMetadata(const class_identifier_t& cls
 	return true;
 }
 
-bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object)
+bool CMetaDataConfigurationStorage::DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 

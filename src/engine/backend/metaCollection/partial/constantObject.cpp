@@ -13,33 +13,33 @@
 //*                           constant value                            *
 //***********************************************************************
 
-CRecordDataObjectConstant* CMetaObjectConstant::CreateRecordDataObjectValue()
+CValueRecordDataObjectConstant* CValueMetaObjectConstant::CreateRecordDataObjectValue()
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	CRecordDataObjectConstant* pDataRef = nullptr;
+	CValueRecordDataObjectConstant* pDataRef = nullptr;
 
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModule->GetMetaObject(), pDataRef))
-			return CValue::CreateAndPrepareValueRef<CRecordDataObjectConstant>(this);
+			return CValue::CreateAndPrepareValueRef<CValueRecordDataObjectConstant>(this);
 	}
 	else {
-		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectConstant>(this);
+		pDataRef = CValue::CreateAndPrepareValueRef<CValueRecordDataObjectConstant>(this);
 	}
 
 	return pDataRef;
 }
 
 //*********************************************************************************************
-//*                                  CRecordDataObjectConstant                                     *
+//*                                  CValueRecordDataObjectConstant                                     *
 //*********************************************************************************************
 
-bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant* source)
+bool CValueRecordDataObjectConstant::InitializeObject(const CValueRecordDataObjectConstant* source)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!m_compileModule) {
@@ -76,29 +76,29 @@ bool CRecordDataObjectConstant::InitializeObject(const CRecordDataObjectConstant
 	return true;
 }
 
-CRecordDataObjectConstant::CRecordDataObjectConstant(CMetaObjectConstant* metaObject)
+CValueRecordDataObjectConstant::CValueRecordDataObjectConstant(CValueMetaObjectConstant* metaObject)
 	: m_metaObject(metaObject), m_objModified(false), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject();
 }
 
-CRecordDataObjectConstant::CRecordDataObjectConstant(const CRecordDataObjectConstant& source)
+CValueRecordDataObjectConstant::CValueRecordDataObjectConstant(const CValueRecordDataObjectConstant& source)
 	: m_metaObject(source.m_metaObject), m_objModified(false), m_methodHelper(new CMethodHelper())
 {
 	InitializeObject(&source);
 }
 
-CRecordDataObjectConstant::~CRecordDataObjectConstant()
+CValueRecordDataObjectConstant::~CValueRecordDataObjectConstant()
 {
 	wxDELETE(m_methodHelper);
 }
 
-IBackendValueForm* CRecordDataObjectConstant::GetForm() const
+IBackendValueForm* CValueRecordDataObjectConstant::GetForm() const
 {
 	return IBackendValueForm::FindFormByUniqueKey(m_metaObject->GetGuid());
 }
 
-void CRecordDataObjectConstant::Modify(bool mod)
+void CValueRecordDataObjectConstant::Modify(bool mod)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -110,7 +110,7 @@ void CRecordDataObjectConstant::Modify(bool mod)
 
 #include "backend/objCtor.h"
 
-class_identifier_t CRecordDataObjectConstant::GetClassType() const
+class_identifier_t CValueRecordDataObjectConstant::GetClassType() const
 {
 	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -120,7 +120,7 @@ class_identifier_t CRecordDataObjectConstant::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CRecordDataObjectConstant::GetClassName() const
+wxString CValueRecordDataObjectConstant::GetClassName() const
 {
 	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -130,7 +130,7 @@ wxString CRecordDataObjectConstant::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CRecordDataObjectConstant::GetString() const
+wxString CValueRecordDataObjectConstant::GetString() const
 {
 	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -140,7 +140,7 @@ wxString CRecordDataObjectConstant::GetString() const
 	return clsFactory->GetClassName();
 }
 
-CSourceExplorer CRecordDataObjectConstant::GetSourceExplorer() const
+CSourceExplorer CValueRecordDataObjectConstant::GetSourceExplorer() const
 {
 	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
@@ -151,13 +151,13 @@ CSourceExplorer CRecordDataObjectConstant::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool CRecordDataObjectConstant::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool CValueRecordDataObjectConstant::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
 {
 	return false;
 }
 
 #pragma region _form_builder_h_
-void CRecordDataObjectConstant::ShowFormValue()
+void CValueRecordDataObjectConstant::ShowFormValue()
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -176,18 +176,18 @@ void CRecordDataObjectConstant::ShowFormValue()
 	}
 }
 
-IBackendValueForm* CRecordDataObjectConstant::GetFormValue()
+IBackendValueForm* CValueRecordDataObjectConstant::GetFormValue()
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
 	if (foundedForm == nullptr)
-		return IMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, this, m_metaObject->GetGuid());
+		return IValueMetaObjectForm::CreateAndBuildForm(nullptr, nullptr, this, m_metaObject->GetGuid());
 
 	return foundedForm;
 }
 #pragma endregion
 
-bool CRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
+bool CValueRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	if (id == m_metaObject->GetMetaID()) {
 		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_metaObject->GetGuid());
@@ -200,7 +200,7 @@ bool CRecordDataObjectConstant::SetValueByMetaID(const meta_identifier_t& id, co
 	return false;
 }
 
-bool CRecordDataObjectConstant::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool CValueRecordDataObjectConstant::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	if (id == m_metaObject->GetMetaID()) {
 		pvarMetaVal = m_constValue;
@@ -212,7 +212,7 @@ bool CRecordDataObjectConstant::GetValueByMetaID(const meta_identifier_t& id, CV
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CRecordDataObjectConstant::PrepareNames() const
+void CValueRecordDataObjectConstant::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp(wxT("value"),
@@ -242,7 +242,7 @@ void CRecordDataObjectConstant::PrepareNames() const
 	}
 }
 
-bool CRecordDataObjectConstant::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueRecordDataObjectConstant::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -259,7 +259,7 @@ bool CRecordDataObjectConstant::SetPropVal(const long lPropNum, const CValue& va
 	return false;
 }
 
-bool CRecordDataObjectConstant::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueRecordDataObjectConstant::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -284,7 +284,7 @@ bool CRecordDataObjectConstant::GetPropVal(const long lPropNum, CValue& pvarProp
 
 #include "backend/databaseLayer/databaseLayer.h"
 
-CValue CRecordDataObjectConstant::GetConstValue() const
+CValue CValueRecordDataObjectConstant::GetConstValue() const
 {
 	CValue ret;
 
@@ -305,13 +305,13 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 		if (db_query->TableExists(tableName)) {
 			IDatabaseResultSet* resultSet = nullptr;
 			if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-				resultSet = db_query->RunQueryWithResults("SELECT %s FROM %s LIMIT 1", IMetaObjectAttribute::GetSQLFieldName(m_metaObject), tableName);
+				resultSet = db_query->RunQueryWithResults("SELECT %s FROM %s LIMIT 1", IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject), tableName);
 			else
-				resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 %s FROM %s", IMetaObjectAttribute::GetSQLFieldName(m_metaObject), tableName);
+				resultSet = db_query->RunQueryWithResults("SELECT FIRST 1 %s FROM %s", IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject), tableName);
 			if (resultSet == nullptr)
 				return ret;
 			if (resultSet->Next()) {
-				if (IMetaObjectAttribute::GetValueAttribute(m_metaObject, ret, resultSet))
+				if (IValueMetaObjectAttribute::GetValueAttribute(m_metaObject, ret, resultSet))
 					ret = m_metaObject->AdjustValue(ret);
 				else
 					ret = m_metaObject->CreateValue();
@@ -332,7 +332,7 @@ CValue CRecordDataObjectConstant::GetConstValue() const
 #include "backend/backend_mainFrame.h"
 #include "backend/databaseLayer/databaseErrorCodes.h" 
 
-bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
+bool CValueRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 {
 	if (!appData->DesignerMode()) {
 
@@ -393,23 +393,23 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 					sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
+					for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
 						sqlText += "?,";
 					}
 					sqlText += "'6')";
 					sqlText += " ON CONFLICT (RECORD_KEY) ";
-					sqlText += " DO UPDATE SET " + IMetaObjectAttribute::GetExcluteSQLFieldName(m_metaObject) + ";";
+					sqlText += " DO UPDATE SET " + IValueMetaObjectAttribute::GetExcluteSQLFieldName(m_metaObject) + ";";
 				}
 				else {
 					sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
-					for (unsigned int idx = 0; idx < IMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
+					for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(m_metaObject); idx++) {
 						sqlText += "?,";
 					}
 					sqlText += "'6') MATCHING(RECORD_KEY);";
 				}
 
 				IPreparedStatement* statement =
-					db_query->PrepareStatement(sqlText, tableName, IMetaObjectAttribute::GetSQLFieldName(m_metaObject));
+					db_query->PrepareStatement(sqlText, tableName, IValueMetaObjectAttribute::GetSQLFieldName(m_metaObject));
 
 				if (statement == nullptr) {
 					m_constValue = constValue;
@@ -418,7 +418,7 @@ bool CRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 
 				int position = 1;
 
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					m_metaObject,
 					m_constValue,
 					statement,

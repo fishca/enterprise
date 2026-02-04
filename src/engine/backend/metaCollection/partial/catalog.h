@@ -8,8 +8,8 @@
 //*                                  Factory & metaData                                      *
 //********************************************************************************************
 
-class CMetaObjectCatalog : public IMetaObjectRecordDataHierarchyMutableRef {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCatalog);
+class CValueMetaObjectCatalog : public IValueMetaObjectRecordDataHierarchyMutableRef {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCatalog);
 private:
 	enum
 	{
@@ -38,11 +38,11 @@ private:
 
 public:
 
-	CMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
+	CValueMetaObjectAttributePredefined* GetCatalogOwner() const { return m_propertyAttributeOwner->GetMetaObject(); }
 
 	//default constructor 
-	CMetaObjectCatalog();
-	virtual ~CMetaObjectCatalog();
+	CValueMetaObjectCatalog();
+	virtual ~CValueMetaObjectCatalog();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -65,16 +65,16 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//get attribute code 
-	virtual IMetaObjectAttribute* GetAttributeForCode() const {
+	virtual IValueMetaObjectAttribute* GetAttributeForCode() const {
 		return m_propertyAttributeCode->GetMetaObject();
 	}
 
 	//create associate value 
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
@@ -89,8 +89,8 @@ public:
 	wxString GetDataPresentation(const IValueDataObject* objValue) const;
 
 	//get module object in compose object 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	/**
 	* Property events
@@ -102,9 +102,9 @@ public:
 protected:
 
 	//predefined array 
-	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 
-		const CMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
+		const CValueMetaObjectAttributePredefined* metaObjectAttributeOwner = GetCatalogOwner();
 		if (metaObjectAttributeOwner != nullptr && metaObjectAttributeOwner->GetClsidCount() > 0) {
 			array = {
 				m_propertyAttributePredefined->GetMetaObject(),
@@ -133,7 +133,7 @@ protected:
 	}
 
 	//searched array 
-	virtual bool FillArrayObjectBySearched(std::vector<IMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectBySearched(std::vector<IValueMetaObjectAttribute*>& array) const {
 
 		array = {
 			m_propertyAttributeCode->GetMetaObject(),
@@ -144,13 +144,13 @@ protected:
 	}
 
 	//create manager
-	virtual IManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
-	virtual IRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
+	virtual IValueRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -232,24 +232,24 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("Object module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("objectModule"), _("Object module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
 
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectCatalog::FillFormObject);
-	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolder"), _("Default Folder Form"), &CMetaObjectCatalog::FillFormFolder);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectCatalog::FillFormList);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CMetaObjectCatalog::FillFormSelect);
-	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolderSelect"), _("Default Folder Select Form"), &CMetaObjectCatalog::FillFormFolderSelect);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CValueMetaObjectCatalog::FillFormObject);
+	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolder"), _("Default Folder Form"), &CValueMetaObjectCatalog::FillFormFolder);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectCatalog::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CValueMetaObjectCatalog::FillFormSelect);
+	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolderSelect"), _("Default Folder Select Form"), &CValueMetaObjectCatalog::FillFormFolderSelect);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("listOwner"), _("List owner"));
 
 	//default array 
-	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
-	friend class CRecordDataObjectCatalog;
+	friend class CValueRecordDataObjectCatalog;
 	friend class IMetaData;
 };
 
@@ -257,9 +257,9 @@ private:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CRecordDataObjectCatalog : public IRecordDataObjectFolderRef {
-	CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const CGuid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
-	CRecordDataObjectCatalog(const CRecordDataObjectCatalog& source);
+class CValueRecordDataObjectCatalog : public IValueRecordDataObjectFolderRef {
+	CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+	CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source);
 public:
 
 	//****************************************************************************
@@ -271,8 +271,8 @@ public:
 
 	//default methods
 	virtual bool FillObject(CValue& vFillObject) const { return Filling(vFillObject); }
-	virtual IRecordDataObjectRef* CopyObject(bool showValue = false) {
-		IRecordDataObjectRef* objectRef = CopyObjectValue();
+	virtual IValueRecordDataObjectRef* CopyObject(bool showValue = false) {
+		IValueRecordDataObjectRef* objectRef = CopyObjectValue();
 		if (objectRef != nullptr && showValue)
 			objectRef->ShowFormValue();
 		return objectRef;
@@ -310,7 +310,7 @@ public:
 
 protected:
 	friend class CValue;
-	friend class CMetaObjectCatalog;
+	friend class CValueMetaObjectCatalog;
 };
 
 #endif

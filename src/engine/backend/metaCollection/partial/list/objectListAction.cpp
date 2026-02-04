@@ -12,7 +12,7 @@ enum
 	eAddFolder = 27,
 };
 
-CListDataObjectEnumRef::CActionCollection CListDataObjectEnumRef::GetActionCollection(const form_identifier_t& formType)
+CValueListDataObjectEnumRef::CActionCollection CValueListDataObjectEnumRef::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection actionData(this);
 
@@ -41,7 +41,7 @@ CListDataObjectEnumRef::CActionCollection CListDataObjectEnumRef::GetActionColle
 	return actionData;
 }
 
-void CListDataObjectEnumRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void CValueListDataObjectEnumRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{
@@ -55,7 +55,7 @@ void CListDataObjectEnumRef::ExecuteAction(const action_identifier_t& lNumAction
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-CListDataObjectRef::CActionCollection CListDataObjectRef::GetActionCollection(const form_identifier_t& formType)
+CValueListDataObjectRef::CActionCollection CValueListDataObjectRef::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection actionData(this);
 
@@ -89,7 +89,7 @@ CListDataObjectRef::CActionCollection CListDataObjectRef::GetActionCollection(co
 	return actionData;
 }
 
-void CListDataObjectRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void CValueListDataObjectRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{
@@ -107,7 +107,7 @@ void CListDataObjectRef::ExecuteAction(const action_identifier_t& lNumAction, IB
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-CListDataObjectRef::CActionCollection CTreeDataObjectFolderRef::GetActionCollection(const form_identifier_t& formType)
+CValueListDataObjectRef::CActionCollection CValueTreeDataObjectFolderRef::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection actionData(this);
 
@@ -152,7 +152,7 @@ CListDataObjectRef::CActionCollection CTreeDataObjectFolderRef::GetActionCollect
 	return actionData;
 }
 
-void CTreeDataObjectFolderRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void CValueTreeDataObjectFolderRef::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	switch (lNumAction)
 	{
@@ -172,12 +172,12 @@ void CTreeDataObjectFolderRef::ExecuteAction(const action_identifier_t& lNumActi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-CListRegisterObject::CActionCollection CListRegisterObject::GetActionCollection(const form_identifier_t& formType)
+CValueListRegisterObject::CActionCollection CValueListRegisterObject::GetActionCollection(const form_identifier_t& formType)
 {
 	return IValueTable::GetActionCollection(formType);
 }
 
-void CListRegisterObject::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
+void CValueListRegisterObject::ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm)
 {
 	IValueTable::ExecuteAction(lNumAction, srcForm);
 }

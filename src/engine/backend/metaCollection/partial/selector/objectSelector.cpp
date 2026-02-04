@@ -3,19 +3,19 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-ISelectorDataObject::ISelectorDataObject() : CValue(eValueTypes::TYPE_VALUE, true),
+IValueSelectorDataObject::IValueSelectorDataObject() : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper())
 {
 }
 
-ISelectorDataObject::~ISelectorDataObject()
+IValueSelectorDataObject::~IValueSelectorDataObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t ISelectorDataObject::GetClassType() const
+class_identifier_t IValueSelectorDataObject::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -23,7 +23,7 @@ class_identifier_t ISelectorDataObject::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString ISelectorDataObject::GetClassName() const
+wxString IValueSelectorDataObject::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -31,7 +31,7 @@ wxString ISelectorDataObject::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString ISelectorDataObject::GetString() const
+wxString IValueSelectorDataObject::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		GetMetaObject()->GetTypeCtor(eCtorMetaType::eCtorMetaType_Selection);
@@ -41,15 +41,15 @@ wxString ISelectorDataObject::GetString() const
 
 /////////////////////////////////////////////////////////////////////////
 
-CSelectorDataObject::CSelectorDataObject(IMetaObjectRecordDataMutableRef* metaObject) :
-	ISelectorDataObject(),
+CValueSelectorRecordDataObject::CValueSelectorRecordDataObject(IValueMetaObjectRecordDataMutableRef* metaObject) :
+	IValueSelectorDataObject(),
 	IValueDataObject(CGuid(), false),
 	m_metaObject(metaObject)
 {
 	Reset();
 }
 
-bool CSelectorDataObject::Next()
+bool CValueSelectorRecordDataObject::Next()
 {
 	if (appData->DesignerMode()) {
 		return false;
@@ -77,7 +77,7 @@ bool CSelectorDataObject::Next()
 	return false;
 }
 
-IRecordDataObjectRef* CSelectorDataObject::GetObject(const CGuid& guid) const
+IValueRecordDataObjectRef* CValueSelectorRecordDataObject::GetObject(const CGuid& guid) const
 {
 	if (appData->DesignerMode()) {
 		return m_metaObject->CreateObjectValue();
@@ -92,14 +92,14 @@ IRecordDataObjectRef* CSelectorDataObject::GetObject(const CGuid& guid) const
 
 //////////////////////////////////////////////////////////////////////////
 
-CSelectorRegisterObject::CSelectorRegisterObject(IMetaObjectRegisterData* metaObject) :
-	ISelectorDataObject(),
+CValueSelectorRegisterDataObject::CValueSelectorRegisterDataObject(IValueMetaObjectRegisterData* metaObject) :
+	IValueSelectorDataObject(),
 	m_metaObject(metaObject)
 {
 	Reset();
 }
 
-bool CSelectorRegisterObject::Next()
+bool CValueSelectorRegisterDataObject::Next()
 {
 	if (appData->DesignerMode()) {
 		return false;
@@ -127,7 +127,7 @@ bool CSelectorRegisterObject::Next()
 	return false;
 }
 
-IRecordManagerObject* CSelectorRegisterObject::GetRecordManager(const valueArray_t& keyValues) const
+IValueRecordManagerObject* CValueSelectorRegisterDataObject::GetRecordManager(const valueArray_t& keyValues) const
 {
 	if (appData->DesignerMode()) {
 		return m_metaObject->CreateRecordManagerObjectValue();
@@ -148,7 +148,7 @@ enum Func {
 	enGetObjectRecord
 };
 
-void CSelectorDataObject::PrepareNames() const
+void CValueSelectorRecordDataObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -188,7 +188,7 @@ void CSelectorDataObject::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("reference"), m_metaObject->GetMetaID());
 }
 
-bool CSelectorDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueSelectorRecordDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -206,12 +206,12 @@ bool CSelectorDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue
 	return false;
 }
 
-bool CSelectorDataObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueSelectorRecordDataObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool CSelectorDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueSelectorRecordDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
 	if (!m_objGuid.isValid()) {
@@ -224,11 +224,11 @@ bool CSelectorDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 		pvarPropVal = m_listObjectValue.at(id);
 		return true;
 	}
-	pvarPropVal = CReferenceDataObject::Create(m_metaObject, m_objGuid);
+	pvarPropVal = CValueReferenceDataObject::Create(m_metaObject, m_objGuid);
 	return true;
 }
 
-void CSelectorRegisterObject::PrepareNames() const
+void CValueSelectorRegisterDataObject::PrepareNames() const
 {
 	m_methodHelper->AppendFunc("next", "next()");
 	m_methodHelper->AppendFunc("reset", "reset()");
@@ -254,7 +254,7 @@ void CSelectorRegisterObject::PrepareNames() const
 	}
 }
 
-bool CSelectorRegisterObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueSelectorRegisterDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -272,12 +272,12 @@ bool CSelectorRegisterObject::CallAsFunc(const long lMethodNum, CValue& pvarRetV
 	return false;
 }
 
-bool CSelectorRegisterObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueSelectorRegisterDataObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool CSelectorRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueSelectorRegisterDataObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
 	if (m_keyValues.empty()) {

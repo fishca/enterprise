@@ -8,23 +8,23 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
 
-void CMetaObjectForm::OnPropertyCreated(IProperty* property)
+void CValueMetaObjectForm::OnPropertyCreated(IProperty* property)
 {
-	IMetaObjectForm::OnPropertyCreated(property);
+	IValueMetaObjectForm::OnPropertyCreated(property);
 }
 
-void CMetaObjectForm::OnPropertySelected(IProperty* property)
+void CValueMetaObjectForm::OnPropertySelected(IProperty* property)
 {
-	IMetaObjectForm::OnPropertySelected(property);
+	IValueMetaObjectForm::OnPropertySelected(property);
 }
 
-void CMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (property == m_properyFormType) {
 		if (appData->DesignerMode()) {
-			IModuleManager* moduleManager = m_metaData->GetModuleManager();
+			IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 			wxASSERT(moduleManager);
-			IMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, IMetaObjectGenericData);
+			IValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, IValueMetaObjectGenericData);
 			wxASSERT(metaObjectValue);
 			IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 			if (metaTree != nullptr) {
@@ -39,5 +39,5 @@ void CMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& ol
 		}
 	}
 
-	IMetaObjectForm::OnPropertyChanged(property, oldValue, newValue);
+	IValueMetaObjectForm::OnPropertyChanged(property, oldValue, newValue);
 }

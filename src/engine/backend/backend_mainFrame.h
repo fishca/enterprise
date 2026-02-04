@@ -25,7 +25,7 @@ public:
 
 	// Form support
 	virtual class IBackendValueForm* ActiveWindow() const { return nullptr; }
-	virtual class IBackendValueForm* CreateNewForm(const class IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
+	virtual class IBackendValueForm* CreateNewForm(const class IValueMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
 		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) {
 		return nullptr;
 	}

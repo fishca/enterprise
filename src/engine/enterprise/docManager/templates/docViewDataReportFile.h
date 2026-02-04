@@ -51,7 +51,7 @@ public:
 		SetTitle(name);
 		SetFilename(name, true);
 
-		IMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+		IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 		wxASSERT(commonObject);
 		commonObject->SetName(name);
 

@@ -16,29 +16,29 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-CRecordDataObjectCatalog::CRecordDataObjectCatalog(CMetaObjectCatalog* metaObject, const CGuid& objGuid, eObjectMode objMode) :
-	IRecordDataObjectFolderRef(metaObject, objGuid, objMode)
+CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid, eObjectMode objMode) :
+	IValueRecordDataObjectFolderRef(metaObject, objGuid, objMode)
 {
 }
 
-CRecordDataObjectCatalog::CRecordDataObjectCatalog(const CRecordDataObjectCatalog& source) :
-	IRecordDataObjectFolderRef(source)
+CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source) :
+	IValueRecordDataObjectFolderRef(source)
 {
 }
 
-CSourceExplorer CRecordDataObjectCatalog::GetSourceExplorer() const
+CSourceExplorer CValueRecordDataObjectCatalog::GetSourceExplorer() const
 {
 	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
 
-	CMetaObjectCatalog* metaRef = nullptr;
+	CValueMetaObjectCatalog* metaRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		srcHelper.AppendSource(metaRef->GetDataCode(), false);
 		srcHelper.AppendSource(metaRef->GetDataDescription());
-		CMetaObjectAttributePredefined* defOwner = metaRef->GetCatalogOwner();
+		CValueMetaObjectAttributePredefined* defOwner = metaRef->GetCatalogOwner();
 		if (defOwner != nullptr && defOwner->GetClsidCount() > 0) {
 			srcHelper.AppendSource(metaRef->GetCatalogOwner());
 		}
@@ -85,7 +85,7 @@ CSourceExplorer CRecordDataObjectCatalog::GetSourceExplorer() const
 }
 
 #pragma region _form_builder_h_
-void CRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+void CValueRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -104,7 +104,7 @@ void CRecordDataObjectCatalog::ShowFormValue(const wxString& strFormName, IBacke
 	}
 }
 
-IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordDataObjectCatalog::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -112,7 +112,7 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFor
 
 		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			m_objMode == eObjectMode::OBJECT_ITEM ? CMetaObjectCatalog::eFormObject : CMetaObjectCatalog::eFormFolder,
+			m_objMode == eObjectMode::OBJECT_ITEM ? CValueMetaObjectCatalog::eFormObject : CValueMetaObjectCatalog::eFormFolder,
 			ownerControl,
 			this,
 			m_objGuid
@@ -134,7 +134,7 @@ IBackendValueForm* CRecordDataObjectCatalog::GetFormValue(const wxString& strFor
 
 #include "backend/backend_mainFrame.h"
 
-bool CRecordDataObjectCatalog::WriteObject()
+bool CValueRecordDataObjectCatalog::WriteObject()
 {
 	if (!appData->DesignerMode())
 	{
@@ -167,7 +167,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 						}
 					}
 
-					bool newObject = CRecordDataObjectCatalog::IsNewObject();
+					bool newObject = CValueRecordDataObjectCatalog::IsNewObject();
 					bool generateUniqueIdentifier = false;
 					
 					if (!IsSetUniqueIdentifier()) {
@@ -175,13 +175,13 @@ bool CRecordDataObjectCatalog::WriteObject()
 						m_procUnit->CallAsProc(wxT("SetNewCode"), prefix, standartProcessing);
 						if (standartProcessing.GetBoolean()) {
 							generateUniqueIdentifier = 
-								CRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
+								CValueRecordDataObjectCatalog::GenerateUniqueIdentifier(prefix.GetString());
 						}
 					}
 
 					if (!SaveData()) {
 						if (generateUniqueIdentifier)
-							CRecordDataObjectCatalog::ResetUniqueIdentifier();
+							CValueRecordDataObjectCatalog::ResetUniqueIdentifier();
 						db_query_active_transaction.RollBackTransaction();
 						CBackendCoreException::Error(_("Failed to write object in db!"));
 						return false;
@@ -192,7 +192,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 						m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 						if (cancel.GetBoolean()) {
 							if (generateUniqueIdentifier)
-								CRecordDataObjectCatalog::ResetUniqueIdentifier();
+								CValueRecordDataObjectCatalog::ResetUniqueIdentifier();
 							db_query_active_transaction.RollBackTransaction();
 							CBackendCoreException::Error(_("Failed to write object in db!"));
 							return false;
@@ -212,7 +212,7 @@ bool CRecordDataObjectCatalog::WriteObject()
 	return true;
 }
 
-bool CRecordDataObjectCatalog::DeleteObject()
+bool CValueRecordDataObjectCatalog::DeleteObject()
 {
 	if (!appData->DesignerMode())
 	{
@@ -286,7 +286,7 @@ enum Func {
 //*                              Support methods                             *
 //****************************************************************************
 
-void CRecordDataObjectCatalog::PrepareNames() const
+void CValueRecordDataObjectCatalog::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -356,7 +356,7 @@ void CRecordDataObjectCatalog::PrepareNames() const
 	}
 }
 
-bool CRecordDataObjectCatalog::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueRecordDataObjectCatalog::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -376,7 +376,7 @@ bool CRecordDataObjectCatalog::SetPropVal(const long lPropNum, const CValue& var
 	return false;
 }
 
-bool CRecordDataObjectCatalog::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueRecordDataObjectCatalog::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eProcUnit) {
@@ -405,7 +405,7 @@ bool CRecordDataObjectCatalog::GetPropVal(const long lPropNum, CValue& pvarPropV
 	return false;
 }
 
-bool CRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueRecordDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{

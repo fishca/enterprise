@@ -8,9 +8,9 @@
 #include "backend/system/systemManager.h"
 #include "backend/appData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(IModuleManager::CModuleUnit, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueModuleManager::CValueModuleUnit, CValue);
 
-IModuleManager::CModuleUnit::CModuleUnit(IModuleManager *moduleManager, IMetaObjectModule *moduleObject, bool managerModule) :
+IValueModuleManager::CValueModuleUnit::CValueModuleUnit(IValueModuleManager *moduleManager, IValueMetaObjectModule *moduleObject, bool managerModule) :
 	CValue(eValueTypes::TYPE_VALUE, true), IModuleDataObject(new CCompileCommonModule(moduleObject)),
 	m_methodHelper(new CMethodHelper()),
 	m_moduleManager(moduleManager),
@@ -18,7 +18,7 @@ IModuleManager::CModuleUnit::CModuleUnit(IModuleManager *moduleManager, IMetaObj
 {
 }
 
-IModuleManager::CModuleUnit::~CModuleUnit()
+IValueModuleManager::CValueModuleUnit::~CValueModuleUnit()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -26,7 +26,7 @@ IModuleManager::CModuleUnit::~CModuleUnit()
 #define objectManager wxT("manager")
 
 //common module 
-bool IModuleManager::CModuleUnit::CreateCommonModule()
+bool IValueModuleManager::CValueModuleUnit::CreateCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
@@ -40,7 +40,7 @@ bool IModuleManager::CModuleUnit::CreateCommonModule()
 		try {
 			m_compileModule->Compile();
 			// у глобального модуля код исполняется в главном модуле! 
-			if (!CModuleUnit::IsGlobalModule()) {
+			if (!CValueModuleUnit::IsGlobalModule()) {
 				m_procUnit = new CProcUnit();
 				m_procUnit->SetParent(m_moduleManager->GetProcUnit());
 				m_procUnit->Execute(m_compileModule->m_cByteCode, false);
@@ -51,11 +51,11 @@ bool IModuleManager::CModuleUnit::CreateCommonModule()
 		};
 	}
 
-	CModuleUnit::PrepareNames();
+	CValueModuleUnit::PrepareNames();
 	return true;
 }
 
-bool IModuleManager::CModuleUnit::DestroyCommonModule()
+bool IValueModuleManager::CValueModuleUnit::DestroyCommonModule()
 {
 	wxASSERT(m_moduleManager != nullptr);
 
@@ -66,7 +66,7 @@ bool IModuleManager::CModuleUnit::DestroyCommonModule()
 	return true;
 }
 
-void IModuleManager::CModuleUnit::PrepareNames() const
+void IValueModuleManager::CValueModuleUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -86,14 +86,14 @@ void IModuleManager::CModuleUnit::PrepareNames() const
 	}
 }
 
-bool IModuleManager::CModuleUnit::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool IValueModuleManager::CValueModuleUnit::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
 	return IModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
-bool IModuleManager::CModuleUnit::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool IValueModuleManager::CValueModuleUnit::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	return IModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray

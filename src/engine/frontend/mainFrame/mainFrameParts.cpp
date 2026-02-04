@@ -155,7 +155,7 @@ IBackendValueForm* CDocMDIFrame::ActiveWindow() const {
 	return nullptr;
 }
 
-IBackendValueForm* CDocMDIFrame::CreateNewForm(const IMetaObjectForm* creator, IBackendControlFrame* backendControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
+IBackendValueForm* CDocMDIFrame::CreateNewForm(const IValueMetaObjectForm* creator, IBackendControlFrame* backendControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
 	IControlFrame* ownerControl = dynamic_cast<IControlFrame*>(backendControl);
 	wxASSERT(!(backendControl == nullptr && ownerControl != nullptr));

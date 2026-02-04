@@ -14,13 +14,13 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	//create main metaObject
-	m_commonObject = new CMetaObjectExternalReport();
+	m_commonObject = new CValueMetaObjectExternalReport();
 	m_commonObject->SetName(
 		IMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 	);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new CModuleManagerExternalReport(this, m_commonObject);
+		m_moduleManager = new CValueModuleManagerExternalReport(this, m_commonObject);
 		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
@@ -35,7 +35,7 @@ m_version(version_oes_last)
 	m_ownerMeta = this;
 }
 
-CMetaDataReport::CMetaDataReport(IMetaData* metaData, CMetaObjectReport* srcReport) : IMetaData(),
+CMetaDataReport::CMetaDataReport(IMetaData* metaData, CValueMetaObjectReport* srcReport) : IMetaData(),
 m_commonObject(srcReport),
 m_ownerMeta(nullptr),
 m_moduleManager(nullptr),
@@ -43,10 +43,10 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	if (srcReport == nullptr) {
-		IMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
+		IValueMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
 		wxASSERT(commonMetaObject);
 		//create main metaObject
-		m_commonObject = new CMetaObjectReport();
+		m_commonObject = new CValueMetaObjectReport();
 		m_commonObject->SetName(
 			IMetaData::GetNewName(g_metaDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 		);
@@ -112,7 +112,7 @@ wxString CMetaDataReport::GetLangCode() const
 
 ////////////////////////////////////////////////////////////////////
 
-bool CMetaDataReport::ClearChildMetadata(IMetaObject* object)
+bool CMetaDataReport::ClearChildMetadata(IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -192,7 +192,7 @@ bool CMetaDataReport::RunDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataReport::RunChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataReport::RunChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);
@@ -230,7 +230,7 @@ bool CMetaDataReport::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataReport::CloseChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataReport::CloseChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);
@@ -396,7 +396,7 @@ bool CMetaDataReport::LoadCommonMetadata(const class_identifier_t& clsid, CMemor
 	return true;
 }
 
-bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
+bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -420,10 +420,10 @@ bool CMetaDataReport::LoadChildMetadata(const class_identifier_t&, CMemoryReader
 
 			wxASSERT(clsid != 0);
 
-			IMetaObject* newMetaObject = nullptr;
+			IValueMetaObject* newMetaObject = nullptr;
 			CValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
+				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
@@ -490,7 +490,7 @@ bool CMetaDataReport::SaveCommonMetadata(const class_identifier_t& clsid, CMemor
 	return true;
 }
 
-bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* object, int flags)
+bool CMetaDataReport::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IValueMetaObject* object, int flags)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -528,7 +528,7 @@ bool CMetaDataReport::DeleteCommonMetadata(const class_identifier_t& clsid)
 	return DeleteChildMetadata(clsid, m_commonObject);
 }
 
-bool CMetaDataReport::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object)
+bool CMetaDataReport::DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 		auto child = object->GetChild(idx);

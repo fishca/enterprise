@@ -117,7 +117,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 		wxImageList* GetSourceImageList() const {
 			wxImageList* list = new wxImageList(icon_size, icon_size);
 			list->Add(CValue::GetIconGroup());
-			list->Add(CValueTable::GetIconGroup());
+			list->Add(CValueTableMemory::GetIconGroup());
 			return list;
 		}
 
@@ -337,7 +337,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 
 			if (typeCtor != nullptr) {
-				const IMetaObjectCompositeData* metaObject = nullptr;
+				const IValueMetaObjectCompositeData* metaObject = nullptr;
 				if (typeCtor->ConvertToMetaValue(metaObject)) {
 					wxTreeItemSourceData* srcItemData = new wxTreeItemSourceData(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), wxNOT_FOUND, true);
 					const wxTreeItemId& rootItem = tc->AddRoot(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), icon_table, icon_table, srcItemData);

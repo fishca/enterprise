@@ -7,13 +7,13 @@ void CDebuggerClientBridge::OnSessionStart(wxSocketClient* sock)
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = dynamic_cast<CMetaDocument*>(doc);
 			if (metaDoc != nullptr) {
-				IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaDoc);
+				IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(metaDoc);
 				if (foundedDoc != nullptr) {
 					foundedDoc->SetCurrentLine(wxNOT_FOUND, false);
 					foundedDoc->SetToolTip(wxEmptyString);
 				}
 				for (auto& child_doc : metaDoc->GetChild()) {
-					IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(child_doc);
+					IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(child_doc);
 					if (foundedDoc != nullptr) {
 						foundedDoc->SetCurrentLine(wxNOT_FOUND, false);
 						foundedDoc->SetToolTip(wxEmptyString);
@@ -32,13 +32,13 @@ void CDebuggerClientBridge::OnSessionEnd(wxSocketClient* sock)
 		for (auto& doc : docManager->GetDocumentsVector()) {
 			CMetaDocument* metaDoc = dynamic_cast<CMetaDocument*>(doc);
 			if (metaDoc != nullptr) {
-				IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaDoc);
+				IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(metaDoc);
 				if (foundedDoc != nullptr) {
 					foundedDoc->SetCurrentLine(wxNOT_FOUND, false);
 					foundedDoc->SetToolTip(wxEmptyString);
 				}
 				for (auto& child_doc : metaDoc->GetChild()) {
-					IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(child_doc);
+					IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(child_doc);
 					if (foundedDoc != nullptr) {
 						foundedDoc->SetCurrentLine(wxNOT_FOUND, false);
 						foundedDoc->SetToolTip(wxEmptyString);
@@ -93,9 +93,9 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineDa
 		if (data.m_fileName.IsEmpty()) {
 			const IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
+				IValueMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
 				if (foundedMeta != nullptr) {
-					IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+					IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 					if (foundedDoc != nullptr) {
 						foundedDoc->SetCurrentLine(data.m_line, false);
 						foundedDoc->SetToolTip(wxEmptyString);
@@ -110,9 +110,9 @@ void CDebuggerClientBridge::OnLeaveLoop(wxSocketClient* sock, const CDebugLineDa
 				wxASSERT(foundedMetadata);
 				const IBackendMetadataTree* metaTree = foundedMetadata->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = foundedMetadata->FindAnyObjectByFilter(moduleName, true);
+					IValueMetaObject* foundedMeta = foundedMetadata->FindAnyObjectByFilter(moduleName, true);
 					if (foundedMeta != nullptr) {
-						IModuleDocument* foundedDoc = dynamic_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+						IValueModuleDocument* foundedDoc = dynamic_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 						if (foundedDoc != nullptr) {
 							foundedDoc->SetCurrentLine(data.m_line, false);
 							foundedDoc->SetToolTip(wxEmptyString);
@@ -136,9 +136,9 @@ void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)
 		if (data.m_fileName.IsEmpty()) {
 			const IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
+				IValueMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
 				if (foundedMeta != nullptr) {
-					IModuleDocument* foundedDoc = static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+					IValueModuleDocument* foundedDoc = static_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 					if (foundedDoc != nullptr) {
 						foundedDoc->ShowAutoComplete(data);
 					}
@@ -152,9 +152,9 @@ void CDebuggerClientBridge::OnAutoComplete(const CDebugAutoCompleteData& data)
 				wxASSERT(metaData);
 				const IBackendMetadataTree* metaTree = metaData->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName, true);
+					IValueMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName, true);
 					if (foundedMeta != nullptr) {
-						IModuleDocument* foundedDoc = static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+						IValueModuleDocument* foundedDoc = static_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 						if (foundedDoc != nullptr) {
 							foundedDoc->ShowAutoComplete(data);
 						}
@@ -205,10 +205,10 @@ void CDebuggerClientBridge::OnSetToolTip(const CDebugExpressionData& data, const
 		if (data.m_fileName.IsEmpty()) {
 			const IBackendMetadataTree* metaTree = activeMetaData->GetMetaTree();
 			if (metaTree != nullptr) {
-				IMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
+				IValueMetaObject* foundedMeta = activeMetaData->FindAnyObjectByFilter(moduleName, true);
 				if (foundedMeta != nullptr) {
-					IModuleDocument* foundedDoc =
-						static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+					IValueModuleDocument* foundedDoc =
+						static_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 					if (foundedDoc != nullptr) {
 						foundedDoc->SetToolTip(resultStr);
 					}
@@ -224,10 +224,10 @@ void CDebuggerClientBridge::OnSetToolTip(const CDebugExpressionData& data, const
 				wxASSERT(metaData);
 				const IBackendMetadataTree* metaTree = metaData->GetMetaTree();
 				if (metaTree != nullptr) {
-					IMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName, true);
+					IValueMetaObject* foundedMeta = metaData->FindAnyObjectByFilter(moduleName, true);
 					if (foundedMeta != nullptr) {
-						IModuleDocument* foundedDoc =
-							static_cast<IModuleDocument*>(metaTree->GetDocument(foundedMeta));
+						IValueModuleDocument* foundedDoc =
+							static_cast<IValueModuleDocument*>(metaTree->GetDocument(foundedMeta));
 						if (foundedDoc != nullptr) {
 							foundedDoc->SetToolTip(resultStr);
 						}

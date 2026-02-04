@@ -37,7 +37,7 @@ CDialogGeneration::CDialogGeneration(IMetaData* metaData, const CMetaDescription
 	);
 
 	for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) {
-		const IMetaObject* typeCtor = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
+		const IValueMetaObject* typeCtor = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_listData->GetImageList(wxIMAGE_LIST_SMALL);
 		long lSelectedItem = m_listData->InsertItem(m_listData->GetItemCount(), typeCtor->GetSynonym(), imageList->Add(typeCtor->GetIcon()));

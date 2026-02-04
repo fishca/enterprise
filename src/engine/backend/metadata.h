@@ -10,7 +10,7 @@ class BACKEND_API IMetaValueTypeCtor;
 ///////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API IMetaData {
-	void DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const;
+	void DoGenerateNewID(meta_identifier_t& id, IValueMetaObject* top) const;
 public:
 
 	IMetaData() :
@@ -20,7 +20,7 @@ public:
 
 	virtual ~IMetaData() {}
 
-	virtual IModuleManager* GetModuleManager() const = 0;
+	virtual IValueModuleManager* GetModuleManager() const = 0;
 
 	virtual bool IsModified() const { return m_metaModify; }
 	virtual void Modify(bool modify = true) {
@@ -33,7 +33,7 @@ public:
 	virtual version_identifier_t GetVersion() const = 0;
 
 	virtual wxString GetFileName() const { return wxEmptyString; }
-	virtual IMetaObject* GetCommonMetaObject() const { return nullptr; }
+	virtual IValueMetaObject* GetCommonMetaObject() const { return nullptr; }
 
 	//runtime support:
 	inline CValue CreateObject(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) const {
@@ -96,7 +96,7 @@ public:
 
 	virtual IMetaValueTypeCtor* GetTypeCtor(const wxString& className) const;
 	virtual IMetaValueTypeCtor* GetTypeCtor(const class_identifier_t& clsid) const;
-	virtual IMetaValueTypeCtor* GetTypeCtor(const IMetaObject* metaValue, enum eCtorMetaType refType) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const IValueMetaObject* metaValue, enum eCtorMetaType refType) const;
 
 	virtual IAbstractTypeCtor* GetAvailableCtor(const wxString& className) const;
 	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
@@ -128,35 +128,35 @@ public:
 	virtual bool CloseDatabase(int flags = defaultFlag) = 0;
 
 	//metaobject
-	IMetaObject* CreateMetaObject(const class_identifier_t& clsid,
-		IMetaObject* parentMetaObj, bool runObject = true);
+	IValueMetaObject* CreateMetaObject(const class_identifier_t& clsid,
+		IValueMetaObject* parentMetaObj, bool runObject = true);
 
-	bool RenameMetaObject(IMetaObject* object, const wxString& newName);
-	void RemoveMetaObject(IMetaObject* object, IMetaObject* objParent = nullptr);
+	bool RenameMetaObject(IValueMetaObject* object, const wxString& newName);
+	void RemoveMetaObject(IValueMetaObject* object, IValueMetaObject* objParent = nullptr);
 
 #pragma region __array_h__
 
 	//any  
-	template <typename _T1 = IMetaObject>
+	template <typename _T1 = IValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, {}, use_child_filter);
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, {}, use_child_filter);
 		return array;
 	}
 
 	//any 
-	template <typename _T1 = IMetaObject>
+	template <typename _T1 = IValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const class_identifier_t& clsid, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, { clsid });
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, { clsid });
 		return array;
 	}
 
 	//any  
-	template <typename _T1 = IMetaObject>
+	template <typename _T1 = IValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(const std::initializer_list<class_identifier_t> filter, const bool use_child_filter = false) const {
 		std::vector<_T1*> array;
-		FillArrayObjectByFilter<_T1, IMetaObject>(array, filter, use_child_filter);
+		FillArrayObjectByFilter<_T1, IValueMetaObject>(array, filter, use_child_filter);
 		return array;
 	}
 
@@ -164,22 +164,22 @@ public:
 #pragma region __filter_h__
 
 	//any 
-	template <typename _T1 = IMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, {}, use_child_filter);
+		return FindObjectByFilter<_T2, IValueMetaObject, _T1>(id, {}, use_child_filter);
 	}
 
 	//any 
-	template <typename _T1 = IMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id, const class_identifier_t& clsid, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, IMetaObject, _T1>(id, { clsid }, use_child_filter);
+		return FindObjectByFilter<_T2, IValueMetaObject, _T1>(id, { clsid }, use_child_filter);
 	}
 
 	//any 
-	template <typename _T1 = IMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id,
 		const std::initializer_list<class_identifier_t> filter, const bool use_child_filter = false) const {
-		return FindObjectByFilter<_T2, IMetaObject, IMetaObject, _T1>(id, filter, use_child_filter);
+		return FindObjectByFilter<_T2, IValueMetaObject, IValueMetaObject, _T1>(id, filter, use_child_filter);
 	}
 
 #pragma endregion 
@@ -189,7 +189,7 @@ public:
 
 	//generate new name
 	wxString GetNewName(const class_identifier_t& clsid,
-		IMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
+		IValueMetaObject* parent, const wxString& strPrefix = wxEmptyString, bool forConstructor = false);
 
 #pragma region serialization
 
@@ -202,7 +202,7 @@ protected:
 
 #pragma region __array_h__
 
-	template <typename _T1 = IMetaObject, typename _T2 = IMetaObject>
+	template <typename _T1 = IValueMetaObject, typename _T2 = IValueMetaObject>
 	bool FillArrayObjectByFilter(
 		std::vector<_T1*>& array,
 		const std::initializer_list<class_identifier_t> filter) const
@@ -213,7 +213,7 @@ protected:
 		return false;
 	}
 
-	template <typename _T1 = IMetaObject, typename _T2 = IMetaObject>
+	template <typename _T1 = IValueMetaObject, typename _T2 = IValueMetaObject>
 	bool FillArrayObjectByFilter(
 		std::vector<_T1*>& array,
 		const std::initializer_list<class_identifier_t> filter,
@@ -228,7 +228,7 @@ protected:
 #pragma endregion 
 #pragma region __filter_h__
 
-	template<typename _T1, typename _T2 = IMetaObject, typename _T3 = IMetaObject>
+	template<typename _T1, typename _T2 = IValueMetaObject, typename _T3 = IValueMetaObject>
 	_T3* FindObjectByFilter(
 		const _T1& id,
 		const std::initializer_list<class_identifier_t> filter) const {
@@ -238,7 +238,7 @@ protected:
 		return nullptr;
 	}
 
-	template<typename _T1, typename _T2 = IMetaObject, typename _T3 = IMetaObject>
+	template<typename _T1, typename _T2 = IValueMetaObject, typename _T3 = IValueMetaObject>
 	_T3* FindObjectByFilter(
 		const _T1& id,
 		const std::initializer_list<class_identifier_t> filter,

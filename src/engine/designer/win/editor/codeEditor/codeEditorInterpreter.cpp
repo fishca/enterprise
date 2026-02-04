@@ -13,7 +13,7 @@
 //array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
-CPrecompileCode::CPrecompileCode(IMetaObjectModule* moduleObject) :
+CPrecompileCode::CPrecompileCode(IValueMetaObjectModule* moduleObject) :
 	CTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
 	m_moduleObject(moduleObject), m_pContext(nullptr), m_pCurrentContext(nullptr),
 	m_numCurrentCompile(wxNOT_FOUND), m_nCurrentPos(0), nLastPosition(0),
@@ -74,7 +74,7 @@ void CPrecompileCode::PrepareModuleData()
 	if (m_moduleObject) {
 		IMetaData* metaData = m_moduleObject->GetMetaData();
 		wxASSERT(metaData);
-		IModuleManager* moduleManager = metaData->GetModuleManager();
+		IValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (!moduleManager->FindCompileModule(m_moduleObject, contextVariable)) {
 			wxASSERT_MSG(false, "CPrecompileCode::PrepareModuleData");
@@ -195,11 +195,11 @@ void CPrecompileCode::PrepareModuleData()
 		CValue* pRefData = nullptr;
 		CCompileModule* compileModule = contextVariable->GetCompileModule();
 		while (compileModule != nullptr) {
-			const IMetaObjectModule* moduleObject = compileModule->GetModuleObject();
+			const IValueMetaObjectModule* moduleObject = compileModule->GetModuleObject();
 			if (moduleObject != nullptr) {
 				IMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
-				IModuleManager* moduleManager = metaData->GetModuleManager();
+				IValueModuleManager* moduleManager = metaData->GetModuleManager();
 				if (moduleManager->FindCompileModule(moduleObject, pRefData)) {
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
@@ -681,7 +681,7 @@ bool CPrecompileCode::Compile()
 	//Добавление глобальных констант
 	IMetaData* metaData = m_moduleObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	for (auto variable : moduleManager->GetGlobalVariables()) {

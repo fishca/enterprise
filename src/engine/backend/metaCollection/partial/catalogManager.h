@@ -3,21 +3,21 @@
 
 #include "catalog.h"
 
-class CManagerDataObjectCatalog :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectCatalog);
+class CValueManagerDataObjectCatalog :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectCatalog);
 public:
 
-	CManagerDataObjectCatalog(CMetaObjectCatalog* metaObject = nullptr);
-	virtual ~CManagerDataObjectCatalog();
+	CValueManagerDataObjectCatalog(CValueMetaObjectCatalog* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectCatalog();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
 
-	CReferenceDataObject* FindByCode(const CValue& vCode) const;
-	CReferenceDataObject* FindByDescription(const CValue& cParam) const;
+	CValueReferenceDataObject* FindByCode(const CValue& vCode) const;
+	CValueReferenceDataObject* FindByDescription(const CValue& cParam) const;
 
-	CReferenceDataObject* EmptyRef() const;
+	CValueReferenceDataObject* EmptyRef() const;
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -36,7 +36,7 @@ public:
 protected:
 	//methods 
 	CMethodHelper* m_methodHelper;
-	CMetaObjectCatalog* m_metaObject;
+	CValueMetaObjectCatalog* m_metaObject;
 };
 
 #endif 

@@ -8,30 +8,30 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectCatalog, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectCatalog, CValue);
 
-CManagerDataObjectCatalog::CManagerDataObjectCatalog(CMetaObjectCatalog* metaObject) : 
+CValueManagerDataObjectCatalog::CValueManagerDataObjectCatalog(CValueMetaObjectCatalog* metaObject) : 
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CManagerDataObjectCatalog::~CManagerDataObjectCatalog()
+CValueManagerDataObjectCatalog::~CValueManagerDataObjectCatalog()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectCatalog::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 #include "reference/reference.h"
 
-CReferenceDataObject* CManagerDataObjectCatalog::EmptyRef() const 
+CValueReferenceDataObject* CValueManagerDataObjectCatalog::EmptyRef() const 
 {
-	return CReferenceDataObject::Create(m_metaObject);
+	return CValueReferenceDataObject::Create(m_metaObject);
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectCatalog::GetClassType() const
+class_identifier_t CValueManagerDataObjectCatalog::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -39,7 +39,7 @@ class_identifier_t CManagerDataObjectCatalog::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectCatalog::GetClassName() const
+wxString CValueManagerDataObjectCatalog::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -47,7 +47,7 @@ wxString CManagerDataObjectCatalog::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectCatalog::GetString() const
+wxString CValueManagerDataObjectCatalog::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -67,11 +67,11 @@ enum Func {
 	eEmptyRef
 };
 
-void CManagerDataObjectCatalog::PrepareNames() const
+void CValueManagerDataObjectCatalog::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -96,7 +96,7 @@ void CManagerDataObjectCatalog::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -110,7 +110,7 @@ bool CManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRe
 		pvarRetValue = m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 		return true;
 	case eSelect:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorDataObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRecordDataObject>(m_metaObject);
 		return true;
 	case eFindByCode:
 		pvarRetValue = FindByCode(*paParams[0]);
@@ -144,7 +144,7 @@ bool CManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& pvarRe
 		return true; 
 	}
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	CValue* pRefData =

@@ -17,14 +17,14 @@ class BACKEND_API CSourceExplorer {
 
 		CTypeDescription m_typeDesc;
 
-		const IMetaObject* m_metaObject = nullptr;
+		const IValueMetaObject* m_metaObject = nullptr;
 	};
 
 private:
 
 	CSourceExplorer() {}
 
-	CSourceExplorer(const IMetaObjectCompositeData* object, const class_identifier_t& cid) {
+	CSourceExplorer(const IValueMetaObjectCompositeData* object, const class_identifier_t& cid) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, false, false, true, { cid }, object
@@ -33,14 +33,14 @@ private:
 		for (const auto child : object->GetGenericAttributeArrayObject()) CSourceExplorer::AppendSource(child);
 	}
 
-	CSourceExplorer(const IMetaObjectAttribute* object, bool enabled = true, bool visible = true) {
+	CSourceExplorer(const IValueMetaObjectAttribute* object, bool enabled = true, bool visible = true) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), enabled, visible, false, true, object->GetTypeDesc(), object
 		};
 	}
 
-	CSourceExplorer(const CMetaObjectTableData* object) {
+	CSourceExplorer(const CValueMetaObjectTableData* object) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), true, true, true, true,  object->GetTypeDesc(), object
@@ -51,7 +51,7 @@ private:
 
 public:
 
-	CSourceExplorer(const IMetaObject* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
+	CSourceExplorer(const IValueMetaObject* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, true, tableSection, select, cid, object
@@ -59,7 +59,7 @@ public:
 	}
 
 	// this object 
-	CSourceExplorer(const IMetaObjectGenericData* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
+	CSourceExplorer(const IValueMetaObjectGenericData* object, const class_identifier_t& cid, bool tableSection, bool select = false) {
 
 		if (object->IsDeleted())
 			return;
@@ -80,25 +80,25 @@ public:
 	bool IsSelect() const { return m_sourceInfo.m_select && IsAllowed(); }
 	bool IsAllowed() const { return GetMetaObject()->IsAllowed(); }
 
-	const IMetaObject* GetMetaObject() const { return m_sourceInfo.m_metaObject; }
+	const IValueMetaObject* GetMetaObject() const { return m_sourceInfo.m_metaObject; }
 	const std::vector<class_identifier_t>& GetClsidList() const { return m_sourceInfo.m_typeDesc.GetClsidList(); }
 
 	bool ContainType(const eValueTypes& valType) const { return m_sourceInfo.m_typeDesc.ContainType(valType); }
 	bool ContainType(const class_identifier_t& cid) const { return m_sourceInfo.m_typeDesc.ContainType(cid); }
 
-	void AppendSource(IMetaObjectGenericData* refData, const class_identifier_t& cid) {
+	void AppendSource(IValueMetaObjectGenericData* refData, const class_identifier_t& cid) {
 		if (refData->IsDeleted())
 			return;
 		m_arraySource.emplace_back(CSourceExplorer{ refData, cid });
 	}
 
-	void AppendSource(IMetaObjectAttribute* attribute, bool enabled = true, bool visible = true) {
+	void AppendSource(IValueMetaObjectAttribute* attribute, bool enabled = true, bool visible = true) {
 		if (attribute->IsDeleted())
 			return;
 		m_arraySource.emplace_back(CSourceExplorer{ attribute, enabled , visible });
 	}
 
-	void AppendSource(CMetaObjectTableData* tableSection) {
+	void AppendSource(CValueMetaObjectTableData* tableSection) {
 		
 		if (tableSection->IsDeleted())
 			return;

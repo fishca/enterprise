@@ -8,7 +8,7 @@ void wxVariantDataAttributeSource::DoSetFromMetaId(const meta_identifier_t& id)
 	if (m_ownerSrcProperty != nullptr && id != wxNOT_FOUND) {
 		const ISourceObject* srcData = m_ownerSrcProperty->GetSourceObject();
 		if (srcData != nullptr) {
-			const IMetaObjectCompositeData* metaObject = srcData->GetSourceMetaObject();
+			const IValueMetaObjectCompositeData* metaObject = srcData->GetSourceMetaObject();
 			if (metaObject != nullptr && metaObject->IsAllowed() && id == metaObject->GetMetaID()) {
 				m_typeDesc.SetDefaultMetaType(srcData->GetSourceClassType());
 				return;
@@ -35,7 +35,7 @@ void wxVariantDataAttributeSource::DoRefreshTypeDesc()
 			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(clsid);
 			if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == eCtorMetaType_TabularSection) {
 				if (srcObject != nullptr) {
-					const IMetaObject* metaTable = typeCtor->GetMetaObject();
+					const IValueMetaObject* metaTable = typeCtor->GetMetaObject();
 					if (metaTable == nullptr) clear_list.insert(clsid);
 					else if (metaTable->GetParent() != srcObject->GetSourceMetaObject()) clear_list.insert(clsid);
 				}
@@ -58,9 +58,9 @@ wxString wxVariantDataSource::MakeString() const
 	if (m_ownerProperty != nullptr) {
 		const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 		if (sourceObject != nullptr) {
-			const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+			const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 			//wxASSERT(genericObject);
-			const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+			const IValueMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
 				genericObject->FindAnyObjectByFilter(m_dataSource) : nullptr;
 			if (metaObject != nullptr && !metaObject->IsAllowed()) return _("<not selected>");
 			else if (metaObject == nullptr) return _("<not selected>");
@@ -76,9 +76,9 @@ meta_identifier_t wxVariantDataSource::GetIdByGuid(const CGuid& guid) const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (guid.isValid() && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
-		const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+		const IValueMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
 			genericObject->FindAnyObjectByFilter(guid) : nullptr;
 		//wxASSERT(metaObject);
 		return metaObject != nullptr &&
@@ -91,9 +91,9 @@ CGuid wxVariantDataSource::GetGuidByID(const meta_identifier_t& id) const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (id != wxNOT_FOUND && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(objMetaValue);
-		const IMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
+		const IValueMetaObject* metaObject = genericObject != nullptr && genericObject->IsAllowed() ?
 			genericObject->FindAnyObjectByFilter(id) : nullptr;
 		//wxASSERT(metaObject);
 		return metaObject != nullptr && metaObject->IsAllowed() ? metaObject->GetCommonGuid() : wxNullGuid;
@@ -104,14 +104,14 @@ CGuid wxVariantDataSource::GetGuidByID(const meta_identifier_t& id) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-IMetaObjectAttribute* wxVariantDataSource::GetSourceAttributeObject() const
+IValueMetaObjectAttribute* wxVariantDataSource::GetSourceAttributeObject() const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (m_dataSource.isValid() && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
 		return genericObject != nullptr && genericObject->IsAllowed() ?
-			wxDynamicCast(genericObject->FindAnyObjectByFilter(m_dataSource), IMetaObjectAttribute) : nullptr;
+			wxDynamicCast(genericObject->FindAnyObjectByFilter(m_dataSource), IValueMetaObjectAttribute) : nullptr;
 	}
 
 	return nullptr;
@@ -123,9 +123,9 @@ void wxVariantDataSource::SetSource(const meta_identifier_t& id, bool fillTypeDe
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (id != wxNOT_FOUND && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		//wxASSERT(genericObject);
-		const IMetaObject* metaObject = genericObject->FindAnyObjectByFilter(id);
+		const IValueMetaObject* metaObject = genericObject->FindAnyObjectByFilter(id);
 		//wxASSERT(metaObject);
 		m_dataSource = metaObject != nullptr && metaObject->IsAllowed() ?
 			metaObject->GetGuid() : wxNullGuid;
@@ -155,9 +155,9 @@ CGuid wxVariantDataSource::GetSourceGuid() const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (m_dataSource.isValid() && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return wxNullGuid;
-		const IMetaObject* metaObject = genericObject ? genericObject->FindAnyObjectByFilter(m_dataSource) : nullptr;
+		const IValueMetaObject* metaObject = genericObject ? genericObject->FindAnyObjectByFilter(m_dataSource) : nullptr;
 		//wxASSERT(metaObject);
 		return metaObject != nullptr && metaObject->IsAllowed() ?
 			metaObject->GetCommonGuid() : wxNullGuid;
@@ -196,9 +196,9 @@ bool wxVariantDataSource::IsPropAllowed() const
 {
 	const ISourceObject* sourceObject = m_ownerProperty->GetSourceObject();
 	if (m_dataSource.isValid() && sourceObject != nullptr) {
-		const IMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectCompositeData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject == nullptr) return true;
-		const IMetaObject* metaObject = genericObject ? genericObject->FindAnyObjectByFilter(m_dataSource) : nullptr;
+		const IValueMetaObject* metaObject = genericObject ? genericObject->FindAnyObjectByFilter(m_dataSource) : nullptr;
 		//wxASSERT(metaObject);
 		if (metaObject != nullptr)
 			return !metaObject->IsAllowed();

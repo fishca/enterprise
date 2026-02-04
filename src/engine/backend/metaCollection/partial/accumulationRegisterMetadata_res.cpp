@@ -3,12 +3,12 @@
 /* PNG */
 static const wxString s_accumRegister_16_png = wxT("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAABLFBMVEUAAAGKdKCMdqOQe6ePeaWMdqKQe6aOeJ2QeaSOeqSun8TGu9zSyunY0u/Gu92MeKWNd6PLwuLc1fLLweGMd6ORfKevoMXSyemLdaHSyee1p8ugjraWgauPeKSgjre2qMvMwuPMweKtncPFudvTzOa6qKKyl3asj2+UfH2Jc5vUy+m4qs+hj7aWgqyMd56fg2bXt3T12ZH02ZDXtnSegmZpTh6/r6f/6p7x4Jjy4Jn/66Cbfka3nXv02JD/76TeyobaxoP/8qb014+silGjhWfz14//8aXu3JTcyISsi1HBttfXt3X/65/56J704pn/6p+bfkWMd6GikLnBtdfQxubUy+W1nX302I/XtnOkhVRuUySRbaOLdqCPe6WKdJyUfHmlh2OmiFqafExvUiNf28shAAAAAXRSTlMAQObYZgAAAK9JREFUGJVjYMACGJmYWVhZWdiY2CF8Dk4ubh5eXh4+Lk5+sICAoBAUCItABETFuMV5ecW5uUQhAhKSUtIysrIycvKSEhABBZgWRaiAqJIyD6+Kqpq6hiZEQEtbR1dP38DQyNjEFK7FzMDcwtLKwBquxcbWzt7B0ckZrsXF1c3dw9HJEyTA6QXS4u3j6+dvHAASCBQJCg4JDTMIt42IjAJbEx3DFssaF5+QmJSMxesApLsZ55fWOyYAAAAASUVORK5CYII=");
 
-wxIcon CMetaObjectAccumulationRegister::GetIcon() const
+wxIcon CValueMetaObjectAccumulationRegister::GetIcon() const
 {
 	return GetIconGroup();
 }
 
-wxIcon CMetaObjectAccumulationRegister::GetIconGroup()
+wxIcon CValueMetaObjectAccumulationRegister::GetIconGroup()
 {
 	static wxIcon icon =
 		CBackendPicture::GetIconFromBase64(s_accumRegister_16_png, wxSize(16, 16));

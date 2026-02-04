@@ -12,17 +12,17 @@
 //ID's 
 meta_identifier_t IMetaData::GenerateNewID() const
 {
-	IMetaObject* commonObject = GetCommonMetaObject();
+	IValueMetaObject* commonObject = GetCommonMetaObject();
 	wxASSERT(commonObject);
 	meta_identifier_t id = commonObject->GetMetaID() + 1;
 	DoGenerateNewID(id, commonObject);
 	return id;
 }
 
-void IMetaData::DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const
+void IMetaData::DoGenerateNewID(meta_identifier_t& id, IValueMetaObject* top) const
 {
 	for (unsigned int idx = 0; idx < top->GetChildCount(); idx++) {
-		IMetaObject* child = top->GetChild(idx);
+		IValueMetaObject* child = top->GetChild(idx);
 		wxASSERT(child);
 		meta_identifier_t newID = child->GetMetaID() + 1;
 		if (newID > id) {
@@ -32,15 +32,15 @@ void IMetaData::DoGenerateNewID(meta_identifier_t& id, IMetaObject* top) const
 	}
 }
 
-IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaObject* parent, bool runObject)
+IValueMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject)
 {
 	wxASSERT(clsid != 0);
 
 	CValue* ppParams[] = { parent };
-	IMetaObject* newMetaObject = nullptr;
+	IValueMetaObject* newMetaObject = nullptr;
 
 	try {
-		newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
+		newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 		newMetaObject->IncrRef();
 	}
 	catch (...) {
@@ -88,7 +88,7 @@ IMetaObject* IMetaData::CreateMetaObject(const class_identifier_t& clsid, IMetaO
 	return newMetaObject;
 }
 
-wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* parent, const wxString& strPrefix, bool forConstructor)
+wxString IMetaData::GetNewName(const class_identifier_t& clsid, IValueMetaObject* parent, const wxString& strPrefix, bool forConstructor)
 {
 	unsigned int countRec = forConstructor ?
 		0 : 1;
@@ -135,7 +135,7 @@ wxString IMetaData::GetNewName(const class_identifier_t& clsid, IMetaObject* par
 	return newName;
 }
 
-bool IMetaData::RenameMetaObject(IMetaObject* metaObject, const wxString& newName)
+bool IMetaData::RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName)
 {
 	bool foundedName = false;
 
@@ -157,7 +157,7 @@ bool IMetaData::RenameMetaObject(IMetaObject* metaObject, const wxString& newNam
 	return false;
 }
 
-void IMetaData::RemoveMetaObject(IMetaObject* object, IMetaObject* parent)
+void IMetaData::RemoveMetaObject(IValueMetaObject* object, IValueMetaObject* parent)
 {
 	if (object->OnAfterCloseMetaObject()) {
 		if (object->OnDeleteMetaObject()) {

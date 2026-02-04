@@ -5,7 +5,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API IMetaObjectRegisterData;
+class BACKEND_API IValueMetaObjectRegisterData;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -55,21 +55,21 @@ protected:
 protected:
 
 	CGuid m_objGuid;
-	const IMetaObjectRegisterData* m_metaObject;
+	const IValueMetaObjectRegisterData* m_metaObject;
 	valueArray_t m_keyValues;
 };
 
 class BACKEND_API CUniquePairKey : public CUniqueKey {
 public:
 
-	CUniquePairKey(const IMetaObjectRegisterData* metaObject = nullptr);
-	CUniquePairKey(const IMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
+	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject = nullptr);
+	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
 
 	bool IsOk() const {
 		return m_metaObject != nullptr && m_keyValues.size() > 0;
 	}
 
-	void SetKeyPair(const IMetaObjectRegisterData* metaObject,
+	void SetKeyPair(const IValueMetaObjectRegisterData* metaObject,
 		valueArray_t& keys) {
 		m_metaObject = metaObject; m_keyValues = keys;
 	}

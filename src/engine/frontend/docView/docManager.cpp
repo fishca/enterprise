@@ -744,17 +744,17 @@ CMetaDocument* CMetaDocManager::GetCurrentDocument() const
 
 #include "backend/metaCollection/metaObject.h"
 
-CMetaDocument* CMetaDocManager::OpenFormMDI(IMetaObject* metaObject, long flags)
+CMetaDocument* CMetaDocManager::OpenFormMDI(IValueMetaObject* metaObject, long flags)
 {
 	return docManager->OpenForm(metaObject, nullptr, flags);
 }
 
-CMetaDocument* CMetaDocManager::OpenFormMDI(IMetaObject* metaObject, CMetaDocument* docParent, long flags)
+CMetaDocument* CMetaDocManager::OpenFormMDI(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags)
 {
 	return docManager->OpenForm(metaObject, docParent, flags);
 }
 
-CMetaDocument* CMetaDocManager::OpenForm(IMetaObject* metaObject, CMetaDocument* docParent, long flags)
+CMetaDocument* CMetaDocManager::OpenForm(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags)
 {
 	for (auto currTemplate : m_templateVector) {
 

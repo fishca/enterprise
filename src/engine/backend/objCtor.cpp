@@ -6,57 +6,57 @@
 //reference class 
 wxClassInfo* CMetaValueRefTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CReferenceDataObject);
+	return CLASSINFO(CValueReferenceDataObject);
 }
 
 CValue* CMetaValueRefTypeCtor::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CReferenceDataObject>(m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CValueReferenceDataObject>(m_metaObject);
 }
 
 //list class 
 wxClassInfo* CMetaValueListRefTypeCtor::GetClassInfo() const
 {
-	IMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
-	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
+	IValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
+	IValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
 	if (m_metaObject->ConvertToValue(folderRef)) {
-		return CLASSINFO(CTreeDataObjectFolderRef);
+		return CLASSINFO(CValueTreeDataObjectFolderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
-		return CLASSINFO(CListDataObjectEnumRef);
+		return CLASSINFO(CValueListDataObjectEnumRef);
 	}
-	return CLASSINFO(CListDataObjectRef);
+	return CLASSINFO(CValueListDataObjectRef);
 }
 
 CValue* CMetaValueListRefTypeCtor::CreateObject() const
 {
-	IMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
-	IMetaObjectRecordDataEnumRef* enumRef = nullptr;
+	IValueMetaObjectRecordDataHierarchyMutableRef* folderRef = nullptr;
+	IValueMetaObjectRecordDataEnumRef* enumRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(folderRef)) {
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(folderRef);
+		return CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(folderRef);
 	}
 	else if (m_metaObject->ConvertToValue(enumRef)) {
-		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(enumRef);
+		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(enumRef);
 	}
 
-	return CValue::CreateAndPrepareValueRef<CListDataObjectRef>((IMetaObjectRecordDataMutableRef*)m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CValueListDataObjectRef>((IValueMetaObjectRecordDataMutableRef*)m_metaObject);
 }
 
 wxClassInfo* CMetaValueListRegisterTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CListRegisterObject);
+	return CLASSINFO(CValueListRegisterObject);
 }
 
 CValue* CMetaValueListRegisterTypeCtor::CreateObject() const
 {
-	return CValue::CreateAndPrepareValueRef<CListRegisterObject>(m_metaObject);
+	return CValue::CreateAndPrepareValueRef<CValueListRegisterObject>(m_metaObject);
 }
 
 //object class
 wxClassInfo* CMetaValueObjectTypeCtor::GetClassInfo() const
 {
-	CValuePtr<IRecordDataObject> recordDataObjectValue = 
+	CValuePtr<IValueRecordDataObject> recordDataObjectValue = 
 		m_metaObject->CreateRecordDataObjectValue();
 	return recordDataObjectValue->GetClassInfo();
 }
@@ -69,7 +69,7 @@ CValue* CMetaValueObjectTypeCtor::CreateObject() const
 //manager class
 wxClassInfo* CMetaValueManagerTypeCtor::GetClassInfo() const
 {
-	CValuePtr<IManagerDataObject> managerDataObject = 
+	CValuePtr<IValueManagerDataObject> managerDataObject = 
 		m_metaObject->CreateManagerDataObjectValue();
 	return managerDataObject->GetClassInfo();
 }
@@ -82,7 +82,7 @@ CValue* CMetaValueManagerTypeCtor::CreateObject() const
 //object record key
 wxClassInfo* CMetaValueRecordKeyTypeCtor::GetClassInfo() const
 {
-	return CLASSINFO(CRecordKeyObject);
+	return CLASSINFO(CValueRecordKeyObject);
 }
 
 CValue* CMetaValueRecordKeyTypeCtor::CreateObject() const
@@ -93,7 +93,7 @@ CValue* CMetaValueRecordKeyTypeCtor::CreateObject() const
 //object record manager
 wxClassInfo* CMetaValueRecordManagerTypeCtor::GetClassInfo() const
 {
-	CValuePtr<IRecordManagerObject> recordManagerObject = 
+	CValuePtr<IValueRecordManagerObject> recordManagerObject = 
 		m_metaObject->CreateRecordManagerObjectValue();
 	return recordManagerObject->GetClassInfo();
 }
@@ -106,7 +106,7 @@ CValue* CMetaValueRecordManagerTypeCtor::CreateObject() const
 //object record set
 wxClassInfo* CMetaValueRecordSetTypeCtor::GetClassInfo() const
 {
-	CValuePtr<IRecordSetObject> recordSetObject = 
+	CValuePtr<IValueRecordSetObject> recordSetObject = 
 		m_metaObject->CreateRecordSetObjectValue();
 	return recordSetObject->GetClassInfo();
 }

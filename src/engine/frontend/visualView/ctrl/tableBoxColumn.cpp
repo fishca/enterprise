@@ -15,37 +15,37 @@ bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 {
 	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
-		IMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
+		IValueMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
 
-			IMetaObjectGenericData* metaObjectValue =
+			IValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 
 			if (metaObjectValue != nullptr) {
-				IMetaObject* metaobject =
+				IValueMetaObject* metaobject =
 					metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource());
 
-				IMetaObjectAttribute* attribute = wxDynamicCast(
-					metaobject, IMetaObjectAttribute
+				IValueMetaObjectAttribute* attribute = wxDynamicCast(
+					metaobject, IValueMetaObjectAttribute
 				);
 				if (attribute != nullptr) {
 
 					const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 					if (so != nullptr) {
-						metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
+						metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
 					}
 				}
 				else
 				{
 					metaObjectRefValue = wxDynamicCast(
-						metaobject, IMetaObjectRecordDataRef);
+						metaobject, IValueMetaObjectRecordDataRef);
 				}
 			}
 		}
 		else {
 			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
-				metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
+				metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
 			}
 		}
 
@@ -85,7 +85,7 @@ wxString CValueTableBoxColumn::GetControlTitle() const
 		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
-		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		const IValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}

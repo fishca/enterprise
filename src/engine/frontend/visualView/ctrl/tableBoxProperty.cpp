@@ -40,8 +40,8 @@ void CValueTableBox::OnPropertyChanged(IProperty* property, const wxVariant& old
 			const IMetaValueTypeCtor* typeCtor =
 				metaData->GetTypeCtor(clsid);
 			if (typeCtor != nullptr) {
-				IMetaObjectCompositeData* metaObject =
-					dynamic_cast<IMetaObjectCompositeData*>(typeCtor->GetMetaObject());
+				IValueMetaObjectCompositeData* metaObject =
+					dynamic_cast<IValueMetaObjectCompositeData*>(typeCtor->GetMetaObject());
 				if (metaObject != nullptr) {
 					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 						CValueTableBoxColumn* tableBoxColumn =

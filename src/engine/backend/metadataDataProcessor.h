@@ -9,11 +9,11 @@ class BACKEND_API CMetaDataDataProcessor :
 public:
 
 	CMetaDataDataProcessor();
-	CMetaDataDataProcessor(IMetaData* metaData, CMetaObjectDataProcessor* srcDataProcessor = nullptr);
+	CMetaDataDataProcessor(IMetaData* metaData, CValueMetaObjectDataProcessor* srcDataProcessor = nullptr);
 	virtual ~CMetaDataDataProcessor();
 
-	virtual CMetaObjectDataProcessor* GetDataProcessor() const { return m_commonObject; }
-	virtual CModuleManagerExternalDataProcessor* GetModuleManager() const { return m_moduleManager; }
+	virtual CValueMetaObjectDataProcessor* GetDataProcessor() const { return m_commonObject; }
+	virtual CValueModuleManagerExternalDataProcessor* GetModuleManager() const { return m_moduleManager; }
 
 	virtual void SetVersion(const version_identifier_t& version) { m_version = version; }
 	virtual version_identifier_t GetVersion() const { return m_version; }
@@ -38,7 +38,7 @@ public:
 	virtual wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false) const;
 
 	virtual IMetaValueTypeCtor* GetTypeCtor(const class_identifier_t& clsid) const;
-	virtual IMetaValueTypeCtor* GetTypeCtor(const IMetaObject* metaValue, enum eCtorMetaType refType) const;
+	virtual IMetaValueTypeCtor* GetTypeCtor(const IValueMetaObject* metaValue, enum eCtorMetaType refType) const;
 
 	virtual IAbstractTypeCtor* GetAvailableCtor(const wxString& className) const;
 	virtual IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid) const;
@@ -72,7 +72,7 @@ public:
 	bool LoadFromFile(const wxString& strFileName);
 	bool SaveToFile(const wxString& strFileName);
 
-	virtual IMetaObject* GetCommonMetaObject() const {return m_commonObject;}
+	virtual IValueMetaObject* GetCommonMetaObject() const {return m_commonObject;}
 
 	//start/exit module 
 	virtual bool StartMainModule() { return m_moduleManager ? m_moduleManager->StartMainModule() : false; }
@@ -86,24 +86,24 @@ protected:
 
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
-	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* object);
+	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
 	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* object, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IValueMetaObject* object, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
-	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object);
+	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
 
 	//run/close recursively:
-	bool RunChildMetadata(IMetaObject* object, int flags, bool before);
-	bool CloseChildMetadata(IMetaObject* object, int flags, bool before);
-	bool ClearChildMetadata(IMetaObject* object);
+	bool RunChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool CloseChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool ClearChildMetadata(IValueMetaObject* object);
 
 private:
 
 	wxString m_fullPath;
 
 	IMetaData* m_ownerMeta; //owner for saving/loading
-	CModuleManagerExternalDataProcessor* m_moduleManager;
-	CMetaObjectDataProcessor* m_commonObject; 	//common meta object
+	CValueModuleManagerExternalDataProcessor* m_moduleManager;
+	CValueMetaObjectDataProcessor* m_commonObject; 	//common meta object
 	bool m_configOpened;
 
 	version_identifier_t m_version;

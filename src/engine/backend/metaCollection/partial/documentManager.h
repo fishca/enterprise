@@ -3,19 +3,19 @@
 
 #include "document.h"
 
-class CManagerDataObjectDocument :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectDocument);
+class CValueManagerDataObjectDocument :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDocument);
 public:
 
-	CManagerDataObjectDocument(CMetaObjectDocument* metaObject = nullptr);
-	virtual ~CManagerDataObjectDocument();
+	CValueManagerDataObjectDocument(CValueMetaObjectDocument* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectDocument();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectDocument* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectDocument* GetMetaObject() const { return m_metaObject; }
 
-	CReferenceDataObject* FindByNumber(const CValue& vCode, const CValue& vPeriod);
-	CReferenceDataObject* EmptyRef();
+	CValueReferenceDataObject* FindByNumber(const CValue& vCode, const CValue& vPeriod);
+	CValueReferenceDataObject* EmptyRef();
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -34,7 +34,7 @@ public:
 protected:
 
 	//methods 
-	CMetaObjectDocument* m_metaObject;
+	CValueMetaObjectDocument* m_metaObject;
 	CMethodHelper* m_methodHelper;
 };
 

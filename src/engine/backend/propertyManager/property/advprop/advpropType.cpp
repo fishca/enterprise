@@ -370,7 +370,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
-						IMetaObjectRecordDataRef* registerData = dynamic_cast<IMetaObjectRecordDataRef*>(so->GetMetaObject());
+						IValueMetaObjectRecordDataRef* registerData = dynamic_cast<IValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -397,7 +397,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						groupIcon, groupIcon);
 
 					for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_List)) {
-						IMetaObjectGenericData* registerData = dynamic_cast<IMetaObjectGenericData*>(so->GetMetaObject());
+						IValueMetaObjectGenericData* registerData = dynamic_cast<IValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -425,7 +425,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Object)) {
-							IMetaObjectRecordData* registerData = dynamic_cast<IMetaObjectRecordData*>(so->GetMetaObject());
+							IValueMetaObjectRecordData* registerData = dynamic_cast<IValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -452,7 +452,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 							groupIcon, groupIcon);
 
 						for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
-							IMetaObjectRecordDataRef* registerData = dynamic_cast<IMetaObjectRecordDataRef*>(so->GetMetaObject());
+							IValueMetaObjectRecordDataRef* registerData = dynamic_cast<IValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);

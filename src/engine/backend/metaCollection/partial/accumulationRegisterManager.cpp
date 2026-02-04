@@ -8,25 +8,25 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectAccumulationRegister, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectAccumulationRegister, CValue);
 
-CManagerDataObjectAccumulationRegister::CManagerDataObjectAccumulationRegister(CMetaObjectAccumulationRegister* metaObject) :
+CValueManagerDataObjectAccumulationRegister::CValueManagerDataObjectAccumulationRegister(CValueMetaObjectAccumulationRegister* metaObject) :
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CManagerDataObjectAccumulationRegister::~CManagerDataObjectAccumulationRegister()
+CValueManagerDataObjectAccumulationRegister::~CValueManagerDataObjectAccumulationRegister()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CManagerDataObjectAccumulationRegister::GetModuleManager() const {
+CValueMetaObjectCommonModule* CValueManagerDataObjectAccumulationRegister::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectAccumulationRegister::GetClassType() const
+class_identifier_t CValueManagerDataObjectAccumulationRegister::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -34,7 +34,7 @@ class_identifier_t CManagerDataObjectAccumulationRegister::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectAccumulationRegister::GetClassName() const
+wxString CValueManagerDataObjectAccumulationRegister::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -42,7 +42,7 @@ wxString CManagerDataObjectAccumulationRegister::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectAccumulationRegister::GetString() const
+wxString CValueManagerDataObjectAccumulationRegister::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -60,11 +60,11 @@ enum Func {
 	eGetListForm,
 };
 
-void CManagerDataObjectAccumulationRegister::PrepareNames() const
+void CValueManagerDataObjectAccumulationRegister::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -88,7 +88,7 @@ void CManagerDataObjectAccumulationRegister::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -99,16 +99,16 @@ bool CManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, C
 		pvarRetValue = m_metaObject->CreateRecordSetObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordKeyObject>(m_metaObject);
 		return true;
 	case eBalance: pvarRetValue = lSizeArray > 1 ?
-		CManagerDataObjectAccumulationRegister::Balance(*paParams[0], *paParams[1]) : CManagerDataObjectAccumulationRegister::Balance(*paParams[0]);
+		CValueManagerDataObjectAccumulationRegister::Balance(*paParams[0], *paParams[1]) : CValueManagerDataObjectAccumulationRegister::Balance(*paParams[0]);
 		return true;
 	case eTurnover: pvarRetValue = lSizeArray > 2 ?
-		CManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], paParams[1], paParams[2]) : CManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], *paParams[1]);
+		CValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], paParams[1], paParams[2]) : CValueManagerDataObjectAccumulationRegister::Turnovers(*paParams[0], *paParams[1]);
 		return true;
 	case eSelect:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRegisterDataObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{
@@ -128,7 +128,7 @@ bool CManagerDataObjectAccumulationRegister::CallAsFunc(const long lMethodNum, C
 	}
 	}
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());

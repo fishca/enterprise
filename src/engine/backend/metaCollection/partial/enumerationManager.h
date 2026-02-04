@@ -3,16 +3,16 @@
 
 #include "enumeration.h"
 
-class CManagerDataObjectEnumeration : 
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectEnumeration);
+class CValueManagerDataObjectEnumeration : 
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectEnumeration);
 public:
 
-	CManagerDataObjectEnumeration(CMetaObjectEnumeration *metaObject = nullptr);
-	virtual ~CManagerDataObjectEnumeration();
+	CValueManagerDataObjectEnumeration(CValueMetaObjectEnumeration *metaObject = nullptr);
+	virtual ~CValueManagerDataObjectEnumeration();
 
-	virtual CMetaObjectCommonModule *GetModuleManager() const;
-	virtual CMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule *GetModuleManager() const;
+	virtual CValueMetaObjectEnumeration* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -33,7 +33,7 @@ public:
 
 protected:
 	//methods 
-	CMetaObjectEnumeration* m_metaObject;
+	CValueMetaObjectEnumeration* m_metaObject;
 	CMethodHelper *m_methodHelper;
 };
 

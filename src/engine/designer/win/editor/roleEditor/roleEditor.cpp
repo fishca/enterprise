@@ -15,7 +15,7 @@
 #define ICON_SIZE 16
 
 CRoleEditor::CRoleEditor(wxWindow* parent,
-	wxWindowID winid, IMetaObject* metaObject) :
+	wxWindowID winid, IValueMetaObject* metaObject) :
 	wxSplitterWindow(parent, winid, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE), m_metaRole(metaObject)
 {
 	m_roleCtrl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxTR_TWIST_BUTTONS);
@@ -92,9 +92,9 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 	event.Skip();
 }
 
-void CRoleEditor::AddInterfaceItem(IMetaObject* metaObject, const wxTreeItemId& hParentID)
+void CRoleEditor::AddInterfaceItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	CMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CMetaObjectInterface>();
+	CValueMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CValueMetaObjectInterface>();
 	wxASSERT(metaObject);
 
 	for (auto commonInterface : metaObjectValue->GetInterfaceArrayObject()) {
@@ -195,7 +195,7 @@ void CRoleEditor::FillData()
 {
 	const IMetaData* metaData = m_metaRole->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaObject* commonObject = metaData->GetCommonMetaObject();
+	const IValueMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_roleCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());

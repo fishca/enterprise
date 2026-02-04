@@ -12,7 +12,7 @@ public:
 
 	CValue GetDataValue() const;
 
-	wxVariantDataOwner(const IMetaObjectGenericData* prop, const CMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
+	wxVariantDataOwner(const IValueMetaObjectGenericData* prop, const CMetaDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_metaDesc(typeDesc) {}
 	wxVariantDataOwner(const wxVariantDataOwner& src) : wxVariantData(), m_ownerProperty(src.m_ownerProperty), m_metaDesc(src.m_metaDesc) {}
 
 	virtual wxVariantDataOwner* Clone() const {
@@ -35,7 +35,7 @@ public:
 	virtual wxString GetType() const { return wxT("wxVariantDataOwner"); }
 
 protected:
-	const IMetaObjectGenericData* m_ownerProperty;
+	const IValueMetaObjectGenericData* m_ownerProperty;
 	CMetaDescription m_metaDesc;
 };
 

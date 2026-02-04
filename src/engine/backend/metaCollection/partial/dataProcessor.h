@@ -3,8 +3,8 @@
 
 #include "commonObject.h"
 
-class CMetaObjectDataProcessor : public IMetaObjectRecordDataExt {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectDataProcessor);
+class CValueMetaObjectDataProcessor : public IValueMetaObjectRecordDataExt {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectDataProcessor);
 protected:
 
 	enum
@@ -36,8 +36,8 @@ public:
 		m_propertyDefFormObject->SetValue(id);
 	}
 
-	CMetaObjectDataProcessor();
-	virtual ~CMetaObjectDataProcessor();
+	CValueMetaObjectDataProcessor();
+	virtual ~CValueMetaObjectDataProcessor();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -60,11 +60,11 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//create associate value 
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//suppot form
@@ -72,8 +72,8 @@ public:
 #pragma endregion
 
 	//get module object in compose object 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -82,13 +82,13 @@ public:
 protected:
 
 	//create manager
-	virtual IManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
-	virtual IRecordDataObjectExt* CreateObjectExtValue();  //create object 
+	virtual IValueRecordDataObjectExt* CreateObjectExtValue();  //create object 
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -110,22 +110,22 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("objectModule"), _("Object module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("objectModule"), _("Object module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CMetaObjectDataProcessor::FillFormObject);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CValueMetaObjectDataProcessor::FillFormObject);
 
-	friend class CRecordDataObjectDataProcessor;
+	friend class CValueRecordDataObjectDataProcessor;
 	friend class IMetaData;
 };
 
 #define default_meta_id 10 //for dataProcessors
 
-class CMetaObjectExternalDataProcessor : public CMetaObjectDataProcessor {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectExternalDataProcessor);
+class CValueMetaObjectExternalDataProcessor : public CValueMetaObjectDataProcessor {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectExternalDataProcessor);
 public:
-	CMetaObjectExternalDataProcessor() : CMetaObjectDataProcessor() {
+	CValueMetaObjectExternalDataProcessor() : CValueMetaObjectDataProcessor() {
 		m_metaId = default_meta_id;
 	}
 
@@ -137,9 +137,9 @@ public:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CRecordDataObjectDataProcessor : public IRecordDataObjectExt {
-	CRecordDataObjectDataProcessor(CMetaObjectDataProcessor* metaObject);
-	CRecordDataObjectDataProcessor(const CRecordDataObjectDataProcessor& source);
+class CValueRecordDataObjectDataProcessor : public IValueRecordDataObjectExt {
+	CValueRecordDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject);
+	CValueRecordDataObjectDataProcessor(const CValueRecordDataObjectDataProcessor& source);
 public:
 
 #pragma region _form_builder_h_
@@ -155,8 +155,8 @@ public:
 protected:
 
 	friend class CValue;
-	friend class CMetaObjectDataProcessor;
-	friend class CModuleManagerExternalDataProcessor;
+	friend class CValueMetaObjectDataProcessor;
+	friend class CValueModuleManagerExternalDataProcessor;
 };
 
 #endif

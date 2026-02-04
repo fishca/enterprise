@@ -12,7 +12,7 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createData)
+bool CValueTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createData)
 {
 	if (m_objectValue->IsNewObject() && !srcGuid.isValid()) {
 		m_readAfter = true;
@@ -20,7 +20,7 @@ bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createDat
 	}
 
 	IValueTable::Clear();
-	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	const wxString& sqlQuery = "SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "'";
@@ -32,7 +32,7 @@ bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createDat
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
-			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 
@@ -46,7 +46,7 @@ bool CTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool createDat
 
 #include "backend/system/systemManager.h"
 
-bool CTabularSectionDataObjectRef::SaveData()
+bool CValueTabularSectionDataObjectRef::SaveData()
 {
 	if (m_readOnly)
 		return true;
@@ -73,12 +73,12 @@ bool CTabularSectionDataObjectRef::SaveData()
 	if (!fillCheck)
 		return false;
 
-	if (!CTabularSectionDataObjectRef::DeleteData())
+	if (!CValueTabularSectionDataObjectRef::DeleteData())
 		return false;
 
-	CMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
+	CValueMetaObjectAttributePredefined* numLine = m_metaTable->GetNumberLine();
 	wxASSERT(numLine);
-	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	reference_t* reference_impl = new reference_t(metaObject->GetMetaID(), m_objectValue->GetGuid());
 
@@ -86,11 +86,11 @@ bool CTabularSectionDataObjectRef::SaveData()
 	wxString queryText = "INSERT INTO " + tableName + " (";
 	queryText += "uuid";
 	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
-		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(object);
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
 	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
+		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
@@ -111,7 +111,7 @@ bool CTabularSectionDataObjectRef::SaveData()
 			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					node->GetTableValue(object->GetMetaID()),
 					statement,
@@ -119,7 +119,7 @@ bool CTabularSectionDataObjectRef::SaveData()
 				);
 			}
 			else {
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					numberLine++,
 					statement,
@@ -137,12 +137,12 @@ bool CTabularSectionDataObjectRef::SaveData()
 	return !hasError;
 }
 
-bool CTabularSectionDataObjectRef::DeleteData()
+bool CValueTabularSectionDataObjectRef::DeleteData()
 {
 	if (m_readOnly || m_objectValue->IsNewObject())
 		return true;
 
-	IMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
+	IValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
 	db_query->RunQuery("DELETE FROM " + tableName + " WHERE uuid = '" + m_objectValue->GetGuid() + "';");

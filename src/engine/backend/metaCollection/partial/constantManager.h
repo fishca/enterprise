@@ -3,16 +3,16 @@
 
 #include "constant.h"
 
-class CManagerDataObjectConstant : 
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectConstant);
+class CValueManagerDataObjectConstant : 
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectConstant);
 public:
 
-	CManagerDataObjectConstant(CMetaObjectConstant* metaConst = nullptr);
-	virtual ~CManagerDataObjectConstant();
+	CValueManagerDataObjectConstant(CValueMetaObjectConstant* metaConst = nullptr);
+	virtual ~CValueManagerDataObjectConstant();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
-	virtual CMetaObjectConstant* GetMetaObject() const { return m_metaConst; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual CValueMetaObjectConstant* GetMetaObject() const { return m_metaConst; }
 
 	virtual CMethodHelper* GetPMethods() const {
 		//PrepareNames();  
@@ -30,7 +30,7 @@ public:
 	virtual wxString GetString() const;
 
 protected:
-	CMetaObjectConstant* m_metaConst;
+	CValueMetaObjectConstant* m_metaConst;
 
 	//methods 
 	static CMethodHelper m_methodHelper;

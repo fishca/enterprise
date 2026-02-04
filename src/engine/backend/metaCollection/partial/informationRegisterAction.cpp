@@ -12,7 +12,7 @@ enum
 	eCopy,
 };
 
-CRecordManagerObjectInformationRegister::CActionCollection CRecordManagerObjectInformationRegister::GetActionCollection(const form_identifier_t &formType)
+CValueRecordManagerObjectInformationRegister::CActionCollection CValueRecordManagerObjectInformationRegister::GetActionCollection(const form_identifier_t &formType)
 {
 	CActionCollection registerActions(this);
 
@@ -23,7 +23,7 @@ CRecordManagerObjectInformationRegister::CActionCollection CRecordManagerObjectI
 	return registerActions;
 }
 
-void CRecordManagerObjectInformationRegister::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
+void CValueRecordManagerObjectInformationRegister::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
 {
 	switch (action)
 	{

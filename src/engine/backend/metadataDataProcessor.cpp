@@ -14,13 +14,13 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	//create main metaObject
-	m_commonObject = new CMetaObjectExternalDataProcessor;
+	m_commonObject = new CValueMetaObjectExternalDataProcessor;
 	m_commonObject->SetName(
 		IMetaData::GetNewName(g_metaExternalDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 	);
 
 	if (m_commonObject->OnCreateMetaObject(this, newObjectFlag)) {
-		m_moduleManager = new CModuleManagerExternalDataProcessor(this, m_commonObject);
+		m_moduleManager = new CValueModuleManagerExternalDataProcessor(this, m_commonObject);
 		m_moduleManager->IncrRef();
 		if (!m_commonObject->OnLoadMetaObject(this)) {
 			wxASSERT_MSG(false, "m_commonObject->OnLoadMetaObject() == false");
@@ -35,7 +35,7 @@ m_version(version_oes_last)
 	m_ownerMeta = this;
 }
 
-CMetaDataDataProcessor::CMetaDataDataProcessor(IMetaData* metaData, CMetaObjectDataProcessor* srcDataProcessor) : IMetaData(),
+CMetaDataDataProcessor::CMetaDataDataProcessor(IMetaData* metaData, CValueMetaObjectDataProcessor* srcDataProcessor) : IMetaData(),
 m_commonObject(srcDataProcessor),
 m_moduleManager(nullptr),
 m_ownerMeta(nullptr),
@@ -43,10 +43,10 @@ m_configOpened(false),
 m_version(version_oes_last)
 {
 	if (srcDataProcessor == nullptr) {
-		IMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
+		IValueMetaObject* commonMetaObject = metaData->GetCommonMetaObject();
 		wxASSERT(commonMetaObject);
 		//create main metaObject
-		m_commonObject = new CMetaObjectDataProcessor();
+		m_commonObject = new CValueMetaObjectDataProcessor();
 		m_commonObject->SetName(
 			IMetaData::GetNewName(g_metaDataProcessorCLSID, nullptr, m_commonObject->GetClassName())
 		);
@@ -112,7 +112,7 @@ wxString CMetaDataDataProcessor::GetLangCode() const
 
 ////////////////////////////////////////////////////////////////////
 
-bool CMetaDataDataProcessor::ClearChildMetadata(IMetaObject* object)
+bool CMetaDataDataProcessor::ClearChildMetadata(IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -186,7 +186,7 @@ bool CMetaDataDataProcessor::RunDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataDataProcessor::RunChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataDataProcessor::RunChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -227,7 +227,7 @@ bool CMetaDataDataProcessor::CloseDatabase(int flags)
 	return true;
 }
 
-bool CMetaDataDataProcessor::CloseChildMetadata(IMetaObject* object, int flags, bool before)
+bool CMetaDataDataProcessor::CloseChildMetadata(IValueMetaObject* object, int flags, bool before)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -394,7 +394,7 @@ bool CMetaDataDataProcessor::LoadCommonMetadata(const class_identifier_t& clsid,
 	return true;
 }
 
-bool CMetaDataDataProcessor::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IMetaObject* object)
+bool CMetaDataDataProcessor::LoadChildMetadata(const class_identifier_t&, CMemoryReader& readerData, IValueMetaObject* object)
 {
 	class_identifier_t clsid = 0;
 	CMemoryReader* prevReaderMemory = nullptr;
@@ -417,10 +417,10 @@ bool CMetaDataDataProcessor::LoadChildMetadata(const class_identifier_t&, CMemor
 				break;
 
 			wxASSERT(clsid != 0);
-			IMetaObject* newMetaObject = nullptr;
+			IValueMetaObject* newMetaObject = nullptr;
 			CValue* ppParams[] = { object };
 			try {
-				newMetaObject = CValue::CreateAndConvertObjectRef<IMetaObject>(clsid, ppParams, 1);
+				newMetaObject = CValue::CreateAndConvertObjectRef<IValueMetaObject>(clsid, ppParams, 1);
 				newMetaObject->IncrRef();
 			}
 			catch (...) {
@@ -485,7 +485,7 @@ bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid,
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IMetaObject* object, int flags)
+bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IValueMetaObject* object, int flags)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -525,7 +525,7 @@ bool CMetaDataDataProcessor::DeleteCommonMetadata(const class_identifier_t& clsi
 	return DeleteChildMetadata(clsid, m_commonObject);
 }
 
-bool CMetaDataDataProcessor::DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object)
+bool CMetaDataDataProcessor::DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 

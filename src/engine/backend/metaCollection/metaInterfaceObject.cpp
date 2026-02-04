@@ -4,21 +4,21 @@
 //*                            IntrfaceObject                           *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectInterface, IMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectInterface, IValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
 //***********************************************************************
 
-CMetaObjectInterface::CMetaObjectInterface(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IMetaObject(name, synonym, comment)
+CValueMetaObjectInterface::CValueMetaObjectInterface(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObject(name, synonym, comment)
 {
 }
 
 #include "backend/metadata.h"
 
-bool CMetaObjectInterface::GetInterfaceItemArrayObject(EInterfaceCommandSection cmdSection,
-	std::vector<IMetaObject*>& array) const
+bool CValueMetaObjectInterface::GetInterfaceItemArrayObject(EInterfaceCommandSection cmdSection,
+	std::vector<IValueMetaObject*>& array) const
 {
 	for (const auto object : m_metaData->GetAnyArrayObject()) {
 
@@ -35,12 +35,12 @@ bool CMetaObjectInterface::GetInterfaceItemArrayObject(EInterfaceCommandSection 
 	return array.size() > 0;
 }
 
-bool CMetaObjectInterface::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectInterface::LoadData(CMemoryReader& reader)
 {
 	return m_propertyPicture->LoadData(reader);
 }
 
-bool CMetaObjectInterface::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectInterface::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyPicture->SaveData(writer);
 }
@@ -49,4 +49,4 @@ bool CMetaObjectInterface::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectInterface, "interface", g_metaInterfaceCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectInterface, "interface", g_metaInterfaceCLSID);

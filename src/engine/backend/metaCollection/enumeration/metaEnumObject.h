@@ -3,8 +3,8 @@
 
 #include "backend/metaCollection/metaObject.h"
 
-class BACKEND_API CMetaObjectEnum : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectEnum);
+class BACKEND_API CValueMetaObjectEnum : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectEnum);
 public:
 
 	CGuid GetGuid() const {

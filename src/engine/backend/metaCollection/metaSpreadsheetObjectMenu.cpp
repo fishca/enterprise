@@ -6,7 +6,7 @@
 #include "metaSpreadsheetObject.h"
 #include "backend/metaData.h"
 
-bool IMetaObjectSpreadsheet::PrepareContextMenu(wxMenu *defaultMenu)
+bool IValueMetaObjectSpreadsheet::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_TEMPLATE, _("Open template"));
 	menuItem->SetBitmap(GetIcon());
@@ -14,7 +14,7 @@ bool IMetaObjectSpreadsheet::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void IMetaObjectSpreadsheet::ProcessCommand(unsigned int id)
+void IValueMetaObjectSpreadsheet::ProcessCommand(unsigned int id)
 {
 	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);

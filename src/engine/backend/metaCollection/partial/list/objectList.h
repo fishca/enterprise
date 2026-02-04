@@ -5,9 +5,9 @@
 #include "backend/metaCollection/partial/reference/reference.h"
 
 //base list class 
-class BACKEND_API IListDataObject : public IValueTable,
+class BACKEND_API IValueListDataObject : public IValueTable,
 	public ISourceDataObject {
-	wxDECLARE_ABSTRACT_CLASS(IListDataObject);
+	wxDECLARE_ABSTRACT_CLASS(IValueListDataObject);
 protected:
 	enum Func {
 		enRefresh
@@ -49,17 +49,17 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectListColumnInfo();
-			CDataObjectListColumnInfo(IMetaObjectAttribute* attribute);
+			CDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute);
 			virtual ~CDataObjectListColumnInfo();
 
 		private:
-			IMetaObjectAttribute* m_metaAttribute;
+			IValueMetaObjectAttribute* m_metaAttribute;
 		};
 
 	public:
 
 		CDataObjectListColumnCollection();
-		CDataObjectListColumnCollection(IListDataObject* ownerTable, IMetaObjectGenericData* metaObject);
+		CDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
 		virtual ~CDataObjectListColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
@@ -77,7 +77,7 @@ public:
 		}
 
 		virtual unsigned int GetColumnCount() const {
-			IMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
+			IValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
 			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
@@ -89,7 +89,7 @@ public:
 
 	protected:
 
-		IListDataObject* m_ownerTable;
+		IValueListDataObject* m_ownerTable;
 		std::map<meta_identifier_t, CValuePtr<CDataObjectListColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
@@ -98,7 +98,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CDataObjectListReturnLine);
 	public:
 
-		CDataObjectListReturnLine(IListDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CDataObjectListReturnLine(IValueListDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
 		virtual ~CDataObjectListReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const {
@@ -116,13 +116,13 @@ public:
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
 	protected:
-		IListDataObject* m_ownerTable;
+		IValueListDataObject* m_ownerTable;
 		CMethodHelper* m_methodHelper;
 	};
 
 public:
 
-	void AppendSort(IMetaObject* metaObject, bool ascending = true, bool use = true, bool system = false) {
+	void AppendSort(IValueMetaObject* metaObject, bool ascending = true, bool use = true, bool system = false) {
 		if (metaObject == nullptr)
 			return;
 		m_sortOrder.AppendSort(
@@ -145,20 +145,20 @@ public:
 		return node->GetValue(id, pvarMetaVal);
 	}
 
-	virtual bool GetValueAttribute(IMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true) {
-		return IMetaObjectAttribute::GetValueAttribute(metaAttr, retValue, resultSet, createData);
+	virtual bool GetValueAttribute(IValueMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true) {
+		return IValueMetaObjectAttribute::GetValueAttribute(metaAttr, retValue, resultSet, createData);
 	}
 
 	//ctor
-	IListDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
-	virtual ~IListDataObject();
+	IValueListDataObject(IValueMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
+	virtual ~IValueListDataObject();
 
 	//****************************************************************************
 	//*                               Support model                              *
 	//****************************************************************************
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual IValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
@@ -176,7 +176,7 @@ public:
 	virtual CUniqueKey GetGuid() const { return m_objGuid; };
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual IValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
 	virtual void SourceIncrRef() { CValue::IncrRef(); }
@@ -197,8 +197,8 @@ protected:
 };
 
 // list enumeration 
-class BACKEND_API CListDataObjectEnumRef : public IListDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CListDataObjectRef);
+class BACKEND_API CValueListDataObjectEnumRef : public IValueListDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueListDataObjectRef);
 public:
 	struct wxValueTableEnumRow : public wxValueTableRow {
 		wxValueTableEnumRow(const CGuid& guid) :
@@ -220,7 +220,7 @@ public:
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
-	CListDataObjectEnumRef(IMetaObjectRecordDataEnumRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
+	CValueListDataObjectEnumRef(IValueMetaObjectRecordDataEnumRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const wxDataViewItem& row, unsigned int col) const;
@@ -257,7 +257,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataEnumRef* GetMetaObject() const {
+	virtual IValueMetaObjectRecordDataEnumRef* GetMetaObject() const {
 		return m_metaObject;
 	};
 
@@ -291,12 +291,12 @@ private:
 private:
 
 	bool m_choiceMode;
-	IMetaObjectRecordDataEnumRef* m_metaObject;
+	IValueMetaObjectRecordDataEnumRef* m_metaObject;
 };
 
 // list without parent  
-class BACKEND_API CListDataObjectRef : public IListDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CListDataObjectRef);
+class BACKEND_API CValueListDataObjectRef : public IValueListDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueListDataObjectRef);
 public:
 	struct wxValueTableListRow : public wxValueTableRow {
 		wxValueTableListRow(const CGuid& guid) :
@@ -314,7 +314,7 @@ public:
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
-	CListDataObjectRef(IMetaObjectRecordDataMutableRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
+	CValueListDataObjectRef(IValueMetaObjectRecordDataMutableRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const wxDataViewItem& row, unsigned int col) const;
@@ -355,7 +355,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataRef* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObjectRecordDataRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -394,12 +394,12 @@ private:
 
 	bool m_choiceMode;
 
-	IMetaObjectRecordDataMutableRef* m_metaObject;
+	IValueMetaObjectRecordDataMutableRef* m_metaObject;
 };
 
 // list register
-class BACKEND_API CListRegisterObject : public IListDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CListRegisterObject);
+class BACKEND_API CValueListRegisterObject : public IValueListDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueListRegisterObject);
 public:
 	struct wxValueTableKeyRow : public wxValueTableRow {
 		wxValueTableKeyRow() :
@@ -407,7 +407,7 @@ public:
 		}
 		void AppendNodeValue(const meta_identifier_t& id, const CValue& variant) { m_nodeKeys.insert_or_assign(id, variant); }
 		CValue& AppendNodeValue(const meta_identifier_t& id) { return m_nodeKeys[id]; }
-		CUniquePairKey GetUniquePairKey(IMetaObjectRegisterData* metaObject) const { return CUniquePairKey(metaObject, m_nodeValues); }
+		CUniquePairKey GetUniquePairKey(IValueMetaObjectRegisterData* metaObject) const { return CUniquePairKey(metaObject, m_nodeValues); }
 
 	private:
 		valueArray_t m_nodeKeys;
@@ -420,7 +420,7 @@ public:
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
-	CListRegisterObject(IMetaObjectRegisterData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND);
+	CValueListRegisterObject(IValueMetaObjectRegisterData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND);
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const wxDataViewItem& row, unsigned int col) const;
@@ -455,7 +455,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRegisterData* GetMetaObject() const {
+	virtual IValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	};
 
@@ -490,13 +490,13 @@ private:
 	);
 
 private:
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 //base tree class 
-class BACKEND_API ITreeDataObject : public IValueTree,
+class BACKEND_API IValueTreeDataObject : public IValueTree,
 	public ISourceDataObject {
-	wxDECLARE_ABSTRACT_CLASS(ITreeDataObject);
+	wxDECLARE_ABSTRACT_CLASS(IValueTreeDataObject);
 protected:
 	enum Func {
 		enRefresh
@@ -526,17 +526,17 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CDataObjectTreeColumnInfo();
-			CDataObjectTreeColumnInfo(IMetaObjectAttribute* attribute);
+			CDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute);
 			virtual ~CDataObjectTreeColumnInfo();
 
 		private:
-			IMetaObjectAttribute* m_metaAttribute;
+			IValueMetaObjectAttribute* m_metaAttribute;
 		};
 
 	public:
 
 		CDataObjectTreeColumnCollection();
-		CDataObjectTreeColumnCollection(ITreeDataObject* ownerTable, IMetaObjectGenericData* metaObject);
+		CDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
 		virtual ~CDataObjectTreeColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
@@ -554,7 +554,7 @@ public:
 		}
 
 		virtual unsigned int GetColumnCount() const {
-			IMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
+			IValueMetaObjectGenericData* metaTable = m_ownerTable->GetMetaObject();
 			wxASSERT(metaTable);
 			const auto& obj = metaTable->GetGenericAttributeArrayObject();
 			return obj.size();
@@ -566,7 +566,7 @@ public:
 
 	protected:
 
-		ITreeDataObject* m_ownerTable;
+		IValueTreeDataObject* m_ownerTable;
 		std::map<meta_identifier_t, CValuePtr<CDataObjectTreeColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
@@ -575,7 +575,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeReturnLine);
 	public:
 
-		CDataObjectTreeReturnLine(ITreeDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
 		virtual ~CDataObjectTreeReturnLine();
 
 		virtual IValueTree* GetOwnerModel() const {
@@ -594,12 +594,12 @@ public:
 
 	protected:
 		CMethodHelper* m_methodHelper;
-		ITreeDataObject* m_ownerTable;
+		IValueTreeDataObject* m_ownerTable;
 	};
 
 public:
 
-	void AppendSort(IMetaObject* metaObject, bool ascending = true, bool use = true, bool system = false) {
+	void AppendSort(IValueMetaObject* metaObject, bool ascending = true, bool use = true, bool system = false) {
 		if (metaObject == nullptr)
 			return;
 		m_sortOrder.AppendSort(
@@ -623,15 +623,15 @@ public:
 	}
 
 	//ctor
-	ITreeDataObject(IMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
-	virtual ~ITreeDataObject();
+	IValueTreeDataObject(IValueMetaObjectGenericData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
+	virtual ~IValueTreeDataObject();
 
 	//****************************************************************************
 	//*                               Support model                              *
 	//****************************************************************************
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual IValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); }
@@ -649,7 +649,7 @@ public:
 	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual IValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//counter
 	virtual void SourceIncrRef() { CValue::IncrRef(); }
@@ -671,8 +671,8 @@ protected:
 };
 
 // tree with parent or only parent 
-class BACKEND_API CTreeDataObjectFolderRef : public ITreeDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CTreeDataObjectFolderRef);
+class BACKEND_API CValueTreeDataObjectFolderRef : public IValueTreeDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueTreeDataObjectFolderRef);
 public:
 
 	enum {
@@ -683,7 +683,7 @@ public:
 
 	struct wxValueTreeListNode : public wxValueTreeNode {
 		CGuid GetGuid() const { return m_objGuid; }
-		wxValueTreeListNode(wxValueTreeNode* parent, const CGuid& guid, ITreeDataObject* treeValue = nullptr, bool container = false) :
+		wxValueTreeListNode(wxValueTreeNode* parent, const CGuid& guid, IValueTreeDataObject* treeValue = nullptr, bool container = false) :
 			wxValueTreeNode(parent), m_objGuid(guid), m_container(container) {
 			m_valueTree = treeValue;
 		}
@@ -699,7 +699,7 @@ public:
 	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
-	CTreeDataObjectFolderRef(IMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
+	CValueTreeDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
 		const form_identifier_t& formType = wxNOT_FOUND, int listMode = LIST_ITEM, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
@@ -741,7 +741,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const { return m_metaObject; }
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -774,7 +774,7 @@ private:
 private:
 
 	bool m_choiceMode; int m_listMode;
-	IMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
+	IValueMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
 };
 
 #endif 

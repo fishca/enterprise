@@ -49,7 +49,7 @@ private:
 		return 0;
 	}
 
-	IMetaObject* GetMetaIdentifier() const {
+	IValueMetaObject* GetMetaIdentifier() const {
 		wxTreeItemId parentItem = GetSelectionIdentifier();
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
@@ -58,7 +58,7 @@ private:
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
-						IMetaObject* parent = GetMetaObject(parentItem);
+						IValueMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -123,9 +123,9 @@ protected:
 			CTreeDataMetaItem* data1 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item1));
 			CTreeDataMetaItem* data2 = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item2));
 			if (data1 != nullptr && data2 != nullptr && ret > 0) {
-				IMetaObject* metaObject1 = data1->m_metaObject;
-				IMetaObject* metaObject2 = data2->m_metaObject;
-				IMetaObject* parent = metaObject1->GetParent();
+				IValueMetaObject* metaObject1 = data1->m_metaObject;
+				IValueMetaObject* metaObject2 = data2->m_metaObject;
+				IValueMetaObject* parent = metaObject1->GetParent();
 				wxASSERT(parent);
 				return parent->ChangeChildPosition(metaObject2,
 					parent->GetChildPosition(metaObject1)
@@ -206,7 +206,7 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const class_identifier_t& clsid, IMetaObject* metaObject) const {
+		const class_identifier_t& clsid, IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -218,7 +218,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		IMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -231,10 +231,10 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool rubObject = true);
-	IMetaObject* CreateItem(bool showValue = true);
+	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool rubObject = true);
+	IValueMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
+	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -255,7 +255,7 @@ private:
 
 	void FillData();
 
-	IMetaObject* GetMetaObject(const wxTreeItemId& item) const
+	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const
 	{
 		if (!item.IsOk())
 			return nullptr;
@@ -266,7 +266,7 @@ private:
 		return data->m_metaObject;
 	}
 
-	void UpdateToolbar(IMetaObject* obj, const wxTreeItemId& item);
+	void UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item);
 
 public:
 
@@ -274,7 +274,7 @@ public:
 
 public:
 
-	bool RenameMetaObject(IMetaObject* obj, const wxString& sNewName);
+	bool RenameMetaObject(IValueMetaObject* obj, const wxString& sNewName);
 
 public:
 

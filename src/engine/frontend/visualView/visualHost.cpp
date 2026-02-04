@@ -52,8 +52,8 @@ void CVisualHost::SetCaption(const wxString& strCaption)
 		if (strCaption.IsEmpty()) {
 			const ISourceDataObject* srcObject = handler->GetSourceObject();
 			if (srcObject != nullptr) {
-				const IMetaObjectForm* creator = handler->GetFormMetaObject();
-				const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+				const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
+				const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 				if (genericObject != nullptr) {
 					m_document->SetTitle(genericObject->GetSynonym() + wxT(": ") + creator->GetSynonym());
 					m_document->SetFilename(genericObject->GetFileName(), true);
@@ -64,7 +64,7 @@ void CVisualHost::SetCaption(const wxString& strCaption)
 				}
 			}
 			else {
-				const IMetaObjectForm* creator = handler->GetFormMetaObject();
+				const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
 				if (creator != nullptr) {
 					m_document->SetTitle(creator->GetSynonym());
 					m_document->SetFilename(creator->GetFileName(), true);
@@ -80,11 +80,11 @@ void CVisualHost::SetCaption(const wxString& strCaption)
 		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 			m_document->SetTitle(srcObject->GetSourceCaption());
-			const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 			m_document->SetFilename(genericObject->GetFileName(), true);
 		}
 		else {
-			const IMetaObjectForm* creator = handler->GetFormMetaObject();
+			const IValueMetaObjectForm* creator = handler->GetFormMetaObject();
 			if (creator != nullptr && !m_document->IsVisualDemonstrationDoc()) {
 				m_document->SetTitle(creator->GetSynonym());
 				m_document->SetFilename(creator->GetFileName(), true);

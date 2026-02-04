@@ -201,7 +201,7 @@ ISourceObject* CValueTableBox::GetSourceObject() const
 	return m_formOwner ? m_formOwner->GetSourceObject() : nullptr;
 }
 
-IMetaObjectCompositeData* CValueTableBox::GetSourceMetaObject() const
+IValueMetaObjectCompositeData* CValueTableBox::GetSourceMetaObject() const
 {
 	wxASSERT(m_tableModel);
 	if (m_tableModel == nullptr) return nullptr;

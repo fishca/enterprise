@@ -3,13 +3,13 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CMetaObjectPicture : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectPicture);
+class BACKEND_API CValueMetaObjectPicture : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectPicture);
 public:
 
 	wxBitmap GetValueAsBitmap() const { return m_propertyPicture->GetValueAsBitmap(); }
 
-	CMetaObjectPicture(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectPicture(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;

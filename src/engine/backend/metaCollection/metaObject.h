@@ -113,7 +113,7 @@ public:
 };
 
 //*******************************************************************************
-//*                             IMetaObject                                     *
+//*                             IValueMetaObject                                     *
 //*******************************************************************************
 
 #define defaultMetaID 1000
@@ -152,14 +152,14 @@ enum metaObjectFlags {
 
 #define repairMetaTable  0x0008000
 
-class BACKEND_API IMetaObject :
+class BACKEND_API IValueMetaObject :
 
 	public CValue,
 
-	public IPropertyObjectHelper<IMetaObject>,
+	public IPropertyObjectHelper<IValueMetaObject>,
 	public IAccessObject, public IInterfaceObject {
 
-	wxDECLARE_ABSTRACT_CLASS(IMetaObject);
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObject);
 
 public:
 
@@ -247,13 +247,13 @@ public:
 
 	bool BuildNewName();
 
-	IMetaObject(
+	IValueMetaObject(
 		const wxString& strName = wxEmptyString,
 		const wxString& synonym = wxEmptyString,
 		const wxString& comment = wxEmptyString
 	);
 
-	virtual ~IMetaObject();
+	virtual ~IValueMetaObject();
 
 	//system override 
 	virtual int GetComponentType() const final { return COMPONENT_TYPE_METADATA; }
@@ -336,7 +336,7 @@ public:
 
 	// save & delete object in DB 
 	bool CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags = createMetaTable);
-	bool UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject);
+	bool UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject);
 	bool DeleteMetaTable(IMetaDataConfiguration* srcMetaData);
 
 	//events: 
@@ -371,7 +371,7 @@ public:
 	virtual bool IsEditable() const;
 
 	//compare object 
-	virtual bool CompareObject(const IMetaObject* metaObject) const;
+	virtual bool CompareObject(const IValueMetaObject* metaObject) const;
 
 	/**
 	* Property events
@@ -384,7 +384,7 @@ public:
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
 	*/
-	bool ChangeChildPosition(IMetaObject* obj, unsigned int pos);
+	bool ChangeChildPosition(IValueMetaObject* obj, unsigned int pos);
 
 	//copy & paste object 
 	bool CopyObject(CMemoryWriter& writer) const;
@@ -393,7 +393,7 @@ public:
 #pragma region __array_h__
 
 	//any
-	template <typename _T1 = IMetaObject>
+	template <typename _T1 = IValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(
 		std::vector<_T1*>& array = std::vector<_T1*>()) const {
 		FillArrayObjectByFilter<_T1>(array, {});
@@ -404,7 +404,7 @@ public:
 #pragma region __filter_h__
 
 	//any 
-	template <typename _T1 = IMetaObject, typename _T2>
+	template <typename _T1 = IValueMetaObject, typename _T2>
 	_T1* FindAnyObjectByFilter(const _T2& id) const {
 		return FindObjectByFilter<_T1>(id, {});
 	}
@@ -414,7 +414,7 @@ public:
 protected:
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags) { return true; }
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags) { return true; }
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader) { return true; }
@@ -530,7 +530,7 @@ protected:
 
 		//self 
 		if (stringUtils::CompareString(name, GetName()))
-			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+			return dynamic_cast<_T1*>(const_cast<IValueMetaObject*>(this));
 
 		return nullptr;
 	}
@@ -577,7 +577,7 @@ protected:
 
 		//self 
 		if (CompareId(id))
-			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+			return dynamic_cast<_T1*>(const_cast<IValueMetaObject*>(this));
 
 		return nullptr;
 	}
@@ -624,7 +624,7 @@ protected:
 
 		//self 
 		if (CompareGuid(id))
-			return dynamic_cast<_T1*>(const_cast<IMetaObject*>(this));
+			return dynamic_cast<_T1*>(const_cast<IValueMetaObject*>(this));
 
 		return nullptr;
 	}

@@ -1,6 +1,6 @@
 #include "informationRegister.h"
 
-void CMetaObjectInformationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueMetaObjectInformationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (GetWriteRegisterMode() == eWriteRegisterMode::eSubordinateRecorder) {
 		(*m_propertyAttributeLineActive)->ClearFlag(metaDisableFlag);
@@ -21,5 +21,5 @@ void CMetaObjectInformationRegister::OnPropertyChanged(IProperty* property, cons
 		(*m_propertyAttributePeriod)->SetFlag(metaDisableFlag);
 	}
 
-	IMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
+	IValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
 }

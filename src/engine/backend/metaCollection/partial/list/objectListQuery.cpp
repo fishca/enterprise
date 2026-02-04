@@ -7,7 +7,7 @@
 #include "backend/appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -27,12 +27,12 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 	for (auto filter : m_filterRow.m_filters) {
 		const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 				if (firstWhere)
 					whereText += " WHERE ";
-				whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+				whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 				if (firstWhere)
 					firstWhere = false;
 			}
@@ -67,23 +67,23 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 	else
 		queryText = queryText + whereText + orderText;
 
-	CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
-	CMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
+	CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+	CValueMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
 	IValueTable::Clear();
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-				const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+				const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 				if (filterValue.ConvertToValue(refData))
 					statement->SetParamString(position++, refData->GetGuid());
 				else
 					statement->SetParamString(position++, wxNullUniqueKey);
 			}
 			else {
-				IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 			}
 		}
 	}
@@ -95,7 +95,7 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 	while (resultSet->Next()) {
 		CGuid enumRow = resultSet->GetResultString(guidName);
 		wxValueTableEnumRow* rowData = new wxValueTableEnumRow(enumRow);
-		rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+		rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 		rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(enumRow)->GetParentPosition());
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 	};
@@ -104,7 +104,7 @@ void CListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const i
 	db_query->CloseStatement(statement);
 }
 
-void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -124,12 +124,12 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 					if (firstWhere)
 						whereText += " WHERE ";
-					whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+					whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 					if (firstWhere)
 						firstWhere = false;
 				}
@@ -173,32 +173,32 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		else
 			queryText = queryText + whereText + orderText;
 
-		CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
-		CMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
+		CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+		CValueMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-					const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+					const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 					if (filterValue.ConvertToValue(refData))
 						statement->SetParamString(position++, refData->GetGuid());
 					else
 						statement->SetParamString(position++, wxNullUniqueKey);
 				}
 				else {
-					IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+					IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 				}
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
 			wxValueTableEnumRow* rowData = new wxValueTableEnumRow(resultSet->GetResultString(guidName));
-			rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(rowData->GetGuid())->GetParentPosition());
 			IValueTable::Insert(rowData, 0, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
@@ -236,12 +236,12 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 					if (firstWhere)
 						whereText += " WHERE ";
-					whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+					whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 					if (firstWhere)
 						firstWhere = false;
 				}
@@ -285,32 +285,32 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		else
 			queryText = queryText + whereText + orderText;
 
-		CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
-		CMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
+		CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+		CValueMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-					const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+					const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 					if (filterValue.ConvertToValue(refData))
 						statement->SetParamString(position++, refData->GetGuid());
 					else
 						statement->SetParamString(position++, wxNullUniqueKey);
 				}
 				else {
-					IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+					IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 				}
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -320,7 +320,7 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
 			wxValueTableEnumRow* rowData = new wxValueTableEnumRow(resultSet->GetResultString(guidName));
-			rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(rowData->GetGuid())->GetParentPosition());
 			IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
@@ -337,7 +337,7 @@ void CListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, con
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -356,12 +356,12 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 	for (auto& filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
 			const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 				if (firstWhere)
 					whereText += " WHERE ";
-				whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+				whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 				if (firstWhere)
 					firstWhere = false;
 			}
@@ -379,13 +379,13 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 	for (auto& sort : m_sortOrder.m_sorts) {
 		if (sort.m_sortEnable) {
 			const wxString& operation = sort.m_sortAscending ? "ASC" : "DESC";
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 			wxASSERT(attribute);
 			if (!m_metaObject->IsDataReference(sort.m_sortModel)) {
 				if (firstOrder)
 					orderText += " ORDER BY ";
-				for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-					if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+				for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+					if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 						orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation);
 						if (firstOrder) firstOrder = false;
 					}
@@ -414,31 +414,31 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 		}
 	};
 
-	const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
+	const std::vector<IValueMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
 	else
 		queryText = queryText + whereText + orderText;
 
-	CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+	CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 	/////////////////////////////////////////////////////////
 	IValueTable::Clear();
 	/////////////////////////////////////////////////////////
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-				const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+				const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 				if (filterValue.ConvertToValue(refData))
 					statement->SetParamString(position++, refData->GetGuid());
 				else
 					statement->SetParamString(position++, wxNullUniqueKey);
 			}
 			else {
-				IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 			}
 		}
 	}
@@ -451,9 +451,9 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 		for (auto& attribute : vec_attr) {
 			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 				continue;
-			IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
-		rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+		rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 	};
 
@@ -461,7 +461,7 @@ void CListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int c
 	db_query->CloseStatement(statement);
 }
 
-void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -481,12 +481,12 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 					if (firstWhere)
 						whereText += " WHERE ";
-					whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+					whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 					if (firstWhere)
 						firstWhere = false;
 				}
@@ -505,13 +505,13 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = !sort.m_sortAscending ? "ASC" : "DESC";
 				const wxString& operation_compare = !sort.m_sortAscending ? ">=" : "<=";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(sort.m_sortModel)) {
 					if (firstOrder)
 						orderText += " ORDER BY ";
-					for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-						if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+					for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+						if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 							orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation_sort);
 							if (firstOrder)
 								firstOrder = false;
@@ -524,8 +524,8 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 						}
 
 						if (firstWhere) whereText += " WHERE ";
-						whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation_compare);
-						sortText += (sortText.IsEmpty() ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, '=');
+						whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation_compare);
+						sortText += (sortText.IsEmpty() ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, '=');
 						if (firstWhere) firstWhere = false;
 					}
 				}
@@ -537,7 +537,7 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (compare_func >= 0 ? !sort.m_sortAscending : sort.m_sortAscending) ? "ASC" : "DESC";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(sort.m_sortModel)) {
 					if (firstOrder)
@@ -555,46 +555,46 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 				}
 			}
 		};
-		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
+		const std::vector<IValueMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
 
-		CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+		CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-					const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+					const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 					if (filterValue.ConvertToValue(refData))
 						statement->SetParamString(position++, refData->GetGuid());
 					else
 						statement->SetParamString(position++, wxNullUniqueKey);
 				}
 				else {
-					IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+					IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 				}
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -607,9 +607,9 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			for (auto& attribute : vec_attr) {
 				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 					continue;
-				IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
-			rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			IValueTable::Insert(rowData, 0, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
@@ -636,12 +636,12 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 					if (firstWhere)
 						whereText += " WHERE ";
-					whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+					whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 					if (firstWhere)
 						firstWhere = false;
 				}
@@ -660,12 +660,12 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = sort.m_sortAscending ? "ASC" : "DESC";
 				const wxString& operation_compare = sort.m_sortAscending ? ">=" : "<=";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				if (!m_metaObject->IsDataReference(sort.m_sortModel)) {
 					if (firstOrder) orderText += " ORDER BY ";
-					for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-						if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+					for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+						if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 							orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation_sort);
 							if (firstOrder) firstOrder = false;
 						}
@@ -674,8 +674,8 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 							if (firstOrder) firstOrder = false;
 						}
 						if (firstWhere) whereText += " WHERE ";
-						whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation_compare);
-						sortText += (sortText.IsEmpty() ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, '=');
+						whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation_compare);
+						sortText += (sortText.IsEmpty() ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, '=');
 						if (firstWhere) firstWhere = false;
 					}
 				}
@@ -687,7 +687,7 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (compare_func >= 0 ? sort.m_sortAscending : !sort.m_sortAscending) ? "ASC" : "DESC";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(sort.m_sortModel)) {
 					if (firstOrder)
@@ -704,46 +704,46 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 				}
 			}
 		};
-		const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
+		const std::vector<IValueMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
 
-		CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+		CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 		/////////////////////////////////////////////////////////
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-					const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+					const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 					if (filterValue.ConvertToValue(refData))
 						statement->SetParamString(position++, refData->GetGuid());
 					else
 						statement->SetParamString(position++, wxNullUniqueKey);
 				}
 				else {
-					IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+					IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 				}
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable && !m_metaObject->IsDataReference(sort.m_sortModel)) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -756,9 +756,9 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 			for (auto& attribute : vec_attr) {
 				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 					continue;
-				IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
-			rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
@@ -774,7 +774,7 @@ void CListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const w
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -794,31 +794,31 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 		if (filter.m_filterUse) {
 			if (firstWhere)
 				whereText += " WHERE ";
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
-			whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>");
+			whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>");
 			if (firstWhere)
 				firstWhere = false;
 		}
 	}
-	const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject(), & vec_dim = m_metaObject->GetGenericDimentionArrayObject();
+	const std::vector<IValueMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject(), & vec_dim = m_metaObject->GetGenericDimentionArrayObject();
 	/////////////////////////////////////////////////////////
 	wxString orderText; bool firstOrder = true;
 	/////////////////////////////////////////////////////////
 	for (auto& sort : m_sortOrder.m_sorts) {
 		if (sort.m_sortEnable) {
 			const wxString& operation = sort.m_sortAscending ? "ASC" : "DESC";
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 			wxASSERT(attribute);
 			const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 			if (firstOrder)
 				orderText += " ORDER BY ";
-			for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-				if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+			for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+				if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 					orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation);
 					if (firstOrder) firstOrder = false;
 				}
-				else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
+				else if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_String) {
 					orderText += (firstOrder ? " " : ", ") + wxString::Format("LPAD(%s, %i, ' ') %s", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation);
 					if (firstOrder) firstOrder = false;
 				}
@@ -839,9 +839,9 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto& filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
-			IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+			IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 		}
 	}
 	/////////////////////////////////////////////////////////
@@ -851,20 +851,20 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 	while (resultSet->Next()) {
 		wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
 		if (m_metaObject->HasRecorder()) {
-			CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+			CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
-			IMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
-			CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+			IValueMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
+			CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
-			IMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
 		}
 		else {
 			for (auto& dimension : vec_dim) {
-				IMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
 			}
 		}
 		for (auto& attribute : vec_attr) {
-			IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
 		IValueTable::Append(
 			rowData, !CBackendException::IsEvalMode()
@@ -875,7 +875,7 @@ void CListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int 
 	db_query->CloseStatement(statement);
 }
 
-void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -895,11 +895,11 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (firstWhere)
 					whereText += " WHERE ";
-				whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+				whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 				if (firstWhere)
 					firstWhere = false;
 			}
@@ -909,18 +909,18 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (!sort.m_sortAscending) ? "ASC" : "DESC";
 				const wxString& operation_compare = (!sort.m_sortAscending) ? ">=" : "<=";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 				if (firstOrder)
 					orderText += " ORDER BY ";
-				for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-					if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+				for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+					if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 						orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation_sort);
 						if (firstOrder)
 							firstOrder = false;
 					}
-					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
+					else if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_String) {
 						orderText += (firstOrder ? " " : ", ") + wxString::Format("LPAD(%s, %i, ' ') %s", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_sort);
 						if (firstOrder) firstOrder = false;
 					}
@@ -929,16 +929,16 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						if (firstOrder) firstOrder = false;
 					}
 				}
-				dimText += firstOr ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
+				dimText += firstOr ? " (" + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
 				if (firstWhere) whereText += " WHERE ";
 				whereText += (firstWhere ? " " : " AND ") + attribute->GetFieldNameDB() + "_TYPE = ? ";
 				if (firstWhere) firstWhere = false;
-				for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-					if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+				for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+					if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefType, operation_compare);
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefName, operation_compare);
 					}
-					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
+					else if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_String) {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(cast(? as varchar(1024)), %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
 					}
 					else {
@@ -949,7 +949,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 			}
 		};
 
-		const std::vector<IMetaObjectAttribute*> vec_attr = m_metaObject->GetGenericAttributeArrayObject(),
+		const std::vector<IValueMetaObjectAttribute*> vec_attr = m_metaObject->GetGenericAttributeArrayObject(),
 			vec_dim = m_metaObject->GetGenericDimentionArrayObject();
 
 		/////////////////////////////////////////////////////////
@@ -961,25 +961,25 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -990,20 +990,20 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		while (resultSet->Next()) {
 			wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
 			if (m_metaObject->HasRecorder()) {
-				CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+				CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
-				IMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
-				CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+				IValueMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
+				CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 				wxASSERT(attributeNumberLine);
-				IMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
 			}
 			else {
 				for (auto& dimension : vec_dim) {
-					IMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
+					IValueMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
 				}
 			}
 			for (auto& attribute : vec_attr) {
-				IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
 			IValueTable::Insert(rowData, 0, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
@@ -1031,11 +1031,11 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		for (auto& filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
 				const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
 				if (firstWhere)
 					whereText += " WHERE ";
-				whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+				whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 				if (firstWhere)
 					firstWhere = false;
 			}
@@ -1045,18 +1045,18 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 			if (sort.m_sortEnable) {
 				const wxString& operation_sort = (sort.m_sortAscending) ? "ASC" : "DESC";
 				const wxString& operation_compare = (sort.m_sortAscending) ? ">=" : "<=";
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
 				const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 				if (firstOrder)
 					orderText += " ORDER BY ";
-				for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-					if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+				for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+					if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 						orderText += (firstOrder ? " " : ", ") + wxString::Format("%s %s", field.m_field.m_fieldRefName.m_fieldRefName, operation_sort);
 						if (firstOrder)
 							firstOrder = false;
 					}
-					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
+					else if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_String) {
 						orderText += (firstOrder ? " " : ", ") + wxString::Format("LPAD(%s, %i, ' ') %s", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_sort);
 						if (firstOrder) firstOrder = false;
 					}
@@ -1065,16 +1065,16 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 						if (firstOrder) firstOrder = false;
 					}
 				}
-				dimText += firstOr ? " (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
+				dimText += firstOr ? " (" + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") " : " OR (" + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, "<>") + ") ";
 				if (firstWhere) whereText += " WHERE ";
 				whereText += (firstWhere ? " " : " AND ") + attribute->GetFieldNameDB() + "_TYPE = ? ";
 				if (firstWhere) firstWhere = false;
-				for (auto& field : IMetaObjectAttribute::GetSQLFieldData(attribute)) {
-					if (field.m_type == IMetaObjectAttribute::eFieldTypes_Reference) {
+				for (auto& field : IValueMetaObjectAttribute::GetSQLFieldData(attribute)) {
+					if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_Reference) {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefType, operation_compare);
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("%s %s ?", field.m_field.m_fieldRefName.m_fieldRefName, operation_compare);
 					}
-					else if (field.m_type == IMetaObjectAttribute::eFieldTypes_String) {
+					else if (field.m_type == IValueMetaObjectAttribute::eFieldTypes_String) {
 						whereText += (firstWhere ? " " : " AND ") + wxString::Format("LPAD(%s, %i, ' ') %s LPAD(cast(? as varchar(1024)), %i, ' ')", field.m_field.m_fieldName, typeDesc.GetStringQualifier().m_length, operation_compare, typeDesc.GetStringQualifier().m_length);
 					}
 					else {
@@ -1085,7 +1085,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 			}
 		};
 
-		const std::vector<IMetaObjectAttribute*> vec_attr = m_metaObject->GetGenericAttributeArrayObject(),
+		const std::vector<IValueMetaObjectAttribute*> vec_attr = m_metaObject->GetGenericAttributeArrayObject(),
 			vec_dim = m_metaObject->GetGenericDimentionArrayObject();
 
 		/////////////////////////////////////////////////////////
@@ -1097,25 +1097,25 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 		for (auto filter : m_filterRow.m_filters) {
 			if (filter.m_filterUse) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
 		for (auto& sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
-				const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
+				const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(sort.m_sortModel);
 				wxASSERT(attribute);
-				IMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, valueTableListRow->GetTableValue(sort.m_sortModel), statement, position);
 			}
 		}
 		/////////////////////////////////////////////////////////
@@ -1126,20 +1126,20 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 		while (resultSet->Next()) {
 			wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
 			if (m_metaObject->HasRecorder()) {
-				CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+				CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
-				IMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
-				CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+				IValueMetaObjectAttribute::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
+				CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 				wxASSERT(attributeNumberLine);
-				IMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
 			}
 			else {
 				for (auto& dimension : vec_dim) {
-					IMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
+					IValueMetaObjectAttribute::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
 				}
 			}
 			for (auto& attribute : vec_attr) {
-				IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+				IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
 			IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
@@ -1156,7 +1156,7 @@ void CListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1170,12 +1170,12 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 	for (auto& filter : m_filterRow.m_filters) {
 		const wxString& operation = filter.m_filterComparison == eComparisonType::eComparisonType_Equal ? "=" : "<>";
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (!m_metaObject->IsDataReference(filter.m_filterModel)) {
 				if (firstWhere)
 					whereText += " WHERE ";
-				whereText += (firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
+				whereText += (firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attribute, operation);
 				if (firstWhere)
 					firstWhere = false;
 			}
@@ -1188,27 +1188,27 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 			}
 		}
 	}
-	const std::vector<IMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
-	CMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
-	CMetaObjectAttributePredefined* metaParent = m_metaObject->GetDataParent();
-	CMetaObjectAttributePredefined* metaIsFolder = m_metaObject->GetDataIsFolder();
+	const std::vector<IValueMetaObjectAttribute*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
+	CValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
+	CValueMetaObjectAttributePredefined* metaParent = m_metaObject->GetDataParent();
+	CValueMetaObjectAttributePredefined* metaIsFolder = m_metaObject->GetDataIsFolder();
 	wxASSERT(metaReference);
 	queryText = queryText + whereText;
 	IValueTree::Clear();
 	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
-			const IMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
+			const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
 			wxASSERT(attribute);
 			if (m_metaObject->IsDataReference(filter.m_filterModel)) {
-				const CValue& filterValue = filter.m_filterValue; CReferenceDataObject* refData = nullptr;
+				const CValue& filterValue = filter.m_filterValue; CValueReferenceDataObject* refData = nullptr;
 				if (filterValue.ConvertToValue(refData))
 					statement->SetParamString(position++, refData->GetGuid());
 				else
 					statement->SetParamString(position++, wxNullUniqueKey);
 			}
 			else {
-				IMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
+				IValueMetaObjectAttribute::SetValueAttribute(attribute, filter.m_filterValue, statement, position);
 			}
 		}
 	}
@@ -1219,17 +1219,17 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	while (resultSet->Next()) {
 
-		if (!IMetaObjectAttribute::GetValueAttribute(metaIsFolder, isFolder, resultSet)) continue;
-		if (m_listMode == CTreeDataObjectFolderRef::LIST_FOLDER && !isFolder.GetBoolean()) continue;
-		if (!IMetaObjectAttribute::GetValueAttribute(metaParent, parent, resultSet)) continue;
+		if (!IValueMetaObjectAttribute::GetValueAttribute(metaIsFolder, isFolder, resultSet)) continue;
+		if (m_listMode == CValueTreeDataObjectFolderRef::LIST_FOLDER && !isFolder.GetBoolean()) continue;
+		if (!IValueMetaObjectAttribute::GetValueAttribute(metaParent, parent, resultSet)) continue;
 
 		wxValueTreeListNode* rowData = new wxValueTreeListNode(nullptr, resultSet->GetResultString(guidName), this, isFolder.GetBoolean());
 		for (auto& attribute : vec_attr) {
 			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 				continue;
-			IMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
-		rowData->AppendTableValue(metaReference->GetMetaID(), CReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+		rowData->AppendTableValue(metaReference->GetMetaID(), CValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 		
 		//////////////////////////////////////////////////
 		arrTree.push_back(rowData);
@@ -1241,7 +1241,7 @@ void CTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const
 	static CValue cReference;
 	for (const auto node : arrTree) {
 		
-		CReferenceDataObject* reference = NULL;
+		CValueReferenceDataObject* reference = NULL;
 		if (node->GetValue(*m_metaObject->GetDataParent(), cReference)) {
 			if (cReference.ConvertToValue(reference)) {
 				

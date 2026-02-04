@@ -8,7 +8,7 @@ class CMetaValueConstantObjectTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueConstantObjectTypeCtor(CMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueConstantObjectTypeCtor(CValueMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("C_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -21,12 +21,12 @@ public:
 	virtual class_identifier_t CMetaValueConstantObjectTypeCtor::GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Object; }
 
 protected:
 	class_identifier_t m_classType;
-	CMetaObjectConstant* m_metaObject;
+	CValueMetaObjectConstant* m_metaObject;
 };
 
 #define registerConstObject()\
@@ -39,7 +39,7 @@ class CMetaValueConstManagerTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueConstManagerTypeCtor(class CMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueConstManagerTypeCtor(class CValueMetaObjectConstant* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("G_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -51,12 +51,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Manager; }
 
 protected:
 	class_identifier_t m_classType;
-	CMetaObjectConstant* m_metaObject;
+	CValueMetaObjectConstant* m_metaObject;
 };
 
 #define registerConstManager()\

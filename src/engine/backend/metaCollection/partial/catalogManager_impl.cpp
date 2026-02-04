@@ -8,7 +8,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
-CReferenceDataObject* CManagerDataObjectCatalog::FindByCode(const CValue& cParam) const 
+CValueReferenceDataObject* CValueManagerDataObjectCatalog::FindByCode(const CValue& cParam) const 
 {
 	if (!appData->DesignerMode()) {
 
@@ -20,34 +20,34 @@ CReferenceDataObject* CManagerDataObjectCatalog::FindByCode(const CValue& cParam
 		if (!cParam.IsEmpty()) {
 			const wxString& tableName = m_metaObject->GetTableNameDB();
 			if (db_query->TableExists(tableName)) {
-				CMetaObjectAttributePredefined* attributeCode = m_metaObject->GetDataCode();
+				CValueMetaObjectAttributePredefined* attributeCode = m_metaObject->GetDataCode();
 				wxASSERT(attributeCode);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					sqlQuery = "SELECT uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE") + " LIMIT 1";
+					sqlQuery = "SELECT uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE") + " LIMIT 1";
 				else
-					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE");
+					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeCode, "LIKE");
 				IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
 				if (statement == nullptr)
-					return CReferenceDataObject::Create(m_metaObject);
+					return CValueReferenceDataObject::Create(m_metaObject);
 				int position = 1;
-				IMetaObjectAttribute::SetValueAttribute(attributeCode, attributeCode->AdjustValue(cParam), statement, position);
-				CReferenceDataObject* foundedReference = nullptr;
+				IValueMetaObjectAttribute::SetValueAttribute(attributeCode, attributeCode->AdjustValue(cParam), statement, position);
+				CValueReferenceDataObject* foundedReference = nullptr;
 				IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 				wxASSERT(databaseResultSet);
 				if (databaseResultSet->Next()) {
 					const CGuid &foundedGuid = databaseResultSet->GetResultString(guidName);
-					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);		
+					if (foundedGuid.isValid()) foundedReference = CValueReferenceDataObject::Create(m_metaObject, foundedGuid);		
 				}
 				db_query->CloseResultSet(databaseResultSet);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}
 	}
-	return CReferenceDataObject::Create(m_metaObject);
+	return CValueReferenceDataObject::Create(m_metaObject);
 }
 
-CReferenceDataObject* CManagerDataObjectCatalog::FindByDescription(const CValue& cParam) const
+CValueReferenceDataObject* CValueManagerDataObjectCatalog::FindByDescription(const CValue& cParam) const
 {
 	if (!appData->DesignerMode()) {
 
@@ -59,28 +59,28 @@ CReferenceDataObject* CManagerDataObjectCatalog::FindByDescription(const CValue&
 		if (!cParam.IsEmpty()) {
 			const wxString tableName = m_metaObject->GetTableNameDB();
 			if (db_query->TableExists(tableName)) {
-				CMetaObjectAttributePredefined* attributeDescription = m_metaObject->GetDataDescription();
+				CValueMetaObjectAttributePredefined* attributeDescription = m_metaObject->GetDataDescription();
 				wxASSERT(attributeDescription);
 				wxString sqlQuery = "";
 				if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-					sqlQuery = "SELECT uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE") + " LIMIT 1";
+					sqlQuery = "SELECT uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE") + " LIMIT 1";
 				else
-					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE");
+					sqlQuery = "SELECT FIRST 1 uuid FROM %s WHERE " + IValueMetaObjectAttribute::GetCompositeSQLFieldName(attributeDescription, "LIKE");
 				IPreparedStatement* statement = db_query->PrepareStatement(sqlQuery, tableName);
-				if (statement == nullptr) return CReferenceDataObject::Create(m_metaObject);
+				if (statement == nullptr) return CValueReferenceDataObject::Create(m_metaObject);
 				int position = 1;
-				IMetaObjectAttribute::SetValueAttribute(attributeDescription, attributeDescription->AdjustValue(cParam), statement, position);
-				CReferenceDataObject* foundedReference = nullptr;
+				IValueMetaObjectAttribute::SetValueAttribute(attributeDescription, attributeDescription->AdjustValue(cParam), statement, position);
+				CValueReferenceDataObject* foundedReference = nullptr;
 				IDatabaseResultSet* databaseResultSet = statement->RunQueryWithResults();
 				wxASSERT(databaseResultSet);
 				if (databaseResultSet->Next()) {
 					const CGuid &foundedGuid = databaseResultSet->GetResultString(guidName);
-					if (foundedGuid.isValid()) foundedReference = CReferenceDataObject::Create(m_metaObject, foundedGuid);			
+					if (foundedGuid.isValid()) foundedReference = CValueReferenceDataObject::Create(m_metaObject, foundedGuid);			
 				}
 				db_query->CloseResultSet(databaseResultSet);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}
 	}	
-	return CReferenceDataObject::Create(m_metaObject);
+	return CValueReferenceDataObject::Create(m_metaObject);
 }

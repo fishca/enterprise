@@ -6,7 +6,7 @@
 #include "metaTableObject.h"
 #include "backend/metaData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectTableData, IMetaObjectCompositeData)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectTableData, IValueMetaObjectCompositeData)
 
 //***********************************************************************
 //*                         Attributes                                  * 
@@ -15,7 +15,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectTableData, IMetaObjectCompositeData)
 #include "backend/objCtor.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
-CTypeDescription CMetaObjectTableData::GetTypeDesc() const
+CTypeDescription CValueMetaObjectTableData::GetTypeDesc() const
 {
 	const IMetaValueTypeCtor* typeCtor = m_metaData->GetTypeCtor(this, eCtorMetaType::eCtorMetaType_TabularSection);
 	wxASSERT(typeCtor);
@@ -25,16 +25,16 @@ CTypeDescription CMetaObjectTableData::GetTypeDesc() const
 
 ////////////////////////////////////////////////////////////////////////////
 
-CMetaObjectTableData::CMetaObjectTableData() : IMetaObjectCompositeData()
+CValueMetaObjectTableData::CValueMetaObjectTableData() : IValueMetaObjectCompositeData()
 {
 }
 
-CMetaObjectTableData::~CMetaObjectTableData()
+CValueMetaObjectTableData::~CValueMetaObjectTableData()
 {
 	//wxDELETE(m_numberLine);
 }
 
-bool CMetaObjectTableData::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectTableData::LoadData(CMemoryReader& dataReader)
 {
 	m_propertyUse->SetValue(dataReader.r_u16());
 
@@ -42,7 +42,7 @@ bool CMetaObjectTableData::LoadData(CMemoryReader& dataReader)
 	return (*m_propertyNumberLine)->LoadMeta(dataReader);
 }
 
-bool CMetaObjectTableData::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectTableData::SaveData(CMemoryWriter& dataWritter)
 {
 	dataWritter.w_u16(m_propertyUse->GetValueAsInteger());
 
@@ -54,9 +54,9 @@ bool CMetaObjectTableData::SaveData(CMemoryWriter& dataWritter)
 //*								Events								    *
 //***********************************************************************
 
-bool CMetaObjectTableData::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectTableData::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObject::OnCreateMetaObject(metaData, flags))
+	if (!IValueMetaObject::OnCreateMetaObject(metaData, flags))
 		return false;
 	if (!(*m_propertyNumberLine)->OnCreateMetaObject(metaData, flags)) {
 		return false;
@@ -64,75 +64,75 @@ bool CMetaObjectTableData::OnCreateMetaObject(IMetaData* metaData, int flags)
 	return true;
 }
 
-bool CMetaObjectTableData::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectTableData::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyNumberLine)->OnLoadMetaObject(metaData))
 		return false;
 
-	return IMetaObject::OnLoadMetaObject(metaData);
+	return IValueMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectTableData::OnSaveMetaObject(int flags)
+bool CValueMetaObjectTableData::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyNumberLine)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObject::OnSaveMetaObject(flags);
+	return IValueMetaObject::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectTableData::OnDeleteMetaObject()
+bool CValueMetaObjectTableData::OnDeleteMetaObject()
 {
 	if (!(*m_propertyNumberLine)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObject::OnDeleteMetaObject();
+	return IValueMetaObject::OnDeleteMetaObject();
 }
 
-bool CMetaObjectTableData::OnReloadMetaObject()
+bool CValueMetaObjectTableData::OnReloadMetaObject()
 {
-	IMetaObject* metaObject = GetParent();
+	IValueMetaObject* metaObject = GetParent();
 	wxASSERT(metaObject);
 	if (metaObject->OnReloadMetaObject())
-		return IMetaObject::OnReloadMetaObject();
+		return IValueMetaObject::OnReloadMetaObject();
 	return false;
 }
 
-bool CMetaObjectTableData::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectTableData::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyNumberLine)->OnBeforeRunMetaObject(flags))
 		return false;
-	IMetaObjectRecordData* metaObject = wxDynamicCast(GetParent(), IMetaObjectRecordData);
+	IValueMetaObjectRecordData* metaObject = wxDynamicCast(GetParent(), IValueMetaObjectRecordData);
 	wxASSERT(metaObject);
 	if (metaObject != nullptr) {
 		registerTabularSection();
 		registerTabularSection_String();
 	}
 
-	return IMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectTableData::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectTableData::OnAfterRunMetaObject(int flags)
 {
 	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) 
 		OnReloadMetaObject();
-	return IMetaObject::OnAfterRunMetaObject(flags);
+	return IValueMetaObject::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectTableData::OnAfterCloseMetaObject()
+bool CValueMetaObjectTableData::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyNumberLine)->OnAfterCloseMetaObject())
 		return false;
-	IMetaObjectRecordData* metaObject = wxDynamicCast(GetParent(), IMetaObjectRecordData);
+	IValueMetaObjectRecordData* metaObject = wxDynamicCast(GetParent(), IValueMetaObjectRecordData);
 	wxASSERT(metaObject);
 	if (metaObject != nullptr) {
 		unregisterTabularSection();
 		unregisterTabularSection_String();
 	}
-	return IMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectTableData, "tabularSection", g_metaTableCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectTableData, "tabularSection", g_metaTableCLSID);

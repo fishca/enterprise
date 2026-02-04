@@ -15,7 +15,7 @@
 //*                                          Common functions                                              *
 //**********************************************************************************************************
 
-wxString IMetaObjectRecordDataRef::GetTableNameDB() const
+wxString IValueMetaObjectRecordDataRef::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
 	wxASSERT(m_metaId != 0);
@@ -23,7 +23,7 @@ wxString IMetaObjectRecordDataRef::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
+int IValueMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -39,10 +39,10 @@ int IMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName,
 		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
 	}
 
-	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, const CMetaObjectTableData* srcTable, const CMetaObjectTableData* dstTable)
+int IValueMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, const CValueMetaObjectTableData* srcTable, const CValueMetaObjectTableData* dstTable)
 {
 	int retCode = 1;
 	//is null - create
@@ -94,7 +94,7 @@ int IMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, c
 	return retCode;
 }
 
-bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
@@ -113,7 +113,7 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 		for (const auto object : GetPredefinedAttributeArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
-			if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
+			if (IValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 				continue;
 			retCode = ProcessAttribute(tableName,
 				object, nullptr);
@@ -148,7 +148,7 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IMetaObjectRecordDataRef* dstValue = nullptr;
+		IValueMetaObjectRecordDataRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!dstValue->CompareObject(this))
@@ -156,8 +156,8 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindPredefinedAttributeObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRecordDataRef::FindPredefinedAttributeObjectByFilter(object->GetGuid());
 				if (dstValue->IsDataReference(object->GetMetaID()))
 					continue;
 				if (foundedMeta == nullptr) {
@@ -169,7 +169,7 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 			//attributes current
 			for (const auto object : GetPredefinedAttributeArrayObject()) {
-				if (IMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
+				if (IValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 					continue;
 				retCode = ProcessAttribute(tableName,
 					object, dstValue->FindPredefinedAttributeObjectByFilter(object->GetGuid())
@@ -180,8 +180,8 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetAttributeArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindAttributeObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRecordDataRef::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -200,8 +200,8 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 			//tables from dst 
 			for (const auto object : dstValue->GetTableArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataRef::FindTableObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRecordDataRef::FindTableObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessTable(object->GetTableNameDB(), nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -247,7 +247,7 @@ bool IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfigurat
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, const CMetaObjectEnum* srcEnum, const CMetaObjectEnum* dstEnum)
+int IValueMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, const CValueMetaObjectEnum* srcEnum, const CValueMetaObjectEnum* dstEnum)
 {
 	int retCode = 1;
 
@@ -283,7 +283,7 @@ int IMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, 
 	return retCode;
 }
 
-bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool IValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
@@ -335,7 +335,7 @@ bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IMetaObjectRecordDataEnumRef* dstValue = nullptr;
+		IValueMetaObjectRecordDataEnumRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!dstValue->CompareObject(this))
@@ -343,8 +343,8 @@ bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 			//enums from dst 
 			for (const auto object : dstValue->GetEnumObjectArray()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRecordDataEnumRef::FindEnumObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRecordDataEnumRef::FindEnumObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessEnumeration(tableName,
 						nullptr, object);
@@ -382,7 +382,7 @@ bool IMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int IMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined)
+int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined)
 {
 	int retCode = 1;
 
@@ -411,9 +411,9 @@ int IMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxStr
 	return retCode;
 }
 
-bool IMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
-	if (!IMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags))
+	if (!IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags))
 		return false;
 
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
@@ -454,13 +454,13 @@ bool IMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataC
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IMetaObjectRecordDataHierarchyMutableRef* dstValue = nullptr;
+		IValueMetaObjectRecordDataHierarchyMutableRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			//enums from dst 
 			for (const auto object : dstValue->m_predefinedObjectVector) {
 				const CPredefinedObjectValue* predefinedValue =
-					IMetaObjectRecordDataHierarchyMutableRef::FindPredefinedValue(object.m_valueGuid);
+					IValueMetaObjectRecordDataHierarchyMutableRef::FindPredefinedValue(object.m_valueGuid);
 				if (predefinedValue == nullptr) {
 					retCode = ProcessPredefinedValue(tableName,
 						nullptr, &object);
@@ -487,7 +487,7 @@ bool IMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataC
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxString IMetaObjectRegisterData::GetTableNameDB() const
+wxString IValueMetaObjectRegisterData::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
 	wxASSERT(m_metaId != 0);
@@ -495,7 +495,7 @@ wxString IMetaObjectRegisterData::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
+int IValueMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -511,10 +511,10 @@ int IMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const I
 		s_restructureInfo.AppendInfo(_("Removed dimension ") + dstAttr->GetFullName());
 	}
 
-	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
+int IValueMetaObjectRegisterData::ProcessResource(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -530,10 +530,10 @@ int IMetaObjectRegisterData::ProcessResource(const wxString& tableName, const IM
 		s_restructureInfo.AppendInfo(_("Removed resource ") + dstAttr->GetFullName());
 	}
 
-	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
+int IValueMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -549,15 +549,15 @@ int IMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const I
 		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
 	}
 
-	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool IMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IMetaObjectRegisterData* dst)
+bool IValueMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IValueMetaObjectRegisterData* dst)
 {
 	if (HasRecorder()) {
-		CMetaObjectAttributePredefined* metaRec = dst->GetRegisterRecorder();
+		CValueMetaObjectAttributePredefined* metaRec = dst->GetRegisterRecorder();
 		if (metaRec == nullptr)
 			return false;
 		const CTypeDescription& typeDesc = metaRec->GetTypeDesc();
@@ -576,7 +576,7 @@ bool IMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IM
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB();
 
@@ -633,17 +633,17 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 		wxString queryText;
 		if (HasRecorder()) {
-			CMetaObjectAttributePredefined* attributeRecorder = GetRegisterRecorder();
+			CValueMetaObjectAttributePredefined* attributeRecorder = GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
-			queryText += IMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CMetaObjectAttributePredefined* attributeNumberLine = GetRegisterLineNumber();
+			queryText += IValueMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
+			CValueMetaObjectAttributePredefined* attributeNumberLine = GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
-			queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
+			queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
 		}
 		else {
 			bool firstMatching = true;
 			for (const auto object : GetGenericDimentionArrayObject()) {
-				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
+				queryText += (firstMatching ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -658,7 +658,7 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IMetaObjectRegisterData* dstValue = nullptr;
+		IValueMetaObjectRegisterData* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!UpdateCurrentRecords(tableName, dstValue))
@@ -669,8 +669,8 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindPredefinedAttributeObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindPredefinedAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -689,8 +689,8 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 			//dimensions from dst 
 			for (const auto object : dstValue->GetDimentionArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -709,8 +709,8 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 			//resources from dst 
 			for (const auto object : dstValue->GetResourceArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -729,8 +729,8 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetAttributeArrayObject()) {
-				IMetaObject* foundedMeta =
-					IMetaObjectRegisterData::FindAttributeObjectByFilter(object->GetGuid());
+				IValueMetaObject* foundedMeta =
+					IValueMetaObjectRegisterData::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -767,12 +767,12 @@ bool IMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* src
 
 #include "backend/system/systemManager.h"
 
-bool IRecordDataObjectRef::ReadData()
+bool IValueRecordDataObjectRef::ReadData()
 {
 	return ReadData(m_objGuid);
 }
 
-bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
+bool IValueRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -798,11 +798,11 @@ bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 			//load other attributes 
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
-					IMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
+					IValueMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 				}
 			}
 			for (const auto object : m_metaObject->GetTableArrayObject()) {
-				CTabularSectionDataObjectRef* tabularSection = new CTabularSectionDataObjectRef(this, object);
+				CValueTabularSectionDataObjectRef* tabularSection = new CValueTabularSectionDataObjectRef(this, object);
 				if (!tabularSection->LoadData(srcGuid)) succes = false;
 				m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
 			}
@@ -813,7 +813,7 @@ bool IRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 	return false;
 }
 
-bool IRecordDataObjectRef::SaveData()
+bool IValueRecordDataObjectRef::SaveData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -837,7 +837,7 @@ bool IRecordDataObjectRef::SaveData()
 	if (!fillCheck)
 		return false;
 
-	if (!IRecordDataObjectRef::DeleteData())
+	if (!IValueRecordDataObjectRef::DeleteData())
 		return false;
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
@@ -846,13 +846,13 @@ bool IRecordDataObjectRef::SaveData()
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		queryText = queryText + ", " + IMetaObjectAttribute::GetSQLFieldName(object);
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
+		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
@@ -871,7 +871,7 @@ bool IRecordDataObjectRef::SaveData()
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_listObjectValue.at(object->GetMetaID()),
 			statement,
@@ -887,7 +887,7 @@ bool IRecordDataObjectRef::SaveData()
 	//table parts
 	if (!hasError) {
 		for (const auto object : m_metaObject->GetTableArrayObject()) {
-			ITabularSectionDataObject* tabularSection = nullptr;
+			IValueTabularSectionDataObject* tabularSection = nullptr;
 			if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 				if (!tabularSection->SaveData()) {
 					hasError = true;
@@ -908,7 +908,7 @@ bool IRecordDataObjectRef::SaveData()
 	return !hasError;
 }
 
-bool IRecordDataObjectRef::DeleteData()
+bool IValueRecordDataObjectRef::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -920,7 +920,7 @@ bool IRecordDataObjectRef::DeleteData()
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	//table parts
 	for (const auto object : m_metaObject->GetTableArrayObject()) {
-		ITabularSectionDataObject* tabularSection = nullptr;
+		IValueTabularSectionDataObject* tabularSection = nullptr;
 		if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 			if (!tabularSection->DeleteData())
 				return false;
@@ -935,7 +935,7 @@ bool IRecordDataObjectRef::DeleteData()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IRecordDataObjectRef::IsSetUniqueIdentifier() const
+bool IValueRecordDataObjectRef::IsSetUniqueIdentifier() const
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr)
@@ -943,7 +943,7 @@ bool IRecordDataObjectRef::IsSetUniqueIdentifier() const
 	return false;
 }
 
-bool IRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
+bool IValueRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr && !IsSetUniqueIdentifier()) {
@@ -954,7 +954,7 @@ bool IRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
 	return false;
 }
 
-bool IRecordDataObjectRef::ResetUniqueIdentifier()
+bool IValueRecordDataObjectRef::ResetUniqueIdentifier()
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr && IsSetUniqueIdentifier()) {
@@ -966,12 +966,12 @@ bool IRecordDataObjectRef::ResetUniqueIdentifier()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IRecordDataObjectFolderRef::ReadData()
+bool IValueRecordDataObjectFolderRef::ReadData()
 {
-	if (IRecordDataObjectRef::ReadData()) {
-		IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+	if (IValueRecordDataObjectRef::ReadData()) {
+		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		CValue isFolder; IValueRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
 			m_objMode = eObjectMode::OBJECT_FOLDER;
 		else
@@ -981,12 +981,12 @@ bool IRecordDataObjectFolderRef::ReadData()
 	return false;
 }
 
-bool IRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
+bool IValueRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
 {
-	if (IRecordDataObjectRef::ReadData(srcGuid)) {
-		IMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+	if (IValueRecordDataObjectRef::ReadData(srcGuid)) {
+		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		CValue isFolder; IValueRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
 			m_objMode = eObjectMode::OBJECT_FOLDER;
 		else
@@ -998,15 +998,15 @@ bool IRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IRecordDataObjectRef::SetDeletionMark(bool deletionMark)
+void IValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 {
 	if (m_newObject)
 		return;
 
 	if (m_metaObject != nullptr) {
-		CMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
+		CValueMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
 		wxASSERT(attributeDeletionMark);
-		IRecordDataObjectRef::SetValueByMetaID(*attributeDeletionMark, deletionMark);
+		IValueRecordDataObjectRef::SetValueByMetaID(*attributeDeletionMark, deletionMark);
 	}
 
 	SaveModify();
@@ -1014,7 +1014,7 @@ void IRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IRecordManagerObject::ExistData()
+bool IValueRecordManagerObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1035,7 +1035,7 @@ bool IRecordManagerObject::ExistData()
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
@@ -1046,7 +1046,7 @@ bool IRecordManagerObject::ExistData()
 		if (statement != nullptr) {
 			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 				CValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					retValue,
 					statement,
@@ -1069,7 +1069,7 @@ bool IRecordManagerObject::ExistData()
 	return success;
 }
 
-bool IRecordManagerObject::ReadData(const CUniquePairKey& key)
+bool IValueRecordManagerObject::ReadData(const CUniquePairKey& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1088,7 +1088,7 @@ bool IRecordManagerObject::ReadData(const CUniquePairKey& key)
 	return false;
 }
 
-bool IRecordManagerObject::SaveData(bool replace)
+bool IValueRecordManagerObject::SaveData(bool replace)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1121,7 +1121,7 @@ bool IRecordManagerObject::SaveData(bool replace)
 	return false;
 }
 
-bool IRecordManagerObject::DeleteData()
+bool IValueRecordManagerObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1132,7 +1132,7 @@ bool IRecordManagerObject::DeleteData()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IRecordSetObject::ExistData()
+bool IValueRecordSetObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1143,13 +1143,13 @@ bool IRecordSetObject::ExistData()
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1160,9 +1160,9 @@ bool IRecordSetObject::ExistData()
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1181,7 +1181,7 @@ bool IRecordSetObject::ExistData()
 	return founded;
 }
 
-bool IRecordSetObject::ExistData(number_t& lastNum)
+bool IValueRecordSetObject::ExistData(number_t& lastNum)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1192,13 +1192,13 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1209,9 +1209,9 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1224,7 +1224,7 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 		return false;
 	bool founded = false; lastNum = 1;
 	while (resultSet->Next()) {
-		CValue numLine; IMetaObjectAttribute::GetValueAttribute(m_metaObject->GetRegisterLineNumber(), numLine, resultSet);
+		CValue numLine; IValueMetaObjectAttribute::GetValueAttribute(m_metaObject->GetRegisterLineNumber(), numLine, resultSet);
 		if (numLine > lastNum) {
 			lastNum = numLine.GetNumber();
 		}
@@ -1235,7 +1235,7 @@ bool IRecordSetObject::ExistData(number_t& lastNum)
 	return founded;
 }
 
-bool IRecordSetObject::ReadData(const CUniquePairKey& key)
+bool IValueRecordSetObject::ReadData(const CUniquePairKey& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1254,7 +1254,7 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1265,7 +1265,7 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!key.FindKey(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			key.GetKey(object->GetMetaID()),
 			statement,
@@ -1278,10 +1278,10 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 	while (resultSet->Next()) {
 		wxValueTableRow* rowData = new wxValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 		m_selected = true;
@@ -1293,7 +1293,7 @@ bool IRecordSetObject::ReadData(const CUniquePairKey& key)
 	return GetRowCount() > 0;
 }
 
-bool IRecordSetObject::ReadData()
+bool IValueRecordSetObject::ReadData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1306,13 +1306,13 @@ bool IRecordSetObject::ReadData()
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1321,9 +1321,9 @@ bool IRecordSetObject::ReadData()
 	if (statement == nullptr)
 		return false;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1336,10 +1336,10 @@ bool IRecordSetObject::ReadData()
 	while (resultSet->Next()) {
 		wxValueTableRow* rowData = new wxValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-			IMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 		m_selected = true;
@@ -1351,7 +1351,7 @@ bool IRecordSetObject::ReadData()
 	return GetRowCount() > 0;
 }
 
-bool IRecordSetObject::SaveData(bool replace, bool clearTable)
+bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1382,15 +1382,15 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	number_t numberLine = 1, oldNumberLine = 1;
 
 	if (m_metaObject->HasRecorder() &&
-		IRecordSetObject::ExistData(oldNumberLine)) {
-		if (replace && !IRecordSetObject::DeleteData())
+		IValueRecordSetObject::ExistData(oldNumberLine)) {
+		if (replace && !IValueRecordSetObject::DeleteData())
 			return false;
 		if (!replace) {
 			numberLine = oldNumberLine;
 		}
 	}
-	else if (IRecordSetObject::ExistData()) {
-		if (replace && !IRecordSetObject::DeleteData())
+	else if (IValueRecordSetObject::ExistData()) {
+		if (replace && !IValueRecordSetObject::DeleteData())
 			return false;
 		if (!replace) {
 			numberLine = oldNumberLine;
@@ -1405,14 +1405,14 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 		queryText = "UPDATE OR INSERT INTO " + tableName + " (";
 	}
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		queryText += (firstUpdate ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
+		queryText += (firstUpdate ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
 		if (firstUpdate) {
 			firstUpdate = false;
 		}
 	}
 	queryText += ") VALUES ("; bool firstInsert = true;
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		unsigned int fieldCount = IMetaObjectAttribute::GetSQLFieldCount(object);
+		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += (firstInsert ? "?" : ",?");
 			if (firstInsert) {
@@ -1427,18 +1427,18 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	else {
 		queryText += ") MATCHING (";
 		if (m_metaObject->HasRecorder()) {
-			CMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+			CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
-			queryText += IMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+			queryText += IValueMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
+			CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
-			queryText += "," + IMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
+			queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
 		}
 		else
 		{
 			bool firstMatching = true;
 			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-				queryText += (firstMatching ? "" : ",") + IMetaObjectAttribute::GetSQLFieldName(object);
+				queryText += (firstMatching ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -1460,7 +1460,7 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			auto foundedKey = m_keyValues.find(object->GetMetaID());
 			if (foundedKey != m_keyValues.end()) {
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					foundedKey->second,
 					statement,
@@ -1468,7 +1468,7 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 				);
 			}
 			else if (m_metaObject->IsRegisterLineNumber(object->GetMetaID())) {
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					numberLine++,
 					statement,
@@ -1478,7 +1478,7 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 			else {
 				wxValueTableRow* node = GetViewData< wxValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				IMetaObjectAttribute::SetValueAttribute(
+				IValueMetaObjectAttribute::SetValueAttribute(
 					object,
 					node->GetTableValue(object->GetMetaID()),
 					statement,
@@ -1503,7 +1503,7 @@ bool IRecordSetObject::SaveData(bool replace, bool clearTable)
 	return !hasError;
 }
 
-bool IRecordSetObject::DeleteData()
+bool IValueRecordSetObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -1513,13 +1513,13 @@ bool IRecordSetObject::DeleteData()
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
@@ -1531,9 +1531,9 @@ bool IRecordSetObject::DeleteData()
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IMetaObjectAttribute::SetValueAttribute(
+		IValueMetaObjectAttribute::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1550,7 +1550,7 @@ bool IRecordSetObject::DeleteData()
 //*                                          Code generator												   *
 //**********************************************************************************************************
 
-CValue IRecordDataObjectRef::GenerateNextIdentifier(IMetaObjectAttribute* attribute, const wxString& strPrefix)
+CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribute* attribute, const wxString& strPrefix)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));

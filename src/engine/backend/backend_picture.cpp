@@ -113,13 +113,13 @@ wxBitmap CBackendPicture::CreatePicture(const CPictureDescription& pictureDesc, 
 		if (metaData != nullptr && pictureDesc.m_meta_guid.isValid()) {
 			IMetaData* metaDataOwner = nullptr;
 			if (metaData != nullptr && metaData->GetOwner(metaDataOwner) && metaDataOwner != nullptr) {
-				const CMetaObjectPicture* picture =
-					metaDataOwner->FindAnyObjectByFilter<CMetaObjectPicture>(pictureDesc.m_meta_guid);
+				const CValueMetaObjectPicture* picture =
+					metaDataOwner->FindAnyObjectByFilter<CValueMetaObjectPicture>(pictureDesc.m_meta_guid);
 				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
 			}
 			else if (metaData != nullptr) {
-				const CMetaObjectPicture* picture =
-					metaData->FindAnyObjectByFilter<CMetaObjectPicture>(pictureDesc.m_meta_guid);
+				const CValueMetaObjectPicture* picture =
+					metaData->FindAnyObjectByFilter<CValueMetaObjectPicture>(pictureDesc.m_meta_guid);
 				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
 			}
 		}

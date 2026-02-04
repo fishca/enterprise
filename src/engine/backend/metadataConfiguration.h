@@ -50,8 +50,8 @@ public:
 	virtual bool SaveToFile(const wxString& strFileName) { return true; }
 
 	//get common module 
-	virtual CModuleManagerConfiguration* GetModuleManager() const = 0;
-	virtual CMetaObjectConfiguration* GetCommonMetaObject() const = 0;
+	virtual CValueModuleManagerConfiguration* GetModuleManager() const = 0;
+	virtual CValueMetaObjectConfiguration* GetCommonMetaObject() const = 0;
 
 	//start/exit module 
 	virtual bool StartMainModule(bool force = false) = 0;
@@ -128,8 +128,8 @@ public:
 	//load/save form file
 	virtual bool LoadFromFile(const wxString& strFileName);
 
-	virtual CModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
-	virtual CMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
+	virtual CValueModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
+	virtual CValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
 
 	//start/exit module 
 	virtual bool StartMainModule(bool force = false) {
@@ -152,23 +152,23 @@ protected:
 
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
-	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* object);
-	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IMetaObject* object);
+	bool LoadDatabase(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
+	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
 
 	//run/close recursively:
-	bool RunChildMetadata(IMetaObject* object, int flags, bool before);
-	bool CloseChildMetadata(IMetaObject* object, int flags, bool before);
+	bool RunChildMetadata(IValueMetaObject* object, int flags, bool before);
+	bool CloseChildMetadata(IValueMetaObject* object, int flags, bool before);
 
 	//clear recursively:
-	bool ClearChildMetadata(IMetaObject* object);
+	bool ClearChildMetadata(IValueMetaObject* object);
 
 protected:
 
 	bool m_configOpened;
 	wxString m_md5Hash;
 	//common meta object
-	CMetaObjectConfiguration* m_commonObject;
-	CModuleManagerConfiguration* m_moduleManager;
+	CValueMetaObjectConfiguration* m_commonObject;
+	CValueModuleManagerConfiguration* m_moduleManager;
 };
 
 class BACKEND_API CMetaDataConfiguration : public CMetaDataConfigurationFile {
@@ -269,10 +269,10 @@ protected:
 	//loader/saver/deleter: 
 	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
 	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IMetaObject* object, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IValueMetaObject* object, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteMetadata(const class_identifier_t& clsid);
-	bool DeleteChildMetadata(const class_identifier_t& clsid, IMetaObject* object);
+	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
 
 private:
 	CMetaDataConfiguration* m_configMetadata;

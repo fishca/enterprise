@@ -13,7 +13,7 @@
 wxIMPLEMENT_CLASS(CMetaDocument, wxDocument);
 
 wxIMPLEMENT_CLASS(IMetaDataDocument, CMetaDocument);
-wxIMPLEMENT_CLASS(IModuleDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(IValueModuleDocument, CMetaDocument);
 
 wxIMPLEMENT_CLASS(CMetaView, wxView);
 

@@ -1,6 +1,6 @@
 #include "accumulationRegister.h"
 
-void CMetaObjectAccumulationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueMetaObjectAccumulationRegister::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (GetRegisterType() == eRegisterType::eBalances) {
 		(*m_propertyAttributeRecordType)->ClearFlag(metaDisableFlag);
@@ -9,5 +9,5 @@ void CMetaObjectAccumulationRegister::OnPropertyChanged(IProperty* property, con
 		(*m_propertyAttributeRecordType)->SetFlag(metaDisableFlag);
 	}
 
-	IMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
+	IValueMetaObjectRegisterData::OnPropertyChanged(property, oldValue, newValue);
 }

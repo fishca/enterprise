@@ -12,7 +12,7 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGGenerationProperty, wxPGProperty, ComboBoxAndB
 
 void wxPGGenerationProperty::FillByClsid(const class_identifier_t& clsid)
 {
-    const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(m_ownerProperty);
+    const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(m_ownerProperty);
     if (metaGenericData != nullptr) {
         IMetaData* metaData = metaGenericData->GetMetaData();
         wxASSERT(metaData);
@@ -66,9 +66,9 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 {
     class wxPGGenerationEventAdapter : public wxPGEditorDialogAdapter {
         class wxTreeItemOptionData : public wxTreeItemData {
-            IMetaObject* m_metaObject;
+            IValueMetaObject* m_metaObject;
         public:
-            wxTreeItemOptionData(IMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
+            wxTreeItemOptionData(IValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
             meta_identifier_t GetMetaID() const { return m_metaObject->GetMetaID(); }
         };
 
@@ -82,7 +82,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
             const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
                 groupIcon, groupIcon);
             for (auto metaObject : metaData->GetAnyArrayObject(clsid)) {
-                IMetaObjectRecordDataMutableRef* registerData = dynamic_cast<IMetaObjectRecordDataMutableRef*>(metaObject);
+                IValueMetaObjectRecordDataMutableRef* registerData = dynamic_cast<IValueMetaObjectRecordDataMutableRef*>(metaObject);
                 if (registerData != nullptr) {
                     {
                         const int icon = imageList->Add(registerData->GetIcon());
@@ -114,7 +114,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 
             wxVariantDataGeneration* data = property_cast(dlgProp->GetValue(), wxVariantDataGeneration);
             if (data == nullptr) return false;
-            const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(dlgProp->GetPropertyObject());
+            const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(dlgProp->GetPropertyObject());
             if (metaGenericData == nullptr) return false;
 
             // launch editor dialog

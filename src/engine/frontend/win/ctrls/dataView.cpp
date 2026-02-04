@@ -323,7 +323,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
 					const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
 					if (meta_so != nullptr) {
-						IMetaObjectRecordDataRef* metaObject = dynamic_cast<IMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
+						IValueMetaObjectRecordDataRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 						if (metaObject != nullptr)
 							return metaObject->HasQuickChoice();
 					}
@@ -355,9 +355,9 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!ITypeControlFactory::QuickChoice(this, clsid, GetEditorCtrl())) {
 					const IMetaValueTypeCtor* singleValue = activeMetaData->GetTypeCtor(clsid);
 					if (singleValue != nullptr) {
-						IMetaObject* metaObject = singleValue->GetMetaObject();
+						IValueMetaObject* metaObject = singleValue->GetMetaObject();
 						wxASSERT(metaObject);
-						const IMetaObjectAttribute* attribute = activeMetaData->FindAnyObjectByFilter<IMetaObjectAttribute>(filterData.m_filterModel, true);
+						const IValueMetaObjectAttribute* attribute = activeMetaData->FindAnyObjectByFilter<IValueMetaObjectAttribute>(filterData.m_filterModel, true);
 
 						eSelectMode selMode = eSelectMode::eSelectMode_Items;
 						if (attribute != nullptr)

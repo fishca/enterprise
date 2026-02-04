@@ -160,7 +160,7 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 
 IMetaData* CValueSizerItem::GetMetaData() const
 {
-	const IMetaObjectForm* metaFormObject = m_formOwner ?
+	const IValueMetaObjectForm* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() :
 		nullptr;
 
@@ -170,7 +170,7 @@ IMetaData* CValueSizerItem::GetMetaData() const
 			m_formOwner->GetSourceObject() :
 			nullptr;
 		if (srcValue != nullptr) {
-			IMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
+			IValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
 			wxASSERT(metaValue);
 			return metaValue->GetMetaData();
 		}
@@ -190,7 +190,7 @@ form_identifier_t CValueSizerItem::GetTypeForm() const
 		return 0;
 	}
 
-	const IMetaObjectForm* metaFormObj =
+	const IValueMetaObjectForm* metaFormObj =
 		m_formOwner->GetFormMetaObject();
 	wxASSERT(metaFormObj);
 

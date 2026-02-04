@@ -4,8 +4,8 @@
 #include "commonObject.h"
 #include "accumulationRegisterEnum.h"
 
-class CMetaObjectAccumulationRegister : public IMetaObjectRegisterData {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectAccumulationRegister);
+class CValueMetaObjectAccumulationRegister : public IValueMetaObjectRegisterData {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAccumulationRegister);
 private:
 	enum
 	{
@@ -25,11 +25,11 @@ private:
 	};
 
 	//private:
-		//CMetaObjectAttributePredefined* m_attributeRecordType = IMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
+		//CValueMetaObjectAttributePredefined* m_attributeRecordType = IValueMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue());
 
 public:
 
-	CMetaObjectAttributePredefined* GetRegisterRecordType() const {
+	CValueMetaObjectAttributePredefined* GetRegisterRecordType() const {
 		return m_propertyAttributeRecordType->GetMetaObject();
 	}
 
@@ -62,13 +62,13 @@ public:
 
 	///////////////////////////////////////////////////////////////////
 
-	bool CreateAndUpdateBalancesTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
-	bool CreateAndUpdateTurnoverTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateBalancesTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	bool CreateAndUpdateTurnoverTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	///////////////////////////////////////////////////////////////////
 
-	CMetaObjectAccumulationRegister();
-	virtual ~CMetaObjectAccumulationRegister();
+	CValueMetaObjectAccumulationRegister();
+	virtual ~CValueMetaObjectAccumulationRegister();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -91,8 +91,8 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//form events 
-	virtual void OnCreateFormObject(IMetaObjectForm* metaForm);
-	virtual void OnRemoveMetaForm(IMetaObjectForm* metaForm);
+	virtual void OnCreateFormObject(IValueMetaObjectForm* metaForm);
+	virtual void OnRemoveMetaForm(IValueMetaObjectForm* metaForm);
 
 	//has record manager 
 	virtual bool HasRecordManager() const { return false; }
@@ -102,11 +102,11 @@ public:
 	virtual bool HasRecorder() const { return true; }
 
 	//get module object in compose object 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleObject->GetMetaObject(); }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return m_propertyModuleManager->GetMetaObject(); }
 
 	//create associate value 
-	virtual IMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
+	virtual IValueMetaObjectForm* GetDefaultFormByID(const form_identifier_t& id) const;
 
 #pragma region _form_builder_h_
 	//support form 
@@ -118,7 +118,7 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	/**
 	* Property events
@@ -128,7 +128,7 @@ public:
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 
 		if (GetRegisterType() == eRegisterType::eBalances) {
 			array = {
@@ -152,19 +152,19 @@ protected:
 
 	//get dimension keys 
 	virtual bool FillArrayObjectByDimention(
-		std::vector<IMetaObjectAttribute*>& array) const {
+		std::vector<IValueMetaObjectAttribute*>& array) const {
 		array = { m_propertyAttributeRecorder->GetMetaObject() };
 		return true;
 	}
 
 	//create manager
-	virtual IManagerDataObject* CreateManagerDataObjectValue();
+	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create record set
-	virtual IRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
+	virtual IValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
 
 	//create object data with meta form
-	virtual ISourceDataObject* CreateSourceObject(IMetaObjectForm* metaObject);
+	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
 
 	//load & save metaData from DB 
 	virtual bool LoadData(CMemoryReader& reader);
@@ -188,15 +188,15 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
-	CPropertyInnerModule<CMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectManagerModule>>(m_categorySecondary, IMetaObjectCompositeData::CreateMetaObjectAndSetParent<CMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
 
 	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CMetaObjectAccumulationRegister::FillFormList);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectAccumulationRegister::FillFormList);
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
 	CPropertyEnum<CValueEnumAccumulationRegisterType>* m_propertyRegisterType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumAccumulationRegisterType>>(m_categoryData, wxT("register_type"), _("Register type"), eRegisterType::eBalances);
 
-	CPropertyInnerAttribute<>* m_propertyAttributeRecordType = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
+	CPropertyInnerAttribute<>* m_propertyAttributeRecordType = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateSpecialType(wxT("recordType"), _("Record type"), wxEmptyString, g_enumRecordTypeCLSID, false, CValueEnumAccumulationRegisterRecordType::CreateDefEnumValue()));
 
 	friend class IMetaData;
 };
@@ -205,15 +205,15 @@ private:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CRecordSetObjectAccumulationRegister : public IRecordSetObject {
+class CValueRecordSetObjectAccumulationRegister : public IValueRecordSetObject {
 public:
-	CRecordSetObjectAccumulationRegister(CMetaObjectAccumulationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
-		IRecordSetObject(metaObject, uniqueKey)
+	CValueRecordSetObjectAccumulationRegister(CValueMetaObjectAccumulationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+		IValueRecordSetObject(metaObject, uniqueKey)
 	{
 	}
 
-	CRecordSetObjectAccumulationRegister(const CRecordSetObjectAccumulationRegister& source) :
-		IRecordSetObject(source)
+	CValueRecordSetObjectAccumulationRegister(const CValueRecordSetObjectAccumulationRegister& source) :
+		IValueRecordSetObject(source)
 	{
 	}
 

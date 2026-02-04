@@ -120,7 +120,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 		}
 
-		IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+		IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
 		for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
@@ -128,7 +128,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			auto child = commonObject->GetChild(idx);
 			if (!commonObject->FilterChild(child->GetClassType()))
 				continue;
-			IMetaObject* foundedMeta =
+			IValueMetaObject* foundedMeta =
 				m_commonObject->FindAnyObjectByFilter(child->GetGuid());
 			if (foundedMeta == nullptr) {
 				bool ret = child->DeleteMetaTable(this);
@@ -147,7 +147,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 
 			s_restructureInfo.AppendInfo("Create new database");
 
-			if (!CMetaObjectConstant::DeleteConstantSQLTable()) {
+			if (!CValueMetaObjectConstant::DeleteConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -155,7 +155,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 #endif
 			}
 
-			if (!CMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
+			if (!CValueMetaObjectConfiguration::ExecuteSystemSQLCommand()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -164,7 +164,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			}
 
 			//create & update tables sql
-			if (!CMetaObjectConstant::CreateConstantSQLTable()) {
+			if (!CValueMetaObjectConstant::CreateConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 				db_query->RollBack(); return false;
 #else 
@@ -178,7 +178,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 			auto child = m_commonObject->GetChild(idx);
 			if (!m_commonObject->FilterChild(child->GetClassType()))
 				continue;
-			IMetaObject* foundedMeta =
+			IValueMetaObject* foundedMeta =
 				commonObject->FindAnyObjectByFilter(child->GetGuid());
 			wxASSERT(child);
 			bool ret = true;
@@ -296,13 +296,13 @@ bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags
 
 				CRestructureInfo restructureInfo;
 
-				IMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+				IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
 				wxASSERT(commonObject);
 				for (unsigned int idx = 0; idx < m_commonObject->GetChildCount(); idx++) {
 					auto child = m_commonObject->GetChild(idx);
 					if (!m_commonObject->FilterChild(child->GetClassType()))
 						continue;
-					IMetaObject* foundedMeta =
+					IValueMetaObject* foundedMeta =
 						commonObject->FindAnyObjectByFilter(child->GetGuid());
 					wxASSERT(child);
 					if (foundedMeta == nullptr) {

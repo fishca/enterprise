@@ -6,7 +6,7 @@
 #include "catalog.h"
 #include "backend/metaData.h"
 
-bool CMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
+bool CValueMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
@@ -17,7 +17,7 @@ bool CMetaObjectCatalog::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void CMetaObjectCatalog::ProcessCommand(unsigned int id)
+void CValueMetaObjectCatalog::ProcessCommand(unsigned int id)
 {
 	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);

@@ -923,7 +923,7 @@ void CSystemFunction::EndJob(bool force) //EndJob
 		CApplicationData::ForceExit();
 	}
 	else if (activeMetaData != nullptr) {
-		IModuleManager* moduleManager = activeMetaData->GetModuleManager();
+		IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 		if (moduleManager->DestroyMainModule()) {
 			CApplicationData::ForceExit();
 		}
@@ -938,14 +938,14 @@ void CSystemFunction::UserInterruptProcessing()
 
 bool CSystemFunction::AccessRight(const wxString& strRoleName, const CValue& cData)
 {
-	const IMetaObject* creator = cData.ConvertToType<IMetaObject>();
+	const IValueMetaObject* creator = cData.ConvertToType<IValueMetaObject>();
 	return creator != nullptr ?
 		creator->AccessRight(strRoleName) : false;
 }
 
 bool CSystemFunction::IsInRole(const CValue& cData)
 {
-	const IMetaObject* creator = activeMetaData->FindAnyObjectByFilter(cData.GetString(), g_metaRoleCLSID);
+	const IValueMetaObject* creator = activeMetaData->FindAnyObjectByFilter(cData.GetString(), g_metaRoleCLSID);
 	if (creator == nullptr) return false;
 
 	if (creator != nullptr) {
@@ -962,8 +962,8 @@ CValue CSystemFunction::GetCommonForm(const wxString& strFormName, IBackendContr
 {
 	if (!strFormName.IsEmpty()) {
 
-		const CMetaObjectCommonForm* creator =
-			activeMetaData->FindAnyObjectByFilter<CMetaObjectCommonForm>(strFormName, g_metaCommonFormCLSID);
+		const CValueMetaObjectCommonForm* creator =
+			activeMetaData->FindAnyObjectByFilter<CValueMetaObjectCommonForm>(strFormName, g_metaCommonFormCLSID);
 
 		if (creator != nullptr)
 			return creator->GetObjectForm(ownerControl, unique ? ((CGuid)*unique) : CGuid());

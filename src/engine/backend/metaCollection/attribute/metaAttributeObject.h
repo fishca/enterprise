@@ -6,9 +6,9 @@
 
 #include "metaAttributeObjectEnum.h"
 
-class BACKEND_API IMetaObjectAttribute :
-	public IMetaObject, public IBackendTypeConfigFactory {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectAttribute);
+class BACKEND_API IValueMetaObjectAttribute :
+	public IValueMetaObject, public IBackendTypeConfigFactory {
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectAttribute);
 public:
 
 	enum eFieldTypes {
@@ -119,24 +119,24 @@ public:
 	};
 
 	//get special filed data
-	static unsigned short GetSQLFieldCount(const IMetaObjectAttribute* metaAttr);
-	static wxString GetSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& aggr = wxEmptyString);
-	static wxString GetCompositeSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& cmp = wxT("="));
-	static wxString GetExcluteSQLFieldName(const IMetaObjectAttribute* metaAttr);
+	static unsigned short GetSQLFieldCount(const IValueMetaObjectAttribute* metaAttr);
+	static wxString GetSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& aggr = wxEmptyString);
+	static wxString GetCompositeSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& cmp = wxT("="));
+	static wxString GetExcluteSQLFieldName(const IValueMetaObjectAttribute* metaAttr);
 
 	//get data sql
-	static sqlField_t GetSQLFieldData(const IMetaObjectAttribute* metaAttr);
+	static sqlField_t GetSQLFieldData(const IValueMetaObjectAttribute* metaAttr);
 
 	//process default query
-	static int ProcessAttribute(const wxString& tableName, const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr);
+	static int ProcessAttribute(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr);
 
 	//set value attribute 
-	static void SetValueAttribute(const IMetaObjectAttribute* attribute, const CValue& cValue, class IPreparedStatement* statement, int& position);
+	static void SetValueAttribute(const IValueMetaObjectAttribute* attribute, const CValue& cValue, class IPreparedStatement* statement, int& position);
 
 	//get value from attribute
-	static bool GetValueAttribute(const wxString& fieldName, const eFieldTypes& fldType, const IMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
-	static bool GetValueAttribute(const wxString& fieldName, const IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
-	static bool GetValueAttribute(const IMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const wxString& fieldName, const eFieldTypes& fldType, const IValueMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const wxString& fieldName, const IValueMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+	static bool GetValueAttribute(const IValueMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
 
 	//contain type
 	bool ContainType(const eValueTypes& valType) const;
@@ -149,8 +149,8 @@ public:
 	bool EqualType(const class_identifier_t& clsid, const CTypeDescription& rhs) const;
 
 	//ctor 
-	IMetaObjectAttribute(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString) :
-		IMetaObject(name, synonym, comment)
+	IValueMetaObjectAttribute(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString) :
+		IValueMetaObject(name, synonym, comment)
 	{
 	}
 
@@ -195,12 +195,12 @@ protected:
 	CValue m_defValue;
 };
 
-class BACKEND_API CMetaObjectAttribute : public IMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectAttribute);
+class BACKEND_API CValueMetaObjectAttribute : public IValueMetaObjectAttribute {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAttribute);
 public:
 
-	CMetaObjectAttribute::CMetaObjectAttribute(const eValueTypes& valType = eValueTypes::TYPE_STRING) :
-		IMetaObjectAttribute()
+	CValueMetaObjectAttribute::CValueMetaObjectAttribute(const eValueTypes& valType = eValueTypes::TYPE_STRING) :
+		IValueMetaObjectAttribute()
 	{
 		m_propertyType->SetValue(CValue::GetIDByVT(valType));
 	}
@@ -243,59 +243,59 @@ private:
 	CPropertyEnum<CValueEnumItemMode>* m_propertyItemMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
 };
 
-class BACKEND_API CMetaObjectAttributePredefined : public IMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectAttribute);
+class BACKEND_API CValueMetaObjectAttributePredefined : public IValueMetaObjectAttribute {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAttribute);
 private:
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_BOOLEAN);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierNumber& qNumber, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierNumber& qNumber, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_NUMBER);
 		m_typeDesc.SetNumber(qNumber.m_precision, qNumber.m_scale);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierDate& qDate, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierDate& qDate, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_DATE);
 		m_typeDesc.SetDate(qDate.m_dateTime);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierString& qString, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierString& qString, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_STRING);
 		m_typeDesc.SetString(qString.m_length);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(clsid);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.SetDefaultMetaType(clsid, descr);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
-	CMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, eItemMode itemMode, eSelectMode selectMode)
-		: IMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, eItemMode itemMode, eSelectMode selectMode)
+		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
 	{
 		m_typeDesc.ClearMetaType();
 		m_fillCheck = fillCheck;
@@ -303,8 +303,8 @@ private:
 
 public:
 
-	CMetaObjectAttributePredefined()
-		: IMetaObjectAttribute(), m_itemMode(eItemMode::eItemMode_Item), m_selectMode(eSelectMode::eSelectMode_Items) {
+	CValueMetaObjectAttributePredefined()
+		: IValueMetaObjectAttribute(), m_itemMode(eItemMode::eItemMode_Item), m_selectMode(eSelectMode::eSelectMode_Items) {
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_STRING);
 	}
 

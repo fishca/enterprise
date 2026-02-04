@@ -113,7 +113,7 @@ public:
 	virtual ISourceObject* GetSourceObject() const;
 
 	//Get source attribute  
-	virtual IMetaObjectAttribute* GetSourceAttributeObject() const {
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const {
 		return m_propertySource->GetSourceAttributeObject();
 	}
 
@@ -297,7 +297,7 @@ public:
 	virtual ISourceObject* GetSourceObject() const;
 
 	//get source attribute  
-	virtual IMetaObjectAttribute* GetSourceAttributeObject() const {
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const {
 		return m_propertySource->GetSourceAttributeObject();
 	}
 

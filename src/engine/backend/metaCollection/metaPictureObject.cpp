@@ -4,23 +4,23 @@
 //*                            IntrfaceObject                           *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectPicture, IMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectPicture, IValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
 //***********************************************************************
 
-CMetaObjectPicture::CMetaObjectPicture(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IMetaObject(name, synonym, comment)
+CValueMetaObjectPicture::CValueMetaObjectPicture(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObject(name, synonym, comment)
 {
 }
 
-bool CMetaObjectPicture::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectPicture::LoadData(CMemoryReader& reader)
 {
 	return m_propertyPicture->LoadData(reader);
 }
 
-bool CMetaObjectPicture::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectPicture::SaveData(CMemoryWriter& writer)
 {
 	return m_propertyPicture->SaveData(writer);
 }
@@ -29,4 +29,4 @@ bool CMetaObjectPicture::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectPicture, "picture", g_metaPictureCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectPicture, "picture", g_metaPictureCLSID);

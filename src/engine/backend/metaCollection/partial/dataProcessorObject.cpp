@@ -9,18 +9,18 @@
 //*                                  ObjectCatalogValue                                       *
 //*********************************************************************************************
 
-CRecordDataObjectDataProcessor::CRecordDataObjectDataProcessor(CMetaObjectDataProcessor* metaObject) :
-	IRecordDataObjectExt(metaObject)
+CValueRecordDataObjectDataProcessor::CValueRecordDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject) :
+	IValueRecordDataObjectExt(metaObject)
 {
 }
 
-CRecordDataObjectDataProcessor::CRecordDataObjectDataProcessor(const CRecordDataObjectDataProcessor& source) :
-	IRecordDataObjectExt(source)
+CValueRecordDataObjectDataProcessor::CValueRecordDataObjectDataProcessor(const CValueRecordDataObjectDataProcessor& source) :
+	IValueRecordDataObjectExt(source)
 {
 }
 
 #pragma region _form_builder_h_
-void CRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+void CValueRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* foundedForm = GetForm();
 
@@ -39,7 +39,7 @@ void CRecordDataObjectDataProcessor::ShowFormValue(const wxString& strFormName, 
 	}
 }
 
-IBackendValueForm* CRecordDataObjectDataProcessor::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordDataObjectDataProcessor::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -47,7 +47,7 @@ IBackendValueForm* CRecordDataObjectDataProcessor::GetFormValue(const wxString& 
 
 		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			CMetaObjectDataProcessor::eFormDataProcessor,
+			CValueMetaObjectDataProcessor::eFormDataProcessor,
 			ownerControl,
 			this,
 			m_objGuid

@@ -5,7 +5,7 @@
 //*                                     Defines                                              *
 //********************************************************************************************
 
-class BACKEND_API IMetaObjectCompositeData;
+class BACKEND_API IValueMetaObjectCompositeData;
 
 //********************************************************************************************
 //*								      ISourceObject											 *
@@ -17,7 +17,7 @@ public:
 	virtual ~ISourceObject() {}
 	
 	//get metaData from object 
-	virtual IMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 	
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const = 0;
@@ -36,7 +36,7 @@ public:
 	virtual ~ITabularObject() {}
 
 	//get metaData from object 
-	virtual IMetaObjectCompositeData* GetSourceMetaObject() const = 0;
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const = 0;
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const = 0;

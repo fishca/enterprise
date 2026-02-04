@@ -5,10 +5,10 @@
 #define ICON_SIZE 16
 
 class CMetaDataItem : public wxTreeItemData {
-	IMetaObject* m_metaObject;
+	IValueMetaObject* m_metaObject;
 public:
-	CMetaDataItem(IMetaObject* metaObject) : m_metaObject(metaObject) {}
-	IMetaObject* GetMetaObject() const { return m_metaObject; }
+	CMetaDataItem(IValueMetaObject* metaObject) : m_metaObject(metaObject) {}
+	IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 };
 
 //////////////////////////////////////////////////////////////////////////

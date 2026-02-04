@@ -41,7 +41,7 @@ public:
 	
 	virtual wxIcon GetIcon() const {
 		if (m_metaData != nullptr) {
-			IMetaObject* metaObject = m_metaData->GetCommonMetaObject();
+			IValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
 			wxASSERT(metaObject);
 			return metaObject->GetIcon();
 		}

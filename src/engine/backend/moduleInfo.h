@@ -28,7 +28,7 @@ public:
 	IModuleDataObject(CCompileModule* compileCode);
 	virtual ~IModuleDataObject();
 
-	const IMetaObjectModule* GetMetaObject() const {
+	const IValueMetaObjectModule* GetMetaObject() const {
 		return GetCompileModule() ? GetCompileModule()->GetModuleObject() : nullptr;
 	}
 

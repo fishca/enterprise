@@ -15,7 +15,7 @@ wxClassInfo* IBackendControlFrame::GetClassInfo() const {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 IBackendValueForm* IBackendValueForm::CreateNewForm(
-	const IMetaObjectForm* creator,
+	const IValueMetaObjectForm* creator,
 	IBackendControlFrame* ownerControl,
 	ISourceDataObject* srcObject,
 	const CUniqueKey& formGuid

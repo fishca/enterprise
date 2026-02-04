@@ -1,7 +1,7 @@
 #include "metaRoleObject.h"
 #include "backend/metaData.h"
 
-bool CMetaObjectRole::PrepareContextMenu(wxMenu* defaultMenu)
+bool CValueMetaObjectRole::PrepareContextMenu(wxMenu* defaultMenu)
 {
 	wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_OPEN_ROLE, _("Open role"));
 	menuItem->SetBitmap(GetIcon());
@@ -9,7 +9,7 @@ bool CMetaObjectRole::PrepareContextMenu(wxMenu* defaultMenu)
 	return false;
 }
 
-void CMetaObjectRole::ProcessCommand(unsigned int id)
+void CValueMetaObjectRole::ProcessCommand(unsigned int id)
 {
 	IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);

@@ -3,19 +3,19 @@
 
 #include "accumulationRegister.h"
 
-class CManagerDataObjectAccumulationRegister : 
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectAccumulationRegister);
+class CValueManagerDataObjectAccumulationRegister : 
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectAccumulationRegister);
 public:
 
 	CValue Balance(const CValue& cPeriod, const CValue& cFilter = CValue());
 	CValue Turnovers(const CValue& cBeginOfPeriod, const CValue& cEndOfPeriod, const CValue& cFilter = CValue());
 
-	CManagerDataObjectAccumulationRegister(CMetaObjectAccumulationRegister* metaObject = nullptr);
-	virtual ~CManagerDataObjectAccumulationRegister();
+	CValueManagerDataObjectAccumulationRegister(CValueMetaObjectAccumulationRegister* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectAccumulationRegister();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectAccumulationRegister* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectAccumulationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -35,7 +35,7 @@ public:
 protected:
 	//methods 
 	CMethodHelper* m_methodHelper;
-	CMetaObjectAccumulationRegister* m_metaObject;
+	CValueMetaObjectAccumulationRegister* m_metaObject;
 };
 
 #endif 

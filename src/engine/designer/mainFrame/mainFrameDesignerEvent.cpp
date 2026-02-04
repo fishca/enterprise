@@ -90,7 +90,7 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 
 		m_docManager->AddDocument(newDocument);
 
-		IMetaObject* metaObject = configDatabase->GetCommonMetaObject();
+		IValueMetaObject* metaObject = configDatabase->GetCommonMetaObject();
 
 		newDocument->SetTitle(metaObject->GetModuleName());
 		newDocument->SetFilename(metaObject->GetDocPath());

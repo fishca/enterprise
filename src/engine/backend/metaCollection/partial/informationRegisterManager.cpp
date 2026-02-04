@@ -8,25 +8,25 @@
 
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectInformationRegister, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister, CValue);
 
-CManagerDataObjectInformationRegister::CManagerDataObjectInformationRegister(CMetaObjectInformationRegister* metaObject) : 
+CValueManagerDataObjectInformationRegister::CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject) : 
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CManagerDataObjectInformationRegister::~CManagerDataObjectInformationRegister()
+CValueManagerDataObjectInformationRegister::~CValueManagerDataObjectInformationRegister()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CManagerDataObjectInformationRegister::GetModuleManager() const {
+CValueMetaObjectCommonModule* CValueManagerDataObjectInformationRegister::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectInformationRegister::GetClassType() const
+class_identifier_t CValueManagerDataObjectInformationRegister::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -34,7 +34,7 @@ class_identifier_t CManagerDataObjectInformationRegister::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectInformationRegister::GetClassName() const
+wxString CValueManagerDataObjectInformationRegister::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -42,7 +42,7 @@ wxString CManagerDataObjectInformationRegister::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectInformationRegister::GetString() const
+wxString CValueManagerDataObjectInformationRegister::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -65,11 +65,11 @@ enum {
 	eGetListForm,
 };
 
-void CManagerDataObjectInformationRegister::PrepareNames() const
+void CValueManagerDataObjectInformationRegister::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -97,7 +97,7 @@ void CManagerDataObjectInformationRegister::PrepareNames() const
 
 #include "selector/objectSelector.h"
 
-bool CManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -111,36 +111,36 @@ bool CManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CV
 		pvarRetValue = m_metaObject->CreateRecordManagerObjectValue();
 		return true;
 	case eCreateRecordKey:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordKeyObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordKeyObject>(m_metaObject);
 		return true;
 	case eGet:
 		pvarRetValue = lSizeArray > 1 ?
-			CManagerDataObjectInformationRegister::Get(*paParams[0], *paParams[1])
+			CValueManagerDataObjectInformationRegister::Get(*paParams[0], *paParams[1])
 			: lSizeArray > 0 ?
-			CManagerDataObjectInformationRegister::Get(*paParams[0]) :
-			CManagerDataObjectInformationRegister::Get();
+			CValueManagerDataObjectInformationRegister::Get(*paParams[0]) :
+			CValueManagerDataObjectInformationRegister::Get();
 		return true;
 	case eGetFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			CManagerDataObjectInformationRegister::GetFirst(*paParams[0], *paParams[1])
-			: CManagerDataObjectInformationRegister::GetFirst(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::GetFirst(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::GetFirst(*paParams[0]);
 		return true;
 	case eGetLast:
 		pvarRetValue = lSizeArray > 1 ?
-			CManagerDataObjectInformationRegister::GetLast(*paParams[0], *paParams[1])
-			: CManagerDataObjectInformationRegister::GetLast(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::GetLast(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::GetLast(*paParams[0]);
 		return true;
 	case eSliceFirst:
 		pvarRetValue = lSizeArray > 1 ?
-			CManagerDataObjectInformationRegister::SliceFirst(*paParams[0], *paParams[1])
-			: CManagerDataObjectInformationRegister::SliceFirst(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::SliceFirst(*paParams[0]);
 	case eSliceLast:
 		pvarRetValue = lSizeArray > 1 ?
-			CManagerDataObjectInformationRegister::SliceLast(*paParams[0], *paParams[1])
-			: CManagerDataObjectInformationRegister::SliceLast(*paParams[0]);
+			CValueManagerDataObjectInformationRegister::SliceLast(*paParams[0], *paParams[1])
+			: CValueManagerDataObjectInformationRegister::SliceLast(*paParams[0]);
 		return true;
 	case eSelect:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CSelectorRegisterObject>(m_metaObject);
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSelectorRegisterDataObject>(m_metaObject);
 		return true;
 	case eGetForm:
 	{
@@ -152,7 +152,7 @@ bool CManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CV
 	}
 	case eGetRecordForm:
 	{
-		CRecordKeyObject* keyVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CRecordKeyObject>() : nullptr;
+		CValueRecordKeyObject* keyVal = lSizeArray > 2 ? paParams[2]->ConvertToType<CValueRecordKeyObject>() : nullptr;
 		pvarRetValue = m_metaObject->GetRecordForm(paParams[0]->GetString(),
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 			keyVal ? (keyVal->GetUniqueKey()) : nullptr);
@@ -168,7 +168,7 @@ bool CManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CV
 	}
 	}
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());

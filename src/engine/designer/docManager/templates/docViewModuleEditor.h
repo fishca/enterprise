@@ -44,10 +44,10 @@ protected:
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class CModuleDocument : public IModuleDocument {
+class CModuleDocument : public IValueModuleDocument {
 public:
 
-	CModuleDocument() : IModuleDocument() {}
+	CModuleDocument() : IValueModuleDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnOpenDocument(const wxString& filename) override;

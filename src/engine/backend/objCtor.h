@@ -47,19 +47,19 @@ public:
 
 	template <typename metaType>
 	inline bool ConvertToMetaValue(metaType*& refValue) const {
-		const IMetaObject* metaObject = GetMetaObject();
+		const IValueMetaObject* metaObject = GetMetaObject();
 		return metaObject ?
 			metaObject->ConvertToValue(refValue) : false;
 	}
 
 	virtual wxIcon GetClassIcon() const {
-		const IMetaObject* metaObject = GetMetaObject();
+		const IValueMetaObject* metaObject = GetMetaObject();
 		return metaObject ?
 			metaObject->GetIcon() : wxNullIcon;
 	}
 
 	virtual eCtorMetaType GetMetaTypeCtor() const = 0;
-	virtual IMetaObject* GetMetaObject() const = 0;
+	virtual IValueMetaObject* GetMetaObject() const = 0;
 };
 
 //reference class 
@@ -67,7 +67,7 @@ class CMetaValueRefTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueRefTypeCtor(IMetaObjectRecordDataRef* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueRefTypeCtor(IValueMetaObjectRecordDataRef* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("R_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -79,12 +79,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Reference; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRecordDataRef* m_metaObject;
+	IValueMetaObjectRecordDataRef* m_metaObject;
 };
 
 #define registerReference()\
@@ -97,7 +97,7 @@ class CMetaValueListRefTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueListRefTypeCtor(IMetaObjectRecordDataRef* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueListRefTypeCtor(IValueMetaObjectRecordDataRef* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("L_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -109,12 +109,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_List; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRecordDataRef* m_metaObject;
+	IValueMetaObjectRecordDataRef* m_metaObject;
 };
 
 #define registerRefList()\
@@ -127,7 +127,7 @@ class CMetaValueListRegisterTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueListRegisterTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueListRegisterTypeCtor(IValueMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("J_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -139,12 +139,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_List; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 #define registerRegList()\
@@ -157,7 +157,7 @@ class CMetaValueObjectTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueObjectTypeCtor(IMetaObjectRecordData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueObjectTypeCtor(IValueMetaObjectRecordData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("O_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -170,19 +170,19 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Object; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRecordData* m_metaObject;
+	IValueMetaObjectRecordData* m_metaObject;
 };
 
 class CMetaValueExternalObjectTypeCtor :
 	public CMetaValueObjectTypeCtor {
 public:
 
-	CMetaValueExternalObjectTypeCtor(IMetaObjectRecordData* recordRef) : CMetaValueObjectTypeCtor(recordRef) {
+	CMetaValueExternalObjectTypeCtor(IValueMetaObjectRecordData* recordRef) : CMetaValueObjectTypeCtor(recordRef) {
 		m_classType = string_to_clsid(wxT("EO_") +
 			stringUtils::IntToStr(recordRef->GetMetaID()));
 	}
@@ -191,7 +191,7 @@ public:
 
 private:
 	class_identifier_t m_classType;
-	IMetaObjectRecordData* m_metaObject;
+	IValueMetaObjectRecordData* m_metaObject;
 };
 
 #define registerObject()\
@@ -206,7 +206,7 @@ class CMetaValueManagerTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueManagerTypeCtor(IMetaObjectGenericData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueManagerTypeCtor(IValueMetaObjectGenericData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("M_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -218,18 +218,18 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Manager; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectGenericData* m_metaObject;
+	IValueMetaObjectGenericData* m_metaObject;
 };
 
 class CMetaValueExternalManagerTypeCtor : public CMetaValueManagerTypeCtor {
 public:
 
-	CMetaValueExternalManagerTypeCtor(IMetaObjectGenericData* recordRef) :CMetaValueManagerTypeCtor(recordRef) {
+	CMetaValueExternalManagerTypeCtor(IValueMetaObjectGenericData* recordRef) :CMetaValueManagerTypeCtor(recordRef) {
 		m_classType = string_to_clsid(wxT("EM_") +
 			stringUtils::IntToStr(recordRef->GetMetaID()));
 	}
@@ -249,7 +249,7 @@ class CMetaValueSelectionTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueSelectionTypeCtor(IMetaObjectGenericData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueSelectionTypeCtor(IValueMetaObjectGenericData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("S_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -261,12 +261,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual CValue* CreateObject() const { return nullptr; }
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_Selection; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectGenericData* m_metaObject;
+	IValueMetaObjectGenericData* m_metaObject;
 };
 
 #define registerSelection()\
@@ -279,7 +279,7 @@ class CMetaValueTabularSectionTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueTabularSectionTypeCtor(IMetaObjectRecordData* recordRef, CMetaObjectTableData* recordTable) : IMetaValueTypeCtor(), m_metaObject(recordRef), m_metaTable(recordTable) {
+	CMetaValueTabularSectionTypeCtor(IValueMetaObjectRecordData* recordRef, CValueMetaObjectTableData* recordTable) : IMetaValueTypeCtor(), m_metaObject(recordRef), m_metaTable(recordTable) {
 		m_classType = string_to_clsid(wxT("T_") +
 			stringUtils::IntToStr(m_metaTable->GetMetaID()));
 	}
@@ -291,13 +291,13 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual CValue* CreateObject() const { return nullptr; }
-	virtual IMetaObject* GetMetaObject() const { return m_metaTable; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaTable; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_TabularSection; }
 
 protected:
 	class_identifier_t m_classType;
-	CMetaObjectTableData* m_metaTable;
-	IMetaObjectRecordData* m_metaObject;
+	CValueMetaObjectTableData* m_metaTable;
+	IValueMetaObjectRecordData* m_metaObject;
 };
 
 #define registerTabularSection()\
@@ -310,7 +310,7 @@ class CMetaValueTabularSectionStringTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueTabularSectionStringTypeCtor(IMetaObjectRecordData* recordRef, CMetaObjectTableData* recordTable) : IMetaValueTypeCtor(), m_metaObject(recordRef), m_metaTable(recordTable) {
+	CMetaValueTabularSectionStringTypeCtor(IValueMetaObjectRecordData* recordRef, CValueMetaObjectTableData* recordTable) : IMetaValueTypeCtor(), m_metaObject(recordRef), m_metaTable(recordTable) {
 		m_classType = string_to_clsid(wxT("B_") +
 			stringUtils::IntToStr(m_metaTable->GetMetaID()));
 	}
@@ -322,13 +322,13 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual CValue* CreateObject() const { return nullptr; }
-	virtual IMetaObject* GetMetaObject() const { return m_metaTable; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaTable; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_TabularSection_String; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRecordData* m_metaObject;
-	CMetaObjectTableData* m_metaTable;
+	IValueMetaObjectRecordData* m_metaObject;
+	CValueMetaObjectTableData* m_metaTable;
 };
 
 #define registerTabularSection_String()\
@@ -341,7 +341,7 @@ class CMetaValueRecordKeyTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueRecordKeyTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueRecordKeyTypeCtor(IValueMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("A_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -353,12 +353,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_RecordKey; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 #define registerRecordKey()\
@@ -371,7 +371,7 @@ class CMetaValueRecordManagerTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueRecordManagerTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueRecordManagerTypeCtor(IValueMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("D_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -383,12 +383,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_RecordManager; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 #define registerRecordManager()\
@@ -401,7 +401,7 @@ class CMetaValueRecordSetTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueRecordSetTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueRecordSetTypeCtor(IValueMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("H_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -413,12 +413,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual CValue* CreateObject() const;
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_RecordSet; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 #define registerRecordSet()\
@@ -431,7 +431,7 @@ class CMetaValueRecordSetStringTypeCtor :
 	public IMetaValueTypeCtor {
 public:
 
-	CMetaValueRecordSetStringTypeCtor(IMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
+	CMetaValueRecordSetStringTypeCtor(IValueMetaObjectRegisterData* recordRef) : IMetaValueTypeCtor(), m_metaObject(recordRef) {
 		m_classType = string_to_clsid(wxT("P_") +
 			stringUtils::IntToStr(m_metaObject->GetMetaID()));
 	}
@@ -443,12 +443,12 @@ public:
 	virtual class_identifier_t GetClassType() const { return m_classType; }
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual CValue* CreateObject() const { return nullptr; }
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 	virtual eCtorMetaType GetMetaTypeCtor() const { return eCtorMetaType::eCtorMetaType_RecordSet_String; }
 
 protected:
 	class_identifier_t m_classType;
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 };
 
 #define registerRecordSet_String()\

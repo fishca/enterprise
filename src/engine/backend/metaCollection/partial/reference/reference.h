@@ -12,22 +12,22 @@ class BACKEND_API IMetaData;
 
 //********************************************************************************************
 
-class BACKEND_API IMetaObjectRecordDataRef;
-class BACKEND_API IRecordDataObjectRef;
+class BACKEND_API IValueMetaObjectRecordDataRef;
+class BACKEND_API IValueRecordDataObjectRef;
 
 //********************************************************************************************
 
-class BACKEND_API CReferenceDataObject : public CValue,
+class BACKEND_API CValueReferenceDataObject : public CValue,
 	public IValueDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CReferenceDataObject);
+	wxDECLARE_DYNAMIC_CLASS(CValueReferenceDataObject);
 private:
 	enum helperAlias {
 		eProperty,
 		eTable
 	};
 private:
-	CReferenceDataObject() : CValue(eValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
-	CReferenceDataObject(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
+	CValueReferenceDataObject() : CValue(eValueTypes::TYPE_VALUE, true), m_initializedRef(false) {}
+	CValueReferenceDataObject(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 public:
 
 	reference_t* GetReferenceData() const {
@@ -36,18 +36,18 @@ public:
 
 	void PrepareRef(bool createData = true);
 
-	virtual ~CReferenceDataObject();
+	virtual ~CValueReferenceDataObject();
 
-	static CReferenceDataObject* Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid = wxNullGuid);
-	static CReferenceDataObject* Create(IMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
+	static CValueReferenceDataObject* Create(IMetaData* metaData, const meta_identifier_t& id, const CGuid& objGuid = wxNullGuid);
+	static CValueReferenceDataObject* Create(IValueMetaObjectRecordDataRef* metaObject, const CGuid& objGuid = wxNullGuid);
 
-	static CReferenceDataObject* Create(IMetaData* metaData, void* ptr);
-	static CReferenceDataObject* CreateFromPtr(IMetaData* metaData, void* ptr);
-	static CReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IMetaObjectRecordDataRef* metaObject, const CGuid& refGuid);
+	static CValueReferenceDataObject* Create(IMetaData* metaData, void* ptr);
+	static CValueReferenceDataObject* CreateFromPtr(IMetaData* metaData, void* ptr);
+	static CValueReferenceDataObject* CreateFromResultSet(class IDatabaseResultSet *rs, IValueMetaObjectRecordDataRef* metaObject, const CGuid& refGuid);
 
 	//operator '>'
 	virtual bool CompareValueGT(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid > rhs->m_objGuid;
 		return false;
@@ -55,7 +55,7 @@ public:
 	
 	//operator '>='
 	virtual bool CompareValueGE(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid >= rhs->m_objGuid;
 		return false;
@@ -63,7 +63,7 @@ public:
 
 	//operator '<'
 	virtual bool CompareValueLS(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid < rhs->m_objGuid;
 		return false;
@@ -71,7 +71,7 @@ public:
 
 	//operator '<='
 	virtual bool CompareValueLE(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid <= rhs->m_objGuid;
 		return false;
@@ -79,7 +79,7 @@ public:
 
 	//operator '=='
 	virtual bool CompareValueEQ(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject == rhs->m_metaObject && m_objGuid == rhs->m_objGuid;
 		return false;
@@ -87,7 +87,7 @@ public:
 
 	//operator '!='
 	virtual bool CompareValueNE(const CValue& cParam) const {
-		CReferenceDataObject* rhs = dynamic_cast<CReferenceDataObject*>(cParam.GetRef());
+		CValueReferenceDataObject* rhs = dynamic_cast<CValueReferenceDataObject*>(cParam.GetRef());
 		if (rhs != nullptr)
 			return m_metaObject != rhs->m_metaObject || m_objGuid != rhs->m_objGuid;
 		return true;
@@ -100,8 +100,8 @@ public:
 	virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 	//get metaData from object 
-	virtual IMetaObjectRecordData* GetMetaObject() const {
-		return (IMetaObjectRecordData *)m_metaObject;
+	virtual IValueMetaObjectRecordData* GetMetaObject() const {
+		return (IValueMetaObjectRecordData *)m_metaObject;
 	}
 
 	//support show 
@@ -120,11 +120,11 @@ public:
 		return IsEmpty();
 	}
 
-	IMetaObjectRecordDataRef* GetMetaObjectRef() const {
+	IValueMetaObjectRecordDataRef* GetMetaObjectRef() const {
 		return m_metaObject;
 	}
 
-	IRecordDataObjectRef* GetObject() const;
+	IValueRecordDataObjectRef* GetObject() const;
 
 	//****************************************************************************
 	//*                              Support methods                             *
@@ -165,7 +165,7 @@ protected:
 	bool m_initializedRef;
 
 	CMethodHelper* m_methodHelper;
-	IMetaObjectRecordDataRef* m_metaObject;
+	IValueMetaObjectRecordDataRef* m_metaObject;
 	reference_t* m_reference_impl;
 
 	bool m_foundedRef;

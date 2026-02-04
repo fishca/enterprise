@@ -10,7 +10,7 @@
 //*                                   Events "moduleManager"                                              *
 //*********************************************************************************************************
 
-bool CModuleManagerConfiguration::BeforeStart()
+bool CValueModuleManagerConfiguration::BeforeStart()
 {
 	if (!appData->DesignerMode()) {
 		try {
@@ -29,7 +29,7 @@ bool CModuleManagerConfiguration::BeforeStart()
 	return true;
 }
 
-void CModuleManagerConfiguration::OnStart()
+void CValueModuleManagerConfiguration::OnStart()
 {
 	if (!appData->DesignerMode()) {
 		try {
@@ -42,7 +42,7 @@ void CModuleManagerConfiguration::OnStart()
 	};
 }
 
-bool CModuleManagerConfiguration::BeforeExit()
+bool CValueModuleManagerConfiguration::BeforeExit()
 {
 	if (!appData->DesignerMode()) {
 		try {
@@ -60,7 +60,7 @@ bool CModuleManagerConfiguration::BeforeExit()
 	return true;
 }
 
-void CModuleManagerConfiguration::OnExit()
+void CValueModuleManagerConfiguration::OnExit()
 {
 	if (!appData->DesignerMode()) {
 		try {

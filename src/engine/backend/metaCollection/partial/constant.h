@@ -3,12 +3,12 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API CRecordDataObjectConstant;
+class BACKEND_API CValueRecordDataObjectConstant;
 
-class BACKEND_API CMetaObjectConstant : 
-	public CMetaObjectAttribute, public IBackendCommandItem {
+class BACKEND_API CValueMetaObjectConstant : 
+	public CValueMetaObjectAttribute, public IBackendCommandItem {
 	
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConstant);
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectConstant);
 protected:
 	enum
 	{
@@ -22,8 +22,8 @@ public:
 	bool AccessRight_Write() const { return IsFullAccess() || AccessRight(m_roleWrite); }
 #pragma endregion
 
-	CMetaObjectConstant();
-	virtual ~CMetaObjectConstant();
+	CValueMetaObjectConstant();
+	virtual ~CValueMetaObjectConstant();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -45,10 +45,10 @@ public:
 	static wxString GetTableNameDB() { return wxT("sys_const"); }
 
 	//get module object in compose object 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
 
 	//create empty object
-	virtual CRecordDataObjectConstant* CreateRecordDataObjectValue();
+	virtual CValueRecordDataObjectConstant* CreateRecordDataObjectValue();
 
 	//support form 
 	virtual IBackendValueForm* GetObjectForm();
@@ -58,13 +58,13 @@ public:
 	static bool DeleteConstantSQLTable();
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Create; }
 
 	//process default query
-	int ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr);
+	int ProcessAttribute(const wxString& tableName, IValueMetaObjectAttribute* srcAttr, IValueMetaObjectAttribute* dstAttr);
 
 protected:
 
@@ -89,22 +89,22 @@ protected:
 
 private:
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("recordModule"), _("Record module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("recordModule"), _("Record module")));
 
 #pragma region role 
-	CRole* m_roleRead = IMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleWrite = IMetaObject::CreateRole(wxT("write"), _("Write"));
+	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("read"), _("Read"));
+	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("write"), _("Write"));
 #pragma endregion
 
-	friend class CRecordDataObjectConstant;
+	friend class CValueRecordDataObjectConstant;
 	friend class IMetaData;
 };
 
 #include "backend/moduleInfo.h"
 
-class BACKEND_API CRecordDataObjectConstant : public CValue, public IActionDataObject,
+class BACKEND_API CValueRecordDataObjectConstant : public CValue, public IActionDataObject,
 	public ISourceDataObject, public IModuleDataObject {
-	virtual bool InitializeObject(const CRecordDataObjectConstant* source = nullptr);
+	virtual bool InitializeObject(const CValueRecordDataObjectConstant* source = nullptr);
 protected:
 	enum helperAlias {
 		eSystem,
@@ -116,8 +116,8 @@ protected:
 protected:
 
 	//override copy constructor
-	CRecordDataObjectConstant(CMetaObjectConstant* metaObject);
-	CRecordDataObjectConstant(const CRecordDataObjectConstant& source);
+	CValueRecordDataObjectConstant(CValueMetaObjectConstant* metaObject);
+	CValueRecordDataObjectConstant(const CValueRecordDataObjectConstant& source);
 
 	//standart override 
 	virtual CMethodHelper* GetPMethods() const final { // get a reference to the class helper for parsing attribute and method names
@@ -127,7 +127,7 @@ protected:
 
 public:
 
-	virtual ~CRecordDataObjectConstant();
+	virtual ~CValueRecordDataObjectConstant();
 
 	CValue GetConstValue() const;
 	bool SetConstValue(const CValue& cValue);
@@ -154,7 +154,7 @@ public:
 	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual IValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); };
@@ -177,8 +177,8 @@ public:
 	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetMetaObject() const {
-		return (IMetaObjectGenericData*)m_metaObject;
+	virtual IValueMetaObjectGenericData* GetMetaObject() const {
+		return (IValueMetaObjectGenericData*)m_metaObject;
 	};
 
 	//get unique identifier 
@@ -211,7 +211,7 @@ protected:
 	bool m_objModified;
 
 	CMethodHelper* m_methodHelper;
-	CMetaObjectConstant* m_metaObject;
+	CValueMetaObjectConstant* m_metaObject;
 	CValue m_constValue;
 
 	friend class CValue;

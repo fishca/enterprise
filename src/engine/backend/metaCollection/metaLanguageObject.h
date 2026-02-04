@@ -3,14 +3,14 @@
 
 #include "metaObject.h"
 
-class BACKEND_API CMetaObjectLanguage : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectLanguage);
+class BACKEND_API CValueMetaObjectLanguage : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectLanguage);
 public:
 
 	wxString GetLangCode() const { return m_propertyCode->GetValueAsString(); }
 	void SetLangCode(const wxString& strCode) { m_propertyCode->SetValue(strCode); }
 
-	CMetaObjectLanguage(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectLanguage(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;

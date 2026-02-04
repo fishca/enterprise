@@ -14,7 +14,7 @@ enum action {
 	eMarkAsDelete,
 };
 
-CRecordDataObjectDocument::CActionCollection CRecordDataObjectDocument::GetActionCollection(const form_identifier_t &formType)
+CValueRecordDataObjectDocument::CActionCollection CValueRecordDataObjectDocument::GetActionCollection(const form_identifier_t &formType)
 {
 	CActionCollection documentActions(this);
 	documentActions.AddAction(wxT("postAndClose"), _("Post and close"), g_picPostCLSID, true, eDefActionAndClose);
@@ -28,7 +28,7 @@ CRecordDataObjectDocument::CActionCollection CRecordDataObjectDocument::GetActio
 	return documentActions;
 }
 
-void CRecordDataObjectDocument::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
+void CValueRecordDataObjectDocument::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
 {
 	switch (action)
 	{

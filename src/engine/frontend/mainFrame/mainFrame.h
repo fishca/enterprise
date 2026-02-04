@@ -56,7 +56,7 @@ public:
 
 	// Form support
 	virtual IBackendValueForm* ActiveWindow() const override;
-	virtual IBackendValueForm* CreateNewForm(const IMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
+	virtual IBackendValueForm* CreateNewForm(const IValueMetaObjectForm* creator, class IBackendControlFrame* ownerControl = nullptr,
 		class ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey) override;
 
 	virtual CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,

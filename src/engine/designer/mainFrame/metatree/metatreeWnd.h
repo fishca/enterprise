@@ -18,7 +18,7 @@ public:
 	IMetaDataTree(wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(nullptr), m_bReadOnly(false) {}
 	IMetaDataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_bReadOnly(false) {}
 
-	virtual form_identifier_t SelectFormType(CMetaObjectForm* metaObject) const;
+	virtual form_identifier_t SelectFormType(CValueMetaObjectForm* metaObject) const;
 	virtual void Activate();
 
 	virtual void SetReadOnly(bool readOnly = true) { m_bReadOnly = readOnly; }
@@ -26,12 +26,12 @@ public:
 
 	virtual void Modify(bool modify);
 
-	virtual bool OpenFormMDI(IMetaObject* metaObject);
-	virtual bool OpenFormMDI(IMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
-	virtual bool CloseFormMDI(IMetaObject* metaObject);
-	virtual CMetaDocument* GetDocument(IMetaObject* metaObject) const;
+	virtual bool OpenFormMDI(IValueMetaObject* metaObject);
+	virtual bool OpenFormMDI(IValueMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
+	virtual bool CloseFormMDI(IValueMetaObject* metaObject);
+	virtual CMetaDocument* GetDocument(IValueMetaObject* metaObject) const;
 
-	virtual void CloseMetaObject(IMetaObject* metaObject) {
+	virtual void CloseMetaObject(IValueMetaObject* metaObject) {
 		CMetaDocument* doc = GetDocument(metaObject);
 		if (doc != nullptr) {
 			doc->DeleteAllViews();
@@ -50,13 +50,13 @@ protected:
 
 	class wxTreeItemMetaData : public wxTreeItemData, public CTreeDataMetaItem {
 	public:
-		wxTreeItemMetaData(IMetaObject* metaObject) : CTreeDataMetaItem(metaObject) {}
+		wxTreeItemMetaData(IValueMetaObject* metaObject) : CTreeDataMetaItem(metaObject) {}
 	};
 
 	class wxTreeItemClsidMetaData : public wxTreeItemData,
 		public CTreeDataMetaItem, public CTreeDataClassIdentifier {
 	public:
-		wxTreeItemClsidMetaData(const class_identifier_t& clsid, IMetaObject* metaObject) :
+		wxTreeItemClsidMetaData(const class_identifier_t& clsid, IValueMetaObject* metaObject) :
 			CTreeDataClassIdentifier(clsid), CTreeDataMetaItem(metaObject)
 		{
 		}
@@ -156,11 +156,11 @@ private:
 		return 0;
 	}
 
-	IMetaObject* GetMetaIdentifier() const {
+	IValueMetaObject* GetMetaIdentifier() const {
 		return GetMetaIdentifier(GetSelectionIdentifier());
 	}
 
-	IMetaObject* GetMetaIdentifier(const wxTreeItemId& id) const {
+	IValueMetaObject* GetMetaIdentifier(const wxTreeItemId& id) const {
 		wxTreeItemId parentItem = id;
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
@@ -169,7 +169,7 @@ private:
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
-						IMetaObject* parent = GetMetaObject(parentItem);
+						IValueMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -204,7 +204,7 @@ private:
 		wxTreeItemId m_draggedItem;
 	public:
 
-		IMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+		IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
 			if (!item.IsOk()) return nullptr;
 			CTreeDataMetaItem* data = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item));
 			if (data == nullptr) return nullptr;
@@ -236,9 +236,9 @@ private:
 			wxTreeItemMetaData* data1 = dynamic_cast<wxTreeItemMetaData*>(GetItemData(item1));
 			wxTreeItemMetaData* data2 = dynamic_cast<wxTreeItemMetaData*>(GetItemData(item2));
 			if (data1 != nullptr && data2 != nullptr && ret > 0) {
-				IMetaObject* metaObject1 = data1->m_metaObject;
-				IMetaObject* metaObject2 = data2->m_metaObject;
-				IMetaObject* parent = metaObject1->GetParent();
+				IValueMetaObject* metaObject1 = data1->m_metaObject;
+				IValueMetaObject* metaObject2 = data2->m_metaObject;
+				IValueMetaObject* parent = metaObject1->GetParent();
 				wxASSERT(parent);
 				return parent->ChangeChildPosition(metaObject2,
 					parent->GetChildPosition(metaObject1)
@@ -328,7 +328,7 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const class_identifier_t& clsid, IMetaObject* metaObject) const {
+		const class_identifier_t& clsid, IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -340,7 +340,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		IMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -353,10 +353,10 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	IMetaObject* NewItem(const class_identifier_t& clsid, IMetaObject* parent, bool runObject = true);
-	IMetaObject* CreateItem(bool showValue = true);
+	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject = true);
+	IValueMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
+	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -380,27 +380,27 @@ private:
 	void PrepareReplaceMenu(wxMenu* menu);
 	void PrepareContextMenu(wxMenu* menu, const wxTreeItemId& item);
 
-	void AddInterfaceItem(IMetaObject* obj, const wxTreeItemId& item);
+	void AddInterfaceItem(IValueMetaObject* obj, const wxTreeItemId& item);
 
-	void AddCatalogItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddDocumentItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddEnumerationItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddDataProcessorItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddReportItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddInformationRegisterItem(IMetaObject* obj, const wxTreeItemId& item);
-	void AddAccumulationRegisterItem(IMetaObject* obj, const wxTreeItemId& item);
+	void AddCatalogItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddDocumentItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddEnumerationItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddDataProcessorItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddReportItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddInformationRegisterItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddAccumulationRegisterItem(IValueMetaObject* obj, const wxTreeItemId& item);
 
 	void FillData();
 
-	IMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
 		return m_metaTreeCtrl->GetMetaObject(item);
 	}
 
-	void UpdateToolbar(IMetaObject* obj, const wxTreeItemId& item);
+	void UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item);
 
 public:
 
-	bool RenameMetaObject(IMetaObject* metaObject, const wxString& newName);
+	bool RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName);
 
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
 

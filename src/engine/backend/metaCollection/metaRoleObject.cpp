@@ -4,14 +4,14 @@
 //*                            RoleObject                               *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectRole, IMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectRole, IValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
 //***********************************************************************
 
-CMetaObjectRole::CMetaObjectRole(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IMetaObject(name, synonym, comment)
+CValueMetaObjectRole::CValueMetaObjectRole(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObject(name, synonym, comment)
 {
 }
 
@@ -19,23 +19,23 @@ CMetaObjectRole::CMetaObjectRole(const wxString& name, const wxString& synonym, 
 //*                             event object                            *
 //***********************************************************************
 
-bool CMetaObjectRole::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectRole::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	return IMetaObject::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectRole::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectRole::OnBeforeRunMetaObject(int flags)
 {
-	return IMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectRole::OnAfterCloseMetaObject()
+bool CValueMetaObjectRole::OnAfterCloseMetaObject()
 {
-	return IMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectRole, "role", g_metaRoleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectRole, "role", g_metaRoleCLSID);

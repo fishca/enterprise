@@ -3,16 +3,16 @@
 
 #include "dataReport.h"
 
-class CManagerDataObjectReport :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectReport);
+class CValueManagerDataObjectReport :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectReport);
 public:
 
-	CManagerDataObjectReport(CMetaObjectReport* metaObject = nullptr);
-	virtual ~CManagerDataObjectReport();
+	CValueManagerDataObjectReport(CValueMetaObjectReport* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectReport();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectReport* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectReport* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -30,19 +30,19 @@ public:
 	virtual wxString GetString() const;
 
 protected:
-	CMetaObjectReport* m_metaObject;
+	CValueMetaObjectReport* m_metaObject;
 	CMethodHelper* m_methodHelper;
 };
 
-class CManagerDataObjectExternalReport :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectExternalReport);
+class CValueManagerDataObjectExternalReport :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectExternalReport);
 public:
-	CManagerDataObjectExternalReport();
-	virtual ~CManagerDataObjectExternalReport();
+	CValueManagerDataObjectExternalReport();
+	virtual ~CValueManagerDataObjectExternalReport();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
-	virtual CMetaObjectReport* GetMetaObject() const { return nullptr; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual CValueMetaObjectReport* GetMetaObject() const { return nullptr; }
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 

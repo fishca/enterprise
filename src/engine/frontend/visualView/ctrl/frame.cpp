@@ -60,7 +60,7 @@ bool IValueFrame::IsEditable() const
 	return false;
 }
 
-bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader)
+bool IValueFrame::LoadControl(const IValueMetaObjectForm* metaForm, CMemoryReader& dataReader)
 {
 	//save meta version 
 	const version_identifier_t& version = dataReader.r_u32(); //reserved 
@@ -87,7 +87,7 @@ bool IValueFrame::LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& da
 	return true;
 }
 
-bool IValueFrame::SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter, bool copy_form)
+bool IValueFrame::SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWriter& dataWritter, bool copy_form)
 {
 	//save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
@@ -240,7 +240,7 @@ bool IValueFrame::HasQuickChoice() const {
 	else if (so != nullptr && so->GetObjectTypeCtor() == eCtorObjectType_object_meta_value) {
 		const IMetaValueTypeCtor* meta_so = dynamic_cast<const IMetaValueTypeCtor*>(so);
 		if (meta_so != nullptr) {
-			IMetaObjectRecordDataRef* metaObject = dynamic_cast<IMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
+			IValueMetaObjectRecordDataRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataRef*>(meta_so->GetMetaObject());
 			if (metaObject != nullptr)
 				return metaObject->HasQuickChoice();
 		}

@@ -3,8 +3,8 @@
 
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
-class BACKEND_API CMetaObjectDimension : public CMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectDimension);
+class BACKEND_API CValueMetaObjectDimension : public CValueMetaObjectAttribute {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectDimension);
 public:
 
 	//support icons

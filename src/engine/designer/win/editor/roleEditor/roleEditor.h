@@ -28,7 +28,7 @@ class CRoleEditor : public wxSplitterWindow {
 	wxTreeItemId m_treeINFORMATION_REGISTERS;
 	wxTreeItemId m_treeACCUMULATION_REGISTERS;
 
-	IMetaObject* m_metaRole;
+	IValueMetaObject* m_metaRole;
 
 	class wxTreeItemMetaData : public wxTreeItemData {
 		IAccessObject* m_metaObject; //тип элемента
@@ -65,14 +65,14 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		IMetaObject* metaObject) const {
+		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_roleCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
 		return m_roleCtrl->AppendItem(parent, metaObject->GetName(), imageIndex, imageIndex, new wxTreeItemMetaData(metaObject));
 	}
 
-	void AddInterfaceItem(IMetaObject* obj, const wxTreeItemId& item);
+	void AddInterfaceItem(IValueMetaObject* obj, const wxTreeItemId& item);
 
 	void InitRole();
 	void ClearRole();
@@ -92,7 +92,7 @@ public:
 
 	CRoleEditor(wxWindow* parent,
 		wxWindowID winid = wxID_ANY,
-		IMetaObject* metaObject = nullptr
+		IValueMetaObject* metaObject = nullptr
 	);
 
 	virtual ~CRoleEditor();

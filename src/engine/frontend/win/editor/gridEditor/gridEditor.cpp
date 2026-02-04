@@ -593,7 +593,7 @@ void CGridEditor::OnGridChange(wxGridExtEvent& event)
 {
 	if (m_document != nullptr)
 	{
-		IMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IMetaObjectSpreadsheet>();
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 		if (creator != nullptr) {
 
 			static CBackendSpreadSheetDocument spreadsheetDescription;

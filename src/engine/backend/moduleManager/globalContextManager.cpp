@@ -100,13 +100,13 @@ bool CValueGlobalContextManager::GetPropVal(const long lPropNum, CValue& pvarPro
 		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueGlobalContextStructureManager>(g_metaDataProcessorCLSID, m_metaData);
 		return true;
 	case enExternalDataProcessors:
-		pvarPropVal = CValue::CreateAndPrepareValueRef<CManagerDataObjectExternalDataProcessor>();
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueManagerDataObjectExternalDataProcessor>();
 		return true;
 	case enReports:
 		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueGlobalContextStructureManager>(g_metaReportCLSID, m_metaData);
 		return true;
 	case enExternalReports:
-		pvarPropVal = CValue::CreateAndPrepareValueRef<CManagerDataObjectExternalReport>();
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueManagerDataObjectExternalReport>();
 		return true;
 	case enInformationRegisters:
 		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueGlobalContextStructureManager>(g_metaInformationRegisterCLSID, m_metaData);

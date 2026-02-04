@@ -8,18 +8,18 @@
 #include "backend/metaData.h"
 #include "backend/moduleManager/moduleManager.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectDocument, IMetaObjectRecordDataMutableRef);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectDocument, IValueMetaObjectRecordDataMutableRef);
 
 //********************************************************************************************
 
-class CListDocumentDataObjectRef : public CListDataObjectRef {
+class CListDocumentDataObjectRef : public CValueListDataObjectRef {
 public:
-	CListDocumentDataObjectRef(CMetaObjectDocument* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false) :
-		CListDataObjectRef(metaObject, formType, choiceMode)
+	CListDocumentDataObjectRef(CValueMetaObjectDocument* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false) :
+		CValueListDataObjectRef(metaObject, formType, choiceMode)
 	{
-		IListDataObject::AppendSort(metaObject->GetDocumentNumber(), true, false);
-		IListDataObject::AppendSort(metaObject->GetDocumentDate(), true, true);
-		IListDataObject::AppendSort(metaObject->GetDataReference(), true, true, true);
+		IValueListDataObject::AppendSort(metaObject->GetDocumentNumber(), true, false);
+		IValueListDataObject::AppendSort(metaObject->GetDocumentDate(), true, true);
+		IValueListDataObject::AppendSort(metaObject->GetDataReference(), true, true, true);
 	}
 };
 
@@ -27,7 +27,7 @@ public:
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CMetaObjectDocument::CMetaObjectDocument() : IMetaObjectRecordDataMutableRef()
+CValueMetaObjectDocument::CValueMetaObjectDocument() : IValueMetaObjectRecordDataMutableRef()
 {
 	//set default proc
 	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel", "writeMode", "postingMode" });
@@ -44,14 +44,14 @@ CMetaObjectDocument::CMetaObjectDocument() : IMetaObjectRecordDataMutableRef()
 	(*m_propertyModuleObject)->SetDefaultProcedure("setNewNumber", eContentHelper::eProcedureHelper, { "prefix", "standartProcessing" });
 }
 
-CMetaObjectDocument::~CMetaObjectDocument()
+CValueMetaObjectDocument::~CValueMetaObjectDocument()
 {
 	//wxDELETE((*m_propertyAttributeNumber));
 	//wxDELETE((*m_propertyAttributeDate));
 	//wxDELETE((*m_propertyAttributePosted));
 }
 
-IMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t& id) const
+IValueMetaObjectForm* CValueMetaObjectDocument::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormObject && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
@@ -68,30 +68,30 @@ IMetaObjectForm* CMetaObjectDocument::GetDefaultFormByID(const form_identifier_t
 
 #include "documentManager.h"
 
-IManagerDataObject* CMetaObjectDocument::CreateManagerDataObjectValue()
+IValueManagerDataObject* CValueMetaObjectDocument::CreateManagerDataObjectValue()
 {
-	return CValue::CreateAndPrepareValueRef<CManagerDataObjectDocument>(this);
+	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectDocument>(this);
 }
 
 #include "backend/appData.h"
 
-IRecordDataObjectRef* CMetaObjectDocument::CreateObjectRefValue(const CGuid& objGuid)
+IValueRecordDataObjectRef* CValueMetaObjectDocument::CreateObjectRefValue(const CGuid& objGuid)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	CRecordDataObjectDocument* pDataRef = nullptr;
+	CValueRecordDataObjectDocument* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef))
-			return CValue::CreateAndPrepareValueRef<CRecordDataObjectDocument>(this, objGuid);
+			return CValue::CreateAndPrepareValueRef<CValueRecordDataObjectDocument>(this, objGuid);
 	}
 	else {
-		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectDocument>(this, objGuid);
+		pDataRef = CValue::CreateAndPrepareValueRef<CValueRecordDataObjectDocument>(this, objGuid);
 	}
 
 	return pDataRef;
 }
 
-ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* metaObject)
+ISourceDataObject* CValueMetaObjectDocument::CreateSourceObject(IValueMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -108,38 +108,38 @@ ISourceDataObject* CMetaObjectDocument::CreateSourceObject(IMetaObjectForm* meta
 }
 
 #pragma region _form_builder_h_
-IBackendValueForm* CMetaObjectDocument::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectDocument::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectDocument::eFormObject,
+		CValueMetaObjectDocument::eFormObject,
 		ownerControl, CreateObjectValue(),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectDocument::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectDocument::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectDocument::eFormList,
-		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormList),
+		CValueMetaObjectDocument::eFormList,
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CValueMetaObjectDocument::eFormList),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectDocument::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectDocument::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectDocument::eFormSelect,
-		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CMetaObjectDocument::eFormSelect, true),
+		CValueMetaObjectDocument::eFormSelect,
+		ownerControl, CValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, CValueMetaObjectDocument::eFormSelect, true),
 		formGuid
 	);
 }
 #pragma endregion
 
-wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objValue) const
+wxString CValueMetaObjectDocument::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	CValue vDate, vNumber;
 	if (!objValue->GetValueByMetaID((*m_propertyAttributeDate)->GetMetaID(), vDate))
@@ -153,7 +153,7 @@ wxString CMetaObjectDocument::GetDataPresentation(const IValueDataObject* objVal
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool CMetaObjectDocument::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectDocument::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
 	(*m_propertyAttributeNumber)->LoadMeta(dataReader);
@@ -172,10 +172,10 @@ bool CMetaObjectDocument::LoadData(CMemoryReader& dataReader)
 	if (!m_propertyRegisterRecord->LoadData(dataReader))
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::LoadData(dataReader);
+	return IValueMetaObjectRecordDataMutableRef::LoadData(dataReader);
 }
 
-bool CMetaObjectDocument::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectDocument::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
 	(*m_propertyAttributeNumber)->SaveMeta(dataWritter);
@@ -195,16 +195,16 @@ bool CMetaObjectDocument::SaveData(CMemoryWriter& dataWritter)
 		return false;
 
 	//create or update table:
-	return IMetaObjectRecordDataMutableRef::SaveData(dataWritter);
+	return IValueMetaObjectRecordDataMutableRef::SaveData(dataWritter);
 }
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool CMetaObjectDocument::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectDocument::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
+	if (!IValueMetaObjectRecordDataMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (*m_propertyAttributeNumber)->OnCreateMetaObject(metaData, flags) &&
@@ -214,7 +214,7 @@ bool CMetaObjectDocument::OnCreateMetaObject(IMetaData* metaData, int flags)
 		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyAttributeNumber)->OnLoadMetaObject(metaData))
 		return false;
@@ -231,10 +231,10 @@ bool CMetaObjectDocument::OnLoadMetaObject(IMetaData* metaData)
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
+	return IValueMetaObjectRecordDataMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectDocument::OnSaveMetaObject(int flags)
+bool CValueMetaObjectDocument::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyAttributeNumber)->OnSaveMetaObject(flags))
 		return false;
@@ -251,10 +251,10 @@ bool CMetaObjectDocument::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::OnSaveMetaObject(flags);
+	return IValueMetaObjectRecordDataMutableRef::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectDocument::OnDeleteMetaObject()
+bool CValueMetaObjectDocument::OnDeleteMetaObject()
 {
 	if (!(*m_propertyAttributeNumber)->OnDeleteMetaObject())
 		return false;
@@ -271,16 +271,16 @@ bool CMetaObjectDocument::OnDeleteMetaObject()
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataMutableRef::OnDeleteMetaObject();
+	return IValueMetaObjectRecordDataMutableRef::OnDeleteMetaObject();
 }
 
-bool CMetaObjectDocument::OnReloadMetaObject()
+bool CValueMetaObjectDocument::OnReloadMetaObject()
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		CRecordDataObjectDocument* pDataRef = nullptr;
+		CValueRecordDataObjectDocument* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return true;
 		}
@@ -299,9 +299,9 @@ bool CMetaObjectDocument::OnReloadMetaObject()
 
 #include "backend/objCtor.h"
 
-bool CMetaObjectDocument::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!(*m_propertyAttributeNumber)->OnBeforeRunMetaObject(flags))
@@ -320,10 +320,10 @@ bool CMetaObjectDocument::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	registerSelection();
-	return IMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectRecordDataMutableRef::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectDocument::OnAfterRunMetaObject(int flags)
 {
 	if (!(*m_propertyAttributeNumber)->OnAfterRunMetaObject(flags))
 		return false;
@@ -340,14 +340,14 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		const IMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
+		const IValueMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IValueMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
 		if (registerData != nullptr) {
-			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
+			CValueMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
 			wxASSERT(infoRecorder);
 			infoRecorder->GetTypeDesc().AppendMetaType((*m_propertyAttributeReference)->GetTypeDesc());
 		}
@@ -355,17 +355,17 @@ bool CMetaObjectDocument::OnAfterRunMetaObject(int flags)
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags)) {
+		if (IValueMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags)) {
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue());
 		}
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags);
+	return IValueMetaObjectRecordDataMutableRef::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectDocument::OnBeforeCloseMetaObject()
+bool CValueMetaObjectDocument::OnBeforeCloseMetaObject()
 {
 	if (!(*m_propertyAttributeNumber)->OnBeforeCloseMetaObject())
 		return false;
@@ -382,14 +382,14 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	const CMetaDescription& metaDesc = m_propertyRegisterRecord->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		const IMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
+		const IValueMetaObjectRegisterData* registerData = m_metaData->FindAnyObjectByFilter<IValueMetaObjectRegisterData>(metaDesc.GetByIdx(idx));
 		if (registerData != nullptr) {
-			CMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
+			CValueMetaObjectAttributePredefined* infoRecorder = registerData->GetRegisterRecorder();
 			wxASSERT(infoRecorder);
 			infoRecorder->GetTypeDesc().ClearMetaType((*m_propertyAttributeReference)->GetTypeDesc());
 		}
@@ -397,17 +397,17 @@ bool CMetaObjectDocument::OnBeforeCloseMetaObject()
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()) {
+		if (IValueMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject()) {
 			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 		}
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject();
+	return IValueMetaObjectRecordDataMutableRef::OnBeforeCloseMetaObject();
 }
 
-bool CMetaObjectDocument::OnAfterCloseMetaObject()
+bool CValueMetaObjectDocument::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyAttributeNumber)->OnAfterCloseMetaObject())
 		return false;
@@ -426,45 +426,45 @@ bool CMetaObjectDocument::OnAfterCloseMetaObject()
 
 	unregisterSelection();
 
-	return IMetaObjectRecordDataMutableRef::OnAfterCloseMetaObject();
+	return IValueMetaObjectRecordDataMutableRef::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                             form events                             *
 //***********************************************************************
 
-void CMetaObjectDocument::OnCreateFormObject(IMetaObjectForm* metaForm)
+void CValueMetaObjectDocument::OnCreateFormObject(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormObject
+	if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormObject
 		&& m_propertyDefFormObject->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormList
+	else if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
 }
 
-void CMetaObjectDocument::OnRemoveMetaForm(IMetaObjectForm* metaForm)
+void CValueMetaObjectDocument::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormObject
+	if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormObject
 		&& m_propertyDefFormObject->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormList
+	else if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectDocument::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectDocument::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
@@ -475,5 +475,5 @@ void CMetaObjectDocument::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectDocument, "document", g_metaDocumentCLSID);
-SYSTEM_TYPE_REGISTER(CRecordDataObjectDocument::CRecorderRegisterDocument, "recordRegister", string_to_clsid("VL_RECR"));
+METADATA_TYPE_REGISTER(CValueMetaObjectDocument, "document", g_metaDocumentCLSID);
+SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "recordRegister", string_to_clsid("VL_RECR"));

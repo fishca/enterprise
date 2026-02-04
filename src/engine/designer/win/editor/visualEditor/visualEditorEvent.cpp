@@ -22,7 +22,7 @@ void CVisualEditorNotebook::CVisualEditor::NotifyEditorLoaded()
 
 void CVisualEditorNotebook::CVisualEditor::NotifyEditorSaved()
 {
-	IMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IMetaObjectForm>();
+	IValueMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectForm>();
 	wxASSERT(creator);
 	// Create a std::string and copy your document data in to the string    
 	if (creator != nullptr) creator->SaveFormData(m_valueForm);	

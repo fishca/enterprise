@@ -3,9 +3,9 @@
 
 #include "informationRegister.h"
 
-class CManagerDataObjectInformationRegister :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectInformationRegister);
+class CValueManagerDataObjectInformationRegister :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister);
 public:
 
 	CValue Get(const CValue& cFilter = CValue());
@@ -17,11 +17,11 @@ public:
 	CValue SliceFirst(const CValue& cPeriod, const CValue& cFilter = CValue());
 	CValue SliceLast(const CValue& cPeriod, const CValue& cFilter = CValue());
 
-	CManagerDataObjectInformationRegister(CMetaObjectInformationRegister* metaObject = nullptr);
-	virtual ~CManagerDataObjectInformationRegister();
+	CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectInformationRegister();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectInformationRegister* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectInformationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
@@ -39,7 +39,7 @@ public:
 
 protected:
 	//methods 
-	CMetaObjectInformationRegister* m_metaObject;
+	CValueMetaObjectInformationRegister* m_metaObject;
 	CMethodHelper* m_methodHelper;
 };
 

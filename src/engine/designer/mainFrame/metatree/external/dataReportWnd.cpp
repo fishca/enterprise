@@ -107,8 +107,8 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 	bSizerMain->Add(sbSizerTree, 1, wxEXPAND, 5);
 
 	CMetaDataReport* metaData = ((CReportFileDocument*)docParent)->GetMetaData();
-	CMetaObjectReport* commonMeta = metaData->GetReport();
-	CMetaObjectModule* moduleMeta = commonMeta->GetModuleObject();
+	CValueMetaObjectReport* commonMeta = metaData->GetReport();
+	CValueMetaObjectModule* moduleMeta = commonMeta->GetModuleObject();
 
 	m_buttonModule = new wxButton(this, wxID_ANY, _("Open module"));
 	m_buttonModule->Connect(wxEVT_BUTTON, wxCommandEventHandler(CDataReportTree::OnButtonModuleClicked), nullptr, this);
@@ -158,7 +158,7 @@ void CDataReportTree::OnEditCaptionName(wxCommandEvent& event)
 	m_docParent->SetFilename(systemName);
 	m_docParent->SetTitle(systemName);
 
-	CMetaObjectReport* report = m_metaData->GetReport();
+	CValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
 	report->SetName(systemName);
 	report->SetSynonym(synonym);
@@ -174,7 +174,7 @@ void CDataReportTree::OnEditCaptionName(wxCommandEvent& event)
 
 void CDataReportTree::OnEditCaptionSynonym(wxCommandEvent& event)
 {
-	CMetaObjectReport* report = m_metaData->GetReport();
+	CValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
 	report->SetSynonym(m_synonymValue->GetValue());
 
@@ -185,7 +185,7 @@ void CDataReportTree::OnEditCaptionSynonym(wxCommandEvent& event)
 
 void CDataReportTree::OnEditCaptionComment(wxCommandEvent& event)
 {
-	CMetaObjectReport* report = m_metaData->GetReport();
+	CValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
 	report->SetComment(m_commentValue->GetValue());
 
@@ -196,7 +196,7 @@ void CDataReportTree::OnEditCaptionComment(wxCommandEvent& event)
 
 void CDataReportTree::OnChoiceDefForm(wxCommandEvent& event)
 {
-	CMetaObjectReport* report = m_metaData->GetReport();
+	CValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
 
 	const meta_identifier_t id = reinterpret_cast<meta_identifier_t>(event.GetClientData());
@@ -214,7 +214,7 @@ void CDataReportTree::OnChoiceDefForm(wxCommandEvent& event)
 
 void CDataReportTree::OnButtonModuleClicked(wxCommandEvent& event)
 {
-	CMetaObjectReport* report = m_metaData->GetReport();
+	CValueMetaObjectReport* report = m_metaData->GetReport();
 	wxASSERT(report);
 	OpenFormMDI(report->GetModuleObject());
 }

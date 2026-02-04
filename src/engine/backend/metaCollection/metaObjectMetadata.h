@@ -14,8 +14,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API CMetaObjectConfiguration : public IMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectConfiguration);
+class BACKEND_API CValueMetaObjectConfiguration : public IValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectConfiguration);
 
 	enum
 	{
@@ -69,8 +69,8 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	CMetaObjectConfiguration();
-	virtual ~CMetaObjectConfiguration();
+	CValueMetaObjectConfiguration();
+	virtual ~CValueMetaObjectConfiguration();
 
 	virtual wxString GetFullName() const { return configurationDefaultName; }
 	virtual wxString GetModuleName() const { return configurationDefaultName; }
@@ -103,7 +103,7 @@ public:
 
 public:
 
-	virtual CMetaObjectModule* GetModuleObject() const { return m_propertyModuleConfiguration->GetMetaObject(); }
+	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleConfiguration->GetMetaObject(); }
 
 protected:
 
@@ -114,7 +114,7 @@ protected:
 private:
 
 	bool FillRoleList(CPropertyList* prop) {
-		std::vector<IMetaObject*> array;
+		std::vector<IValueMetaObject*> array;
 		if (FillArrayObjectByFilter(array, { g_metaRoleCLSID })) {
 			for (const auto child : array) {
 				prop->AppendItem(
@@ -129,7 +129,7 @@ private:
 	}
 
 	bool FillLanguageList(CPropertyList* prop) {
-		std::vector<IMetaObject*> array;
+		std::vector<IValueMetaObject*> array;
 		if (FillArrayObjectByFilter(array, { g_metaLanguageCLSID })) {
 			for (const auto child : array) {
 				prop->AppendItem(
@@ -143,22 +143,22 @@ private:
 		return false;
 	}
 
-	CPropertyInnerModule<CMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CMetaObjectModule>>(m_categorySecondary, IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectModule>(wxT("configurationModule"), _("Configuration module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("configurationModule"), _("Configuration module")));
 
 	CPropertyCategory* m_propertyPresetValues = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultRole"), _("Default role"), _("Default configuration role"), &CMetaObjectConfiguration::FillRoleList);
-	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultLanguage"), _("Default language"), _("Default configuration language"), &CMetaObjectConfiguration::FillLanguageList);
+	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultRole"), _("Default role"), _("Default configuration role"), &CValueMetaObjectConfiguration::FillRoleList);
+	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("defaultLanguage"), _("Default language"), _("Default configuration language"), &CValueMetaObjectConfiguration::FillLanguageList);
 
 	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("compatibility"), _("Compatibility"));
 	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("version"), _("Version"), version_oes_last);
 
 #pragma region role 
-	CRole* m_roleAdministration = IMetaObject::CreateRole(wxT("administration"), _("Administration"));
-	CRole* m_roleDataAdministration = IMetaObject::CreateRole(wxT("dataAdministration"), _("Data administration"));
-	CRole* m_roleUpdateDatabaseConfiguration = IMetaObject::CreateRole(wxT("updateDatabaseConfiguration"), _("Update database configuration"));
-	CRole* m_roleActiveUsers = IMetaObject::CreateRole(wxT("activeUsers"), _("Active users"));
-	CRole* m_roleExclusiveMode = IMetaObject::CreateRole(wxT("exclusiveMode"), _("Exclusive mode"));
-	CRole* m_roleModeAllFunction = IMetaObject::CreateRole(wxT("modeAllFunctions"), _("Mode \"All functions\""));
+	CRole* m_roleAdministration = IValueMetaObject::CreateRole(wxT("administration"), _("Administration"));
+	CRole* m_roleDataAdministration = IValueMetaObject::CreateRole(wxT("dataAdministration"), _("Data administration"));
+	CRole* m_roleUpdateDatabaseConfiguration = IValueMetaObject::CreateRole(wxT("updateDatabaseConfiguration"), _("Update database configuration"));
+	CRole* m_roleActiveUsers = IValueMetaObject::CreateRole(wxT("activeUsers"), _("Active users"));
+	CRole* m_roleExclusiveMode = IValueMetaObject::CreateRole(wxT("exclusiveMode"), _("Exclusive mode"));
+	CRole* m_roleModeAllFunction = IValueMetaObject::CreateRole(wxT("modeAllFunctions"), _("Mode \"All functions\""));
 #pragma endregion
 };
 

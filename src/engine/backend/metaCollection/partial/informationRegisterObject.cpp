@@ -8,7 +8,7 @@
 
 #include "backend/backend_mainFrame.h"
 
-bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clearTable)
+bool CValueRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clearTable)
 {
 	if (!appData->DesignerMode())
 	{
@@ -65,7 +65,7 @@ bool CRecordSetObjectInformationRegister::WriteRecordSet(bool replace, bool clea
 	return true;
 }
 
-bool CRecordSetObjectInformationRegister::DeleteRecordSet()
+bool CValueRecordSetObjectInformationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
@@ -124,14 +124,14 @@ bool CRecordSetObjectInformationRegister::DeleteRecordSet()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CSourceExplorer CRecordManagerObjectInformationRegister::GetSourceExplorer() const
+CSourceExplorer CValueRecordManagerObjectInformationRegister::GetSourceExplorer() const
 {
 	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
 
-	CMetaObjectInformationRegister* metaRef = nullptr;
+	CValueMetaObjectInformationRegister* metaRef = nullptr;
 
 	if (m_metaObject->ConvertToValue(metaRef)) {
 		if (metaRef->GetPeriodicity() != ePeriodicity::eNonPeriodic) {
@@ -155,7 +155,7 @@ CSourceExplorer CRecordManagerObjectInformationRegister::GetSourceExplorer() con
 }
 
 #pragma region _form_builder_h_
-void CRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+void CValueRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -174,7 +174,7 @@ void CRecordManagerObjectInformationRegister::ShowFormValue(const wxString& strF
 	}
 }
 
-IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
+IBackendValueForm* CValueRecordManagerObjectInformationRegister::GetFormValue(const wxString& strFormName, IBackendControlFrame* ownerControl)
 {
 	IBackendValueForm* const foundedForm = GetForm();
 
@@ -182,7 +182,7 @@ IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const w
 
 		IBackendValueForm* createdForm = m_metaObject->CreateAndBuildForm(
 			strFormName,
-			CMetaObjectInformationRegister::eFormRecord,
+			CValueMetaObjectInformationRegister::eFormRecord,
 			ownerControl,
 			this,
 			m_objGuid
@@ -198,7 +198,7 @@ IBackendValueForm* CRecordManagerObjectInformationRegister::GetFormValue(const w
 }
 #pragma endregion
 
-bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
+bool CValueRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 {
 	if (!appData->DesignerMode())
 	{
@@ -213,7 +213,7 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 			{
 				db_query_active_transaction.BeginTransaction();
 
-				bool newObject = CRecordManagerObjectInformationRegister::IsNewObject();
+				bool newObject = CValueRecordManagerObjectInformationRegister::IsNewObject();
 
 				if (!SaveData()) {
 					db_query_active_transaction.RollBackTransaction();
@@ -238,7 +238,7 @@ bool CRecordManagerObjectInformationRegister::WriteRegister(bool replace)
 	return true;
 }
 
-bool CRecordManagerObjectInformationRegister::DeleteRegister()
+bool CValueRecordManagerObjectInformationRegister::DeleteRegister()
 {
 	if (!appData->DesignerMode())
 	{
@@ -309,7 +309,7 @@ enum prop
 //*                              Support methods                             *
 //****************************************************************************
 
-void CRecordSetObjectInformationRegister::PrepareNames() const
+void CValueRecordSetObjectInformationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -328,7 +328,7 @@ void CRecordSetObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
-void CRecordManagerObjectInformationRegister::PrepareNames() const
+void CValueRecordManagerObjectInformationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -357,14 +357,14 @@ void CRecordManagerObjectInformationRegister::PrepareNames() const
 	}
 }
 
-bool CRecordManagerObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)       //setting attribute
+bool CValueRecordManagerObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)       //setting attribute
 {
 	return SetValueByMetaID(
 		m_methodHelper->GetPropData(lPropNum), varPropVal
 	);
 }
 
-bool CRecordManagerObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueRecordManagerObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	return GetValueByMetaID(
 		m_methodHelper->GetPropData(lPropNum), pvarPropVal
@@ -373,12 +373,12 @@ bool CRecordManagerObjectInformationRegister::GetPropVal(const long lPropNum, CV
 
 //////////////////////////////////////////////////////////////////////////
 
-bool CRecordSetObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueRecordSetObjectInformationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool CRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -393,7 +393,7 @@ bool CRecordSetObjectInformationRegister::GetPropVal(const long lPropNum, CValue
 	return false;
 }
 
-bool CRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -401,7 +401,7 @@ bool CRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CVal
 	switch (lMethodNum)
 	{
 	case recordSet::enAdd:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case recordSet::enCount:
 		pvarRetValue = (unsigned int)GetRowCount();
@@ -438,7 +438,7 @@ bool CRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum, CVal
 	return false;
 }
 
-bool CRecordManagerObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueRecordManagerObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{

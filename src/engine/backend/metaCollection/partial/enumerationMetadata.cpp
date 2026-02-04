@@ -7,7 +7,7 @@
 #include "backend/metaData.h"
 #include "list/objectList.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectEnumeration, IMetaObjectRecordDataEnumRef)
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectEnumeration, IValueMetaObjectRecordDataEnumRef)
 
 //********************************************************************************************
 
@@ -18,16 +18,16 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectEnumeration, IMetaObjectRecordDataEnumRef)
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CMetaObjectEnumeration::CMetaObjectEnumeration() : IMetaObjectRecordDataEnumRef()
+CValueMetaObjectEnumeration::CValueMetaObjectEnumeration() : IValueMetaObjectRecordDataEnumRef()
 {
 	m_propertyQuickChoice->SetValue(true);
 }
 
-CMetaObjectEnumeration::~CMetaObjectEnumeration()
+CValueMetaObjectEnumeration::~CValueMetaObjectEnumeration()
 {
 }
 
-IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id) const
+IValueMetaObjectForm* CValueMetaObjectEnumeration::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormList && m_propertyDefFormList->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormList->GetValueAsInteger());
@@ -41,47 +41,47 @@ IMetaObjectForm* CMetaObjectEnumeration::GetDefaultFormByID(const form_identifie
 
 #include "enumerationManager.h"
 
-IManagerDataObject* CMetaObjectEnumeration::CreateManagerDataObjectValue()
+IValueManagerDataObject* CValueMetaObjectEnumeration::CreateManagerDataObjectValue()
 {
-	return CValue::CreateAndPrepareValueRef<CManagerDataObjectEnumeration>(this);
+	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectEnumeration>(this);
 }
 
-ISourceDataObject* CMetaObjectEnumeration::CreateSourceObject(IMetaObjectForm* metaObject)
+ISourceDataObject* CValueMetaObjectEnumeration::CreateSourceObject(IValueMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
 	case eFormList: 
-		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, metaObject->GetTypeForm());
+		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, metaObject->GetTypeForm());
 	case eFormSelect: 
-		return CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
+		return CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, metaObject->GetTypeForm(), true);
 	}
 
 	return nullptr;
 }
 
 #pragma region _form_builder_h_
-IBackendValueForm* CMetaObjectEnumeration::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectEnumeration::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectEnumeration::eFormList,
-		ownerControl, CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormList),
+		CValueMetaObjectEnumeration::eFormList,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, CValueMetaObjectEnumeration::eFormList),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectEnumeration::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectEnumeration::eFormSelect,
-		ownerControl, CValue::CreateAndPrepareValueRef<CListDataObjectEnumRef>(this, CMetaObjectEnumeration::eFormSelect, true),
+		CValueMetaObjectEnumeration::eFormSelect,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueListDataObjectEnumRef>(this, CValueMetaObjectEnumeration::eFormSelect, true),
 		formGuid
 	);
 }
 #pragma endregion
 
-wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
+wxString CValueMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	for (auto obj : GetEnumObjectArray()) {
 		if (objValue->GetGuid() == obj->GetGuid()) {
@@ -95,7 +95,7 @@ wxString CMetaObjectEnumeration::GetDataPresentation(const IValueDataObject* obj
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool CMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
 {
 	//Load object module
 	(*m_propertyModuleManager)->LoadMeta(dataReader);
@@ -104,10 +104,10 @@ bool CMetaObjectEnumeration::LoadData(CMemoryReader& dataReader)
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
-	return IMetaObjectRecordDataEnumRef::LoadData(dataReader);
+	return IValueMetaObjectRecordDataEnumRef::LoadData(dataReader);
 }
 
-bool CMetaObjectEnumeration::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectEnumeration::SaveData(CMemoryWriter& dataWritter)
 {
 	//Save object module
 	(*m_propertyModuleManager)->SaveMeta(dataWritter);
@@ -117,30 +117,30 @@ bool CMetaObjectEnumeration::SaveData(CMemoryWriter& dataWritter)
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormSelect->GetValueAsInteger()));
 
 	//create or update table:
-	return IMetaObjectRecordDataEnumRef::SaveData(dataWritter);
+	return IValueMetaObjectRecordDataEnumRef::SaveData(dataWritter);
 }
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool CMetaObjectEnumeration::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectEnumeration::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
+	if (!IValueMetaObjectRecordDataEnumRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectEnumeration::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
+	return IValueMetaObjectRecordDataEnumRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectEnumeration::OnSaveMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
@@ -152,80 +152,80 @@ bool CMetaObjectEnumeration::OnSaveMetaObject(int flags)
 	}
 #endif 
 
-	return IMetaObjectRecordDataEnumRef::OnSaveMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectEnumeration::OnDeleteMetaObject()
+bool CValueMetaObjectEnumeration::OnDeleteMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnDeleteMetaObject();
 }
 
-bool CMetaObjectEnumeration::OnReloadMetaObject()
+bool CValueMetaObjectEnumeration::OnReloadMetaObject()
 {
 	return true;
 }
 
-bool CMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectEnumeration::OnAfterRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
+	return IValueMetaObjectRecordDataEnumRef::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectEnumeration::OnBeforeCloseMetaObject()
+bool CValueMetaObjectEnumeration::OnBeforeCloseMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnBeforeCloseMetaObject();
 }
 
-bool CMetaObjectEnumeration::OnAfterCloseMetaObject()
+bool CValueMetaObjectEnumeration::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();
+	return IValueMetaObjectRecordDataEnumRef::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                             form events                             *
 //***********************************************************************
 
-void CMetaObjectEnumeration::OnCreateFormObject(IMetaObjectForm* metaForm)
+void CValueMetaObjectEnumeration::OnCreateFormObject(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectEnumeration::eFormList
+	if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectEnumeration::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
 }
 
-void CMetaObjectEnumeration::OnRemoveMetaForm(IMetaObjectForm* metaForm)
+void CValueMetaObjectEnumeration::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectEnumeration::eFormList
+	if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectEnumeration::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectEnumeration::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
@@ -236,4 +236,4 @@ void CMetaObjectEnumeration::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectEnumeration, "enumeration", g_metaEnumerationCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectEnumeration, "enumeration", g_metaEnumerationCLSID);

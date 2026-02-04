@@ -8,13 +8,13 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTable, IValueTable);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory, IValueTable);
 
 //////////////////////////////////////////////////////////////////////
-CValue::CMethodHelper CValueTable::m_methodHelper;
+CValue::CMethodHelper CValueTableMemory::m_methodHelper;
 //////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueTable::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewItem CValueTableMemory::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
@@ -30,26 +30,26 @@ wxDataViewItem CValueTable::FindRowValue(const CValue& varValue, const wxString&
 	return wxDataViewItem(nullptr);
 }
 
-wxDataViewItem CValueTable::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewItem CValueTableMemory::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	return wxDataViewItem(nullptr);
 }
 
-CValueTable::CValueTable() : IValueTable(),
+CValueTableMemory::CValueTableMemory() : IValueTable(),
 m_tableColumnCollection(CValue::CreateAndPrepareValueRef<CValueTableColumnCollection>(this))
 {
 }
 
-CValueTable::CValueTable(const CValueTable& valueTable) : IValueTable(),
+CValueTableMemory::CValueTableMemory(const CValueTableMemory& valueTable) : IValueTable(),
 m_tableColumnCollection(valueTable.m_tableColumnCollection)
 {
 }
 
-CValueTable::~CValueTable()
+CValueTableMemory::~CValueTableMemory()
 {
 }
 
-void CValueTable::PrepareNames() const
+void CValueTableMemory::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -67,7 +67,7 @@ void CValueTable::PrepareNames() const
 		m_tableColumnCollection->PrepareNames();
 }
 
-bool CValueTable::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueTableMemory::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -79,7 +79,7 @@ bool CValueTable::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	return false;
 }
 
-bool CValueTable::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueTableMemory::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -130,7 +130,7 @@ bool CValueTable::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue
 
 #include "backend/appData.h"
 
-bool CValueTable::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool CValueTableMemory::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 {
 	const long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
@@ -145,21 +145,21 @@ bool CValueTable::GetAt(const CValue& varKeyValue, CValue& pvarValue)
 //               CValueTableColumnCollection                        //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTable::CValueTableColumnCollection, IValueTable::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory::CValueTableColumnCollection, IValueTable::IValueModelColumnCollection);
 
-CValueTable::CValueTableColumnCollection::CValueTableColumnCollection(CValueTable* ownerTable) : IValueModelColumnCollection(),
+CValueTableMemory::CValueTableColumnCollection::CValueTableColumnCollection(CValueTableMemory* ownerTable) : IValueModelColumnCollection(),
 m_ownerTable(ownerTable),
 m_methodHelper(new CMethodHelper())
 {
 }
 
-CValueTable::CValueTableColumnCollection::~CValueTableColumnCollection() {
+CValueTableMemory::CValueTableColumnCollection::~CValueTableColumnCollection() {
 	wxDELETE(m_methodHelper);
 }
 
 //работа с массивом как с агрегатным объектом
 //перечисление строковых ключей
-void CValueTable::CValueTableColumnCollection::PrepareNames() const
+void CValueTableMemory::CValueTableColumnCollection::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -169,7 +169,7 @@ void CValueTable::CValueTableColumnCollection::PrepareNames() const
 
 #include "valueType.h"
 
-bool CValueTable::CValueTableColumnCollection::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool CValueTableMemory::CValueTableColumnCollection::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -190,7 +190,7 @@ bool CValueTable::CValueTableColumnCollection::CallAsProc(const long lMethodNum,
 	return false;
 }
 
-bool CValueTable::CValueTableColumnCollection::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueTableMemory::CValueTableColumnCollection::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -214,12 +214,12 @@ bool CValueTable::CValueTableColumnCollection::CallAsFunc(const long lMethodNum,
 	return false;
 }
 
-bool CValueTable::CValueTableColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool CValueTableMemory::CValueTableColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool CValueTable::CValueTableColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool CValueTableMemory::CValueTableColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
@@ -236,16 +236,16 @@ bool CValueTable::CValueTableColumnCollection::GetAt(const CValue& varKeyValue, 
 //               CValueTableColumnInfo                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTable::CValueTableColumnCollection::CValueTableColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
 
-CValueTable::CValueTableColumnCollection::CValueTableColumnInfo::CValueTableColumnInfo() : IValueModelColumnInfo() {
+CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo::CValueTableColumnInfo() : IValueModelColumnInfo() {
 }
 
-CValueTable::CValueTableColumnCollection::CValueTableColumnInfo::CValueTableColumnInfo(unsigned int colID, const wxString& colName, const CTypeDescription& typeDescription, const wxString& caption, int width) :
+CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo::CValueTableColumnInfo(unsigned int colID, const wxString& colName, const CTypeDescription& typeDescription, const wxString& caption, int width) :
 	IValueModelColumnInfo(), m_columnID(colID), m_columnName(colName), m_columnType(typeDescription), m_columnCaption(caption), m_columnWidth(width) {
 }
 
-CValueTable::CValueTableColumnCollection::CValueTableColumnInfo::~CValueTableColumnInfo() {
+CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo::~CValueTableColumnInfo() {
 	wxDELETE(m_methodHelper);
 }
 
@@ -253,17 +253,17 @@ CValueTable::CValueTableColumnCollection::CValueTableColumnInfo::~CValueTableCol
 //               CValueTableReturnLine                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTable::CValueTableReturnLine, IValueTable::IValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory::CValueTableReturnLine, IValueTable::IValueModelReturnLine);
 
-CValueTable::CValueTableReturnLine::CValueTableReturnLine(CValueTable* ownerTable, const wxDataViewItem& line) :
+CValueTableMemory::CValueTableReturnLine::CValueTableReturnLine(CValueTableMemory* ownerTable, const wxDataViewItem& line) :
 	IValueModelReturnLine(line), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable) {
 }
 
-CValueTable::CValueTableReturnLine::~CValueTableReturnLine() {
+CValueTableMemory::CValueTableReturnLine::~CValueTableReturnLine() {
 	wxDELETE(m_methodHelper);
 }
 
-void CValueTable::CValueTableReturnLine::PrepareNames() const
+void CValueTableMemory::CValueTableReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	for (auto& colInfo : m_ownerTable->m_tableColumnCollection->m_listColumnInfo) {
@@ -275,7 +275,7 @@ void CValueTable::CValueTableReturnLine::PrepareNames() const
 	}
 }
 
-bool CValueTable::CValueTableReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueTableMemory::CValueTableReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -285,7 +285,7 @@ bool CValueTable::CValueTableReturnLine::SetPropVal(const long lPropNum, const C
 	);
 }
 
-bool CValueTable::CValueTableReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueTableMemory::CValueTableReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -297,7 +297,7 @@ bool CValueTable::CValueTableReturnLine::GetPropVal(const long lPropNum, CValue&
 
 //**********************************************************************
 
-long CValueTable::AppendRow(unsigned int before)
+long CValueTableMemory::AppendRow(unsigned int before)
 {
 	wxValueTableRow* rowData = new wxValueTableRow();
 	for (auto& colData : m_tableColumnCollection->m_listColumnInfo) {
@@ -309,12 +309,12 @@ long CValueTable::AppendRow(unsigned int before)
 	return IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 }
 
-void CValueTable::EditRow()
+void CValueTableMemory::EditRow()
 {
 	IValueTable::RowValueStartEdit(GetSelection());
 }
 
-void CValueTable::CopyRow()
+void CValueTableMemory::CopyRow()
 {
 	wxDataViewItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
@@ -337,7 +337,7 @@ void CValueTable::CopyRow()
 	}
 }
 
-void CValueTable::DeleteRow()
+void CValueTableMemory::DeleteRow()
 {
 	wxDataViewItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
@@ -349,7 +349,7 @@ void CValueTable::DeleteRow()
 		IValueTable::Remove(node);
 }
 
-void CValueTable::Clear()
+void CValueTableMemory::Clear()
 {
 	if (CBackendException::IsEvalMode())
 		return;
@@ -360,8 +360,8 @@ void CValueTable::Clear()
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueTable, "table", g_valueTableCLSID);
+VALUE_TYPE_REGISTER(CValueTableMemory, "table", g_valueTableCLSID);
 
-SYSTEM_TYPE_REGISTER(CValueTable::CValueTableColumnCollection, "tableValueColumn", string_to_clsid("VL_TVCLM"));
-SYSTEM_TYPE_REGISTER(CValueTable::CValueTableColumnCollection::CValueTableColumnInfo, "tableValueColumnInfo", string_to_clsid("VL_TVCLI"));
-SYSTEM_TYPE_REGISTER(CValueTable::CValueTableReturnLine, "tableValueRow", string_to_clsid("VL_TVROW"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection, "tableValueColumn", string_to_clsid("VL_TVCLM"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo, "tableValueColumnInfo", string_to_clsid("VL_TVCLI"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableReturnLine, "tableValueRow", string_to_clsid("VL_TVROW"));

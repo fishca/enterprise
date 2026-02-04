@@ -6,7 +6,7 @@
 #include "enumeration.h"
 #include "backend/metaData.h"
 
-bool CMetaObjectEnumeration::PrepareContextMenu(wxMenu *defaultMenu)
+bool CValueMetaObjectEnumeration::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_MANAGER, _("Open manager module"));
 	menuItem->SetBitmap((*m_propertyModuleManager)->GetIcon());
@@ -14,7 +14,7 @@ bool CMetaObjectEnumeration::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void CMetaObjectEnumeration::ProcessCommand(unsigned int id)
+void CValueMetaObjectEnumeration::ProcessCommand(unsigned int id)
 {
 	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);

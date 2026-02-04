@@ -3,7 +3,7 @@
 
 wxVariantData* CPropertyRecord::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
 {
-	const IMetaObjectGenericData* propFactory = dynamic_cast<const IMetaObjectGenericData*>(property);
+	const IValueMetaObjectGenericData* propFactory = dynamic_cast<const IValueMetaObjectGenericData*>(property);
 	if (propFactory == nullptr)
 		return nullptr;
 	return new wxVariantDataRecord(propFactory, typeDesc);

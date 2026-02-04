@@ -27,7 +27,7 @@ public:
 	void SetValue(const CTypeDescription& val);
 #pragma endregion 
 
-	class IMetaObjectAttribute* GetSourceAttributeObject() const;
+	class IValueMetaObjectAttribute* GetSourceAttributeObject() const;
 
 	CPropertySource(CPropertyCategory* cat, const wxString& name, const eValueTypes& type = eValueTypes::TYPE_STRING)
 		: IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), type))

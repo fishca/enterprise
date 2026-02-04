@@ -19,11 +19,11 @@
 class BACKEND_API CSourceExplorer;
 class BACKEND_API CProcUnit;
 
-class BACKEND_API IMetaObjectForm;
+class BACKEND_API IValueMetaObjectForm;
 
 class BACKEND_API ISourceDataObject;
-class BACKEND_API IListDataObject;
-class BACKEND_API IRecordDataObject;
+class BACKEND_API IValueListDataObject;
+class BACKEND_API IValueRecordDataObject;
 
 class FRONTEND_API CValueForm;
 
@@ -427,8 +427,8 @@ public:
 	}
 
 	//load & save object in metaObject 
-	bool LoadControl(const IMetaObjectForm* metaForm, CMemoryReader& dataReader);
-	bool SaveControl(const IMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter(), bool copy_form = false);
+	bool LoadControl(const IValueMetaObjectForm* metaForm, CMemoryReader& dataReader);
+	bool SaveControl(const IValueMetaObjectForm* metaForm, CMemoryWriter& dataWritter = CMemoryWriter(), bool copy_form = false);
 
 protected:
 

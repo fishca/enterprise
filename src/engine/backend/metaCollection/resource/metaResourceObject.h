@@ -3,11 +3,11 @@
 
 #include "backend/metaCollection/attribute/metaAttributeObject.h"
 
-class BACKEND_API CMetaObjectResource : public CMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectResource);
+class BACKEND_API CValueMetaObjectResource : public CValueMetaObjectAttribute {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectResource);
 public:
 
-	CMetaObjectResource() : CMetaObjectAttribute(eValueTypes::TYPE_NUMBER) {
+	CValueMetaObjectResource() : CValueMetaObjectAttribute(eValueTypes::TYPE_NUMBER) {
 	}
 
 	//support icons

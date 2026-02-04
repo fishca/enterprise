@@ -66,7 +66,7 @@ public:
 
 	//////////////////////////////////////////////////
 
-	IMetaObjectAttribute* GetSourceAttributeObject() const;
+	IValueMetaObjectAttribute* GetSourceAttributeObject() const;
 
 	//////////////////////////////////////////////////
 

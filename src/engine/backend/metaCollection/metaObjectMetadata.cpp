@@ -10,7 +10,7 @@
 //*                         metaData													  * 
 //*****************************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectConfiguration, IMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectConfiguration, IValueMetaObject);
 
 //*****************************************************************************************
 //*                                  MetadataObject                                       *
@@ -18,10 +18,10 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectConfiguration, IMetaObject);
 
 #include "backend/metaCollection/metaLanguageObject.h"
 
-wxString CMetaObjectConfiguration::GetLangCode() const
+wxString CValueMetaObjectConfiguration::GetLangCode() const
 {
-	const CMetaObjectLanguage* language =
-		FindAnyObjectByFilter<CMetaObjectLanguage>(GetLanguage());
+	const CValueMetaObjectLanguage* language =
+		FindAnyObjectByFilter<CValueMetaObjectLanguage>(GetLanguage());
 
 	if (language != nullptr)
 		return language->GetLangCode();
@@ -29,7 +29,7 @@ wxString CMetaObjectConfiguration::GetLangCode() const
 	return wxT("");
 }
 
-CMetaObjectConfiguration::CMetaObjectConfiguration() : IMetaObject(configurationDefaultName)
+CValueMetaObjectConfiguration::CValueMetaObjectConfiguration() : IValueMetaObject(configurationDefaultName)
 {
 	//set default proc
 	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, { "cancel" });
@@ -41,11 +41,11 @@ CMetaObjectConfiguration::CMetaObjectConfiguration() : IMetaObject(configuration
 	m_metaId = defaultMetaID;
 }
 
-CMetaObjectConfiguration::~CMetaObjectConfiguration()
+CValueMetaObjectConfiguration::~CValueMetaObjectConfiguration()
 {
 }
 
-bool CMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
 {
 	m_propertyVersion->SetValue(dataReader.r_s32());
 
@@ -55,7 +55,7 @@ bool CMetaObjectConfiguration::LoadData(CMemoryReader& dataReader)
 	return (*m_propertyModuleConfiguration)->LoadMeta(dataReader);
 }
 
-bool CMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 {
 	dataWritter.w_s32(m_propertyVersion->GetValueAsInteger());
 
@@ -71,25 +71,25 @@ bool CMetaObjectConfiguration::SaveData(CMemoryWriter& dataWritter)
 
 #include "backend/metaData.h"
 
-bool CMetaObjectConfiguration::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectConfiguration::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnCreateMetaObject(metaData, flags)) {
 		return false;
 	}
 
-	return IMetaObject::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectConfiguration::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyModuleConfiguration)->OnLoadMetaObject(metaData)) {
 		return false;
 	}
 
-	return IMetaObject::OnLoadMetaObject(metaData);
+	return IValueMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectConfiguration::OnSaveMetaObject(int flags)
+bool CValueMetaObjectConfiguration::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnSaveMetaObject(flags)) {
 		return false;
@@ -100,48 +100,48 @@ bool CMetaObjectConfiguration::OnSaveMetaObject(int flags)
 		return false;
 	}
 
-	return IMetaObject::OnSaveMetaObject(flags);
+	return IValueMetaObject::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectConfiguration::OnDeleteMetaObject()
+bool CValueMetaObjectConfiguration::OnDeleteMetaObject()
 {
 	if (!(*m_propertyModuleConfiguration)->OnDeleteMetaObject()) {
 		return false;
 	}
 
-	return IMetaObject::OnDeleteMetaObject();
+	return IValueMetaObject::OnDeleteMetaObject();
 }
 
-bool CMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleConfiguration)->OnBeforeRunMetaObject(flags))
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCompileModule(m_propertyModuleConfiguration->GetMetaObject(), moduleManager))
 		return false;
 
-	return IMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectConfiguration::OnAfterCloseMetaObject()
+bool CValueMetaObjectConfiguration::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyModuleConfiguration)->OnAfterCloseMetaObject())
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RemoveCompileModule(m_propertyModuleConfiguration->GetMetaObject()))
 		return false;
 
-	return IMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectConfiguration, "commonMetadata", g_metaCommonMetadataCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectConfiguration, "commonMetadata", g_metaCommonMetadataCLSID);

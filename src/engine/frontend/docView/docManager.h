@@ -65,7 +65,7 @@ class FRONTEND_API CMetaDocManager : public wxDocManager {
 
 private:
 
-	CMetaDocument* OpenForm(IMetaObject* metaObject, CMetaDocument* docParent, long flags);
+	CMetaDocument* OpenForm(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags);
 
 	// Handlers for common user commands
 	void OnFileClose(wxCommandEvent& event);
@@ -103,8 +103,8 @@ private:
 
 public:
 
-	static CMetaDocument* OpenFormMDI(IMetaObject* metaObject, long flags = wxDOC_NEW);
-	static CMetaDocument* OpenFormMDI(IMetaObject* metaObject, CMetaDocument* docParent, long flags = wxDOC_NEW);
+	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, long flags = wxDOC_NEW);
+	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags = wxDOC_NEW);
 
 	// Get the current document manager
 	static CMetaDocManager* GetDocumentManager() {

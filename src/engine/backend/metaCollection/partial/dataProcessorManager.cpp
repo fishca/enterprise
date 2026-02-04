@@ -7,23 +7,23 @@
 #include "backend/metaData.h"
 #include "commonObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectDataProcessor, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor, CValue);
 
-CManagerDataObjectDataProcessor::CManagerDataObjectDataProcessor(CMetaObjectDataProcessor* metaObject) :
+CValueManagerDataObjectDataProcessor::CValueManagerDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject) :
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
-CManagerDataObjectDataProcessor::~CManagerDataObjectDataProcessor()
+CValueManagerDataObjectDataProcessor::~CValueManagerDataObjectDataProcessor()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CMetaObjectCommonModule* CManagerDataObjectDataProcessor::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
+CValueMetaObjectCommonModule* CValueManagerDataObjectDataProcessor::GetModuleManager() const { return m_metaObject->GetModuleManager(); }
 
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectDataProcessor::GetClassType() const
+class_identifier_t CValueManagerDataObjectDataProcessor::GetClassType() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -31,7 +31,7 @@ class_identifier_t CManagerDataObjectDataProcessor::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectDataProcessor::GetClassName() const
+wxString CValueManagerDataObjectDataProcessor::GetClassName() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -39,7 +39,7 @@ wxString CManagerDataObjectDataProcessor::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectDataProcessor::GetString() const
+wxString CValueManagerDataObjectDataProcessor::GetString() const
 {
 	const IMetaValueTypeCtor* clsFactory =
 		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
@@ -49,14 +49,14 @@ wxString CManagerDataObjectDataProcessor::GetString() const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectExternalDataProcessor, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor, CValue);
 
-CManagerDataObjectExternalDataProcessor::CManagerDataObjectExternalDataProcessor() :
+CValueManagerDataObjectExternalDataProcessor::CValueManagerDataObjectExternalDataProcessor() :
 	m_methodHelper(new CMethodHelper())
 {
 }
 
-CManagerDataObjectExternalDataProcessor::~CManagerDataObjectExternalDataProcessor()
+CValueManagerDataObjectExternalDataProcessor::~CValueManagerDataObjectExternalDataProcessor()
 {
 	wxDELETE(m_methodHelper);
 }
@@ -68,11 +68,11 @@ enum Func {
 	eGetForm
 };
 
-void CManagerDataObjectDataProcessor::PrepareNames() const
+void CValueManagerDataObjectDataProcessor::PrepareNames() const
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
@@ -88,7 +88,7 @@ void CManagerDataObjectDataProcessor::PrepareNames() const
 	}
 }
 
-bool CManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -108,7 +108,7 @@ bool CManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, CValue& 
 	}
 	}
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	CValue* pRefData =
@@ -118,7 +118,7 @@ bool CManagerDataObjectDataProcessor::CallAsFunc(const long lMethodNum, CValue& 
 	return false;
 }
 
-void CManagerDataObjectExternalDataProcessor::PrepareNames() const
+void CValueManagerDataObjectExternalDataProcessor::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc("create", 1, "create(fullPath)");
@@ -127,7 +127,7 @@ void CManagerDataObjectExternalDataProcessor::PrepareNames() const
 #include "backend/system/systemManager.h"
 #include "backend/metadataDataProcessor.h"
 
-bool CManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -135,7 +135,7 @@ bool CManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, 
 	{
 		CMetaDataDataProcessor* metaDataProcessor = new CMetaDataDataProcessor();
 		if (metaDataProcessor->LoadFromFile(paParams[0]->GetString())) {
-			CModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetModuleManager();
+			CValueModuleManagerExternalDataProcessor* moduleManager = metaDataProcessor->GetModuleManager();
 			pvarRetValue = moduleManager->GetObjectValue();
 			return true;
 		}
@@ -152,4 +152,4 @@ bool CManagerDataObjectExternalDataProcessor::CallAsFunc(const long lMethodNum, 
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CManagerDataObjectExternalDataProcessor, "externalManagerDataProcessor", string_to_clsid("MG_EXTD"));
+SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalDataProcessor, "externalManagerDataProcessor", string_to_clsid("MG_EXTD"));

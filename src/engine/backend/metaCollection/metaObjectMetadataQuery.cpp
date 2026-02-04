@@ -5,7 +5,7 @@
 
 #include "appData.h"
 
-bool CMetaObjectConfiguration::ExecuteSystemSQLCommand()
+bool CValueMetaObjectConfiguration::ExecuteSystemSQLCommand()
 {
 	s_restructureInfo.AppendWarning("Execute system sql command");
 

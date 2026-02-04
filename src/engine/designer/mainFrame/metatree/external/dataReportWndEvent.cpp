@@ -188,7 +188,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnCopyItem(wxCommandEvent &event)
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
 
-		IMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
+		IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
 
 			CMemoryWriter dataWritter;
@@ -228,7 +228,7 @@ void CDataReportTree::CDataReportTreeCtrl::OnPasteItem(wxCommandEvent &event)
 		wxCustomDataObject data(oes_clipboard_metadata);
 		if (wxTheClipboard->GetData(data)) {
 
-			IMetaObject* metaObject = m_ownerTree->NewItem(
+			IValueMetaObject* metaObject = m_ownerTree->NewItem(
 				m_ownerTree->GetClassIdentifier(),
 				m_ownerTree->GetMetaIdentifier(),
 				false

@@ -115,12 +115,12 @@ void CValueTextCtrl::OnSelectButtonPressed(wxCommandEvent& event)
 				wxASSERT(metaData);
 				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(clsid);
 				if (so != nullptr && so->GetMetaTypeCtor() == eCtorMetaType_Reference) {
-					IMetaObject* metaObject = so->GetMetaObject();
+					IValueMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {
 						const meta_identifier_t& id = m_propertyChoiceForm->GetValueAsInteger();
 						if (id != wxNOT_FOUND) {
 							const IMetaData* metaData = GetMetaData();
-							const IMetaObject* foundedObject = metaData != nullptr
+							const IValueMetaObject* foundedObject = metaData != nullptr
 								? metaData->FindAnyObjectByFilter(id) : nullptr;
 							metaObject->ProcessChoice(this, foundedObject != nullptr ? foundedObject->GetName() : wxEmptyString, GetSelectMode());
 						}

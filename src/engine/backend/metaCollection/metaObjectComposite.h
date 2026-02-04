@@ -6,7 +6,7 @@
 #pragma region __property_standart_h__
 
 //base property for "inner attribute"
-template <typename T = class CMetaObjectAttributePredefined>
+template <typename T = class CValueMetaObjectAttributePredefined>
 class CPropertyInnerAttribute : public IProperty {
 public:
 
@@ -66,30 +66,30 @@ class IMetaValueTypeCtor;
 //********************************************************************************************
 
 
-class BACKEND_API IMetaObjectCompositeData
-	: public IMetaObject {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectCompositeData);
+class BACKEND_API IValueMetaObjectCompositeData
+	: public IValueMetaObject {
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectCompositeData);
 public:
 
-	IMetaObjectCompositeData(
+	IValueMetaObjectCompositeData(
 		const wxString& strName = wxEmptyString,
 		const wxString& synonym = wxEmptyString,
 		const wxString& comment = wxEmptyString
-	) : IMetaObject(strName, synonym, comment) {
+	) : IValueMetaObject(strName, synonym, comment) {
 	}
 
-	virtual ~IMetaObjectCompositeData() {}
+	virtual ~IValueMetaObjectCompositeData() {}
 
 	//guid to id 
-	meta_identifier_t IMetaObjectCompositeData::GetIdByGuid(const CGuid& guid) const {
-		IMetaObject* metaObject = FindAnyObjectByFilter(guid);
+	meta_identifier_t IValueMetaObjectCompositeData::GetIdByGuid(const CGuid& guid) const {
+		IValueMetaObject* metaObject = FindAnyObjectByFilter(guid);
 		if (metaObject != nullptr)
 			return metaObject->GetMetaID();
 		return wxNOT_FOUND;
 	}
 
-	CGuid IMetaObjectCompositeData::GetGuidByID(const meta_identifier_t& id) const {
-		IMetaObject* metaObject = FindAnyObjectByFilter(id);
+	CGuid IValueMetaObjectCompositeData::GetGuidByID(const meta_identifier_t& id) const {
+		IValueMetaObject* metaObject = FindAnyObjectByFilter(id);
 		if (metaObject != nullptr)
 			return metaObject->GetGuid();
 		return wxNullGuid;
@@ -101,15 +101,15 @@ public:
 #pragma region __generic_h__
 
 	//any attribute 
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const = 0;
+	virtual std::vector<IValueMetaObjectAttribute*> GetGenericAttributeArrayObject(
+		std::vector<IValueMetaObjectAttribute*>& array = std::vector<IValueMetaObjectAttribute*>()) const = 0;
 
 #pragma endregion
 #pragma region __array_h__
 
 	//predefined 
-	std::vector<IMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+	std::vector<IValueMetaObjectAttribute*> GetPredefinedAttributeArrayObject(
+		std::vector<IValueMetaObjectAttribute*>& array = std::vector<IValueMetaObjectAttribute*>()) const {
 		FillArrayObjectByPredefined(array);
 		return array;
 	}
@@ -119,111 +119,111 @@ public:
 
 	//predefined 
 	template <typename _T1>
-	IMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
+	IValueMetaObjectAttribute* FindPredefinedAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IValueMetaObjectAttribute>(id, { g_metaPredefinedAttributeCLSID });
 	}
 
 #pragma endregion 
 
 protected:
 
-	CMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
 		eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, false, eValueTypes::TYPE_BOOLEAN, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, false, eValueTypes::TYPE_BOOLEAN, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
 		bool fillCheck, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, eValueTypes::TYPE_BOOLEAN, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, eValueTypes::TYPE_BOOLEAN, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateBoolean(const wxString& name, const wxString& synonym, const wxString& comment,
 		bool fillCheck, const bool& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, CValue(defValue), useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, CValue(defValue), useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned char precision, unsigned char scale, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), false, eValueTypes::TYPE_NUMBER, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), false, eValueTypes::TYPE_NUMBER, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned char precision, unsigned char scale, bool fillCheck, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), fillCheck, eValueTypes::TYPE_NUMBER, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), fillCheck, eValueTypes::TYPE_NUMBER, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateNumber(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned char precision, unsigned char scale, bool fillCheck, const number_t& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), fillCheck, CValue(defValue), useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierNumber(precision, scale), fillCheck, CValue(defValue), useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
 		eDateFractions dateTime, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), false, eValueTypes::TYPE_DATE, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), false, eValueTypes::TYPE_DATE, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
 		eDateFractions dateTime, bool fillCheck, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), fillCheck, eValueTypes::TYPE_DATE, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), fillCheck, eValueTypes::TYPE_DATE, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateDate(const wxString& name, const wxString& synonym, const wxString& comment,
 		eDateFractions dateTime, bool fillCheck, const wxDateTime& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), fillCheck, CValue(defValue), useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierDate(dateTime), fillCheck, CValue(defValue), useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned short length, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), false, eValueTypes::TYPE_STRING, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), false, eValueTypes::TYPE_STRING, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned short length, bool fillCheck, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), fillCheck, eValueTypes::TYPE_STRING, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), fillCheck, eValueTypes::TYPE_STRING, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateString(const wxString& name, const wxString& synonym, const wxString& comment,
 		unsigned short length, bool fillCheck, const wxString& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), fillCheck, CValue(defValue), useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, CQualifierString(length), fillCheck, CValue(defValue), useItem, selectMode);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	CMetaObjectAttributePredefined* CreateEmptyType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateEmptyType(const wxString& name, const wxString& synonym, const wxString& comment,
 		eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, false, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, false, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateEmptyType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateEmptyType(const wxString& name, const wxString& synonym, const wxString& comment,
 		bool fillCheck, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, fillCheck, useItem, selectMode);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	CMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, clsid, false, CValue(), useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, clsid, false, CValue(), useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, const CValue& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, clsid, false, defValue, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, clsid, false, defValue, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, bool fillCheck, const CValue& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, clsid, fillCheck, defValue, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, clsid, fillCheck, defValue, useItem, selectMode);
 	}
 
-	CMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
+	CValueMetaObjectAttributePredefined* CreateSpecialType(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr,
 		bool fillCheck, const CValue& defValue, eItemMode useItem = eItemMode::eItemMode_Item, eSelectMode selectMode = eSelectMode::eSelectMode_Items) {
-		return IMetaObject::CreateMetaObjectAndSetParent<CMetaObjectAttributePredefined>(name, synonym, comment, clsid, descr, fillCheck, defValue, useItem, selectMode);
+		return IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectAttributePredefined>(name, synonym, comment, clsid, descr, fillCheck, defValue, useItem, selectMode);
 	}
 
 	virtual bool FillArrayObjectByPredefined(
-		std::vector<IMetaObjectAttribute*>& array) const {
+		std::vector<IValueMetaObjectAttribute*>& array) const {
 		return false;
 	}
 };

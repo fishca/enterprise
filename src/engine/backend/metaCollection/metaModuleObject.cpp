@@ -10,11 +10,11 @@
 //*                           ModuleObject                              *
 //***********************************************************************
 
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaObjectModule, IMetaObject);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectModule, IValueMetaObject);
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectModule, IMetaObjectModule);
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCommonModule, IMetaObjectModule);
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectManagerModule, CMetaObjectCommonModule);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectModule, IValueMetaObjectModule);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectCommonModule, IValueMetaObjectModule);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectManagerModule, CValueMetaObjectCommonModule);
 
 //***********************************************************************
 //*                           System metaData                           *
@@ -22,17 +22,17 @@ wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectManagerModule, CMetaObjectCommonModule);
 
 #include "backend/debugger/debugClient.h"
 
-bool IMetaObjectModule::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool IValueMetaObjectModule::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	return IMetaObject::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObject::OnCreateMetaObject(metaData, flags);
 }
 
-bool IMetaObjectModule::OnLoadMetaObject(IMetaData* metaData)
+bool IValueMetaObjectModule::OnLoadMetaObject(IMetaData* metaData)
 {
-	return IMetaObject::OnLoadMetaObject(metaData);
+	return IValueMetaObject::OnLoadMetaObject(metaData);
 }
 
-bool IMetaObjectModule::OnSaveMetaObject(int flags)
+bool IValueMetaObjectModule::OnSaveMetaObject(int flags)
 {
 	//save debugger client offset
 	if ((flags & saveConfigFlag) != 0 && appData->DesignerMode()) {
@@ -41,15 +41,15 @@ bool IMetaObjectModule::OnSaveMetaObject(int flags)
 			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
 	}
 
-	return IMetaObject::OnSaveMetaObject(flags);
+	return IValueMetaObject::OnSaveMetaObject(flags);
 }
 
-bool IMetaObjectModule::OnDeleteMetaObject()
+bool IValueMetaObjectModule::OnDeleteMetaObject()
 {
-	return IMetaObject::OnDeleteMetaObject();
+	return IValueMetaObject::OnDeleteMetaObject();
 }
 
-bool IMetaObjectModule::OnBeforeRunMetaObject(int flags)
+bool IValueMetaObjectModule::OnBeforeRunMetaObject(int flags)
 {
 	//initialize debugger client
 	if ((flags & loadConfigFlag) == 0 && (flags & newObjectFlag) == 0 && appData->DesignerMode()) {
@@ -58,23 +58,23 @@ bool IMetaObjectModule::OnBeforeRunMetaObject(int flags)
 			1 + std::count(strBuffer.begin(), strBuffer.end(), wxT('\n')));
 	}
 
-	return IMetaObject::OnBeforeRunMetaObject(flags);
+	return IValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool IMetaObjectModule::OnAfterCloseMetaObject()
+bool IValueMetaObjectModule::OnAfterCloseMetaObject()
 {
 	//remove debugger client module unit
 	//if (appData->DesignerMode())
 	//	debugClient->RemoveModule(GetDocPath());
 
-	return IMetaObject::OnAfterCloseMetaObject();
+	return IValueMetaObject::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                          default procedures						    *
 //***********************************************************************
 
-void IMetaObjectModule::SetDefaultProcedure(const wxString& procname, const eContentHelper& contentHelper, std::vector<wxString> args)
+void IValueMetaObjectModule::SetDefaultProcedure(const wxString& procname, const eContentHelper& contentHelper, std::vector<wxString> args)
 {
 	m_contentHelper.insert_or_assign(procname, CContentData{ contentHelper , args });
 }
@@ -83,13 +83,13 @@ void IMetaObjectModule::SetDefaultProcedure(const wxString& procname, const eCon
 //*                           Metamodule                                *
 //***********************************************************************
 
-bool CMetaObjectModule::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectModule::LoadData(CMemoryReader& reader)
 {
 	//reader.r_stringZ(m_moduleData);
 	return m_propertyModule->LoadData(reader);
 }
 
-bool CMetaObjectModule::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectModule::SaveData(CMemoryWriter& writer)
 {
 	//writer.w_stringZ(m_moduleData);
 	return m_propertyModule->SaveData(writer);
@@ -99,19 +99,19 @@ bool CMetaObjectModule::SaveData(CMemoryWriter& writer)
 //*                           Metamodule                                *
 //***********************************************************************
 
-CMetaObjectCommonModule::CMetaObjectCommonModule(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IMetaObjectModule(name, synonym, comment)
+CValueMetaObjectCommonModule::CValueMetaObjectCommonModule(const wxString& name, const wxString& synonym, const wxString& comment) :
+	IValueMetaObjectModule(name, synonym, comment)
 {
 }
 
-bool CMetaObjectCommonModule::LoadData(CMemoryReader& reader)
+bool CValueMetaObjectCommonModule::LoadData(CMemoryReader& reader)
 {
 	m_propertyModule->LoadData(reader); //reader.r_stringZ(m_moduleData);
 	m_propertyGlobalModule->SetValue(reader.r_u8());
 	return true;
 }
 
-bool CMetaObjectCommonModule::SaveData(CMemoryWriter& writer)
+bool CValueMetaObjectCommonModule::SaveData(CMemoryWriter& writer)
 {
 	//writer.w_stringZ(m_moduleData);
 	m_propertyModule->SaveData(writer);
@@ -125,110 +125,110 @@ bool CMetaObjectCommonModule::SaveData(CMemoryWriter& writer)
 
 #include "backend/metaData.h"
 
-bool CMetaObjectCommonModule::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectCommonModule::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	return IMetaObjectModule::OnCreateMetaObject(metaData, flags);
+	return IValueMetaObjectModule::OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectCommonModule::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectCommonModule::OnLoadMetaObject(IMetaData* metaData)
 {
-	return IMetaObjectModule::OnLoadMetaObject(metaData);
+	return IValueMetaObjectModule::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectCommonModule::OnSaveMetaObject(int flags)
+bool CValueMetaObjectCommonModule::OnSaveMetaObject(int flags)
 {
-	return IMetaObjectModule::OnSaveMetaObject(flags);
+	return IValueMetaObjectModule::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectCommonModule::OnDeleteMetaObject()
+bool CValueMetaObjectCommonModule::OnDeleteMetaObject()
 {
-	return IMetaObjectModule::OnDeleteMetaObject();
+	return IValueMetaObjectModule::OnDeleteMetaObject();
 }
 
-bool CMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
+bool CValueMetaObjectCommonModule::OnRenameMetaObject(const wxString& newName)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RenameCommonModule(this, newName))
 		return false;
 
-	return IMetaObjectModule::OnRenameMetaObject(newName);
+	return IValueMetaObjectModule::OnRenameMetaObject(newName);
 }
 
-bool CMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectCommonModule::OnBeforeRunMetaObject(int flags)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCommonModule(this, false, (flags & newObjectFlag) != 0))
 		return false;
 
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectCommonModule::OnAfterRunMetaObject(int flags)
 {
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectCommonModule::OnBeforeCloseMetaObject()
+bool CValueMetaObjectCommonModule::OnBeforeCloseMetaObject()
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RemoveCommonModule(this))
 		return false;
 
-	return IMetaObjectModule::OnAfterCloseMetaObject();
+	return IValueMetaObjectModule::OnAfterCloseMetaObject();
 }
 
-bool CMetaObjectCommonModule::OnAfterCloseMetaObject()
+bool CValueMetaObjectCommonModule::OnAfterCloseMetaObject()
 {
-	return IMetaObjectModule::OnAfterCloseMetaObject();
+	return IValueMetaObjectModule::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                          manager value object                       *
 //***********************************************************************
 
-bool CMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectManagerModule::OnBeforeRunMetaObject(int flags)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->AddCommonModule(this, true, (flags & newObjectFlag) != 0))
 		return false;
 
-	return IMetaObjectModule::OnBeforeRunMetaObject(flags);
+	return IValueMetaObjectModule::OnBeforeRunMetaObject(flags);
 }
 
-bool CMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectManagerModule::OnAfterRunMetaObject(int flags)
 {
-	return IMetaObjectModule::OnAfterRunMetaObject(flags);
+	return IValueMetaObjectModule::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectManagerModule::OnBeforeCloseMetaObject()
+bool CValueMetaObjectManagerModule::OnBeforeCloseMetaObject()
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->RemoveCommonModule(this))
 		return false;
 
-	return IMetaObjectModule::OnBeforeCloseMetaObject();
+	return IValueMetaObjectModule::OnBeforeCloseMetaObject();
 }
 
-bool CMetaObjectManagerModule::OnAfterCloseMetaObject()
+bool CValueMetaObjectManagerModule::OnAfterCloseMetaObject()
 {
-	return IMetaObjectModule::OnAfterCloseMetaObject();
+	return IValueMetaObjectModule::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectModule, "module", g_metaModuleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectModule, "module", g_metaModuleCLSID);
 
-METADATA_TYPE_REGISTER(CMetaObjectCommonModule, "commonModule", g_metaCommonModuleCLSID);
-METADATA_TYPE_REGISTER(CMetaObjectManagerModule, "managerModule", g_metaManagerCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCommonModule, "commonModule", g_metaCommonModuleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectManagerModule, "managerModule", g_metaManagerCLSID);

@@ -5,8 +5,8 @@
 
 #include "backend/metaCollection/table/metaTableObject.h"
 
-class BACKEND_API ITabularSectionDataObject : public IValueTable {
-	wxDECLARE_ABSTRACT_CLASS(ITabularSectionDataObject);
+class BACKEND_API IValueTabularSectionDataObject : public IValueTable {
+	wxDECLARE_ABSTRACT_CLASS(IValueTabularSectionDataObject);
 private:
 
 	enum Func {
@@ -30,7 +30,7 @@ public:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, line);
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, line);
 	}
 
 	virtual bool HasDefaultCompare() const override { return false; }
@@ -49,8 +49,8 @@ public:
 		return CValue();
 	}
 
-	class CTabularSectionDataObjectColumnCollection : public IValueTable::IValueModelColumnCollection {
-		wxDECLARE_DYNAMIC_CLASS(CTabularSectionDataObjectColumnCollection);
+	class CValueTabularSectionDataObjectColumnCollection : public IValueTable::IValueModelColumnCollection {
+		wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectColumnCollection);
 	public:
 		class CValueTabularSectionColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionColumnInfo);
@@ -62,19 +62,19 @@ public:
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
 			CValueTabularSectionColumnInfo();
-			CValueTabularSectionColumnInfo(IMetaObjectAttribute* attribute);
+			CValueTabularSectionColumnInfo(IValueMetaObjectAttribute* attribute);
 			virtual ~CValueTabularSectionColumnInfo();
 
 		private:
-			IMetaObjectAttribute* m_metaAttribute;
-			friend CTabularSectionDataObjectColumnCollection;
+			IValueMetaObjectAttribute* m_metaAttribute;
+			friend CValueTabularSectionDataObjectColumnCollection;
 		};
 
 	public:
 
-		CTabularSectionDataObjectColumnCollection();
-		CTabularSectionDataObjectColumnCollection(ITabularSectionDataObject* ownerTable);
-		virtual ~CTabularSectionDataObjectColumnCollection();
+		CValueTabularSectionDataObjectColumnCollection();
+		CValueTabularSectionDataObjectColumnCollection(IValueTabularSectionDataObject* ownerTable);
+		virtual ~CValueTabularSectionDataObjectColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
 			return m_listColumnInfo.at(col)->GetColumnType();
@@ -94,21 +94,21 @@ public:
 		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
 		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
-		friend class ITabularSectionDataObject;
+		friend class IValueTabularSectionDataObject;
 
 	protected:
 
-		ITabularSectionDataObject* m_ownerTable;
+		IValueTabularSectionDataObject* m_ownerTable;
 		std::map<meta_identifier_t, CValuePtr<CValueTabularSectionColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
 
-	class CTabularSectionDataObjectReturnLine : public IValueModelReturnLine {
-		wxDECLARE_DYNAMIC_CLASS(CTabularSectionDataObjectReturnLine);
+	class CValueTabularSectionDataObjectReturnLine : public IValueModelReturnLine {
+		wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectReturnLine);
 	public:
 
-		CTabularSectionDataObjectReturnLine(ITabularSectionDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
-		virtual ~CTabularSectionDataObjectReturnLine();
+		CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		virtual ~CValueTabularSectionDataObjectReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
 		virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
@@ -127,34 +127,34 @@ public:
 		virtual wxString GetClassName() const;
 		virtual wxString GetString() const;
 
-		friend class ITabularSectionDataObject;
+		friend class IValueTabularSectionDataObject;
 	private:
-		ITabularSectionDataObject* m_ownerTable;
+		IValueTabularSectionDataObject* m_ownerTable;
 		CMethodHelper* m_methodHelper;
 	};
 
-	CMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
+	CValueMetaObjectTableData* GetMetaObject() const { return m_metaTable; }
 	meta_identifier_t GetMetaID() const { return m_metaTable ? m_metaTable->GetMetaID() : wxNOT_FOUND; }
 
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual IMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const { return m_metaTable; }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const { return GetClassType(); }
 
 #pragma endregion 
 
-	ITabularSectionDataObject() :
+	IValueTabularSectionDataObject() :
 		m_objectValue(nullptr), m_metaTable(nullptr),
 		m_recordColumnCollection(nullptr),
 		m_methodHelper(nullptr), m_readOnly(false) {
 	}
 
-	ITabularSectionDataObject(IValueDataObject* objectValue, CMetaObjectTableData* tableObject, bool readOnly = false) :
+	IValueTabularSectionDataObject(IValueDataObject* objectValue, CValueMetaObjectTableData* tableObject, bool readOnly = false) :
 		m_objectValue(objectValue), m_metaTable(tableObject),
-		m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectColumnCollection>(this)),
+		m_recordColumnCollection(CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectColumnCollection>(this)),
 		m_methodHelper(new CMethodHelper()), m_readOnly(readOnly) {
 		for (const auto object : tableObject->GetGenericAttributeArrayObject()) {
 			m_filterRow.AppendFilter(
@@ -169,7 +169,7 @@ public:
 		}
 	}
 
-	virtual ~ITabularSectionDataObject() { wxDELETE(m_methodHelper); }
+	virtual ~IValueTabularSectionDataObject() { wxDELETE(m_methodHelper); }
 
 	virtual void GetValueByRow(wxVariant& variant,
 		const wxDataViewItem& row, unsigned int col) const override;
@@ -226,13 +226,13 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, wxDataViewItem(nullptr));
 	}
 
 	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())
 			return wxEmptyValue;
-		return CValue::CreateAndPrepareValueRef<CTabularSectionDataObjectReturnLine>(this, GetItem(idx));
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, GetItem(idx));
 	}
 
 	virtual unsigned int GetIteratorCount() const override { return GetRowCount(); }
@@ -249,34 +249,34 @@ protected:
 
 	bool m_readOnly;
 
-	CMetaObjectTableData* m_metaTable;
+	CValueMetaObjectTableData* m_metaTable;
 
 	IValueDataObject* m_objectValue;
-	CValuePtr<CTabularSectionDataObjectColumnCollection> m_recordColumnCollection;
+	CValuePtr<CValueTabularSectionDataObjectColumnCollection> m_recordColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CTabularSectionDataObject : public ITabularSectionDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CTabularSectionDataObject);
+class BACKEND_API CValueTabularSectionDataObject : public IValueTabularSectionDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObject);
 public:
 
-	CTabularSectionDataObject();
-	CTabularSectionDataObject(class IRecordDataObject* recordObject, CMetaObjectTableData* tableObject);
-	virtual ~CTabularSectionDataObject() {}
+	CValueTabularSectionDataObject();
+	CValueTabularSectionDataObject(class IValueRecordDataObject* recordObject, CValueMetaObjectTableData* tableObject);
+	virtual ~CValueTabularSectionDataObject() {}
 };
 
-class BACKEND_API CTabularSectionDataObjectRef : public ITabularSectionDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CTabularSectionDataObjectRef);
+class BACKEND_API CValueTabularSectionDataObjectRef : public IValueTabularSectionDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectRef);
 public:
 
 	bool IsReadAfter() const { return m_readAfter; }
 
-	CTabularSectionDataObjectRef();
-	CTabularSectionDataObjectRef(class CReferenceDataObject* reference, CMetaObjectTableData* tableObject, bool readAfter = false);
-	CTabularSectionDataObjectRef(class IRecordDataObjectRef* recordObject, CMetaObjectTableData* tableObject);
-	CTabularSectionDataObjectRef(class CSelectorDataObject* selectorObject, CMetaObjectTableData* tableObject);
+	CValueTabularSectionDataObjectRef();
+	CValueTabularSectionDataObjectRef(class CValueReferenceDataObject* reference, CValueMetaObjectTableData* tableObject, bool readAfter = false);
+	CValueTabularSectionDataObjectRef(class IValueRecordDataObjectRef* recordObject, CValueMetaObjectTableData* tableObject);
+	CValueTabularSectionDataObjectRef(class CValueSelectorRecordDataObject* selectorObject, CValueMetaObjectTableData* tableObject);
 
-	virtual ~CTabularSectionDataObjectRef() {}
+	virtual ~CValueTabularSectionDataObjectRef() {}
 
 	virtual void CopyValue();
 	virtual void DeleteValue();

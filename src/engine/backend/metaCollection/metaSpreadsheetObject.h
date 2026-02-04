@@ -3,8 +3,8 @@
 
 #include "metaObject.h"
 
-class BACKEND_API IMetaObjectSpreadsheet : public IMetaObject {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectSpreadsheet);
+class BACKEND_API IValueMetaObjectSpreadsheet : public IValueMetaObject {
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectSpreadsheet);
 protected:
 	enum
 	{
@@ -30,8 +30,8 @@ public:
 	virtual void ProcessCommand(unsigned int id);
 };
 
-class BACKEND_API CMetaObjectSpreadsheet : public IMetaObjectSpreadsheet {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonSpreadsheet);
+class BACKEND_API CValueMetaObjectSpreadsheet : public IValueMetaObjectSpreadsheet {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonSpreadsheet);
 public:
 	//set spreadsheet code 
 	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
@@ -44,8 +44,8 @@ private:
 	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("templateData"), _("Template data"));
 };
 
-class BACKEND_API CMetaObjectCommonSpreadsheet : public IMetaObjectSpreadsheet {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonSpreadsheet);
+class BACKEND_API CValueMetaObjectCommonSpreadsheet : public IValueMetaObjectSpreadsheet {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonSpreadsheet);
 public:
 	//set spreadsheet code 
 	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }

@@ -9,7 +9,7 @@
 #include "backend/objCtor.h"
 #include "backend/metaCollection/partial/reference/reference.h"
 
-wxString IMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& clsid) const
+wxString IValueMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& clsid) const
 {
 	const CTypeDescription& typeDesc = GetTypeDesc();
 
@@ -45,7 +45,7 @@ wxString IMetaObjectAttribute::GetSQLTypeObject(const class_identifier_t& clsid)
 	return wxEmptyString;
 }
 
-unsigned short IMetaObjectAttribute::GetSQLFieldCount(const IMetaObjectAttribute* metaAttr)
+unsigned short IValueMetaObjectAttribute::GetSQLFieldCount(const IValueMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); unsigned short sqlField = 1;
 
@@ -71,7 +71,7 @@ unsigned short IMetaObjectAttribute::GetSQLFieldCount(const IMetaObjectAttribute
 	return sqlField;
 }
 
-wxString IMetaObjectAttribute::GetSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& aggr)
+wxString IValueMetaObjectAttribute::GetSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& aggr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -117,7 +117,7 @@ wxString IMetaObjectAttribute::GetSQLFieldName(const IMetaObjectAttribute* metaA
 		+ sqlField;
 }
 
-wxString IMetaObjectAttribute::GetCompositeSQLFieldName(const IMetaObjectAttribute* metaAttr, const wxString& cmp)
+wxString IValueMetaObjectAttribute::GetCompositeSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& cmp)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -157,7 +157,7 @@ wxString IMetaObjectAttribute::GetCompositeSQLFieldName(const IMetaObjectAttribu
 		+ sqlField;
 }
 
-wxString IMetaObjectAttribute::GetExcluteSQLFieldName(const IMetaObjectAttribute* metaAttr)
+wxString IValueMetaObjectAttribute::GetExcluteSQLFieldName(const IValueMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -197,7 +197,7 @@ wxString IMetaObjectAttribute::GetExcluteSQLFieldName(const IMetaObjectAttribute
 		+ sqlField;
 }
 
-IMetaObjectAttribute::sqlField_t IMetaObjectAttribute::GetSQLFieldData(const IMetaObjectAttribute* metaAttr)
+IValueMetaObjectAttribute::sqlField_t IValueMetaObjectAttribute::GetSQLFieldData(const IValueMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); sqlField_t sqlData(fieldName + "_TYPE");
 
@@ -249,8 +249,8 @@ IMetaObjectAttribute::sqlField_t IMetaObjectAttribute::GetSQLFieldData(const IMe
 
 #include "backend/valueInfo.h"
 
-int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
-	const IMetaObjectAttribute* srcAttr, const IMetaObjectAttribute* dstAttr)
+int IValueMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
+	const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
 {
 	int retCode = 1;
 	//is null - create
@@ -503,7 +503,7 @@ int IMetaObjectAttribute::ProcessAttribute(const wxString& tableName,
 	return retCode;
 }
 
-void IMetaObjectAttribute::SetValueAttribute(const IMetaObjectAttribute* metaAttr,
+void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribute* metaAttr,
 	const CValue& cValue, IPreparedStatement* statement, int& position)
 {
 	//write type & data
@@ -680,7 +680,7 @@ void IMetaObjectAttribute::SetValueAttribute(const IMetaObjectAttribute* metaAtt
 		wxASSERT(typeCtor);
 
 		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == eCtorMetaType::eCtorMetaType_Reference) {
-			CReferenceDataObject* refData = nullptr;
+			CValueReferenceDataObject* refData = nullptr;
 			if (cValue.ConvertToValue(refData)) {
 				statement->SetParamNumber(position++, clsid); //TYPE REF
 				statement->SetParamBlob(position++, refData->GetReferenceData(), sizeof(reference_t)); //DATA REF
@@ -699,8 +699,8 @@ void IMetaObjectAttribute::SetValueAttribute(const IMetaObjectAttribute* metaAtt
 
 #include "backend/compiler/enumUnit.h"
 
-bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	const eFieldTypes& fieldType, const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
+	const eFieldTypes& fieldType, const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	switch (fieldType)
 	{
@@ -760,15 +760,15 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 
 			if (createData) {
 
-				CValuePtr<CReferenceDataObject> created_reference =
-					CReferenceDataObject::CreateFromPtr(metaData, bufferData.GetData());
+				CValuePtr<CValueReferenceDataObject> created_reference =
+					CValueReferenceDataObject::CreateFromPtr(metaData, bufferData.GetData());
 
 				retValue = created_reference;
 				return created_reference != nullptr;
 			}
 
-			CValuePtr<CReferenceDataObject> created_reference =
-				CReferenceDataObject::Create(metaData, bufferData.GetData());
+			CValuePtr<CValueReferenceDataObject> created_reference =
+				CValueReferenceDataObject::Create(metaData, bufferData.GetData());
 
 			retValue = created_reference;
 			return created_reference != nullptr;
@@ -778,11 +778,11 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 			const IMetaValueTypeCtor* typeCtor = metaData->GetTypeCtor(refType);
 			if (typeCtor != nullptr) {
 
-				const IMetaObject* metaObject = typeCtor->GetMetaObject();
+				const IValueMetaObject* metaObject = typeCtor->GetMetaObject();
 				wxASSERT(metaObject);
 
-				CValuePtr<CReferenceDataObject> created_reference =
-					CReferenceDataObject::Create(metaData, metaObject->GetMetaID());
+				CValuePtr<CValueReferenceDataObject> created_reference =
+					CValueReferenceDataObject::Create(metaData, metaObject->GetMetaID());
 
 				retValue = created_reference;
 				return created_reference != nullptr;
@@ -798,8 +798,8 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	return false;
 }
 
-bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
-	const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
+	const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
 	eFieldTypes fieldType =
 		static_cast<eFieldTypes>(resultSet->GetResultInt(fieldName + wxT("_TYPE")));
@@ -807,20 +807,20 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	switch (fieldType)
 	{
 	case eFieldTypes_Boolean:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_B"), eFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_B"), eFieldTypes_Boolean, metaAttr, retValue, resultSet, createData);
 	case eFieldTypes_Number:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_N"), eFieldTypes_Number, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_N"), eFieldTypes_Number, metaAttr, retValue, resultSet, createData);
 	case eFieldTypes_Date:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_D"), eFieldTypes_Date, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_D"), eFieldTypes_Date, metaAttr, retValue, resultSet, createData);
 	case eFieldTypes_String:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_S"), eFieldTypes_String, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_S"), eFieldTypes_String, metaAttr, retValue, resultSet, createData);
 	case eFieldTypes_Null:
 		retValue = eValueTypes::TYPE_NULL;
 		return true;
 	case eFieldTypes_Enum:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_E"), eFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName + wxT("_E"), eFieldTypes_Enum, metaAttr, retValue, resultSet, createData);
 	case eFieldTypes_Reference:
-		return IMetaObjectAttribute::GetValueAttribute(fieldName, eFieldTypes_Reference, metaAttr, retValue, resultSet, createData);
+		return IValueMetaObjectAttribute::GetValueAttribute(fieldName, eFieldTypes_Reference, metaAttr, retValue, resultSet, createData);
 	default:
 		retValue = metaAttr->CreateValue(); // if attribute was updated after 
 		return true;
@@ -829,9 +829,9 @@ bool IMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
 	return false;
 }
 
-bool IMetaObjectAttribute::GetValueAttribute(const IMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
+bool IValueMetaObjectAttribute::GetValueAttribute(const IValueMetaObjectAttribute* metaAttr, CValue& retValue, IDatabaseResultSet* resultSet, bool createData)
 {
-	return IMetaObjectAttribute::GetValueAttribute(
+	return IValueMetaObjectAttribute::GetValueAttribute(
 		metaAttr->GetFieldNameDB(),
 		metaAttr, retValue, resultSet, createData
 	);

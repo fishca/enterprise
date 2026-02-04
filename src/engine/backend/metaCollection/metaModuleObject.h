@@ -50,12 +50,12 @@ private:
 
 #pragma endregion
 
-class BACKEND_API IMetaObjectModule : public IMetaObject {
-	wxDECLARE_ABSTRACT_CLASS(IMetaObjectModule);
+class BACKEND_API IValueMetaObjectModule : public IValueMetaObject {
+	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectModule);
 public:
 
-	IMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
-		: IMetaObject(name, synonym, comment) {
+	IValueMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
+		: IValueMetaObject(name, synonym, comment) {
 	}
 
 	//support icons
@@ -123,11 +123,11 @@ private:
 	std::map<wxString, CContentData> m_contentHelper;
 };
 
-class BACKEND_API CMetaObjectModule : public IMetaObjectModule {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectModule);
+class BACKEND_API CValueMetaObjectModule : public IValueMetaObjectModule {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectModule);
 public:
-	CMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
-		: IMetaObjectModule(name, synonym, comment)
+	CValueMetaObjectModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
+		: IValueMetaObjectModule(name, synonym, comment)
 	{
 	}
 
@@ -147,8 +147,8 @@ private:
 	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("module"), _("Module"));
 };
 
-class BACKEND_API CMetaObjectCommonModule : public IMetaObjectModule {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectCommonModule);
+class BACKEND_API CValueMetaObjectCommonModule : public IValueMetaObjectModule {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonModule);
 private:
 	enum
 	{
@@ -157,7 +157,7 @@ private:
 
 public:
 
-	CMetaObjectCommonModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	CValueMetaObjectCommonModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -211,11 +211,11 @@ private:
 	CPropertyBoolean* m_propertyGlobalModule = IPropertyObject::CreateProperty<CPropertyBoolean>(m_moduleCategory, wxT("globalModule"), _("Global module"), false);
 };
 
-class BACKEND_API CMetaObjectManagerModule : public CMetaObjectCommonModule {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectManagerModule);
+class BACKEND_API CValueMetaObjectManagerModule : public CValueMetaObjectCommonModule {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectManagerModule);
 public:
-	CMetaObjectManagerModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
-		: CMetaObjectCommonModule(name, synonym, comment)
+	CValueMetaObjectManagerModule(const wxString& name = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString)
+		: CValueMetaObjectCommonModule(name, synonym, comment)
 	{
 	}
 

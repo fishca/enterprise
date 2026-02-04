@@ -34,7 +34,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 		mainToolBar->SetControlName(wxT("mainToolbar"));
 		mainToolBar->SetActionSrc(FORM_ACTION);
 
-		const IMetaObjectGenericData* metaObjectValue = m_sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectGenericData* metaObjectValue = m_sourceObject->GetSourceMetaObject();
 
 		CValueTableBox* mainTableBox = nullptr;
 
@@ -223,7 +223,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 	}
 }
 
-void CValueForm::InitializeForm(const IMetaObjectForm* creator,
+void CValueForm::InitializeForm(const IValueMetaObjectForm* creator,
 	IControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
 {
 	if (ownerControl != nullptr) ownerControl->ControlIncrRef();
@@ -257,7 +257,7 @@ bool CValueForm::InitializeFormModule()
 
 		const IMetaData* metaData = m_metaFormObject->GetMetaData();
 		wxASSERT(metaData);
-		const IModuleManager* moduleManager = metaData->GetModuleManager();
+		const IValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
 		IModuleDataObject* sourceObjectValue =
@@ -504,9 +504,9 @@ void CValueForm::ChangeForm()
 
 #include "frontend/win/dlgs/generation.h"
 
-bool CValueForm::GenerateForm(IRecordDataObjectRef* obj) const
+bool CValueForm::GenerateForm(IValueRecordDataObjectRef* obj) const
 {
-	IMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
+	IValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
 	wxASSERT(metaObject);
 	IMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
@@ -515,9 +515,9 @@ bool CValueForm::GenerateForm(IRecordDataObjectRef* obj) const
 
 	meta_identifier_t sel_id = 0;
 	if (selectDataType->ShowModal(sel_id)) {
-		IMetaObjectRecordDataMutableRef* meta = metaData->FindAnyObjectByFilter<IMetaObjectRecordDataMutableRef>(sel_id);
+		IValueMetaObjectRecordDataMutableRef* meta = metaData->FindAnyObjectByFilter<IValueMetaObjectRecordDataMutableRef>(sel_id);
 		if (meta != nullptr) {
-			IRecordDataObjectRef* genObj = meta->CreateObjectValue(obj, true);
+			IValueRecordDataObjectRef* genObj = meta->CreateObjectValue(obj, true);
 			if (genObj != nullptr) {
 				genObj->ShowFormValue();
 				selectDataType->Destroy();

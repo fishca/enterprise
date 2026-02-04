@@ -12,17 +12,17 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool CMetaObjectConstant::CreateConstantSQLTable()
+bool CValueMetaObjectConstant::CreateConstantSQLTable()
 {
 	s_restructureInfo.AppendWarning("Create constant table");
 
 	//create constats 	
-	if (!db_query->TableExists(CMetaObjectConstant::GetTableNameDB())) {
+	if (!db_query->TableExists(CValueMetaObjectConstant::GetTableNameDB())) {
 
-		int retCode = db_query->RunQuery("CREATE TABLE %s (RECORD_KEY CHAR DEFAULT '6' PRIMARY KEY);", CMetaObjectConstant::GetTableNameDB());
+		int retCode = db_query->RunQuery("CREATE TABLE %s (RECORD_KEY CHAR DEFAULT '6' PRIMARY KEY);", CValueMetaObjectConstant::GetTableNameDB());
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
-		//retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", CMetaObjectConstant::GetTableNameDB());
+		//retCode = db_query->RunQuery("INSERT INTO %s (RECORD_KEY) VALUES ('6');", CValueMetaObjectConstant::GetTableNameDB());
 		//if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		//	return false;
 		//}
@@ -31,14 +31,14 @@ bool CMetaObjectConstant::CreateConstantSQLTable()
 	return db_query->IsOpen();
 }
 
-bool CMetaObjectConstant::DeleteConstantSQLTable()
+bool CValueMetaObjectConstant::DeleteConstantSQLTable()
 {
 	s_restructureInfo.AppendWarning("Create new database");
 
 	//create constats 	
-	if (db_query->TableExists(CMetaObjectConstant::GetTableNameDB())) {
+	if (db_query->TableExists(CValueMetaObjectConstant::GetTableNameDB())) {
 
-		int retCode = db_query->RunQuery("DROP TABLE %s;", CMetaObjectConstant::GetTableNameDB());
+		int retCode = db_query->RunQuery("DROP TABLE %s;", CValueMetaObjectConstant::GetTableNameDB());
 		if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 			return false;
 	}
@@ -48,7 +48,7 @@ bool CMetaObjectConstant::DeleteConstantSQLTable()
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-int CMetaObjectConstant::ProcessAttribute(const wxString& tableName, IMetaObjectAttribute* srcAttr, IMetaObjectAttribute* dstAttr)
+int CValueMetaObjectConstant::ProcessAttribute(const wxString& tableName, IValueMetaObjectAttribute* srcAttr, IValueMetaObjectAttribute* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -64,10 +64,10 @@ int CMetaObjectConstant::ProcessAttribute(const wxString& tableName, IMetaObject
 		s_restructureInfo.AppendInfo(_("Removed constant ") + dstAttr->GetFullName());
 	}
 
-	return IMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-bool CMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject, int flags)
+bool CValueMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB();
 	const wxString& fieldName = GetFieldNameDB();
@@ -96,7 +96,7 @@ bool CMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMeta
 	}
 	else if ((flags & updateMetaTable) != 0) {
 		//if src is null then delete
-		CMetaObjectConstant* dstValue = nullptr;
+		CValueMetaObjectConstant* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			retCode = ProcessAttribute(tableName, this, dstValue);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {
@@ -106,7 +106,7 @@ bool CMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMeta
 	}
 	else if ((flags & deleteMetaTable) != 0) {
 		//if src is null then delete
-		CMetaObjectConstant* dstValue = nullptr;
+		CValueMetaObjectConstant* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 			retCode = ProcessAttribute(tableName, nullptr, dstValue);
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR) {

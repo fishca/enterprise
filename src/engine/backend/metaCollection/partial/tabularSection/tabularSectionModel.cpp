@@ -9,7 +9,7 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void ITabularSectionDataObject::GetValueByRow(wxVariant& variant,
+void IValueTabularSectionDataObject::GetValueByRow(wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
@@ -23,7 +23,7 @@ void ITabularSectionDataObject::GetValueByRow(wxVariant& variant,
 
 #include "backend/metaData.h"
 
-bool ITabularSectionDataObject::SetValueByRow(const wxVariant& variant,
+bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col)
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
@@ -61,7 +61,7 @@ bool ITabularSectionDataObject::SetValueByRow(const wxVariant& variant,
 	return true;
 }
 
-void ITabularSectionDataObject::AddValue(unsigned int before)
+void IValueTabularSectionDataObject::AddValue(unsigned int before)
 {
 	long row = GetRow(GetSelection());
 	if (row > 0) AppendRow(row);
@@ -70,7 +70,7 @@ void ITabularSectionDataObject::AddValue(unsigned int before)
 	RefreshTabularSection();
 }
 
-void ITabularSectionDataObject::CopyValue()
+void IValueTabularSectionDataObject::CopyValue()
 {
 	const wxDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
@@ -98,7 +98,7 @@ void ITabularSectionDataObject::CopyValue()
 	RefreshTabularSection();
 }
 
-void ITabularSectionDataObject::EditValue()
+void IValueTabularSectionDataObject::EditValue()
 {
 	const wxDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
@@ -119,7 +119,7 @@ void ITabularSectionDataObject::EditValue()
 	RefreshTabularSection();
 }
 
-void ITabularSectionDataObject::DeleteValue()
+void IValueTabularSectionDataObject::DeleteValue()
 {
 	const wxDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
@@ -135,9 +135,9 @@ void ITabularSectionDataObject::DeleteValue()
 	}
 }
 
-void CTabularSectionDataObjectRef::CopyValue()
+void CValueTabularSectionDataObjectRef::CopyValue()
 {
-	ITabularSectionDataObject::CopyValue();
+	IValueTabularSectionDataObject::CopyValue();
 
 	if (!CBackendException::IsEvalMode()) {
 		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
@@ -151,9 +151,9 @@ void CTabularSectionDataObjectRef::CopyValue()
 	RefreshTabularSection();
 }
 
-void CTabularSectionDataObjectRef::DeleteValue()
+void CValueTabularSectionDataObjectRef::DeleteValue()
 {
-	ITabularSectionDataObject::DeleteValue();
+	IValueTabularSectionDataObject::DeleteValue();
 
 	if (!CBackendException::IsEvalMode()) {
 		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());

@@ -3,7 +3,7 @@
 #define ICON_SIZE 16
 
 CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
-	wxWindowID winid, IMetaObject* metaObject) :
+	wxWindowID winid, IValueMetaObject* metaObject) :
 	wxWindow(parent, winid, wxDefaultPosition, wxDefaultSize), m_metaInterface(metaObject)
 {
 	m_interfaceCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
@@ -128,7 +128,7 @@ void CInterfaceEditor::FillData()
 {
 	const IMetaData* metaData = m_metaInterface->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaObject* commonObject = metaData->GetCommonMetaObject();
+	const IValueMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_interfaceCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());

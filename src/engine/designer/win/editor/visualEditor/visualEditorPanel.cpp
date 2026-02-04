@@ -69,7 +69,7 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	if (m_document == nullptr)
 		return false;
 
-	const IMetaObjectForm* creator = m_document->GetMetaObject()->ConvertToType<IMetaObjectForm>();
+	const IValueMetaObjectForm* creator = m_document->GetMetaObject()->ConvertToType<IValueMetaObjectForm>();
 
 	if (creator == nullptr)
 		return false;
@@ -77,7 +77,7 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	IMetaData* metaData = creator->GetMetaData();
 	wxASSERT(metaData);
 
-	IModuleManager* moduleManager = metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->FindCompileModule(creator, m_valueForm)) {
@@ -105,7 +105,7 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 
 bool CVisualEditorNotebook::CVisualEditor::SaveForm()
 {
-	IMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IMetaObjectForm>();
+	IValueMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectForm>();
 
 	// Create a std::string and copy your document data in to the string    
 	if (creator != nullptr) {

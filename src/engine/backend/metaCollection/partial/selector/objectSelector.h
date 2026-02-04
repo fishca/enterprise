@@ -3,11 +3,11 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API ISelectorDataObject : public CValue {
+class BACKEND_API IValueSelectorDataObject : public CValue {
 public:
 
-	ISelectorDataObject();
-	virtual ~ISelectorDataObject();
+	IValueSelectorDataObject();
+	virtual ~IValueSelectorDataObject();
 
 	virtual bool Next() = 0;
 
@@ -17,7 +17,7 @@ public:
 	}
 
 	//get metaData from object 
-	virtual IMetaObjectGenericData* GetMetaObject() const = 0;
+	virtual IValueMetaObjectGenericData* GetMetaObject() const = 0;
 
 	//Get ref class 
 	virtual class_identifier_t GetClassType() const;
@@ -35,17 +35,17 @@ protected:
 	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CSelectorDataObject : public ISelectorDataObject,
+class BACKEND_API CValueSelectorRecordDataObject : public IValueSelectorDataObject,
 	public IValueDataObject {
 public:
 
-	CSelectorDataObject(IMetaObjectRecordDataMutableRef* metaObject);
+	CValueSelectorRecordDataObject(IValueMetaObjectRecordDataMutableRef* metaObject);
 
 	virtual bool Next();
-	virtual IRecordDataObjectRef* GetObject(const CGuid& guid) const;
+	virtual IValueRecordDataObjectRef* GetObject(const CGuid& guid) const;
 
 	//get metaData from object 
-	virtual IMetaObjectRecordData* GetMetaObject() const {
+	virtual IValueMetaObjectRecordData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
@@ -67,22 +67,22 @@ protected:
 
 protected:
 
-	IMetaObjectRecordDataMutableRef* m_metaObject;
+	IValueMetaObjectRecordDataMutableRef* m_metaObject;
 	std::vector<CGuid> m_currentValues;
 };
 
 /////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API CSelectorRegisterObject :
-	public ISelectorDataObject {
+class BACKEND_API CValueSelectorRegisterDataObject :
+	public IValueSelectorDataObject {
 public:
-	CSelectorRegisterObject(IMetaObjectRegisterData* metaObject);
+	CValueSelectorRegisterDataObject(IValueMetaObjectRegisterData* metaObject);
 
 	virtual bool Next();
-	virtual IRecordManagerObject* GetRecordManager(const valueArray_t& keyValues) const;
+	virtual IValueRecordManagerObject* GetRecordManager(const valueArray_t& keyValues) const;
 
 	//get metaData from object 
-	virtual IMetaObjectRegisterData* GetMetaObject() const {
+	virtual IValueMetaObjectRegisterData* GetMetaObject() const {
 		return m_metaObject;
 	}
 
@@ -104,10 +104,10 @@ protected:
 
 protected:
 
-	IMetaObjectRegisterData* m_metaObject;
+	IValueMetaObjectRegisterData* m_metaObject;
 
 	valueArray_t m_keyValues;
-	
+
 	std::vector <valueArray_t> m_currentValues;
 	std::map<
 		valueArray_t,

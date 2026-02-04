@@ -12,13 +12,13 @@
 //*										 metaData											 * 
 //********************************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CMetaObjectCatalog, IMetaObjectRecordDataHierarchyMutableRef);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectCatalog, IValueMetaObjectRecordDataHierarchyMutableRef);
 
 //********************************************************************************************
 //*                                      metaData                                            *
 //********************************************************************************************
 
-CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataHierarchyMutableRef()
+CValueMetaObjectCatalog::CValueMetaObjectCatalog() : IValueMetaObjectRecordDataHierarchyMutableRef()
 {
 	//set default proc
 	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
@@ -32,12 +32,12 @@ CMetaObjectCatalog::CMetaObjectCatalog() : IMetaObjectRecordDataHierarchyMutable
 	(*m_propertyModuleObject)->SetDefaultProcedure("setNewCode", eContentHelper::eProcedureHelper, { "prefix", "standartProcessing" });
 }
 
-CMetaObjectCatalog::~CMetaObjectCatalog()
+CValueMetaObjectCatalog::~CValueMetaObjectCatalog()
 {
 	//wxDELETE((*m_propertyAttributeOwner));
 }
 
-IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id) const
+IValueMetaObjectForm* CValueMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t& id) const
 {
 	if (id == eFormObject && m_propertyDefFormObject->GetValueAsInteger() != wxNOT_FOUND) {
 		return FindFormObjectByFilter(m_propertyDefFormObject->GetValueAsInteger());
@@ -60,31 +60,31 @@ IMetaObjectForm* CMetaObjectCatalog::GetDefaultFormByID(const form_identifier_t&
 
 #include "catalogManager.h"
 
-IManagerDataObject* CMetaObjectCatalog::CreateManagerDataObjectValue()
+IValueManagerDataObject* CValueMetaObjectCatalog::CreateManagerDataObjectValue()
 {
-	return CValue::CreateAndPrepareValueRef<CManagerDataObjectCatalog>(this);
+	return CValue::CreateAndPrepareValueRef<CValueManagerDataObjectCatalog>(this);
 }
 
 #include "backend/appData.h"
 
-IRecordDataObjectFolderRef* CMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const CGuid& guid)
+IValueRecordDataObjectFolderRef* CValueMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const CGuid& guid)
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
-	CRecordDataObjectCatalog* pDataRef = nullptr;
+	CValueRecordDataObjectCatalog* pDataRef = nullptr;
 	if (appData->DesignerMode()) {
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
-			return CValue::CreateAndPrepareValueRef<CRecordDataObjectCatalog>(this, guid, mode);
+			return CValue::CreateAndPrepareValueRef<CValueRecordDataObjectCatalog>(this, guid, mode);
 		}
 	}
 	else {
-		pDataRef = CValue::CreateAndPrepareValueRef<CRecordDataObjectCatalog>(this, guid, mode);
+		pDataRef = CValue::CreateAndPrepareValueRef<CValueRecordDataObjectCatalog>(this, guid, mode);
 	}
 
 	return pDataRef;
 }
 
-ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaObject)
+ISourceDataObject* CValueMetaObjectCatalog::CreateSourceObject(IValueMetaObjectForm* metaObject)
 {
 	switch (metaObject->GetTypeForm())
 	{
@@ -93,69 +93,69 @@ ISourceDataObject* CMetaObjectCatalog::CreateSourceObject(IMetaObjectForm* metaO
 	case eFormFolder:
 		return CreateObjectValue(eObjectMode::OBJECT_FOLDER);
 	case eFormList:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
+		return CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CValueTreeDataObjectFolderRef::LIST_ITEM_FOLDER);
 	case eFormSelect:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
+		return CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CValueTreeDataObjectFolderRef::LIST_ITEM_FOLDER, true);
 	case eFormFolderSelect:
-		return CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CTreeDataObjectFolderRef::LIST_FOLDER, true);
+		return CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, metaObject->GetTypeForm(), CValueTreeDataObjectFolderRef::LIST_FOLDER, true);
 	}
 
 	return nullptr;
 }
 
 #pragma region _form_builder_h_
-IBackendValueForm* CMetaObjectCatalog::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectCatalog::GetObjectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormObject,
+		CValueMetaObjectCatalog::eFormObject,
 		ownerControl, CreateObjectValue(eObjectMode::OBJECT_ITEM),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetFolderForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectCatalog::GetFolderForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormFolder,
+		CValueMetaObjectCatalog::eFormFolder,
 		ownerControl, CreateObjectValue(eObjectMode::OBJECT_FOLDER),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectCatalog::GetListForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormList,
-		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormList, CTreeDataObjectFolderRef::LIST_ITEM_FOLDER),
+		CValueMetaObjectCatalog::eFormList,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, CValueMetaObjectCatalog::eFormList, CValueTreeDataObjectFolderRef::LIST_ITEM_FOLDER),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectCatalog::GetSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormSelect,
-		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_ITEM, true),
+		CValueMetaObjectCatalog::eFormSelect,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, CValueMetaObjectCatalog::eFormSelect, CValueTreeDataObjectFolderRef::LIST_ITEM, true),
 		formGuid
 	);
 }
 
-IBackendValueForm* CMetaObjectCatalog::GetFolderSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
+IBackendValueForm* CValueMetaObjectCatalog::GetFolderSelectForm(const wxString& strFormName, IBackendControlFrame* ownerControl, const CUniqueKey& formGuid)
 {
-	return IMetaObjectGenericData::CreateAndBuildForm(
+	return IValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
-		CMetaObjectCatalog::eFormFolderSelect,
-		ownerControl, CValue::CreateAndPrepareValueRef<CTreeDataObjectFolderRef>(this, CMetaObjectCatalog::eFormSelect, CTreeDataObjectFolderRef::LIST_FOLDER, true),
+		CValueMetaObjectCatalog::eFormFolderSelect,
+		ownerControl, CValue::CreateAndPrepareValueRef<CValueTreeDataObjectFolderRef>(this, CValueMetaObjectCatalog::eFormSelect, CValueTreeDataObjectFolderRef::LIST_FOLDER, true),
 		formGuid
 	);
 }
 #pragma endregion
 
-wxString CMetaObjectCatalog::GetDataPresentation(const IValueDataObject* objValue) const
+wxString CValueMetaObjectCatalog::GetDataPresentation(const IValueDataObject* objValue) const
 {
 	CValue vDescription;
 	if (objValue->GetValueByMetaID((*m_propertyAttributeDescription)->GetMetaID(), vDescription))
@@ -167,7 +167,7 @@ wxString CMetaObjectCatalog::GetDataPresentation(const IValueDataObject* objValu
 //*                       Save & load metaData                              *
 //***************************************************************************
 
-bool CMetaObjectCatalog::LoadData(CMemoryReader& dataReader)
+bool CValueMetaObjectCatalog::LoadData(CMemoryReader& dataReader)
 {
 	//load default attributes:
 	(*m_propertyAttributeOwner)->LoadMeta(dataReader);
@@ -185,10 +185,10 @@ bool CMetaObjectCatalog::LoadData(CMemoryReader& dataReader)
 	if (!m_propertyOwner->LoadData(dataReader))
 		return false;
 
-	return IMetaObjectRecordDataHierarchyMutableRef::LoadData(dataReader);
+	return IValueMetaObjectRecordDataHierarchyMutableRef::LoadData(dataReader);
 }
 
-bool CMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
+bool CValueMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
 {
 	//save default attributes:
 	(*m_propertyAttributeOwner)->SaveMeta(dataWritter);
@@ -207,16 +207,16 @@ bool CMetaObjectCatalog::SaveData(CMemoryWriter& dataWritter)
 		return false;
 
 	//create or update table:
-	return IMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);
+	return IValueMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);
 }
 
 //***********************************************************************
 //*                           read & save events                        *
 //***********************************************************************
 
-bool CMetaObjectCatalog::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool CValueMetaObjectCatalog::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
-	if (!IMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(metaData, flags))
+	if (!IValueMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(metaData, flags))
 		return false;
 
 	return (*m_propertyAttributeOwner)->OnCreateMetaObject(metaData, flags) &&
@@ -224,7 +224,7 @@ bool CMetaObjectCatalog::OnCreateMetaObject(IMetaData* metaData, int flags)
 		(*m_propertyModuleManager)->OnCreateMetaObject(metaData, flags);
 }
 
-bool CMetaObjectCatalog::OnLoadMetaObject(IMetaData* metaData)
+bool CValueMetaObjectCatalog::OnLoadMetaObject(IMetaData* metaData)
 {
 	if (!(*m_propertyAttributeOwner)->OnLoadMetaObject(metaData))
 		return false;
@@ -235,10 +235,10 @@ bool CMetaObjectCatalog::OnLoadMetaObject(IMetaData* metaData)
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData))
 		return false;
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
 }
 
-bool CMetaObjectCatalog::OnSaveMetaObject(int flags)
+bool CValueMetaObjectCatalog::OnSaveMetaObject(int flags)
 {
 	if (!(*m_propertyAttributeOwner)->OnSaveMetaObject(flags))
 		return false;
@@ -249,10 +249,10 @@ bool CMetaObjectCatalog::OnSaveMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags))
 		return false;
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
 }
 
-bool CMetaObjectCatalog::OnDeleteMetaObject()
+bool CValueMetaObjectCatalog::OnDeleteMetaObject()
 {
 	if (!(*m_propertyAttributeOwner)->OnDeleteMetaObject())
 		return false;
@@ -263,16 +263,16 @@ bool CMetaObjectCatalog::OnDeleteMetaObject()
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject())
 		return false;
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
 }
 
-bool CMetaObjectCatalog::OnReloadMetaObject()
+bool CValueMetaObjectCatalog::OnReloadMetaObject()
 {
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (appData->DesignerMode()) {
-		CRecordDataObjectCatalog* pDataRef = nullptr;
+		CValueRecordDataObjectCatalog* pDataRef = nullptr;
 		if (!moduleManager->FindCompileModule(m_propertyModuleObject->GetMetaObject(), pDataRef)) {
 			return true;
 		}
@@ -284,7 +284,7 @@ bool CMetaObjectCatalog::OnReloadMetaObject()
 
 #include "backend/objCtor.h"
 
-bool CMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
+bool CValueMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 {
 	if (!(*m_propertyAttributeOwner)->OnBeforeRunMetaObject(flags))
 		return false;
@@ -297,7 +297,7 @@ bool CMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 
 	registerSelection();
 
-	if (!IMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(flags))
+	if (!IValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeRunMetaObject(flags))
 		return false;
 
 	const IMetaValueTypeCtor* typeCtor =
@@ -310,7 +310,7 @@ bool CMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 	return true;
 }
 
-bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
+bool CValueMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 {
 	if (!(*m_propertyAttributeOwner)->OnAfterRunMetaObject(flags))
 		return false;
@@ -321,12 +321,12 @@ bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags))
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc(); CTypeDescription typeDesc;
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		const IMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+		const IValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 		if (catalog != nullptr) {
 			const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
 			wxASSERT(so);
@@ -343,16 +343,16 @@ bool CMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
+		if (IValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(eObjectMode::OBJECT_ITEM));
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags);
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags);
 }
 
-bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
+bool CValueMetaObjectCatalog::OnBeforeCloseMetaObject()
 {
 	if (!(*m_propertyAttributeOwner)->OnBeforeCloseMetaObject())
 		return false;
@@ -363,12 +363,12 @@ bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject())
 		return false;
 
-	IModuleManager* moduleManager = m_metaData->GetModuleManager();
+	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	const CMetaDescription& metaDesc = m_propertyOwner->GetValueAsMetaDesc();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
-		const IMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+		const IValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 		if (catalog != nullptr) {
 			const IMetaValueTypeCtor* so = m_metaData->GetTypeCtor(catalog, eCtorMetaType::eCtorMetaType_Reference);
 			wxASSERT(so);
@@ -378,16 +378,16 @@ bool CMetaObjectCatalog::OnBeforeCloseMetaObject()
 
 	if (appData->DesignerMode()) {
 
-		if (IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
+		if (IValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject())
 			return moduleManager->RemoveCompileModule(m_propertyModuleObject->GetMetaObject());
 
 		return false;
 	}
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject();
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnBeforeCloseMetaObject();
 }
 
-bool CMetaObjectCatalog::OnAfterCloseMetaObject()
+bool CValueMetaObjectCatalog::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertyAttributeOwner)->OnAfterCloseMetaObject())
 		return false;
@@ -400,65 +400,65 @@ bool CMetaObjectCatalog::OnAfterCloseMetaObject()
 
 	unregisterSelection();
 
-	return IMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject();
+	return IValueMetaObjectRecordDataHierarchyMutableRef::OnAfterCloseMetaObject();
 }
 
 //***********************************************************************
 //*                             form events                             *
 //***********************************************************************
 
-void CMetaObjectCatalog::OnCreateFormObject(IMetaObjectForm* metaForm)
+void CValueMetaObjectCatalog::OnCreateFormObject(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormObject
+	if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormObject
 		&& m_propertyDefFormObject->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolder
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormFolder
 		&& m_propertyDefFormFolder->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormFolder->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormList
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolderSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormFolderSelect
 		&& m_propertyDefFormFolderSelect->GetValueAsInteger() == wxNOT_FOUND)
 	{
 		m_propertyDefFormFolderSelect->SetValue(metaForm->GetMetaID());
 	}
 }
 
-void CMetaObjectCatalog::OnRemoveMetaForm(IMetaObjectForm* metaForm)
+void CValueMetaObjectCatalog::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 {
-	if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormObject
+	if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormObject
 		&& m_propertyDefFormObject->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormObject->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolder
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormFolder
 		&& m_propertyDefFormFolder->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormFolder->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormList
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormList
 		&& m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormSelect
 		&& m_propertyDefFormSelect->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormSelect->SetValue(metaForm->GetMetaID());
 	}
-	else if (metaForm->GetTypeForm() == CMetaObjectCatalog::eFormFolderSelect
+	else if (metaForm->GetTypeForm() == CValueMetaObjectCatalog::eFormFolderSelect
 		&& m_propertyDefFormFolderSelect->GetValueAsInteger() == metaForm->GetMetaID())
 	{
 		m_propertyDefFormFolderSelect->SetValue(metaForm->GetMetaID());
@@ -469,4 +469,4 @@ void CMetaObjectCatalog::OnRemoveMetaForm(IMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CMetaObjectCatalog, "catalog", g_metaCatalogCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCatalog, "catalog", g_metaCatalogCLSID);

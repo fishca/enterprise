@@ -12,12 +12,12 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGRecordProperty, wxPGProperty, ComboBoxAndButto
 
 void wxPGRecordProperty::FillByClsid(const class_identifier_t& clsid)
 {
-    const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(m_ownerProperty);
+    const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(m_ownerProperty);
     if (metaGenericData != nullptr) {
         IMetaData* metaData = metaGenericData->GetMetaData();
         wxASSERT(metaData);
         for (auto metaRecorder : metaData->GetAnyArrayObject(clsid)) {
-            IMetaObjectRegisterData* registerData = dynamic_cast<IMetaObjectRegisterData*>(metaRecorder);
+            IValueMetaObjectRegisterData* registerData = dynamic_cast<IValueMetaObjectRegisterData*>(metaRecorder);
             if (registerData == nullptr || !registerData->HasRecorder()) continue;
             m_choices.Add(registerData->GetName(), registerData->GetIcon(), registerData->GetMetaID());
         }
@@ -68,9 +68,9 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
 {
     class wxPGRecordEventAdapter : public wxPGEditorDialogAdapter {
         class wxTreeItemOptionData : public wxTreeItemData {
-            IMetaObject* m_metaObject;
+            IValueMetaObject* m_metaObject;
         public:
-            wxTreeItemOptionData(IMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
+            wxTreeItemOptionData(IValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
             meta_identifier_t GetMetaID() const { return m_metaObject->GetMetaID(); }
         };
 
@@ -84,7 +84,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
             const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
                 groupIcon, groupIcon);
             for (auto metaObject : metaData->GetAnyArrayObject(clsid)) {
-                IMetaObjectRegisterData* registerData = dynamic_cast<IMetaObjectRegisterData*>(metaObject);
+                IValueMetaObjectRegisterData* registerData = dynamic_cast<IValueMetaObjectRegisterData*>(metaObject);
                 if (registerData != nullptr && registerData->HasRecorder()) {
                     const int icon = imageList->Add(registerData->GetIcon());
                     wxTreeItemOptionData* itemData = new wxTreeItemOptionData(metaObject);
@@ -113,7 +113,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
 
             wxVariantDataRecord* data = property_cast(dlgProp->GetValue(), wxVariantDataRecord);
             if (data == nullptr) return false;
-            const IMetaObjectGenericData* metaGenericData = dynamic_cast<const IMetaObjectGenericData*>(dlgProp->GetPropertyObject());
+            const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(dlgProp->GetPropertyObject());
             if (metaGenericData == nullptr) return false;
 
             // launch editor dialog

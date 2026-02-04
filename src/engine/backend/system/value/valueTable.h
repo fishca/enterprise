@@ -9,8 +9,8 @@
 const class_identifier_t g_valueTableCLSID = string_to_clsid("VL_TABL");
 
 //Table support
-class BACKEND_API CValueTable : public IValueTable {
-	wxDECLARE_DYNAMIC_CLASS(CValueTable);
+class BACKEND_API CValueTableMemory : public IValueTable {
+	wxDECLARE_DYNAMIC_CLASS(CValueTableMemory);
 private:
 	// methods:
 	enum Func {
@@ -68,7 +68,7 @@ public:
 
 	public:
 
-		CValueTableColumnCollection(CValueTable* ownerTable = nullptr);
+		CValueTableColumnCollection(CValueTableMemory* ownerTable = nullptr);
 		virtual ~CValueTableColumnCollection();
 
 		IValueModelColumnInfo* AddColumn(const wxString& colName,
@@ -146,11 +146,11 @@ public:
 		virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
 		virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
 
-		friend class CValueTable;
+		friend class CValueTableMemory;
 
 	protected:
 
-		CValueTable* m_ownerTable;
+		CValueTableMemory* m_ownerTable;
 		std::vector<CValuePtr<CValueTableColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
@@ -159,7 +159,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueTableReturnLine);
 	public:
 
-		CValueTableReturnLine(CValueTable* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CValueTableReturnLine(CValueTableMemory* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
 		virtual ~CValueTableReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
@@ -175,7 +175,7 @@ public:
 		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal); //attribute value
 
 	private:
-		CValueTable* m_ownerTable;
+		CValueTableMemory* m_ownerTable;
 		CMethodHelper* m_methodHelper;
 	};
 
@@ -215,9 +215,9 @@ public:
 		return node->GetValue(id, pvarMetaVal);
 	}
 
-	CValueTable();
-	CValueTable(const CValueTable& val);
-	virtual ~CValueTable();
+	CValueTableMemory();
+	CValueTableMemory(const CValueTableMemory& val);
+	virtual ~CValueTableMemory();
 
 	virtual void AddValue(unsigned int before = 0) {
 		long row = GetRow(GetSelection());
@@ -258,13 +258,13 @@ public:
 	void EditRow();
 	void DeleteRow();
 
-	CValueTable* Clone() { return CValue::CreateAndPrepareValueRef<CValueTable>(*this); }
+	CValueTableMemory* Clone() { return CValue::CreateAndPrepareValueRef<CValueTableMemory>(*this); }
 	unsigned int Count() { return GetRowCount(); }
 	void Clear();
 
 #pragma region _tabular_data_
 	//get metaData from object 
-	virtual IMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const { return nullptr; }
 
 	//Get ref class 
 	virtual class_identifier_t GetSourceClassType() const { return g_valueTableCLSID; }

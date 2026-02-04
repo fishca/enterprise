@@ -5,21 +5,21 @@
 
 #include "constantManager.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CManagerDataObjectConstant, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectConstant, CValue);
 
-CManagerDataObjectConstant::CManagerDataObjectConstant(CMetaObjectConstant* metaConst) :
+CValueManagerDataObjectConstant::CValueManagerDataObjectConstant(CValueMetaObjectConstant* metaConst) :
 	m_metaConst(metaConst)
 {
 }
 
-CManagerDataObjectConstant::~CManagerDataObjectConstant()
+CValueManagerDataObjectConstant::~CValueManagerDataObjectConstant()
 {
 }
 
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-class_identifier_t CManagerDataObjectConstant::GetClassType() const
+class_identifier_t CValueManagerDataObjectConstant::GetClassType() const
 {
 	IMetaData* metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
@@ -29,7 +29,7 @@ class_identifier_t CManagerDataObjectConstant::GetClassType() const
 	return clsFactory->GetClassType();
 }
 
-wxString CManagerDataObjectConstant::GetClassName() const
+wxString CValueManagerDataObjectConstant::GetClassName() const
 {
 	IMetaData* metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
@@ -39,7 +39,7 @@ wxString CManagerDataObjectConstant::GetClassName() const
 	return clsFactory->GetClassName();
 }
 
-wxString CManagerDataObjectConstant::GetString() const
+wxString CValueManagerDataObjectConstant::GetString() const
 {
 	IMetaData* metaData = m_metaConst->GetMetaData();
 	wxASSERT(metaData);
@@ -49,23 +49,23 @@ wxString CManagerDataObjectConstant::GetString() const
 	return clsFactory->GetClassName();
 }
 
-CValue::CMethodHelper CManagerDataObjectConstant::m_methodHelper;
+CValue::CMethodHelper CValueManagerDataObjectConstant::m_methodHelper;
 
 enum Func {
 	enSet = 0,
 	enGet
 };
 
-void CManagerDataObjectConstant::PrepareNames() const
+void CValueManagerDataObjectConstant::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendFunc("set", 1, "set(value)");
 	m_methodHelper.AppendFunc("get", "get()");
 }
 
-bool CManagerDataObjectConstant::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueManagerDataObjectConstant::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	CValuePtr<CRecordDataObjectConstant> recordDataObjectValue = m_metaConst->CreateRecordDataObjectValue();
+	CValuePtr<CValueRecordDataObjectConstant> recordDataObjectValue = m_metaConst->CreateRecordDataObjectValue();
 
 	switch (lMethodNum)
 	{

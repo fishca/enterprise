@@ -38,7 +38,7 @@ void IValueControl::SetOwnerForm(CValueForm* ownerForm)
 
 IMetaData* IValueControl::GetMetaData() const
 {
-	const IMetaObjectForm* metaFormObject = m_formOwner ?
+	const IValueMetaObjectForm* metaFormObject = m_formOwner ?
 		m_formOwner->GetFormMetaObject() : nullptr;
 
 	//for form buider
@@ -47,7 +47,7 @@ IMetaData* IValueControl::GetMetaData() const
 			m_formOwner->GetSourceObject() :
 			nullptr;
 		if (srcValue != nullptr) {
-			IMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
+			IValueMetaObjectGenericData* metaValue = srcValue->GetSourceMetaObject();
 			wxASSERT(metaValue);
 			return metaValue->GetMetaData();
 		}
@@ -67,7 +67,7 @@ form_identifier_t IValueControl::GetTypeForm() const
 		return 0;
 	}
 
-	const IMetaObjectForm* creator = m_formOwner->GetFormMetaObject();
+	const IValueMetaObjectForm* creator = m_formOwner->GetFormMetaObject();
  	if (creator != nullptr) 
 		return creator->GetTypeForm();
 	return m_formOwner->GetTypeForm();

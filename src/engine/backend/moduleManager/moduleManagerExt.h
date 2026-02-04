@@ -5,7 +5,7 @@
 #include "backend/metaCollection/partial/dataProcessor.h"
 #include "backend/metaCollection/partial/dataReport.h"
 
-class BACKEND_API CModuleManagerExternalDataProcessor : public IModuleManager {
+class BACKEND_API CValueModuleManagerExternalDataProcessor : public IValueModuleManager {
 public:
 
 	virtual CCompileModule* GetCompileModule() const;
@@ -14,11 +14,11 @@ public:
 	virtual std::map<wxString, CValue*>& GetContextVariables();
 
 	//metaData and external variant
-	CModuleManagerExternalDataProcessor(IMetaData* metaData = nullptr, CMetaObjectDataProcessor* metaObject = nullptr);
-	virtual ~CModuleManagerExternalDataProcessor();
+	CValueModuleManagerExternalDataProcessor(IMetaData* metaData = nullptr, CValueMetaObjectDataProcessor* metaObject = nullptr);
+	virtual ~CValueModuleManagerExternalDataProcessor();
 
 	//return external module
-	virtual IRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
+	virtual IValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -44,10 +44,10 @@ public:
 	virtual long FindProp(const wxString& strName) const;
 
 private:
-	CRecordDataObjectDataProcessor* m_objectValue;
+	CValueRecordDataObjectDataProcessor* m_objectValue;
 };
 
-class BACKEND_API CModuleManagerExternalReport : public IModuleManager {
+class BACKEND_API CValueModuleManagerExternalReport : public IValueModuleManager {
 public:
 
 	virtual CCompileModule* GetCompileModule() const;
@@ -56,11 +56,11 @@ public:
 	virtual std::map<wxString, CValue*>& GetContextVariables();
 
 	//metaData and external variant
-	CModuleManagerExternalReport(IMetaData* metaData = nullptr, CMetaObjectReport* metaObject = nullptr);
-	virtual ~CModuleManagerExternalReport();
+	CValueModuleManagerExternalReport(IMetaData* metaData = nullptr, CValueMetaObjectReport* metaObject = nullptr);
+	virtual ~CValueModuleManagerExternalReport();
 
 	//return external module
-	virtual IRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
+	virtual IValueRecordDataObjectExt* GetObjectValue() const { return m_objectValue; }
 
 	//Create common module
 	virtual bool CreateMainModule();
@@ -85,7 +85,7 @@ public:
 	virtual long FindProp(const wxString& strName) const;
 
 private:
-	CRecordDataObjectReport* m_objectValue;
+	CValueRecordDataObjectReport* m_objectValue;
 };
 
 #endif

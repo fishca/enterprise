@@ -8,16 +8,16 @@
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void CMetaObjectAttribute::OnPropertyCreated(IProperty* property)
+void CValueMetaObjectAttribute::OnPropertyCreated(IProperty* property)
 {
 	//if (m_propertyType == property) {
-	/////	CMetaObjectAttribute::SaveToVariant(m_propertyType->GetValue(), m_metaData);
+	/////	CValueMetaObjectAttribute::SaveToVariant(m_propertyType->GetValue(), m_metaData);
 	//}
 }
 
 #include <wx/propgrid/manager.h>
 
-void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
+void CValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
 	if (m_propertySelectMode == property) {
 		if (GetClsidCount() > 1) {
@@ -26,7 +26,7 @@ void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 		else {
 			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				IMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
+				IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)
 					pg->HideProperty(pgProperty, true);
 				else if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
@@ -40,24 +40,24 @@ void CMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProp
 		}
 	}
 	else if (m_propertyItemMode == property) {
-		IMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
+		IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 		pg->HideProperty(pgProperty, metaObject == nullptr);
 	}
 }
 
-bool CMetaObjectAttribute::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool CValueMetaObjectAttribute::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
-	//if (m_propertyType == property && !CMetaObjectAttribute::LoadFromVariant(newValue))
+	//if (m_propertyType == property && !CValueMetaObjectAttribute::LoadFromVariant(newValue))
 	//	return false;
-	return IMetaObjectAttribute::OnPropertyChanging(property, newValue);
+	return IValueMetaObjectAttribute::OnPropertyChanging(property, newValue);
 }
 
-void CMetaObjectAttribute::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CValueMetaObjectAttribute::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	IMetaObject* metaObject = GetParent();
+	IValueMetaObject* metaObject = GetParent();
 	wxASSERT(metaObject);
 
 	if (metaObject->OnReloadMetaObject()) {
-		IMetaObject::OnPropertyChanged(property, oldValue, newValue);
+		IValueMetaObject::OnPropertyChanged(property, oldValue, newValue);
 	}
 }

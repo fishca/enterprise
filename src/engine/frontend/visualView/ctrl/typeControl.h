@@ -10,10 +10,10 @@
 
 class BACKEND_API IMetaData;
 
-class BACKEND_API IMetaObject;
-class BACKEND_API IMetaObjectAttribute;
-class BACKEND_API IMetaObjectGenericData;
-class BACKEND_API CMetaObjectTableData;
+class BACKEND_API IValueMetaObject;
+class BACKEND_API IValueMetaObjectAttribute;
+class BACKEND_API IValueMetaObjectGenericData;
+class BACKEND_API CValueMetaObjectTableData;
 
 class BACKEND_API ISourceDataObject;
 
@@ -27,7 +27,7 @@ class FRONTEND_API ITypeControlFactory : public IBackendTypeSourceFactory {
 public:
 
 	//////////////////////////////////////////////////
-	virtual IMetaObjectAttribute* GetSourceAttributeObject() const = 0;
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const = 0;
 	//////////////////////////////////////////////////
 
 	static bool SimpleChoice(IControlFrame* ownerValue, const class_identifier_t& clsid, wxWindow* parent);

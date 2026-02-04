@@ -16,8 +16,8 @@ class BACKEND_API CUniqueKey;
 
 class CVisualView;
 
-class BACKEND_API IMetaObjectForm;
-class BACKEND_API IMetaObjectGenericData;
+class BACKEND_API IValueMetaObjectForm;
+class BACKEND_API IValueMetaObjectGenericData;
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
@@ -182,7 +182,7 @@ public:
 
 public:
 
-	CValueForm(const IMetaObjectForm* creator = nullptr, IControlFrame* ownerControl = nullptr,
+	CValueForm(const IValueMetaObjectForm* creator = nullptr, IControlFrame* ownerControl = nullptr,
 		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullUniqueKey);
 
 	virtual ~CValueForm();
@@ -208,7 +208,7 @@ public:
 	//****************************************************************************
 
 	virtual void BuildForm(const form_identifier_t& formType);
-	virtual void InitializeForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
+	virtual void InitializeForm(const IValueMetaObjectForm* creator, IControlFrame* ownerControl,
 		ISourceDataObject* srcObject, const CUniqueKey& formGuid);
 
 	virtual bool InitializeFormModule();
@@ -223,9 +223,9 @@ public:
 	}
 
 	virtual ISourceDataObject* GetSourceObject() const { return m_sourceObject; }
-	virtual const IMetaObjectForm* GetFormMetaObject() const { return m_metaFormObject; }
+	virtual const IValueMetaObjectForm* GetFormMetaObject() const { return m_metaFormObject; }
 
-	IMetaObjectGenericData* GetMetaObject() const;
+	IValueMetaObjectGenericData* GetMetaObject() const;
 
 	// get control caption
 	virtual wxString GetControlTitle() const;
@@ -336,7 +336,7 @@ public:
 	virtual void HelpForm();
 	virtual void ChangeForm();
 
-	virtual bool GenerateForm(IRecordDataObjectRef* obj) const;
+	virtual bool GenerateForm(IValueRecordDataObjectRef* obj) const;
 	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
 
 	//set & get modify 
@@ -427,7 +427,7 @@ private:
 	bool					m_closeOnChoice;
 	bool					m_closeOnOwnerClose;
 
-	const IMetaObjectForm* m_metaFormObject; // ref to metaData
+	const IValueMetaObjectForm* m_metaFormObject; // ref to metaData
 
 	IControlFrame* m_controlOwner;
 	ISourceDataObject* m_sourceObject;

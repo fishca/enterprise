@@ -12,7 +12,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueForm, IValueFrame);
 //*                              Frame                                       *
 //****************************************************************************
 
-CValueForm::CValueForm(const IMetaObjectForm* creator, IControlFrame* ownerControl,
+CValueForm::CValueForm(const IValueMetaObjectForm* creator, IControlFrame* ownerControl,
 	ISourceDataObject* srcObject, const CUniqueKey& formGuid) : IValueFrame(), IModuleDataObject(),
 	m_controlOwner(nullptr), m_sourceObject(nullptr), m_metaFormObject(nullptr),
 	m_formCollectionControl(CValue::CreateAndPrepareValueRef<CValueFormCollectionControl>(this)),
@@ -100,7 +100,7 @@ bool CValueForm::SaveData(CMemoryWriter& writer)
 IMetaData* CValueForm::GetMetaData() const
 {
 	if (m_sourceObject != nullptr) {
-		const IMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
+		const IValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
 		if (metaObject != nullptr)
 			return metaObject->GetMetaData();
 	}
@@ -120,7 +120,7 @@ form_identifier_t CValueForm::GetTypeForm() const
 bool CValueForm::IsEditable() const
 {
 	if (m_sourceObject != nullptr) {
-		const IMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
+		const IValueMetaObject* metaObject = m_sourceObject->GetSourceMetaObject();
 		if (metaObject != nullptr)
 			return metaObject->IsEditable();
 	}

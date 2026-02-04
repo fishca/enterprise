@@ -44,7 +44,7 @@ void CPropertySource::SetValue(const CGuid& val, bool fillTypeDesc) { m_propValu
 void CPropertySource::SetValue(const CTypeDescription& val) { m_propValue = CreateVariantData(m_owner, val); }
 ////////////////////////////////////////////////////////////////////////
 
-IMetaObjectAttribute* CPropertySource::GetSourceAttributeObject() const { 
+IValueMetaObjectAttribute* CPropertySource::GetSourceAttributeObject() const { 
     return get_cell_variant<wxVariantDataSource>()->GetSourceAttributeObject(); 
 }
 

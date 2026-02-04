@@ -7,35 +7,33 @@
 #include "backend/metaCollection/metaModuleObject.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API IModuleManager :
-	public IModuleDataObject,
-	public CValue {
+class BACKEND_API IValueModuleManager :
+	public IModuleDataObject, public CValue {
 protected:
 	enum helperAlias {
 		eProcUnit
 	};
 public:
 
-	class BACKEND_API CModuleUnit :
-		public IModuleDataObject,
-		public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CModuleUnit);
+	class BACKEND_API CValueModuleUnit :
+		public IModuleDataObject, public CValue {
+		wxDECLARE_DYNAMIC_CLASS(CValueModuleUnit);
 	protected:
 		enum helperAlias {
 			eProcUnit
 		};
 	public:
 
-		CModuleUnit() {}
-		CModuleUnit(IModuleManager* moduleManager, IMetaObjectModule* moduleObject, bool managerModule = false);
-		virtual ~CModuleUnit();
+		CValueModuleUnit() {}
+		CValueModuleUnit(IValueModuleManager* moduleManager, IValueMetaObjectModule* moduleObject, bool managerModule = false);
+		virtual ~CValueModuleUnit();
 
 		//initalize common module
 		bool CreateCommonModule();
 		bool DestroyCommonModule();
 
 		//get common module 
-		IMetaObjectModule* GetModuleObject() const {
+		IValueMetaObjectModule* GetModuleObject() const {
 			return m_moduleObject;
 		}
 
@@ -87,7 +85,7 @@ public:
 		//operator '=='
 		virtual bool CompareValueEQ(const CValue& cParam) const override
 		{
-			CModuleUnit* compareModule = dynamic_cast<CModuleUnit*>(cParam.GetRef());
+			CValueModuleUnit* compareModule = dynamic_cast<CValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
 				return m_moduleObject == compareModule->GetModuleObject();
 			}
@@ -98,7 +96,7 @@ public:
 		//operator '!='
 		virtual bool CompareValueNE(const CValue& cParam) const override
 		{
-			CModuleUnit* compareModule = dynamic_cast<CModuleUnit*>(cParam.GetRef());
+			CValueModuleUnit* compareModule = dynamic_cast<CValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
 				return m_moduleObject != compareModule->GetModuleObject();
 			}
@@ -107,8 +105,8 @@ public:
 		}
 
 	protected:
-		IModuleManager* m_moduleManager;
-		IMetaObjectModule* m_moduleObject;
+		IValueModuleManager* m_moduleManager;
+		IValueMetaObjectModule* m_moduleObject;
 	private:
 		CMethodHelper* m_methodHelper;
 	};
@@ -176,11 +174,11 @@ private:
 protected:
 
 	//metaData and external variant
-	IModuleManager(IMetaData* metaData, CMetaObjectModule* metaObject);
+	IValueModuleManager(IMetaData* metaData, CValueMetaObjectModule* metaObject);
 
 public:
 
-	virtual ~IModuleManager();
+	virtual ~IValueModuleManager();
 
 	//Create common module
 	virtual bool CreateMainModule() = 0;
@@ -215,11 +213,11 @@ public:
 	virtual bool IsEmpty() const { return false; }
 
 	//compile modules:
-	bool AddCompileModule(const IMetaObject* moduleObject, CValue* object);
-	bool RemoveCompileModule(const IMetaObject* moduleObject);
+	bool AddCompileModule(const IValueMetaObject* moduleObject, CValue* object);
+	bool RemoveCompileModule(const IValueMetaObject* moduleObject);
 
 	//templates:
-	template <class T> inline bool FindCompileModule(const IMetaObject* moduleObject, T*& objValue) const {
+	template <class T> inline bool FindCompileModule(const IValueMetaObject* moduleObject, T*& objValue) const {
 		auto& it = m_listCommonModuleValue.find(moduleObject);
 		if (it != m_listCommonModuleValue.end()) {
 			objValue = dynamic_cast<T*>(&(*it->second));
@@ -229,25 +227,25 @@ public:
 		return false;
 	}
 
-	template <class T> inline bool FindParentCompileModule(const IMetaObject* moduleObject, T*& objValue) const {
-		IMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
+	template <class T> inline bool FindParentCompileModule(const IValueMetaObject* moduleObject, T*& objValue) const {
+		IValueMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
 		if (parentMetadata != nullptr)
 			return FindCompileModule(parentMetadata, objValue);
 		return false;
 	}
 
 	//common modules:
-	bool AddCommonModule(CMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
+	bool AddCommonModule(CValueMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
 
-	CModuleUnit* FindCommonModule(CMetaObjectCommonModule* commonModule) const;
-	bool RenameCommonModule(CMetaObjectCommonModule* commonModule, const wxString& newName);
-	bool RemoveCommonModule(CMetaObjectCommonModule* commonModule);
+	CValueModuleUnit* FindCommonModule(CValueMetaObjectCommonModule* commonModule) const;
+	bool RenameCommonModule(CValueMetaObjectCommonModule* commonModule, const wxString& newName);
+	bool RemoveCommonModule(CValueMetaObjectCommonModule* commonModule);
 
 	//system object:
 	CValue* GetObjectManager() const { return m_objectManager; }
 	CMetadataUnit* GetMetaManager() const { return m_metaManager; }
 
-	virtual std::vector<CValuePtr<CModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
+	virtual std::vector<CValuePtr<CValueModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
 
 	//associated map
 	virtual std::map<wxString, CValuePtr<CValue>>& GetGlobalVariables() { return m_listGlConstValue; }
@@ -267,10 +265,10 @@ protected:
 	CValuePtr<CMetadataUnit> m_metaManager;
 
 	//map with compile data
-	std::map<const IMetaObject*, CValuePtr<CValue>> m_listCommonModuleValue;
+	std::map<const IValueMetaObject*, CValuePtr<CValue>> m_listCommonModuleValue;
 
 	//array of common modules
-	std::vector<CValuePtr<CModuleUnit>> m_listCommonModuleManager;
+	std::vector<CValuePtr<CValueModuleUnit>> m_listCommonModuleManager;
 
 	//array of global variables
 	std::map<wxString, CValuePtr<CValue>> m_listGlConstValue;
@@ -278,13 +276,13 @@ protected:
 	friend class CMetaDataConfiguration;
 	friend class CMetaDataDataProcessor;
 
-	friend class CModuleUnit;
+	friend class CValueModuleUnit;
 
 	CMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CModuleManagerConfiguration :
-	public IModuleManager {
+class BACKEND_API CValueModuleManagerConfiguration :
+	public IValueModuleManager {
 	//system events:
 	bool BeforeStart();
 	void OnStart();
@@ -293,7 +291,7 @@ class BACKEND_API CModuleManagerConfiguration :
 public:
 
 	//metaData and external variant
-	CModuleManagerConfiguration(IMetaData* metaData = nullptr, CMetaObjectConfiguration* metaObject = nullptr);
+	CValueModuleManagerConfiguration(IMetaData* metaData = nullptr, CValueMetaObjectConfiguration* metaObject = nullptr);
 
 	//Create common module
 	virtual bool CreateMainModule();

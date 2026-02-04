@@ -27,7 +27,7 @@ CValuePreparedStatement::~CValuePreparedStatement()
 void CValuePreparedStatement::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
-	m_methodHelper.AppendProc(wxT("setParam"), 2, wxT("runQuery(number: position, any:value)"));
+	m_methodHelper.AppendProc(wxT("setParam"), 2, wxT("setParam(number: position, any:value)"));
 
 	m_methodHelper.AppendFunc(wxT("runQuery"), 1, wxT("runQuery()"));
 	m_methodHelper.AppendFunc(wxT("runQueryWithResults"), 1, wxT("runQueryWithResults()"));

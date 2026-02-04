@@ -10,7 +10,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObject, CValue);
 
 #define metaBlock 0x200222
 #define helpBlock 0x200224
@@ -19,12 +19,12 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaObject, CValue);
 //*                                  MetaObject                                           *
 //*****************************************************************************************
 
-void IMetaObject::ResetGuid()
+void IValueMetaObject::ResetGuid()
 {
 	m_metaGuid = wxNewUniqueGuid;
 }
 
-void IMetaObject::ResetId()
+void IValueMetaObject::ResetId()
 {
 	if (m_metaData != nullptr) {
 		m_metaId = m_metaData->GenerateNewID();
@@ -33,17 +33,17 @@ void IMetaObject::ResetId()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-IBackendMetadataTree* IMetaObject::GetMetaDataTree() const
+IBackendMetadataTree* IValueMetaObject::GetMetaDataTree() const
 {
 	return m_metaData ? m_metaData->GetMetaTree() : nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-bool IMetaObject::BuildNewName()
+bool IValueMetaObject::BuildNewName()
 {
 	const wxString& strName = GetName(); bool foundedName = false;
-	std::vector<IMetaObject*> array;
+	std::vector<IValueMetaObject*> array;
 	if (m_parent != nullptr && m_parent->FillArrayObjectByFilter(array, { GetClassType() })) {
 		for (const auto object : array) {
 			if (object->GetParent() != GetParent())
@@ -72,7 +72,7 @@ bool IMetaObject::BuildNewName()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-IMetaObject::IMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true),
+IValueMetaObject::IValueMetaObject(const wxString& strName, const wxString& synonym, const wxString& comment) : CValue(eValueTypes::TYPE_VALUE, true),
 m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaultFlag), m_metaId(0)
 {
 	m_propertyName->SetValue(strName);
@@ -81,12 +81,12 @@ m_methodHelper(new CMethodHelper()), m_metaData(nullptr), m_metaFlags(metaDefaul
 	m_propertyComment->SetValue(comment);
 }
 
-IMetaObject::~IMetaObject()
+IValueMetaObject::~IValueMetaObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
+bool IValueMetaObject::LoadMeta(CMemoryReader& dataReader)
 {
 	//Save meta version 
 	(void)dataReader.r_u32(); //reserved 
@@ -137,7 +137,7 @@ bool IMetaObject::LoadMeta(CMemoryReader& dataReader)
 	return true;
 }
 
-bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
+bool IValueMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 {
 	//save meta version 
 	dataWritter.w_u32(version_oes_last); //reserved 
@@ -179,7 +179,7 @@ bool IMetaObject::SaveMeta(CMemoryWriter& dataWritter)
 	return true;
 }
 
-bool IMetaObject::LoadMetaObject(IMetaData* metaData, CMemoryReader& dataReader)
+bool IValueMetaObject::LoadMetaObject(IMetaData* metaData, CMemoryReader& dataReader)
 {
 	m_metaData = metaData;
 
@@ -192,7 +192,7 @@ bool IMetaObject::LoadMetaObject(IMetaData* metaData, CMemoryReader& dataReader)
 	return true;
 }
 
-bool IMetaObject::SaveMetaObject(IMetaData* metaData, CMemoryWriter& dataWritter, int flags)
+bool IValueMetaObject::SaveMetaObject(IMetaData* metaData, CMemoryWriter& dataWritter, int flags)
 {
 	bool saveToFile = (flags & saveToFileFlag) != 0;
 
@@ -210,7 +210,7 @@ bool IMetaObject::SaveMetaObject(IMetaData* metaData, CMemoryWriter& dataWritter
 	return true;
 }
 
-bool IMetaObject::DeleteMetaObject(IMetaData* metaData)
+bool IValueMetaObject::DeleteMetaObject(IMetaData* metaData)
 {
 	if (m_metaData != metaData)
 		return false;
@@ -218,22 +218,22 @@ bool IMetaObject::DeleteMetaObject(IMetaData* metaData)
 	return DeleteData();
 }
 
-bool IMetaObject::CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags)
+bool IValueMetaObject::CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags)
 {
 	return CreateAndUpdateTableDB(srcMetaData, nullptr, flags);
 }
 
-bool IMetaObject::UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IMetaObject* srcMetaObject)
+bool IValueMetaObject::UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject)
 {
 	return CreateAndUpdateTableDB(srcMetaData, srcMetaObject, updateMetaTable);
 }
 
-bool IMetaObject::DeleteMetaTable(IMetaDataConfiguration* srcMetaData)
+bool IValueMetaObject::DeleteMetaTable(IMetaDataConfiguration* srcMetaData)
 {
 	return CreateAndUpdateTableDB(srcMetaData, this, deleteMetaTable);
 }
 
-bool IMetaObject::OnCreateMetaObject(IMetaData* metaData, int flags)
+bool IValueMetaObject::OnCreateMetaObject(IMetaData* metaData, int flags)
 {
 	GenerateGuid();
 	wxASSERT(metaData);
@@ -247,18 +247,18 @@ bool IMetaObject::OnCreateMetaObject(IMetaData* metaData, int flags)
 	return true;
 }
 
-bool IMetaObject::OnLoadMetaObject(IMetaData* metaData)
+bool IValueMetaObject::OnLoadMetaObject(IMetaData* metaData)
 {
 	m_metaData = metaData;
 	return true;
 }
 
-bool IMetaObject::OnDeleteMetaObject()
+bool IValueMetaObject::OnDeleteMetaObject()
 {
 	return true;
 }
 
-bool IMetaObject::OnAfterCloseMetaObject()
+bool IValueMetaObject::OnAfterCloseMetaObject()
 {
 	IBackendMetadataTree* const metaTree = m_metaData->GetMetaTree();
 	if (metaTree != nullptr)
@@ -267,19 +267,19 @@ bool IMetaObject::OnAfterCloseMetaObject()
 }
 
 #pragma region interface_h
-void IMetaObject::DoSetInterface(const meta_identifier_t& id, const bool& val)
+void IValueMetaObject::DoSetInterface(const meta_identifier_t& id, const bool& val)
 {
 	m_metaData->Modify(true);
 }
 #pragma endregion
 #pragma region role_h 
-void IMetaObject::DoSetRight(const CRole* role, const bool& val)
+void IValueMetaObject::DoSetRight(const CRole* role, const bool& val)
 {
 	m_metaData->Modify(true);
 }
 #pragma endregion
 
-bool IMetaObject::IsFullAccess() const
+bool IValueMetaObject::IsFullAccess() const
 {
 	if (appData->DesignerMode())
 		return true;
@@ -287,7 +287,7 @@ bool IMetaObject::IsFullAccess() const
 	return m_metaData->IsFullAccess();
 }
 
-CUserRoleInfo IMetaObject::GetUserRoleInfo() const
+CUserRoleInfo IValueMetaObject::GetUserRoleInfo() const
 {
 	CUserRoleInfo roleInfo;
 	for (auto role : appData->GetUserRoleArray())
@@ -299,18 +299,18 @@ CUserRoleInfo IMetaObject::GetUserRoleInfo() const
 #define	dataBlock 0x002350
 #define	childBlock 0x002370
 
-bool IMetaObject::Init()
+bool IValueMetaObject::Init()
 {
 	// always false
 	return false;
 }
 
-bool IMetaObject::Init(CValue** paParams, const long lSizeArray)
+bool IValueMetaObject::Init(CValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
 
-	IMetaObject* parent = nullptr;
+	IValueMetaObject* parent = nullptr;
 	if (paParams[0]->ConvertToValue(parent)) {
 		const class_identifier_t& clsid = GetClassType();
 		if (parent != nullptr) {
@@ -324,7 +324,7 @@ bool IMetaObject::Init(CValue** paParams, const long lSizeArray)
 	return false;
 }
 
-bool IMetaObject::IsEditable() const
+bool IValueMetaObject::IsEditable() const
 {
 	if (!IsEnabled() || IsDeleted())
 		return false;
@@ -337,15 +337,15 @@ bool IMetaObject::IsEditable() const
 		m_parent->IsEditable() : true;
 }
 
-bool IMetaObject::CompareObject(const IMetaObject* compareObject) const
+bool IValueMetaObject::CompareObject(const IValueMetaObject* compareObject) const
 {
 #pragma region _compare_fill_h_
 	class CControlComparator {
 	public:
 
 		static bool CompareObject(
-			const IMetaObject* compareObject1,
-			const IMetaObject* compareObject2
+			const IValueMetaObject* compareObject1,
+			const IValueMetaObject* compareObject2
 		)
 		{
 			if (compareObject2 == nullptr)
@@ -381,19 +381,19 @@ bool IMetaObject::CompareObject(const IMetaObject* compareObject) const
 	return CControlComparator::CompareObject(this, compareObject);
 }
 
-bool IMetaObject::CopyObject(CMemoryWriter& writer) const
+bool IValueMetaObject::CopyObject(CMemoryWriter& writer) const
 {
 #pragma region _copy_guard_h_
 
 	class CControlCopyGuard {
 
-		static void Generate(const IMetaObject* copyObject) {
+		static void Generate(const IValueMetaObject* copyObject) {
 			for (unsigned int idx = 0; idx < copyObject->GetChildCount(); idx++)
 				Generate(copyObject->GetChild(idx));
 			copyObject->m_metaCopyGuid = wxNewUniqueGuid;
 		}
 
-		static void Erase(const IMetaObject* copyObject) {
+		static void Erase(const IValueMetaObject* copyObject) {
 			for (unsigned int idx = 0; idx < copyObject->GetChildCount(); idx++)
 				Erase(copyObject->GetChild(idx));
 			copyObject->m_metaCopyGuid = wxNullGuid;
@@ -401,11 +401,11 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 
 	public:
 
-		CControlCopyGuard(const IMetaObject* copyObject) : m_copyObject(copyObject) { Generate(m_copyObject); }
+		CControlCopyGuard(const IValueMetaObject* copyObject) : m_copyObject(copyObject) { Generate(m_copyObject); }
 		~CControlCopyGuard() { Erase(m_copyObject); }
 
 	protected:
-		const IMetaObject* m_copyObject = nullptr;
+		const IValueMetaObject* m_copyObject = nullptr;
 	};
 
 	CControlCopyGuard controlCopyGuard(this);
@@ -419,7 +419,7 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 	class CControlMemoryWriter {
 	public:
 
-		static bool CopyObject(const IMetaObject* copyObject, CMemoryWriter& writer)
+		static bool CopyObject(const IValueMetaObject* copyObject, CMemoryWriter& writer)
 		{
 			CMemoryWriter writterHeaderMemory;
 			writterHeaderMemory.w_s32(copyObject->m_metaData->GetVersion());
@@ -464,13 +464,13 @@ bool IMetaObject::CopyObject(CMemoryWriter& writer) const
 	return CControlMemoryWriter::CopyObject(this, writer);
 }
 
-bool IMetaObject::PasteObject(CMemoryReader& reader)
+bool IValueMetaObject::PasteObject(CMemoryReader& reader)
 {
 #pragma region _paste_fill_h_
 
 	class CControlMemoryReader {
 
-		static bool PasteObject(IMetaObject* pasteObject, CMemoryReader& reader)
+		static bool PasteObject(IValueMetaObject* pasteObject, CMemoryReader& reader)
 		{
 			IMetaData* metaData = pasteObject->GetMetaData();
 
@@ -492,7 +492,7 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 					if (readerMemory == nullptr)
 						break;
 					if (clsid > 0) {
-						IMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
+						IValueMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
 						if (metaObject != nullptr && !PasteObject(metaObject, *readerMemory)) {
 							wxDELETE(metaObject);
 							return false;
@@ -520,7 +520,7 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 
 	public:
 
-		static bool PasteAndRunObject(IMetaObject* pasteObject, CMemoryReader& reader)
+		static bool PasteAndRunObject(IValueMetaObject* pasteObject, CMemoryReader& reader)
 		{
 			IMetaData* metaData = pasteObject->GetMetaData();
 
@@ -542,7 +542,7 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 					if (readerMemory == nullptr)
 						break;
 					if (clsid > 0) {
-						IMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
+						IValueMetaObject* metaObject = metaData->CreateMetaObject(clsid, pasteObject, false);
 						if (metaObject != nullptr && !PasteObject(metaObject, *readerMemory)) {
 							wxDELETE(metaObject);
 							return false;
@@ -574,15 +574,15 @@ bool IMetaObject::PasteObject(CMemoryReader& reader)
 	return CControlMemoryReader::PasteAndRunObject(this, reader);
 }
 
-bool IMetaObject::ChangeChildPosition(IMetaObject* object, unsigned int pos)
+bool IValueMetaObject::ChangeChildPosition(IValueMetaObject* object, unsigned int pos)
 {
 	m_metaData->Modify(true);
 	return IPropertyObjectHelper::ChangeChildPosition(object, pos);
 }
 
-wxString IMetaObject::GetModuleName() const
+wxString IValueMetaObject::GetModuleName() const
 {
-	IMetaObject* parent = GetParent();
+	IValueMetaObject* parent = GetParent();
 	//wxASSERT(parent);
 	if (parent != nullptr) {
 		return parent->GetName() + wxT(": ") + GetName();
@@ -590,11 +590,11 @@ wxString IMetaObject::GetModuleName() const
 	return GetName();
 }
 
-wxString IMetaObject::GetFullName() const
+wxString IValueMetaObject::GetFullName() const
 {
 	wxString strFullName;
 
-	IMetaObject* parent = GetParent();
+	IValueMetaObject* parent = GetParent();
 
 	if (parent != nullptr && g_metaModuleCLSID != GetClassType() && g_metaManagerCLSID != GetClassType())
 		strFullName = strFullName + GetClassName() + '.' + GetName();
@@ -613,7 +613,7 @@ wxString IMetaObject::GetFullName() const
 	return strFullName;
 }
 
-wxString IMetaObject::GetFileName() const
+wxString IValueMetaObject::GetFileName() const
 {
 	return m_metaData->GetFileName();
 }
@@ -622,7 +622,7 @@ wxString IMetaObject::GetFileName() const
 //*                              Support methods                             *
 //****************************************************************************
 
-void IMetaObject::PrepareNames() const
+void IValueMetaObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -633,14 +633,14 @@ void IMetaObject::PrepareNames() const
 	}
 }
 
-bool IMetaObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool IValueMetaObject::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	IProperty* property = GetPropertyByIndex(lPropNum);
 	if (property != nullptr) return property->SetDataValue(varPropVal);
 	return false;
 }
 
-bool IMetaObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool IValueMetaObject::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	const IProperty* property = GetPropertyByIndex(lPropNum);
 	if (property != nullptr) return property->GetDataValue(pvarPropVal);

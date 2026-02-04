@@ -9,7 +9,7 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void IRecordSetObject::GetValueByRow(wxVariant& variant,
+void IValueRecordSetObject::GetValueByRow(wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
@@ -20,7 +20,7 @@ void IRecordSetObject::GetValueByRow(wxVariant& variant,
 
 #include "backend/metaData.h"
 
-bool IRecordSetObject::SetValueByRow(const wxVariant& variant,
+bool IValueRecordSetObject::SetValueByRow(const wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col)
 {
 	const wxString &strData = variant.GetString();
@@ -28,9 +28,9 @@ bool IRecordSetObject::SetValueByRow(const wxVariant& variant,
 	if (node == nullptr)
 		return false;
 
-	IMetaObjectRegisterData* metaObject = GetMetaObject();
+	IValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
-	IMetaObjectAttribute* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
+	IValueMetaObjectAttribute* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
 	wxASSERT(metaObject);
 	CValue newValue = metaObjectAttribute->CreateValue();
 	if (strData.Length() > 0) {

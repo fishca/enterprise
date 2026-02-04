@@ -9,7 +9,7 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void CValueTable::GetValueByRow(wxVariant& variant,
+void CValueTableMemory::GetValueByRow(wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
@@ -18,7 +18,7 @@ void CValueTable::GetValueByRow(wxVariant& variant,
 	node->GetValue(col, variant);
 }
 
-bool CValueTable::SetValueByRow(const wxVariant& variant,
+bool CValueTableMemory::SetValueByRow(const wxVariant& variant,
 	const wxDataViewItem& row, unsigned int col)
 {
 	const wxString& strData = variant.GetString();

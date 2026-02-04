@@ -66,7 +66,7 @@ bool CPropertyForm::SaveData(CMemoryWriter& writer)
 
 bool CPropertyForm::PasteData(CMemoryReader& reader)
 {
-	IMetaObjectForm* metaForm = dynamic_cast<IMetaObjectForm*>(m_owner);
+	IValueMetaObjectForm* metaForm = dynamic_cast<IValueMetaObjectForm*>(m_owner);
 	if (metaForm == nullptr) return false;
 	reader.r_chunk(chunkForm, GetValueAsMemoryBuffer());
 	CPropertyForm::SetValue(reader.r_stringZ());	
@@ -75,7 +75,7 @@ bool CPropertyForm::PasteData(CMemoryReader& reader)
 
 bool CPropertyForm::CopyData(CMemoryWriter& writer)
 {
-	IMetaObjectForm* metaForm = dynamic_cast<IMetaObjectForm*>(m_owner);
+	IValueMetaObjectForm* metaForm = dynamic_cast<IValueMetaObjectForm*>(m_owner);
 	if (metaForm == nullptr) return false; 
 	writer.w_chunk(chunkForm, metaForm->CopyFormData());
 	writer.w_stringZ(GetValueAsString());

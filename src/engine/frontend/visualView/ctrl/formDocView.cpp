@@ -45,14 +45,14 @@ bool CVisualDocument::OnCreate(const wxString& path, long flags)
 	const ISourceDataObject* sourceObject = m_valueForm->GetSourceObject();
 
 	if (sourceObject != nullptr && !IsVisualDemonstrationDoc()) {
-		const IMetaObjectGenericData* genericObject = sourceObject->GetSourceMetaObject();
+		const IValueMetaObjectGenericData* genericObject = sourceObject->GetSourceMetaObject();
 		if (genericObject != nullptr) {
 			CVisualDocument::SetIcon(genericObject->GetIcon());
 			CVisualDocument::SetFilename(genericObject->GetFileName());
 		}
 	}
 	else {
-		const IMetaObjectForm* creator = m_valueForm->GetFormMetaObject();
+		const IValueMetaObjectForm* creator = m_valueForm->GetFormMetaObject();
 		if (creator != nullptr) {
 			CVisualDocument::SetIcon(creator->GetIcon());
 		}
@@ -415,7 +415,7 @@ CVisualDocument* CValueForm::GetVisualDocument() const
 
 //////////////////////////////////////////////////////////////
 
-IMetaObjectGenericData* CValueForm::GetMetaObject() const
+IValueMetaObjectGenericData* CValueForm::GetMetaObject() const
 {
 	return m_sourceObject != nullptr ?
 		m_sourceObject->GetSourceMetaObject() : nullptr;
@@ -427,10 +427,10 @@ wxString CValueForm::GetControlTitle() const
 {
 	if (m_propertyTitle->IsEmptyProperty()) {
 
-		const IMetaObjectGenericData* metaSource = GetMetaObject();
+		const IValueMetaObjectGenericData* metaSource = GetMetaObject();
 		if (metaSource != nullptr) return metaSource->GetSynonym();
 
-		const IMetaObjectForm* metaForm = GetFormMetaObject();
+		const IValueMetaObjectForm* metaForm = GetFormMetaObject();
 		if (metaForm != nullptr) return metaForm->GetSynonym();
 	}
 

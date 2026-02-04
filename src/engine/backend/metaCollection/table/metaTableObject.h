@@ -3,14 +3,14 @@
 
 #include "backend/metaCollection/metaObjectComposite.h"
 
-class BACKEND_API CMetaObjectTableData : public IMetaObjectCompositeData {
-	wxDECLARE_DYNAMIC_CLASS(CMetaObjectTableData);
+class BACKEND_API CValueMetaObjectTableData : public IValueMetaObjectCompositeData {
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectTableData);
 
 public:
 
 	eItemMode GetTableUse() const { return m_propertyUse->GetValueAsEnum(); }
 
-	CMetaObjectAttributePredefined* GetNumberLine() const { return m_propertyNumberLine->GetMetaObject(); }
+	CValueMetaObjectAttributePredefined* GetNumberLine() const { return m_propertyNumberLine->GetMetaObject(); }
 	bool IsNumberLine(const meta_identifier_t& id) const { return id == (*m_propertyNumberLine)->GetMetaID(); }
 
 	//get table class
@@ -23,8 +23,8 @@ public:
 	}
 
 	//ctor 
-	CMetaObjectTableData();
-	virtual ~CMetaObjectTableData();
+	CValueMetaObjectTableData();
+	virtual ~CValueMetaObjectTableData();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -50,10 +50,10 @@ public:
 #pragma region __generic_h__
 
 	//attribute  
-	virtual std::vector<IMetaObjectAttribute*> GetGenericAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+	virtual std::vector<IValueMetaObjectAttribute*> GetGenericAttributeArrayObject(
+		std::vector<IValueMetaObjectAttribute*>& array = std::vector<IValueMetaObjectAttribute*>()) const {
 		FillArrayObjectByPredefined(array);
-		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		FillArrayObjectByFilter<IValueMetaObjectAttribute>(array, { g_metaAttributeCLSID });
 		return array;
 	}
 
@@ -61,17 +61,17 @@ public:
 #pragma region __array_h__
 
 	//any
-	std::vector<IMetaObjectAttribute*> GetAnyAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
+	std::vector<IValueMetaObjectAttribute*> GetAnyAttributeArrayObject(
+		std::vector<IValueMetaObjectAttribute*>& array = std::vector<IValueMetaObjectAttribute*>()) const {
 		FillArrayObjectByPredefined(array);
-		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+		FillArrayObjectByFilter<IValueMetaObjectAttribute>(array, { g_metaAttributeCLSID });
 		return array;
 	}
 
 	//attribute 
-	std::vector<IMetaObjectAttribute*> GetAttributeArrayObject(
-		std::vector<IMetaObjectAttribute*>& array = std::vector<IMetaObjectAttribute*>()) const {
-		FillArrayObjectByFilter<IMetaObjectAttribute>(array, { g_metaAttributeCLSID });
+	std::vector<IValueMetaObjectAttribute*> GetAttributeArrayObject(
+		std::vector<IValueMetaObjectAttribute*>& array = std::vector<IValueMetaObjectAttribute*>()) const {
+		FillArrayObjectByFilter<IValueMetaObjectAttribute>(array, { g_metaAttributeCLSID });
 		return array;
 	}
 
@@ -80,21 +80,21 @@ public:
 
 	//any 
 	template <typename _T1>
-	IMetaObjectAttribute* FindAnyAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaAttributeCLSID, g_metaPredefinedAttributeCLSID });
+	IValueMetaObjectAttribute* FindAnyAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IValueMetaObjectAttribute>(id, { g_metaAttributeCLSID, g_metaPredefinedAttributeCLSID });
 	}
 
 	//attribute 
 	template <typename _T1>
-	IMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
-		return FindObjectByFilter<IMetaObjectAttribute>(id, { g_metaAttributeCLSID });
+	IValueMetaObjectAttribute* FindAttributeObjectByFilter(const _T1& id) const {
+		return FindObjectByFilter<IValueMetaObjectAttribute>(id, { g_metaAttributeCLSID });
 	}
 
 #pragma endregion 
 
 	//special functions for DB 
 	virtual wxString GetTableNameDB() const {
-		IMetaObject* parentMeta = GetParent();
+		IValueMetaObject* parentMeta = GetParent();
 		wxASSERT(parentMeta);
 		return wxString::Format(wxT("%s%i_VT%i"),
 			parentMeta->GetClassName(),
@@ -111,7 +111,7 @@ public:
 protected:
 
 	//get default attributes
-	virtual bool FillArrayObjectByPredefined(std::vector<IMetaObjectAttribute*>& array) const {
+	virtual bool FillArrayObjectByPredefined(std::vector<IValueMetaObjectAttribute*>& array) const {
 		array = { m_propertyNumberLine->GetMetaObject() };
 		return true;
 	}
@@ -123,7 +123,7 @@ private:
 
 	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
 	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
-	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
+	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IValueMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
 };
 
 #endif

@@ -6,7 +6,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool clearTable)
+bool CValueRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool clearTable)
 {
 	if (!appData->DesignerMode())
 	{
@@ -63,7 +63,7 @@ bool CRecordSetObjectAccumulationRegister::WriteRecordSet(bool replace, bool cle
 	return true;
 }
 
-bool CRecordSetObjectAccumulationRegister::DeleteRecordSet()
+bool CValueRecordSetObjectAccumulationRegister::DeleteRecordSet()
 {
 	if (!appData->DesignerMode())
 	{
@@ -144,7 +144,7 @@ enum prop
 //*                              Support methods                             *
 //****************************************************************************
 
-void CRecordSetObjectAccumulationRegister::PrepareNames() const
+void CValueRecordSetObjectAccumulationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -163,12 +163,12 @@ void CRecordSetObjectAccumulationRegister::PrepareNames() const
 	m_methodHelper->AppendProp(wxT("filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
-bool CRecordSetObjectAccumulationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool CValueRecordSetObjectAccumulationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool CRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool CValueRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -183,12 +183,12 @@ bool CRecordSetObjectAccumulationRegister::GetPropVal(const long lPropNum, CValu
 	return false;
 }
 
-bool CRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool CValueRecordSetObjectAccumulationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case func::eAdd:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case func::eCount:
 		pvarRetValue = (unsigned int)GetRowCount();

@@ -3,16 +3,16 @@
 
 #include "dataProcessor.h"
 
-class CManagerDataObjectDataProcessor :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectDataProcessor);
+class CValueManagerDataObjectDataProcessor :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor);
 public:
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const;
-	virtual CMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
 
-	CManagerDataObjectDataProcessor(CMetaObjectDataProcessor* metaObject = nullptr);
-	virtual ~CManagerDataObjectDataProcessor();
+	CValueManagerDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject = nullptr);
+	virtual ~CValueManagerDataObjectDataProcessor();
 
 	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
@@ -31,19 +31,19 @@ public:
 protected:
 
 	CMethodHelper* m_methodHelper;
-	CMetaObjectDataProcessor* m_metaObject;
+	CValueMetaObjectDataProcessor* m_metaObject;
 };
 
-class CManagerDataObjectExternalDataProcessor :
-	public IManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CManagerDataObjectExternalDataProcessor);
+class CValueManagerDataObjectExternalDataProcessor :
+	public IValueManagerDataObject {
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor);
 public:
 	
-	CManagerDataObjectExternalDataProcessor();
-	virtual ~CManagerDataObjectExternalDataProcessor();
+	CValueManagerDataObjectExternalDataProcessor();
+	virtual ~CValueManagerDataObjectExternalDataProcessor();
 
-	virtual CMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
-	virtual CMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
+	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();

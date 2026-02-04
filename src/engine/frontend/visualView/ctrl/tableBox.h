@@ -34,7 +34,7 @@ public:
 	virtual ~CValueTableBox() {}
 
 	//Get source attribute  
-	virtual IMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
 	virtual eSelectorDataType GetFilterDataType() const { return eSelectorDataType::eSelectorDataType_table; }
 	virtual eSourceDataType GetFilterSourceDataType() const { return eSourceDataType::eSourceDataVariant_table; }
 
@@ -44,7 +44,7 @@ public:
 #pragma region _source_data_
 
 	//get metaData from object 
-	virtual IMetaObjectCompositeData* GetSourceMetaObject() const;
+	virtual IValueMetaObjectCompositeData* GetSourceMetaObject() const;
 	//get ref class 
 	virtual class_identifier_t GetSourceClassType() const;
 	//Get presentation 
@@ -286,7 +286,7 @@ public:
 	virtual ISourceObject* GetSourceObject() const { return GetOwner(); }
 
 	//Get source attribute  
-	virtual IMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
+	virtual IValueMetaObjectAttribute* GetSourceAttributeObject() const { return m_propertySource->GetSourceAttributeObject(); }
 	virtual eSelectorDataType GetFilterDataType() const { return eSelectorDataType::eSelectorDataType_reference; }
 	virtual eSourceDataType GetFilterSourceDataType() const { return eSourceDataType::eSourceDataVariant_tableColumn; }
 

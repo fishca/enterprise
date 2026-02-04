@@ -6,15 +6,15 @@
 #include "metaObject.h"
 #include "backend/metaData.h"
 
-void IMetaObject::OnPropertyCreated(IProperty* property)
+void IValueMetaObject::OnPropertyCreated(IProperty* property)
 {
 }
 
-void IMetaObject::OnPropertySelected(IProperty* property)
+void IValueMetaObject::OnPropertySelected(IProperty* property)
 {
 }
 
-bool IMetaObject::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool IValueMetaObject::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
 {
 	IBackendMetadataTree* metadataTree = m_metaData->GetMetaTree();
 	if (m_propertyName == property && metadataTree != nullptr)
@@ -27,7 +27,7 @@ bool IMetaObject::OnPropertyChanging(IProperty* property, const wxVariant& newVa
 
 #include "backend/backend_mainFrame.h"
 
-void IMetaObject::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void IValueMetaObject::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyName == property) m_propertySynonym->SetValue(stringUtils::GenerateSynonym(newValue));
 	wxASSERT(m_metaData);

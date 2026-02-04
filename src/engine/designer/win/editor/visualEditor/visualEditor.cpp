@@ -389,8 +389,8 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const w
 	if (strCaption.IsEmpty()) {
 		const ISourceDataObject* srcObject = handler->GetSourceObject();
 		if (srcObject != nullptr) {
-			const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
-			const IMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
+			const IValueMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+			const IValueMetaObjectGenericData* genericObject = srcObject->GetSourceMetaObject();
 			if (genericObject != nullptr) {
 				m_back->SetTitle(genericObject->GetSynonym() + wxT(": ") + metaFormObject->GetSynonym());
 			}
@@ -399,7 +399,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetCaption(const w
 			}
 		}
 		else {
-			const IMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
+			const IValueMetaObjectForm* metaFormObject = handler->GetFormMetaObject();
 			if (metaFormObject != nullptr) m_back->SetTitle(metaFormObject->GetSynonym());
 		}
 	}

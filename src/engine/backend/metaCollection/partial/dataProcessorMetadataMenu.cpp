@@ -6,7 +6,7 @@
 #include "dataProcessor.h"
 #include "backend/metaData.h"
 
-bool CMetaObjectDataProcessor::PrepareContextMenu(wxMenu *defaultMenu)
+bool CValueMetaObjectDataProcessor::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
 	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
@@ -16,7 +16,7 @@ bool CMetaObjectDataProcessor::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void CMetaObjectDataProcessor::ProcessCommand(unsigned int id)
+void CValueMetaObjectDataProcessor::ProcessCommand(unsigned int id)
 {
 	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);

@@ -143,7 +143,7 @@ meta_identifier_t IMetaData::GetVTByID(const class_identifier_t& clsid) const
 {
 	const IMetaValueTypeCtor* typeCtor = GetTypeCtor(clsid);
 	if (typeCtor != nullptr) {
-		IMetaObject* metaValue = typeCtor->GetMetaObject();
+		IValueMetaObject* metaValue = typeCtor->GetMetaObject();
 		wxASSERT(metaValue);
 		return metaValue->GetMetaID();
 	}
@@ -153,7 +153,7 @@ meta_identifier_t IMetaData::GetVTByID(const class_identifier_t& clsid) const
 class_identifier_t IMetaData::GetIDByVT(const meta_identifier_t& valueType, eCtorMetaType refType) const
 {
 	for (auto& typeCtor : m_factoryCtors) {
-		const IMetaObject* metaValue = typeCtor->GetMetaObject();
+		const IValueMetaObject* metaValue = typeCtor->GetMetaObject();
 		wxASSERT(metaValue);
 		if (refType == typeCtor->GetMetaTypeCtor() && valueType == metaValue->GetMetaID())
 			return typeCtor->GetClassType();
@@ -177,7 +177,7 @@ IMetaValueTypeCtor* IMetaData::GetTypeCtor(const class_identifier_t& clsid) cons
 	return nullptr;
 }
 
-IMetaValueTypeCtor* IMetaData::GetTypeCtor(const IMetaObject* metaValue, eCtorMetaType refType) const
+IMetaValueTypeCtor* IMetaData::GetTypeCtor(const IValueMetaObject* metaValue, eCtorMetaType refType) const
 {
 	for (auto& typeCtor : m_factoryCtors)
 		if (refType == typeCtor->GetMetaTypeCtor() && metaValue == typeCtor->GetMetaObject())
@@ -208,7 +208,7 @@ std::vector<IMetaValueTypeCtor*> IMetaData::GetListCtorsByType() const
 	std::vector<IMetaValueTypeCtor*> retVector;
 	std::copy(m_factoryCtors.begin(), m_factoryCtors.end(), std::back_inserter(retVector));
 	std::sort(retVector.begin(), retVector.end(), [](const IMetaValueTypeCtor* a, const IMetaValueTypeCtor* b) {
-		IMetaObject* ma = a->GetMetaObject(); IMetaObject* mb = b->GetMetaObject();
+		IValueMetaObject* ma = a->GetMetaObject(); IValueMetaObject* mb = b->GetMetaObject();
 		return ma->GetName() > mb->GetName() &&
 			a->GetMetaTypeCtor() > b->GetMetaTypeCtor();
 		}
@@ -221,12 +221,12 @@ std::vector<IMetaValueTypeCtor*> IMetaData::GetListCtorsByType(const class_ident
 {
 	std::vector<IMetaValueTypeCtor*> retVector;
 	std::copy_if(m_factoryCtors.begin(), m_factoryCtors.end(), std::back_inserter(retVector), [clsid, refType](IMetaValueTypeCtor* t) {
-		IMetaObject* const m = t->GetMetaObject();
+		IValueMetaObject* const m = t->GetMetaObject();
 		return refType == t->GetMetaTypeCtor() &&
 			clsid == m->GetClassType(); }
 	);
 	std::sort(retVector.begin(), retVector.end(), [](const IMetaValueTypeCtor* a, const IMetaValueTypeCtor* b) {
-		IMetaObject* ma = a->GetMetaObject(); IMetaObject* mb = b->GetMetaObject();
+		IValueMetaObject* ma = a->GetMetaObject(); IValueMetaObject* mb = b->GetMetaObject();
 		return ma->GetName() > mb->GetName() &&
 			a->GetMetaTypeCtor() > b->GetMetaTypeCtor();
 		}
@@ -239,7 +239,7 @@ std::vector<IMetaValueTypeCtor*> IMetaData::GetListCtorsByType(eCtorMetaType ref
 	std::vector<IMetaValueTypeCtor*> retVector;
 	std::copy_if(m_factoryCtors.begin(), m_factoryCtors.end(), std::back_inserter(retVector), [refType](const IMetaValueTypeCtor* t) { return refType == t->GetMetaTypeCtor(); });
 	std::sort(retVector.begin(), retVector.end(), [](const IMetaValueTypeCtor* a, const IMetaValueTypeCtor* b) {
-		IMetaObject* ma = a->GetMetaObject(); IMetaObject* mb = b->GetMetaObject();
+		IValueMetaObject* ma = a->GetMetaObject(); IValueMetaObject* mb = b->GetMetaObject();
 		return ma->GetName() > mb->GetName() &&
 			a->GetMetaTypeCtor() > b->GetMetaTypeCtor();
 		}

@@ -131,7 +131,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 
 	if (m_ownerProperty != nullptr) {
 
-		std::map<CMetaObjectLanguage*, wxTextCtrl*> locArray;
+		std::map<CValueMetaObjectLanguage*, wxTextCtrl*> locArray;
 
 		// launch editor dialog
 		wxDialog* dlg = new wxDialog(pg->GetPanel(), wxID_ANY,
@@ -160,7 +160,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 			metaData->GetOwner(owner);
 			if (owner == nullptr) { owner = metaData; }
 
-			auto arrayLanguage = owner->GetAnyArrayObject<CMetaObjectLanguage>(g_metaLanguageCLSID);
+			auto arrayLanguage = owner->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID);
 			for (const auto language : arrayLanguage) {
 
 				auto iterator = std::find_if(array.begin(), array.end(),

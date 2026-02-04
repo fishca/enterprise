@@ -37,7 +37,7 @@ CFunctionList::CFunctionList(CMetaDocument* moduleDoc, CCodeEditor* parent)
 	int funcRed = imageList->Add(wxArtProvider::GetIcon(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE));
 	m_listProcedures->SetImageList(imageList, wxIMAGE_LIST_SMALL);
 
-	const IMetaObjectModule* metaModule = dynamic_cast<const IMetaObjectModule*>(moduleDoc->GetMetaObject());
+	const IValueMetaObjectModule* metaModule = dynamic_cast<const IValueMetaObjectModule*>(moduleDoc->GetMetaObject());
 	wxASSERT(metaModule);
 
 	CParserModule moduleParser; std::vector<wxString> arrayProcedures; int maxLine = 0;
@@ -131,8 +131,8 @@ void CFunctionList::OnButtonOk(wxCommandEvent& event)
 			m_codeEditor->GotoLine(line.m_line - 1);
 		}
 		else {
-			IMetaObjectModule* metaModule = wxDynamicCast(
-				m_docModule->GetMetaObject(), IMetaObjectModule
+			IValueMetaObjectModule* metaModule = wxDynamicCast(
+				m_docModule->GetMetaObject(), IValueMetaObjectModule
 			);
 			wxASSERT(metaModule);
 			wxString procName = m_listProcedures->GetItemText(lSelectedItem);

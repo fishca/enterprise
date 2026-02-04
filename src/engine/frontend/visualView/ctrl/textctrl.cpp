@@ -13,23 +13,23 @@ bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 {
 	const IMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
-		IMetaObjectRecordDataRef* metaObject = nullptr;
+		IValueMetaObjectRecordDataRef* metaObject = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
-			const IMetaObjectGenericData* metaObjectValue =
+			const IValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 			if (metaObjectValue != nullptr) {
-				const IMetaObjectAttribute* attribute = wxDynamicCast(metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IMetaObjectAttribute);
+				const IValueMetaObjectAttribute* attribute = wxDynamicCast(metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IValueMetaObjectAttribute);
 				wxASSERT(attribute);
 				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 				if (so != nullptr) {
-					metaObject = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
+					metaObject = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
 				}
 			}
 		}
 		else {
 			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
-				metaObject = wxDynamicCast(so->GetMetaObject(), IMetaObjectRecordDataRef);
+				metaObject = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
 			}
 		}
 
@@ -113,7 +113,7 @@ wxString CValueTextCtrl::GetControlTitle() const
 		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
-		const IMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		const IValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}
@@ -235,7 +235,7 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 {
 	ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 	if (!m_propertySource->IsEmptyProperty() && sourceObject != nullptr) {
-		const IMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
+		const IValueMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		sourceObject->SetValueByMetaID(m_propertySource->GetValueAsSource(), varControlVal);
 		m_selValue = metaObject->AdjustValue(varControlVal);

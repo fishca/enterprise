@@ -39,7 +39,7 @@ bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
 void wxPGHyperLinkProperty::OnSetValue()
 {
 	if (wxT("hyperLink_clicked") == m_value.GetName() && m_value.GetBool()) {
-		IMetaObject* metaObject = dynamic_cast<IMetaObject*>(m_ownerProperty);
+		IValueMetaObject* metaObject = dynamic_cast<IValueMetaObject*>(m_ownerProperty);
 		if (metaObject != nullptr) {
 			wxTheApp->CallAfter(
 				[metaObject]() {

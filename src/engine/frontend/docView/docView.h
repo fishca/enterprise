@@ -14,12 +14,12 @@
 
 class BACKEND_API CValue;
 
-class BACKEND_API IMetaObject;
-class BACKEND_API IMetaObjectRecordData;
+class BACKEND_API IValueMetaObject;
+class BACKEND_API IValueMetaObjectRecordData;
 
-class BACKEND_API CMetaObjectModule;
-class BACKEND_API CMetaObjectForm;
-class BACKEND_API CMetaObjectGrid;
+class BACKEND_API CValueMetaObjectModule;
+class BACKEND_API CValueMetaObjectForm;
+class BACKEND_API CValueMetaObjectGrid;
 
 class CMetaView;
 
@@ -36,8 +36,8 @@ public:
 	virtual void SetIcon(const wxIcon& icon) { m_docIcon = icon; }
 	virtual wxIcon GetIcon() const { return m_docIcon; }
 
-	virtual void SetMetaObject(IMetaObject* metaObject) { m_metaObject = metaObject; }
-	virtual IMetaObject* GetMetaObject() const { return m_metaObject; }
+	virtual void SetMetaObject(IValueMetaObject* metaObject) { m_metaObject = metaObject; }
+	virtual IValueMetaObject* GetMetaObject() const { return m_metaObject; }
 
 	template <class T>
 	inline T* ConvertMetaObjectToType() {
@@ -109,7 +109,7 @@ public:
 protected:
 
 	CMetaDocument* m_documentParent;
-	IMetaObject* m_metaObject;	// current metadata object
+	IValueMetaObject* m_metaObject;	// current metadata object
 
 	wxDList<CMetaDocument> m_childDocs;
 	bool m_childDoc;
@@ -124,8 +124,8 @@ public:
 	virtual class IMetaData* GetMetaData() const = 0;
 };
 
-class FRONTEND_API IModuleDocument : public CMetaDocument {
-	wxDECLARE_ABSTRACT_CLASS(IModuleDocument);
+class FRONTEND_API IValueModuleDocument : public CMetaDocument {
+	wxDECLARE_ABSTRACT_CLASS(IValueModuleDocument);
 public:
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) = 0;

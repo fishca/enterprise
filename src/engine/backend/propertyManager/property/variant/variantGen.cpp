@@ -6,7 +6,7 @@ wxString wxVariantDataGeneration::MakeString() const
 	if (metaData == nullptr) return wxEmptyString;
 	wxString strDescr;
 	for (unsigned int idx = 0; idx < m_metaDesc.GetTypeCount(); idx++) {
-		IMetaObject* record = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
+		IValueMetaObject* record = metaData->FindAnyObjectByFilter(m_metaDesc.GetByIdx(idx));
 		if (record == nullptr || !record->IsAllowed())
 			continue;
 		if (strDescr.IsEmpty()) {

@@ -171,7 +171,7 @@ void CMetadataTree::CMetaTreeCtrl::OnBeginDrag(wxTreeEvent& event) {
 	// need to explicitly allow drag
 	if (curItem == GetRootItem())
 		return;
-	IMetaObject* metaObject = m_ownerTree->GetMetaObject(curItem);
+	IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(curItem);
 	if (metaObject == nullptr)
 		return;
 	m_draggedItem = curItem;
@@ -188,7 +188,7 @@ void CMetadataTree::CMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 		return;
 
 	// ensure that itemDst is not itemSrc or a child of itemSrc
-	IMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
+	IValueMetaObject* metaSrcObject = m_ownerTree->GetMetaObject(itemSrc);
 
 	if (metaSrcObject != nullptr) {
 
@@ -197,7 +197,7 @@ void CMetadataTree::CMetaTreeCtrl::OnEndDrag(wxTreeEvent& event) {
 		if (!item.IsOk())
 			return;
 
-		IMetaObject* createdMetaObject = m_ownerTree->NewItem(
+		IValueMetaObject* createdMetaObject = m_ownerTree->NewItem(
 			m_ownerTree->GetClassIdentifier(item),
 			m_ownerTree->GetMetaIdentifier(item),
 			false
@@ -307,7 +307,7 @@ void CMetadataTree::CMetaTreeCtrl::OnCopyItem(wxCommandEvent& event)
 	// Write some text to the clipboard
 	if (wxTheClipboard->Open()) {
 
-		IMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
+		IValueMetaObject* metaObject = m_ownerTree->GetMetaObject(item);
 		if (metaObject != nullptr) {
 
 			CMemoryWriter dataWritter;
@@ -348,7 +348,7 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 
 		if (wxTheClipboard->GetData(data)) {
 
-			IMetaObject* metaObject = m_ownerTree->NewItem(
+			IValueMetaObject* metaObject = m_ownerTree->NewItem(
 				m_ownerTree->GetClassIdentifier(),
 				m_ownerTree->GetMetaIdentifier(),
 				false

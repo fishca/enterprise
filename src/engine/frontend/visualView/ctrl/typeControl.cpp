@@ -462,7 +462,7 @@ void ITypeControlFactory::QuickChoice(IControlFrame* controlValue, CValue& newVa
 
 eSelectMode ITypeControlFactory::GetSelectMode() const
 {
-	IMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return sourceObject->GetSelectMode();
 	return eSelectMode::eSelectMode_Items;
 }
@@ -474,14 +474,14 @@ CValue ITypeControlFactory::CreateValue() const
 
 CValue* ITypeControlFactory::CreateValueRef() const
 {
-	IMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return sourceObject->CreateValueRef();
 	return IBackendTypeSourceFactory::CreateValueRef();
 }
 
 class_identifier_t ITypeControlFactory::GetDataType() const
 {
-	IMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
+	IValueMetaObjectAttribute* sourceObject = GetSourceAttributeObject();
 	if (sourceObject != nullptr) return ShowSelectType(sourceObject->GetMetaData(), sourceObject->GetTypeDesc());
 	return ShowSelectType(GetMetaData(), GetTypeDesc());
 }

@@ -19,7 +19,7 @@ private:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) override {
 		if (!line.IsOk())
 			return nullptr;
-		return CValue::CreateAndPrepareValueRef<CDataObjectListReturnLine>(this, line);
+		return CValue::CreateAndPrepareValueRef<CValueDataObjectListReturnLine>(this, line);
 	}
 
 public:
@@ -36,8 +36,8 @@ public:
 		return 0;
 	}
 
-	class CDataObjectListColumnCollection : public IValueTable::IValueModelColumnCollection {
-		wxDECLARE_DYNAMIC_CLASS(CDataObjectListColumnCollection);
+	class CValueDataObjectListColumnCollection : public IValueTable::IValueModelColumnCollection {
+		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectListColumnCollection);
 	public:
 		class CDataObjectListColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CDataObjectListColumnInfo);
@@ -58,9 +58,9 @@ public:
 
 	public:
 
-		CDataObjectListColumnCollection();
-		CDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
-		virtual ~CDataObjectListColumnCollection();
+		CValueDataObjectListColumnCollection();
+		CValueDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
+		virtual ~CValueDataObjectListColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
 			CDataObjectListColumnInfo* columnInfo = m_listColumnInfo.at(col);
@@ -94,12 +94,12 @@ public:
 		CMethodHelper* m_methodHelper;
 	};
 
-	class CDataObjectListReturnLine : public IValueModelReturnLine {
-		wxDECLARE_DYNAMIC_CLASS(CDataObjectListReturnLine);
+	class CValueDataObjectListReturnLine : public IValueModelReturnLine {
+		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectListReturnLine);
 	public:
 
-		CDataObjectListReturnLine(IValueListDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
-		virtual ~CDataObjectListReturnLine();
+		CValueDataObjectListReturnLine(IValueListDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		virtual ~CValueDataObjectListReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const {
 			return m_ownerTable;
@@ -192,7 +192,7 @@ public:
 
 protected:
 	CGuid m_objGuid;
-	CValuePtr<CDataObjectListColumnCollection> m_recordColumnCollection;
+	CValuePtr<CValueDataObjectListColumnCollection> m_recordColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
 
@@ -508,13 +508,13 @@ private:
 	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
 		if (!line.IsOk())
 			return nullptr;
-		return CValue::CreateAndPrepareValueRef<CDataObjectTreeReturnLine>(this, line);
+		return CValue::CreateAndPrepareValueRef<CValueDataObjectTreeReturnLine>(this, line);
 	}
 
 public:
 
-	class CDataObjectTreeColumnCollection : public IValueTree::IValueModelColumnCollection {
-		wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeColumnCollection);
+	class CValueDataObjectTreeColumnCollection : public IValueTree::IValueModelColumnCollection {
+		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectTreeColumnCollection);
 	public:
 		class CDataObjectTreeColumnInfo : public IValueTree::IValueModelColumnCollection::IValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeColumnInfo);
@@ -535,9 +535,9 @@ public:
 
 	public:
 
-		CDataObjectTreeColumnCollection();
-		CDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
-		virtual ~CDataObjectTreeColumnCollection();
+		CValueDataObjectTreeColumnCollection();
+		CValueDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject);
+		virtual ~CValueDataObjectTreeColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
 			CDataObjectTreeColumnInfo* columnInfo = m_listColumnInfo.at(col);
@@ -571,12 +571,12 @@ public:
 		CMethodHelper* m_methodHelper;
 	};
 
-	class CDataObjectTreeReturnLine : public IValueModelReturnLine {
-		wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeReturnLine);
+	class CValueDataObjectTreeReturnLine : public IValueModelReturnLine {
+		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectTreeReturnLine);
 	public:
 
-		CDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
-		virtual ~CDataObjectTreeReturnLine();
+		CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		virtual ~CValueDataObjectTreeReturnLine();
 
 		virtual IValueTree* GetOwnerModel() const {
 			return m_ownerTable;
@@ -666,7 +666,7 @@ public:
 protected:
 
 	CGuid m_objGuid;
-	CValuePtr<CDataObjectTreeColumnCollection> m_recordColumnCollection;
+	CValuePtr<CValueDataObjectTreeColumnCollection> m_recordColumnCollection;
 	CMethodHelper* m_methodHelper;
 };
 

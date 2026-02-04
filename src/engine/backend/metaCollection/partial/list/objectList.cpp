@@ -18,7 +18,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTreeDataObjectFolderRef, IValueTreeDataObject);
 
 IValueListDataObject::IValueListDataObject(IValueMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
 	ISourceDataObject(),
-	m_recordColumnCollection(new CDataObjectListColumnCollection(this, metaObject)),
+	m_recordColumnCollection(new CValueDataObjectListColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
@@ -43,7 +43,7 @@ IValueListDataObject::~IValueListDataObject()
 
 IValueTreeDataObject::IValueTreeDataObject(IValueMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
 	ISourceDataObject(),
-	m_recordColumnCollection(new CDataObjectTreeColumnCollection(this, metaObject)),
+	m_recordColumnCollection(new CValueDataObjectTreeColumnCollection(this, metaObject)),
 	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
 {
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
@@ -63,17 +63,17 @@ IValueTreeDataObject::~IValueTreeDataObject()
 }
 
 //////////////////////////////////////////////////////////////////////
-//					  CDataObjectListColumnCollection               //
+//					  CValueDataObjectListColumnCollection               //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CDataObjectListColumnCollection, IValueTable::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection, IValueTable::IValueModelColumnCollection);
 
-IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollection() :
+IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnCollection() :
 	IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
 {
 }
 
-IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
+IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
 	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
@@ -83,17 +83,17 @@ IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnColl
 	}
 }
 
-IValueListDataObject::CDataObjectListColumnCollection::~CDataObjectListColumnCollection()
+IValueListDataObject::CValueDataObjectListColumnCollection::~CValueDataObjectListColumnCollection()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IValueListDataObject::CDataObjectListColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool IValueListDataObject::CValueDataObjectListColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool IValueListDataObject::CDataObjectListColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool IValueListDataObject::CValueDataObjectListColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 
@@ -109,14 +109,14 @@ bool IValueListDataObject::CDataObjectListColumnCollection::GetAt(const CValue& 
 	return true;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CDataObjectTreeColumnCollection, IValueTree::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, IValueTree::IValueModelColumnCollection);
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollection() :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnCollection() :
 	IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
 {
 }
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
 	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
@@ -127,17 +127,17 @@ IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnColl
 	}
 }
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::~CDataObjectTreeColumnCollection()
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::~CValueDataObjectTreeColumnCollection()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IValueTreeDataObject::CDataObjectTreeColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool IValueTreeDataObject::CDataObjectTreeColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
@@ -155,55 +155,55 @@ bool IValueTreeDataObject::CDataObjectTreeColumnCollection::GetAt(const CValue& 
 //							 CDataObjectListColumnInfo              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
 
-IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo() :
+IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo() :
 	IValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute) :
+IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute) :
 	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo::~CDataObjectListColumnInfo()
+IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::~CDataObjectListColumnInfo()
 {
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, IValueTree::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, IValueTree::IValueModelColumnCollection::IValueModelColumnInfo);
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo() :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo() :
 	IValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute) :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute) :
 	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::~CDataObjectTreeColumnInfo()
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::~CDataObjectTreeColumnInfo()
 {
 }
 
 //////////////////////////////////////////////////////////////////////
-//					  CDataObjectListReturnLine                     //
+//					  CValueDataObjectListReturnLine                     //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CDataObjectListReturnLine, IValueTable::IValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListReturnLine, IValueTable::IValueModelReturnLine);
 
-IValueListDataObject::CDataObjectListReturnLine::CDataObjectListReturnLine(IValueListDataObject* ownerTable, const wxDataViewItem& line) :
+IValueListDataObject::CValueDataObjectListReturnLine::CValueDataObjectListReturnLine(IValueListDataObject* ownerTable, const wxDataViewItem& line) :
 	IValueModelReturnLine(line), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
 }
 
-IValueListDataObject::CDataObjectListReturnLine::~CDataObjectListReturnLine()
+IValueListDataObject::CValueDataObjectListReturnLine::~CValueDataObjectListReturnLine()
 {
 	wxDELETE(m_methodHelper);
 }
 
-void IValueListDataObject::CDataObjectListReturnLine::PrepareNames() const
+void IValueListDataObject::CValueDataObjectListReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -216,12 +216,12 @@ void IValueListDataObject::CDataObjectListReturnLine::PrepareNames() const
 	}
 }
 
-bool IValueListDataObject::CDataObjectListReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool IValueListDataObject::CValueDataObjectListReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueListDataObject::CDataObjectListReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool IValueListDataObject::CValueDataObjectListReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -232,20 +232,20 @@ bool IValueListDataObject::CDataObjectListReturnLine::GetPropVal(const long lPro
 	return node->GetValue(id, pvarPropVal);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CDataObjectTreeReturnLine, IValueTree::IValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeReturnLine, IValueTree::IValueModelReturnLine);
 
-IValueTreeDataObject::CDataObjectTreeReturnLine::CDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable, const wxDataViewItem& line) :
+IValueTreeDataObject::CValueDataObjectTreeReturnLine::CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable, const wxDataViewItem& line) :
 	IValueModelReturnLine(line),
 	m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
 }
 
-IValueTreeDataObject::CDataObjectTreeReturnLine::~CDataObjectTreeReturnLine()
+IValueTreeDataObject::CValueDataObjectTreeReturnLine::~CValueDataObjectTreeReturnLine()
 {
 	wxDELETE(m_methodHelper);
 }
 
-void IValueTreeDataObject::CDataObjectTreeReturnLine::PrepareNames() const
+void IValueTreeDataObject::CValueDataObjectTreeReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -258,12 +258,12 @@ void IValueTreeDataObject::CDataObjectTreeReturnLine::PrepareNames() const
 	}
 }
 
-bool IValueTreeDataObject::CDataObjectTreeReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueTreeDataObject::CDataObjectTreeReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -1191,10 +1191,10 @@ bool CValueListRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropV
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CDataObjectListColumnCollection, "listColumn", string_to_clsid("VL_LVC"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CDataObjectListColumnCollection::CDataObjectListColumnInfo, "listColumnInfo", string_to_clsid("VL_LCI"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CDataObjectListReturnLine, "listValueRow", string_to_clsid("VL_LVR"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection, "listColumn", string_to_clsid("VL_LVC"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo, "listColumnInfo", string_to_clsid("VL_LCI"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListReturnLine, "listValueRow", string_to_clsid("VL_LVR"));
 
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CDataObjectTreeColumnCollection, "treeColumn", string_to_clsid("VL_TVC"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, "treeColumnInfo", string_to_clsid("VL_TCI"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CDataObjectTreeReturnLine, "treeValueRow", string_to_clsid("VL_TVR"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, "treeColumn", string_to_clsid("VL_TVC"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, "treeColumnInfo", string_to_clsid("VL_TCI"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeReturnLine, "treeValueRow", string_to_clsid("VL_TVR"));

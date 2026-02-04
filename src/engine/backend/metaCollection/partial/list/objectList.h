@@ -39,8 +39,8 @@ public:
 	class CValueDataObjectListColumnCollection : public IValueTable::IValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectListColumnCollection);
 	public:
-		class CDataObjectListColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
-			wxDECLARE_DYNAMIC_CLASS(CDataObjectListColumnInfo);
+		class CValueDataObjectListColumnInfo : public IValueTable::IValueModelColumnCollection::IValueModelColumnInfo {
+			wxDECLARE_DYNAMIC_CLASS(CValueDataObjectListColumnInfo);
 		public:
 
 			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
@@ -48,9 +48,9 @@ public:
 			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
-			CDataObjectListColumnInfo();
-			CDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute);
-			virtual ~CDataObjectListColumnInfo();
+			CValueDataObjectListColumnInfo();
+			CValueDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute);
+			virtual ~CValueDataObjectListColumnInfo();
 
 		private:
 			IValueMetaObjectAttribute* m_metaAttribute;
@@ -63,7 +63,7 @@ public:
 		virtual ~CValueDataObjectListColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
-			CDataObjectListColumnInfo* columnInfo = m_listColumnInfo.at(col);
+			CValueDataObjectListColumnInfo* columnInfo = m_listColumnInfo.at(col);
 			wxASSERT(columnInfo);
 			return columnInfo->GetColumnType();
 		}
@@ -90,7 +90,7 @@ public:
 	protected:
 
 		IValueListDataObject* m_ownerTable;
-		std::map<meta_identifier_t, CValuePtr<CDataObjectListColumnInfo>> m_listColumnInfo;
+		std::map<meta_identifier_t, CValuePtr<CValueDataObjectListColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
 
@@ -516,8 +516,8 @@ public:
 	class CValueDataObjectTreeColumnCollection : public IValueTree::IValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectTreeColumnCollection);
 	public:
-		class CDataObjectTreeColumnInfo : public IValueTree::IValueModelColumnCollection::IValueModelColumnInfo {
-			wxDECLARE_DYNAMIC_CLASS(CDataObjectTreeColumnInfo);
+		class CValueDataObjectTreeColumnInfo : public IValueTree::IValueModelColumnCollection::IValueModelColumnInfo {
+			wxDECLARE_DYNAMIC_CLASS(CValueDataObjectTreeColumnInfo);
 		public:
 
 			virtual unsigned int GetColumnID() const { return m_metaAttribute->GetMetaID(); }
@@ -525,9 +525,9 @@ public:
 			virtual wxString GetColumnCaption() const { return m_metaAttribute->GetSynonym(); }
 			virtual const CTypeDescription GetColumnType() const { return m_metaAttribute->GetTypeDesc(); }
 
-			CDataObjectTreeColumnInfo();
-			CDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute);
-			virtual ~CDataObjectTreeColumnInfo();
+			CValueDataObjectTreeColumnInfo();
+			CValueDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute);
+			virtual ~CValueDataObjectTreeColumnInfo();
 
 		private:
 			IValueMetaObjectAttribute* m_metaAttribute;
@@ -540,7 +540,7 @@ public:
 		virtual ~CValueDataObjectTreeColumnCollection();
 
 		virtual const CTypeDescription GetColumnType(unsigned int col) const {
-			CDataObjectTreeColumnInfo* columnInfo = m_listColumnInfo.at(col);
+			CValueDataObjectTreeColumnInfo* columnInfo = m_listColumnInfo.at(col);
 			wxASSERT(columnInfo);
 			return columnInfo->GetColumnType();
 		}
@@ -567,7 +567,7 @@ public:
 	protected:
 
 		IValueTreeDataObject* m_ownerTable;
-		std::map<meta_identifier_t, CValuePtr<CDataObjectTreeColumnInfo>> m_listColumnInfo;
+		std::map<meta_identifier_t, CValuePtr<CValueDataObjectTreeColumnInfo>> m_listColumnInfo;
 		CMethodHelper* m_methodHelper;
 	};
 

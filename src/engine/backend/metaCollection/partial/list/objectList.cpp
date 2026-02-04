@@ -79,7 +79,7 @@ IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectList
 	wxASSERT(metaObject);
 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
-		m_listColumnInfo.insert_or_assign(object->GetMetaID(), new CDataObjectListColumnInfo(object));
+		m_listColumnInfo.insert_or_assign(object->GetMetaID(), new CValueDataObjectListColumnInfo(object));
 	}
 }
 
@@ -123,7 +123,7 @@ IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTree
 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_listColumnInfo.insert_or_assign(object->GetMetaID(),
-			new CDataObjectTreeColumnInfo(object));
+			new CValueDataObjectTreeColumnInfo(object));
 	}
 }
 
@@ -152,38 +152,38 @@ bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::GetAt(const CVa
 
 
 //////////////////////////////////////////////////////////////////////
-//							 CDataObjectListColumnInfo              //
+//							 CValueDataObjectListColumnInfo              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo() :
+IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::CValueDataObjectListColumnInfo() :
 	IValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::CDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute) :
+IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::CValueDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute) :
 	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo::~CDataObjectListColumnInfo()
+IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::~CValueDataObjectListColumnInfo()
 {
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, IValueTree::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, IValueTree::IValueModelColumnCollection::IValueModelColumnInfo);
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo() :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::CValueDataObjectTreeColumnInfo() :
 	IValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::CDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute) :
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::CValueDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute) :
 	IValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo::~CDataObjectTreeColumnInfo()
+IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::~CValueDataObjectTreeColumnInfo()
 {
 }
 
@@ -1192,9 +1192,9 @@ bool CValueListRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropV
 //**********************************************************************
 
 SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection, "listColumn", string_to_clsid("VL_LVC"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CDataObjectListColumnInfo, "listColumnInfo", string_to_clsid("VL_LCI"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, "listColumnInfo", string_to_clsid("VL_LCI"));
 SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListReturnLine, "listValueRow", string_to_clsid("VL_LVR"));
 
 SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, "treeColumn", string_to_clsid("VL_TVC"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CDataObjectTreeColumnInfo, "treeColumnInfo", string_to_clsid("VL_TCI"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, "treeColumnInfo", string_to_clsid("VL_TCI"));
 SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeReturnLine, "treeValueRow", string_to_clsid("VL_TVR"));

@@ -61,10 +61,10 @@ bool CValueSpreadsheet::SetPropVal(const long lPropNum, const CValue& varPropVal
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		spreadsheetDesc.SetFreezeRow(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetFreezeRow(varPropVal.GetInteger());
 		return true;
 	case eFixedTop:
-		spreadsheetDesc.SetFreezeCol(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetFreezeCol(varPropVal.GetInteger());
 		return true;
 	case eAreas:
 		return true;
@@ -133,18 +133,17 @@ bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, con
 
 	if (lMethodNum == ePutHorizontalPageBreak)
 	{
-		spreadsheetDesc.AddRowBrake(spreadsheetDesc.GetNumberRows());
+		m_spreadsheetDoc->AddRowBrake(spreadsheetDesc.GetNumberRows());
 		return true;
 	}
 	else if (lMethodNum == ePutVerticalPageBreak)
 	{
-		spreadsheetDesc.AddColBrake(spreadsheetDesc.GetNumberCols());
+		m_spreadsheetDoc->AddColBrake(spreadsheetDesc.GetNumberCols());
 		return true;
 	}
 	else if (lMethodNum == eClear)
 	{
-		spreadsheetDesc.ResetSpreadsheet();
-
+		m_spreadsheetDoc->ResetSpreadsheet();
 		return true;
 	}
 	else if (lMethodNum == ePrint)

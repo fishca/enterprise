@@ -70,6 +70,61 @@ public:
 
 	bool IsEmptyDocument() const { return m_spreadsheetDesc.IsEmptySpreadsheet(); }
 
+#pragma region __notifier_h__
+
+	void ResetSpreadsheet(int count = 0);
+
+	//size 
+	void SetRowSize(int row, int height = 0);
+	void SetColSize(int col, int width = 0);
+
+	//freeze 
+	void SetFreezeRow(int row);
+	void SetFreezeCol(int col);
+
+	//area 
+	void AddRowArea(const wxString& strAreaName,
+		unsigned int start, unsigned int end);
+	void DeleteRowArea(const wxString& strAreaName);
+	void AddColArea(const wxString& strAreaName,
+		unsigned int start, unsigned int end);
+	void DeleteColArea(const wxString& strAreaName);
+	void SetRowSizeArea(const wxString& strAreaName, int start, int end);
+	void SetRowNameArea(size_t idx, const wxString& strAreaName);;
+	void SetColSizeArea(const wxString& strAreaName, int start, int end);;
+	void SetColNameArea(size_t idx, const wxString& strAreaName);;
+
+	// ------ row and col formatting
+	//
+
+	void SetCellBackgroundColour(int row, int col, const wxColour& colour);
+	void SetCellTextColour(int row, int col, const wxColour& colour);
+	void SetCellTextOrient(int row, int col, const int orient);
+	void SetCellFont(int row, int col, const wxFont& font);
+	void SetCellAlignment(int row, int col, const int horiz, const int vert);
+	void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc);
+	void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc);
+	void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc);
+	void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc);
+	void SetCellSize(int row, int col, int num_rows, int num_cols);
+	void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode);
+	void SetCellReadOnly(int row, int col, bool isReadOnly = true);
+
+	// ------ cell brake accessors
+	//
+	//support printing 
+	void AddRowBrake(int row);
+	void AddColBrake(int col);
+
+	void SetRowBrake(int row);
+	void SetColBrake(int col);
+
+	// ------ cell value accessors
+	//
+	void SetCellValue(int row, int col, const wxString& s);
+
+#pragma endregion 
+
 #pragma region __fs_h__
 
 	//load/save form file

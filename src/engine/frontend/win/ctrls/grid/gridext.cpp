@@ -10708,6 +10708,9 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 
 			if (valid_area)
 			{
+				const wxString newValue = areaLabel;
+				const wxString oldValue = rowArea->m_areaLabel;
+
 				rowArea->m_areaLabel = areaLabel;
 
 				const int index = m_rowAreaAt.Index(*rowArea);
@@ -10715,7 +10718,7 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 				{
 					SendGridAreaEvent(wxEVT_GRID_ROW_AREA_NAME, index, *rowArea);
 
-					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaRow, areaLabel, rowArea->m_areaLabel);
+					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaRow, newValue, oldValue);
 				}
 
 				return true;
@@ -10761,14 +10764,17 @@ bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 
 			if (valid_area)
 			{
+				const wxString newValue = areaLabel;
+				const wxString oldValue = colArea->m_areaLabel;
+
 				colArea->m_areaLabel = areaLabel;
 
-				const int index = m_rowAreaAt.Index(*colArea);
+				const int index = m_colAreaAt.Index(*colArea);
 				if (index >= 0)
 				{
-					SendGridAreaEvent(wxEVT_GRID_ROW_AREA_NAME, index, *colArea);
+					SendGridAreaEvent(wxEVT_GRID_COL_AREA_NAME, index, *colArea);
 
-					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaCol, areaLabel, colArea->m_areaLabel);
+					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaCol, newValue, oldValue);
 				}
 
 				return true;
@@ -10783,7 +10789,7 @@ bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 
 void wxGridExt::AddRowBrake(int row)
 {
-	m_rowBrakeAt.Add(row); 
+	m_rowBrakeAt.Add(row);
 
 	// make up a dummy event for the grid event to use -- unfortunately we
 	// can't do anything else here
@@ -10819,8 +10825,8 @@ void wxGridExt::SetRowBrake(int row)
 }
 
 void wxGridExt::AddColBrake(int col)
-{ 
-	m_colBrakeAt.Add(col); 
+{
+	m_colBrakeAt.Add(col);
 
 	// make up a dummy event for the grid event to use -- unfortunately we
 	// can't do anything else here
@@ -13374,7 +13380,7 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 
 				item.m_end = end;
 
-				SendGridAreaEvent(wxEVT_GRID_ROW_AREA_SIZE, idx,  item);
+				SendGridAreaEvent(wxEVT_GRID_ROW_AREA_SIZE, idx, item);
 
 				//support printing
 				SetRowBrake(end);

@@ -4460,32 +4460,6 @@ private:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtAreaEvent);
 };
 
-class wxGridExtAreaSizeEvent : public wxNotifyEvent
-{
-public:
-
-	enum
-	{
-		wxGridExtAreaSizeEvent_Start,
-		wxGridExtAreaSizeEvent_End
-	};
-
-private:
-
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtAreaSizeEvent);
-};
-
-class wxGridExtAreaNameEvent : public wxNotifyEvent
-{
-public:
-
-private:
-
-	wxString m_labelName;
-
-	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtAreaNameEvent);
-};
-
 wxDECLARE_EVENT(wxEVT_GRID_CELL_LEFT_CLICK, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_CELL_RIGHT_CLICK, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_CELL_LEFT_DCLICK, wxGridExtEvent);

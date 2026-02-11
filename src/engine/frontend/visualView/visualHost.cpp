@@ -42,6 +42,21 @@ void CVisualHost::OnIdle(wxIdleEvent& event)
 
 /////////////////////////////////////////////////////////////////////////////////
 
+void CVisualHost::OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event)
+{
+	if (event.GetEventType() == wxEVT_LEFT_DOWN) {
+		wxWindow* wnd = currentWindow;
+		while (wnd != nullptr) {
+			IValueFrame* founded = GetObjectBase(wnd);
+			if (founded != nullptr) {
+				OnSelected(founded, wnd);
+				break;
+			}
+			wnd = wnd->GetParent();
+		}
+	}
+}
+
 #include "backend/metaCollection/partial/commonObject.h"
 
 void CVisualHost::SetCaption(const wxString& strCaption)

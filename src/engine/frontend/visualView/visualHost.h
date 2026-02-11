@@ -22,6 +22,8 @@ public:
 	virtual wxWindow* GetParentBackgroundWindow() const { return const_cast<CVisualHost*>(this); }
 	virtual wxWindow* GetBackgroundWindow() const { return const_cast<CVisualHost*>(this); }
 
+	virtual void OnClickFromApp(wxWindow* currentWindow, wxMouseEvent& event);
+
 	void ShowForm();
 	void ActivateForm();
 	void UpdateForm();

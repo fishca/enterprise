@@ -74,10 +74,10 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	const wxSize& size) : wxGridExt(parent, id, pos, size),
 	m_cellProperty(nullptr), m_document(document), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
-	m_rowLabelWidth = WXGRID_DEFAULT_ROW_LABEL_WIDTH - 42;
-	m_colLabelHeight = WXGRID_MIN_COL_WIDTH;
-	m_defaultColWidth = WXGRID_DEFAULT_ROW_LABEL_WIDTH - 12;
-	m_defaultRowHeight = WXGRID_MIN_ROW_HEIGHT;
+	m_rowLabelWidth = s_rowLabelWidth;
+	m_colLabelHeight = s_colLabelHeight;
+	m_defaultColWidth = s_defaultColWidth;
+	m_defaultRowHeight = s_defaultRowHeight;
 
 	// Grid
 	wxGridExt::EnableEditing(true);
@@ -87,7 +87,7 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	wxGridExt::SetMargins(0, 0);
 
 	// Create property
-	m_cellProperty = new CGridEditorCellProperty();
+	m_cellProperty = new CGridEditorCellProperty;
 	m_cellProperty->SetView(this);
 
 	// Native col 
@@ -101,8 +101,8 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	m_selectionBackground.Set(211, 217, 239);
 	m_selectionForeground.Set(0, 0, 0);
 
-	wxGridExt::SetDefaultCellFont(
-		wxFont(8, wxFontFamily::wxFONTFAMILY_DEFAULT, wxFontStyle::wxFONTSTYLE_NORMAL, wxFontWeight::wxFONTWEIGHT_NORMAL));
+	wxGridExt::SetLabelFont(s_defaultSpreadsheetFont);
+	wxGridExt::SetDefaultCellFont(s_defaultSpreadsheetFont);
 
 	wxGridExt::SetDefaultEditor(new CGridEditorCellTextEditor);
 
@@ -381,9 +381,7 @@ void CGridEditor::OnGridColSize(wxGridExtSizeEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-		
 		spreadsheetDescription.SetColSize(event.GetRowOrCol(), GetColSize(event.GetRowOrCol()));
 	}
 
@@ -397,9 +395,7 @@ void CGridEditor::OnGridRowBrake(wxGridExtSizeEvent& event)
 		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
 		if (creator != nullptr) {
-
 			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
-
 			if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_ADD)
 				spreadsheetDescription.AddRowBrake(event.GetRowOrCol());
 			else if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_SET)
@@ -410,9 +406,7 @@ void CGridEditor::OnGridRowBrake(wxGridExtSizeEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-
 		if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_ADD)
 			spreadsheetDescription.AddRowBrake(event.GetRowOrCol());
 		else if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_SET)
@@ -440,9 +434,7 @@ void CGridEditor::OnGridColBrake(wxGridExtSizeEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-
 		if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_ADD)
 			spreadsheetDescription.AddColBrake(event.GetRowOrCol());
 		else if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_SET)
@@ -459,9 +451,7 @@ void CGridEditor::OnGridRowArea(wxGridExtAreaEvent& event)
 		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
 		if (creator != nullptr) {
-
 			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
-
 			if (event.GetEventType() == wxEVT_GRID_ROW_AREA_CREATE)
 				spreadsheetDescription.AddRowArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
 			else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_DELETE)
@@ -476,9 +466,7 @@ void CGridEditor::OnGridRowArea(wxGridExtAreaEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-
 		if (event.GetEventType() == wxEVT_GRID_ROW_AREA_CREATE)
 			spreadsheetDescription.AddRowArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
 		else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_DELETE)
@@ -499,9 +487,7 @@ void CGridEditor::OnGridColArea(wxGridExtAreaEvent& event)
 		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
 		if (creator != nullptr) {
-
 			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
-
 			if (event.GetEventType() == wxEVT_GRID_COL_AREA_CREATE)
 				spreadsheetDescription.AddColArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
 			else if (event.GetEventType() == wxEVT_GRID_COL_AREA_DELETE)
@@ -516,9 +502,7 @@ void CGridEditor::OnGridColArea(wxGridExtAreaEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-
 		if (event.GetEventType() == wxEVT_GRID_COL_AREA_CREATE)
 			spreadsheetDescription.AddColArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
 		else if (event.GetEventType() == wxEVT_GRID_COL_AREA_DELETE)
@@ -550,9 +534,7 @@ void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
 		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
 		if (creator != nullptr) {
-
 			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
-
 			spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
 		}
 
@@ -560,9 +542,7 @@ void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
 	}
 
 	if (m_spreadsheetObject != nullptr) {
-	
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-
 		spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
 	}
 

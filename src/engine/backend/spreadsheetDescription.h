@@ -3,6 +3,19 @@
 
 #include "backend/compiler/value.h"
 
+////////////////////////////////////////
+// spreadsheet defines 
+
+const static int s_defaultRowHeight = 15;
+const static int s_rowLabelWidth = 40;
+
+const static int s_defaultColWidth = 70;
+const static int s_colLabelHeight = 15;
+
+static const wxFont s_defaultSpreadsheetFont = wxFont(8, wxFontFamily::wxFONTFAMILY_DEFAULT, wxFontStyle::wxFONTSTYLE_NORMAL, wxFontWeight::wxFONTWEIGHT_NORMAL);
+
+///////////////////////////////////////
+
 struct CSpreadsheetBorderDescription {
 
 	bool operator == (const CSpreadsheetBorderDescription& rhs) const {
@@ -75,7 +88,7 @@ struct CSpreadsheetAttrDescription {
 	int m_alignHorz = wxALIGN_LEFT;
 	int m_alignVert = wxALIGN_TOP;
 	int m_textOrient = wxHORIZONTAL;
-	wxFont m_font = wxFont(8, wxFontFamily::wxFONTFAMILY_DEFAULT, wxFontStyle::wxFONTSTYLE_NORMAL, wxFontWeight::wxFONTWEIGHT_NORMAL);
+	wxFont m_font = s_defaultSpreadsheetFont;
 	wxColour m_backgroundColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	wxColour m_textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 	CSpreadsheetBorderDescription m_borderAt[4]; //left, right, top, bottom
@@ -167,7 +180,7 @@ struct CSpreadsheetDescription {
 			return 0;
 		return m_rowBrakeAt[idx];
 	}
-	
+
 	int GetColBrakeByIdx(size_t idx) const {
 		if (idx > m_colBrakeAt.size())
 			return 0;
@@ -396,7 +409,7 @@ struct CSpreadsheetDescription {
 		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_font;
-		return wxFont(8, wxFontFamily::wxFONTFAMILY_DEFAULT, wxFontStyle::wxFONTSTYLE_NORMAL, wxFontWeight::wxFONTWEIGHT_NORMAL);
+		return s_defaultSpreadsheetFont;
 	}
 
 	void SetCellFont(int row, int col, const wxFont& font) {
@@ -606,12 +619,6 @@ struct CSpreadsheetDescription {
 	}
 
 private:
-
-	const static int s_defaultRowHeight = 15;
-	const static int s_rowLabelWidth = 40;
-
-	const static int s_defaultColWidth = 70;
-	const static int s_colLabelHeight = 15;
 
 	// default font
 	wxFont m_labelFont;

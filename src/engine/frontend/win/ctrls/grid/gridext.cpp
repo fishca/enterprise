@@ -141,8 +141,10 @@ wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_CLICK, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_LABEL_LEFT_DCLICK, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_LABEL_RIGHT_DCLICK, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_SIZE, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_MODIFIED, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_AUTO_SIZE, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_SIZE, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_MODIFIED, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_AUTO_SIZE, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
@@ -151,11 +153,24 @@ wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTING, wxGridExtRangeSelectEvent);
 wxDEFINE_EVENT(wxEVT_GRID_RANGE_SELECTED, wxGridExtRangeSelectEvent);
 wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGING, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_CELL_CHANGED, wxGridExtEvent);
+wxDEFINE_EVENT(wxEVT_GRID_TABLE_MODIFIED, wxGridExtEvent);
+wxDEFINE_EVENT(wxEVT_GRID_TABLE_ATTR_MODIFIED, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_SELECT_CELL, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_SHOWN, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
-wxDEFINE_EVENT(wxEVT_GRID_CHANGED, wxGridExtEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_NAME, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
@@ -1465,7 +1480,6 @@ void wxGridExtCellAttrProvider::UpdateAttrRows(size_t pos, int numRows)
 	if (m_data)
 	{
 		m_data->m_cellAttrs.UpdateAttrRows(pos, numRows);
-
 		m_data->m_rowAttrs.UpdateAttrRowsOrCols(pos, numRows);
 	}
 }
@@ -1475,7 +1489,6 @@ void wxGridExtCellAttrProvider::UpdateAttrCols(size_t pos, int numCols)
 	if (m_data)
 	{
 		m_data->m_cellAttrs.UpdateAttrCols(pos, numCols);
-
 		m_data->m_colAttrs.UpdateAttrRowsOrCols(pos, numCols);
 	}
 }
@@ -1909,6 +1922,11 @@ bool wxGridExtTableBase::GetValueAsBool(int WXUNUSED(row), int WXUNUSED(col))
 	return false;
 }
 
+wxVariant wxGridExtTableBase::GetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col))
+{
+	return wxVariant();
+}
+
 void wxGridExtTableBase::SetValueAsLong(int WXUNUSED(row), int WXUNUSED(col),
 	long WXUNUSED(value))
 {
@@ -1924,6 +1942,11 @@ void wxGridExtTableBase::SetValueAsBool(int WXUNUSED(row), int WXUNUSED(col),
 {
 }
 
+void wxGridExtTableBase::SetValueAsVariant(int WXUNUSED(row), int WXUNUSED(col),
+	wxVariant WXUNUSED(value))
+{
+}
+
 void* wxGridExtTableBase::GetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
 	const wxString& WXUNUSED(typeName))
 {
@@ -1934,6 +1957,16 @@ void  wxGridExtTableBase::SetValueAsCustom(int WXUNUSED(row), int WXUNUSED(col),
 	const wxString& WXUNUSED(typeName),
 	void* WXUNUSED(value))
 {
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void wxGridExtTableBase::OnGridTableNotify(int row, int col, const wxString& s)
+{
+	if (GetView())
+	{
+		GetView()->SendEvent(wxEVT_GRID_TABLE_MODIFIED, row, col, s);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2006,6 +2039,8 @@ void wxGridExtStringTable::SetValue(int row, int col, const wxString& value)
 		wxT("invalid row or column index in wxGridExtStringTable"));
 
 	m_data[row][col] = value;
+
+	OnGridTableNotify(row, col, value);
 }
 
 void wxGridExtStringTable::Clear()
@@ -2588,11 +2623,11 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 	m_owner->PrepareDCFor(dc, this);
 	wxRegion reg = GetUpdateRegion();
 
-	static wxGridExtCellCoordsArray dirtyCells;
+	wxGridExtCellCoordsArray dirtyCells;
 
 	m_owner->CalcCellsExposed(reg, dirtyCells, this);
 
-	static wxGridExtCellCacheArray storage;
+	wxGridExtCellCacheArray storage;
 
 	m_owner->DrawGridSpace(dc, this);
 	m_owner->DrawGridCellArea(dc, dirtyCells, storage);
@@ -2603,9 +2638,6 @@ void wxGridExtWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	m_owner->DrawBorder(dc, storage);
 	m_owner->DrawHighlight(dc, dirtyCells);
-
-	((wxBaseArray<wxGridExtCellCoords*>&)dirtyCells).SetCount(0);
-	((wxBaseArray<wxGridExtCellCache*>&)storage).SetCount(0);
 }
 
 void wxGridExt::Render(wxDC& dc,
@@ -3254,11 +3286,14 @@ wxGridExt::SetTable(wxGridExtTableBase* table,
 			// Don't hold on to attributes cached from the old table
 			ClearAttrCache();
 
-			m_table->SetView(0);
+			m_table->SetView(NULL);
 			if (m_ownTable)
 				delete m_table;
 			m_table = NULL;
 		}
+
+		m_undoStack.clear();
+		m_redoStack.clear();
 
 		wxDELETE(m_selection);
 
@@ -4746,7 +4781,7 @@ void wxGridExt::DoStartResizeRowOrCol(int col, int size)
 	AcceptCellEditControlIfShown();
 
 	m_dragRowOrCol = col;
-	m_dragRowOrColOldSize = size;
+	m_dragRowOrColOldSize = wxRestoreGridScale(size, GetGridZoom());
 }
 
 void wxGridExt::ProcessRowColAreaMouseEvent(const wxGridExtOperations& oper, wxMouseEvent& event, wxGridExtSubwindow* areaWin)
@@ -5508,6 +5543,11 @@ void wxGridExt::DoEndDragResizeRow(const wxMouseEvent& event, wxGridExtWindow* g
 
 	SendGridSizeEvent(wxEVT_GRID_ROW_SIZE, m_dragRowOrCol, event);
 
+	PushCommand<wxGridExtCommandRowSize>(m_dragRowOrCol,
+		GetRowHeight(m_dragRowOrCol), m_dragRowOrColOldSize);
+
+	SendGridSizeEvent(wxEVT_GRID_ROW_MODIFIED, m_dragRowOrCol, event);
+
 	m_dragRowOrCol = -1;
 }
 
@@ -5516,6 +5556,11 @@ void wxGridExt::DoEndDragResizeCol(const wxMouseEvent& event, wxGridExtWindow* g
 	DoGridDragResize(event.GetPosition(), wxGridExtColumnOperations(), gridWindow);
 
 	SendGridSizeEvent(wxEVT_GRID_COL_SIZE, m_dragRowOrCol, event);
+
+	PushCommand<wxGridExtCommandColSize>(m_dragRowOrCol,
+		GetColWidth(m_dragRowOrCol), m_dragRowOrColOldSize);
+
+	SendGridSizeEvent(wxEVT_GRID_COL_MODIFIED, m_dragRowOrCol, event);
 
 	m_dragRowOrCol = -1;
 }
@@ -5973,6 +6018,18 @@ wxGridExt::DoAppendLines(bool (wxGridExtTableBase::* funcAppend)(size_t),
 // ----------------------------------------------------------------------------
 // event generation helpers
 // ----------------------------------------------------------------------------
+
+bool
+wxGridExt::SendGridAreaEvent(wxEventType type, int rowOrColPos, const wxGridExtCellArea& area)
+{
+	wxGridExtAreaEvent gridEvt(GetId(),
+		type,
+		this,
+		rowOrColPos,
+		area);
+
+	return ProcessWindowEvent(gridEvt);
+}
 
 bool
 wxGridExt::SendGridSizeEvent(wxEventType type,
@@ -8619,10 +8676,6 @@ void wxGridExt::DoSaveEditControlValue()
 	if (!editor->EndEdit(row, col, this, oldval, &newval))
 		return;
 
-	// set new brake pos
-	SetRowBrake(row);
-	SetColBrake(col);
-
 	switch (SendEvent(wxEVT_GRID_CELL_CHANGING, newval))
 	{
 	case Event_Vetoed:
@@ -8645,9 +8698,12 @@ void wxGridExt::DoSaveEditControlValue()
 			// not have been changed, while m_currentCellCoords could have
 			// been changed by the event handler.
 			SetCellValue(row, col, oldval);
+			return;
 		}
 
-		SendEvent(wxEVT_GRID_CHANGED);
+		// set new brake pos
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
@@ -9688,8 +9744,6 @@ void wxGridExt::SetRowLabelSize(int width)
 		CalcWindowSizes();
 		wxScrolledCanvas::Refresh(true);
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetColLabelSize(int height)
@@ -9725,8 +9779,6 @@ void wxGridExt::SetColLabelSize(int height)
 		CalcWindowSizes();
 		wxScrolledCanvas::Refresh(true);
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetLabelBackgroundColour(const wxColour& colour)
@@ -9786,8 +9838,6 @@ void wxGridExt::SetLabelTextColour(const wxColour& colour)
 			m_colLabelWin->Refresh();
 		}
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetLabelFont(const wxFont& font)
@@ -9804,8 +9854,6 @@ void wxGridExt::SetLabelFont(const wxFont& font)
 		m_colAreaWin->Refresh();
 		m_colLabelWin->Refresh();
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetRowLabelAlignment(int horiz, int vert)
@@ -9840,8 +9888,6 @@ void wxGridExt::SetRowLabelAlignment(int horiz, int vert)
 		m_rowAreaWin->Refresh();
 		m_rowLabelWin->Refresh();
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetColLabelAlignment(int horiz, int vert)
@@ -9876,8 +9922,6 @@ void wxGridExt::SetColLabelAlignment(int horiz, int vert)
 		m_colAreaWin->Refresh();
 		m_colLabelWin->Refresh();
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetCornerLabelAlignment(int horiz, int vert)
@@ -9911,8 +9955,6 @@ void wxGridExt::SetCornerLabelAlignment(int horiz, int vert)
 	{
 		m_cornerLabelWin->Refresh();
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetGridZoom(int point)
@@ -9954,8 +9996,6 @@ void wxGridExt::SetColLabelTextOrientation(int textOrientation)
 		m_colAreaWin->Refresh();
 		m_colLabelWin->Refresh();
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetCornerLabelTextOrientation(int textOrientation)
@@ -9965,8 +10005,6 @@ void wxGridExt::SetCornerLabelTextOrientation(int textOrientation)
 
 	if (ShouldRefresh())
 		m_cornerLabelWin->Refresh();
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetRowLabelValue(int row, const wxString& s)
@@ -9988,8 +10026,6 @@ void wxGridExt::SetRowLabelValue(int row, const wxString& s)
 				m_rowLabelWin->Refresh(true, &rect);
 			}
 		}
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10016,8 +10052,6 @@ void wxGridExt::SetColLabelValue(int col, const wxString& s)
 				}
 			}
 		}
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10031,8 +10065,6 @@ void wxGridExt::SetCornerLabelValue(const wxString& s)
 			wxRect rect = m_cornerLabelWin->GetRect();
 			m_cornerLabelWin->Refresh(true, &rect);
 		}
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10044,8 +10076,6 @@ void wxGridExt::SetGridLineColour(const wxColour& colour)
 
 		if (GridLinesEnabled())
 			RedrawGridLines();
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10056,8 +10086,6 @@ void wxGridExt::SetCellHighlightColour(const wxColour& colour)
 		m_cellHighlightColour = colour;
 
 		RefreshBlock(m_currentCellCoords, m_currentCellCoords);
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10077,8 +10105,6 @@ void wxGridExt::SetCellHighlightPenWidth(int width)
 		wxRect rect = CellToRect(row, col);
 		wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
 		gridWindow->Refresh(true, &rect);
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10099,8 +10125,6 @@ void wxGridExt::SetCellHighlightROPenWidth(int width)
 		wxRect rect = CellToRect(row, col);
 		wxGridExtWindow* gridWindow = CellToGridWindow(row, col);
 		gridWindow->Refresh(true, &rect);
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10117,8 +10141,6 @@ void wxGridExt::SetGridFrozenBorderColour(const wxColour& colour)
 			if (m_frozenColGridWin)
 				m_frozenColGridWin->Refresh();
 		}
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10135,8 +10157,6 @@ void wxGridExt::SetGridFrozenBorderPenWidth(int width)
 			if (m_frozenColGridWin)
 				m_frozenColGridWin->Refresh();
 		}
-
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -10435,149 +10455,144 @@ wxGridExtCellEditor* wxGridExt::GetCellEditor(int row, int col) const
 	return GetCellAttrPtr(row, col)->GetEditor(this, row, col);
 }
 
-bool wxGridExt::IsReadOnly(int row, int col) const
+bool wxGridExt::IsCellReadOnly(int row, int col) const
 {
 	return GetCellAttrPtr(row, col)->IsReadOnly();
 }
 
 // ----------------------------------------------------------------------------
-// area support: cache, automatic provider creation, ...
+// area support: cache, automatic creation, ...
 // ----------------------------------------------------------------------------
 
-void wxGridExt::AddAreaRow(int start, int end)
+void wxGridExt::InsertRowArea(size_t index, wxGridExtCellArea& entry)
 {
-	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++) {
+	m_rowAreaAt.Insert(entry, index);
 
-		wxGridExtCellArea& item = m_rowAreaAt[idx];
+	//support printing
+	SetRowBrake(entry.m_end);
 
-		if (start >= item.m_start && start <= item.m_end) {
-			if (end > item.m_end) { //expand the bottom border
-				item.m_end = end;
-				SetRowBrake(end);
-				return;
-			}
-		}
-		else if (end >= item.m_start && end <= item.m_end) {
-
-			if (start < item.m_start) { //extending the upper bound
-				item.m_start = start;
-				return;
-			}
-		}
-
-		if (start >= item.m_start && start <= item.m_end)
-			return;
-
-		if (end >= item.m_start && end <= item.m_end)
-			return;
-	}
-
-	unsigned int countRec = 1;
-
-	//adding a new section
-	wxGridExtCellArea entry;
-
-	entry.m_start = start;
-	entry.m_end = end;
-	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
-
-	while (countRec > 0)
-	{
-
-		bool foundedName = false;
-
-		for (unsigned int idx = 0; idx < m_rowAreaAt.Count(); idx++)
-		{
-			if (entry.m_areaLabel == m_rowAreaAt[idx].m_areaLabel)
-			{
-				foundedName = true;
-				break;
-			}
-		}
-
-		if (!foundedName)
-			break;
-
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
-	}
-
-	if (MakeRowAreaLabel(&entry))
-	{
-		m_rowAreaAt.Add(entry);
-		SetRowBrake(end);
-		CalcDimensions();
-	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
+	CalcDimensions();
 }
 
-void wxGridExt::AddAreaCol(int start, int end)
+void wxGridExt::InsertColArea(size_t index, wxGridExtCellArea& entry)
 {
-	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++) {
+	m_colAreaAt.Insert(entry, index);
 
-		wxGridExtCellArea& item = m_colAreaAt[idx];
+	//support printing
+	SetColBrake(entry.m_end);
 
-		if (start >= item.m_start && start <= item.m_end) {
-			if (end > item.m_end) {//expand the bottom border
-				item.m_end = end;
-				SetColBrake(end);
-				return;
-			}
-		}
-		else if (end >= item.m_start && end <= item.m_end) {
-
-			if (start < item.m_start) { //extending the upper bound
-				item.m_start = start;
-				return;
-			}
-		}
-
-		if (start >= item.m_start && start <= item.m_end)
-			return;
-
-		if (end >= item.m_start && end <= item.m_end)
-			return;
-	}
-
-	unsigned int countRec = 1;
-
-	//adding a new section
-	wxGridExtCellArea entry;
-
-	entry.m_start = start;
-	entry.m_end = end;
-	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
-
-	while (countRec > 0) {
-
-		bool foundedName = false;
-
-		for (unsigned int idx = 0; idx < m_colAreaAt.Count(); idx++)
-		{
-			if (entry.m_areaLabel == m_colAreaAt[idx].m_areaLabel)
-			{
-				foundedName = true;
-				break;
-			}
-		}
-
-		if (!foundedName)
-			break;
-
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
-	}
-
-	if (MakeColAreaName(&entry))
-	{
-		m_colAreaAt.Add(entry);
-		CalcDimensions();
-		SetColBrake(end);
-	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
+	CalcDimensions();
 }
 
-void wxGridExt::AddArea()
+void wxGridExt::SetRowAreaStartSize(int idx, int w)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return;
+
+	m_rowAreaAt[idx].m_start = w;
+
+	CalcDimensions();
+}
+
+void wxGridExt::SetRowAreaEndSize(int idx, int w)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return;
+
+	m_rowAreaAt[idx].m_end = w;
+
+	CalcDimensions();
+}
+
+int wxGridExt::GetRowAreaStartSize(int idx)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return -1;
+
+	return m_rowAreaAt[idx].m_start;
+}
+
+int wxGridExt::GetRowAreaEndSize(int idx)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return -1;
+
+	return m_rowAreaAt[idx].m_end;
+}
+
+void wxGridExt::SetColAreaStartSize(int idx, int w)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return;
+
+	m_colAreaAt[idx].m_start = w;
+
+	CalcDimensions();
+}
+
+void wxGridExt::SetColAreaEndSize(int idx, int w)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return;
+
+	m_colAreaAt[idx].m_end = w;
+
+	CalcDimensions();
+}
+
+int wxGridExt::GetColAreaStartSize(int idx)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return -1;
+
+	return m_colAreaAt[idx].m_start;
+}
+
+int wxGridExt::GetColAreaEndSize(int idx)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return -1;
+
+	return m_colAreaAt[idx].m_end;
+}
+
+void wxGridExt::SetRowAreaLabel(int idx, const wxString& label)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return;
+
+	m_rowAreaAt[idx].m_areaLabel = label;
+
+	CalcDimensions();
+}
+
+void wxGridExt::SetColAreaLabel(int idx, const wxString& label)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return;
+
+	m_colAreaAt[idx].m_areaLabel = label;
+
+	CalcDimensions();
+}
+
+wxString wxGridExt::GetRowAreaLabel(int idx)
+{
+	if (idx > (int)m_rowAreaAt.Count())
+		return wxT("");
+
+	return m_rowAreaAt[idx].m_areaLabel;
+}
+
+wxString wxGridExt::GetColAreaLabel(int idx)
+{
+	if (idx > (int)m_colAreaAt.Count())
+		return wxT("");
+
+	return m_colAreaAt[idx].m_areaLabel;
+}
+
+void wxGridExt::CreateArea()
 {
 	if (m_selection != NULL)
 	{
@@ -10600,61 +10615,31 @@ void wxGridExt::AddArea()
 		}
 
 		if (col2 == m_numCols - 1 && row2 != m_numRows - 1) {
-			AddAreaRow(row1, row2); //horzontal
+			DoRowAreaCreate(row1, row2); //horzontal
 		}
 		else if (col2 != m_numCols - 1 && row2 == m_numRows - 1) {
-			AddAreaCol(col1, col2); //vertical
+			DoColAreaCreate(col1, col2); //vertical
 		}
 	}
 }
 
-void wxGridExt::DeleteAreaRow(int start, int end)
+void wxGridExt::DeleteRowArea(size_t index)
 {
-	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++)
-	{
-		wxGridExtCellArea& item = m_rowAreaAt[idx];
+	if (index > m_rowAreaAt.GetCount())
+		return;
 
-		if (start == item.m_start && end == item.m_end) { //deleting a section
-			m_rowAreaAt.Detach(idx);
-		}
-		else if (start >= item.m_start && start <= item.m_end) {
-			if (end >= item.m_end) { //removing the bottom border		
-				item.m_end = start - 1;
-			}
-		}
-		else if (end >= item.m_start && end <= item.m_end) {
-			if (start <= item.m_start) { //removing the top border
-				item.m_start = end + 1;
-			}
-		}
-	}
+	m_rowAreaAt.Detach(index);
 
-	SendEvent(wxEVT_GRID_CHANGED);
 	CalcDimensions();
 }
 
-void wxGridExt::DeleteAreaCol(int start, int end)
+void wxGridExt::DeleteColArea(size_t index)
 {
-	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++)
-	{
-		wxGridExtCellArea& item = m_colAreaAt[idx];
+	if (index > m_colAreaAt.GetCount())
+		return;
 
-		if (start == item.m_start && end == item.m_end) { //deleting a section
-			m_colAreaAt.Detach(idx);
-		}
-		else if (start >= item.m_start && start <= item.m_end) {
-			if (end >= item.m_end) { //removing the bottom border		
-				item.m_end = start - 1;
-			}
-		}
-		else if (end >= item.m_start && end <= item.m_end) {
-			if (start <= item.m_start) { //removing the top border
-				item.m_start = end + 1;
-			}
-		}
-	}
+	m_colAreaAt.Detach(index);
 
-	SendEvent(wxEVT_GRID_CHANGED);
 	CalcDimensions();
 }
 
@@ -10681,10 +10666,10 @@ void wxGridExt::DeleteArea()
 		}
 
 		if (col2 == m_numCols - 1 && row2 != m_numRows - 1) {
-			DeleteAreaRow(row1, row2); //horzontal
+			DoRowAreaDelete(row1, row2); //horzontal
 		}
 		else if (col2 != m_numCols - 1 && row2 == m_numRows - 1) {
-			DeleteAreaCol(col1, col2); //vertical
+			DoColAreaDelete(col1, col2); //vertical
 		}
 	}
 }
@@ -10724,9 +10709,15 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 			if (valid_area)
 			{
 				rowArea->m_areaLabel = areaLabel;
-				const int founded = m_rowAreaAt.Index(*rowArea);
-				if (founded != wxNOT_FOUND)
-					SendEvent(wxEVT_GRID_CHANGED);
+
+				const int index = m_rowAreaAt.Index(*rowArea);
+				if (index >= 0)
+				{
+					SendGridAreaEvent(wxEVT_GRID_ROW_AREA_NAME, index, *rowArea);
+
+					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaRow, areaLabel, rowArea->m_areaLabel);
+				}
+
 				return true;
 			}
 
@@ -10737,7 +10728,7 @@ bool wxGridExt::MakeRowAreaLabel(wxGridExtCellArea* rowArea)
 	return false;
 }
 
-bool wxGridExt::MakeColAreaName(wxGridExtCellArea* colArea)
+bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 {
 	if (colArea != NULL)
 	{
@@ -10772,9 +10763,14 @@ bool wxGridExt::MakeColAreaName(wxGridExtCellArea* colArea)
 			{
 				colArea->m_areaLabel = areaLabel;
 
-				const int founded = m_colAreaAt.Index(*colArea);
-				if (founded != wxNOT_FOUND)
-					SendEvent(wxEVT_GRID_CHANGED);
+				const int index = m_rowAreaAt.Index(*colArea);
+				if (index >= 0)
+				{
+					SendGridAreaEvent(wxEVT_GRID_ROW_AREA_NAME, index, *colArea);
+
+					PushCommand<wxGridExtCommandAreaName>(index, wxGridExtCommandAreaName::AreaCol, areaLabel, colArea->m_areaLabel);
+				}
+
 				return true;
 			}
 
@@ -10783,6 +10779,80 @@ bool wxGridExt::MakeColAreaName(wxGridExtCellArea* colArea)
 	}
 
 	return false;
+}
+
+void wxGridExt::AddRowBrake(int row)
+{
+	m_rowBrakeAt.Add(row); 
+
+	// make up a dummy event for the grid event to use -- unfortunately we
+	// can't do anything else here
+	wxMouseEvent e;
+	e.SetState(wxGetMouseState());
+	ScreenToClient(&e.m_x, &e.m_y);
+
+	SendGridSizeEvent(wxEVT_GRID_ROW_BRAKE_ADD, row, e);
+}
+
+void wxGridExt::SetRowBrake(int row)
+{
+	if (m_table)
+	{
+		const int maxRowBrake = GetMaxRowBrake();
+
+		if (!m_rowBrakeAt.IsEmpty())
+			m_rowBrakeAt[m_rowBrakeAt.Count() - 1] = wxMax(wxMin(m_rowBrakeAt.Last(), m_table->GetRowsCount() - 1), row);
+		else
+			m_rowBrakeAt.Add(row);
+
+		if (maxRowBrake != GetMaxRowBrake())
+		{
+			// make up a dummy event for the grid event to use -- unfortunately we
+			// can't do anything else here
+			wxMouseEvent e;
+			e.SetState(wxGetMouseState());
+			ScreenToClient(&e.m_x, &e.m_y);
+
+			SendGridSizeEvent(wxEVT_GRID_ROW_BRAKE_SET, row, e);
+		}
+	}
+}
+
+void wxGridExt::AddColBrake(int col)
+{ 
+	m_colBrakeAt.Add(col); 
+
+	// make up a dummy event for the grid event to use -- unfortunately we
+	// can't do anything else here
+	wxMouseEvent e;
+	e.SetState(wxGetMouseState());
+	ScreenToClient(&e.m_x, &e.m_y);
+
+	SendGridSizeEvent(wxEVT_GRID_COL_BRAKE_ADD, col, e);
+}
+
+void wxGridExt::SetColBrake(int col)
+{
+	if (m_table)
+	{
+		const int maxColBrake = GetMaxColBrake();
+
+		if (!m_colBrakeAt.IsEmpty())
+			m_colBrakeAt[m_colBrakeAt.Count() - 1] = wxMax(wxMin(m_colBrakeAt.Last(), m_table->GetColsCount() - 1), col);
+		else
+			m_colBrakeAt.Add(col);
+
+		if (maxColBrake != GetMaxColBrake())
+		{
+			// make up a dummy event for the grid event to use -- unfortunately we
+			// can't do anything else here
+			wxMouseEvent e;
+			e.SetState(wxGetMouseState());
+			ScreenToClient(&e.m_x, &e.m_y);
+
+			SendGridSizeEvent(wxEVT_GRID_COL_BRAKE_SET, col, e);
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -10971,8 +11041,6 @@ void wxGridExt::SetAttr(int row, int col, wxGridExtCellAttr* attr)
 	{
 		wxSafeDecRef(attr);
 	}
-
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetRowAttr(int row, wxGridExtCellAttr* attr)
@@ -10987,7 +11055,6 @@ void wxGridExt::SetRowAttr(int row, wxGridExtCellAttr* attr)
 		wxSafeDecRef(attr);
 	}
 
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
 void wxGridExt::SetColAttr(int col, wxGridExtCellAttr* attr)
@@ -11002,100 +11069,431 @@ void wxGridExt::SetColAttr(int col, wxGridExtCellAttr* attr)
 		wxSafeDecRef(attr);
 	}
 
-	SendEvent(wxEVT_GRID_CHANGED);
 }
 
-void wxGridExt::SetCellBackgroundColour(int row, int col, const wxColour& colour)
+void wxGridExt::SetCellBackgroundColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetBackgroundColour(colour);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrBackgroundColour>(row, col, colour, GetCellBackgroundColour(row, col));
+
+		attr->SetBackgroundColour(colour);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
-void wxGridExt::SetCellTextColour(int row, int col, const wxColour& colour)
+void wxGridExt::SetCellBackgroundColour(const wxGridExtBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetTextColour(colour);
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBackgroundColour>>(this, coords, colour);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetBackgroundColour(colour);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
-void wxGridExt::SetCellTextOrient(int row, int col, const int& orient)
+void wxGridExt::SetCellTextColour(int row, int col, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetTextOrient(orient);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrTextColour>(row, col, colour, attr->GetTextColour());
+
+		attr->SetTextColour(colour);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
-void wxGridExt::SetCellFont(int row, int col, const wxFont& font)
+void wxGridExt::SetCellTextColour(const wxGridExtBlockCoords& coords, const wxColour& colour, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetFont(font);
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrTextColour>>(this, coords, colour);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetTextColour(colour);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
-void wxGridExt::SetCellAlignment(int row, int col, int horiz, int vert)
+void wxGridExt::SetCellTextOrient(int row, int col, const int& orient, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetAlignment(horiz, vert);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrTextOrient>(row, col, orient, attr->GetTextOrient());
+
+		attr->SetTextOrient(orient);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
-void wxGridExt::SetCellBorderLeft(int row, int col, wxPenStyle style, const wxColour& colour, int width)
+void wxGridExt::SetCellTextOrient(const wxGridExtBlockCoords& coords, const int& orient, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetBorderLeft(style, colour, width);
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrTextOrient>>(this, coords, orient);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetTextOrient(orient);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
-void wxGridExt::SetCellBorderRight(int row, int col, wxPenStyle style, const wxColour& colour, int width)
+void wxGridExt::SetCellFont(int row, int col, const wxFont& font, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetBorderRight(style, colour, width);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrFont>(row, col, font, attr->GetFont());
+
+		attr->SetFont(font);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
-void wxGridExt::SetCellBorderTop(int row, int col, wxPenStyle style, const wxColour& colour, int width)
+void wxGridExt::SetCellFont(const wxGridExtBlockCoords& coords, const wxFont& font, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetBorderTop(style, colour, width);
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrFont>>(this, coords, font);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetFont(font);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
-void wxGridExt::SetCellBorderBottom(int row, int col, wxPenStyle style, const wxColour& colour, int width)
+void wxGridExt::SetCellAlignment(int row, int col, int horiz, int vert, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetBorderBottom(style, colour, width);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		wxSize alignment; attr->GetAlignment(&alignment.x, &alignment.y);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrAlignment>(row, col, wxSize{ horiz, vert }, alignment);
+
+		attr->SetAlignment(horiz, vert);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
 	}
 }
 
-void wxGridExt::SetCellFitMode(int row, int col, wxGridExtFitMode fitMode)
+void wxGridExt::SetCellAlignment(const wxGridExtBlockCoords& coords, int horiz, int vert, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetFitMode(fitMode);
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrAlignment>>(this, coords, wxSize{ horiz, vert });
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetAlignment(horiz, vert);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
-void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols)
+void wxGridExt::SetCellBorderLeft(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrBorderLeft>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderLeft());
+
+		attr->SetBorderLeft(style, colour, width);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellBorderLeft(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderLeft>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetBorderLeft(style, colour, width);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
+	}
+}
+
+void wxGridExt::SetCellBorderRight(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrBorderRight>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderRight());
+
+		attr->SetBorderRight(style, colour, width);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellBorderRight(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderRight>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetBorderRight(style, colour, width);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
+	}
+}
+
+void wxGridExt::SetCellBorderTop(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrBorderTop>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderTop());
+
+		attr->SetBorderTop(style, colour, width);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellBorderTop(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderTop>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetBorderTop(style, colour, width);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
+	}
+}
+
+void wxGridExt::SetCellBorderBottom(int row, int col, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrBorderBottom>(row, col, wxGridExtCellBorder{ style, colour, width }, attr->GetBorderBottom());
+
+		attr->SetBorderBottom(style, colour, width);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellBorderBottom(const wxGridExtBlockCoords& coords, wxPenStyle style, const wxColour& colour, int width, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrBorderBottom>>(this, coords, wxGridExtCellBorder{ style, colour, width });
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetBorderBottom(style, colour, width);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
+	}
+}
+
+void wxGridExt::SetCellFitMode(int row, int col, wxGridExtFitMode fitMode, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrFitMode>(row, col, fitMode, attr->GetFitMode());
+
+		attr->SetFitMode(fitMode);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellFitMode(const wxGridExtBlockCoords& coords, wxGridExtFitMode fitMode, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrFitMode>>(this, coords, fitMode);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetFitMode(fitMode);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
+	}
+}
+
+void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
@@ -11104,9 +11502,6 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols)
 		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
 		attr->GetSize(&cell_rows, &cell_cols);
 		attr->SetSize(num_rows, num_cols);
-
-		SetRowBrake(row + num_rows - 1);
-		SetColBrake(col + num_cols - 1);
 
 		// Cannot set the size of a cell to 0 or negative values
 		// While it is perfectly legal to do that, this function cannot
@@ -11128,6 +11523,8 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols)
 					if ((i != col) || (j != row))
 					{
 						GetOrCreateCellAttrPtr(j, i)->SetSize(1, 1);
+
+						SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, j, i);
 					}
 				}
 			}
@@ -11145,12 +11542,22 @@ void wxGridExt::SetCellSize(int row, int col, int num_rows, int num_cols)
 					if ((i != col) || (j != row))
 					{
 						GetOrCreateCellAttrPtr(j, i)->SetSize(row - j, col - i);
+
+						SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, j, i);
 					}
 				}
 			}
 		}
 
-		SendEvent(wxEVT_GRID_CHANGED);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrSize>(row, col,
+				wxSize{ num_rows, num_cols }, wxSize{ cell_rows, cell_cols });
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row + num_rows - 1);
+		SetColBrake(col + num_cols - 1);
 	}
 }
 
@@ -11159,7 +11566,6 @@ void wxGridExt::SetCellRenderer(int row, int col, wxGridExtCellRenderer* rendere
 	if (CanHaveAttributes())
 	{
 		GetOrCreateCellAttrPtr(row, col)->SetRenderer(renderer);
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
@@ -11168,16 +11574,48 @@ void wxGridExt::SetCellEditor(int row, int col, wxGridExtCellEditor* editor)
 	if (CanHaveAttributes())
 	{
 		GetOrCreateCellAttrPtr(row, col)->SetEditor(editor);
-		SendEvent(wxEVT_GRID_CHANGED);
 	}
 }
 
-void wxGridExt::SetReadOnly(int row, int col, bool isReadOnly)
+void wxGridExt::SetCellReadOnly(int row, int col, bool isReadOnly, bool sendUndoCommand)
 {
 	if (CanHaveAttributes())
 	{
-		GetOrCreateCellAttrPtr(row, col)->SetReadOnly(isReadOnly);
-		SendEvent(wxEVT_GRID_CHANGED);
+		wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, col);
+
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandAttrReadOnly>(row, col, isReadOnly, attr->IsReadOnly());
+
+		attr->SetReadOnly(isReadOnly);
+
+		SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+
+		//support printing
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellReadOnly(const wxGridExtBlockCoords& coords, bool isReadOnly, bool sendUndoCommand)
+{
+	if (CanHaveAttributes())
+	{
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCompositeAttr<wxGridExtCommandAttrReadOnly>>(this, coords, isReadOnly);
+
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+		{
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			{
+				GetOrCreateCellAttrPtr(row, col)->SetReadOnly(isReadOnly);
+
+				SendEvent(wxEVT_GRID_TABLE_ATTR_MODIFIED, row, col);
+			}
+		}
+
+		//support printing
+		SetRowBrake(coords.GetBottomRow());
+		SetColBrake(coords.GetRightCol());
 	}
 }
 
@@ -11354,7 +11792,7 @@ namespace
 
 } // anonymous namespace
 
-void wxGridExt::SetRowSize(int row, int height, float scale)
+void wxGridExt::SetRowSize(int row, int height, float scale, bool sendUndoCommand)
 {
 	height = wxRestoreGridScale(height, scale);
 
@@ -11377,7 +11815,39 @@ void wxGridExt::SetRowSize(int row, int height, float scale)
 		height = wxMax(h, GetRowMinimalHeight(row));
 	}
 
+	const int size = GetRowSize(row);
+
 	DoSetRowSize(row, height);
+
+	if (!sendUndoCommand || m_dragRowOrCol != -1 || height == size)
+		return;
+
+	PushCommand<wxGridExtCommandRowSize>(row,
+		height, size);
+}
+
+void wxGridExt::HideRow(int row)
+{
+	const int size = GetRowSize(row);
+
+	DoSetRowSize(row, 0);
+
+	if (m_dragRowOrCol != -1)
+		return;
+
+	PushCommand<wxGridExtCommandRowSize>(row, 0, size);
+}
+
+void wxGridExt::ShowRow(int row)
+{
+	const int size = GetRowSize(row);
+
+	DoSetRowSize(row, -1);
+
+	if (m_dragRowOrCol != -1)
+		return;
+
+	PushCommand<wxGridExtCommandRowSize>(row, -1, size);
 }
 
 void wxGridExt::DoSetRowSize(int row, int height)
@@ -11490,7 +11960,17 @@ void wxGridExt::DoSetRowSize(int row, int height)
 
 	//support printing
 	SetRowBrake(row);
-	SendEvent(wxEVT_GRID_CHANGED);
+
+	if (m_dragRowOrCol == -1)
+	{
+		// make up a dummy event for the grid event to use -- unfortunately we
+		// can't do anything else here
+		wxMouseEvent e;
+		e.SetState(wxGetMouseState());
+		ScreenToClient(&e.m_x, &e.m_y);
+
+		SendGridSizeEvent(wxEVT_GRID_ROW_MODIFIED, row, e);
+	}
 }
 
 void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCols)
@@ -11510,7 +11990,7 @@ void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCol
 	}
 }
 
-void wxGridExt::SetColSize(int col, int width, float scale)
+void wxGridExt::SetColSize(int col, int width, float scale, bool sendUndoCommand)
 {
 	width = wxRestoreGridScale(width, scale);
 
@@ -11557,7 +12037,41 @@ void wxGridExt::SetColSize(int col, int width, float scale)
 		width = wxMax(width, GetColMinimalWidth(col));
 	}
 
+	const int size = GetColSize(col);
+
 	DoSetColSize(col, width);
+
+	if (!sendUndoCommand || m_dragRowOrCol != -1 || width == size)
+		return;
+
+	PushCommand<wxGridExtCommandColSize>(col,
+		width, size);
+}
+
+void wxGridExt::HideCol(int col)
+{
+	const int size = GetColSize(col);
+
+	DoSetColSize(col, 0);
+
+	if (m_dragRowOrCol != -1)
+		return;
+
+	PushCommand<wxGridExtCommandColSize>(col,
+		0, size);
+}
+
+void wxGridExt::ShowCol(int col)
+{
+	const int size = GetColSize(col);
+
+	DoSetColSize(col, -1);
+
+	if (m_dragRowOrCol != -1)
+		return;
+
+	PushCommand<wxGridExtCommandColSize>(col,
+		-1, size);
 }
 
 void wxGridExt::DoSetColSize(int col, int width)
@@ -11678,7 +12192,17 @@ void wxGridExt::DoSetColSize(int col, int width)
 
 	//support printing
 	SetColBrake(col);
-	SendEvent(wxEVT_GRID_CHANGED);
+
+	if (m_dragRowOrCol == -1)
+	{
+		// make up a dummy event for the grid event to use -- unfortunately we
+		// can't do anything else here
+		wxMouseEvent e;
+		e.SetState(wxGetMouseState());
+		ScreenToClient(&e.m_x, &e.m_y);
+
+		SendGridSizeEvent(wxEVT_GRID_COL_MODIFIED, col, e);
+	}
 }
 
 void wxGridExt::SetColMinimalWidth(int col, int width, float scale)
@@ -12163,13 +12687,6 @@ void wxGridExt::SetFocus()
 	m_gridWin->SetFocus();
 }
 
-#if WXWIN_COMPATIBILITY_2_8
-wxPen& wxGridExt::GetDividerPen() const
-{
-	return wxNullPen;
-}
-#endif // WXWIN_COMPATIBILITY_2_8
-
 const wxArrayInt& wxGridExt::GetRowBottoms(float scale) const
 {
 	m_rowBottoms.Alloc(m_rowHeights.Count());
@@ -12216,13 +12733,48 @@ const wxArrayInt& wxGridExt::GetColRights(float scale) const
 	return m_colRights;
 }
 
+bool wxGridExt::Undo()
+{
+	if (!m_undoStack.empty()) {
+		wxSharedPtr<wxGridExtCommand> command = m_undoStack.back();
+		m_undoStack.pop_back();
+		command->Restore(this);
+		m_redoStack.push_back(command);
+	}
+
+	return true;
+}
+
+bool wxGridExt::Redo()
+{
+	if (!m_redoStack.empty()) {
+		wxSharedPtr<wxGridExtCommand> command = m_redoStack.back();
+		m_redoStack.pop_back();
+		command->Execute(this);
+		m_undoStack.push_back(command);
+	}
+	return true;
+}
+
+bool wxGridExt::CanUndo() const
+{
+	return (!m_undoStack.empty());
+}
+
+bool wxGridExt::CanRedo() const
+{
+	return (!m_redoStack.empty());
+}
+
 // ----------------------------------------------------------------------------
 // cell value accessor functions
 // ----------------------------------------------------------------------------
 
-void wxGridExt::SetCellValue(int row, int col, const wxString& s)
+void wxGridExt::SetCellValue(int row, int col, const wxString& newValue, bool sendUndoCommand)
 {
-	if (s == GetCellValue(row, col))
+	const wxString& oldValue = GetCellValue(row, col);
+
+	if (oldValue == newValue)
 	{
 		// Avoid flicker by not doing anything in this case.
 		return;
@@ -12230,11 +12782,11 @@ void wxGridExt::SetCellValue(int row, int col, const wxString& s)
 
 	if (m_table)
 	{
-		// set new brake pos
-		SetRowBrake(row);
-		SetColBrake(col);
+		if (sendUndoCommand)
+			PushCommand<wxGridExtCommandCellValue>(row, col, newValue, oldValue);
 
-		m_table->SetValue(row, col, s);
+		m_table->SetValue(row, col, newValue);
+
 		if (ShouldRefresh())
 		{
 			int dummy;
@@ -12255,9 +12807,60 @@ void wxGridExt::SetCellValue(int row, int col, const wxString& s)
 			HideCellEditControl();
 			ShowCellEditControl(); // will reread data from table
 		}
+
+		// set new brake pos
+		SetRowBrake(row);
+		SetColBrake(col);
+	}
+}
+
+void wxGridExt::SetCellValue(const wxGridExtBlockCoords& coords, const wxString& newValue, bool sendUndoCommand)
+{
+	if (sendUndoCommand)
+		PushCommand<wxGridExtCommandCompositeCell<wxGridExtCommandCellValue>>(this, coords, newValue);
+
+	for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+	{
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+		{
+			const wxString& oldValue = GetCellValue(row, col);
+			if (oldValue == newValue)
+			{
+				// Avoid flicker by not doing anything in this case.
+				continue;
+			}
+
+			if (m_table)
+			{
+				m_table->SetValue(row, col, newValue);
+
+				if (ShouldRefresh())
+				{
+					int dummy;
+					wxRect rect(CellToRect(row, col));
+					rect.x = 0;
+					rect.width = m_gridWin->GetClientSize().GetWidth();
+					CalcScrolledPosition(0, rect.y, &dummy, &rect.y);
+					m_gridWin->Refresh(false, &rect);
+				}
+
+				if (m_currentCellCoords.GetRow() == row &&
+					m_currentCellCoords.GetCol() == col &&
+					IsCellEditControlShown())
+					// Note: If we are using IsCellEditControlEnabled,
+					// this interacts badly with calling SetCellValue from
+					// an EVT_GRID_CELL_CHANGE handler.
+				{
+					HideCellEditControl();
+					ShowCellEditControl(); // will reread data from table
+				}
+			}
+		}
 	}
 
-	SendEvent(wxEVT_GRID_CHANGED);
+	// set new brake pos
+	SetRowBrake(coords.GetBottomRow());
+	SetColBrake(coords.GetRightCol());
 }
 
 // ----------------------------------------------------------------------------
@@ -12757,6 +13360,229 @@ int wxGridExtSizesInfo::GetSize(unsigned pos) const
 	return it->second;
 }
 
+void wxGridExt::DoRowAreaCreate(int start, int end)
+{
+	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++) {
+
+		wxGridExtCellArea& item = m_rowAreaAt[idx];
+
+		if (start >= item.m_start && start <= item.m_end) {
+			if (end > item.m_end) { //expand the bottom border
+
+				PushCommand<wxGridExtCommandAreaSize>(idx,
+					wxGridExtCommandAreaSize::AreaRow, item.m_end - end, wxGridExtCommandAreaSize::FromEndArea);
+
+				item.m_end = end;
+
+				SendGridAreaEvent(wxEVT_GRID_ROW_AREA_SIZE, idx,  item);
+
+				//support printing
+				SetRowBrake(end);
+				return;
+			}
+		}
+		else if (end >= item.m_start && end <= item.m_end) {
+
+			if (start < item.m_start) { //extending the upper bound
+
+				PushCommand<wxGridExtCommandAreaSize>(idx,
+					wxGridExtCommandAreaSize::AreaRow, item.m_start - start, wxGridExtCommandAreaSize::FromStartArea);
+
+				item.m_start = start;
+
+				SendGridAreaEvent(wxEVT_GRID_ROW_AREA_SIZE, idx, item);
+				return;
+			}
+		}
+
+		if (start >= item.m_start && start <= item.m_end)
+			return;
+
+		if (end >= item.m_start && end <= item.m_end)
+			return;
+	}
+
+	unsigned int countRec = 1;
+
+	//adding a new section
+	wxGridExtCellArea entry;
+
+	entry.m_start = start;
+	entry.m_end = end;
+	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
+
+	while (countRec > 0)
+	{
+
+		bool foundedName = false;
+
+		for (unsigned int idx = 0; idx < m_rowAreaAt.Count(); idx++)
+		{
+			if (entry.m_areaLabel == m_rowAreaAt[idx].m_areaLabel)
+			{
+				foundedName = true;
+				break;
+			}
+		}
+
+		if (!foundedName)
+			break;
+
+		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
+	}
+
+	if (MakeRowAreaLabel(&entry))
+	{
+		PushCommand<wxGridExtCommandArea>(m_rowAreaAt.Count(),
+			wxGridExtCommandArea::AreaRow, wxGridExtCommandArea::AddArea, entry);
+
+		AddRowArea(entry);
+
+		SendGridAreaEvent(wxEVT_GRID_ROW_AREA_CREATE, m_rowAreaAt.Count() - 1, entry);
+	}
+}
+
+void wxGridExt::DoColAreaCreate(int start, int end)
+{
+	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++) {
+
+		wxGridExtCellArea& item = m_colAreaAt[idx];
+
+		if (start >= item.m_start && start <= item.m_end) {
+			if (end > item.m_end) {//expand the bottom border
+
+				PushCommand<wxGridExtCommandAreaSize>(idx,
+					wxGridExtCommandAreaSize::AreaCol, item.m_end - end, wxGridExtCommandAreaSize::FromEndArea);
+
+				item.m_end = end;
+
+				SendGridAreaEvent(wxEVT_GRID_COL_AREA_SIZE, idx, item);
+
+				//support printing
+				SetColBrake(end);
+				return;
+			}
+		}
+		else if (end >= item.m_start && end <= item.m_end) {
+
+			if (start < item.m_start) { //extending the upper bound
+
+				PushCommand<wxGridExtCommandAreaSize>(idx,
+					wxGridExtCommandAreaSize::AreaCol, item.m_start - start, wxGridExtCommandAreaSize::FromStartArea);
+
+				item.m_start = start;
+
+				SendGridAreaEvent(wxEVT_GRID_COL_AREA_SIZE, idx, item);
+				return;
+			}
+		}
+
+		if (start >= item.m_start && start <= item.m_end)
+			return;
+
+		if (end >= item.m_start && end <= item.m_end)
+			return;
+	}
+
+	unsigned int countRec = 1;
+
+	//adding a new section
+	wxGridExtCellArea entry;
+
+	entry.m_start = start;
+	entry.m_end = end;
+	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
+
+	while (countRec > 0) {
+
+		bool foundedName = false;
+
+		for (unsigned int idx = 0; idx < m_colAreaAt.Count(); idx++)
+		{
+			if (entry.m_areaLabel == m_colAreaAt[idx].m_areaLabel)
+			{
+				foundedName = true;
+				break;
+			}
+		}
+
+		if (!foundedName)
+			break;
+
+		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
+	}
+
+	if (MakeColAreaLabel(&entry))
+	{
+		PushCommand<wxGridExtCommandArea>(m_colAreaAt.Count(),
+			wxGridExtCommandArea::AreaCol, wxGridExtCommandArea::AddArea, entry);
+
+		AddColArea(entry);
+
+		SendGridAreaEvent(wxEVT_GRID_COL_AREA_CREATE, m_colAreaAt.Count() - 1, entry);
+	}
+}
+
+void wxGridExt::DoRowAreaDelete(int start, int end)
+{
+	for (unsigned int idx = 0; idx < m_rowAreaAt.size(); idx++)
+	{
+		wxGridExtCellArea& item = m_rowAreaAt[idx];
+
+		if (start == item.m_start && end == item.m_end) { //deleting a section
+
+			PushCommand<wxGridExtCommandArea>(idx,
+				wxGridExtCommandArea::AreaRow, wxGridExtCommandArea::DeleteArea, item);
+
+			SendGridAreaEvent(wxEVT_GRID_ROW_AREA_DELETE, idx, item);
+
+			m_rowAreaAt.Detach(idx);
+		}
+		else if (start >= item.m_start && start <= item.m_end) {
+			if (end >= item.m_end) { //removing the bottom border		
+				item.m_end = start - 1;
+			}
+		}
+		else if (end >= item.m_start && end <= item.m_end) {
+			if (start <= item.m_start) { //removing the top border
+				item.m_start = end + 1;
+			}
+		}
+	}
+
+	CalcDimensions();
+}
+
+void wxGridExt::DoColAreaDelete(int start, int end)
+{
+	for (unsigned int idx = 0; idx < m_colAreaAt.size(); idx++)
+	{
+		wxGridExtCellArea& item = m_colAreaAt[idx];
+
+		if (start == item.m_start && end == item.m_end) { //deleting a section
+
+			PushCommand<wxGridExtCommandArea>(idx,
+				wxGridExtCommandArea::AreaCol, wxGridExtCommandArea::DeleteArea, item);
+
+			SendGridAreaEvent(wxEVT_GRID_COL_AREA_DELETE, idx, item);
+
+			m_colAreaAt.Detach(idx);
+		}
+		else if (start >= item.m_start && start <= item.m_end) {
+			if (end >= item.m_end) { //removing the bottom border		
+				item.m_end = start - 1;
+			}
+		}
+		else if (end >= item.m_start && end <= item.m_end) {
+			if (start <= item.m_start) { //removing the top border
+				item.m_start = end + 1;
+			}
+		}
+	}
+
+	CalcDimensions();
+}
+
 // ----------------------------------------------------------------------------
 // drop target
 // ----------------------------------------------------------------------------
@@ -12801,7 +13627,6 @@ wxGridExtSizeEvent::wxGridExtSizeEvent(int id, wxEventType type, wxObject* obj,
 	SetEventObject(obj);
 }
 
-
 wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtRangeSelectEvent, wxNotifyEvent);
 
 wxGridExtRangeSelectEvent::wxGridExtRangeSelectEvent(int id, wxEventType type, wxObject* obj,
@@ -12817,7 +13642,6 @@ wxGridExtRangeSelectEvent::wxGridExtRangeSelectEvent(int id, wxEventType type, w
 	SetEventObject(obj);
 }
 
-
 wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtEditorCreatedEvent, wxCommandEvent);
 
 wxGridExtEditorCreatedEvent::wxGridExtEditorCreatedEvent(int id, wxEventType type,
@@ -12831,6 +13655,17 @@ wxGridExtEditorCreatedEvent::wxGridExtEditorCreatedEvent(int id, wxEventType typ
 	m_window = window;
 }
 
+wxIMPLEMENT_DYNAMIC_CLASS(wxGridExtAreaEvent, wxNotifyEvent);
+
+wxGridExtAreaEvent::wxGridExtAreaEvent(int id, wxEventType type,
+	wxObject* obj, int rowOrColPos, const wxGridExtCellArea& area)
+	: wxNotifyEvent(type, id)
+{
+	SetEventObject(obj);
+
+	m_rowOrColPos = rowOrColPos;
+	m_area = area;
+}
 
 // ----------------------------------------------------------------------------
 // wxGridExtTypeRegistry

@@ -43,6 +43,7 @@
     <ClCompile Include="mainFrame\settings\statictextex.cpp" />
     <ClCompile Include="mainFrame\settings\stlutility.cpp" />
     <ClCompile Include="mainFrame\settings\xmlutility.cpp" />
+    <ClCompile Include="visualView\controlEnum.cpp" />
     <ClCompile Include="visualView\ctrl\boxsizer.cpp" />
     <ClCompile Include="visualView\ctrl\boxsizer_res.cpp" />
     <ClCompile Include="visualView\ctrl\button.cpp" />
@@ -125,7 +126,6 @@
     <ClCompile Include="visualView\ctrl\wrapsizer.cpp" />
     <ClCompile Include="visualView\dvc\dvc.cpp" />
     <ClCompile Include="visualView\pageWindow.cpp" />
-    <ClCompile Include="visualView\special\enum\valueEnum.cpp" />
     <ClCompile Include="visualView\visualHost.cpp" />
     <ClCompile Include="visualView\visualHost_impl.cpp" />
     <ClCompile Include="visualView\visual.cpp" />
@@ -278,6 +278,7 @@
     <ClCompile Include="win\dlgs\userItem.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridCellEditor.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridEditor.cpp" />
+    <ClCompile Include="win\editor\gridEditor\gridEditorClipbrd.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridEditorDoc.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridPrintout.cpp" />
     <ClCompile Include="win\editor\gridEditor\gridProperty.cpp" />
@@ -313,6 +314,7 @@
     <ClInclude Include="mainFrame\settings\xmlutility.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="visualView\controlCtor.h" />
+    <ClInclude Include="visualView\controlEnum.h" />
     <ClInclude Include="visualView\ctrl\chartBox.h" />
     <ClInclude Include="visualView\ctrl\control.h" />
     <ClInclude Include="visualView\ctrl\form.h" />
@@ -329,7 +331,6 @@
     <ClInclude Include="visualView\dvc\dvc.h" />
     <ClInclude Include="visualView\formdefs.h" />
     <ClInclude Include="visualView\pageWindow.h" />
-    <ClInclude Include="visualView\special\enum\valueEnum.h" />
     <ClInclude Include="visualView\visualHost.h" />
     <ClInclude Include="visualView\visual.h" />
     <ClInclude Include="window_ptr.h" />

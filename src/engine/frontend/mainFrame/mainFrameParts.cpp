@@ -195,11 +195,16 @@ bool CDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 #include "frontend/docView/templates/docViewSpreadsheet.h"
 
 // Grid support
-bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, const CBackendSpreadSheetDocument& spreadSheetDocument)
+bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument)
 {
-	class CSpreadsheetMDIFileDocument : public CSpreadsheetFileDocument {
+	class CSpreadsheetMDIFileDocument :
+		public CSpreadsheetFileDocument {
 	public:
-		CSpreadsheetMDIFileDocument(const CBackendSpreadSheetDocument& spreadSheetDocument) : CSpreadsheetFileDocument(spreadSheetDocument) {}
+		CSpreadsheetMDIFileDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) :
+			CSpreadsheetFileDocument(spreadSheetDocument)
+		{
+		}
+
 	private:
 		virtual CMetaView* DoCreateView() { return new CSpreadsheetEditView; }
 	};
@@ -223,11 +228,19 @@ bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, const CBack
 	return false;
 }
 
-bool CDocMDIFrame::PrintSpreadSheetDocument(const CBackendSpreadSheetDocument& doc)
+#include "frontend/win/editor/gridEditor/gridPrintout.h"
+
+bool CDocMDIFrame::PrintSpreadSheetDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, bool showPrintDlg)
 {
+	wxScopedPtr<CGridEditorPrintout> printout(new CGridEditorPrintout(doc));
 
+	const wxPageSetupDialogData& pageSetupDialogData =
+		docManager->GetPageSetupDialogData();
 
-	return false;
+	wxPrintDialogData printDialogData(pageSetupDialogData.GetPrintData());
+	wxPrinter printer(&printDialogData);
+
+	return printer.Print(this, printout.get(), true);
 }
 
 #pragma endregion 

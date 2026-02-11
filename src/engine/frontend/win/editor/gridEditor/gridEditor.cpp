@@ -4,7 +4,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "gridEditor.h"
-#include "frontend/win/ctrls/grid/gridextprivate.h"
+
+#include "frontend/docView/docView.h"
 
 enum
 {
@@ -21,9 +22,22 @@ EVT_GRID_LABEL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
 EVT_KEY_DOWN(CGridEditor::OnKeyDown)
 EVT_GRID_SELECT_CELL(CGridEditor::OnSelectCell)
 EVT_GRID_RANGE_SELECT(CGridEditor::OnSelectCells)
-EVT_GRID_COL_SIZE(CGridEditor::OnGridColSize)
-EVT_GRID_ROW_SIZE(CGridEditor::OnGridRowSize)
-EVT_GRID_EDITOR_HIDDEN(CGridEditor::OnGridEditorHidden)
+EVT_GRID_ROW_MODIFIED(CGridEditor::OnGridRowSize)
+EVT_GRID_COL_MODIFIED(CGridEditor::OnGridColSize)
+EVT_GRID_TABLE_MODIFIED(CGridEditor::OnGridTableModified)
+EVT_GRID_TABLE_ATTR_MODIFIED(CGridEditor::OnGridTableAttrModified)
+EVT_GRID_ROW_BRAKE_ADD(CGridEditor::OnGridRowBrake)
+EVT_GRID_ROW_BRAKE_SET(CGridEditor::OnGridRowBrake)
+EVT_GRID_COL_BRAKE_ADD(CGridEditor::OnGridColBrake)
+EVT_GRID_COL_BRAKE_SET(CGridEditor::OnGridColBrake)
+EVT_GRID_ROW_AREA_CREATE(CGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_DELETE(CGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_SIZE(CGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_NAME(CGridEditor::OnGridRowArea)
+EVT_GRID_COL_AREA_CREATE(CGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_DELETE(CGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_SIZE(CGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_NAME(CGridEditor::OnGridColArea)
 EVT_SCROLLWIN(CGridEditor::OnScroll)
 EVT_IDLE(CGridEditor::OnIdle)
 EVT_SIZE(CGridEditor::OnSize)
@@ -36,7 +50,6 @@ EVT_MENU(wxID_HIDE_CELL, CGridEditor::OnHideCell)
 EVT_MENU(wxID_SHOW_CELL, CGridEditor::OnShowCell)
 EVT_MENU(wxID_PROPERTIES, CGridEditor::OnProperties)
 EVT_GRID_ZOOM(CGridEditor::OnGridZoom)
-EVT_GRID_CHANGED(CGridEditor::OnGridChange)
 wxEND_EVENT_TABLE()
 
 ////////////////////////////////////////////////////////////////////
@@ -51,7 +64,7 @@ void CGridEditor::ActivateEditor()
 
 // ctor and Create() create the grid window, as with the other controls
 CGridEditor::CGridEditor() : wxGridExt(),
-m_cellProperty(nullptr), m_document(nullptr), m_enableProperty(true)
+m_cellProperty(nullptr), m_document(nullptr), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
 }
 
@@ -59,7 +72,7 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	wxWindow* parent,
 	wxWindowID id, const wxPoint& pos,
 	const wxSize& size) : wxGridExt(parent, id, pos, size),
-	m_cellProperty(nullptr), m_document(document), m_enableProperty(true)
+	m_cellProperty(nullptr), m_document(document), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
 	m_rowLabelWidth = WXGRID_DEFAULT_ROW_LABEL_WIDTH - 42;
 	m_colLabelHeight = WXGRID_MIN_COL_WIDTH;
@@ -93,15 +106,15 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 
 	wxGridExt::SetDefaultEditor(new CGridEditorCellTextEditor);
 
-	wxAcceleratorEntry entries[4];
+	wxAcceleratorEntry entries[5];
 	entries[0].Set(wxACCEL_CTRL, (int)'A', wxID_SELECTALL);
 	entries[1].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
 	entries[2].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
 
 	entries[3].Set(wxACCEL_NORMAL, WXK_DELETE, wxID_DELETE);
-	entries[3].Set(wxACCEL_NORMAL, WXK_NUMPAD_DELETE, wxID_DELETE);
+	entries[4].Set(wxACCEL_NORMAL, WXK_NUMPAD_DELETE, wxID_DELETE);
 
-	wxAcceleratorTable accel(4, entries);
+	wxAcceleratorTable accel(5, entries);
 	SetAcceleratorTable(accel);
 }
 
@@ -111,12 +124,21 @@ CGridEditor::~CGridEditor()
 	wxDELETE(m_cellProperty);
 }
 
+#include "gridPrintout.h"
+
+CGridEditorPrintout* CGridEditor::CreatePrintout() const
+{
+	return new CGridEditorPrintout(m_spreadsheetObject, wxGP_SHOW_NONE, m_document ? m_document->GetTitle() : _("Spreadsheet document"));
+}
+
+#pragma region commands
+
 void CGridEditor::AddArea()
 {
 	if (!wxGridExt::IsEditable())
 		return;
 
-	wxGridExt::AddArea();
+	wxGridExt::CreateArea();
 }
 
 void CGridEditor::DeleteArea()
@@ -146,68 +168,7 @@ void CGridEditor::DockTable()
 	CGridEditor::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
 }
 
-#include <wx/clipbrd.h>
-
-void CGridEditor::Copy()
-{
-	wxString copy_data;
-	bool something_in_this_line;
-
-	for (int i = 0; i < m_numRows; i++) {
-		something_in_this_line = false;
-		for (int j = 0; j < m_numCols; j++) {
-			if (IsInSelection(i, j)) {
-				if (something_in_this_line == false) {
-					if (copy_data.IsEmpty() == false) {
-						copy_data.Append(wxT("\n"));
-					}
-					something_in_this_line = true;
-				}
-				else {
-					copy_data.Append(wxT("\t"));
-				}
-				copy_data = copy_data + GetCellValue(i, j);
-			}
-		}
-	}
-
-	if (wxTheClipboard->Open()) {
-		wxTheClipboard->SetData(new wxTextDataObject(copy_data));
-		wxTheClipboard->Close();
-	}
-}
-
-void CGridEditor::Paste()
-{
-	wxString copy_data, cur_field, cur_line;
-
-	if (wxTheClipboard->Open()
-		&& wxTheClipboard->IsSupported(wxDF_TEXT)) {
-		wxTextDataObject textObj;
-		if (wxTheClipboard->GetData(textObj)) {
-			copy_data = textObj.GetText();
-		}
-		wxTheClipboard->Close();
-	}
-
-	int i = GetGridCursorRow(), j = GetGridCursorCol();
-	int k = j;
-
-	while (!copy_data.IsEmpty()) {
-		cur_line = copy_data.BeforeFirst('\n');
-		while (!cur_line.IsEmpty()) {
-			cur_field = cur_line.BeforeFirst('\t');
-			SetCellValue(i, j, cur_field);
-			j++;
-			cur_line = cur_line.AfterFirst('\t');
-		}
-		i++;
-		j = k;
-		copy_data = copy_data.AfterFirst('\n');
-	}
-
-	wxGridExt::ForceRefresh();
-}
+#pragma endregion
 
 #pragma region events
 
@@ -291,6 +252,8 @@ void CGridEditor::OnMouseRightDown(wxGridExtEvent& event)
 	}
 }
 
+#include "frontend/win/ctrls/grid/gridextprivate.h"
+
 // This seems to be required for wxMotif/wxGTK otherwise the mouse
 // cursor must be in the cell edit control to get key events
 //
@@ -321,13 +284,13 @@ void CGridEditor::OnKeyDown(wxKeyEvent& event)
 		const short scroll = (code == WXK_UP || code == WXK_LEFT) ? -1 : 1;
 
 		if (scroll > 0 && code == WXK_DOWN) {
-			if (y1 == wxGridExt::GetNumberRows() - 1) {
+			if (y1 >= wxGridExt::GetNumberRows() - wxGridExt::GetNumberFrozenRows() - 1) {
 				wxGridExt::AppendRows();
 				wxGridExt::SetScrollPos(wxOrientation::wxVERTICAL, (sy + uy) / uy);
 			}
 		}
 		else if (scroll > 0 && code == WXK_RIGHT) {
-			if (x1 == wxGridExt::GetNumberCols() - 1) {
+			if (x1 >= wxGridExt::GetNumberCols() - wxGridExt::GetNumberFrozenCols() - 1) {
 				wxGridExt::AppendCols();
 				wxGridExt::SetScrollPos(wxOrientation::wxHORIZONTAL, (sx + ux) / ux);
 			}
@@ -381,40 +344,306 @@ void CGridEditor::OnSelectCells(wxGridExtRangeSelectEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridColSize(wxGridExtSizeEvent& event)
-{
-	//CalcSection();
-	wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtCellCoords{ m_currentCellCoords.GetCol(), event.GetRowOrCol() });
-	wxGridExt::ForceRefresh();
-	event.Skip();
-}
+#include "backend/metaCollection/metaSpreadsheetObject.h"
 
 void CGridEditor::OnGridRowSize(wxGridExtSizeEvent& event)
 {
-	//CalcSection();
-	wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtCellCoords{ event.GetRowOrCol(), m_currentCellCoords.GetCol() });
-	wxGridExt::ForceRefresh();
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+			spreadsheetDescription.SetRowSize(event.GetRowOrCol(), GetRowSize(event.GetRowOrCol()));
+		}
+
+		m_document->Modify(true);
+	}
+
+	CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+	spreadsheetDescription.SetRowSize(event.GetRowOrCol(), GetRowSize(event.GetRowOrCol()));
+
 	event.Skip();
 }
 
-void CGridEditor::OnGridEditorHidden(wxGridExtEvent& event)
+void CGridEditor::OnGridColSize(wxGridExtSizeEvent& event)
 {
-	int col = event.GetCol(),
-		row = event.GetRow();
+	if (m_document != nullptr) {
 
-	int cell_rows = 0, cell_cols = 0;
-	if (wxGridExt::GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
 
-		row += cell_rows - 1; col += cell_cols - 1;
-
-	}
-	else if (wxGridExt::GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Inside) {
-
-		row += cell_rows; col += cell_cols;
-
-		if (GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
-			row += cell_rows; col += cell_cols;
+		if (creator != nullptr) {
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+			spreadsheetDescription.SetColSize(event.GetRowOrCol(), GetColSize(event.GetRowOrCol()));
 		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+		
+		spreadsheetDescription.SetColSize(event.GetRowOrCol(), GetColSize(event.GetRowOrCol()));
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridRowBrake(wxGridExtSizeEvent& event)
+{
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+
+			if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_ADD)
+				spreadsheetDescription.AddRowBrake(event.GetRowOrCol());
+			else if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_SET)
+				spreadsheetDescription.SetRowBrake(event.GetRowOrCol());
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_ADD)
+			spreadsheetDescription.AddRowBrake(event.GetRowOrCol());
+		else if (event.GetEventType() == wxEVT_GRID_ROW_BRAKE_SET)
+			spreadsheetDescription.SetRowBrake(event.GetRowOrCol());
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridColBrake(wxGridExtSizeEvent& event)
+{
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+			if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_ADD)
+				spreadsheetDescription.AddColBrake(event.GetRowOrCol());
+			else if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_SET)
+				spreadsheetDescription.SetColBrake(event.GetRowOrCol());
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_ADD)
+			spreadsheetDescription.AddColBrake(event.GetRowOrCol());
+		else if (event.GetEventType() == wxEVT_GRID_COL_BRAKE_SET)
+			spreadsheetDescription.SetColBrake(event.GetRowOrCol());
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridRowArea(wxGridExtAreaEvent& event)
+{
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+
+			if (event.GetEventType() == wxEVT_GRID_ROW_AREA_CREATE)
+				spreadsheetDescription.AddRowArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+			else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_DELETE)
+				spreadsheetDescription.DeleteRowArea(event.GetAreaLabel());
+			else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_SIZE)
+				spreadsheetDescription.SetRowSizeArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+			else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_NAME)
+				spreadsheetDescription.SetRowNameArea(event.GetRowOrColPos(), event.GetAreaLabel());
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		if (event.GetEventType() == wxEVT_GRID_ROW_AREA_CREATE)
+			spreadsheetDescription.AddRowArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+		else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_DELETE)
+			spreadsheetDescription.DeleteRowArea(event.GetAreaLabel());
+		else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_SIZE)
+			spreadsheetDescription.SetRowSizeArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+		else if (event.GetEventType() == wxEVT_GRID_ROW_AREA_NAME)
+			spreadsheetDescription.SetRowNameArea(event.GetRowOrColPos(), event.GetAreaLabel());
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridColArea(wxGridExtAreaEvent& event)
+{
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+
+			if (event.GetEventType() == wxEVT_GRID_COL_AREA_CREATE)
+				spreadsheetDescription.AddColArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+			else if (event.GetEventType() == wxEVT_GRID_COL_AREA_DELETE)
+				spreadsheetDescription.DeleteColArea(event.GetAreaLabel());
+			else if (event.GetEventType() == wxEVT_GRID_COL_AREA_SIZE)
+				spreadsheetDescription.SetColSizeArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+			else if (event.GetEventType() == wxEVT_GRID_COL_AREA_NAME)
+				spreadsheetDescription.SetColNameArea(event.GetRowOrColPos(), event.GetAreaLabel());
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		if (event.GetEventType() == wxEVT_GRID_COL_AREA_CREATE)
+			spreadsheetDescription.AddColArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+		else if (event.GetEventType() == wxEVT_GRID_COL_AREA_DELETE)
+			spreadsheetDescription.DeleteColArea(event.GetAreaLabel());
+		else if (event.GetEventType() == wxEVT_GRID_COL_AREA_SIZE)
+			spreadsheetDescription.SetColSizeArea(event.GetAreaLabel(), event.GetAreaStart(), event.GetAreaEnd());
+		else if (event.GetEventType() == wxEVT_GRID_COL_AREA_NAME)
+			spreadsheetDescription.SetColNameArea(event.GetRowOrColPos(), event.GetAreaLabel());
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
+{
+	wxString value;
+
+	void* tempval = m_table->GetValueAsCustom(event.GetRow(), event.GetCol(), wxT("translate"));
+	if (tempval != nullptr) {
+		const CBackendLocalizationEntryArray* array = static_cast<CBackendLocalizationEntryArray*>(tempval);
+		if (array != nullptr) {
+			CBackendLocalization::GetRawLocText(*array, value);
+			wxDELETE(array);
+		}
+	}
+
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+
+			spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+	
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
+	}
+
+	event.Skip();
+}
+
+void CGridEditor::OnGridTableAttrModified(wxGridExtEvent& event)
+{
+	int horiz, vert;
+	GetCellAlignment(event.GetRow(), event.GetCol(), &horiz, &vert);
+
+	int num_rows, num_cols;
+	GetCellSize(event.GetRow(), event.GetCol(), &num_rows, &num_cols);
+
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+
+			spreadsheetDescription.SetCellBackgroundColour(event.GetRow(), event.GetCol(), GetCellBackgroundColour(event.GetRow(), event.GetCol()));
+			spreadsheetDescription.SetCellTextColour(event.GetRow(), event.GetCol(), GetCellTextColour(event.GetRow(), event.GetCol()));
+			spreadsheetDescription.SetCellTextOrient(event.GetRow(), event.GetCol(), GetCellTextOrient(event.GetRow(), event.GetCol()));
+			spreadsheetDescription.SetCellFont(event.GetRow(), event.GetCol(), GetCellFont(event.GetRow(), event.GetCol()));
+			spreadsheetDescription.SetCellAlignment(event.GetRow(), event.GetCol(), horiz, vert);
+
+			//border 
+			const wxGridExtCellBorder& borderLeft = GetCellBorderLeft(event.GetRow(), event.GetCol());
+			spreadsheetDescription.SetCellBorderLeft(event.GetRow(), event.GetCol(), { borderLeft.m_style, borderLeft.m_colour, borderLeft.m_width });
+			const wxGridExtCellBorder& borderRight = GetCellBorderLeft(event.GetRow(), event.GetCol());
+			spreadsheetDescription.SetCellBorderRight(event.GetRow(), event.GetCol(), { borderRight.m_style, borderRight.m_colour, borderRight.m_width });
+			const wxGridExtCellBorder& borderTop = GetCellBorderLeft(event.GetRow(), event.GetCol());
+			spreadsheetDescription.SetCellBorderTop(event.GetRow(), event.GetCol(), { borderTop.m_style, borderTop.m_colour, borderTop.m_width });
+			const wxGridExtCellBorder& borderBottom = GetCellBorderLeft(event.GetRow(), event.GetCol());
+			spreadsheetDescription.SetCellBorderBottom(event.GetRow(), event.GetCol(), { borderBottom.m_style, borderBottom.m_colour, borderBottom.m_width });
+
+			//size 
+			spreadsheetDescription.SetCellSize(event.GetRow(), event.GetCol(), num_rows, num_cols);
+
+			//cell
+			wxGridExtFitMode fitMode =
+				GetCellFitMode(event.GetRow(), event.GetCol());
+
+			spreadsheetDescription.SetCellFitMode(event.GetRow(), event.GetCol(), fitMode.IsOverflow() ? CSpreadsheetAttrDescription::EFitMode::Mode_Overflow : CSpreadsheetAttrDescription::EFitMode::Mode_Clip);
+			spreadsheetDescription.SetCellReadOnly(event.GetRow(), event.GetCol(), IsCellReadOnly(event.GetRow(), event.GetCol()));
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) {
+
+		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
+
+		spreadsheetDescription.SetCellBackgroundColour(event.GetRow(), event.GetCol(), GetCellBackgroundColour(event.GetRow(), event.GetCol()));
+		spreadsheetDescription.SetCellTextColour(event.GetRow(), event.GetCol(), GetCellTextColour(event.GetRow(), event.GetCol()));
+		spreadsheetDescription.SetCellTextOrient(event.GetRow(), event.GetCol(), GetCellTextOrient(event.GetRow(), event.GetCol()));
+		spreadsheetDescription.SetCellFont(event.GetRow(), event.GetCol(), GetCellFont(event.GetRow(), event.GetCol()));
+		spreadsheetDescription.SetCellAlignment(event.GetRow(), event.GetCol(), horiz, vert);
+
+		//border 
+		const wxGridExtCellBorder& borderLeft = GetCellBorderLeft(event.GetRow(), event.GetCol());
+		spreadsheetDescription.SetCellBorderLeft(event.GetRow(), event.GetCol(), { borderLeft.m_style, borderLeft.m_colour, borderLeft.m_width });
+		const wxGridExtCellBorder& borderRight = GetCellBorderLeft(event.GetRow(), event.GetCol());
+		spreadsheetDescription.SetCellBorderRight(event.GetRow(), event.GetCol(), { borderRight.m_style, borderRight.m_colour, borderRight.m_width });
+		const wxGridExtCellBorder& borderTop = GetCellBorderLeft(event.GetRow(), event.GetCol());
+		spreadsheetDescription.SetCellBorderTop(event.GetRow(), event.GetCol(), { borderTop.m_style, borderTop.m_colour, borderTop.m_width });
+		const wxGridExtCellBorder& borderBottom = GetCellBorderLeft(event.GetRow(), event.GetCol());
+		spreadsheetDescription.SetCellBorderBottom(event.GetRow(), event.GetCol(), { borderBottom.m_style, borderBottom.m_colour, borderBottom.m_width });
+
+		//size 
+		spreadsheetDescription.SetCellSize(event.GetRow(), event.GetCol(), num_rows, num_cols);
+
+		//cell
+		wxGridExtFitMode fitMode =
+			GetCellFitMode(event.GetRow(), event.GetCol());
+
+		spreadsheetDescription.SetCellFitMode(event.GetRow(), event.GetCol(), fitMode.IsOverflow() ? CSpreadsheetAttrDescription::EFitMode::Mode_Overflow : CSpreadsheetAttrDescription::EFitMode::Mode_Clip);
+		spreadsheetDescription.SetCellReadOnly(event.GetRow(), event.GetCol(), IsCellReadOnly(event.GetRow(), event.GetCol()));
 	}
 
 	event.Skip();
@@ -499,13 +728,13 @@ void CGridEditor::OnScroll(wxScrollWinEvent& event)
 	const int y1 = wxGridExt::YToRow(sy + h, true);
 
 	if (scroll > 0 && event.GetOrientation() == wxOrientation::wxVERTICAL) {
-		if (y1 == wxGridExt::GetNumberRows() - 1) {
+		if (y1 >= wxGridExt::GetNumberRows() - wxGridExt::GetNumberFrozenRows() - 1) {
 			wxGridExt::AppendRows();
 			wxGridExt::SetScrollPos(wxOrientation::wxVERTICAL, (sy + scroll) / uy);
 		}
 	}
 	else if (scroll > 0 && event.GetOrientation() == wxOrientation::wxHORIZONTAL) {
-		if (x1 == wxGridExt::GetNumberCols() - 1) {
+		if (x1 >= wxGridExt::GetNumberCols() - wxGridExt::GetNumberFrozenCols() - 1) {
 			wxGridExt::AppendCols();
 			wxGridExt::SetScrollPos(wxOrientation::wxHORIZONTAL, (sx + scroll) / ux);
 		}
@@ -581,27 +810,6 @@ void CGridEditor::OnSize(wxSizeEvent& event)
 			const int row = ((h - row_size) / wxCalcGridScale(m_defaultRowHeight, GetGridZoom()));
 			m_table->AppendRows(row + 1);
 		}
-	}
-
-	event.Skip();
-}
-
-#include "frontend/docView/docView.h"
-#include "backend/metaCollection/metaSpreadsheetObject.h"
-
-void CGridEditor::OnGridChange(wxGridExtEvent& event)
-{
-	if (m_document != nullptr)
-	{
-		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
-		if (creator != nullptr) {
-
-			static CBackendSpreadSheetDocument spreadsheetDescription;
-			SaveDocument(spreadsheetDescription);
-			creator->SetSpreadsheetDesc(spreadsheetDescription.GetSpreadsheetDesc());
-		}
-
-		m_document->Modify(true);
 	}
 
 	event.Skip();
@@ -718,6 +926,7 @@ void CGridEditor::OnRowHeight(wxCommandEvent& event)
 	if (result == wxID_OK) {
 		for (auto cell : wxGridExt::GetSelectedBlocks()) {
 			for (int row = cell.GetTopRow(); row <= cell.GetBottomRow(); row++) {
+				const int size = wxGridExt::GetRowSize(row);
 				wxGridExt::SetRowSize(row, rowHeight->GetHeight());
 			}
 		}
@@ -733,6 +942,7 @@ void CGridEditor::OnColWidth(wxCommandEvent& event)
 	if (result == wxID_OK) {
 		for (auto cell : wxGridExt::GetSelectedBlocks()) {
 			for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
+				const int size = wxGridExt::GetColSize(col);
 				wxGridExt::SetColSize(col, colWidth->GetWidth());
 			}
 		}
@@ -745,12 +955,14 @@ void CGridEditor::OnHideCell(wxCommandEvent& event)
 		if (cell.GetLeftCol() > 0 &&
 			cell.GetTopRow() == 0) {
 			for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
+				const int size = wxGridExt::GetColSize(col);
 				wxGridExt::SetColSize(col, 0);
 			}
 		}
 		else if (cell.GetTopRow() > 0 &&
 			cell.GetLeftCol() == 0) {
 			for (int row = cell.GetTopRow(); row <= cell.GetBottomRow(); row++) {
+				const int size = wxGridExt::GetRowSize(row);
 				wxGridExt::SetRowSize(row, 0);
 			}
 		}
@@ -758,11 +970,13 @@ void CGridEditor::OnHideCell(wxCommandEvent& event)
 			cell.GetTopRow() == 0) {
 			if (cell.GetBottomRow() == m_numRows - 1) {
 				for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
+					const int size = wxGridExt::GetColSize(col);
 					wxGridExt::SetColSize(col, 0);
 				}
 			}
 			else if (cell.GetRightCol() == m_numCols - 1) {
 				for (int row = cell.GetTopRow(); row <= cell.GetBottomRow(); row++) {
+					const int size = wxGridExt::GetRowSize(row);
 					wxGridExt::SetRowSize(row, 0);
 				}
 			}
@@ -781,6 +995,7 @@ void CGridEditor::OnShowCell(wxCommandEvent& event)
 				hiddenCol = size == 0;
 			}
 			for (int col = hiddenCol ? 0 : cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
+				const int size = wxGridExt::GetColSize(col);
 				wxGridExt::SetColSize(col, wxNOT_FOUND);
 			}
 		}
@@ -792,6 +1007,7 @@ void CGridEditor::OnShowCell(wxCommandEvent& event)
 				hiddenRow = size == 0;
 			}
 			for (int row = hiddenRow ? 0 : cell.GetTopRow(); row <= cell.GetBottomRow(); row++) {
+				const int size = wxGridExt::GetRowSize(row);
 				wxGridExt::SetRowSize(row, wxNOT_FOUND);
 			}
 		}
@@ -799,11 +1015,13 @@ void CGridEditor::OnShowCell(wxCommandEvent& event)
 			cell.GetTopRow() == 0) {
 			if (cell.GetBottomRow() == m_numRows - 1) {
 				for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
+					const int size = wxGridExt::GetColSize(col);
 					wxGridExt::SetColSize(col, wxNOT_FOUND);
 				}
 			}
 			else if (cell.GetRightCol() == m_numCols - 1) {
 				for (int row = cell.GetTopRow(); row <= cell.GetBottomRow(); row++) {
+					const int size = wxGridExt::GetRowSize(row);
 					wxGridExt::SetRowSize(row, wxNOT_FOUND);
 				}
 			}

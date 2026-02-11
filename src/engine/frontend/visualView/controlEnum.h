@@ -1,16 +1,21 @@
-#ifndef __VALUE_ENUM_H__
-#define __VALUE_ENUM_H__
+#ifndef __CONTROL_ENUM_H__
+#define __CONTROL_ENUM_H__
 
 enum enTitleLocation {
 	eLeft = 1,
 	eRight
 };
 
-enum enRepresentation {	
-	eRepresentation_Auto, 
+enum enRepresentation {
+	eRepresentation_Auto,
 	eRepresentation_Text,
 	eRepresentation_Picture,
 	eRepresentation_PictureAndText
+};
+
+enum enFitMode {
+	enFitMode_Overflow = 4,
+	enFitMode_Clip = 5
 };
 
 #pragma region enumeration
@@ -121,5 +126,17 @@ public:
 	}
 };
 
+class CValueEnumFitMode : public IEnumeration<enFitMode> {
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumFitMode);
+public:
+	CValueEnumFitMode() : IEnumeration() {}
+
+	virtual void CreateEnumeration() {
+		AddEnumeration(enFitMode::enFitMode_Overflow, wxT("overflow"), _("Overflow"));
+		AddEnumeration(enFitMode::enFitMode_Clip, wxT("clip"), _("Clip"));
+	}
+};
+
 #pragma endregion 
-#endif
+
+#endif // !__CONTROL_ENUM_H__

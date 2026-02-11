@@ -1165,7 +1165,7 @@ public:
 
 	virtual void MakeAreaName(wxGridExt* grid, int line, wxMouseEvent& event) const wxOVERRIDE
 	{
-		grid->MakeColAreaName(grid->GetColArea(line));
+		grid->MakeColAreaLabel(grid->GetColArea(line));
 	}
 
 	virtual wxGridExt::EventResult SendEvent(wxGridExt* grid, wxEventType eventType,

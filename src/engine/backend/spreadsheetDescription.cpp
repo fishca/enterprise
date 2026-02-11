@@ -3,6 +3,8 @@
 
 #define cell_sign		0x0243565431
 
+#define grid_block		0x10000
+
 #define main_block		0x12000
 #define cell_block		0x14000
 #define area_block		0x16000
@@ -12,8 +14,14 @@
 
 bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetDescription& spreadsheetDesc)
 {
+	wxMemoryBuffer mainBuffer;
+	if (!reader.r_chunk(grid_block, mainBuffer))
+		return false;
+	
+	CMemoryReader mainReader(mainBuffer);
+
 	wxMemoryBuffer headerBuffer;
-	if (!reader.r_chunk(main_block, headerBuffer))
+	if (!mainReader.r_chunk(main_block, headerBuffer))
 		return false;
 
 	CMemoryReader headerReader(headerBuffer);
@@ -21,187 +29,213 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 		return false;
 
 	wxMemoryBuffer cellBuffer;
-	if (!reader.r_chunk(cell_block, cellBuffer))
+	if (!mainReader.r_chunk(cell_block, cellBuffer))
 		return false;
 
 	CMemoryReader cellReader(cellBuffer);
-	spreadsheetDesc.m_cellAt.reserve(cellReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_cellAt.capacity(); c++)
+
 	{
-		CSpreadsheetAttrChunk& cell = spreadsheetDesc.m_cellAt.emplace_back();
+		const size_t capacity = cellReader.r_u64();
+		spreadsheetDesc.ResetSpreadsheet(capacity);
 
-		cell.m_row = cellReader.r_s32();
-		cell.m_col = cellReader.r_s32();
+		for (u64 c = 0; c < capacity; c++)
+		{
+			int row = cellReader.r_s32();
+			int col = cellReader.r_s32();
 
-		cell.m_value = cellReader.r_stringZ();
+			CSpreadsheetAttrDescription* cell =
+				spreadsheetDesc.GetOrCreateCell(row, col);
 
-		cell.m_alignHorz = cellReader.r_s32();
-		cell.m_alignVert = cellReader.r_s32();
-		cell.m_textOrient = cellReader.r_s32();
+			cell->m_value = cellReader.r_stringZ();
 
-		cell.m_font = typeConv::StringToFont(cellReader.r_stringZ());
-		cell.m_backgroundColour = typeConv::StringToColour(cellReader.r_stringZ());
-		cell.m_textColour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_alignHorz = cellReader.r_s32();
+			cell->m_alignVert = cellReader.r_s32();
+			cell->m_textOrient = cellReader.r_s32();
 
-		cell.m_borderAt[0].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[0].m_width = cellReader.r_s32();
-		cell.m_borderAt[0].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_font = typeConv::StringToFont(cellReader.r_stringZ());
+			cell->m_backgroundColour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_textColour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[1].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[1].m_width = cellReader.r_s32();
-		cell.m_borderAt[1].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_borderAt[0].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+			cell->m_borderAt[0].m_width = cellReader.r_s32();
+			cell->m_borderAt[0].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[2].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[2].m_width = cellReader.r_s32();
-		cell.m_borderAt[2].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_borderAt[1].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+			cell->m_borderAt[1].m_width = cellReader.r_s32();
+			cell->m_borderAt[1].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_borderAt[3].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-		cell.m_borderAt[3].m_width = cellReader.r_s32();
-		cell.m_borderAt[3].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
+			cell->m_borderAt[2].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+			cell->m_borderAt[2].m_width = cellReader.r_s32();
+			cell->m_borderAt[2].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
 
-		cell.m_row_size = cellReader.r_s32();
-		cell.m_col_size = cellReader.r_s32();
+			cell->m_borderAt[3].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
+			cell->m_borderAt[3].m_width = cellReader.r_s32();
+			cell->m_borderAt[3].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
+
+			cell->m_row_size = cellReader.r_s32();
+			cell->m_col_size = cellReader.r_s32();
+
+			cell->m_fitMode = static_cast<CSpreadsheetAttrDescription::EFitMode>(cellReader.r_s32());
+			cell->m_isReadOnly = cellReader.r_u8();
+		}
 	}
 
 	wxMemoryBuffer areaBuffer;
-	if (!reader.r_chunk(area_block, areaBuffer))
+	if (!mainReader.r_chunk(area_block, areaBuffer))
 		return false;
 
 	CMemoryReader areaReader(areaBuffer);
-	spreadsheetDesc.m_rowAreaAt.reserve(areaReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_rowAreaAt.capacity(); c++) {
-		CSpreadsheetAreaChunk& area = spreadsheetDesc.m_rowAreaAt.emplace_back();
-		area.m_label = areaReader.r_stringZ();
-		area.m_start = areaReader.r_s32();
-		area.m_end = areaReader.r_s32();
+
+	{
+		const size_t capacity = areaReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddRowArea(areaReader.r_stringZ(), areaReader.r_s32(), areaReader.r_s32());
 	}
-	spreadsheetDesc.m_colAreaAt.reserve(areaReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_colAreaAt.capacity(); c++) {
-		CSpreadsheetAreaChunk& area = spreadsheetDesc.m_colAreaAt.emplace_back();
-		area.m_label = areaReader.r_stringZ();
-		area.m_start = areaReader.r_s32();
-		area.m_end = areaReader.r_s32();
+	{
+		const size_t capacity = areaReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddColArea(areaReader.r_stringZ(), areaReader.r_s32(), areaReader.r_s32());
 	}
 
 	wxMemoryBuffer dataBuffer;
-	if (!reader.r_chunk(data_block, dataBuffer))
+	if (!mainReader.r_chunk(data_block, dataBuffer))
 		return false;
 
 	CMemoryReader dataReader(dataBuffer);
-	spreadsheetDesc.m_rowBrakeAt.reserve(dataReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_rowBrakeAt.capacity(); c++)
-		spreadsheetDesc.m_rowBrakeAt.push_back(dataReader.r_s32());
-	spreadsheetDesc.m_colBrakeAt.reserve(dataReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_colBrakeAt.capacity(); c++)
-		spreadsheetDesc.m_colBrakeAt.push_back(dataReader.r_s32());
 
-	spreadsheetDesc.m_rowHeightAt.reserve(dataReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_rowHeightAt.capacity(); c++)
 	{
-		CSpreadsheetRowSizeChunk& row = spreadsheetDesc.m_rowHeightAt.emplace_back();
-		row.m_row = dataReader.r_s32();
-		row.m_height = dataReader.r_s32();
+		const size_t capacity = dataReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddRowBrake(dataReader.r_s32());
 	}
-	spreadsheetDesc.m_colWidthAt.reserve(dataReader.r_u64());
-	for (u64 c = 0; c < spreadsheetDesc.m_colWidthAt.capacity(); c++)
 	{
-		CSpreadsheetColSizeChunk& col = spreadsheetDesc.m_colWidthAt.emplace_back();
-		col.m_col = dataReader.r_s32();
-		col.m_width = dataReader.r_s32();
+		const size_t capacity = dataReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddColBrake(dataReader.r_s32());
+	}
+	{
+		const size_t capacity = dataReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) {
+			int row = dataReader.r_s32();
+			spreadsheetDesc.SetRowSize(row, dataReader.r_s32());
+		}
+	}
+	{
+		const size_t capacity = dataReader.r_u64();
+		for (u64 c = 0; c < capacity; c++) {
+			int col = dataReader.r_s32();
+			spreadsheetDesc.SetColSize(col, dataReader.r_s32());
+		}
 	}
 
-	spreadsheetDesc.m_freezeRow = dataReader.r_s32();
-	spreadsheetDesc.m_freezeCol = dataReader.r_s32();
+	spreadsheetDesc.SetFreezeRow(dataReader.r_s32());
+	spreadsheetDesc.SetFreezeCol(dataReader.r_s32());
 	return true;
 }
 
 bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheetDescription& spreadsheetDesc)
 {
-	CMemoryWriter headerWritter;
-	headerWritter.w_u64(cell_sign); //sign
-	headerWritter.w_u64(0); //reserved
-	writer.w_chunk(main_block, headerWritter.buffer());
+	CMemoryWriter mainWriter;
 
-	CMemoryWriter cellWritter;
-	cellWritter.w_u64(spreadsheetDesc.m_cellAt.size());
-	for (const auto& c : spreadsheetDesc.m_cellAt)
+	CMemoryWriter headerWriter;
+	headerWriter.w_u64(cell_sign); //sign
+	headerWriter.w_u64(0); //reserved
+	mainWriter.w_chunk(main_block, headerWriter.buffer());
+
+	CMemoryWriter cellWriter;
+	cellWriter.w_u64(spreadsheetDesc.GetCellCount());
+
+	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++)
 	{
-		cellWritter.w_s32(c.m_row);
-		cellWritter.w_s32(c.m_col);
+		const CSpreadsheetAttrDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
 
-		cellWritter.w_stringZ(c.m_value);
+		cellWriter.w_s32(cell->m_row);
+		cellWriter.w_s32(cell->m_col);
 
-		cellWritter.w_s32(c.m_alignHorz);
-		cellWritter.w_s32(c.m_alignVert);
-		cellWritter.w_s32(c.m_textOrient);
+		cellWriter.w_stringZ(cell->m_value);
 
-		cellWritter.w_stringZ(typeConv::FontToString(c.m_font));
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_backgroundColour));
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_textColour));
+		cellWriter.w_s32(cell->m_alignHorz);
+		cellWriter.w_s32(cell->m_alignVert);
+		cellWriter.w_s32(cell->m_textOrient);
 
-		cellWritter.w_s32(c.m_borderAt[0].m_style);
-		cellWritter.w_s32(c.m_borderAt[0].m_width);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[0].m_colour));
+		cellWriter.w_stringZ(typeConv::FontToString(cell->m_font));
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_backgroundColour));
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_textColour));
 
-		cellWritter.w_s32(c.m_borderAt[1].m_style);
-		cellWritter.w_s32(c.m_borderAt[1].m_width);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[1].m_colour));
+		cellWriter.w_s32(cell->m_borderAt[0].m_style);
+		cellWriter.w_s32(cell->m_borderAt[0].m_width);
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[0].m_colour));
 
-		cellWritter.w_s32(c.m_borderAt[2].m_style);
-		cellWritter.w_s32(c.m_borderAt[2].m_width);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[2].m_colour));
+		cellWriter.w_s32(cell->m_borderAt[1].m_style);
+		cellWriter.w_s32(cell->m_borderAt[1].m_width);
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[1].m_colour));
 
-		cellWritter.w_s32(c.m_borderAt[3].m_style);
-		cellWritter.w_s32(c.m_borderAt[3].m_width);
-		cellWritter.w_stringZ(typeConv::ColourToString(c.m_borderAt[3].m_colour));
+		cellWriter.w_s32(cell->m_borderAt[2].m_style);
+		cellWriter.w_s32(cell->m_borderAt[2].m_width);
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[2].m_colour));
 
-		cellWritter.w_s32(c.m_row_size);
-		cellWritter.w_s32(c.m_col_size);
-	}
-	writer.w_chunk(cell_block, cellWritter.buffer());
+		cellWriter.w_s32(cell->m_borderAt[3].m_style);
+		cellWriter.w_s32(cell->m_borderAt[3].m_width);
+		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[3].m_colour));
 
-	CMemoryWriter areaWritter;
-	areaWritter.w_u64(spreadsheetDesc.m_rowAreaAt.size());
-	for (const auto& c : spreadsheetDesc.m_rowAreaAt)
-	{
-		areaWritter.w_stringZ(c.m_label);
-		areaWritter.w_s32(c.m_start);
-		areaWritter.w_s32(c.m_end);
-	}
-	areaWritter.w_u64(spreadsheetDesc.m_colAreaAt.size());
-	for (const auto& c : spreadsheetDesc.m_colAreaAt)
-	{
-		areaWritter.w_stringZ(c.m_label);
-		areaWritter.w_s32(c.m_start);
-		areaWritter.w_s32(c.m_end);
-	}
-	writer.w_chunk(area_block, areaWritter.buffer());
+		cellWriter.w_s32(cell->m_row_size);
+		cellWriter.w_s32(cell->m_col_size);
 
-	CMemoryWriter dataWritter;
-
-	dataWritter.w_u64(spreadsheetDesc.m_rowBrakeAt.size());
-	for (const auto& c : spreadsheetDesc.m_rowBrakeAt) dataWritter.w_s32(c);
-
-	dataWritter.w_u64(spreadsheetDesc.m_colBrakeAt.size());
-	for (const auto& c : spreadsheetDesc.m_colBrakeAt) dataWritter.w_s32(c);
-
-	dataWritter.w_u64(spreadsheetDesc.m_rowHeightAt.size());
-	for (const auto& c : spreadsheetDesc.m_rowHeightAt)
-	{
-		dataWritter.w_s32(c.m_row);
-		dataWritter.w_s32(c.m_height);
+		cellWriter.w_s32(cell->m_fitMode);
+		cellWriter.w_s8(cell->m_isReadOnly);
 	}
 
-	dataWritter.w_u64(spreadsheetDesc.m_colWidthAt.size());
-	for (const auto& c : spreadsheetDesc.m_colWidthAt)
+	mainWriter.w_chunk(cell_block, cellWriter.buffer());
+
+	CMemoryWriter areaWriter;
+
+	areaWriter.w_u64(spreadsheetDesc.GetAreaNumberRows());
+
+	for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++)
 	{
-		dataWritter.w_s32(c.m_col);
-		dataWritter.w_s32(c.m_width);
+		const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
+
+		areaWriter.w_stringZ(area->m_label);
+		areaWriter.w_s32(area->m_start);
+		areaWriter.w_s32(area->m_end);
 	}
 
-	dataWritter.w_s32(spreadsheetDesc.m_freezeRow);
-	dataWritter.w_s32(spreadsheetDesc.m_freezeCol);
-	writer.w_chunk(data_block, dataWritter.buffer());
+	areaWriter.w_u64(spreadsheetDesc.GetAreaNumberCols());
 
+	for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++)
+	{
+		const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
+
+		areaWriter.w_stringZ(area->m_label);
+		areaWriter.w_s32(area->m_start);
+		areaWriter.w_s32(area->m_end);
+	}
+
+	mainWriter.w_chunk(area_block, areaWriter.buffer());
+
+	CMemoryWriter dataWriter;
+
+	dataWriter.w_u64(spreadsheetDesc.GetBrakeNumberRows());
+	for (int idx = 0; idx < spreadsheetDesc.GetBrakeNumberRows(); idx++) dataWriter.w_s32(spreadsheetDesc.GetRowBrakeByIdx(idx));
+
+	dataWriter.w_u64(spreadsheetDesc.GetBrakeNumberCols());
+	for (int idx = 0; idx < spreadsheetDesc.GetBrakeNumberCols(); idx++) dataWriter.w_s32(spreadsheetDesc.GetColBrakeByIdx(idx));
+
+	dataWriter.w_u64(spreadsheetDesc.GetSizeNumberRows());
+	for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++) {
+		const CSpreadsheetRowSizeDescription* desc = spreadsheetDesc.GetRowSizeByIdx(idx);
+		dataWriter.w_s32(desc->m_row);
+		dataWriter.w_s32(desc->m_height);
+	}
+
+	dataWriter.w_u64(spreadsheetDesc.GetSizeNumberCols());
+	for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
+		const CSpreadsheetColSizeDescription* desc = spreadsheetDesc.GetColSizeByIdx(idx);
+		dataWriter.w_s32(desc->m_col);
+		dataWriter.w_s32(desc->m_width);
+	}
+
+	dataWriter.w_s32(spreadsheetDesc.GetFreezeRow());
+	dataWriter.w_s32(spreadsheetDesc.GetFreezeCol());
+
+	mainWriter.w_chunk(data_block, dataWriter.buffer());
+
+	writer.w_chunk(grid_block, mainWriter.buffer());
 	return true;
 }

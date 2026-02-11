@@ -15,7 +15,7 @@ public:
 
 	//set spreadsheet code 
 	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) = 0;
-	virtual const CSpreadsheetDescription& GetSpreadsheetDesc() const = 0;
+	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const = 0;
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -35,7 +35,7 @@ class BACKEND_API CValueMetaObjectSpreadsheet : public IValueMetaObjectSpreadshe
 public:
 	//set spreadsheet code 
 	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
-	virtual const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
+	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
 protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
@@ -49,7 +49,7 @@ class BACKEND_API CValueMetaObjectCommonSpreadsheet : public IValueMetaObjectSpr
 public:
 	//set spreadsheet code 
 	virtual void SetSpreadsheetDesc(const CSpreadsheetDescription& spreadsheetDescription) { m_propertyTemplate->SetValue(spreadsheetDescription); }
-	virtual const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
+	virtual CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_propertyTemplate->GetValueAsSpreadsheetDesc(); }
 protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());

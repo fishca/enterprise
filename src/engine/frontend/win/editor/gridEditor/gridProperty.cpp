@@ -101,38 +101,63 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property
 		m_propertyBottomBorder->SetValue(borderBottom.m_style);
 		m_propertyColourBorder->SetValue(borderLeft.m_colour);
 	}
+	else if (m_propertyFitMode == property){
+		
+		wxGridExtFitMode fitMode = m_view->GetCellFitMode(coords.GetTopRow(), coords.GetLeftCol());
+
+		if (fitMode.IsOverflow())
+			m_propertyFitMode->SetValue(enFitMode_Overflow);
+		else if (fitMode.IsClip())
+			m_propertyFitMode->SetValue(enFitMode_Clip);
+	}
+	else if (m_propertyReadOnly == property) {
+		m_propertyReadOnly->SetValue(m_view->IsCellReadOnly(coords.GetTopRow(), coords.GetLeftCol()));
+	}
 }
 
 void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
 {
-	for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
-		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++) {
-			if (m_propertyText == property) {
-				m_view->SetCellValue(row, col, m_propertyText->GetValueAsString());
-			}
-			else if (m_propertyFont == property) {
-				m_view->SetCellFont(row, col, m_propertyFont->GetValueAsFont());
-			}
-			else if (m_propertyBackgroundColour == property) {
-				m_view->SetCellBackgroundColour(row, col, m_propertyBackgroundColour->GetValueAsColour());
-			}
-			else if (m_propertyTextColour == property) {
-				m_view->SetCellTextColour(row, col, m_propertyTextColour->GetValueAsColour());
-			}
-			else if (m_propertyAlignHorz == property || m_propertyAlignVert == property) {
-				m_view->SetCellAlignment(row, col, m_propertyAlignHorz->GetValueAsInteger(), m_propertyAlignVert->GetValueAsInteger());
-			}
-			else if (m_propertyOrient == property) {
-				m_view->SetCellTextOrient(row, col, m_propertyOrient->GetValueAsInteger());
-			}
-			else if (m_propertyLeftBorder == property || m_propertyRightBorder == property || m_propertyTopBorder == property || m_propertyBottomBorder == property || m_propertyColourBorder == property) 
-			{
-				m_view->SetCellBorderLeft(row, col, m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-				m_view->SetCellBorderRight(row, col, m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-				m_view->SetCellBorderTop(row, col, m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-				m_view->SetCellBorderBottom(row, col, m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-			}
-		}
+	if (m_propertyText == property) {
+		m_view->SetCellValue(coords, m_propertyText->GetValueAsString());
+	}
+	else if (m_propertyFont == property) {
+		m_view->SetCellFont(coords, m_propertyFont->GetValueAsFont());
+	}
+	else if (m_propertyBackgroundColour == property) {
+		m_view->SetCellBackgroundColour(coords, m_propertyBackgroundColour->GetValueAsColour());
+	}
+	else if (m_propertyTextColour == property) {
+		m_view->SetCellTextColour(coords, m_propertyTextColour->GetValueAsColour());
+	}
+	else if (m_propertyAlignHorz == property || m_propertyAlignVert == property) {
+		m_view->SetCellAlignment(coords, m_propertyAlignHorz->GetValueAsInteger(), m_propertyAlignVert->GetValueAsInteger());
+	}
+	else if (m_propertyOrient == property) {
+		m_view->SetCellTextOrient(coords, m_propertyOrient->GetValueAsInteger());
+	}
+	else if (m_propertyLeftBorder == property) {
+		m_view->SetCellBorderLeft(coords, m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+	}
+	else if (m_propertyRightBorder == property) {
+		m_view->SetCellBorderRight(coords, m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+	}
+	else if (m_propertyTopBorder == property) {
+		m_view->SetCellBorderTop(coords, m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+	}
+	else if (m_propertyBottomBorder == property) {
+		m_view->SetCellBorderBottom(coords, m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+	}
+	else if (m_propertyColourBorder == property) {
+		m_view->SetCellBorderLeft(coords, m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderRight(coords, m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderTop(coords, m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderBottom(coords, m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+	}
+	else if (m_propertyFitMode == property) {
+		m_view->SetCellFitMode(coords, m_propertyFitMode->GetValueAsEnum() == enFitMode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
+	}
+	else if (m_propertyReadOnly == property) {
+		m_view->SetCellReadOnly(coords, m_propertyReadOnly->GetValueAsBoolean());
 	}
 }
 
@@ -145,7 +170,7 @@ IMetaData* CGridEditor::CGridEditorCellProperty::GetMetaData() const
 
 void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property)
 {
-	for (auto coords : m_currentSelection) {
+	for (const auto coords : m_currentSelection) {
 		CGridEditorCellProperty::OnPropertyCreated(property, coords);
 	}
 }

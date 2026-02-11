@@ -3,6 +3,7 @@
 
 #include "window.h"
 #include "frontend/win/editor/gridEditor/gridEditor.h"
+#include "backend/system/value/valueSpreadsheet.h"
 
 class CValueGridBox : public IValueWindow {
 	wxDECLARE_DYNAMIC_CLASS(CValueGridBox);
@@ -19,6 +20,12 @@ public:
 	//support printing 
 	virtual wxPrintout* CreatePrintout() const;
 
+	//methods & attributes
+	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
+
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
@@ -26,6 +33,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(CMemoryReader &reader);
 	virtual bool SaveData(CMemoryWriter &writer = CMemoryWriter());
+
+private:
+
+	CValuePtr<CValueSpreadsheet> m_valueSpreadsheet;
 };
 
 #endif

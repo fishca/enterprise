@@ -1,9 +1,10 @@
 #include "backend_spreadsheet.h"
 #include "backend/fileSystem/fs.h"
 
+#pragma region __fs_h__
 #include <fstream>
 
-bool CBackendSpreadSheetDocument::LoadFromFile(const wxString& strFileName)
+bool CBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)
 {
 	std::ifstream in(strFileName.ToStdWstring(), std::ios::in | std::ios::binary);
 
@@ -30,7 +31,7 @@ bool CBackendSpreadSheetDocument::LoadFromFile(const wxString& strFileName)
 	return CSpreadsheetDescriptionMemory::LoadData(readerData, m_spreadsheetDesc);
 }
 
-bool CBackendSpreadSheetDocument::SaveToFile(const wxString& strFileName)
+bool CBackendSpreadsheetObject::SaveToFile(const wxString& strFileName)
 {
 	//common data
 	CMemoryWriter writterData;
@@ -45,3 +46,5 @@ bool CBackendSpreadSheetDocument::SaveToFile(const wxString& strFileName)
 
 	return true;
 }
+
+#pragma endregion 

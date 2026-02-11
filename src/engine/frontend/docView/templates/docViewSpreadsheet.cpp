@@ -3,12 +3,12 @@
 
 enum
 {
-	wxID_MERGE_CELLS = wxID_HIGHEST + 150,
-	wxID_SECTION_ADD,
-	wxID_SECTION_REMOVE,
-	wxID_SHOW_CELLS,
-	wxID_SHOW_HEADERS,
-	wxID_SHOW_SECTIONS,
+	wxID_MERGE_CELL = wxID_HIGHEST + 150,
+	wxID_AREA_ADD,
+	wxID_AREA_DELETE,
+	wxID_SHOW_CELL,
+	wxID_SHOW_HEADER,
+	wxID_SHOW_AREA,
 	wxID_BORDERS,
 	wxID_DOCK_TABLE,
 };
@@ -25,12 +25,12 @@ EVT_MENU(wxID_COPY, CSpreadsheetEditView::OnCopy)
 EVT_MENU(wxID_PASTE, CSpreadsheetEditView::OnPaste)
 EVT_MENU(wxID_SELECTALL, CSpreadsheetEditView::OnSelectAll)
 
-EVT_MENU(wxID_MERGE_CELLS, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SECTION_ADD, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SECTION_REMOVE, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_CELLS, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_HEADERS, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_SHOW_SECTIONS, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_MERGE_CELL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_AREA_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_AREA_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_CELL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_HEADER, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_SHOW_AREA, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDERS, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_DOCK_TABLE, CSpreadsheetEditView::OnMenuEvent)
 
@@ -45,6 +45,32 @@ bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
 	return CMetaView::OnCreate(doc, flags);
 }
 
+#if wxUSE_MENUS	
+wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
+{
+	wxMenuBar* mb = new wxMenuBar;
+
+	wxMenu* menu = new wxMenu;
+	wxMenuItem* menuItem = nullptr;
+
+	wxMenu* menuSection = new wxMenu;
+	menuItem = menuSection->Append(wxID_AREA_ADD, _("Add area"));
+	menuItem = menuSection->Append(wxID_AREA_DELETE, _("Delete area"));
+	menu->AppendSubMenu(menuSection, _("Area"));
+
+	menuItem = menu->AppendSeparator();
+	menuItem = menu->Append(wxID_SHOW_CELL, _("Show cells"));
+	menuItem = menu->Append(wxID_SHOW_HEADER, _("Show headers"));
+	menuItem = menu->Append(wxID_SHOW_AREA, _("Show area"));
+
+	menuItem = menu->AppendSeparator();
+	menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
+
+	mb->Append(menu, _("Spreadsheet"));
+	return mb;
+}
+#endif 
+
 void CSpreadsheetEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) m_gridEditor->ActivateEditor();
@@ -58,25 +84,25 @@ void CSpreadsheetEditView::OnDraw(wxDC* WXUNUSED(dc))
 #include "frontend/win/editor/gridEditor/gridPrintout.h"
 
 wxPrintout* CSpreadsheetEditView::OnCreatePrintout()
-{	
-	return new CGridEditorPrintout(m_gridEditor, wxGP_SHOW_NONE, m_viewDocument->GetTitle());
+{
+	return m_gridEditor->CreatePrintout();
 }
 
 #include "frontend/artProvider/artProvider.h"
 
 void CSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
-	toolbar->AddTool(wxID_MERGE_CELLS, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
-	toolbar->EnableTool(wxID_MERGE_CELLS, m_gridEditor->IsEditable());
+	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
+	toolbar->EnableTool(wxID_MERGE_CELL, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_SECTION_ADD, _("Add section"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add"), wxItemKind::wxITEM_NORMAL);
-	toolbar->EnableTool(wxID_SECTION_ADD, m_gridEditor->IsEditable());
-	toolbar->AddTool(wxID_SECTION_REMOVE, _("Remove section"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove"), wxItemKind::wxITEM_NORMAL);
-	toolbar->EnableTool(wxID_SECTION_REMOVE, m_gridEditor->IsEditable());
+	toolbar->AddTool(wxID_AREA_ADD, _("Add section"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add"), wxItemKind::wxITEM_NORMAL);
+	toolbar->EnableTool(wxID_AREA_ADD, m_gridEditor->IsEditable());
+	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove"), wxItemKind::wxITEM_NORMAL);
+	toolbar->EnableTool(wxID_AREA_DELETE, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_SHOW_CELLS, _("Show cells"), wxArtProvider::GetBitmap(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
-	toolbar->AddTool(wxID_SHOW_HEADERS, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
-	toolbar->AddTool(wxID_SHOW_SECTIONS, _("Show sections"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show sections"));
+	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmap(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
+	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
+	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
 	toolbar->AddTool(wxID_BORDERS, _("Borders"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Borders"));
 	toolbar->SetToolDropDown(wxID_BORDERS, true);
 	toolbar->AddSeparator();
@@ -104,22 +130,22 @@ void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	switch (event.GetId())
 	{
-	case wxID_MERGE_CELLS:
+	case wxID_MERGE_CELL:
 		m_gridEditor->MergeCells();
 		break;
-	case wxID_SECTION_ADD:
+	case wxID_AREA_ADD:
 		m_gridEditor->AddArea();
 		break;
-	case wxID_SECTION_REMOVE:
+	case wxID_AREA_DELETE:
 		m_gridEditor->DeleteArea();
 		break;
-	case wxID_SHOW_CELLS:
+	case wxID_SHOW_CELL:
 		m_gridEditor->ShowCells();
 		break;
-	case wxID_SHOW_HEADERS:
+	case wxID_SHOW_HEADER:
 		m_gridEditor->ShowHeader();
 		break;
-	case wxID_SHOW_SECTIONS:
+	case wxID_SHOW_AREA:
 		m_gridEditor->ShowArea();
 		break;
 	case wxID_DOCK_TABLE:
@@ -139,6 +165,11 @@ wxIMPLEMENT_ABSTRACT_CLASS(ISpreadsheetDocument, CMetaDocument);
 wxIMPLEMENT_DYNAMIC_CLASS(CSpreadsheetFileDocument, ISpreadsheetDocument);
 wxIMPLEMENT_DYNAMIC_CLASS(CSpreadsheetEditDocument, ISpreadsheetDocument);
 
+wxCommandProcessor* ISpreadsheetDocument::OnCreateCommandProcessor()
+{
+	return new wxGridExtCommandProcessor(GetGridCtrl());
+}
+
 CGridEditor* ISpreadsheetDocument::GetGridCtrl() const
 {
 	wxView* view = GetFirstView();
@@ -154,14 +185,14 @@ bool CSpreadsheetFileDocument::OnCreate(const wxString& path, long flags)
 	if (!CMetaDocument::OnCreate(path, flags))
 		return false;
 
-	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument);
+	return GetGridCtrl()->AssociateDocument(m_spreadSheetDocument);
 }
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
 bool CSpreadsheetFileDocument::DoOpenDocument(const wxString& filename)
 {
-	if (!m_spreadSheetDocument.LoadFromFile(filename))
+	if (!m_spreadSheetDocument->LoadFromFile(filename))
 		return false;
 
 	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument);
@@ -172,7 +203,7 @@ bool CSpreadsheetFileDocument::DoSaveDocument(const wxString& filename)
 	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument))
 		return false;
 
-	return m_spreadSheetDocument.SaveToFile(filename);
+	return m_spreadSheetDocument->SaveToFile(filename);
 }
 
 // ----------------------------------------------------------------------------
@@ -273,8 +304,10 @@ bool CSpreadsheetEditDocument::SaveAs()
 
 bool CSpreadsheetEditDocument::DoSaveDocument(const wxString& filename)
 {
-	CBackendSpreadSheetDocument spreadSheetDocument;
-	if (!GetGridCtrl()->SaveDocument(spreadSheetDocument))
+	wxObjectDataPtr<CBackendSpreadsheetObject>spreadSheetDocument;
+
+	if (!GetGridCtrl()->GetActiveDocument(spreadSheetDocument))
 		return false;
-	return spreadSheetDocument.SaveToFile(filename);
+
+	return spreadSheetDocument->SaveToFile(filename);
 }

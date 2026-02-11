@@ -14,6 +14,10 @@ class FRONTEND_API CSpreadsheetEditView : public CMetaView
 public:
 	CSpreadsheetEditView() : CMetaView(), m_gridEditor(nullptr) {}
 
+#if wxUSE_MENUS	
+	wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const;
+#endif 
+
 	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
@@ -52,7 +56,8 @@ public:
 	}
 
 	ISpreadsheetDocument() : CMetaDocument() {}
-
+	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
+	
 	virtual CGridEditor* GetGridCtrl() const;
 
 private:
@@ -67,7 +72,7 @@ private:
 class FRONTEND_API CSpreadsheetFileDocument : public ISpreadsheetDocument {
 public:
 
-	CSpreadsheetFileDocument(const CBackendSpreadSheetDocument& spreadSheetDocument = CBackendSpreadSheetDocument()) : ISpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
+	CSpreadsheetFileDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<CBackendSpreadsheetObject>(new CBackendSpreadsheetObject)) : ISpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -97,7 +102,7 @@ protected:
 
 private:
 
-	CBackendSpreadSheetDocument m_spreadSheetDocument;
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadSheetDocument;
 
 	wxDECLARE_NO_COPY_CLASS(CSpreadsheetFileDocument);
 	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetFileDocument);

@@ -481,7 +481,7 @@ public:
 	}
 };
 
-class CTypeDescriptionMemory {
+class BACKEND_API CTypeDescriptionMemory {
 public:
 	//load & save object in control 
 	static bool LoadData(class CMemoryReader& reader, CTypeDescription& typeDesc);
@@ -526,7 +526,7 @@ public:
 	unsigned int GetTypeCount() const { return m_listMetaClass.size(); }
 };
 
-class CMetaDescriptionMemory {
+class BACKEND_API CMetaDescriptionMemory {
 public:
 	//load & save object in control 
 	static bool LoadData(class CMemoryReader& reader, CMetaDescription& metaDesc);

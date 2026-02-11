@@ -72,8 +72,8 @@ public:
 	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
 
 	// Grid support
-	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, const CBackendSpreadSheetDocument& spreadSheetDocument) override;
-	virtual bool PrintSpreadSheetDocument(const CBackendSpreadSheetDocument& doc) override;
+	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) override;
+	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
 
 #pragma endregion 
 

@@ -7,7 +7,6 @@
 
 CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(title)
 {
-	m_view = nullptr;
 	SetStyle(wxGP_SHOW_NONE);
 
 	m_minPage = 1;
@@ -22,9 +21,9 @@ CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(tit
 	m_rightMargin = 50;
 }
 
-CGridEditorPrintout::CGridEditorPrintout(CGridEditor* gridCtrl, int style, const wxString& title) : wxPrintout(title)
+CGridEditorPrintout::CGridEditorPrintout(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, int style, const wxString& title) : wxPrintout(title)
 {
-	m_view = gridCtrl;
+	m_doc = doc;
 	SetStyle(style);
 
 	m_minPage = 1;
@@ -37,16 +36,6 @@ CGridEditorPrintout::CGridEditorPrintout(CGridEditor* gridCtrl, int style, const
 	m_bottomMargin = 50;
 	m_leftMargin = 50;
 	m_rightMargin = 50;
-}
-
-void CGridEditorPrintout::SetGrid(CGridEditor* gridCtrl)
-{
-	m_view = gridCtrl;
-}
-
-CGridEditor* CGridEditorPrintout::GetGrid() const
-{
-	return m_view;
 }
 
 void CGridEditorPrintout::SetStyle(int style)
@@ -123,14 +112,16 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 	colIndex = page % columnPages;
 	rowIndex = page / columnPages;
 
+	const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
+
 	int toCol;
 	if (colIndex == m_colsPerPage.Count() - 1)
-		toCol = m_view->GetNumberCols();
+		toCol = spreadsheetDesc.GetNumberCols();
 	else
 		toCol = m_colsPerPage.Item(colIndex + 1);
 	int toRow;
 	if (rowIndex == m_rowsPerPage.Count() - 1)
-		toRow = m_view->GetNumberRows();
+		toRow = spreadsheetDesc.GetNumberRows();
 	else
 		toRow = m_rowsPerPage.Item(rowIndex + 1);
 
@@ -144,19 +135,19 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 	if ((m_showCl && rowIndex == 0) || m_showClAlways) {
 		if ((m_showRl && colIndex == 0) || m_showRlAlways) {
 			dc->SetBrush(*wxLIGHT_GREY_BRUSH);
-			dc->DrawRectangle(countWidth, 0, m_view->GetRowLabelSize(), m_view->GetColLabelSize());
-			countWidth += m_view->GetRowLabelSize();
+			dc->DrawRectangle(countWidth, 0, spreadsheetDesc.GetRowLabelSize(), spreadsheetDesc.GetColLabelSize());
+			countWidth += spreadsheetDesc.GetRowLabelSize();
 		}
 		for (int i = m_colsPerPage.Item(colIndex); i < toCol; i++) {
 			dc->SetBrush(*wxLIGHT_GREY_BRUSH);
-			wxString str = m_view->GetColLabelValue(i);
-			wxRect rect = wxRect(countWidth, 0, m_view->GetColSize(i), m_view->GetColLabelSize());
-			wxFont fnt = m_view->GetLabelFont();
+			wxString str = spreadsheetDesc.GetColLabelValue(i);
+			wxRect rect = wxRect(countWidth, 0, spreadsheetDesc.GetColSize(i), spreadsheetDesc.GetColLabelSize());
+			wxFont fnt = spreadsheetDesc.GetLabelFont();
 			DrawTextInRectangle(*dc, str, rect, fnt, *wxBLACK, wxALIGN_CENTER, wxALIGN_CENTER);
-			countWidth += m_view->GetColSize(i);
+			countWidth += spreadsheetDesc.GetColSize(i);
 		}
 
-		cellInitialH = m_view->GetColLabelSize();
+		cellInitialH = spreadsheetDesc.GetColLabelSize();
 	}
 	//////////////////////////////////////
 
@@ -165,13 +156,13 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 	if ((m_showRl && colIndex == 0) || m_showRlAlways) {
 		for (int i = m_rowsPerPage.Item(rowIndex); i < toRow; i++) {
 			dc->SetBrush(*wxLIGHT_GREY_BRUSH);
-			wxString str = m_view->GetRowLabelValue(i);
-			wxRect rct = wxRect(0, countHeight, m_view->GetRowLabelSize(), m_view->GetRowSize(i));
-			wxFont fnt = m_view->GetLabelFont();
+			wxString str = spreadsheetDesc.GetRowLabelValue(i);
+			wxRect rct = wxRect(0, countHeight, spreadsheetDesc.GetRowLabelSize(), spreadsheetDesc.GetRowSize(i));
+			wxFont fnt = spreadsheetDesc.GetLabelFont();
 			DrawTextInRectangle(*dc, str, rct, fnt, *wxBLACK, wxALIGN_CENTER, wxALIGN_CENTER);
-			countHeight += m_view->GetRowSize(i);
+			countHeight += spreadsheetDesc.GetRowSize(i);
 		}
-		cellInitialW = m_view->GetRowLabelSize();
+		cellInitialW = spreadsheetDesc.GetRowLabelSize();
 	}
 	////////////////////////////////
 
@@ -181,102 +172,111 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 		countWidth = cellInitialW;
 		for (int col = m_colsPerPage.Item(colIndex); col < toCol; col++) {
 			int cell_rows, cell_cols;
-			if (m_view->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
+			if (spreadsheetDesc.GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
 				int colSize = 0, rowSize = 0;
 				for (int i = col; i < col + cell_cols; i++)
-					colSize += m_view->GetColSize(i);
+					colSize += spreadsheetDesc.GetColSize(i);
 				for (int i = row; i < row + cell_rows; i++)
-					rowSize += m_view->GetRowSize(i);
+					rowSize += spreadsheetDesc.GetRowSize(i);
 				wxRect rect(countWidth, countHeight, colSize, rowSize);
-				dc->SetBrush(m_view->GetCellBackgroundColour(row, col));
+				dc->SetBrush(spreadsheetDesc.GetCellBackgroundColour(row, col));
 				dc->SetPen(*wxTRANSPARENT_PEN);
 				dc->DrawRectangle(rect);
 				int horz, vert;
-				m_view->GetCellAlignment(row, col, &horz, &vert);
-				
-				DrawTextInRectangle(*dc, m_view->GetCellValue(row, col),
+				spreadsheetDesc.GetCellAlignment(row, col, &horz, &vert);
+
+				wxString result;
+				CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+					spreadsheetDesc.GetCellValue(row, col), result);
+
+				DrawTextInRectangle(*dc, result,
 					rect,
-					m_view->GetCellFont(row, col),
-					m_view->GetCellTextColour(row, col),
+					spreadsheetDesc.GetCellFont(row, col),
+					spreadsheetDesc.GetCellTextColour(row, col),
 					horz, vert,
-					m_view->GetCellTextOrient(row, col)
+					spreadsheetDesc.GetCellTextOrient(row, col)
 				);
 
-				wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(row, col);
+				CSpreadsheetBorderDescription borderLeft = spreadsheetDesc.GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetLeft(), rect.GetBottom());
 				}
 
-				wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(row, col);
+				CSpreadsheetBorderDescription borderRight = spreadsheetDesc.GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
 					dc->DrawLine(rect.GetRight(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 				}
 
-				wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(row, col);
+				CSpreadsheetBorderDescription borderTop = spreadsheetDesc.GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetTop());
 				}
 
-				wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(row, col);
+				CSpreadsheetBorderDescription borderBottom = spreadsheetDesc.GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetBottom(), rect.GetRight(), rect.GetBottom());
 				}
 			}
-			else if (m_view->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
-				wxRect rect(countWidth, countHeight, m_view->GetColSize(col), m_view->GetRowSize(row));
-				dc->SetBrush(m_view->GetCellBackgroundColour(row, col));
+			else if (spreadsheetDesc.GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
+				wxRect rect(countWidth, countHeight, spreadsheetDesc.GetColSize(col), spreadsheetDesc.GetRowSize(row));
+				dc->SetBrush(spreadsheetDesc.GetCellBackgroundColour(row, col));
 				dc->SetPen(*wxTRANSPARENT_PEN);
 				dc->DrawRectangle(rect);
 				int horz, vert;
-				m_view->GetCellAlignment(row, col, &horz, &vert);
-				DrawTextInRectangle(*dc, m_view->GetCellValue(row, col),
+				spreadsheetDesc.GetCellAlignment(row, col, &horz, &vert);
+
+				wxString result;
+				CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+					spreadsheetDesc.GetCellValue(row, col), result);
+
+				DrawTextInRectangle(*dc, result,
 					rect,
-					m_view->GetCellFont(row, col),
-					m_view->GetCellTextColour(row, col),
+					spreadsheetDesc.GetCellFont(row, col),
+					spreadsheetDesc.GetCellTextColour(row, col),
 					horz, vert,
-					m_view->GetCellTextOrient(row, col)
+					spreadsheetDesc.GetCellTextOrient(row, col)
 				);
-				
-				wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(row, col);
+
+				CSpreadsheetBorderDescription borderLeft = spreadsheetDesc.GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetLeft(), rect.GetBottom());
 				}
 
-				wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(row, col);
+				CSpreadsheetBorderDescription borderRight = spreadsheetDesc.GetCellBorderRight(row, col);
 				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
 					dc->DrawLine(rect.GetRight(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 				}
 
-				wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(row, col);
+				CSpreadsheetBorderDescription borderTop = spreadsheetDesc.GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetTop());
 				}
 
-				wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(row, col);
+				CSpreadsheetBorderDescription borderBottom = spreadsheetDesc.GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
 					dc->DrawLine(rect.GetLeft(), rect.GetBottom(), rect.GetRight(), rect.GetBottom());
 				}
 			}
-			
-			countWidth += m_view->GetColSize(col);
+
+			countWidth += spreadsheetDesc.GetColSize(col);
 		}
-		
-		countHeight += m_view->GetRowSize(row);
+
+		countHeight += spreadsheetDesc.GetRowSize(row);
 	}
 
 	////////////////////////////////
 
-	dc->SetBrush(*wxTRANSPARENT_BRUSH);
-	dc->SetPen(*wxBLACK_PEN);
-	dc->DrawRectangle(1, 1, m_maxWidth, m_maxHeight);
+	//dc->SetBrush(*wxTRANSPARENT_BRUSH);
+	//dc->SetPen(*wxBLACK_PEN);
+	//dc->DrawRectangle(1, 1, m_maxWidth, m_maxHeight);
 
 	return true;
 }
@@ -293,6 +293,8 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_maxWidth /= m_overallScale;
 	m_maxHeight /= m_overallScale;
 
+	const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
+
 	m_maxWidth -= 100;
 	m_maxHeight -= 100;
 
@@ -303,15 +305,15 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_colsPerPage.Add(0);
 
 	if (m_showRl || m_showRlAlways)
-		widthCount = m_view->GetRowLabelSize();
+		widthCount = spreadsheetDesc.GetRowLabelSize();
 
-	for (int i = 0; i < m_view->GetMaxColBrake(); i++) {
-		widthCount += m_view->GetColSize(i);
+	for (int i = 0; i < spreadsheetDesc.GetMaxColBrake(); i++) {
+		widthCount += spreadsheetDesc.GetColSize(i);
 		if ((widthCount >= m_maxWidth) ||
-			(m_colsPerPage.Last() != i && m_view->IsColBrake(i))) {
+			(m_colsPerPage.Last() != i && spreadsheetDesc.IsColBrake(i))) {
 			m_colsPerPage.Add(i);
 			if (m_showRlAlways)
-				widthCount = m_view->GetRowLabelSize();
+				widthCount = spreadsheetDesc.GetRowLabelSize();
 			else
 				widthCount = 0;
 			i--;
@@ -323,15 +325,15 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_rowsPerPage.Add(0);
 
 	if (m_showCl || m_showClAlways)
-		heightCount = m_view->GetColLabelSize();
+		heightCount = spreadsheetDesc.GetColLabelSize();
 
-	for (int i = 0; i < m_view->GetMaxRowBrake(); i++) {
-		heightCount += m_view->GetRowSize(i);
+	for (int i = 0; i < spreadsheetDesc.GetMaxRowBrake(); i++) {
+		heightCount += spreadsheetDesc.GetRowSize(i);
 		if ((heightCount >= m_maxHeight) ||
-			(m_rowsPerPage.Last() != i && m_view->IsRowBrake(i))) {
+			(m_rowsPerPage.Last() != i && spreadsheetDesc.IsRowBrake(i))) {
 			m_rowsPerPage.Add(i);
 			if (m_showClAlways)
-				heightCount = m_view->GetColLabelSize();
+				heightCount = spreadsheetDesc.GetColLabelSize();
 			else
 				heightCount = 0;
 			i--;

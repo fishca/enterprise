@@ -668,6 +668,7 @@
     <ClInclude Include="moduleManager\globalContextManager.h">
       <Filter>moduleManager</Filter>
     </ClInclude>
+    <ClInclude Include="value_ptr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />

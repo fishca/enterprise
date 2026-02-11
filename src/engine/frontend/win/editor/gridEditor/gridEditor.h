@@ -1,4 +1,4 @@
-#ifndef __GRID_EXT_COMMON_H__
+﻿#ifndef __GRID_EXT_COMMON_H__
 #define __GRID_EXT_COMMON_H__
 
 #include "frontend/frontend.h"
@@ -6,14 +6,71 @@
 #include "backend/backend_spreadsheet.h"
 #include "backend/propertyManager/propertyManager.h"
 
+#include "frontend/visualView/controlEnum.h"
+
 static const wxArrayString wxEmptyArrayString;
 
 #include "frontend/win/ctrls/grid/gridextctrl.h"
 #include "frontend/win/ctrls/grid/gridexteditors.h"
 
-#include "frontend/visualView/special/enum/valueEnum.h"
-
 class FRONTEND_API CGridEditor : public wxGridExt {
+
+	class CGridSpreadsheetObjectNotifier : public IBackendSpreadsheetObjectNotifier {
+	public:
+
+		CGridSpreadsheetObjectNotifier(CGridEditor* view) : m_view(view) {}
+		virtual void ResetSpreadsheet(int count = 0) {}
+
+		//size 
+		virtual void SetRowSize(int row, int height = 0) { m_view->SetRowSize(row, height); }
+		virtual void SetColSize(int col, int width = 0) { m_view->SetColSize(col, width); }
+
+		//freeze 
+		virtual void SetFreezeRow(int row) {}
+		virtual void SetFreezeCol(int col) {}
+
+		//area 
+		virtual void AddRowArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
+		virtual void DeleteRowArea(const wxString& strAreaName) {}
+		virtual void AddColArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
+		virtual void DeleteColArea(const wxString& strAreaName) {}
+		virtual void SetRowSizeArea(const wxString& strAreaName, int start, int end) {}
+		virtual void SetRowNameArea(size_t idx, const wxString& strAreaName) {};
+		virtual void SetColSizeArea(const wxString& strAreaName, int start, int end) {};
+		virtual void SetColNameArea(size_t idx, const wxString& strAreaName) {};
+
+		// ------ row and col formatting
+		//
+
+		virtual void SetCellBackgroundColour(int row, int col, const wxColour& colour) {}
+		virtual void SetCellTextColour(int row, int col, const wxColour& colour) {}
+		virtual void SetCellTextOrient(int row, int col, const int orient) {}
+		virtual void SetCellFont(int row, int col, const wxFont& font) {}
+		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) {}
+		virtual void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {}
+		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) {}
+		virtual void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) {}
+		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { m_view->SetCellReadOnly(row, col, isReadOnly); }
+
+		// ------ cell brake accessors
+		//
+		//support printing 
+		virtual void AddRowBrake(int row) { m_view->AddRowBrake(row); }
+		virtual void AddColBrake(int col) { m_view->AddColBrake(col); }
+
+		virtual void SetRowBrake(int row) { m_view->SetRowBrake(row); }
+		virtual void SetColBrake(int col) { m_view->SetColBrake(col); }
+
+		// ------ cell value accessors
+		//
+		virtual void SetCellValue(int row, int col, const wxString& s) { m_view->SetCellValue(row, col, s, false); }
+
+	private:
+		CGridEditor* m_view;
+	};
 
 	// the editor for string/text data
 	class CGridEditorCellTextEditor : public wxGridExtCellEditor
@@ -98,7 +155,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		{
 			const wxString& value = m_data[row][col];
 
-			if (s != value) 
+			if (s != value)
 			{
 				if (CBackendLocalization::IsLocalizationString(s))
 				{
@@ -184,12 +241,11 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("general"), _("General"));
 		CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("name"), _("Name"), wxEmptyString);
 		CPropertyTString* m_propertyText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryGeneral, wxT("text"), _("Text"), wxEmptyString);
-
-		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("Template"));
-		CPropertyEnum<CValueEnumBorder>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryTemplate, wxT("fillType"), _("Fill type"), wxPENSTYLE_TRANSPARENT);
-		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("parameter"), _("Parameter"), wxEmptyString);
+		CPropertyBoolean* m_propertyReadOnly = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryGeneral, wxT("readOnly"), _("Read only"), false);
 
 		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("Alignment"));
+
+		CPropertyEnum<CValueEnumFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumFitMode>>(m_categoryAlignment, wxT("fit_mode"), _("Fit mode"), enFitMode::enFitMode_Overflow);
 		CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), wxAlignment::wxALIGN_LEFT);
 		CPropertyEnum<CValueEnumVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVerticalAlignment>>(m_categoryAlignment, wxT("align_vert"), _("Vertical"), wxAlignment::wxALIGN_CENTER);
 		CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryAlignment, wxT("orient_text"), _("Orientation text"), wxOrientation::wxVERTICAL);
@@ -255,9 +311,7 @@ public:
 		}
 	}
 
-	void ShowArea() {
-		wxGridExt::EnableGridArea(!m_areaEnabled);
-	}
+	void ShowArea() { wxGridExt::EnableGridArea(!m_areaEnabled); }
 
 	void MergeCells();
 	void DockTable();
@@ -265,16 +319,24 @@ public:
 	void Copy();
 	void Paste();
 
+	bool AssociateDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
+	bool GetActiveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const;
+
 #pragma region file
 
-	bool LoadDocument(const CBackendSpreadSheetDocument& doc);
-	bool SaveDocument(CBackendSpreadSheetDocument& doc) const;
+	bool LoadDocument(const CSpreadsheetDescription& spreadsheetDesc);
+	bool LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
+	bool SaveDocument(CSpreadsheetDescription& spreadsheetDesc) const;
+	bool SaveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const;
 
 #pragma endregion 
 
+	class CGridEditorPrintout* CreatePrintout() const;
+
 protected:
 
-	const wxString m_GRID_VALUE_STRING = wxGRID_VALUE_STRING;
+	bool LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc);
+	bool SaveSpreadsheet(CSpreadsheetDescription& spreadsheetDesc) const;
 
 	//events:
 	void OnMouseRightDown(wxGridExtEvent& event);
@@ -287,10 +349,15 @@ protected:
 	void OnSelectCell(wxGridExtEvent& event);
 	void OnSelectCells(wxGridExtRangeSelectEvent& event);
 
-	void OnGridColSize(wxGridExtSizeEvent& event);
 	void OnGridRowSize(wxGridExtSizeEvent& event);
+	void OnGridColSize(wxGridExtSizeEvent& event);
+	void OnGridRowBrake(wxGridExtSizeEvent& event);
+	void OnGridColBrake(wxGridExtSizeEvent& event);
+	void OnGridRowArea(wxGridExtAreaEvent& event);
+	void OnGridColArea(wxGridExtAreaEvent& event);
 
-	void OnGridEditorHidden(wxGridExtEvent& event);
+	void OnGridTableModified(wxGridExtEvent& event);
+	void OnGridTableAttrModified(wxGridExtEvent& event);
 
 	void OnCopy(wxCommandEvent& event);
 	void OnPaste(wxCommandEvent& event);
@@ -308,29 +375,27 @@ protected:
 	void OnIdle(wxIdleEvent& event);
 	void OnSize(wxSizeEvent& event);
 
-	void OnGridChange(wxGridExtEvent& event);
 	void OnGridZoom(wxGridExtEvent& event);
 
 private:
 
-	friend class CGridEditorRowHeaderRenderer;
-	friend class CGridEditorColumnHeaderRenderer;
-	friend class CGridEditorCornerHeaderRenderer;
-
-	friend class CGridEditorPrintout;
-
-	bool m_enableProperty;
-
-	// the margin between a cell vertical line and a cell text
-	const int GRID_TEXT_MARGIN = 1;
-
-	//property grid
-	CGridEditorCellProperty* m_cellProperty;
+	const wxString m_GRID_VALUE_STRING = wxGRID_VALUE_STRING;
 
 	//document 
 	CMetaDocument* m_document;
 
+	// grid property
+	CGridEditorCellProperty* m_cellProperty;
+
+	//grid doc
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetObject;
+	wxSharedPtr<IBackendSpreadsheetObjectNotifier> m_notifier;
+
+	//grid enabled property? 
+	bool m_enableProperty;
+
 	wxDECLARE_EVENT_TABLE();
 };
+
 
 #endif 

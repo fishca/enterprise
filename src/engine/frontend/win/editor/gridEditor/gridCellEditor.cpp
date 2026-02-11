@@ -191,7 +191,7 @@ void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridE
 			grid->SetRowSize(row, height, grid->GetGridZoom());
 	}
 
-	grid->GetTable()->SetValue(row, col, m_value);
+	grid->SetCellValue(row, col, m_value);
 
 	m_value.clear();
 }

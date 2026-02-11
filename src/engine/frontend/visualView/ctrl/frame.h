@@ -40,7 +40,7 @@ class FRONTEND_API CVisualHost;
 
 class FRONTEND_API CVisualDocument;
 
-#include "frontend/visualView/special/enum/valueEnum.h"
+#include "frontend/visualView/controlEnum.h"
 
 class FRONTEND_API IControlFrame : public IBackendControlFrame {
 public:

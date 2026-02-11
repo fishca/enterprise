@@ -239,7 +239,7 @@
     <ClCompile Include="win\editor\visualEditor\visualEditor.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorEvent.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorNotebook.cpp" />
-    <ClCompile Include="win\editor\visualEditor\visualEditorObject.cpp" />
+    <ClCompile Include="win\editor\visualEditor\visualEditorCmdProc.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorObjectTree.cpp" />
     <ClCompile Include="win\editor\visualEditor\visualEditorPanel.cpp" />
   </ItemGroup>

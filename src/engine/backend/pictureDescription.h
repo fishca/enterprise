@@ -26,7 +26,7 @@ struct CExternalPictureDescription {
 	unsigned int m_width = 0, m_height = 0;
 };
 
-class CExternalPictureDescriptionMemory {
+class BACKEND_API CExternalPictureDescriptionMemory {
 public:
 	//load & save object in control 
 	static bool LoadData(class CMemoryReader& reader, CExternalPictureDescription& pictureDesc);
@@ -78,7 +78,7 @@ struct CPictureDescription {
 	CExternalPictureDescription m_img_data;
 };
 
-class CPictureDescriptionMemory {
+class BACKEND_API CPictureDescriptionMemory {
 public:
 	//load & save object in control 
 	static bool LoadData(class CMemoryReader& reader, CPictureDescription& pictureDesc);

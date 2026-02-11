@@ -62,6 +62,7 @@ void CValueTableBox::AddColumn()
 		);
 		if (column_info != nullptr) column_info->SetColumnID(columnTable->GetControlID());
 	}
+	
 	g_visualHostContext->RefreshEditor();
 }
 

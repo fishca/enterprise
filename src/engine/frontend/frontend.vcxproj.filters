@@ -740,9 +740,6 @@
     <ClCompile Include="win\dlgs\connectionDB.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\special\enum\valueEnum.cpp">
-      <Filter>visualView\special\enum</Filter>
-    </ClCompile>
     <ClCompile Include="win\dlgs\applyChange.cpp">
       <Filter>win\dlg</Filter>
     </ClCompile>
@@ -799,6 +796,12 @@
     </ClCompile>
     <ClCompile Include="win\editor\gridEditor\gridEditorDoc.cpp">
       <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editor\gridEditor\gridEditorClipbrd.cpp">
+      <Filter>win\editor\gridEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\controlEnum.cpp">
+      <Filter>visualView</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1349,9 +1352,6 @@
     <ClInclude Include="win\dlgs\connectionDB.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
-    <ClInclude Include="visualView\special\enum\valueEnum.h">
-      <Filter>visualView\special\enum</Filter>
-    </ClInclude>
     <ClInclude Include="win\dlgs\applyChange.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
@@ -1410,6 +1410,9 @@
     <ClInclude Include="win\dlgs\choiceTemplate.h">
       <Filter>win\dlg</Filter>
     </ClInclude>
+    <ClInclude Include="visualView\controlEnum.h">
+      <Filter>visualView</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1432,9 +1435,6 @@
     </Filter>
     <Filter Include="visualView\dvc">
       <UniqueIdentifier>{5388c62b-4a7a-427f-9607-53405723f906}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="visualView\special">
-      <UniqueIdentifier>{eb4f12fd-11f1-4731-8809-a46442706ba5}</UniqueIdentifier>
     </Filter>
     <Filter Include="win\theme">
       <UniqueIdentifier>{25dd471b-6260-4d4d-85b7-1d3978db9616}</UniqueIdentifier>
@@ -1462,9 +1462,6 @@
     </Filter>
     <Filter Include="win\ctrl\charts">
       <UniqueIdentifier>{fefa8620-51e2-434d-8ef3-1f8ed381f960}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="visualView\special\enum">
-      <UniqueIdentifier>{fd65e2ab-52ca-4f1d-892c-641b7b7e68a2}</UniqueIdentifier>
     </Filter>
     <Filter Include="artProvider\private">
       <UniqueIdentifier>{531fb9e2-c07f-4ce7-a206-811961ef7263}</UniqueIdentifier>

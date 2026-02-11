@@ -21,25 +21,25 @@ class FRONTEND_API CGridEditorPrintout : public wxPrintout {
 public:
 
 	CGridEditorPrintout(const wxString& title = wxT("CGridEditorPrintout"));
-	CGridEditorPrintout(CGridEditor* view, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
+	CGridEditorPrintout(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
 
-	void SetGrid(CGridEditor* view);
-	CGridEditor* GetGrid() const;
 	void SetStyle(int style);
 	int GetStyle() const;
 	void SetUserScale(float scale);
 
 	bool HasColValue(int col) const {
-		for (int row = 0; row < m_view->GetNumberRows(); row++) {
-			if (m_view->IsEmptyCell(row, col))
+		const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
+		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
+			if (spreadsheetDesc.IsEmptyCell(row, col))
 				return true;
 		}
 		return false;
 	}
 
 	bool HasRowValue(int row) const {
-		for (int col = 0; col < m_view->GetNumberCols(); col++) {
-			if (m_view->IsEmptyCell(row, col))
+		const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
+		for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
+			if (spreadsheetDesc.IsEmptyCell(row, col))
 				return true;
 		}
 		return false;
@@ -62,7 +62,8 @@ protected:
 
 private:
 
-	CGridEditor* m_view;
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_doc;
+
 	int m_style;
 
 	int m_minPage;

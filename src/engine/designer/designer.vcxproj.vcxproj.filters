@@ -99,7 +99,7 @@
     <ClCompile Include="win\editor\visualEditor\visualEditorNotebook.cpp">
       <Filter>win\editor\visualEditor</Filter>
     </ClCompile>
-    <ClCompile Include="win\editor\visualEditor\visualEditorObject.cpp">
+    <ClCompile Include="win\editor\visualEditor\visualEditorCmdProc.cpp">
       <Filter>win\editor\visualEditor</Filter>
     </ClCompile>
     <ClCompile Include="win\editor\visualEditor\visualEditorObjectTree.cpp">

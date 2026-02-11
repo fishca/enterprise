@@ -2599,6 +2599,7 @@ public:
 	// set area label
 	void SetRowAreaLabel(int idx, const wxString& label);
 	void SetColAreaLabel(int idx, const wxString& label);
+	
 	wxString GetRowAreaLabel(int idx);
 	wxString GetColAreaLabel(int idx);
 

@@ -1,28 +1,41 @@
 #include "backend_spreadsheet.h"
 #include "backend/fileSystem/fs.h"
 
+#define spreadsheetNotify \
+	for (auto notify : m_spreadsheetNotifiers) notify
+
 #pragma region __notifier_h__
 
 void CBackendSpreadsheetObject::ResetSpreadsheet(int count)
 {
+	spreadsheetNotify->ResetSpreadsheet();
+	m_spreadsheetDesc.ResetSpreadsheet(count);
 }
 
 //size 
 void CBackendSpreadsheetObject::SetRowSize(int row, int height)
 {
+	spreadsheetNotify->SetRowSize(row, height);
+	m_spreadsheetDesc.SetRowSize(row, height);
 }
 
 void CBackendSpreadsheetObject::SetColSize(int col, int width)
 {
+	spreadsheetNotify->SetColSize(col, width);
+	m_spreadsheetDesc.SetColSize(col, width);
 }
 
 //freeze 
 void CBackendSpreadsheetObject::SetFreezeRow(int row)
 {
+	spreadsheetNotify->SetFreezeRow(row);
+	m_spreadsheetDesc.SetFreezeRow(row);
 }
 
 void CBackendSpreadsheetObject::SetFreezeCol(int col)
 {
+	spreadsheetNotify->SetFreezeCol(col);
+	m_spreadsheetDesc.SetFreezeCol(col);
 }
 
 //area 
@@ -63,61 +76,73 @@ void CBackendSpreadsheetObject::SetColNameArea(size_t idx, const wxString& strAr
 
 void CBackendSpreadsheetObject::SetCellBackgroundColour(int row, int col, const wxColour& colour)
 {
+	spreadsheetNotify->SetCellBackgroundColour(row, col, colour);
+	m_spreadsheetDesc.SetCellBackgroundColour(row, col, colour);
 }
 
 void CBackendSpreadsheetObject::SetCellTextColour(int row, int col, const wxColour& colour)
 {
+	spreadsheetNotify->SetCellTextColour(row, col, colour);
+	m_spreadsheetDesc.SetCellTextColour(row, col, colour);
 }
 
 void CBackendSpreadsheetObject::SetCellTextOrient(int row, int col, const int orient)
 {
+	spreadsheetNotify->SetCellTextOrient(row, col, orient);
+	m_spreadsheetDesc.SetCellTextOrient(row, col, orient);
 }
 
 void CBackendSpreadsheetObject::SetCellFont(int row, int col, const wxFont& font)
 {
+	spreadsheetNotify->SetCellFont(row, col, font);
+	m_spreadsheetDesc.SetCellFont(row, col, font);
 }
 
 void CBackendSpreadsheetObject::SetCellAlignment(int row, int col, const int horiz, const int vert)
 {
+	spreadsheetNotify->SetCellAlignment(row, col, horiz, vert);
+	m_spreadsheetDesc.SetCellAlignment(row, col, horiz, vert);
 }
 
 void CBackendSpreadsheetObject::SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc)
 {
+	spreadsheetNotify->SetCellBorderLeft(row, col, desc);
+	m_spreadsheetDesc.SetCellBorderLeft(row, col, desc);
 }
 
 void CBackendSpreadsheetObject::SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc)
 {
+	spreadsheetNotify->SetCellBorderRight(row, col, desc);
+	m_spreadsheetDesc.SetCellBorderRight(row, col, desc);
 }
 
 void CBackendSpreadsheetObject::SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc)
 {
+	spreadsheetNotify->SetCellBorderTop(row, col, desc);
+	m_spreadsheetDesc.SetCellBorderTop(row, col, desc);
 }
 
 void CBackendSpreadsheetObject::SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc)
 {
+	spreadsheetNotify->SetCellBorderBottom(row, col, desc);
+	m_spreadsheetDesc.SetCellBorderBottom(row, col, desc);
 }
 
 void CBackendSpreadsheetObject::SetCellSize(int row, int col, int num_rows, int num_cols)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetCellSize(row, col, num_rows, num_cols);
-
+	spreadsheetNotify->SetCellSize(row, col, num_rows, num_cols);
 	m_spreadsheetDesc.SetCellSize(row, col, num_rows, num_cols);
 }
 
 void CBackendSpreadsheetObject::SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetCellFitMode(row, col, fitMode);
-
+	spreadsheetNotify->SetCellFitMode(row, col, fitMode);
 	m_spreadsheetDesc.SetCellFitMode(row, col, fitMode);
 }
 
 void CBackendSpreadsheetObject::SetCellReadOnly(int row, int col, bool isReadOnly)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetCellReadOnly(row, col, isReadOnly);
-
+	spreadsheetNotify->SetCellReadOnly(row, col, isReadOnly);
 	m_spreadsheetDesc.SetCellReadOnly(row, col, isReadOnly);
 }
 
@@ -126,33 +151,25 @@ void CBackendSpreadsheetObject::SetCellReadOnly(int row, int col, bool isReadOnl
 //support printing 
 void CBackendSpreadsheetObject::AddRowBrake(int row)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->AddRowBrake(row);
-
+	spreadsheetNotify->AddRowBrake(row);
 	m_spreadsheetDesc.AddRowBrake(row);
 }
 
 void CBackendSpreadsheetObject::AddColBrake(int col)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->AddColBrake(col);
-
+	spreadsheetNotify->AddColBrake(col);
 	m_spreadsheetDesc.AddColBrake(col);
 }
 
 void CBackendSpreadsheetObject::SetRowBrake(int row)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetRowBrake(row);
-
+	spreadsheetNotify->SetRowBrake(row);
 	m_spreadsheetDesc.SetRowBrake(row);
 }
 
 void CBackendSpreadsheetObject::SetColBrake(int col)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetColBrake(col);
-
+	spreadsheetNotify->SetColBrake(col);
 	m_spreadsheetDesc.SetColBrake(col);
 }
 
@@ -160,15 +177,14 @@ void CBackendSpreadsheetObject::SetColBrake(int col)
 //
 void CBackendSpreadsheetObject::SetCellValue(int row, int col, const wxString& s)
 {
-	for (auto notify : m_spreadsheetNotifiers)
-		notify->SetCellValue(row, col, s);
-
+	spreadsheetNotify->SetCellValue(row, col, s);
 	m_spreadsheetDesc.SetCellValue(row, col, s);
 }
 
 #pragma endregion 
 
 #pragma region __fs_h__
+
 #include <fstream>
 
 bool CBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)

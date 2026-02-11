@@ -91,7 +91,6 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	m_cellProperty->SetView(this);
 
 	// Native col 
-	wxGridExt::SetUseNativeColLabels(false);
 	wxGridExt::SetDoubleBuffered(true);
 
 	// Cell Defaults

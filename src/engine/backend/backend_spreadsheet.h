@@ -3,11 +3,11 @@
 
 #include "spreadsheetDescription.h"
 
-class BACKEND_API IBackendSpreadsheetObjectNotifier {
+class BACKEND_API IBackendSpreadsheetNotifier {
 public:
 
-	virtual ~IBackendSpreadsheetObjectNotifier() {}
-	virtual void ResetSpreadsheet(int count = 0) = 0;
+	virtual ~IBackendSpreadsheetNotifier() {}
+	virtual void ResetSpreadsheet() = 0;
 
 	//size 
 	virtual void SetRowSize(int row, int height = 0) = 0;
@@ -74,40 +74,75 @@ public:
 
 	void ResetSpreadsheet(int count = 0);
 
-	//size 
-	void SetRowSize(int row, int height = 0);
-	void SetColSize(int col, int width = 0);
-
-	//freeze 
-	void SetFreezeRow(int row);
-	void SetFreezeCol(int col);
-
 	//area 
 	void AddRowArea(const wxString& strAreaName,
 		unsigned int start, unsigned int end);
 	void DeleteRowArea(const wxString& strAreaName);
+
 	void AddColArea(const wxString& strAreaName,
 		unsigned int start, unsigned int end);
 	void DeleteColArea(const wxString& strAreaName);
+
 	void SetRowSizeArea(const wxString& strAreaName, int start, int end);
-	void SetRowNameArea(size_t idx, const wxString& strAreaName);;
-	void SetColSizeArea(const wxString& strAreaName, int start, int end);;
-	void SetColNameArea(size_t idx, const wxString& strAreaName);;
+	void SetRowNameArea(size_t idx, const wxString& strAreaName);
+
+	void SetColSizeArea(const wxString& strAreaName, int start, int end);
+	void SetColNameArea(size_t idx, const wxString& strAreaName);
+
+	// ------ grid dimensions
+	//
+
+	int GetNumberRows() const { return m_spreadsheetDesc.GetNumberRows(); }
+	int GetNumberCols() const { return m_spreadsheetDesc.GetNumberCols(); }
 
 	// ------ row and col formatting
 	//
 
+	//size 
+	void SetRowSize(int row, int height = 0);
+	void SetColSize(int col, int width = 0);
+
+	int GetRowSize(int row) const { return m_spreadsheetDesc.GetRowSize(row); }
+	bool IsRowShown(int row) const { return m_spreadsheetDesc.IsRowShown(row); }
+
+	int GetColSize(int col) const { return m_spreadsheetDesc.GetColSize(col); }
+	bool IsColShown(int col) const { return m_spreadsheetDesc.IsColShown(col); }
+
+	//cell
+	wxColour GetCellBackgroundColour(int row, int col) const { return m_spreadsheetDesc.GetCellBackgroundColour(row, col); }
 	void SetCellBackgroundColour(int row, int col, const wxColour& colour);
+
+	wxColour GetCellTextColour(int row, int col) const { return m_spreadsheetDesc.GetCellTextColour(row, col); }
 	void SetCellTextColour(int row, int col, const wxColour& colour);
+
+	int GetCellTextOrient(int row, int col) const { return m_spreadsheetDesc.GetCellTextOrient(row, col); }
 	void SetCellTextOrient(int row, int col, const int orient);
+
+	wxFont GetCellFont(int row, int col) const { return m_spreadsheetDesc.GetCellFont(row, col); }
 	void SetCellFont(int row, int col, const wxFont& font);
+
+	void GetCellAlignment(int row, int col, int* horiz, int* vert) const { m_spreadsheetDesc.GetCellAlignment(row, col, horiz, vert); }
 	void SetCellAlignment(int row, int col, const int horiz, const int vert);
+
+	CSpreadsheetBorderDescription GetCellBorderLeft(int row, int col) const { return m_spreadsheetDesc.GetCellBorderLeft(row, col); }
 	void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc);
+
+	CSpreadsheetBorderDescription GetCellBorderRight(int row, int col) const { return m_spreadsheetDesc.GetCellBorderRight(row, col); }
 	void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc);
+
+	CSpreadsheetBorderDescription GetCellBorderTop(int row, int col) const { return m_spreadsheetDesc.GetCellBorderTop(row, col); }
 	void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc);
+
+	CSpreadsheetBorderDescription GetCellBorderBottom(int row, int col) const { return m_spreadsheetDesc.GetCellBorderBottom(row, col); }
 	void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc);
+
+	int GetCellSize(int row, int col, int* num_rows, int* num_cols) const { return m_spreadsheetDesc.GetCellSize(row, col, num_rows, num_cols); }
 	void SetCellSize(int row, int col, int num_rows, int num_cols);
+
+	CSpreadsheetAttrDescription::EFitMode GetCellFitMode(int row, int col) { return m_spreadsheetDesc.GetCellFitMode(row, col); }
 	void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode);
+
+	bool IsCellReadOnly(int row, int col, bool isReadOnly = true) { return m_spreadsheetDesc.IsCellReadOnly(row, col); }
 	void SetCellReadOnly(int row, int col, bool isReadOnly = true);
 
 	// ------ cell brake accessors
@@ -119,9 +154,40 @@ public:
 	void SetRowBrake(int row);
 	void SetColBrake(int col);
 
+	bool IsRowBrake(int row) const { return m_spreadsheetDesc.IsRowBrake(row); }
+	bool IsColBrake(int col) const { return m_spreadsheetDesc.IsColBrake(col); }
+
+	int GetMaxRowBrake() const { return m_spreadsheetDesc.GetMaxRowBrake(); }
+	int GetMaxColBrake() const { return m_spreadsheetDesc.GetMaxColBrake(); }
+
+	// ------ freeze
+	//
+	void SetFreezeRow(int row);
+	void SetFreezeCol(int col);
+
+	int GetFreezeRow() const { return m_spreadsheetDesc.GetFreezeCol(); }
+	int GetFreezeCol() const { return m_spreadsheetDesc.GetFreezeRow(); }
+
+	// ------ label and gridline formatting
+	//
+	int GetRowLabelSize() const { return m_spreadsheetDesc.GetRowLabelSize(); }
+	int GetColLabelSize() const { return m_spreadsheetDesc.GetColLabelSize(); }
+
+	wxFont GetLabelFont() const { return m_spreadsheetDesc.GetLabelFont(); }
+
+	wxString GetRowLabelValue(int row) const { return m_spreadsheetDesc.GetRowLabelValue(row); }
+	wxString GetColLabelValue(int col) const { return m_spreadsheetDesc.GetColLabelValue(col); }
+
 	// ------ cell value accessors
 	//
+
+	bool IsEmptyCell(int row, int col) const { return m_spreadsheetDesc.IsEmptyCell(row, col); }
+
+	void GetCellValue(int row, int col, wxString& s) const { m_spreadsheetDesc.GetCellValue(row, col, s); }
 	void SetCellValue(int row, int col, const wxString& s);
+
+	//special string return 
+	wxString GetCellValue(int row, int col) const { return m_spreadsheetDesc.GetCellValue(row, col); }
 
 #pragma endregion 
 
@@ -142,13 +208,13 @@ public:
 #pragma region __notifier_h__
 
 	template <typename T, typename... Args>
-	wxSharedPtr<IBackendSpreadsheetObjectNotifier> AddNotifier(Args&&... args) {
-		wxSharedPtr<IBackendSpreadsheetObjectNotifier> notifier(new T(std::forward<Args>(args)...));
+	wxSharedPtr<IBackendSpreadsheetNotifier> AddNotifier(Args&&... args) {
+		wxSharedPtr<IBackendSpreadsheetNotifier> notifier(new T(std::forward<Args>(args)...));
 		m_spreadsheetNotifiers.push_back(notifier);
 		return notifier;
 	}
 
-	void RemoveNotifier(const wxSharedPtr<IBackendSpreadsheetObjectNotifier>& notify) {
+	void RemoveNotifier(const wxSharedPtr<IBackendSpreadsheetNotifier>& notify) {
 		m_spreadsheetNotifiers.erase(
 			std::remove(m_spreadsheetNotifiers.begin(), m_spreadsheetNotifiers.end(), notify));
 	}
@@ -167,7 +233,7 @@ private:
 	CSpreadsheetDescription m_spreadsheetDesc;
 
 	//grid notifier 
-	wxVector<wxSharedPtr<IBackendSpreadsheetObjectNotifier>> m_spreadsheetNotifiers;
+	wxVector<wxSharedPtr<IBackendSpreadsheetNotifier>> m_spreadsheetNotifiers;
 };
 
 #endif 

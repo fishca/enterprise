@@ -190,55 +190,6 @@ struct CSpreadsheetDescription {
 	int GetBrakeNumberRows() const { return m_rowBrakeAt.size(); }
 	int GetBrakeNumberCols() const { return m_colBrakeAt.size(); }
 
-	//size 
-	void SetRowSize(int row, int height = 0) {
-
-		auto iterator = std::find_if(m_rowHeightAt.begin(),
-			m_rowHeightAt.end(), [row](const auto& value) { return row == value.m_row; });
-
-		if (iterator != m_rowHeightAt.end()) {
-			iterator->m_height = height;
-			return;
-		}
-
-		m_rowHeightAt.emplace_back(row, height);
-	}
-
-	const CSpreadsheetRowSizeDescription* GetRowSizeByIdx(size_t idx) const {
-		if (idx > m_rowHeightAt.size())
-			return nullptr;
-		return &m_rowHeightAt[idx];
-	}
-
-	void SetColSize(int col, int width = 0) {
-
-		auto iterator = std::find_if(m_colWidthAt.begin(),
-			m_colWidthAt.end(), [col](const auto& value) { return col == value.m_col; });
-
-		if (iterator != m_colWidthAt.end()) {
-			iterator->m_width = width;
-			return;
-		}
-
-		m_colWidthAt.emplace_back(col, width);
-	}
-
-	const CSpreadsheetColSizeDescription* GetColSizeByIdx(size_t idx) const {
-		if (idx > m_colWidthAt.size())
-			return nullptr;
-		return &m_colWidthAt[idx];
-	}
-
-	int GetSizeNumberRows() const { return m_rowHeightAt.size(); }
-	int GetSizeNumberCols() const { return m_colWidthAt.size(); }
-
-	//freeze 
-	void SetFreezeRow(int row) { m_freezeRow = row; }
-	void SetFreezeCol(int col) { m_freezeCol = col; }
-
-	int GetFreezeRow() const { return m_freezeRow; }
-	int GetFreezeCol() const { return m_freezeCol; }
-
 	//area 
 	void AddRowArea(const wxString& strAreaName,
 		unsigned int start, unsigned int end) {
@@ -344,6 +295,45 @@ struct CSpreadsheetDescription {
 
 	// ------ row and col formatting
 	//
+
+	void SetRowSize(int row, int height = 0) {
+
+		auto iterator = std::find_if(m_rowHeightAt.begin(),
+			m_rowHeightAt.end(), [row](const auto& value) { return row == value.m_row; });
+
+		if (iterator != m_rowHeightAt.end()) {
+			iterator->m_height = height;
+			return;
+		}
+
+		m_rowHeightAt.emplace_back(row, height);
+	}
+
+	const CSpreadsheetRowSizeDescription* GetRowSizeByIdx(size_t idx) const {
+		if (idx > m_rowHeightAt.size())
+			return nullptr;
+		return &m_rowHeightAt[idx];
+	}
+
+	void SetColSize(int col, int width = 0) {
+
+		auto iterator = std::find_if(m_colWidthAt.begin(),
+			m_colWidthAt.end(), [col](const auto& value) { return col == value.m_col; });
+
+		if (iterator != m_colWidthAt.end()) {
+			iterator->m_width = width;
+			return;
+		}
+
+		m_colWidthAt.emplace_back(col, width);
+	}
+
+	const CSpreadsheetColSizeDescription* GetColSizeByIdx(size_t idx) const {
+		if (idx > m_colWidthAt.size())
+			return nullptr;
+		return &m_colWidthAt[idx];
+	}
+
 	int GetRowSize(int row) const {
 		auto iterator = std::find_if(m_rowHeightAt.begin(),
 			m_rowHeightAt.end(), [row](const auto& value) { return row == value.m_row; });
@@ -353,7 +343,9 @@ struct CSpreadsheetDescription {
 
 		return s_defaultRowHeight;
 	}
+
 	bool IsRowShown(int row) const { return GetRowSize(row) != 0; }
+
 	int GetColSize(int col) const {
 		auto iterator = std::find_if(m_colWidthAt.begin(),
 			m_colWidthAt.end(), [col](const auto& value) { return col == value.m_col; });
@@ -366,6 +358,10 @@ struct CSpreadsheetDescription {
 
 	bool IsColShown(int col) const { return GetColSize(col) != 0; }
 
+	int GetSizeNumberRows() const { return m_rowHeightAt.size(); }
+	int GetSizeNumberCols() const { return m_colWidthAt.size(); }
+
+	//cell
 	wxColour GetCellBackgroundColour(int row, int col) const {
 		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
@@ -506,8 +502,7 @@ struct CSpreadsheetDescription {
 		if (cell != nullptr) cell->m_fitMode = fitMode;
 	}
 
-	bool GetCellReadOnly(int row, int col, bool isReadOnly = true)
-	{
+	bool IsCellReadOnly(int row, int col, bool isReadOnly = true) {
 		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) return cell->m_isReadOnly;
 		return false;
@@ -540,16 +535,16 @@ struct CSpreadsheetDescription {
 			m_colBrakeAt.emplace_back(col);
 	}
 
-	bool IsColBrake(int col) const {
-		auto iterator =
-			std::find(m_colBrakeAt.begin(), m_colBrakeAt.end(), col);
-		return iterator != m_colBrakeAt.end();
-	}
-
 	bool IsRowBrake(int row) const {
 		auto iterator =
 			std::find(m_rowBrakeAt.begin(), m_rowBrakeAt.end(), row);
 		return iterator != m_rowBrakeAt.end();
+	}
+
+	bool IsColBrake(int col) const {
+		auto iterator =
+			std::find(m_colBrakeAt.begin(), m_colBrakeAt.end(), col);
+		return iterator != m_colBrakeAt.end();
 	}
 
 	int GetMaxRowBrake() const {
@@ -564,12 +559,20 @@ struct CSpreadsheetDescription {
 		return 0;
 	}
 
+	// ------ freeze
+	//
+	void SetFreezeRow(int row) { m_freezeRow = row; }
+	void SetFreezeCol(int col) { m_freezeCol = col; }
+
+	int GetFreezeRow() const { return m_freezeRow; }
+	int GetFreezeCol() const { return m_freezeCol; }
+
 	// ------ label and gridline formatting
 	//
-	int      GetRowLabelSize() const { return s_rowLabelWidth; }
-	int      GetColLabelSize() const { return s_colLabelHeight; }
+	int GetRowLabelSize() const { return s_rowLabelWidth; }
+	int GetColLabelSize() const { return s_colLabelHeight; }
 
-	wxFont   GetLabelFont() const { return m_labelFont; }
+	wxFont GetLabelFont() const { return m_labelFont; }
 
 	wxString GetRowLabelValue(int row) const { return stringUtils::IntToStr(row + 1); }
 	wxString GetColLabelValue(int col) const { return stringUtils::IntToStr(col + 1); }
@@ -583,13 +586,6 @@ struct CSpreadsheetDescription {
 		return true;
 	}
 
-	wxString GetCellValue(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
-		if (cell != nullptr)
-			return cell->m_value;
-		return wxT("");
-	}
-
 	void GetCellValue(int row, int col, wxString& s) const {
 		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
@@ -601,6 +597,14 @@ struct CSpreadsheetDescription {
 		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_value = s;
+	}
+
+	//special string return 
+	wxString GetCellValue(int row, int col) const {
+		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		if (cell != nullptr)
+			return cell->m_value;
+		return wxT("");
 	}
 
 	bool operator == (const CSpreadsheetDescription& rhs) const {

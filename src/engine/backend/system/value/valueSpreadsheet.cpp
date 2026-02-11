@@ -19,6 +19,7 @@ enum
 
 enum
 {
+	eArea,
 	ePutVerticalPageBreak,
 	ePutHorizontalPageBreak,
 	eGetArea,
@@ -43,6 +44,7 @@ void CValueSpreadsheet::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("printerName"), ePrinterName);
 	m_methodHelper.AppendProp(wxT("languageCode"), eLanguageCode);
 
+	m_methodHelper.AppendFunc(wxT("area"), 2, wxT("area(number: row, number: col)"));
 	m_methodHelper.AppendProc(wxT("putVerticalPageBreak"), wxT("putVerticalPageBreak()"));
 	m_methodHelper.AppendProc(wxT("putHorizontalPageBreak"), wxT("putHorizontalPageBreak()"));
 	m_methodHelper.AppendFunc(wxT("getArea"), 1, wxT("getArea(string: label)"));
@@ -56,8 +58,6 @@ void CValueSpreadsheet::PrepareNames() const
 
 bool CValueSpreadsheet::SetPropVal(const long lPropNum, const CValue& varPropVal)
 {
-	CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
-
 	switch (lPropNum)
 	{
 	case eFixedLeft:
@@ -79,15 +79,13 @@ bool CValueSpreadsheet::SetPropVal(const long lPropNum, const CValue& varPropVal
 
 bool CValueSpreadsheet::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 {
-	const CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
-
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		pvarPropVal = spreadsheetDesc.GetFreezeRow();
+		pvarPropVal = m_spreadsheetDoc->GetFreezeRow();
 		return true;
 	case eFixedTop:
-		pvarPropVal = spreadsheetDesc.GetFreezeCol();
+		pvarPropVal = m_spreadsheetDoc->GetFreezeCol();
 		return true;
 	case eAreas:
 		return true;
@@ -102,21 +100,21 @@ bool CValueSpreadsheet::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 
 bool CValueSpreadsheet::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
-
-	if (lMethodNum == eGetArea)
-	{
+	if (lMethodNum == eGetArea) {
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetArea>(
+			m_spreadsheetDoc, paParams[0]->GetInteger(), paParams[1]->GetInteger());
+		return true;
+	}
+	else if (lMethodNum == eGetArea) {
+		CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
 		wxStringTokenizer token(paParams[0]->GetString(), wxT('|'));
 		if (token.HasMoreTokens()) {
-
 			const wxString& strRowArea = token.GetNextToken();
 			const CSpreadsheetAreaDescription* areaRow = spreadsheetDesc.GetRowAreaByName(strRowArea);
-
 			if (token.HasMoreTokens()) {
 				const wxString& strColArea = token.GetNextToken();
 				const CSpreadsheetAreaDescription* areaCol = spreadsheetDesc.GetColAreaByName(strColArea);
 			}
-
 			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheet>();
 			return true;
 		}
@@ -129,54 +127,42 @@ bool CValueSpreadsheet::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, 
 
 bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
 {
-	CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
-
-	if (lMethodNum == ePutHorizontalPageBreak)
-	{
-		m_spreadsheetDoc->AddRowBrake(spreadsheetDesc.GetNumberRows());
+	if (lMethodNum == ePutHorizontalPageBreak) {
+		m_spreadsheetDoc->AddRowBrake(m_spreadsheetDoc->GetNumberRows());
 		return true;
 	}
-	else if (lMethodNum == ePutVerticalPageBreak)
-	{
-		m_spreadsheetDoc->AddColBrake(spreadsheetDesc.GetNumberCols());
+	else if (lMethodNum == ePutVerticalPageBreak) {
+		m_spreadsheetDoc->AddColBrake(m_spreadsheetDoc->GetNumberCols());
 		return true;
 	}
-	else if (lMethodNum == eClear)
-	{
+	else if (lMethodNum == eClear) {
 		m_spreadsheetDoc->ResetSpreadsheet();
 		return true;
 	}
-	else if (lMethodNum == ePrint)
-	{
+	else if (lMethodNum == ePrint) {
 		if (backend_mainFrame != nullptr)
 			return backend_mainFrame->PrintSpreadSheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
-
 		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
-	else if (lMethodNum == eShow)
-	{
+	else if (lMethodNum == eShow) {
 		if (backend_mainFrame != nullptr)
 			return backend_mainFrame->ShowSpreadSheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
 
 		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
-	else if (lMethodNum == eHide)
-	{
+	else if (lMethodNum == eHide) {
 		if (backend_mainFrame != nullptr)
 			return backend_mainFrame->ShowSpreadSheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
-
 		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
-	else if (lMethodNum == ePut)
-	{
+	else if (lMethodNum == ePut) {
 		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
-	else if (lMethodNum == eJoin)
-	{
+	else if (lMethodNum == eJoin) {
 		CBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
@@ -189,3 +175,4 @@ bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, con
 //**********************************************************************
 
 VALUE_TYPE_REGISTER(CValueSpreadsheet, "spreadsheetDocument", string_to_clsid("VL_SPSTD"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetArea, "spreadsheetDocumentArea", string_to_clsid("VL_SPSTA"));

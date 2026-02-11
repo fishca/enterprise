@@ -28,18 +28,16 @@ public:
 	void SetUserScale(float scale);
 
 	bool HasColValue(int col) const {
-		const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
-		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
-			if (spreadsheetDesc.IsEmptyCell(row, col))
+		for (int row = 0; row < m_doc->GetNumberRows(); row++) {
+			if (m_doc->IsEmptyCell(row, col))
 				return true;
 		}
 		return false;
 	}
 
 	bool HasRowValue(int row) const {
-		const CSpreadsheetDescription& spreadsheetDesc = m_doc->GetSpreadsheetDesc();
-		for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
-			if (spreadsheetDesc.IsEmptyCell(row, col))
+		for (int col = 0; col < m_doc->GetNumberCols(); col++) {
+			if (m_doc->IsEmptyCell(row, col))
 				return true;
 		}
 		return false;

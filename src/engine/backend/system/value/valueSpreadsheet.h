@@ -4,8 +4,8 @@
 #include "backend/compiler/value.h"
 #include "backend/backend_spreadsheet.h"
 
-class BACKEND_API CValueSpreadsheet : public CValue {
-	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheet);
+class BACKEND_API CValueSpreadsheet :
+	public CValue {
 public:
 
 	wxObjectDataPtr<CBackendSpreadsheetObject> GetSpreadsheetDocument() const { return m_spreadsheetDoc; }
@@ -33,9 +33,18 @@ public:
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 private:
-
 	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
-
 	static CMethodHelper m_methodHelper;
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheet);
 };
+
+class BACKEND_API CValueSpreadsheetArea :
+	public CValue {
+public:
+	CValueSpreadsheetArea(wxObjectDataPtr<CBackendSpreadsheetObject>& spreadsheetDoc, int row, int col) : m_spreadsheetDoc(spreadsheetDoc), m_row(row), m_col(col) {}
+private:
+	int m_row, m_col;
+	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
+};
+
 #endif 

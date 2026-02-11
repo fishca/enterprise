@@ -8,7 +8,7 @@ bool CGridEditor::AssociateDocument(const wxObjectDataPtr<CBackendSpreadsheetObj
 			m_spreadsheetObject->RemoveNotifier(m_notifier);
 
 		m_spreadsheetObject = doc;
-		m_notifier = m_spreadsheetObject->AddNotifier<CGridSpreadsheetObjectNotifier>(this);
+		m_notifier = m_spreadsheetObject->AddNotifier<CGenericSpreadsheetNotifier>(this);
 	}
 
 	return true;

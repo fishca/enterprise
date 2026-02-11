@@ -15,19 +15,19 @@ static const wxArrayString wxEmptyArrayString;
 
 class FRONTEND_API CGridEditor : public wxGridExt {
 
-	class CGridSpreadsheetObjectNotifier : public IBackendSpreadsheetObjectNotifier {
+	class CGenericSpreadsheetNotifier : public IBackendSpreadsheetNotifier {
 	public:
 
-		CGridSpreadsheetObjectNotifier(CGridEditor* view) : m_view(view) {}
-		virtual void ResetSpreadsheet(int count = 0) {}
+		CGenericSpreadsheetNotifier(CGridEditor* view) : m_view(view) {}
+		virtual void ResetSpreadsheet() { m_view->ClearGrid(); }
 
 		//size 
 		virtual void SetRowSize(int row, int height = 0) { m_view->SetRowSize(row, height); }
 		virtual void SetColSize(int col, int width = 0) { m_view->SetColSize(col, width); }
 
 		//freeze 
-		virtual void SetFreezeRow(int row) {}
-		virtual void SetFreezeCol(int col) {}
+		virtual void SetFreezeRow(int row) { m_view->FreezeTo(row, 0); }
+		virtual void SetFreezeCol(int col) { m_view->FreezeTo(0, col); }
 
 		//area 
 		virtual void AddRowArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
@@ -35,25 +35,25 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void AddColArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
 		virtual void DeleteColArea(const wxString& strAreaName) {}
 		virtual void SetRowSizeArea(const wxString& strAreaName, int start, int end) {}
-		virtual void SetRowNameArea(size_t idx, const wxString& strAreaName) {};
-		virtual void SetColSizeArea(const wxString& strAreaName, int start, int end) {};
-		virtual void SetColNameArea(size_t idx, const wxString& strAreaName) {};
+		virtual void SetRowNameArea(size_t idx, const wxString& strAreaName) {}
+		virtual void SetColSizeArea(const wxString& strAreaName, int start, int end) {}
+		virtual void SetColNameArea(size_t idx, const wxString& strAreaName) {}
 
 		// ------ row and col formatting
 		//
 
-		virtual void SetCellBackgroundColour(int row, int col, const wxColour& colour) {}
-		virtual void SetCellTextColour(int row, int col, const wxColour& colour) {}
-		virtual void SetCellTextOrient(int row, int col, const int orient) {}
-		virtual void SetCellFont(int row, int col, const wxFont& font) {}
-		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) {}
+		virtual void SetCellBackgroundColour(int row, int col, const wxColour& colour) { m_view->SetCellBackgroundColour(row, col, colour, false); }
+		virtual void SetCellTextColour(int row, int col, const wxColour& colour) { m_view->SetCellTextColour(row, col, colour, false); }
+		virtual void SetCellTextOrient(int row, int col, const int orient) { m_view->SetCellTextOrient(row, col, orient, false); }
+		virtual void SetCellFont(int row, int col, const wxFont& font) { m_view->SetCellFont(row, col, font, false); }
+		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) { m_view->SetCellAlignment(row, col, horiz, vert, false); }
 		virtual void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {}
-		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) {}
-		virtual void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) {}
-		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { m_view->SetCellReadOnly(row, col, isReadOnly); }
+		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) { m_view->SetCellSize(row, col, num_rows, num_cols, false); }
+		virtual void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) { m_view->SetCellFitMode(row, col, fitMode == CSpreadsheetAttrDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
+		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { m_view->SetCellReadOnly(row, col, isReadOnly, false); }
 
 		// ------ cell brake accessors
 		//
@@ -389,7 +389,7 @@ private:
 
 	//grid doc
 	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetObject;
-	wxSharedPtr<IBackendSpreadsheetObjectNotifier> m_notifier;
+	wxSharedPtr<IBackendSpreadsheetNotifier> m_notifier;
 
 	//grid enabled property? 
 	bool m_enableProperty;

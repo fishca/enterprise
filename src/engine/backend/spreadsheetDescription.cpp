@@ -17,7 +17,7 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 	wxMemoryBuffer mainBuffer;
 	if (!reader.r_chunk(grid_block, mainBuffer))
 		return false;
-	
+
 	CMemoryReader mainReader(mainBuffer);
 
 	wxMemoryBuffer headerBuffer;
@@ -88,11 +88,27 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 
 	{
 		const size_t capacity = areaReader.r_u64();
-		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddRowArea(areaReader.r_stringZ(), areaReader.r_s32(), areaReader.r_s32());
+		for (u64 c = 0; c < capacity; c++) {
+
+			wxString areaLabel = areaReader.r_stringZ();
+			
+			int start = areaReader.r_s32(),
+				end = areaReader.r_s32();
+
+			spreadsheetDesc.AddRowArea(areaLabel, start, end);
+		}
 	}
 	{
 		const size_t capacity = areaReader.r_u64();
-		for (u64 c = 0; c < capacity; c++) spreadsheetDesc.AddColArea(areaReader.r_stringZ(), areaReader.r_s32(), areaReader.r_s32());
+		for (u64 c = 0; c < capacity; c++) {
+
+			wxString areaLabel = areaReader.r_stringZ();
+
+			int start = areaReader.r_s32(),
+				end = areaReader.r_s32();
+
+			spreadsheetDesc.AddColArea(areaLabel, start, end);
+		}
 	}
 
 	wxMemoryBuffer dataBuffer;

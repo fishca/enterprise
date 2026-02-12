@@ -247,7 +247,7 @@ public:
 
 #pragma region _template_builder_h_
 
-	class CValueSpreadsheet* GetTemplate(const wxString& strFormName);
+	class CValueSpreadsheetDocument* GetTemplate(const wxString& strFormName);
 
 #pragma endregion
 

@@ -13,6 +13,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueGlobalContextManager, CValue);
 class CValueGlobalContextStructureManager : public CValueStructure {
 public:
 
+	CValueGlobalContextStructureManager() : m_clsid(0), m_metaData(nullptr) {}
 	CValueGlobalContextStructureManager(const class_identifier_t& clsid, IMetaData* metaData)
 		: CValueStructure(true), m_clsid(clsid), m_metaData(metaData) {
 
@@ -43,9 +44,14 @@ public:
 
 private:
 
-	class_identifier_t m_clsid;
 	IMetaData* m_metaData;
+
+	class_identifier_t m_clsid;
+
+	wxDECLARE_DYNAMIC_CLASS(CValueGlobalContextStructureManager);
 };
+
+wxIMPLEMENT_DYNAMIC_CLASS(CValueGlobalContextStructureManager, CValue);
 
 enum
 {

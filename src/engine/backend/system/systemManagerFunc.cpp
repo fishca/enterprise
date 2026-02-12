@@ -994,7 +994,7 @@ CValue CSystemFunction::GetCommonTemplate(const wxString& strTemplateName)
 			activeMetaData->FindAnyObjectByFilter<CValueMetaObjectCommonSpreadsheet>(strTemplateName, g_metaCommonTemplateCLSID);
 
 		if (creator != nullptr)
-			return CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(creator->GetSpreadsheetDesc());
+			return CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(creator->GetSpreadsheetDesc());
 	}
 
 	CBackendCoreException::Error(_("Common template not found '%s'"), strTemplateName);

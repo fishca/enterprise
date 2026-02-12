@@ -36,7 +36,7 @@ public:
 
 private:
 
-	CValuePtr<CValueSpreadsheet> m_valueSpreadsheet;
+	CValuePtr<CValueSpreadsheetDocument> m_valueSpreadsheet;
 };
 
 #endif

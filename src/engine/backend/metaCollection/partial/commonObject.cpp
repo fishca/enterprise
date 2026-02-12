@@ -93,7 +93,7 @@ IBackendValueForm* IValueMetaObjectGenericData::CreateAndBuildForm(const wxStrin
 
 #include "backend/system/value/valueSpreadsheet.h"
 
-CValueSpreadsheet* IValueMetaObjectGenericData::GetTemplate(const wxString& strTemplateName)
+CValueSpreadsheetDocument* IValueMetaObjectGenericData::GetTemplate(const wxString& strTemplateName)
 {
 	IValueMetaObjectSpreadsheet* creator = nullptr;
 
@@ -107,7 +107,7 @@ CValueSpreadsheet* IValueMetaObjectGenericData::GetTemplate(const wxString& strT
 		}
 	}
 
-	return CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(
+	return CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(
 		creator->GetSpreadsheetDesc());
 }
 

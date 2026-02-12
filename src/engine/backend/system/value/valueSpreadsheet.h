@@ -4,7 +4,7 @@
 #include "backend/compiler/value.h"
 #include "backend/backend_spreadsheet.h"
 
-class BACKEND_API CValueSpreadsheet :
+class BACKEND_API CValueSpreadsheetDocument :
 	public CValue {
 public:
 
@@ -13,7 +13,7 @@ public:
 	CSpreadsheetDescription& GetSpreadsheetDesc() { return m_spreadsheetDoc->GetSpreadsheetDesc(); }
 	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDoc->GetSpreadsheetDesc(); }
 
-	CValueSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc = CSpreadsheetDescription()) :
+	CValueSpreadsheetDocument(const CSpreadsheetDescription& spreadsheetDesc = CSpreadsheetDescription()) :
 		CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDoc(new CBackendSpreadsheetObject(spreadsheetDesc)) {
 	}
 
@@ -35,7 +35,7 @@ public:
 private:
 	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
 	static CMethodHelper m_methodHelper;
-	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheet);
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocument);
 };
 
 #pragma region enumeration 
@@ -123,12 +123,13 @@ private:
 };
 #pragma endregion 
 
-class BACKEND_API CValueSpreadsheetCell :
+class BACKEND_API CValueSpreadsheetDocumentArea :
 	public CValue {
 public:
 
-	CValueSpreadsheetCell(wxObjectDataPtr<CBackendSpreadsheetObject>& spreadsheetDoc, int row, int col) :
-		m_spreadsheetDoc(spreadsheetDoc), m_row(row), m_col(col) {
+	CValueSpreadsheetDocumentArea() : CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDoc(), m_row(-1), m_col(-1) {}
+	CValueSpreadsheetDocumentArea(wxObjectDataPtr<CBackendSpreadsheetObject>& spreadsheetDoc, int row, int col) :
+		CValue(eValueTypes::TYPE_VALUE), m_spreadsheetDoc(spreadsheetDoc), m_row(row), m_col(col) {
 	}
 
 	virtual bool IsEmpty() const { return m_spreadsheetDoc->IsEmptyCell(m_row, m_col); }
@@ -147,12 +148,15 @@ public:
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 private:
+
 	int m_row, m_col;
 	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadsheetDoc;
 	static CMethodHelper m_methodHelper;
+
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentArea);
 };
 
-class BACKEND_API CValueSpreadsheetBorder :
+class BACKEND_API CValueSpreadsheetDocumentBorder :
 	public CValue {
 public:
 
@@ -160,8 +164,8 @@ public:
 	wxColour GetColour() const { return m_colour; }
 	int GetWidth() const { return m_width; }
 
-	CValueSpreadsheetBorder(wxPenStyle style = wxPENSTYLE_TRANSPARENT, const wxColour& colour = *wxBLACK, int width = 1) :
-		m_style(style), m_colour(colour), m_width(width) {
+	CValueSpreadsheetDocumentBorder(wxPenStyle style = wxPENSTYLE_TRANSPARENT, const wxColour& colour = *wxBLACK, int width = 1) :
+		CValue(eValueTypes::TYPE_VALUE), m_style(style), m_colour(colour), m_width(width) {
 	}
 
 	virtual bool IsEmpty() const { return false; }
@@ -170,6 +174,8 @@ private:
 	wxPenStyle m_style = wxPENSTYLE_TRANSPARENT;
 	wxColour m_colour = *wxBLACK;
 	int m_width = 1;
+
+	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentBorder);
 };
 
 #endif 

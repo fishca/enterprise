@@ -34,7 +34,7 @@ bool CPropertySpreadsheet::IsEmptyProperty() const
 //base property for "template"
 bool CPropertySpreadsheet::SetDataValue(const CValue& varPropVal)
 {
-	CValueSpreadsheet* valueType = varPropVal.ConvertToType<CValueSpreadsheet>();
+	CValueSpreadsheetDocument* valueType = varPropVal.ConvertToType<CValueSpreadsheetDocument>();
 	if (valueType != nullptr) {
 		SetValue(valueType->GetSpreadsheetDesc());
 		return true;
@@ -44,7 +44,7 @@ bool CPropertySpreadsheet::SetDataValue(const CValue& varPropVal)
 
 bool CPropertySpreadsheet::GetDataValue(CValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValueSpreadsheet>(GetValueAsSpreadsheetDesc());
+	pvarPropVal = CValue::CreateObjectValue<CValueSpreadsheetDocument>(GetValueAsSpreadsheetDesc());
 	return true;
 }
 

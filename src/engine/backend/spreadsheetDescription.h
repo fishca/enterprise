@@ -208,6 +208,10 @@ struct CSpreadsheetDescription {
 	bool IsEmptySpreadsheet() const { return GetNumberRows() == 0 && GetNumberCols() == 0; }
 
 	const CSpreadsheetCellDescription* GetCell(int row, int col) const {
+		
+		if (row < 0 || col < 0)
+			return nullptr;
+
 		auto iterator = std::find_if(m_cellAt.begin(), m_cellAt.end(),
 			[row, col](const auto& v) { return v.m_row == row && v.m_col == col; });
 
@@ -218,6 +222,10 @@ struct CSpreadsheetDescription {
 	}
 
 	CSpreadsheetCellDescription* GetOrCreateCell(int row, int col) {
+
+		if (row < 0 || col < 0)
+			return nullptr;
+
 		auto iterator = std::find_if(m_cellAt.begin(), m_cellAt.end(),
 			[row, col](const auto& v) { return v.m_row == row && v.m_col == col; });
 

@@ -81,15 +81,17 @@ void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 
 				wxString strValue = text->GetValue();
 				if (insertion < (int)strValue.size())
-					strValue.insert(insertion, static_cast<wchar_t>(e.GetRawKeyCode()));
+					strValue.insert(insertion, e.GetUnicodeKey());
 				else
-					strValue.append(static_cast<wchar_t>(e.GetRawKeyCode()));
+					strValue.append(e.GetUnicodeKey());
 
 				dc.SetFont(text->GetFont());
 				dc.GetMultiLineTextExtent(strValue, &intStringX, &intStringY, &intLineY);
 
 				text->GetSize(&intSizeX, &intSizeY);
-				text->SetSize(intStringX > (intSizeX - 5) ? intStringX + 5 : intSizeX + dc.GetCharWidth(), intSizeY);
+
+				if (intStringX + dc.GetCharWidth() > intSizeX)
+					text->SetSize(intStringX + dc.GetCharWidth() + 1, intSizeY);
 
 				e.Skip();
 				break;

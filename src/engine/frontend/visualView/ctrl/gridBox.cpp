@@ -10,7 +10,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueGridBox, IValueWindow);
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-CValueGridBox::CValueGridBox() : IValueWindow(), m_valueSpreadsheet(new CValueSpreadsheet)
+CValueGridBox::CValueGridBox() : IValueWindow(), m_valueSpreadsheet(new CValueSpreadsheetDocument)
 {
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(300, 100));
@@ -103,7 +103,7 @@ bool CValueGridBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eGridValue) {
 			CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
-			m_valueSpreadsheet = varPropVal.ConvertToType<CValueSpreadsheet>();
+			m_valueSpreadsheet = varPropVal.ConvertToType<CValueSpreadsheetDocument>();
 			if (gridWindow != nullptr) gridWindow->LoadDocument(m_valueSpreadsheet->GetSpreadsheetDesc());
 		}
 	}

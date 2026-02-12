@@ -187,8 +187,22 @@ void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridE
 		dc.SetFont(grid->GetCellFont(row, col, grid->GetGridZoom()));
 		dc.GetMultiLineTextExtent(m_value, NULL, &height);
 
-		if (height > grid->GetRowSize(row, grid->GetGridZoom()))
-			grid->SetRowSize(row, height, grid->GetGridZoom());
+		int cell_rows, cell_cols;
+		CellSpan span = grid->GetCellSize(row, col, &cell_rows, &cell_cols);
+
+		if (span == CellSpan::CellSpan_Main) {
+			int rowSize = 0;
+			for (int i = row; i < row + cell_rows; i++)
+				rowSize += grid->GetRowSize(i, grid->GetGridZoom());
+			if (height > rowSize){
+				int rowOldSize = grid->GetRowSize(row, grid->GetGridZoom()); 
+				grid->SetRowSize(row, height - (rowSize - rowOldSize) + 2, grid->GetGridZoom());
+			}
+		}
+		else if (span == CellSpan::CellSpan_None) {
+			if (height > grid->GetRowSize(row, grid->GetGridZoom()))
+				grid->SetRowSize(row, height + 2, grid->GetGridZoom());
+		}
 	}
 
 	grid->SetCellValue(row, col, m_value);

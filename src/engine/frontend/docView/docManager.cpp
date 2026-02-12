@@ -104,9 +104,14 @@ bool CMetaDocManager::CMetaDocTemplate::InitDocument(wxDocument* doc, const wxSt
 CMetaDocManager::CMetaDocManager()
 	: wxDocManager(), m_findDialog(nullptr)
 {
-	AddDocTemplate(g_metaModuleCLSID, _("Text document"), wxT("*.txt;*.text"), wxEmptyString, wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(g_metaTemplateCLSID, _("Spreadsheet document"), wxT("*.oxl"), wxEmptyString, wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(g_metaInterfaceCLSID, _("Help document"), wxT("*.hle"), wxEmptyString, wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_INVISIBLE);
+	AddDocTemplate(g_metaModuleCLSID,
+		_("Text document"), wxT("*.txt;*.text"), wxT("txt;text"), _("Text Doc"), _("Text View"), CLASSINFO(CTextFileDocument), CLASSINFO(CTextEditView), wxTEMPLATE_VISIBLE, doc::s_guidText);
+	
+	AddDocTemplate(g_metaTemplateCLSID, 
+		_("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), _("Spreadsheet Doc"), _("Spreadsheet View"), CLASSINFO(CSpreadsheetFileDocument), CLASSINFO(CSpreadsheetEditView), wxTEMPLATE_VISIBLE, doc::s_guidSpreadsheet);
+	
+	AddDocTemplate(g_metaInterfaceCLSID, 
+		_("Help document"), wxT("*.hle"), wxT("hle"), _("Help Doc"), _("Help View"), CLASSINFO(CHelpFileDocument), CLASSINFO(CHelpEditView), wxTEMPLATE_INVISIBLE, doc::s_guidHelp);
 
 #if wxUSE_PRINTING_ARCHITECTURE
 
@@ -671,6 +676,17 @@ wxDocTemplate* CMetaDocManager::SelectDocumentType(wxDocTemplate** templates, in
 	return theTemplate;
 }
 
+wxDocTemplate* CMetaDocManager::GetTemplateByGuid(const CGuid& guid) const
+{
+	auto iterator = std::find_if(m_templateVector.begin(), m_templateVector.end(),
+		[guid](const auto& value) { return guid == value.m_guidTemplate; });
+
+	if (iterator != m_templateVector.end())
+		return iterator->m_docTemplate;
+
+	return nullptr;
+}
+
 CGuid CMetaDocManager::AddDocTemplate(
 	const picture_identifier_t& id,
 	const wxString& descr,
@@ -680,7 +696,7 @@ CGuid CMetaDocManager::AddDocTemplate(
 	const wxString& docTypeName,
 	const wxString& viewTypeName,
 	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
-	long flags)
+	long flags, const CGuid& guidTemplate)
 {
 	CMetaDocManagerItem entry;
 
@@ -699,8 +715,6 @@ CGuid CMetaDocManager::AddDocTemplate(
 		flags
 	);
 
-	const CGuid& guidTemplate = wxNewUniqueGuid;
-
 	entry.m_guidTemplate = guidTemplate;
 	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(id);
 
@@ -708,9 +722,22 @@ CGuid CMetaDocManager::AddDocTemplate(
 	return guidTemplate;
 }
 
+CGuid CMetaDocManager::AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+	const wxString& filter,
+	const wxString& ext,
+	const wxString& docTypeName,
+	const wxString& viewTypeName,
+	wxClassInfo* docClassInfo,
+	wxClassInfo* viewClassInfo,
+	long flags, const CGuid& guidTemplate)
+{
+	return AddDocTemplate(id,
+		descr, wxEmptyString, filter, ext, docTypeName, viewTypeName, docClassInfo, viewClassInfo, flags, guidTemplate);
+}
+
 CGuid CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
 	const wxString& descr, const wxString& filter, const wxString& ext,
-	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo)
+	wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo, const CGuid& guidTemplate)
 {
 	CMetaDocManagerItem entry;
 
@@ -727,8 +754,6 @@ CGuid CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,
 		viewClassInfo,
 		wxTEMPLATE_INVISIBLE | (!ext.IsEmpty() ? wxTEMPLATE_SAVE_AS_FILE : 0)
 	);
-
-	const CGuid& guidTemplate = wxNewUniqueGuid;
 
 	entry.m_guidTemplate = guidTemplate;
 	entry.m_classIcon = CBackendPicture::GetPictureAsIcon(clsid);

@@ -161,8 +161,10 @@ wxDEFINE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_BRAKE_DELETE, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_BRAKE_DELETE, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
@@ -171,6 +173,8 @@ wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
 wxDEFINE_EVENT(wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
+wxDEFINE_EVENT(wxEVT_GRID_ROW_FREEZE, wxGridExtSizeEvent);
+wxDEFINE_EVENT(wxEVT_GRID_COL_FREEZE, wxGridExtSizeEvent);
 wxDEFINE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
 wxDEFINE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
@@ -5927,6 +5931,14 @@ bool wxGridExt::FreezeTo(int row, int col)
 	if (ShouldRefresh())
 		Refresh();
 
+	// make up a dummy event for the grid event to use -- unfortunately we
+	// can't do anything else here
+	wxMouseEvent e;
+	e.SetState(wxGetMouseState());
+	ScreenToClient(&e.m_x, &e.m_y);
+
+	SendGridSizeEvent(wxEVT_GRID_ROW_FREEZE, row, e);
+	SendGridSizeEvent(wxEVT_GRID_COL_FREEZE, col, e);
 	return true;
 }
 
@@ -10789,6 +10801,10 @@ bool wxGridExt::MakeColAreaLabel(wxGridExtCellArea* colArea)
 
 void wxGridExt::AddRowBrake(int row)
 {
+	int index = m_rowBrakeAt.Index(row);
+	if (index != -1)
+		return;
+
 	m_rowBrakeAt.Add(row);
 
 	// make up a dummy event for the grid event to use -- unfortunately we
@@ -10826,6 +10842,10 @@ void wxGridExt::SetRowBrake(int row)
 
 void wxGridExt::AddColBrake(int col)
 {
+	int index = m_colBrakeAt.Index(col);
+	if (index != -1)
+		return;
+
 	m_colBrakeAt.Add(col);
 
 	// make up a dummy event for the grid event to use -- unfortunately we
@@ -10835,6 +10855,41 @@ void wxGridExt::AddColBrake(int col)
 	ScreenToClient(&e.m_x, &e.m_y);
 
 	SendGridSizeEvent(wxEVT_GRID_COL_BRAKE_ADD, col, e);
+}
+
+void wxGridExt::DeleteRowBrake(int row)
+{
+	int index = m_rowBrakeAt.Index(row);
+	if (index == -1)
+		return;
+
+	m_rowBrakeAt.Remove(row);
+
+	// make up a dummy event for the grid event to use -- unfortunately we
+	// can't do anything else here
+	wxMouseEvent e;
+	e.SetState(wxGetMouseState());
+	ScreenToClient(&e.m_x, &e.m_y);
+
+	SendGridSizeEvent(wxEVT_GRID_ROW_BRAKE_DELETE, row, e);
+}
+
+void wxGridExt::DeleteColBrake(int col)
+{
+	int index = m_colBrakeAt.Index(col);
+	if (index == -1)
+		return;
+
+	m_colBrakeAt.Remove(col);
+
+	// make up a dummy event for the grid event to use -- unfortunately we
+	// can't do anything else here
+	wxMouseEvent e;
+	e.SetState(wxGetMouseState());
+	ScreenToClient(&e.m_x, &e.m_y);
+
+	SendGridSizeEvent(wxEVT_GRID_COL_BRAKE_DELETE, col, e);
+
 }
 
 void wxGridExt::SetColBrake(int col)

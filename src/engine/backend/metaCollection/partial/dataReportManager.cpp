@@ -65,7 +65,8 @@ CValueManagerDataObjectExternalReport::~CValueManagerDataObjectExternalReport()
 
 enum Func {
 	eCreate = 0,
-	eGetForm
+	eGetForm,
+	eGetTemplate,
 };
 
 void CValueManagerDataObjectReport::PrepareNames() const
@@ -78,6 +79,7 @@ void CValueManagerDataObjectReport::PrepareNames() const
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc("create", "create()");
 	m_methodHelper->AppendFunc("getForm", "getForm(string, owner, guid)");
+	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
@@ -105,6 +107,9 @@ bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pv
 			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
+	case eGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
+		return true;
 	}
 
 	IValueModuleManager* moduleManager = metaData->GetModuleManager();

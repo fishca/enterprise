@@ -6,6 +6,12 @@ enum
 	wxID_MERGE_CELL = wxID_HIGHEST + 150,
 	wxID_AREA_ADD,
 	wxID_AREA_DELETE,
+	wxID_FREEZE_ROW,
+	wxID_FREEZE_COL,
+	wxID_PRINT_BRAKE_ROW_ADD,
+	wxID_PRINT_BRAKE_ROW_DELETE,
+	wxID_PRINT_BRAKE_COL_ADD,
+	wxID_PRINT_BRAKE_COL_DELETE,
 	wxID_SHOW_CELL,
 	wxID_SHOW_HEADER,
 	wxID_SHOW_AREA,
@@ -24,10 +30,15 @@ wxBEGIN_EVENT_TABLE(CSpreadsheetEditView, CMetaView)
 EVT_MENU(wxID_COPY, CSpreadsheetEditView::OnCopy)
 EVT_MENU(wxID_PASTE, CSpreadsheetEditView::OnPaste)
 EVT_MENU(wxID_SELECTALL, CSpreadsheetEditView::OnSelectAll)
-
 EVT_MENU(wxID_MERGE_CELL, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_AREA_ADD, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_AREA_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_FREEZE_ROW, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_FREEZE_COL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_ROW_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_ROW_DELETE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_COL_ADD, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_PRINT_BRAKE_COL_DELETE, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_CELL, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_HEADER, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_AREA, CSpreadsheetEditView::OnMenuEvent)
@@ -53,10 +64,22 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 	wxMenu* menu = new wxMenu;
 	wxMenuItem* menuItem = nullptr;
 
-	wxMenu* menuSection = new wxMenu;
-	menuItem = menuSection->Append(wxID_AREA_ADD, _("Add area"));
-	menuItem = menuSection->Append(wxID_AREA_DELETE, _("Delete area"));
-	menu->AppendSubMenu(menuSection, _("Area"));
+	wxMenu* menuArea = new wxMenu;
+	menuItem = menuArea->Append(wxID_AREA_ADD, _("Add area"));
+	menuItem = menuArea->Append(wxID_AREA_DELETE, _("Delete area"));
+	menu->AppendSubMenu(menuArea, _("Area"));
+
+	wxMenu* menuFreeze = new wxMenu;
+	menuItem = menuFreeze->Append(wxID_FREEZE_ROW, _("Freeze row"));
+	menuItem = menuFreeze->Append(wxID_FREEZE_COL, _("Freeze column"));
+	menu->AppendSubMenu(menuFreeze, _("Freeze"));
+
+	wxMenu* menuPrintBrake = new wxMenu;
+	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_ADD, _("Add brake row"));
+	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_ADD, _("Add brake column"));
+	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_DELETE, _("Delete brake row"));
+	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_DELETE, _("Delete brake column"));
+	menu->AppendSubMenu(menuPrintBrake, _("Print brake"));
 
 	menuItem = menu->AppendSeparator();
 	menuItem = menu->Append(wxID_SHOW_CELL, _("Show cells"));
@@ -128,6 +151,12 @@ bool CSpreadsheetEditView::OnClose(bool deleteWindow)
 
 void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 {
+	wxArrayInt arrRows = m_gridEditor->GetSelectedRows();
+	const int selected_row = arrRows.Count() > 0 ? arrRows[0] : -1;
+
+	wxArrayInt arrCols = m_gridEditor->GetSelectedCols();
+	const int selected_col = arrCols.Count() > 0 ? arrCols[0] : -1;
+
 	switch (event.GetId())
 	{
 	case wxID_MERGE_CELL:
@@ -138,6 +167,30 @@ void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 		break;
 	case wxID_AREA_DELETE:
 		m_gridEditor->DeleteArea();
+		break;
+	case wxID_FREEZE_ROW:
+		if (selected_row >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->FreezeTo(selected_row, 0);
+		break;
+	case wxID_FREEZE_COL:
+		if (selected_col >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->FreezeTo(0, selected_col);
+		break;
+	case wxID_PRINT_BRAKE_ROW_ADD:
+		if (selected_row >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->AddRowBrake(selected_row);
+		break;
+	case wxID_PRINT_BRAKE_COL_ADD:
+		if (selected_col >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->AddColBrake(selected_col);
+		break;
+	case wxID_PRINT_BRAKE_ROW_DELETE:
+		if (selected_row >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->DeleteRowBrake(selected_row);
+		break;
+	case wxID_PRINT_BRAKE_COL_DELETE:
+		if (selected_col >= 0 && m_gridEditor->IsSelection())
+			m_gridEditor->DeleteColBrake(selected_col);
 		break;
 	case wxID_SHOW_CELL:
 		m_gridEditor->ShowCells();

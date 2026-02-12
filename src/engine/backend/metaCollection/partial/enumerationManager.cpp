@@ -53,6 +53,7 @@ enum Func {
 	eGetForm,
 	eGetListForm,
 	eGetSelectForm,
+	eGetTemplate,
 };
 
 void CValueManagerDataObjectEnumeration::PrepareNames() const
@@ -66,6 +67,7 @@ void CValueManagerDataObjectEnumeration::PrepareNames() const
 	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
+	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
 
 	//fill custom attributes 
 	for (unsigned int idx = 0; idx < m_metaObject->GetChildCount(); idx++) {
@@ -136,6 +138,10 @@ bool CValueManagerDataObjectEnumeration::CallAsFunc(const long lMethodNum, CValu
 			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
+	case eGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
+		return true;
+
 	}
 
 	IValueModuleManager* moduleManager = metaData->GetModuleManager();

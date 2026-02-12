@@ -2599,7 +2599,7 @@ public:
 	// set area label
 	void SetRowAreaLabel(int idx, const wxString& label);
 	void SetColAreaLabel(int idx, const wxString& label);
-	
+
 	wxString GetRowAreaLabel(int idx);
 	wxString GetColAreaLabel(int idx);
 
@@ -2614,6 +2614,9 @@ public:
 	//support printing 
 	void AddRowBrake(int row);
 	void AddColBrake(int col);
+
+	void DeleteRowBrake(int row);
+	void DeleteColBrake(int col);
 
 	void SetRowBrake(int row);
 	void SetColBrake(int col);
@@ -4491,8 +4494,10 @@ wxDECLARE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_SORT, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
+wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_DELETE, wxGridExtSizeEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
+wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_DELETE, wxGridExtSizeEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
@@ -4501,6 +4506,8 @@ wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
 wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
+wxDECLARE_EVENT(wxEVT_GRID_ROW_FREEZE, wxGridExtSizeEvent);
+wxDECLARE_EVENT(wxEVT_GRID_COL_FREEZE, wxGridExtSizeEvent);
 wxDECLARE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
 wxDECLARE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
 
@@ -4569,8 +4576,10 @@ typedef void (wxEvtHandler::* wxGridExtEditorAreaEventFunction)(wxGridExtAreaEve
 #define EVT_GRID_CMD_CELL_BEGIN_DRAG(id, fn)     wx__DECLARE_GRIDEVT(CELL_BEGIN_DRAG, id, fn)
 #define EVT_GRID_CMD_ROW_BRAKE_ADD(id, fn)       wx__DECLARE_GRIDSIZEEVT(ROW_BRAKE_ADD, id, fn)
 #define EVT_GRID_CMD_ROW_BRAKE_SET(id, fn)       wx__DECLARE_GRIDSIZEEVT(ROW_BRAKE_SET, id, fn)
+#define EVT_GRID_CMD_ROW_BRAKE_DELETE(id, fn)    wx__DECLARE_GRIDSIZEEVT(ROW_BRAKE_DELETE, id, fn)
 #define EVT_GRID_CMD_COL_BRAKE_ADD(id, fn)       wx__DECLARE_GRIDSIZEEVT(COL_BRAKE_ADD, id, fn)
 #define EVT_GRID_CMD_COL_BRAKE_SET(id, fn)       wx__DECLARE_GRIDSIZEEVT(COL_BRAKE_SET, id, fn)
+#define EVT_GRID_CMD_COL_BRAKE_DELETE(id, fn)    wx__DECLARE_GRIDSIZEEVT(COL_BRAKE_DELETE, id, fn)
 #define EVT_GRID_CMD_ROW_AREA_CREATE(id, fn)     wx__DECLARE_GRIDAREAEVT(ROW_AREA_CREATE, id, fn)
 #define EVT_GRID_CMD_ROW_AREA_DELETE(id, fn)     wx__DECLARE_GRIDAREAEVT(ROW_AREA_DELETE, id, fn)
 #define EVT_GRID_CMD_ROW_AREA_SIZE(id, fn)       wx__DECLARE_GRIDAREAEVT(ROW_AREA_SIZE, id, fn)
@@ -4579,6 +4588,8 @@ typedef void (wxEvtHandler::* wxGridExtEditorAreaEventFunction)(wxGridExtAreaEve
 #define EVT_GRID_CMD_COL_AREA_DELETE(id, fn)     wx__DECLARE_GRIDAREAEVT(COL_AREA_DELETE, id, fn)
 #define EVT_GRID_CMD_COL_AREA_SIZE(id, fn)       wx__DECLARE_GRIDAREAEVT(COL_AREA_SIZE, id, fn)
 #define EVT_GRID_CMD_COL_AREA_NAME(id, fn)       wx__DECLARE_GRIDAREAEVT(COL_AREA_NAME, id, fn)
+#define EVT_GRID_CMD_ROW_FREEZE(id, fn)			 wx__DECLARE_GRIDSIZEEVT(ROW_FREEZE, id, fn)
+#define EVT_GRID_CMD_COL_FREEZE(id, fn)			 wx__DECLARE_GRIDSIZEEVT(COL_FREEZE, id, fn)
 #define EVT_GRID_CMD_TABBING(id, fn)             wx__DECLARE_GRIDEVT(TABBING, id, fn)
 #define EVT_GRID_CMD_ZOOM(id, fn)				 wx__DECLARE_GRIDEVT(ZOOM, id, fn)
 
@@ -4613,8 +4624,10 @@ typedef void (wxEvtHandler::* wxGridExtEditorAreaEventFunction)(wxGridExtAreaEve
 #define EVT_GRID_CELL_BEGIN_DRAG(fn)     EVT_GRID_CMD_CELL_BEGIN_DRAG(wxID_ANY, fn)
 #define EVT_GRID_ROW_BRAKE_ADD(fn)		 EVT_GRID_CMD_ROW_BRAKE_ADD(wxID_ANY, fn)
 #define EVT_GRID_ROW_BRAKE_SET(fn)		 EVT_GRID_CMD_ROW_BRAKE_SET(wxID_ANY, fn)
+#define EVT_GRID_ROW_BRAKE_DELETE(fn)	 EVT_GRID_CMD_ROW_BRAKE_DELETE(wxID_ANY, fn)
 #define EVT_GRID_COL_BRAKE_ADD(fn)		 EVT_GRID_CMD_COL_BRAKE_ADD(wxID_ANY, fn)
 #define EVT_GRID_COL_BRAKE_SET(fn)		 EVT_GRID_CMD_COL_BRAKE_SET(wxID_ANY, fn)
+#define EVT_GRID_COL_BRAKE_DELETE(fn)	 EVT_GRID_CMD_COL_BRAKE_DELETE(wxID_ANY, fn)
 #define EVT_GRID_ROW_AREA_CREATE(fn)	 EVT_GRID_CMD_ROW_AREA_CREATE(wxID_ANY, fn)
 #define EVT_GRID_ROW_AREA_DELETE(fn)	 EVT_GRID_CMD_ROW_AREA_DELETE(wxID_ANY, fn)
 #define EVT_GRID_ROW_AREA_SIZE(fn)		 EVT_GRID_CMD_ROW_AREA_SIZE(wxID_ANY, fn)
@@ -4623,6 +4636,8 @@ typedef void (wxEvtHandler::* wxGridExtEditorAreaEventFunction)(wxGridExtAreaEve
 #define EVT_GRID_COL_AREA_DELETE(fn)	 EVT_GRID_CMD_COL_AREA_DELETE(wxID_ANY, fn)
 #define EVT_GRID_COL_AREA_SIZE(fn)		 EVT_GRID_CMD_COL_AREA_SIZE(wxID_ANY, fn)
 #define EVT_GRID_COL_AREA_NAME(fn)		 EVT_GRID_CMD_COL_AREA_NAME(wxID_ANY, fn)
+#define EVT_GRID_ROW_FREEZE(fn)			 EVT_GRID_CMD_ROW_FREEZE(wxID_ANY, fn)
+#define EVT_GRID_COL_FREEZE(fn)			 EVT_GRID_CMD_COL_FREEZE(wxID_ANY, fn)
 #define EVT_GRID_TABBING(fn)             EVT_GRID_CMD_TABBING(wxID_ANY, fn)
 #define EVT_GRID_ZOOM(fn)				 EVT_GRID_CMD_ZOOM(wxID_ANY, fn)
 

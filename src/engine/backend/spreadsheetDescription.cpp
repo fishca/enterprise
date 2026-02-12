@@ -36,14 +36,14 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 
 	{
 		const size_t capacity = cellReader.r_u64();
-		spreadsheetDesc.ResetSpreadsheet(capacity);
+		spreadsheetDesc.ClearSpreadsheet(capacity);
 
 		for (u64 c = 0; c < capacity; c++)
 		{
 			int row = cellReader.r_s32();
 			int col = cellReader.r_s32();
 
-			CSpreadsheetAttrDescription* cell =
+			CSpreadsheetCellDescription* cell =
 				spreadsheetDesc.GetOrCreateCell(row, col);
 
 			cell->m_value = cellReader.r_stringZ();
@@ -75,7 +75,7 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 			cell->m_row_size = cellReader.r_s32();
 			cell->m_col_size = cellReader.r_s32();
 
-			cell->m_fitMode = static_cast<CSpreadsheetAttrDescription::EFitMode>(cellReader.r_s32());
+			cell->m_fitMode = static_cast<CSpreadsheetCellDescription::EFitMode>(cellReader.r_s32());
 			cell->m_isReadOnly = cellReader.r_u8();
 		}
 	}
@@ -140,8 +140,8 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 		}
 	}
 
-	spreadsheetDesc.SetFreezeRow(dataReader.r_s32());
-	spreadsheetDesc.SetFreezeCol(dataReader.r_s32());
+	spreadsheetDesc.SetRowFreeze(dataReader.r_s32());
+	spreadsheetDesc.SetColFreeze(dataReader.r_s32());
 	return true;
 }
 
@@ -159,7 +159,7 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 
 	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++)
 	{
-		const CSpreadsheetAttrDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
+		const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
 
 		cellWriter.w_s32(cell->m_row);
 		cellWriter.w_s32(cell->m_col);
@@ -247,8 +247,8 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 		dataWriter.w_s32(desc->m_width);
 	}
 
-	dataWriter.w_s32(spreadsheetDesc.GetFreezeRow());
-	dataWriter.w_s32(spreadsheetDesc.GetFreezeCol());
+	dataWriter.w_s32(spreadsheetDesc.GetRowFreeze());
+	dataWriter.w_s32(spreadsheetDesc.GetColFreeze());
 
 	mainWriter.w_chunk(data_block, dataWriter.buffer());
 

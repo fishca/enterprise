@@ -6,10 +6,182 @@
 
 #pragma region __notifier_h__
 
-void CBackendSpreadsheetObject::ResetSpreadsheet(int count)
+void CBackendSpreadsheetObject::ClearSpreadsheet(int count)
 {
-	spreadsheetNotify->ResetSpreadsheet();
-	m_spreadsheetDesc.ResetSpreadsheet(count);
+	spreadsheetNotify->ClearSpreadsheet();
+	m_spreadsheetDesc.ClearSpreadsheet(count);
+}
+
+//area 
+CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowRight, int colTop, int colBottom)
+{
+	CSpreadsheetDescription spreadsheetDesc;
+
+	if (rowLeft >= 0 && colTop >= 0 && rowRight > 0 && colBottom > 0) {
+		for (int row = rowLeft; row < rowRight; row++) {
+			for (int col = colTop; col < colBottom; col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
+
+				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(rowLeft - rowRight);
+		spreadsheetDesc.SetColBrake(colTop - colBottom);
+	}
+	else if (rowLeft >= 0 && colTop < 0 && rowRight > 0 && colBottom < 0)
+	{
+		for (int row = rowLeft; row < rowRight; row++) {
+			for (int col = 0; col < GetMaxColBrake(); col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
+
+				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(rowLeft - rowRight);
+		spreadsheetDesc.SetColBrake(GetMaxColBrake());
+	}
+	else if (rowLeft < 0 && colTop >= 0 && rowRight < 0 && colBottom > 0) {
+		for (int row = 0; row < GetMaxRowBrake(); row++) {
+			for (int col = colTop; col < colBottom; col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
+
+				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(GetMaxRowBrake());
+		spreadsheetDesc.SetColBrake(colTop - colBottom);
+	}
+
+	return spreadsheetDesc;
+}
+
+CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName)
+{
+	const CSpreadsheetAreaDescription* r = m_spreadsheetDesc.GetRowAreaByName(strAreaLeftName);
+	const CSpreadsheetAreaDescription* c = m_spreadsheetDesc.GetColAreaByName(strAreaTopName);
+
+	CSpreadsheetDescription spreadsheetDesc;
+
+	if (r != nullptr && c != nullptr) {
+		for (int row = r->m_start; row <= (int)r->m_end; row++) {
+			for (int col = c->m_start; col <= (int)c->m_end; col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col - c->m_start);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - c->m_start));
+
+				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(r->m_end - r->m_start);
+		spreadsheetDesc.SetColBrake(c->m_end - c->m_start);
+	}
+	else if (r != nullptr) {
+		for (int row = r->m_start; row <= (int)r->m_end; row++) {
+			for (int col = 0; col <= GetMaxColBrake(); col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col));
+
+				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(r->m_end - r->m_start);
+		spreadsheetDesc.SetColBrake(GetMaxColBrake());
+	}
+	else if (c != nullptr) {
+		for (int row = 0; row <= GetMaxRowBrake(); row++) {
+			for (int col = c->m_start; col <= (int)c->m_end; col++) {
+
+				CSpreadsheetCellDescription* cellSrc =
+					spreadsheetDesc.GetOrCreateCell(row, col - c->m_start);
+
+				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - c->m_start));
+
+				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
+			}
+
+			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+		}
+
+		spreadsheetDesc.SetRowBrake(GetMaxRowBrake());
+		spreadsheetDesc.SetColBrake(c->m_end - c->m_start);
+	}
+
+	return spreadsheetDesc;
+}
+
+void CBackendSpreadsheetObject::PutArea(const CSpreadsheetDescription& spreadsheetDesc)
+{
+	const int maxRowBrake = m_spreadsheetDesc.GetNumberRows();
+	const int maxColBrake = m_spreadsheetDesc.GetNumberCols();
+
+	for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
+		for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
+			CSpreadsheetCellDescription* cellSrc =
+				m_spreadsheetDesc.GetOrCreateCell(maxRowBrake + row, col);
+			cellSrc->SetCell(spreadsheetDesc.GetCell(row, col));
+			if (col == 0) m_spreadsheetDesc.SetColSize(col, spreadsheetDesc.GetColSize(col));
+		}
+		if (row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, spreadsheetDesc.GetRowSize(row));
+	}
+
+	m_spreadsheetDesc.SetRowBrake(maxRowBrake + spreadsheetDesc.GetNumberRows() - 1);
+
+	if (maxColBrake < spreadsheetDesc.GetNumberCols())
+		m_spreadsheetDesc.SetColBrake(maxColBrake + spreadsheetDesc.GetNumberCols() - 1);
+}
+
+void CBackendSpreadsheetObject::JoinArea(const CSpreadsheetDescription& spreadsheetDesc)
+{
+	const int maxRowBrake = m_spreadsheetDesc.GetNumberRows();
+	const int maxColBrake = m_spreadsheetDesc.GetNumberCols();
+
+	for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
+		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
+			CSpreadsheetCellDescription* cellSrc =
+				m_spreadsheetDesc.GetOrCreateCell(row, maxColBrake + col);
+			cellSrc->SetCell(spreadsheetDesc.GetCell(row, col));
+			if (row == 0) m_spreadsheetDesc.SetRowSize(row, spreadsheetDesc.GetRowSize(row));
+		}
+
+		if (col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, spreadsheetDesc.GetColSize(col));
+	}
+
+	if (maxRowBrake < spreadsheetDesc.GetNumberRows())
+		m_spreadsheetDesc.SetRowBrake(maxRowBrake + spreadsheetDesc.GetNumberRows() - 1);
+
+	m_spreadsheetDesc.SetColBrake(maxColBrake + spreadsheetDesc.GetNumberCols() - 1);
 }
 
 //size 
@@ -26,49 +198,16 @@ void CBackendSpreadsheetObject::SetColSize(int col, int width)
 }
 
 //freeze 
-void CBackendSpreadsheetObject::SetFreezeRow(int row)
+void CBackendSpreadsheetObject::SetRowFreeze(int row)
 {
-	spreadsheetNotify->SetFreezeRow(row);
-	m_spreadsheetDesc.SetFreezeRow(row);
+	spreadsheetNotify->SetRowFreeze(row);
+	m_spreadsheetDesc.SetRowFreeze(row);
 }
 
-void CBackendSpreadsheetObject::SetFreezeCol(int col)
+void CBackendSpreadsheetObject::SetColFreeze(int col)
 {
-	spreadsheetNotify->SetFreezeCol(col);
-	m_spreadsheetDesc.SetFreezeCol(col);
-}
-
-//area 
-void CBackendSpreadsheetObject::AddRowArea(const wxString& strAreaName, unsigned int start, unsigned int end)
-{
-}
-
-void CBackendSpreadsheetObject::DeleteRowArea(const wxString& strAreaName)
-{
-}
-
-void CBackendSpreadsheetObject::AddColArea(const wxString& strAreaName, unsigned int start, unsigned int end)
-{
-}
-
-void CBackendSpreadsheetObject::DeleteColArea(const wxString& strAreaName)
-{
-}
-
-void CBackendSpreadsheetObject::SetRowSizeArea(const wxString& strAreaName, int start, int end)
-{
-}
-
-void CBackendSpreadsheetObject::SetRowNameArea(size_t idx, const wxString& strAreaName)
-{
-}
-
-void CBackendSpreadsheetObject::SetColSizeArea(const wxString& strAreaName, int start, int end)
-{
-}
-
-void CBackendSpreadsheetObject::SetColNameArea(size_t idx, const wxString& strAreaName)
-{
+	spreadsheetNotify->SetColFreeze(col);
+	m_spreadsheetDesc.SetColFreeze(col);
 }
 
 // ------ row and col formatting
@@ -134,7 +273,7 @@ void CBackendSpreadsheetObject::SetCellSize(int row, int col, int num_rows, int 
 	m_spreadsheetDesc.SetCellSize(row, col, num_rows, num_cols);
 }
 
-void CBackendSpreadsheetObject::SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode)
+void CBackendSpreadsheetObject::SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode)
 {
 	spreadsheetNotify->SetCellFitMode(row, col, fitMode);
 	m_spreadsheetDesc.SetCellFitMode(row, col, fitMode);
@@ -159,6 +298,18 @@ void CBackendSpreadsheetObject::AddColBrake(int col)
 {
 	spreadsheetNotify->AddColBrake(col);
 	m_spreadsheetDesc.AddColBrake(col);
+}
+
+void CBackendSpreadsheetObject::DeleteRowBrake(int row)
+{
+	spreadsheetNotify->DeleteRowBrake(row);
+	m_spreadsheetDesc.DeleteRowBrake(row);
+}
+
+void CBackendSpreadsheetObject::DeleteColBrake(int col)
+{
+	spreadsheetNotify->DeleteColBrake(col);
+	m_spreadsheetDesc.DeleteColBrake(col);
 }
 
 void CBackendSpreadsheetObject::SetRowBrake(int row)

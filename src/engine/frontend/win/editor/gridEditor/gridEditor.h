@@ -5,8 +5,7 @@
 
 #include "backend/backend_spreadsheet.h"
 #include "backend/propertyManager/propertyManager.h"
-
-#include "frontend/visualView/controlEnum.h"
+#include "backend/system/value/valueSpreadsheet.h"
 
 static const wxArrayString wxEmptyArrayString;
 
@@ -19,25 +18,15 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 	public:
 
 		CGenericSpreadsheetNotifier(CGridEditor* view) : m_view(view) {}
-		virtual void ResetSpreadsheet() { m_view->ClearGrid(); }
+		virtual void ClearSpreadsheet() { m_view->ClearGrid(); }
 
 		//size 
 		virtual void SetRowSize(int row, int height = 0) { m_view->SetRowSize(row, height); }
 		virtual void SetColSize(int col, int width = 0) { m_view->SetColSize(col, width); }
 
 		//freeze 
-		virtual void SetFreezeRow(int row) { m_view->FreezeTo(row, 0); }
-		virtual void SetFreezeCol(int col) { m_view->FreezeTo(0, col); }
-
-		//area 
-		virtual void AddRowArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
-		virtual void DeleteRowArea(const wxString& strAreaName) {}
-		virtual void AddColArea(const wxString& strAreaName, unsigned int start, unsigned int end) {}
-		virtual void DeleteColArea(const wxString& strAreaName) {}
-		virtual void SetRowSizeArea(const wxString& strAreaName, int start, int end) {}
-		virtual void SetRowNameArea(size_t idx, const wxString& strAreaName) {}
-		virtual void SetColSizeArea(const wxString& strAreaName, int start, int end) {}
-		virtual void SetColNameArea(size_t idx, const wxString& strAreaName) {}
+		virtual void SetRowFreeze(int row) { m_view->FreezeTo(row, 0); }
+		virtual void SetColFreeze(int col) { m_view->FreezeTo(0, col); }
 
 		// ------ row and col formatting
 		//
@@ -52,7 +41,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) { m_view->SetCellSize(row, col, num_rows, num_cols, false); }
-		virtual void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) { m_view->SetCellFitMode(row, col, fitMode == CSpreadsheetAttrDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
+		virtual void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) { m_view->SetCellFitMode(row, col, fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
 		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { m_view->SetCellReadOnly(row, col, isReadOnly, false); }
 
 		// ------ cell brake accessors
@@ -60,6 +49,9 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		//support printing 
 		virtual void AddRowBrake(int row) { m_view->AddRowBrake(row); }
 		virtual void AddColBrake(int col) { m_view->AddColBrake(col); }
+
+		virtual void DeleteRowBrake(int row) { m_view->DeleteRowBrake(row); }
+		virtual void DeleteColBrake(int col) { m_view->DeleteColBrake(col); }
 
 		virtual void SetRowBrake(int row) { m_view->SetRowBrake(row); }
 		virtual void SetColBrake(int col) { m_view->SetColBrake(col); }
@@ -201,7 +193,8 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 	};
 
 	// the property of grid 
-	class CGridEditorCellProperty : public IPropertyObject {
+	class CGridEditorCellProperty : 
+		public IPropertyObject {
 	public:
 
 		void SetView(CGridEditor* view) { m_view = view; }
@@ -224,6 +217,8 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void OnPropertyCreated(IProperty* property);
 		virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
+		friend class CGridEditor;
+
 	private:
 
 		void ClearSelectedCell() { m_currentSelection.clear(); }
@@ -245,10 +240,10 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("Alignment"));
 
-		CPropertyEnum<CValueEnumFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumFitMode>>(m_categoryAlignment, wxT("fit_mode"), _("Fit mode"), enFitMode::enFitMode_Overflow);
-		CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), wxAlignment::wxALIGN_LEFT);
-		CPropertyEnum<CValueEnumVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVerticalAlignment>>(m_categoryAlignment, wxT("align_vert"), _("Vertical"), wxAlignment::wxALIGN_CENTER);
-		CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categoryAlignment, wxT("orient_text"), _("Orientation text"), wxOrientation::wxVERTICAL);
+		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("fit_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);
+		CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), enSpreadsheetAlignmentHorz::enAlignmentHorz_Left);
+		CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>>(m_categoryAlignment, wxT("align_vert"), _("Vertical"), enSpreadsheetAlignmentVert::enAlignmentVert_Center);
+		CPropertyEnum<CValueEnumSpreadsheetOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetOrient>>(m_categoryAlignment, wxT("orient_text"), _("Orientation text"), enSpreadsheetOrientation::enOrient_Vertical);
 
 		CPropertyCategory* m_categoryAppearance = IPropertyObject::CreatePropertyCategory(wxT("appearance"), _("Appearance"));
 		CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryAppearance, wxT("font"), _("Font"));
@@ -256,13 +251,11 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		CPropertyColour* m_propertyTextColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("text_colour"), _("Text colour"), wxNullColour);
 
 		CPropertyCategory* m_categoryBorder = IPropertyObject::CreatePropertyCategory(wxT("border"), _("Border"));
-		CPropertyEnum<CValueEnumBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("left_border"), _("Left"), wxPENSTYLE_TRANSPARENT);
-		CPropertyEnum<CValueEnumBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("right_border"), _("Right"), wxPENSTYLE_TRANSPARENT);
-		CPropertyEnum<CValueEnumBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("top_border"), _("Top"), wxPENSTYLE_TRANSPARENT);
-		CPropertyEnum<CValueEnumBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumBorder>>(m_categoryBorder, wxT("bottom_border"), _("Bottom"), wxPENSTYLE_TRANSPARENT);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("left_border"), _("Left"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("right_border"), _("Right"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("top_border"), _("Top"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("bottom_border"), _("Bottom"), enSpreadsheetPenStyle::enPenStyle_Transparent);
 		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("border_colour"), _("Colour"), wxNullColour);
-
-		friend class CGridEditor;
 	};
 
 public:
@@ -355,6 +348,8 @@ protected:
 	void OnGridColBrake(wxGridExtSizeEvent& event);
 	void OnGridRowArea(wxGridExtAreaEvent& event);
 	void OnGridColArea(wxGridExtAreaEvent& event);
+	void OnGridRowFreeze(wxGridExtSizeEvent& event);
+	void OnGridColFreeze(wxGridExtSizeEvent& event);
 
 	void OnGridTableModified(wxGridExtEvent& event);
 	void OnGridTableAttrModified(wxGridExtEvent& event);

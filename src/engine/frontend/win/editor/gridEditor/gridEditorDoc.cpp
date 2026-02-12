@@ -62,11 +62,11 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 
 		wxGridExt::SetEvtHandlerEnabled(false);
 
-		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++)
-		{
-			for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++)
-			{
-				const CSpreadsheetAttrDescription* cell = spreadsheetDesc.GetCell(row, col);
+		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
+
+			for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
+
+				const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCell(row, col);
 				if (cell == nullptr)
 					continue;
 
@@ -88,15 +88,15 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 				attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
 				attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
 
-				attr->SetFitMode(cell->m_fitMode == CSpreadsheetAttrDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
+				attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
 				attr->SetReadOnly(cell->m_isReadOnly);
 			}
 		}
 
 		m_rowAreaAt.Clear();
 
-		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++)
-		{
+		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberRows(); idx++) {
+
 			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetRowAreaByIdx(idx);
 
 			if (area == nullptr)
@@ -114,8 +114,8 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 
 		m_colAreaAt.Clear();
 
-		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++)
-		{
+		for (int idx = 0; idx < spreadsheetDesc.GetAreaNumberCols(); idx++) {
+
 			const CSpreadsheetAreaDescription* area = spreadsheetDesc.GetColAreaByIdx(idx);
 
 			if (area == nullptr)
@@ -141,8 +141,7 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 		for (int idx = 0; idx < spreadsheetDesc.GetBrakeNumberCols(); idx++)
 			m_colBrakeAt.push_back(spreadsheetDesc.GetColBrakeByIdx(idx));
 
-		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++)
-		{
+		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberRows(); idx++) {
 			const CSpreadsheetRowSizeDescription* row_size = spreadsheetDesc.GetRowSizeByIdx(idx);
 			if (row_size == nullptr)
 				continue;
@@ -150,8 +149,7 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 			wxGridExt::SetRowSize(row_size->m_row, row_size->m_height, 1.0f, false);
 		}
 
-		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++)
-		{
+		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
 			const CSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
 			if (col_size == nullptr)
 				continue;
@@ -159,9 +157,9 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
 
-		wxGridExt::SetEvtHandlerEnabled(true);
+		FreezeTo(spreadsheetDesc.GetRowFreeze(), spreadsheetDesc.GetColFreeze());
 
-		FreezeTo(spreadsheetDesc.GetFreezeRow(), spreadsheetDesc.GetFreezeCol());
+		wxGridExt::SetEvtHandlerEnabled(true);
 	}
 
 	return true;

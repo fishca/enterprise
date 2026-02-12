@@ -243,7 +243,7 @@ public:
 			return wxEmptyString;
 		auto it = m_listEnumData.begin();
 		std::advance(it, idx);
-		return it.second;
+		return it->second;
 	}
 
 	wxString GetEnumDesc(unsigned int idx) const {

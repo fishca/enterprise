@@ -1831,22 +1831,29 @@ MLabel:
 
 			const long lMethodNum = parentValue.FindMethod(sMethod);
 			if (lMethodNum != wxNOT_FOUND && parentValue.HasRetVal(lMethodNum)) {
+				
 				CValue** paParams = new CValue * [aParamList.size() ? aParamList.size() : 1];
+				
 				if (aParamList.size() == 0) {
 					CValue cValue = eValueTypes::TYPE_EMPTY;
 					paParams[0] = &cValue;
 				}
+				
 				for (unsigned int i = 0; i < aParamList.size(); i++) {
 					paParams[i] = &aParamList[i].m_paramObject;
 				}
 
-				try {
-					parentValue.CallAsFunc(lMethodNum, sVariable.m_paramObject, paParams, aParamList.size());
+				if (aParamList.size() >= parentValue.GetNParams(lMethodNum)) {
+					
+					try {
+						parentValue.CallAsFunc(lMethodNum, sVariable.m_paramObject, paParams, aParamList.size());
+					}
+					catch (...) {
+					}
+
+					SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
+					delete[]paParams;
 				}
-				catch (...) {
-				}
-				SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
-				delete[]paParams;
 			}
 
 			nIsSet = 0;

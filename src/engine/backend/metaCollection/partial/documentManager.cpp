@@ -62,6 +62,7 @@ enum Func {
 	eGetForm,
 	eGetListForm,
 	eGetSelectForm,
+	eGetTemplate,
 	eEmptyRef
 };
 
@@ -81,6 +82,7 @@ void CValueManagerDataObjectDocument::PrepareNames() const
 	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
+	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
 	m_methodHelper->AppendFunc("emptyRef", "emptyRef()");
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
@@ -138,6 +140,9 @@ bool CValueManagerDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& 
 			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
+	case eGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
+		return true;
 	case eEmptyRef:
 		pvarRetValue = EmptyRef();
 		return true;

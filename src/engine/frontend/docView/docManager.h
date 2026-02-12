@@ -14,6 +14,13 @@ enum
 	wxTEMPLATE_SAVE_AS_FILE = 8
 };
 
+namespace doc
+{
+	static const CGuid s_guidText = wxNewUniqueGuid;
+	static const CGuid s_guidSpreadsheet = wxNewUniqueGuid;
+	static const CGuid s_guidHelp = wxNewUniqueGuid;
+};
+
 class FRONTEND_API CMetaDocManager : public wxDocManager {
 
 	class CMetaDocTemplate : public wxDocTemplate {
@@ -121,18 +128,29 @@ public:
 		const wxString& docTypeName,
 		const wxString& viewTypeName,
 		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
-		long flags = wxTEMPLATE_VISIBLE
+		long flags = wxTEMPLATE_VISIBLE, const CGuid& guidTemplate = wxNewUniqueGuid
+	);
+
+	CGuid AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+		const wxString& filter,
+		const wxString& ext,
+		const wxString& docTypeName,
+		const wxString& viewTypeName,
+		wxClassInfo* docClassInfo,
+		wxClassInfo* viewClassInfo,
+		long flags = wxTEMPLATE_VISIBLE, const CGuid& guidTemplate = wxNewUniqueGuid
 	);
 
 	CGuid AddDocTemplate(const class_identifier_t& id,
 		const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
-		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo);
+		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo, 
+		const CGuid& guidTemplate = wxNewUniqueGuid);
 
-	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo) {
+	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo, const CGuid& guidTemplate = wxNewUniqueGuid) {
 		return AddDocTemplate(id,
-			wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo);
+			wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo, guidTemplate);
 	}
 
 	CMetaDocument* GetCurrentDocument() const;
@@ -144,6 +162,8 @@ public:
 
 	virtual wxDocTemplate* SelectDocumentType(wxDocTemplate** templates,
 		int noTemplates, bool sort = false) override;
+
+	wxDocTemplate* GetTemplateByGuid(const CGuid& guid) const;
 
 	bool CloseDocument(wxDocument* doc, bool force = false);
 	bool CloseDocuments(bool force);

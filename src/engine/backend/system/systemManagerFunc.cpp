@@ -984,6 +984,23 @@ void CSystemFunction::ShowCommonForm(const wxString& strFormName, IBackendContro
 	if (valueForm != nullptr) valueForm->ShowForm();
 }
 
+#include "backend/system/value/valueSpreadsheet.h"
+
+CValue CSystemFunction::GetCommonTemplate(const wxString& strTemplateName)
+{
+	if (!strTemplateName.IsEmpty()) {
+
+		const CValueMetaObjectCommonSpreadsheet* creator =
+			activeMetaData->FindAnyObjectByFilter<CValueMetaObjectCommonSpreadsheet>(strTemplateName, g_metaCommonTemplateCLSID);
+
+		if (creator != nullptr)
+			return CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(creator->GetSpreadsheetDesc());
+	}
+
+	CBackendCoreException::Error(_("Common template not found '%s'"), strTemplateName);
+	return wxEmptyValue;
+}
+
 void CSystemFunction::BeginTransaction()
 {
 	if (CBackendException::IsEvalMode())

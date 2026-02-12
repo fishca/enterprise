@@ -103,6 +103,7 @@ enum
 	enIsInRole,
 	enGetCommonForm,
 	enShowCommonForm,
+	enGetCommonTemplate,
 	enBeginTransaction,
 	enCommitTransaction,
 	enRollBackTransaction
@@ -207,6 +208,7 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->AppendFunc("isInRole", 1, "isInRole(string)");
 	m_methodHelper->AppendFunc("getCommonForm", 3, "getCommonForm(string, owner, uniqueGuid)");
 	m_methodHelper->AppendProc("showCommonForm", 3, "showCommonForm(string, owner, uniqueGuid)");
+	m_methodHelper->AppendFunc("getCommonTemplate", 1, "getCommonTemplate(string)");
 	m_methodHelper->AppendProc("beginTransaction", "beginTransaction()");
 	m_methodHelper->AppendProc("commitTransaction", "commitTransaction()");
 	m_methodHelper->AppendProc("rollBackTransaction", "rollBackTransaction()");
@@ -338,6 +340,9 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
 			return true;
+		case enGetCommonTemplate: 
+			pvarRetValue = GetCommonTemplate(paParams[0]->GetString());
+			return true;
 			//--- Тразакции:
 		case enBeginTransaction: BeginTransaction(); return true;
 		case enCommitTransaction: CommitTransaction(); return true;
@@ -360,6 +365,10 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			pvarRetValue = GetCommonForm(paParams[0]->GetString(),
 				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			return true;
+
+		case enGetCommonTemplate: 
+			pvarRetValue = GetCommonTemplate(paParams[0]->GetString());
 			return true;
 		}
 	}

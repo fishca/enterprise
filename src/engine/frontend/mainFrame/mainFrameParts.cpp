@@ -121,19 +121,20 @@ bool CDocMDIFrame::AuthenticationUser(const wxString& userName, const wxString& 
 {
 	if (appData == nullptr)
 		return false;
-	CDialogAuthentication* autorization = new CDialogAuthentication();
-	autorization->SetLogin(userName);
-	autorization->SetPassword(userPassword);
-	const int result = autorization->ShowModal();
-	autorization->Destroy();
-	if (result == wxID_CANCEL) return false;
-	return true; //appData->AuthenticationAndSetUser(autorization->GetLogin(), autorization->GetPassword());
+
+	CDialogAuthentication dlg;
+
+	dlg.SetLogin(userName);
+	dlg.SetPassword(userPassword);
+
+	return dlg.ShowModal() != wxID_CANCEL;
 }
 
 IMetaData* CDocMDIFrame::FindMetadataByPath(const wxString& strFileName) const
 {
 	IMetaDataDocument* const foundedDoc = dynamic_cast<IMetaDataDocument*>(docManager->FindDocumentByPath(strFileName));
-	if (foundedDoc != nullptr) return foundedDoc->GetMetaData();
+	if (foundedDoc != nullptr)
+		return foundedDoc->GetMetaData();
 	return nullptr;
 }
 
@@ -142,7 +143,7 @@ IMetaData* CDocMDIFrame::FindMetadataByPath(const wxString& strFileName) const
 // Form support
 IBackendValueForm* CDocMDIFrame::ActiveWindow() const {
 
-	if (CDocMDIFrame::GetFrame()) {
+	if (CDocMDIFrame::GetFrame() != nullptr) {
 		wxDocChildFrameAnyBase* activeChild =
 			dynamic_cast<wxDocChildFrameAnyBase*>(CDocMDIFrame::GetActiveChild());
 		if (activeChild != nullptr) {
@@ -152,6 +153,7 @@ IBackendValueForm* CDocMDIFrame::ActiveWindow() const {
 			}
 		}
 	}
+	
 	return nullptr;
 }
 
@@ -197,22 +199,34 @@ bool CDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 // Grid support
 bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument)
 {
-	class CSpreadsheetMDIFileDocument :
+	class CSpreadsheetMemoryDocument :
 		public CSpreadsheetFileDocument {
 	public:
-		CSpreadsheetMDIFileDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) :
+		
+		CSpreadsheetMemoryDocument(const wxString& strTitle, const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument) :
 			CSpreadsheetFileDocument(spreadSheetDocument)
 		{
+			CSpreadsheetFileDocument::SetTitle(strTitle);
+			CSpreadsheetFileDocument::SetDocumentTemplate(docManager->GetTemplateByGuid(doc::s_guidSpreadsheet));
+		}
+
+		virtual bool OnCreate(const wxString& path, long flags) override {
+			
+			if (!CMetaDocument::OnCreate(path, flags))
+				return false;
+
+			return GetGridCtrl()->LoadDocument(m_spreadSheetDocument);
 		}
 
 	private:
 		virtual CMetaView* DoCreateView() { return new CSpreadsheetEditView; }
 	};
 
-	CSpreadsheetMDIFileDocument* createdDoc = new CSpreadsheetMDIFileDocument(spreadSheetDocument);
-	createdDoc->SetTitle(strTitle);
-
+	CSpreadsheetMemoryDocument* createdDoc = 
+		new CSpreadsheetMemoryDocument(strTitle, spreadSheetDocument);
+	
 	if (createdDoc->OnCreate(wxEmptyString, 0)) {
+		createdDoc->SetCommandProcessor(createdDoc->OnCreateCommandProcessor());
 		docManager->AddDocument(createdDoc);
 		return true;
 	}

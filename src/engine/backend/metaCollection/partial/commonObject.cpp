@@ -26,7 +26,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectRecordDataMutableRef, IValueMetaObjec
 wxIMPLEMENT_ABSTRACT_CLASS(IValueMetaObjectRecordDataHierarchyMutableRef, IValueMetaObjectRecordDataMutableRef);
 
 //***********************************************************************
-//*							IValueMetaObjectGenericData				        *
+//*							IValueMetaObjectGenericData				    *
 //***********************************************************************
 
 #pragma region _form_builder_h_
@@ -87,10 +87,34 @@ IBackendValueForm* IValueMetaObjectGenericData::CreateAndBuildForm(const wxStrin
 
 	return result;
 }
+
+#pragma endregion
+#pragma region _template_builder_h_
+
+#include "backend/system/value/valueSpreadsheet.h"
+
+CValueSpreadsheet* IValueMetaObjectGenericData::GetTemplate(const wxString& strTemplateName)
+{
+	IValueMetaObjectSpreadsheet* creator = nullptr;
+
+	if (!strTemplateName.IsEmpty()) {
+
+		creator = FindTemplateObjectByFilter(strTemplateName);
+
+		if (creator == nullptr) {
+			CBackendCoreException::Error(_("Template not found '") + strTemplateName + "'");
+			return nullptr;
+		}
+	}
+
+	return CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(
+		creator->GetSpreadsheetDesc());
+}
+
 #pragma endregion
 
 //***********************************************************************
-//*                           IValueMetaObjectRecordData					    *
+//*                           IValueMetaObjectRecordData				*
 //***********************************************************************
 
 #include "backend/fileSystem/fs.h"
@@ -125,7 +149,7 @@ bool IValueMetaObjectRecordData::OnAfterCloseMetaObject()
 }
 
 //***********************************************************************
-//*						IValueMetaObjectRecordDataExt					    *
+//*						IValueMetaObjectRecordDataExt					*
 //***********************************************************************
 
 IValueMetaObjectRecordDataExt::IValueMetaObjectRecordDataExt() :
@@ -189,7 +213,7 @@ bool IValueMetaObjectRecordDataExt::OnAfterCloseMetaObject()
 }
 
 //***********************************************************************
-//*						IValueMetaObjectRecordDataRef					    *
+//*						IValueMetaObjectRecordDataRef					*
 //***********************************************************************
 
 IValueMetaObjectRecordDataRef::IValueMetaObjectRecordDataRef() : IValueMetaObjectRecordData()

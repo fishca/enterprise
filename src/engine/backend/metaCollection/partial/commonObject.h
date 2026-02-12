@@ -204,7 +204,7 @@ public:
 
 	//grid
 	template <typename _T1>
-	IValueMetaObjectSpreadsheet* FindGridObjectByFilter(const _T1& id) const {
+	IValueMetaObjectSpreadsheet* FindTemplateObjectByFilter(const _T1& id) const {
 		return FindObjectByFilter<IValueMetaObjectSpreadsheet>(id, { g_metaCommonTemplateCLSID, g_metaTemplateCLSID });
 	}
 
@@ -243,6 +243,12 @@ public:
 		ISourceDataObject* srcObject = nullptr,
 		const CUniqueKey& formGuid = wxNullGuid
 	);
+#pragma endregion
+
+#pragma region _template_builder_h_
+
+	class CValueSpreadsheet* GetTemplate(const wxString& strFormName);
+
 #pragma endregion
 
 	virtual IValueManagerDataObject* CreateManagerDataObjectValue() = 0;

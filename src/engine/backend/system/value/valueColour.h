@@ -37,11 +37,10 @@ public:
 		//PrepareNames();
 		return &m_methodHelper;
 	}
+	
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 
-	operator wxColour() const {
-		return m_colour;
-	}
+	operator wxColour() const { return m_colour; }
 };
 
 #endif

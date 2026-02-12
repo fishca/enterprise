@@ -100,9 +100,9 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-private:
-
 	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadSheetDocument;
+
+private:
 
 	wxDECLARE_NO_COPY_CLASS(CSpreadsheetFileDocument);
 	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetFileDocument);

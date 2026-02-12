@@ -136,22 +136,22 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property
 		m_view->SetCellTextOrient(coords, m_propertyOrient->GetValueAsInteger());
 	}
 	else if (m_propertyLeftBorder == property) {
-		m_view->SetCellBorderLeft(coords, m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderLeft(coords, (wxPenStyle)m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyRightBorder == property) {
-		m_view->SetCellBorderRight(coords, m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderRight(coords, (wxPenStyle)m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyTopBorder == property) {
-		m_view->SetCellBorderTop(coords, m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderTop(coords, (wxPenStyle)m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyBottomBorder == property) {
-		m_view->SetCellBorderBottom(coords, m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderBottom(coords, (wxPenStyle)m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyColourBorder == property) {
-		m_view->SetCellBorderLeft(coords, m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-		m_view->SetCellBorderRight(coords, m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-		m_view->SetCellBorderTop(coords, m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
-		m_view->SetCellBorderBottom(coords, m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderLeft(coords, (wxPenStyle)m_propertyLeftBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderRight(coords, (wxPenStyle)m_propertyRightBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderTop(coords, (wxPenStyle)m_propertyTopBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
+		m_view->SetCellBorderBottom(coords, (wxPenStyle)m_propertyBottomBorder->GetValueAsEnum(), m_propertyColourBorder->GetValueAsColour());
 	}
 	else if (m_propertyFitMode == property) {
 		m_view->SetCellFitMode(coords, m_propertyFitMode->GetValueAsEnum() == enFitMode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());

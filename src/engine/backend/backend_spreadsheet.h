@@ -7,27 +7,15 @@ class BACKEND_API IBackendSpreadsheetNotifier {
 public:
 
 	virtual ~IBackendSpreadsheetNotifier() {}
-	virtual void ResetSpreadsheet() = 0;
+	virtual void ClearSpreadsheet() = 0;
 
 	//size 
 	virtual void SetRowSize(int row, int height = 0) = 0;
 	virtual void SetColSize(int col, int width = 0) = 0;
 
 	//freeze 
-	virtual void SetFreezeRow(int row) = 0;
-	virtual void SetFreezeCol(int col) = 0;
-
-	//area 
-	virtual void AddRowArea(const wxString& strAreaName,
-		unsigned int start, unsigned int end) = 0;
-	virtual void DeleteRowArea(const wxString& strAreaName) = 0;
-	virtual void AddColArea(const wxString& strAreaName,
-		unsigned int start, unsigned int end) = 0;
-	virtual void DeleteColArea(const wxString& strAreaName) = 0;
-	virtual void SetRowSizeArea(const wxString& strAreaName, int start, int end) = 0;
-	virtual void SetRowNameArea(size_t idx, const wxString& strAreaName) = 0;;
-	virtual void SetColSizeArea(const wxString& strAreaName, int start, int end) = 0;;
-	virtual void SetColNameArea(size_t idx, const wxString& strAreaName) = 0;;
+	virtual void SetRowFreeze(int row) = 0;
+	virtual void SetColFreeze(int col) = 0;
 
 	// ------ row and col formatting
 	//
@@ -42,7 +30,7 @@ public:
 	virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) = 0;
 	virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) = 0;
 	virtual void SetCellSize(int row, int col, int num_rows, int num_cols) = 0;
-	virtual void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) = 0;
+	virtual void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) = 0;
 	virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) = 0;
 
 	// ------ cell brake accessors
@@ -50,6 +38,9 @@ public:
 	//support printing 
 	virtual void AddRowBrake(int row) = 0;
 	virtual void AddColBrake(int col) = 0;
+
+	virtual void DeleteRowBrake(int row) = 0;
+	virtual void DeleteColBrake(int col) = 0;
 
 	virtual void SetRowBrake(int row) = 0;
 	virtual void SetColBrake(int col) = 0;
@@ -62,8 +53,8 @@ public:
 class BACKEND_API CBackendSpreadsheetObject : public wxRefCounter {
 public:
 
-	CBackendSpreadsheetObject() : m_docGuid(wxNewUniqueGuid) {}
-	CBackendSpreadsheetObject(const CSpreadsheetDescription& spreadsheetDesc) : m_docGuid(wxNewUniqueGuid), m_spreadsheetDesc(spreadsheetDesc) {}
+	CBackendSpreadsheetObject() : m_docGuid(wxNewUniqueGuid), m_docReadOnly(false) {}
+	CBackendSpreadsheetObject(const CSpreadsheetDescription& spreadsheetDesc) : m_docGuid(wxNewUniqueGuid), m_spreadsheetDesc(spreadsheetDesc), m_docReadOnly(false) {}
 
 	CSpreadsheetDescription& GetSpreadsheetDesc() { return m_spreadsheetDesc; }
 	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDesc; }
@@ -72,22 +63,26 @@ public:
 
 #pragma region __notifier_h__
 
-	void ResetSpreadsheet(int count = 0);
+	void ClearSpreadsheet(int count = 0);
+
+	//read only 
+	bool GetReadOnly() { return m_docReadOnly; }
+	void SetReadOnly(bool readOnly) { m_docReadOnly = true; }
+
+	//lang 
+	wxString GetLangCode() const { return m_docLangCode; }
+	void SetLangCode(const wxString& strLangCode) { m_docLangCode = strLangCode; }
+
+	//printer 
+	wxString GetPrinterName() const { return m_docPrinterName; }
+	void SetPrinterName(const wxString& strPrinterName) { m_docPrinterName = strPrinterName; }
 
 	//area 
-	void AddRowArea(const wxString& strAreaName,
-		unsigned int start, unsigned int end);
-	void DeleteRowArea(const wxString& strAreaName);
+	CSpreadsheetDescription GetArea(int rowLeft, int rowRight, int colTop = -1, int colBottom = -1);
+	CSpreadsheetDescription GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName = wxT(""));
 
-	void AddColArea(const wxString& strAreaName,
-		unsigned int start, unsigned int end);
-	void DeleteColArea(const wxString& strAreaName);
-
-	void SetRowSizeArea(const wxString& strAreaName, int start, int end);
-	void SetRowNameArea(size_t idx, const wxString& strAreaName);
-
-	void SetColSizeArea(const wxString& strAreaName, int start, int end);
-	void SetColNameArea(size_t idx, const wxString& strAreaName);
+	void PutArea(const CSpreadsheetDescription& spreadsheetDesc);
+	void JoinArea(const CSpreadsheetDescription& spreadsheetDesc);
 
 	// ------ grid dimensions
 	//
@@ -139,8 +134,8 @@ public:
 	int GetCellSize(int row, int col, int* num_rows, int* num_cols) const { return m_spreadsheetDesc.GetCellSize(row, col, num_rows, num_cols); }
 	void SetCellSize(int row, int col, int num_rows, int num_cols);
 
-	CSpreadsheetAttrDescription::EFitMode GetCellFitMode(int row, int col) { return m_spreadsheetDesc.GetCellFitMode(row, col); }
-	void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode);
+	CSpreadsheetCellDescription::EFitMode GetCellFitMode(int row, int col) { return m_spreadsheetDesc.GetCellFitMode(row, col); }
+	void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode);
 
 	bool IsCellReadOnly(int row, int col, bool isReadOnly = true) { return m_spreadsheetDesc.IsCellReadOnly(row, col); }
 	void SetCellReadOnly(int row, int col, bool isReadOnly = true);
@@ -150,6 +145,9 @@ public:
 	//support printing 
 	void AddRowBrake(int row);
 	void AddColBrake(int col);
+
+	void DeleteRowBrake(int row);
+	void DeleteColBrake(int col);
 
 	void SetRowBrake(int row);
 	void SetColBrake(int col);
@@ -162,11 +160,11 @@ public:
 
 	// ------ freeze
 	//
-	void SetFreezeRow(int row);
-	void SetFreezeCol(int col);
+	void SetRowFreeze(int row);
+	void SetColFreeze(int col);
 
-	int GetFreezeRow() const { return m_spreadsheetDesc.GetFreezeCol(); }
-	int GetFreezeCol() const { return m_spreadsheetDesc.GetFreezeRow(); }
+	int GetRowFreeze() const { return m_spreadsheetDesc.GetColFreeze(); }
+	int GetColFreeze() const { return m_spreadsheetDesc.GetRowFreeze(); }
 
 	// ------ label and gridline formatting
 	//
@@ -199,9 +197,6 @@ public:
 
 #pragma endregion 
 
-	//lang 
-	wxString GetLangCode() const { return m_locLangCode; }
-
 	//guid 
 	CGuid GetDocGuid() const { return m_docGuid; }
 
@@ -224,10 +219,16 @@ public:
 private:
 
 	//localization
-	wxString m_locLangCode;
+	wxString m_docLangCode;
+
+	//printer
+	wxString m_docPrinterName;
 
 	// assoc with unique id
 	CGuid m_docGuid;
+
+	// read only 
+	bool m_docReadOnly;
 
 	//cell desc
 	CSpreadsheetDescription m_spreadsheetDesc;

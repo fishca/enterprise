@@ -63,6 +63,7 @@ enum {
 	eGetForm,
 	eGetRecordForm,
 	eGetListForm,
+	eGetTemplate,
 };
 
 void CValueManagerDataObjectInformationRegister::PrepareNames() const
@@ -85,6 +86,7 @@ void CValueManagerDataObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getRecordForm", 3, "getRecordForm(string, owner, guid)");
 	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
+	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
@@ -166,6 +168,9 @@ bool CValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNu
 			guidVal ? ((CGuid)*guidVal) : CGuid());
 		return true;
 	}
+	case eGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
+		return true;
 	}
 
 	IValueModuleManager* moduleManager = metaData->GetModuleManager();

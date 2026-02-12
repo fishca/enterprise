@@ -6,6 +6,39 @@
 ////////////////////////////////////////
 // spreadsheet defines 
 
+enum enSpreadsheetOrientation {
+	enOrient_Horizontal = wxHORIZONTAL,
+	enOrient_Vertical = wxVERTICAL
+};
+
+enum enSpreadsheetAlignmentHorz {
+	enAlignmentHorz_Left = wxAlignment::wxALIGN_LEFT,
+	enAlignmentHorz_Center = wxAlignment::wxALIGN_CENTER,
+	enAlignmentHorz_Right = wxAlignment::wxALIGN_RIGHT
+};
+
+enum enSpreadsheetAlignmentVert {
+	enAlignmentVert_Top = wxAlignment::wxALIGN_TOP,
+	enAlignmentVert_Center = wxAlignment::wxALIGN_CENTER,
+	enAlignmentVert_Bottom = wxAlignment::wxALIGN_BOTTOM
+};
+
+enum enSpreadsheetFitMode {
+	enFitMode_Overflow = 4,
+	enFitMode_Clip = 5
+};
+
+enum enSpreadsheetPenStyle {
+	enPenStyle_Transparent = wxPenStyle::wxPENSTYLE_TRANSPARENT,
+	enPenStyle_Solid = wxPenStyle::wxPENSTYLE_SOLID,
+	enPenStyle_Dot = wxPenStyle::wxPENSTYLE_DOT,
+	enPenStyle_ShortDash = wxPenStyle::wxPENSTYLE_SHORT_DASH,
+	enPenStyle_DotDash = wxPenStyle::wxPENSTYLE_DOT_DASH,
+	enPenStyle_LongDash = wxPenStyle::wxPENSTYLE_LONG_DASH,
+};
+
+///////////////////////////////////////
+
 const static int s_defaultRowHeight = 15;
 const static int s_rowLabelWidth = 40;
 
@@ -28,7 +61,7 @@ struct CSpreadsheetBorderDescription {
 	int m_width = 1;
 };
 
-struct CSpreadsheetAttrDescription {
+struct CSpreadsheetCellDescription {
 
 	enum EFitMode
 	{
@@ -42,14 +75,17 @@ struct CSpreadsheetAttrDescription {
 		Mode_Clip
 	};
 
-	CSpreadsheetAttrDescription(int row, int col) : m_row(row), m_col(col) {}
+	CSpreadsheetCellDescription(int row, int col) : m_row(row), m_col(col) {}
 
 	bool IsEmptyValue() const { return m_value.IsEmpty(); }
 
-	wxString GetValue() const { return m_value; }
 	void GetValue(wxString& s) const { s = m_value; }
+	void SetValue(const wxString& s) { m_value = s; }
 
-	int GetCellSize(int* num_rows, int* num_cols) const {
+	//special set
+	wxString GetValue() const { return m_value; }
+
+	int GetSize(int* num_rows, int* num_cols) const {
 
 		if (num_rows != nullptr)
 			*num_rows = m_row_size;
@@ -66,12 +102,39 @@ struct CSpreadsheetAttrDescription {
 		return 1;
 	}
 
-	void SetCellSize(int num_rows, int num_cols) {
+	void SetSize(int num_rows, int num_cols) {
 		m_row_size = num_rows;
 		m_col_size = num_cols;
 	}
 
-	bool operator == (const CSpreadsheetAttrDescription& rhs) const {
+	void SetCell(const CSpreadsheetCellDescription* rhs) {
+		if (rhs == nullptr)
+			return;
+		//m_row = rhs->m_row;
+		//m_col = rhs->m_col;
+		m_alignHorz = rhs->m_alignHorz;
+		m_alignVert = rhs->m_alignVert;
+		m_textOrient = rhs->m_textOrient;
+		m_font = rhs->m_font;
+		m_backgroundColour = rhs->m_backgroundColour;
+		m_textColour = rhs->m_textColour;
+		m_borderAt[0] = rhs->m_borderAt[0];
+		m_borderAt[1] = rhs->m_borderAt[1];
+		m_borderAt[2] = rhs->m_borderAt[2];
+		m_borderAt[3] = rhs->m_borderAt[3];
+		m_row_size = rhs->m_row_size;
+		m_col_size = rhs->m_col_size;
+		m_fitMode = rhs->m_fitMode;
+		m_isReadOnly = rhs->m_isReadOnly;
+		m_value = rhs->m_value;
+	}
+
+	CSpreadsheetCellDescription& operator =(const CSpreadsheetCellDescription& rhs) {
+		SetCell(&rhs);
+		return *this;
+	}
+
+	bool operator == (const CSpreadsheetCellDescription& rhs) const {
 		return m_row == rhs.m_row && m_col == rhs.m_col
 			&& m_alignHorz == rhs.m_alignHorz
 			&& m_alignVert == rhs.m_alignVert
@@ -128,7 +191,7 @@ struct CSpreadsheetColSizeDescription
 
 struct CSpreadsheetDescription {
 
-	void ResetSpreadsheet(int count = 0) {
+	void ClearSpreadsheet(int count = 0) {
 
 		m_cellAt.reserve(count);
 		m_cellAt.clear();
@@ -144,7 +207,7 @@ struct CSpreadsheetDescription {
 
 	bool IsEmptySpreadsheet() const { return GetNumberRows() == 0 && GetNumberCols() == 0; }
 
-	const CSpreadsheetAttrDescription* GetCell(int row, int col) const {
+	const CSpreadsheetCellDescription* GetCell(int row, int col) const {
 		auto iterator = std::find_if(m_cellAt.begin(), m_cellAt.end(),
 			[row, col](const auto& v) { return v.m_row == row && v.m_col == col; });
 
@@ -154,20 +217,20 @@ struct CSpreadsheetDescription {
 		return nullptr;
 	}
 
-	CSpreadsheetAttrDescription* GetOrCreateCell(int row, int col) {
+	CSpreadsheetCellDescription* GetOrCreateCell(int row, int col) {
 		auto iterator = std::find_if(m_cellAt.begin(), m_cellAt.end(),
 			[row, col](const auto& v) { return v.m_row == row && v.m_col == col; });
 
 		if (iterator != m_cellAt.end())
 			return &*iterator;
 
-		CSpreadsheetAttrDescription& entry =
+		CSpreadsheetCellDescription& entry =
 			m_cellAt.emplace_back(row, col);
 
 		return &entry;
 	}
 
-	const CSpreadsheetAttrDescription* GetCellByIdx(size_t idx) const {
+	const CSpreadsheetCellDescription* GetCellByIdx(size_t idx) const {
 		if (idx > m_cellAt.size())
 			return nullptr;
 		return &m_cellAt[idx];
@@ -198,7 +261,7 @@ struct CSpreadsheetDescription {
 
 	void DeleteRowArea(const wxString& strAreaName) {
 		auto iterator = std::find_if(m_rowAreaAt.begin(), m_rowAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_rowAreaAt.end())
 			m_rowAreaAt.erase(iterator);
 	}
@@ -210,7 +273,7 @@ struct CSpreadsheetDescription {
 
 	void DeleteColArea(const wxString& strAreaName) {
 		auto iterator = std::find_if(m_colAreaAt.begin(), m_colAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_colAreaAt.end())
 			m_colAreaAt.erase(iterator);
 	}
@@ -223,7 +286,7 @@ struct CSpreadsheetDescription {
 
 	const CSpreadsheetAreaDescription* GetRowAreaByName(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_rowAreaAt.begin(), m_rowAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_rowAreaAt.end())
 			return &*iterator;
 		return nullptr;
@@ -231,7 +294,7 @@ struct CSpreadsheetDescription {
 
 	void SetRowSizeArea(const wxString& strAreaName, int start, int end) {
 		auto iterator = std::find_if(m_rowAreaAt.begin(), m_rowAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_rowAreaAt.end()) {
 			iterator->m_start = start;
 			iterator->m_end = end;
@@ -252,7 +315,7 @@ struct CSpreadsheetDescription {
 
 	const CSpreadsheetAreaDescription* GetColAreaByName(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_colAreaAt.begin(), m_colAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_colAreaAt.end())
 			return &*iterator;
 		return nullptr;
@@ -260,7 +323,7 @@ struct CSpreadsheetDescription {
 
 	void SetColSizeArea(const wxString& strAreaName, int start, int end) {
 		auto iterator = std::find_if(m_colAreaAt.begin(), m_colAreaAt.end(),
-			[strAreaName](const auto& v) { return v.m_label == strAreaName; });
+			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_colAreaAt.end()) {
 			iterator->m_start = start;
 			iterator->m_end = end;
@@ -363,59 +426,59 @@ struct CSpreadsheetDescription {
 
 	//cell
 	wxColour GetCellBackgroundColour(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_backgroundColour;
 		return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	}
 
 	void SetCellBackgroundColour(int row, int col, const wxColour& colour) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_backgroundColour = colour;
 	}
 
 	wxColour GetCellTextColour(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_textColour;
 		return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 	}
 
 	void SetCellTextColour(int row, int col, const wxColour& colour) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_textColour = colour;
 	}
 
 	int GetCellTextOrient(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_textOrient;
 		return wxHORIZONTAL;
 	}
 
 	void SetCellTextOrient(int row, int col, const int orient) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_textOrient = orient;
 	}
 
 	wxFont GetCellFont(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_font;
 		return s_defaultSpreadsheetFont;
 	}
 
 	void SetCellFont(int row, int col, const wxFont& font) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_font = font;
 	}
 
 	void GetCellAlignment(int row, int col, int* horiz, int* vert) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) {
 			if (horiz) *horiz = cell->m_alignHorz;
 			if (vert) *vert = cell->m_alignVert;
@@ -423,7 +486,7 @@ struct CSpreadsheetDescription {
 	}
 
 	void SetCellAlignment(int row, int col, const int horiz, const int vert) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) {
 			cell->m_alignHorz = horiz;
 			cell->m_alignVert = vert;
@@ -431,85 +494,85 @@ struct CSpreadsheetDescription {
 	}
 
 	CSpreadsheetBorderDescription GetCellBorderLeft(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[0];
 		return CSpreadsheetBorderDescription();
 	}
 
 	void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[0] = desc;
 	}
 
 	CSpreadsheetBorderDescription GetCellBorderRight(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[1];
 		return CSpreadsheetBorderDescription();
 	}
 
 	void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[1] = desc;
 	}
 
 	CSpreadsheetBorderDescription GetCellBorderTop(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[2];
 		return CSpreadsheetBorderDescription();
 	}
 
 	void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[2] = desc;
 	}
 
 	CSpreadsheetBorderDescription GetCellBorderBottom(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[3];
 		return CSpreadsheetBorderDescription();
 	}
 
 	void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[3] = desc;
 	}
 
 	int GetCellSize(int row, int col, int* num_rows, int* num_cols) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
-		if (cell != nullptr) return cell->GetCellSize(num_rows, num_cols);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		if (cell != nullptr) return cell->GetSize(num_rows, num_cols);
 		if (num_rows != nullptr) *num_rows = 1;
 		if (num_cols != nullptr) *num_cols = 1;
 		return 0;
 	}
 
 	void SetCellSize(int row, int col, int num_rows, int num_cols) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
-		if (cell != nullptr) cell->SetCellSize(num_rows, num_cols);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		if (cell != nullptr) cell->SetSize(num_rows, num_cols);
 	}
 
-	CSpreadsheetAttrDescription::EFitMode GetCellFitMode(int row, int col) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+	CSpreadsheetCellDescription::EFitMode GetCellFitMode(int row, int col) {
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) return cell->m_fitMode;
-		return CSpreadsheetAttrDescription::EFitMode::Mode_Overflow;
+		return CSpreadsheetCellDescription::EFitMode::Mode_Overflow;
 	}
 
-	void SetCellFitMode(int row, int col, CSpreadsheetAttrDescription::EFitMode fitMode) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+	void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) {
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) cell->m_fitMode = fitMode;
 	}
 
 	bool IsCellReadOnly(int row, int col, bool isReadOnly = true) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) return cell->m_isReadOnly;
 		return false;
 	}
 
 	void SetCellReadOnly(int row, int col, bool isReadOnly = true) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) cell->m_isReadOnly = isReadOnly;
 	}
 
@@ -518,6 +581,9 @@ struct CSpreadsheetDescription {
 	//support printing 
 	void AddRowBrake(int row) { m_rowBrakeAt.emplace_back(row); }
 	void AddColBrake(int col) { m_colBrakeAt.emplace_back(col); }
+
+	void DeleteRowBrake(int row) { m_rowBrakeAt.erase(std::remove(m_colBrakeAt.begin(), m_colBrakeAt.end(), row)); }
+	void DeleteColBrake(int col) { m_colBrakeAt.erase(std::remove(m_colBrakeAt.begin(), m_colBrakeAt.end(), col)); }
 
 	void SetRowBrake(int row) {
 		if (m_rowBrakeAt.size() != 0)
@@ -561,11 +627,11 @@ struct CSpreadsheetDescription {
 
 	// ------ freeze
 	//
-	void SetFreezeRow(int row) { m_freezeRow = row; }
-	void SetFreezeCol(int col) { m_freezeCol = col; }
+	void SetRowFreeze(int row) { m_freezeRow = row; }
+	void SetColFreeze(int col) { m_freezeCol = col; }
 
-	int GetFreezeRow() const { return m_freezeRow; }
-	int GetFreezeCol() const { return m_freezeCol; }
+	int GetRowFreeze() const { return m_freezeRow; }
+	int GetColFreeze() const { return m_freezeCol; }
 
 	// ------ label and gridline formatting
 	//
@@ -580,28 +646,28 @@ struct CSpreadsheetDescription {
 	// ------ cell value accessors
 	//
 	bool IsEmptyCell(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->IsEmptyValue();
 		return true;
 	}
 
 	void GetCellValue(int row, int col, wxString& s) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			s = cell->m_value;
 		s = wxT("");
 	}
 
 	void SetCellValue(int row, int col, const wxString& s) {
-		CSpreadsheetAttrDescription* cell = GetOrCreateCell(row, col);
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_value = s;
 	}
 
 	//special string return 
 	wxString GetCellValue(int row, int col) const {
-		const CSpreadsheetAttrDescription* cell = GetCell(row, col);
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_value;
 		return wxT("");
@@ -634,7 +700,7 @@ private:
 	std::vector <CSpreadsheetColSizeDescription> m_colWidthAt;
 
 	//cell
-	std::vector<CSpreadsheetAttrDescription> m_cellAt;
+	std::vector<CSpreadsheetCellDescription> m_cellAt;
 
 	//print brake 
 	std::vector <unsigned int> m_rowBrakeAt;

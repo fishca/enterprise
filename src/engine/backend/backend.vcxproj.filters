@@ -1496,6 +1496,9 @@
     <ClCompile Include="moduleManager\globalContextManager.cpp">
       <Filter>moduleManager</Filter>
     </ClCompile>
+    <ClCompile Include="system\value\valueSpreadsheetCell.cpp">
+      <Filter>system\value</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="debugger">

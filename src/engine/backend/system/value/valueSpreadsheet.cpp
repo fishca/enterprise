@@ -4,6 +4,12 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheet, CValue);
 
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetOrient, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetHorizontalAlignment, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetVerticalAlignment, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetFitMode, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSpreadsheetBorder, CValue);
+
 CValue::CMethodHelper CValueSpreadsheet::m_methodHelper;
 
 enum
@@ -20,6 +26,7 @@ enum
 enum
 {
 	eArea,
+	eRange,
 	ePutVerticalPageBreak,
 	ePutHorizontalPageBreak,
 	eGetArea,
@@ -44,7 +51,8 @@ void CValueSpreadsheet::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("printerName"), ePrinterName);
 	m_methodHelper.AppendProp(wxT("languageCode"), eLanguageCode);
 
-	m_methodHelper.AppendFunc(wxT("area"), 2, wxT("area(number: row, number: col)"));
+	m_methodHelper.AppendFunc(wxT("area"), 1, wxT("area(string: left, string: top = <empty>)"));
+	m_methodHelper.AppendFunc(wxT("range"), 2, wxT("area(number: row start, number: row end, number: col start = -1, number: col end = -1)"));
 	m_methodHelper.AppendProc(wxT("putVerticalPageBreak"), wxT("putVerticalPageBreak()"));
 	m_methodHelper.AppendProc(wxT("putHorizontalPageBreak"), wxT("putHorizontalPageBreak()"));
 	m_methodHelper.AppendFunc(wxT("getArea"), 1, wxT("getArea(string: label)"));
@@ -61,17 +69,22 @@ bool CValueSpreadsheet::SetPropVal(const long lPropNum, const CValue& varPropVal
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		m_spreadsheetDoc->SetFreezeRow(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetRowFreeze(varPropVal.GetInteger());
 		return true;
 	case eFixedTop:
-		m_spreadsheetDoc->SetFreezeCol(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetColFreeze(varPropVal.GetInteger());
 		return true;
 	case eAreas:
 		return true;
 	case eReadOnly:
+		m_spreadsheetDoc->SetReadOnly(varPropVal.GetBoolean());
 		return true;
-
-	default: break;
+	case ePrinterName:
+		m_spreadsheetDoc->SetPrinterName(varPropVal.GetString());
+		return true;
+	case eLanguageCode:
+		m_spreadsheetDoc->SetLangCode(varPropVal.GetString());
+		return true;
 	}
 
 	return false;
@@ -82,17 +95,22 @@ bool CValueSpreadsheet::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		pvarPropVal = m_spreadsheetDoc->GetFreezeRow();
+		pvarPropVal = m_spreadsheetDoc->GetRowFreeze();
 		return true;
 	case eFixedTop:
-		pvarPropVal = m_spreadsheetDoc->GetFreezeCol();
+		pvarPropVal = m_spreadsheetDoc->GetColFreeze();
 		return true;
 	case eAreas:
 		return true;
 	case eReadOnly:
+		pvarPropVal = m_spreadsheetDoc->GetReadOnly();
 		return true;
-
-	default: break;
+	case ePrinterName:
+		pvarPropVal = m_spreadsheetDoc->GetPrinterName();
+		return true;
+	case eLanguageCode:
+		pvarPropVal = m_spreadsheetDoc->GetLangCode();
+		return true;
 	}
 
 	return false;
@@ -100,24 +118,20 @@ bool CValueSpreadsheet::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 
 bool CValueSpreadsheet::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	if (lMethodNum == eGetArea) {
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetArea>(
-			m_spreadsheetDoc, paParams[0]->GetInteger(), paParams[1]->GetInteger());
+	if (lMethodNum == eArea) {
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheetCell>(
+			m_spreadsheetDoc, paParams[0]->GetInteger(), lSizeArray > 1 ? paParams[1]->GetInteger() : 0);
+		return true;
+	}
+	else if (lMethodNum == eRange) {
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(m_spreadsheetDoc->GetArea(
+			paParams[0]->GetInteger(), paParams[1]->GetInteger(), lSizeArray > 2 ? paParams[2]->GetInteger() : -1, lSizeArray > 3 ? paParams[3]->GetInteger() : -1));
 		return true;
 	}
 	else if (lMethodNum == eGetArea) {
-		CSpreadsheetDescription& spreadsheetDesc = m_spreadsheetDoc->GetSpreadsheetDesc();
-		wxStringTokenizer token(paParams[0]->GetString(), wxT('|'));
-		if (token.HasMoreTokens()) {
-			const wxString& strRowArea = token.GetNextToken();
-			const CSpreadsheetAreaDescription* areaRow = spreadsheetDesc.GetRowAreaByName(strRowArea);
-			if (token.HasMoreTokens()) {
-				const wxString& strColArea = token.GetNextToken();
-				const CSpreadsheetAreaDescription* areaCol = spreadsheetDesc.GetColAreaByName(strColArea);
-			}
-			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheet>();
-			return true;
-		}
+		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueSpreadsheet>(m_spreadsheetDoc->GetAreaByName(
+			paParams[0]->GetString(), lSizeArray > 1 ? paParams[1]->GetString() : wxT("")));	
+		return true;
 	}
 
 	return false;
@@ -136,7 +150,7 @@ bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, con
 		return true;
 	}
 	else if (lMethodNum == eClear) {
-		m_spreadsheetDoc->ResetSpreadsheet();
+		m_spreadsheetDoc->ClearSpreadsheet();
 		return true;
 	}
 	else if (lMethodNum == ePrint) {
@@ -159,12 +173,18 @@ bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, con
 		return false;
 	}
 	else if (lMethodNum == ePut) {
-		CBackendCoreException::Error(_("Context functions are not available!"));
-		return false;
+		CValuePtr<CValueSpreadsheet> valueSpreadsheet =
+			paParams[0]->ConvertToType<CValueSpreadsheet>();
+		if (valueSpreadsheet)
+			m_spreadsheetDoc->PutArea(valueSpreadsheet->GetSpreadsheetDesc());
+		return true;
 	}
 	else if (lMethodNum == eJoin) {
-		CBackendCoreException::Error(_("Context functions are not available!"));
-		return false;
+		CValuePtr<CValueSpreadsheet> valueSpreadsheet =
+			paParams[0]->ConvertToType<CValueSpreadsheet>();
+		if (valueSpreadsheet)
+			m_spreadsheetDoc->JoinArea(valueSpreadsheet->GetSpreadsheetDesc());
+		return true;
 	}
 
 	return false;
@@ -175,4 +195,9 @@ bool CValueSpreadsheet::CallAsProc(const long lMethodNum, CValue** paParams, con
 //**********************************************************************
 
 VALUE_TYPE_REGISTER(CValueSpreadsheet, "spreadsheetDocument", string_to_clsid("VL_SPSTD"));
-SYSTEM_TYPE_REGISTER(CValueSpreadsheetArea, "spreadsheetDocumentArea", string_to_clsid("VL_SPSTA"));
+
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetOrient, "spreadsheetOrient", string_to_clsid("EN_SORNT"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetHorizontalAlignment, "spreadsheetHorizontalAlignment", string_to_clsid("EN_SHOAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetVerticalAlignment, "spreadsheetVerticalAlignment", string_to_clsid("EN_SVEAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetBorder, "spreadsheetBorder", string_to_clsid("EN_SBORD"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFitMode, "spreadsheetFitMode", string_to_clsid("EN_SFTMD"));

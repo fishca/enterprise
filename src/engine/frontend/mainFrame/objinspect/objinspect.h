@@ -25,19 +25,62 @@ enum {
 
 class FRONTEND_API CObjectInspector final : public wxPanel {
 
-	wxPropertyGridManager* m_pg;
+	CObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
 
-	std::map< wxString, bool > m_isExpanded;
+public:
 
-	std::map< wxPGProperty*, IProperty*> m_propMap;
-	std::map< wxPGProperty*, IEvent*> m_eventMap;
+	virtual ~CObjectInspector();
 
-	IPropertyObject* m_currentSel;
+	wxPropertyGridManager* GetPropertyManager() const { return m_pg; }
 
-	int m_style;
+	// Hides or reveals a property.
+	// hide - If true, hides property, otherwise reveals it.
+	// flags - By default changes are applied recursively. Set this parameter
+	//   wxPG_DONT_RECURSE to prevent this.
+	bool HideProperty(wxPGPropArg id,
+		bool hide = true,
+		int flags = wxPG_RECURSE) { return m_pg->HideProperty(id, hide, flags); }
 
-	//save the current selected property
-	wxString m_strSelPropItem;
+	bool ShowProperty(wxPGPropArg id,
+		bool show = true,
+		int flags = wxPG_RECURSE) {
+		return m_pg->HideProperty(id, !show, flags);
+	}
+
+	wxPGProperty* GetProperty(IProperty* prop) const;
+	wxPGProperty* GetEvent(IEvent* event) const;
+
+	// Servicios para los observadores
+	void SelectObject(IPropertyObject* selobj, bool force = false) {
+
+		if (IsShownInspector() && (force || m_currentSel != selobj)) {
+			Create(selobj, force);
+		}
+
+		if (selobj != nullptr)
+			wxLogDebug(wxT("! <debug> activate property %s"), selobj->GetClassName());
+		else
+			wxLogDebug(wxT("! <debug> clear property"));
+	}
+
+	IPropertyObject* GetSelectedObject() const { return m_currentSel; }
+
+	bool IsShownInspector() const;
+	void ShowInspector();
+
+	void SavePosition();
+
+	static CObjectInspector* GetObjectInspector();
+
+protected:
+
+	void OnPropertyGridChanging(wxPropertyGridEvent& event);
+	void OnPropertyGridChanged(wxPropertyGridEvent& event);
+	void OnPropertyGridExpand(wxPropertyGridEvent& event);
+	void OnPropertyGridItemSelected(wxPropertyGridEvent& event);
+
+	void OnBitmapPropertyChanged(wxCommandEvent& event);
+	void OnChildFocus(wxChildFocusEvent& event);
 
 private:
 
@@ -260,8 +303,7 @@ private:
 
 	friend class CDocMDIFrame;
 
-	wxPGProperty* GetProperty(IProperty* prop);
-	wxPGProperty* GetEvent(IEvent* event);
+	wxPropertyGridManager* CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const;
 
 	void Create(IPropertyObject* object, bool force = false);
 
@@ -301,45 +343,19 @@ private:
 		m_pg->SetDescription(wxEmptyString, wxEmptyString);
 	}
 
-	CObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
+	wxPropertyGridManager* m_pg;
 
-public:
+	std::map< wxString, bool > m_isExpanded;
 
-	virtual ~CObjectInspector();
+	std::map< wxPGProperty*, IProperty*> m_propMap;
+	std::map< wxPGProperty*, IEvent*> m_eventMap;
 
-	wxPropertyGridManager* CreatePropertyGridManager(wxWindow* parent, wxWindowID id);
+	IPropertyObject* m_currentSel;
 
-	// Servicios para los observadores
-	void SelectObject(IPropertyObject* selobj, bool force = false) {
+	int m_style;
 
-		if (IsShownProperty() && (force || m_currentSel != selobj)) {
-			Create(selobj, force);
-		}
-
-		if (selobj != nullptr)
-			wxLogDebug(wxT("! <debug> activate property %s"), selobj->GetClassName());
-		else
-			wxLogDebug(wxT("! <debug> clear property"));
-	}
-
-	IPropertyObject* GetSelectedObject() const { return m_currentSel; }
-
-	bool IsShownProperty() const;
-	void ShowProperty();
-
-	void SavePosition();
-
-	static CObjectInspector* GetObjectInspector();
-
-protected:
-
-	void OnPropertyGridChanging(wxPropertyGridEvent& event);
-	void OnPropertyGridChanged(wxPropertyGridEvent& event);
-	void OnPropertyGridExpand(wxPropertyGridEvent& event);
-	void OnPropertyGridItemSelected(wxPropertyGridEvent& event);
-
-	void OnBitmapPropertyChanged(wxCommandEvent& event);
-	void OnChildFocus(wxChildFocusEvent& event);
+	//save the current selected property
+	wxString m_strSelPropItem;
 
 	wxDECLARE_EVENT_TABLE();
 };

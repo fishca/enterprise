@@ -20,8 +20,6 @@ wxBEGIN_EVENT_TABLE(CGridEditor, wxGridExt)
 EVT_GRID_CELL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
 EVT_GRID_LABEL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
 EVT_KEY_DOWN(CGridEditor::OnKeyDown)
-EVT_GRID_SELECT_CELL(CGridEditor::OnSelectCell)
-EVT_GRID_RANGE_SELECT(CGridEditor::OnSelectCells)
 EVT_GRID_ROW_MODIFIED(CGridEditor::OnGridRowSize)
 EVT_GRID_COL_MODIFIED(CGridEditor::OnGridColSize)
 EVT_GRID_TABLE_MODIFIED(CGridEditor::OnGridTableModified)
@@ -63,12 +61,12 @@ wxEND_EVENT_TABLE()
 void CGridEditor::ActivateEditor()
 {
 	if (m_enableProperty)
-		objectInspector->SelectObject(m_cellProperty, true);
+		objectInspector->SelectObject(m_propertySpreadsheet, true);
 }
 
 // ctor and Create() create the grid window, as with the other controls
 CGridEditor::CGridEditor() : wxGridExt(),
-m_cellProperty(nullptr), m_document(nullptr), m_spreadsheetObject(nullptr), m_enableProperty(true)
+m_propertySpreadsheet(nullptr), m_document(nullptr), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
 }
 
@@ -76,7 +74,7 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	wxWindow* parent,
 	wxWindowID id, const wxPoint& pos,
 	const wxSize& size) : wxGridExt(parent, id, pos, size),
-	m_cellProperty(nullptr), m_document(document), m_spreadsheetObject(nullptr), m_enableProperty(true)
+	m_propertySpreadsheet(nullptr), m_document(document), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
 	m_rowLabelWidth = s_rowLabelWidth;
 	m_colLabelHeight = s_colLabelHeight;
@@ -91,8 +89,7 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 	wxGridExt::SetMargins(0, 0);
 
 	// Create property
-	m_cellProperty = new CGridEditorCellProperty;
-	m_cellProperty->SetView(this);
+	m_propertySpreadsheet = new CPropertyGridEditorSpreadsheet(this);
 
 	// Native col 
 	wxGridExt::SetDoubleBuffered(true);
@@ -124,7 +121,7 @@ CGridEditor::CGridEditor(CMetaDocument* document,
 CGridEditor::~CGridEditor()
 {
 	//delete property
-	wxDELETE(m_cellProperty);
+	wxDELETE(m_propertySpreadsheet);
 }
 
 #include "gridPrintout.h"
@@ -304,44 +301,6 @@ void CGridEditor::OnKeyDown(wxKeyEvent& event)
 		else if (scroll < 0 && code == WXK_LEFT) {
 			if (x0 > GetMaxColBrake() && x0 != 0) wxGridExt::DeleteCols(wxGridExt::GetNumberCols() - 1);
 		}
-	}
-
-	event.Skip();
-}
-
-void CGridEditor::OnSelectCell(wxGridExtEvent& event)
-{
-	if (m_enableProperty) {
-		if (event.Selecting()) {
-			m_cellProperty->AddSelectedCell(
-				{
-				 event.GetRow(), event.GetCol(),
-				 event.GetRow(), event.GetCol()
-				}
-			);
-		}
-		else {
-			m_cellProperty->ClearSelectedCell();
-		}
-	}
-
-	event.Skip();
-}
-
-void CGridEditor::OnSelectCells(wxGridExtRangeSelectEvent& event)
-{
-	if (m_enableProperty) {
-		if (event.Selecting()) {
-			m_cellProperty->AddSelectedCell({
-				event.GetTopRow(), event.GetLeftCol(),
-				event.GetBottomRow(), event.GetRightCol()
-				}
-			);
-		}
-		else {
-			m_cellProperty->ClearSelectedCell();
-		}
-
 	}
 
 	event.Skip();
@@ -573,15 +532,28 @@ void CGridEditor::OnGridColFreeze(wxGridExtSizeEvent& event)
 
 void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
 {
-	wxString value;
+	enSpreadsheetFillType type = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 
-	void* tempval = m_table->GetValueAsCustom(event.GetRow(), event.GetCol(), wxT("translate"));
-	if (tempval != nullptr) {
-		const CBackendLocalizationEntryArray* array = static_cast<CBackendLocalizationEntryArray*>(tempval);
-		if (array != nullptr) {
-			CBackendLocalization::GetRawLocText(*array, value);
-			wxDELETE(array);
-		}
+	if (m_table->CanGetValueAs(event.GetRow(), event.GetCol(), s_strTypeTextOrString))
+		type = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+	else if (m_table->CanGetValueAs(event.GetRow(), event.GetCol(), s_strTypeTemplate))
+		type = enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate;
+	else if (m_table->CanGetValueAs(event.GetRow(), event.GetCol(), s_strTypeParameter))
+		type = enSpreadsheetFillType::enSpreadsheetFillType_StrParameter;
+
+	wxSharedPtr<wxString> value;
+
+	if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
+		value = static_cast<wxString*>(
+			m_table->GetValueAsCustom(event.GetRow(), event.GetCol(), s_strTypeTextOrString));
+	}
+	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+		value = static_cast<wxString*>(
+			m_table->GetValueAsCustom(event.GetRow(), event.GetCol(), s_strTypeTemplate));
+	}
+	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+		value = static_cast<wxString*>(
+			m_table->GetValueAsCustom(event.GetRow(), event.GetCol(), s_strTypeParameter));
 	}
 
 	if (m_document != nullptr) {
@@ -590,7 +562,8 @@ void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
 
 		if (creator != nullptr) {
 			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
-			spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
+			spreadsheetDescription.SetCellFillType(event.GetRow(), event.GetCol(), type);
+			spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), *value);
 		}
 
 		m_document->Modify(true);
@@ -598,7 +571,8 @@ void CGridEditor::OnGridTableModified(wxGridExtEvent& event)
 
 	if (m_spreadsheetObject != nullptr) {
 		CSpreadsheetDescription& spreadsheetDescription = m_spreadsheetObject->GetSpreadsheetDesc();
-		spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), value);
+		spreadsheetDescription.SetCellFillType(event.GetRow(), event.GetCol(), type);
+		spreadsheetDescription.SetCellValue(event.GetRow(), event.GetCol(), *value);
 	}
 
 	event.Skip();
@@ -1066,6 +1040,6 @@ void CGridEditor::OnShowCell(wxCommandEvent& event)
 
 void CGridEditor::OnProperties(wxCommandEvent& event)
 {
-	m_cellProperty->ShowProperty();
+	m_propertySpreadsheet->ShowInspector();
 }
 #pragma endregion  

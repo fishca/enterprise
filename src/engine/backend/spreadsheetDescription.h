@@ -37,6 +37,12 @@ enum enSpreadsheetPenStyle {
 	enPenStyle_LongDash = wxPenStyle::wxPENSTYLE_LONG_DASH,
 };
 
+enum enSpreadsheetFillType {
+	enSpreadsheetFillType_StrText = 1, //default
+	enSpreadsheetFillType_StrParameter,
+	enSpreadsheetFillType_StrTemplate
+};
+
 ///////////////////////////////////////
 
 const static int s_defaultRowHeight = 15;
@@ -126,6 +132,7 @@ struct CSpreadsheetCellDescription {
 		m_col_size = rhs->m_col_size;
 		m_fitMode = rhs->m_fitMode;
 		m_isReadOnly = rhs->m_isReadOnly;
+		m_fillSetType = rhs->m_fillSetType;
 		m_value = rhs->m_value;
 	}
 
@@ -143,7 +150,8 @@ struct CSpreadsheetCellDescription {
 			&& m_backgroundColour == rhs.m_backgroundColour
 			&& m_textColour == rhs.m_textColour
 			&& m_borderAt == rhs.m_borderAt
-			&& m_row_size == rhs.m_row_size && m_col_size == rhs.m_col_size;
+			&& m_row_size == rhs.m_row_size && m_col_size == rhs.m_col_size
+			&& m_fillSetType == rhs.m_fillSetType;
 	}
 
 	unsigned int m_row, m_col;
@@ -158,6 +166,7 @@ struct CSpreadsheetCellDescription {
 	int m_row_size = 1, m_col_size = 1;
 	EFitMode m_fitMode = EFitMode::Mode_Overflow;
 	bool m_isReadOnly = false;
+	enSpreadsheetFillType m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 };
 
 struct CSpreadsheetAreaDescription {
@@ -208,7 +217,7 @@ struct CSpreadsheetDescription {
 	bool IsEmptySpreadsheet() const { return GetNumberRows() == 0 && GetNumberCols() == 0; }
 
 	const CSpreadsheetCellDescription* GetCell(int row, int col) const {
-		
+
 		if (row < 0 || col < 0)
 			return nullptr;
 
@@ -660,11 +669,23 @@ struct CSpreadsheetDescription {
 		return true;
 	}
 
+	enSpreadsheetFillType GetFillType(int row, int col) const {
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		if (cell != nullptr)
+			return cell->m_fillSetType;
+		return enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+	}
+
+	void SetCellFillType(int row, int col, enSpreadsheetFillType type) {
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		if (cell != nullptr)
+			cell->m_fillSetType = type;
+	}
+
 	void GetCellValue(int row, int col, wxString& s) const {
 		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			s = cell->m_value;
-		s = wxT("");
 	}
 
 	void SetCellValue(int row, int col, const wxString& s) {

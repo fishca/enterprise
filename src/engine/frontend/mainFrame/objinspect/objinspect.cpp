@@ -150,22 +150,22 @@ void CObjectInspector::Create(IPropertyObject* object, bool force)
 	RestoreLastSelectedPropItem();
 }
 
-bool CObjectInspector::IsShownProperty() const
+bool CObjectInspector::IsShownInspector() const
 {
 	if (mainFrame != nullptr)
-		return mainFrame->IsShownProperty();
+		return mainFrame->IsShownInspector();
 	return false;
 }
 
-void CObjectInspector::ShowProperty()
+void CObjectInspector::ShowInspector()
 {
 	if (mainFrame != nullptr)
-		mainFrame->ShowProperty();
+		mainFrame->ShowInspector();
 }
 
 #include "frontend/visualView/ctrl/frame.h"
 
-wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id)
+wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const
 {
 	int pgStyle;
 	int defaultDescBoxHeight;
@@ -207,7 +207,7 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	return pg;
 }
 
-wxPGProperty* CObjectInspector::GetProperty(IProperty* prop)
+wxPGProperty* CObjectInspector::GetProperty(IProperty* prop) const 
 {
 	wxPGProperty* result = prop->GetPGProperty();
 	if (result != nullptr) {
@@ -217,7 +217,7 @@ wxPGProperty* CObjectInspector::GetProperty(IProperty* prop)
 	return result;
 }
 
-wxPGProperty* CObjectInspector::GetEvent(IEvent* event)
+wxPGProperty* CObjectInspector::GetEvent(IEvent* event) const
 {
 	wxPGProperty* result = event->GetPGProperty();
 	if (result != nullptr) {

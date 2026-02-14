@@ -6,40 +6,27 @@
 #include "gridEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-static const wxString strTranslateType = wxT("translate");
-
-void CGridEditor::CGridEditorCellProperty::AddSelectedCell(const wxGridExtBlockCoords& coords, bool afterErase)
+void CGridEditor::CPropertyGridEditorSpreadsheet::ShowInspector()
 {
-	if (afterErase) ClearSelectedCell();
+	m_selection.clear(); bool hasBlocks = false;
 
-	m_currentSelection.push_back(coords);
-
-	objectInspector->SelectObject(this, true);
-	m_view->ForceRefresh();
-}
-
-void CGridEditor::CGridEditorCellProperty::ShowProperty()
-{
-	CGridEditorCellProperty::ClearSelectedCell(); bool hasBlocks = false;
-
-	for (auto& coords : m_view->GetSelectedBlocks()) {
-		m_currentSelection.push_back(coords); hasBlocks = true;
+	for (const wxGridExtBlockCoords& coords : m_view->GetSelectedBlocks()) {
+		m_selection.push_back(coords); hasBlocks = true;
 	}
+
 	if (!hasBlocks) {
-		m_currentSelection.push_back({
-			m_view->GetGridCursorRow(), m_view->GetGridCursorCol(),
-			m_view->GetGridCursorRow(), m_view->GetGridCursorCol()
-			}
-		);
+		wxGridExtBlockCoords coords(m_view->GetGridCursorRow(), m_view->GetGridCursorCol(),
+			m_view->GetGridCursorRow(), m_view->GetGridCursorCol());
+		m_selection.push_back(coords);
 	}
 
-	if (!objectInspector->IsShownProperty())
-		objectInspector->ShowProperty();
+	if (!objectInspector->IsShownInspector())
+		objectInspector->ShowInspector();
 
 	objectInspector->SelectObject(this, true);
 }
 
-void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
 {
 	if (m_propertyName == property) {
 		if (coords.GetTopLeft() != coords.GetBottomRight()) {
@@ -57,15 +44,6 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property
 				coords.GetLeftCol() + 1
 			);
 			m_propertyName->SetValue(nameField);
-		}
-	}
-	else if (m_propertyText == property) {
-
-		void* tempval = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), strTranslateType);
-		if (tempval != nullptr)
-		{
-			m_propertyText->SetValue(CBackendLocalization::GetRawLocText(*((CBackendLocalizationEntryArray*)tempval)));
-			delete (CBackendLocalizationEntryArray*)tempval;
 		}
 	}
 	else if (m_propertyAlignHorz == property) {
@@ -88,23 +66,19 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property
 	else if (m_propertyTextColour == property) {
 		m_propertyTextColour->SetValue(m_view->GetCellTextColour(coords.GetTopRow(), coords.GetLeftCol()));
 	}
-	else if (m_propertyLeftBorder == property || m_propertyRightBorder == property || m_propertyTopBorder == property || m_propertyBottomBorder == property || m_propertyColourBorder == property)
-	{
+	else if (m_propertyLeftBorder == property || m_propertyRightBorder == property || m_propertyTopBorder == property || m_propertyBottomBorder == property || m_propertyColourBorder == property) {
 		wxGridExtCellBorder borderLeft = m_view->GetCellBorderLeft(coords.GetTopRow(), coords.GetLeftCol());
 		wxGridExtCellBorder borderRight = m_view->GetCellBorderRight(coords.GetTopRow(), coords.GetLeftCol());
 		wxGridExtCellBorder borderTop = m_view->GetCellBorderTop(coords.GetTopRow(), coords.GetLeftCol());
 		wxGridExtCellBorder borderBottom = m_view->GetCellBorderBottom(coords.GetTopRow(), coords.GetLeftCol());
-
 		m_propertyLeftBorder->SetValue(borderLeft.m_style);
 		m_propertyRightBorder->SetValue(borderRight.m_style);
 		m_propertyTopBorder->SetValue(borderTop.m_style);
 		m_propertyBottomBorder->SetValue(borderBottom.m_style);
 		m_propertyColourBorder->SetValue(borderLeft.m_colour);
 	}
-	else if (m_propertyFitMode == property){
-		
+	else if (m_propertyFitMode == property) {
 		wxGridExtFitMode fitMode = m_view->GetCellFitMode(coords.GetTopRow(), coords.GetLeftCol());
-
 		if (fitMode.IsOverflow())
 			m_propertyFitMode->SetValue(enFitMode_Overflow);
 		else if (fitMode.IsClip())
@@ -113,14 +87,46 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property
 	else if (m_propertyReadOnly == property) {
 		m_propertyReadOnly->SetValue(m_view->IsCellReadOnly(coords.GetTopRow(), coords.GetLeftCol()));
 	}
+	else if (m_propertyFillType == property) {
+		if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTextOrString))
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrText);
+		else if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTemplate))
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate);
+		else if (m_view->GetTable()->CanGetValueAs(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeParameter))
+			m_propertyFillType->SetValue(enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
+	}
+	else if (m_propertyText == property) {
+
+		if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
+			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTextOrString);
+			wxSharedPtr<wxString> textString =
+				wxSharedPtr<wxString>(static_cast<wxString*>(value));
+			m_propertyText->SetValue(*textString);
+		}
+		else if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeTemplate);
+			wxSharedPtr<wxString> textString =
+				wxSharedPtr<wxString>(static_cast<wxString*>(value));
+			m_propertyText->SetValue(*textString);
+		}
+		else if (m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+			void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeParameter);
+			wxSharedPtr<wxString> textString =
+				wxSharedPtr<wxString>(static_cast<wxString*>(value));
+			m_propertyText->SetValue(*textString);
+		}
+	}
+	else if (m_propertyParameter == property) {
+		void* value = m_view->GetTable()->GetValueAsCustom(coords.GetTopRow(), coords.GetLeftCol(), s_strTypeParameter);
+		wxSharedPtr<wxString> textString =
+			wxSharedPtr<wxString>(static_cast<wxString*>(value));
+		m_propertyParameter->SetValue(*textString);
+	}
 }
 
-void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
 {
-	if (m_propertyText == property) {
-		m_view->SetCellValue(coords, m_propertyText->GetValueAsString());
-	}
-	else if (m_propertyFont == property) {
+	if (m_propertyFont == property) {
 		m_view->SetCellFont(coords, m_propertyFont->GetValueAsFont());
 	}
 	else if (m_propertyBackgroundColour == property) {
@@ -159,37 +165,100 @@ void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property
 	else if (m_propertyReadOnly == property) {
 		m_view->SetCellReadOnly(coords, m_propertyReadOnly->GetValueAsBoolean());
 	}
+	else if (m_propertyFillType == property) {
+		enSpreadsheetFillType type = m_propertyFillType->GetValueAsEnum();
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++) {
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
+				if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrText) {
+					wxSharedPtr<wxString> ptr;
+					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeTextOrString));
+					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeTextOrString, ptr.get());
+				}
+				else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+					wxSharedPtr<wxString> ptr;
+					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeTemplate));
+					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeTemplate, ptr.get());
+				}
+				else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+					wxSharedPtr<wxString> ptr;
+					ptr = static_cast<wxString*>(m_view->GetTable()->GetValueAsCustom(row, col, s_strTypeParameter));
+					m_view->GetTable()->SetValueAsCustom(row, col, s_strTypeParameter, ptr.get());
+				}
+			}
+		}
+	}
+	else if (m_propertyText == property) {
+		m_view->SetCellValue(coords, m_propertyText->GetValueAsString());
+	}
+	else if (m_propertyParameter == property) {
+		m_view->SetCellValue(coords, m_propertyParameter->GetValueAsString());
+	}
 }
 
 #include "backend/metadataConfiguration.h"
 
-IMetaData* CGridEditor::CGridEditorCellProperty::GetMetaData() const
+IMetaData* CGridEditor::CPropertyGridEditorSpreadsheet::GetMetaData() const
 {
 	return IMetaDataConfiguration::Get();
 }
 
-void CGridEditor::CGridEditorCellProperty::OnPropertyCreated(IProperty* property)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property)
 {
-	for (const auto coords : m_currentSelection) {
-		CGridEditorCellProperty::OnPropertyCreated(property, coords);
-	}
+	for (const auto& coords : m_selection)
+		CPropertyGridEditorSpreadsheet::OnPropertyCreated(property, coords);
 }
 
-void CGridEditor::CGridEditorCellProperty::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
 {
-	int maxRow = m_view->GetGridCursorRow(), maxCol = m_view->GetGridCursorCol();
-
-	for (auto coords : m_currentSelection) {
-
-		if (maxRow < coords.GetBottomRow())
-			maxRow = coords.GetBottomRow();
-
-		if (maxCol < coords.GetRightCol())
-			maxCol = coords.GetRightCol();
-
-		CGridEditorCellProperty::OnPropertyChanged(property, coords);
+	if (m_propertyText == property) {
+		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
+	}
+	else if (m_propertyParameter == property) {
+		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter);
 	}
 
-	m_view->SendPropertyModify({ maxRow, maxCol });
+}
+
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+{
+	const int row = m_view->GetGridCursorRow(),
+		col = m_view->GetGridCursorCol();
+
+	for (const wxGridExtBlockCoords& coords : m_selection)
+		CPropertyGridEditorSpreadsheet::OnPropertyChanged(property, coords);
+
 	m_view->ForceRefresh();
 }
+
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCell(wxGridExtEvent& event)
+{
+	if (event.Selecting()) {
+		wxGridExtBlockCoords coords(event.GetRow(), event.GetCol(),
+			event.GetRow(), event.GetCol());
+		m_selection.push_back(coords);
+	}
+	else {
+		m_selection.clear();
+	}
+
+	objectInspector->SelectObject(this, true);
+	m_view->ForceRefresh();
+	event.Skip();
+}
+
+void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCells(wxGridExtRangeSelectEvent& event)
+{
+	if (event.Selecting()) {
+		wxGridExtBlockCoords coords(event.GetTopRow(), event.GetLeftCol(),
+			event.GetBottomRow(), event.GetRightCol());
+		m_selection.push_back(coords);
+	}
+	else {
+		m_selection.clear();
+	}
+
+	objectInspector->SelectObject(this, true);
+	m_view->ForceRefresh();
+	event.Skip();
+}
+

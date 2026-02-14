@@ -365,8 +365,8 @@ void CMetadataTree::PropertyItem()
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
 
-	if (!objectInspector->IsShownProperty())
-		objectInspector->ShowProperty();
+	if (!objectInspector->IsShownInspector())
+		objectInspector->ShowInspector();
 
 	objectInspector->SelectObject(metaObject);
 }

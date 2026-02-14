@@ -20,15 +20,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	if (rowLeft >= 0 && colTop >= 0 && rowRight > 0 && colBottom > 0) {
 		for (int row = rowLeft; row < rowRight; row++) {
 			for (int col = colTop; col < colBottom; col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -39,15 +35,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	{
 		for (int row = rowLeft; row < rowRight; row++) {
 			for (int col = 0; col < GetMaxColBrake(); col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -57,15 +49,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	else if (rowLeft < 0 && colTop >= 0 && rowRight < 0 && colBottom > 0) {
 		for (int row = 0; row < GetMaxRowBrake(); row++) {
 			for (int col = colTop; col < colBottom; col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - colTop));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -86,15 +74,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	if (r != nullptr && c != nullptr) {
 		for (int row = r->m_start; row <= (int)r->m_end; row++) {
 			for (int col = c->m_start; col <= (int)c->m_end; col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col - c->m_start);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - c->m_start));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -104,15 +88,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	else if (r != nullptr) {
 		for (int row = r->m_start; row <= (int)r->m_end; row++) {
 			for (int col = 0; col <= GetMaxColBrake(); col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -122,15 +102,11 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	else if (c != nullptr) {
 		for (int row = 0; row <= GetMaxRowBrake(); row++) {
 			for (int col = c->m_start; col <= (int)c->m_end; col++) {
-
-				CSpreadsheetCellDescription* cellSrc =
+				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row, col - c->m_start);
-
-				cellSrc->SetCell(m_spreadsheetDesc.GetCell(row, col - c->m_start));
-
+				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
 			}
-
 			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
 		}
 
@@ -141,47 +117,64 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	return spreadsheetDesc;
 }
 
-void CBackendSpreadsheetObject::PutArea(const CSpreadsheetDescription& spreadsheetDesc)
+#include "backend_localization.h"
+
+void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
 	const int maxRowBrake = m_spreadsheetDesc.GetNumberRows();
 	const int maxColBrake = m_spreadsheetDesc.GetNumberCols();
 
-	for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
-		for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
-			CSpreadsheetCellDescription* cellSrc =
+	for (int row = 0; row < doc->GetNumberRows(); row++) {
+		for (int col = 0; col < doc->GetNumberCols(); col++) {
+
+			CSpreadsheetCellDescription* cell =
 				m_spreadsheetDesc.GetOrCreateCell(maxRowBrake + row, col);
-			cellSrc->SetCell(spreadsheetDesc.GetCell(row, col));
-			if (col == 0) m_spreadsheetDesc.SetColSize(col, spreadsheetDesc.GetColSize(col));
+
+			cell->SetCell(doc->GetSpreadsheetDesc().GetCell(row, col));
+
+			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate || cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
+				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+			}
+
+			if (maxColBrake + col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
 		}
-		if (row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, spreadsheetDesc.GetRowSize(row));
+		if (row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
 	}
 
-	m_spreadsheetDesc.SetRowBrake(maxRowBrake + spreadsheetDesc.GetNumberRows() - 1);
+	m_spreadsheetDesc.SetRowBrake(maxRowBrake + doc->GetNumberRows() - 1);
 
-	if (maxColBrake < spreadsheetDesc.GetNumberCols())
-		m_spreadsheetDesc.SetColBrake(maxColBrake + spreadsheetDesc.GetNumberCols() - 1);
+	if (maxColBrake < doc->GetNumberCols())
+		m_spreadsheetDesc.SetColBrake(maxColBrake + doc->GetNumberCols() - 1);
 }
 
-void CBackendSpreadsheetObject::JoinArea(const CSpreadsheetDescription& spreadsheetDesc)
+void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
 	const int maxRowBrake = m_spreadsheetDesc.GetNumberRows();
 	const int maxColBrake = m_spreadsheetDesc.GetNumberCols();
 
-	for (int col = 0; col < spreadsheetDesc.GetNumberCols(); col++) {
-		for (int row = 0; row < spreadsheetDesc.GetNumberRows(); row++) {
-			CSpreadsheetCellDescription* cellSrc =
-				m_spreadsheetDesc.GetOrCreateCell(row, maxColBrake + col);
-			cellSrc->SetCell(spreadsheetDesc.GetCell(row, col));
-			if (row == 0) m_spreadsheetDesc.SetRowSize(row, spreadsheetDesc.GetRowSize(row));
-		}
+	for (int col = 0; col < doc->GetNumberCols(); col++) {
+		for (int row = 0; row < doc->GetNumberRows(); row++) {
 
-		if (col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, spreadsheetDesc.GetColSize(col));
+			CSpreadsheetCellDescription* cell =
+				m_spreadsheetDesc.GetOrCreateCell(row, maxColBrake + col);
+
+			cell->SetCell(doc->GetSpreadsheetDesc().GetCell(row, col));
+
+			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate || cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
+				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+			}
+
+			if (maxRowBrake + row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
+		}
+		if (col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
 	}
 
-	if (maxRowBrake < spreadsheetDesc.GetNumberRows())
-		m_spreadsheetDesc.SetRowBrake(maxRowBrake + spreadsheetDesc.GetNumberRows() - 1);
+	if (maxRowBrake < doc->GetNumberRows())
+		m_spreadsheetDesc.SetRowBrake(maxRowBrake + doc->GetNumberRows() - 1);
 
-	m_spreadsheetDesc.SetColBrake(maxColBrake + spreadsheetDesc.GetNumberCols() - 1);
+	m_spreadsheetDesc.SetColBrake(maxColBrake + doc->GetNumberCols() - 1);
 }
 
 //size 
@@ -326,10 +319,88 @@ void CBackendSpreadsheetObject::SetColBrake(int col)
 
 // ------ cell value accessors
 //
+
+void CBackendSpreadsheetObject::SetCellFillType(int row, int col, enSpreadsheetFillType type)
+{
+	m_spreadsheetDesc.SetCellFillType(row, col, type);
+}
+
 void CBackendSpreadsheetObject::SetCellValue(int row, int col, const wxString& s)
 {
 	spreadsheetNotify->SetCellValue(row, col, s);
 	m_spreadsheetDesc.SetCellValue(row, col, s);
+}
+
+bool CBackendSpreadsheetObject::GetParameter(const wxString& strParameter, CValue& valueParam) const
+{
+	auto iterator = std::find_if(m_paramVector.begin(), m_paramVector.end(),
+		[strParameter](const auto& pair) { return stringUtils::CompareString(strParameter, pair.first); });
+
+	if (iterator == m_paramVector.end())
+		return false;
+
+	valueParam = iterator->second;
+	return true;
+}
+
+void CBackendSpreadsheetObject::SetParameter(const wxString& strParameter, const CValue& valueParam)
+{
+	m_paramVector.insert_or_assign(strParameter, valueParam);
+}
+
+wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxString& strValue, enSpreadsheetFillType type) const
+{
+	if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+
+		if (!strValue.IsEmpty()) {
+
+			wxString strTemplateValue;
+			CBackendLocalization::GetTranslateGetRawLocText(m_docLangCode, strValue, strTemplateValue);
+
+			size_t start_pos = 0, end_pos = 0;
+
+			// Find the first opening or closing bracket
+			start_pos = strTemplateValue.find_first_of(wxT("[]"), start_pos);
+
+			while (start_pos != wxString::npos) {
+
+				// Find the next bracket of any type
+				end_pos = strTemplateValue.find_first_of(wxT("[]"), start_pos + 1);
+
+				if (end_pos != wxString::npos) {
+					// Extract the substring between the brackets
+					// +1 to start after the opening bracket
+					const wxString& token =
+						strTemplateValue.substr(start_pos + 1, end_pos - start_pos - 1);
+					if (!token.empty()) {
+						strTemplateValue.replace(start_pos, end_pos - start_pos, GetParameter(token).GetString());
+					}
+					else {
+						strTemplateValue.replace(start_pos, end_pos - start_pos, wxT(""));
+					}
+
+					// Move start_pos to the character after the closing bracket for the next iteration
+					start_pos = end_pos + 1;
+				}
+				else {
+					// No matching end bracket found, stop
+					break;
+				}
+
+				// Find the next opening bracket for the next iteration
+				start_pos = strTemplateValue.find_first_of(wxT("[]"), start_pos);
+			}
+
+			return CBackendLocalization::CreateLocalizationRawLocText(strTemplateValue);
+		}
+	}
+	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+
+		if (!strValue.IsEmpty())
+			return CBackendLocalization::CreateLocalizationRawLocText(GetParameter(strValue).GetString());
+	}
+
+	return strValue;
 }
 
 #pragma endregion 

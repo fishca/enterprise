@@ -14,13 +14,6 @@ enum
 	wxTEMPLATE_SAVE_AS_FILE = 8
 };
 
-namespace doc
-{
-	static const CGuid s_guidText = wxNewUniqueGuid;
-	static const CGuid s_guidSpreadsheet = wxNewUniqueGuid;
-	static const CGuid s_guidHelp = wxNewUniqueGuid;
-};
-
 class FRONTEND_API CMetaDocManager : public wxDocManager {
 
 	class CMetaDocTemplate : public wxDocTemplate {
@@ -110,6 +103,17 @@ private:
 
 public:
 
+	template <typename T, typename... Args>
+	T* CreateDocument(Args&&... args) const {
+		wxDocTemplate* docTemplate = FindTemplateByDocClassInfo(CLASSINFO(T));
+		if (docTemplate != nullptr) {
+			T* doc = new T(std::forward<Args>(args)...);
+			doc->SetDocumentTemplate(docTemplate);
+			return doc;
+		}
+		return nullptr;
+	}
+
 	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, long flags = wxDOC_NEW);
 	static CMetaDocument* OpenFormMDI(IValueMetaObject* metaObject, CMetaDocument* docParent, long flags = wxDOC_NEW);
 
@@ -121,49 +125,49 @@ public:
 	CMetaDocManager();
 	virtual ~CMetaDocManager();
 
-	CGuid AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+	void AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
 		const wxString& filter,
 		const wxString& dir,
 		const wxString& ext,
 		const wxString& docTypeName,
 		const wxString& viewTypeName,
-		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo,
-		long flags = wxTEMPLATE_VISIBLE, const CGuid& guidTemplate = wxNewUniqueGuid
+		wxClassInfo* docClassInfo,
+		wxClassInfo* viewClassInfo,
+		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	CGuid AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
+	void AddDocTemplate(const picture_identifier_t& id, const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
 		const wxString& docTypeName,
 		const wxString& viewTypeName,
 		wxClassInfo* docClassInfo,
 		wxClassInfo* viewClassInfo,
-		long flags = wxTEMPLATE_VISIBLE, const CGuid& guidTemplate = wxNewUniqueGuid
+		long flags = wxTEMPLATE_VISIBLE
 	);
 
-	CGuid AddDocTemplate(const class_identifier_t& id,
+	void AddDocTemplate(const class_identifier_t& id,
 		const wxString& descr,
 		const wxString& filter,
 		const wxString& ext,
-		wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo, 
-		const CGuid& guidTemplate = wxNewUniqueGuid);
+		wxClassInfo* docClassInfo,
+		wxClassInfo* viewClassInfo
+	);
 
-	CGuid AddDocTemplate(const class_identifier_t& id, wxClassInfo* docClassInfo, wxClassInfo* viewClassInfo, const CGuid& guidTemplate = wxNewUniqueGuid) {
-		return AddDocTemplate(id,
-			wxEmptyString, wxEmptyString, wxEmptyString, docClassInfo, viewClassInfo, guidTemplate);
-	}
+	void AddDocTemplate(const class_identifier_t& id,
+		wxClassInfo* docClassInfo,
+		wxClassInfo* viewClassInfo
+	);
 
 	CMetaDocument* GetCurrentDocument() const;
 
 	virtual wxDocument* CreateDocument(const wxString& pathOrig, long flags) override;
-
 	virtual wxDocTemplate* SelectDocumentPath(wxDocTemplate** templates,
 		int noTemplates, wxString& path, long flags, bool save = false) override;
-
 	virtual wxDocTemplate* SelectDocumentType(wxDocTemplate** templates,
 		int noTemplates, bool sort = false) override;
 
-	wxDocTemplate* GetTemplateByGuid(const CGuid& guid) const;
+	wxDocTemplate* FindTemplateByDocClassInfo(const wxClassInfo* classInfo) const;
 
 	bool CloseDocument(wxDocument* doc, bool force = false);
 	bool CloseDocuments(bool force);

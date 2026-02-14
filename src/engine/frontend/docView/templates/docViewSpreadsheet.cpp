@@ -15,8 +15,14 @@ enum
 	wxID_SHOW_CELL,
 	wxID_SHOW_HEADER,
 	wxID_SHOW_AREA,
-	wxID_BORDERS,
 	wxID_DOCK_TABLE,
+	wxID_BORDER_LEFT,
+	wxID_BORDER_TOP,
+	wxID_BORDER_RIGHT,
+	wxID_BORDER_BOTTOM,
+	wxID_BORDER_ALL,
+	wxID_BORDER_AROUND,
+	wxID_BORDER_NONE
 };
 
 // ----------------------------------------------------------------------------
@@ -42,9 +48,14 @@ EVT_MENU(wxID_PRINT_BRAKE_COL_DELETE, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_CELL, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_HEADER, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_SHOW_AREA, CSpreadsheetEditView::OnMenuEvent)
-EVT_MENU(wxID_BORDERS, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_DOCK_TABLE, CSpreadsheetEditView::OnMenuEvent)
-
+EVT_MENU(wxID_BORDER_LEFT, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_TOP, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_RIGHT, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_BOTTOM, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_ALL, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_AROUND, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_BORDER_NONE, CSpreadsheetEditView::OnMenuEvent)
 wxEND_EVENT_TABLE()
 
 bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
@@ -80,6 +91,17 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_DELETE, _("Delete brake row"));
 	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_DELETE, _("Delete brake column"));
 	menu->AppendSubMenu(menuPrintBrake, _("Print brake"));
+
+	wxMenu* menuBorder = new wxMenu;
+	menuItem = menuBorder->Append(wxID_BORDER_LEFT, _("Left border"));
+	menuItem = menuBorder->Append(wxID_BORDER_TOP, _("Top border"));
+	menuItem = menuBorder->Append(wxID_BORDER_RIGHT, _("Right border"));
+	menuItem = menuBorder->Append(wxID_BORDER_BOTTOM, _("Bottom border"));
+	menuBorder->AppendSeparator();
+	menuItem = menuBorder->Append(wxID_BORDER_ALL, _("Border all"));
+	menuItem = menuBorder->Append(wxID_BORDER_AROUND, _("Border around"));
+	menuItem = menuBorder->Append(wxID_BORDER_NONE, _("No border"));
+	menu->AppendSubMenu(menuBorder, _("Border"));
 
 	menuItem = menu->AppendSeparator();
 	menuItem = menu->Append(wxID_SHOW_CELL, _("Show cells"));
@@ -118,18 +140,16 @@ void CSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	toolbar->AddTool(wxID_MERGE_CELL, _("Merge cells"), wxArtProvider::GetBitmap(wxART_MERGE_CELL, wxART_DOC_TEMPLATE), _("Merge cells"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_MERGE_CELL, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_AREA_ADD, _("Add section"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_ADD, _("Add area"), wxArtProvider::GetBitmap(wxART_ADD_SECTION, wxART_DOC_TEMPLATE), _("Add area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_ADD, m_gridEditor->IsEditable());
-	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove"), wxItemKind::wxITEM_NORMAL);
+	toolbar->AddTool(wxID_AREA_DELETE, _("Delete area"), wxArtProvider::GetBitmap(wxART_REMOVE_SECTION, wxART_DOC_TEMPLATE), _("Remove area"), wxItemKind::wxITEM_NORMAL);
 	toolbar->EnableTool(wxID_AREA_DELETE, m_gridEditor->IsEditable());
 	toolbar->AddSeparator();
 	toolbar->AddTool(wxID_SHOW_CELL, _("Show cells"), wxArtProvider::GetBitmap(wxART_SHOW_CELL, wxART_DOC_TEMPLATE), _("Show cells"));
 	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
 	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
-	toolbar->AddTool(wxID_BORDERS, _("Borders"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Borders"));
-	toolbar->SetToolDropDown(wxID_BORDERS, true);
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_DOCK_TABLE, _("Dock table"), wxArtProvider::GetBitmap(wxART_DOCK_TABLE, wxART_DOC_TEMPLATE), _("Dock table"));
+	toolbar->AddTool(wxID_DOCK_TABLE, _("Dock table"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Dock table"));
 }
 
 bool CSpreadsheetEditView::OnClose(bool deleteWindow)
@@ -156,6 +176,8 @@ void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 
 	wxArrayInt arrCols = m_gridEditor->GetSelectedCols();
 	const int selected_col = arrCols.Count() > 0 ? arrCols[0] : -1;
+
+	wxGridExtBlockCoords coords = m_gridEditor->GetSelectedCellRange();
 
 	switch (event.GetId())
 	{
@@ -204,6 +226,51 @@ void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 	case wxID_DOCK_TABLE:
 		m_gridEditor->DockTable();
 		break;
+
+	case wxID_BORDER_LEFT:
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			m_gridEditor->SetCellBorderLeft(row, coords.GetLeftCol(), wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		break;
+	case wxID_BORDER_TOP:
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			m_gridEditor->SetCellBorderTop(coords.GetTopRow(), col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		break;
+	case wxID_BORDER_RIGHT:
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			m_gridEditor->SetCellBorderRight(row, coords.GetRightCol(), wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		break;
+	case wxID_BORDER_BOTTOM:
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			m_gridEditor->SetCellBorderBottom(coords.GetBottomRow(), col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		break;
+	case wxID_BORDER_ALL:
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
+				m_gridEditor->SetCellBorderLeft(row, col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderTop(row, col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderRight(row, col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderBottom(row, col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+			}
+		break;
+	case wxID_BORDER_AROUND:
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			m_gridEditor->SetCellBorderLeft(row, coords.GetLeftCol(), wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			m_gridEditor->SetCellBorderTop(coords.GetTopRow(), col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			m_gridEditor->SetCellBorderRight(row, coords.GetRightCol(), wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+			m_gridEditor->SetCellBorderBottom(coords.GetBottomRow(), col, wxPenStyle::wxPENSTYLE_SOLID, *wxBLACK, 1);
+		break;
+	case wxID_BORDER_NONE:
+		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++) {
+				m_gridEditor->SetCellBorderLeft(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderTop(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderRight(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
+				m_gridEditor->SetCellBorderBottom(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
+			}
+		break;
 	}
 
 	//event.Skip();
@@ -248,12 +315,12 @@ bool CSpreadsheetFileDocument::DoOpenDocument(const wxString& filename)
 	if (!m_spreadSheetDocument->LoadFromFile(filename))
 		return false;
 
-	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument);
+	return GetGridCtrl()->LoadDocument(m_spreadSheetDocument->GetSpreadsheetDesc());
 }
 
 bool CSpreadsheetFileDocument::DoSaveDocument(const wxString& filename)
 {
-	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument))
+	if (!GetGridCtrl()->SaveDocument(m_spreadSheetDocument->GetSpreadsheetDesc()))
 		return false;
 
 	return m_spreadSheetDocument->SaveToFile(filename);
@@ -358,9 +425,7 @@ bool CSpreadsheetEditDocument::SaveAs()
 bool CSpreadsheetEditDocument::DoSaveDocument(const wxString& filename)
 {
 	wxObjectDataPtr<CBackendSpreadsheetObject>spreadSheetDocument;
-
 	if (!GetGridCtrl()->GetActiveDocument(spreadSheetDocument))
 		return false;
-
 	return spreadSheetDocument->SaveToFile(filename);
 }

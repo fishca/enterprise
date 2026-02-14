@@ -64,7 +64,7 @@ IBackendValueForm* IValueMetaObjectGenericData::CreateAndBuildForm(const wxStrin
 		creator = FindFormObjectByFilter(strFormName, form_id);
 
 		if (creator == nullptr) {
-			CBackendCoreException::Error(_("Form not found '") + strFormName + "'");
+			CBackendCoreException::Error(_("Form not found '%s'"), strFormName);
 			return nullptr;
 		}
 	}
@@ -91,8 +91,6 @@ IBackendValueForm* IValueMetaObjectGenericData::CreateAndBuildForm(const wxStrin
 #pragma endregion
 #pragma region _template_builder_h_
 
-#include "backend/system/value/valueSpreadsheet.h"
-
 CValueSpreadsheetDocument* IValueMetaObjectGenericData::GetTemplate(const wxString& strTemplateName)
 {
 	IValueMetaObjectSpreadsheet* creator = nullptr;
@@ -102,13 +100,19 @@ CValueSpreadsheetDocument* IValueMetaObjectGenericData::GetTemplate(const wxStri
 		creator = FindTemplateObjectByFilter(strTemplateName);
 
 		if (creator == nullptr) {
-			CBackendCoreException::Error(_("Template not found '") + strTemplateName + "'");
+			CBackendCoreException::Error(_("Template not found '%s'"), strTemplateName);
 			return nullptr;
 		}
+
+		CValueSpreadsheetDocument* valueSpreadsheetDocument = 
+			new CValueSpreadsheetDocument(creator->GetSpreadsheetDesc());
+		
+		valueSpreadsheetDocument->PrepareNames();
+		return valueSpreadsheetDocument;
 	}
 
-	return CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>(
-		creator->GetSpreadsheetDesc());
+	CBackendCoreException::Error(_("Template not found!"));
+	return nullptr;
 }
 
 #pragma endregion

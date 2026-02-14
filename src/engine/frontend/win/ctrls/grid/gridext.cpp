@@ -11710,6 +11710,7 @@ wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForCell(int row, int col) co
 	static wxString typeName;
 	if (!m_table->GetTypeName(row, col, typeName))
 		return NULL;
+	
 	return GetDefaultRendererForType(typeName);
 }
 
@@ -13156,8 +13157,8 @@ wxGridExtBlockCoords wxGridExt::GetSelectedCellRange() const
 {
 	int row1 = m_numRows, col1 = m_numCols,
 		row2 = 0, col2 = 0; bool hasBlocks = false;
-
-	for (auto& coords : wxGridExt::GetSelectedBlocks()) {
+	
+	for (const auto& coords : wxGridExt::GetSelectedBlocks()) {
 		if (row1 > coords.GetTopRow()) row1 = coords.GetTopRow();
 		if (col1 > coords.GetLeftCol()) col1 = coords.GetLeftCol();
 		if (row2 < coords.GetBottomRow()) row2 = coords.GetBottomRow();
@@ -13166,8 +13167,9 @@ wxGridExtBlockCoords wxGridExt::GetSelectedCellRange() const
 	}
 
 	if (!hasBlocks) {
-		if (row1 > wxGridExt::GetGridCursorRow()) row1 = wxGridExt::GetGridCursorRow();
-		if (col1 > wxGridExt::GetGridCursorCol()) col1 = wxGridExt::GetGridCursorCol();
+
+		if (row1 > wxGridExt::GetGridCursorRow() && wxGridExt::GetGridCursorRow() >= 0) row1 = wxGridExt::GetGridCursorRow(); else row1 = 0;
+		if (col1 > wxGridExt::GetGridCursorCol() && wxGridExt::GetGridCursorCol() >= 0) col1 = wxGridExt::GetGridCursorCol(); else col1 = 0;
 		if (row2 < wxGridExt::GetGridCursorRow()) row2 = wxGridExt::GetGridCursorRow();
 		if (col2 < wxGridExt::GetGridCursorCol()) col2 = wxGridExt::GetGridCursorCol();
 	}

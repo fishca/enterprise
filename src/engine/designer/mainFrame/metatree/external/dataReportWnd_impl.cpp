@@ -186,8 +186,8 @@ void CDataReportTree::PropertyItem()
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IValueMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
-	if (!objectInspector->IsShownProperty())
-		objectInspector->ShowProperty();
+	if (!objectInspector->IsShownInspector())
+		objectInspector->ShowInspector();
 	objectInspector->SelectObject(metaObject);
 }
 

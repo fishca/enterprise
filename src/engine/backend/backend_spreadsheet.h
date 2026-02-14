@@ -81,8 +81,8 @@ public:
 	CSpreadsheetDescription GetArea(int rowLeft, int rowRight, int colTop = -1, int colBottom = -1);
 	CSpreadsheetDescription GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName = wxT(""));
 
-	void PutArea(const CSpreadsheetDescription& spreadsheetDesc);
-	void JoinArea(const CSpreadsheetDescription& spreadsheetDesc);
+	void PutArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
+	void JoinArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
 
 	// ------ grid dimensions
 	//
@@ -181,11 +181,24 @@ public:
 
 	bool IsEmptyCell(int row, int col) const { return m_spreadsheetDesc.IsEmptyCell(row, col); }
 
+	enSpreadsheetFillType GetCellFillType(int row, int col) const { return m_spreadsheetDesc.GetFillType(row, col); }
+	void SetCellFillType(int row, int col, enSpreadsheetFillType type);
+
 	void GetCellValue(int row, int col, wxString& s) const { m_spreadsheetDesc.GetCellValue(row, col, s); }
 	void SetCellValue(int row, int col, const wxString& s);
 
 	//special string return 
 	wxString GetCellValue(int row, int col) const { return m_spreadsheetDesc.GetCellValue(row, col); }
+
+	// ------ cell parameter accessors
+	//
+	bool GetParameter(const wxString& strParameter, CValue& valueParam) const;
+	void SetParameter(const wxString& strParameter, const CValue& valueParam = CValue());
+
+	wxString ComputeStringValueFromParameters(const wxString& strValue, enSpreadsheetFillType type = enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) const;
+
+	//special value return 
+	CValue GetParameter(const wxString& strParameter) const { CValue valueParam; GetParameter(strParameter, valueParam); return valueParam; }
 
 #pragma endregion 
 
@@ -232,6 +245,9 @@ private:
 
 	//cell desc
 	CSpreadsheetDescription m_spreadsheetDesc;
+
+	//param value
+	std::map<wxString, CValue> m_paramVector;
 
 	//grid notifier 
 	wxVector<wxSharedPtr<IBackendSpreadsheetNotifier>> m_spreadsheetNotifiers;

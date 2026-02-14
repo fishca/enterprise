@@ -698,33 +698,49 @@ void CDebuggerServer::CDebuggerServerConnection::RecvCommand(void* pointer, unsi
 				for (long i = 0; i < vResult.GetNProps(); i++) {
 					const wxString& strPropName = vResult.GetPropName(i); const long lPropNum = vResult.FindProp(strPropName);
 					if (lPropNum != wxNOT_FOUND) {
+
+						wxString strPropValue;
+						wxString strPropType;
+
+						unsigned int propCount = 0;
+
 						try {
 							if (!vResult.IsPropReadable(lPropNum))
 								CBackendCoreException::Error(_("Object field not readable (%s)"), strPropName);
 							//send attribute body
-							commandChannel.w_stringZ(strPropName);
 							CValue vAttribute;
 							if (vResult.GetPropVal(lPropNum, vAttribute)) {
-								commandChannel.w_stringZ(vAttribute.GetString());
-								commandChannel.w_stringZ(vAttribute.GetClassName());
+
+								strPropValue = vAttribute.GetString();
+								strPropType = vAttribute.GetClassName();
 							}
 							else {
-								commandChannel.w_stringZ(CBackendException::GetLastError());
-								commandChannel.w_stringZ(wxT("<error>"));
+								strPropValue = CBackendException::GetLastError();
+								strPropType = wxT("<error>");
 							}
 							//count of attribute   
-							commandChannel.w_u32(vAttribute.GetNProps());
+							propCount = vAttribute.GetNProps();
 						}
 						catch (const CBackendException* err) {
+
 							wxString strErrorMessage = err->GetErrorDescription();
 							strErrorMessage.Replace('\n', ' ');
+
 							//send attribute body
-							commandChannel.w_stringZ(strPropName);
-							commandChannel.w_stringZ(strErrorMessage);
-							commandChannel.w_stringZ(wxT("<error>"));
+							strPropValue = strErrorMessage;
+							strPropType = wxT("<error>");
+
 							//count of attribute   
-							commandChannel.w_u32(0);
+							propCount = 0;
 						}
+
+						//send attribute body
+						commandChannel.w_stringZ(strPropName);
+						commandChannel.w_stringZ(strPropValue);
+						commandChannel.w_stringZ(strPropType);
+
+						//count of attribute   
+						commandChannel.w_u32(propCount);
 					}
 					else {
 						//send attribute body

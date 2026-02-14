@@ -22,7 +22,8 @@
 //tables 
 #include "backend/metaCollection/table/metaTableObject.h"
 
-//guid 
+//spreadsheet guid 
+#include "backend/system/value/valueSpreadsheet.h"
 #include "backend/system/value/valueGuid.h"
 
 #include "backend/actionInfo.h"

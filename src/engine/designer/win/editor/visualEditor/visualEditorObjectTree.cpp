@@ -508,7 +508,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorItemPopupMenu::OnMenuEve
 	case MENU_MOVE_DOWN: m_formHandler->MovePosition(m_object, true); break;
 
 	case MENU_PROPERTIES:
-		if (!objectInspector->IsShownProperty()) objectInspector->ShowProperty();
+		if (!objectInspector->IsShownInspector()) objectInspector->ShowInspector();
 		m_formHandler->SelectObject(m_object, true);
 		break;
 

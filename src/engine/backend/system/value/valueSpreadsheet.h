@@ -121,6 +121,23 @@ private:
 
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumSpreadsheetBorder);
 };
+
+class BACKEND_API CValueEnumSpreadsheetFillType :
+	public IEnumeration<enSpreadsheetFillType> {
+public:
+
+	CValueEnumSpreadsheetFillType() : IEnumeration() {}
+
+	virtual void CreateEnumeration() {
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrText, wxT("text"), _("Text"));
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrParameter, wxT("parameter"), _("Parameter"));
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate, wxT("template"), _("Template"));
+	}
+
+private:
+
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumSpreadsheetFillType);
+};
 #pragma endregion 
 
 class BACKEND_API CValueSpreadsheetDocumentArea :

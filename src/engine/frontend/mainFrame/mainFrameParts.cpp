@@ -29,14 +29,14 @@ void CDocMDIFrame::CreatePropertyPane()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CDocMDIFrame::IsShownProperty()
+bool CDocMDIFrame::IsShownInspector()
 {
 	const wxAuiPaneInfo propertyPane = m_mgr.GetPane(wxAUI_PANE_PROPERTY);
 	if (!propertyPane.IsOk()) return false;
 	return propertyPane.IsShown();
 }
 
-void CDocMDIFrame::ShowProperty()
+void CDocMDIFrame::ShowInspector()
 {
 	wxAuiPaneInfo& propertyPane = m_mgr.GetPane(wxAUI_PANE_PROPERTY);
 	if (!propertyPane.IsOk())
@@ -207,7 +207,7 @@ bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDat
 			CSpreadsheetFileDocument(spreadSheetDocument)
 		{
 			CSpreadsheetFileDocument::SetTitle(strTitle);
-			CSpreadsheetFileDocument::SetDocumentTemplate(docManager->GetTemplateByGuid(doc::s_guidSpreadsheet));
+			CSpreadsheetFileDocument::SetFilename(strTitle);
 		}
 
 		virtual bool OnCreate(const wxString& path, long flags) override {
@@ -217,13 +217,12 @@ bool CDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDat
 
 			return GetGridCtrl()->LoadDocument(m_spreadSheetDocument);
 		}
-
-	private:
-		virtual CMetaView* DoCreateView() { return new CSpreadsheetEditView; }
 	};
 
 	CSpreadsheetMemoryDocument* createdDoc = 
-		new CSpreadsheetMemoryDocument(strTitle, spreadSheetDocument);
+		docManager->CreateDocument<CSpreadsheetMemoryDocument>(strTitle, spreadSheetDocument);
+
+	wxASSERT(createdDoc != nullptr);
 	
 	if (createdDoc->OnCreate(wxEmptyString, 0)) {
 		createdDoc->SetCommandProcessor(createdDoc->OnCreateCommandProcessor());

@@ -184,8 +184,13 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				m_doc->GetCellAlignment(row, col, &horz, &vert);
 
 				wxString result;
-				CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
-					m_doc->GetCellValue(row, col), result);
+				if (m_doc->GetCellFillType(row, col) != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter){
+					CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+						m_doc->GetCellValue(row, col), result);
+				}
+				else {
+					m_doc->GetCellValue(row, col, result);
+				}
 
 				DrawTextInRectangle(*dc, result,
 					rect,
@@ -228,8 +233,13 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				m_doc->GetCellAlignment(row, col, &horz, &vert);
 
 				wxString result;
-				CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
-					m_doc->GetCellValue(row, col), result);
+				if (m_doc->GetCellFillType(row, col) != enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+					CBackendLocalization::GetTranslateGetRawLocText(m_doc->GetLangCode(),
+						m_doc->GetCellValue(row, col), result);
+				}
+				else {
+					m_doc->GetCellValue(row, col, result);
+				}
 
 				DrawTextInRectangle(*dc, result,
 					rect,

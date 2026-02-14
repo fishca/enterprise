@@ -158,8 +158,8 @@ public:
 	/**
 	* Show property in mainFrame
 	*/
-	bool IsShownProperty();
-	void ShowProperty();
+	bool IsShownInspector();
+	void ShowInspector();
 
 	// Activate view 
 	void ActivateView(CMetaView* view, bool activate = true);

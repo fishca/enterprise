@@ -604,16 +604,16 @@ struct CSpreadsheetDescription {
 
 	void SetRowBrake(int row) {
 		if (m_rowBrakeAt.size() != 0)
-			m_rowBrakeAt[m_rowBrakeAt.size() - 1] =
-			wxMax(wxMin(m_rowBrakeAt[m_rowBrakeAt.size() - 1], GetNumberRows() - 1), row);
+			m_rowBrakeAt[std::distance(m_rowBrakeAt.begin(),
+				std::max_element(m_rowBrakeAt.begin(), m_rowBrakeAt.end()))] = wxMax(wxMin(m_rowBrakeAt[m_colBrakeAt.size() - 1], GetNumberCols() - 1), row);
 		else
 			m_rowBrakeAt.emplace_back(row);
 	}
 
 	void SetColBrake(int col) {
 		if (m_colBrakeAt.size() != 0)
-			m_colBrakeAt[m_colBrakeAt.size() - 1] =
-			wxMax(wxMin(m_colBrakeAt[m_colBrakeAt.size() - 1], GetNumberCols() - 1), col);
+			m_colBrakeAt[std::distance(m_colBrakeAt.begin(),
+				std::max_element(m_colBrakeAt.begin(), m_colBrakeAt.end()))] = wxMax(wxMin(m_colBrakeAt[m_colBrakeAt.size() - 1], GetNumberCols() - 1), col);
 		else
 			m_colBrakeAt.emplace_back(col);
 	}
@@ -632,13 +632,15 @@ struct CSpreadsheetDescription {
 
 	int GetMaxRowBrake() const {
 		if (m_rowBrakeAt.size() != 0)
-			return m_rowBrakeAt[m_rowBrakeAt.size() - 1];
+			return m_rowBrakeAt[std::distance(m_rowBrakeAt.begin(),
+				std::max_element(m_rowBrakeAt.begin(), m_rowBrakeAt.end()))];
 		return 0;
 	}
 
 	int GetMaxColBrake() const {
 		if (m_colBrakeAt.size() != 0)
-			return m_colBrakeAt[m_colBrakeAt.size() - 1];
+			return m_colBrakeAt[std::distance(m_colBrakeAt.begin(),
+				std::max_element(m_colBrakeAt.begin(), m_colBrakeAt.end()))];
 		return 0;
 	}
 

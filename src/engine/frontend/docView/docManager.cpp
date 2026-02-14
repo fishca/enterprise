@@ -735,7 +735,7 @@ void CMetaDocManager::AddDocTemplate(const picture_identifier_t& id,
 	long flags)
 {
 	AddDocTemplate(id,
-		descr, filter, wxEmptyString, ext, docTypeName, viewTypeName, docClassInfo, viewClassInfo);
+		descr, filter, wxEmptyString, ext, docTypeName, viewTypeName, docClassInfo, viewClassInfo, flags);
 }
 
 void CMetaDocManager::AddDocTemplate(const class_identifier_t& clsid,

@@ -23,10 +23,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
+				//if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+			//if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = rowLeft; row < rowRight; row++)
+			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = colTop; col < colBottom; col++)
+			if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(rowLeft - rowRight);
 		spreadsheetDesc.SetColBrake(colTop - colBottom);
@@ -38,10 +44,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
+				//if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+			//if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = rowLeft; row < rowRight; row++)
+			if (row - rowLeft == 0) spreadsheetDesc.SetRowSize(row - rowLeft, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = 0; col < GetMaxColBrake(); col++)
+			if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(rowLeft - rowRight);
 		spreadsheetDesc.SetColBrake(GetMaxColBrake());
@@ -52,10 +64,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(row));
+				//if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+			//if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = 0; row < GetMaxRowBrake(); row++)
+			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = colTop; col < colBottom; col++)
+			if (col - colTop == 0) spreadsheetDesc.SetColSize(col - colTop, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(GetMaxRowBrake());
 		spreadsheetDesc.SetColBrake(colTop - colBottom);
@@ -77,10 +95,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col - c->m_start);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
+				//if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+			//if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = r->m_start; row <= (int)r->m_end; row++)
+			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = c->m_start; col <= (int)c->m_end; col++)
+			if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(r->m_end - r->m_start);
 		spreadsheetDesc.SetColBrake(c->m_end - c->m_start);
@@ -91,10 +115,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col == 0) spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(row));
+				//spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+			//if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = r->m_start; row <= (int)r->m_end; row++)
+			if (row - r->m_start == 0) spreadsheetDesc.SetRowSize(row - r->m_start, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = 0; col <= GetMaxColBrake(); col++)
+			spreadsheetDesc.SetColSize(col, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(r->m_end - r->m_start);
 		spreadsheetDesc.SetColBrake(GetMaxColBrake());
@@ -105,10 +135,16 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 				CSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row, col - c->m_start);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
-				if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(row));
+				//if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(col));
 			}
-			if (row == 0) spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+			//spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
 		}
+
+		for (int row = 0; row <= GetMaxRowBrake(); row++)
+			spreadsheetDesc.SetRowSize(row, m_spreadsheetDesc.GetRowSize(row));
+
+		for (int col = c->m_start; col <= (int)c->m_end; col++)
+			if (col - c->m_start == 0) spreadsheetDesc.SetColSize(col - c->m_start, m_spreadsheetDesc.GetColSize(col));
 
 		spreadsheetDesc.SetRowBrake(GetMaxRowBrake());
 		spreadsheetDesc.SetColBrake(c->m_end - c->m_start);
@@ -116,8 +152,6 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 
 	return spreadsheetDesc;
 }
-
-#include "backend_localization.h"
 
 void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
 {
@@ -137,10 +171,16 @@ void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadshee
 				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 			}
 
-			if (maxColBrake + col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
+			//if (maxColBrake + col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
 		}
-		if (row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
+		//if (row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
 	}
+
+	for (int row = 0; row < doc->GetNumberRows(); row++)
+		m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
+
+	for (int col = 0; col < doc->GetNumberCols(); col++)
+		m_spreadsheetDesc.SetColSize(col, doc->GetColSize(col));
 
 	m_spreadsheetDesc.SetRowBrake(maxRowBrake + doc->GetNumberRows() - 1);
 
@@ -166,10 +206,16 @@ void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadshe
 				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 			}
 
-			if (maxRowBrake + row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
+			//if (maxRowBrake + row == 0) m_spreadsheetDesc.SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
 		}
-		if (col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
+		//if (col == 0) m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
 	}
+
+	for (int row = 0; row < doc->GetNumberRows(); row++)
+		m_spreadsheetDesc.SetRowSize(row, doc->GetRowSize(row));
+
+	for (int col = 0; col < doc->GetNumberCols(); col++)
+		m_spreadsheetDesc.SetColSize(maxColBrake + col, doc->GetColSize(col));
 
 	if (maxRowBrake < doc->GetNumberRows())
 		m_spreadsheetDesc.SetRowBrake(maxRowBrake + doc->GetNumberRows() - 1);
@@ -347,6 +393,8 @@ void CBackendSpreadsheetObject::SetParameter(const wxString& strParameter, const
 {
 	m_paramVector.insert_or_assign(strParameter, valueParam);
 }
+
+#include "backend_localization.h"
 
 wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxString& strValue, enSpreadsheetFillType type) const
 {

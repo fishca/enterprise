@@ -191,7 +191,7 @@ public:
 		{
 			CMethodHelper* methodHelper = paParams[0]->GetPMethods();
 			if (methodHelper != nullptr) {
-				for (int lPropPos = 0; lPropPos < m_methodHelper->GetNProps(); lPropPos++) {
+				for (int lPropPos = 0; lPropPos <= m_methodHelper->GetNProps(); lPropPos++) {
 					wxString strPropName = methodHelper->GetPropName(lPropPos);
 					long lPropNum = methodHelper->FindProp(strPropName);
 					if (lPropNum == wxNOT_FOUND)
@@ -202,6 +202,7 @@ public:
 				}
 				return true;
 			}
+			return false;
 		}
 		case enSet:
 			m_spreadsheetDoc->SetParameter(paParams[0]->GetString(), *paParams[1]);

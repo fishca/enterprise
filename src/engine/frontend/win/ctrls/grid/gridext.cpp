@@ -5891,29 +5891,29 @@ bool wxGridExt::FreezeTo(int row, int col)
 			return false;
 
 		// check all involved cells for merged ones
-		int cell_rows, cell_cols;
+		//int cell_rows, cell_cols;
 
-		for (int i = m_numFrozenRows; i < row; i++)
-		{
-			for (int j = 0; j < m_numCols; j++)
-			{
-				GetCellSize(GetRowAt(i), GetColAt(j), &cell_rows, &cell_cols);
+		//for (int i = m_numFrozenRows; i < row; i++)
+		//{
+		//	for (int j = 0; j < m_numCols; j++)
+		//	{
+		//		GetCellSize(GetRowAt(i), GetColAt(j), &cell_rows, &cell_cols);
 
-				if ((cell_rows > 1) || (cell_cols > 1))
-					return false;
-			}
-		}
+		//		if ((cell_rows > 1) || (cell_cols > 1))
+		//			return false;
+		//	}
+		//}
 
-		for (int i = m_numFrozenCols; i < col; i++)
-		{
-			for (int j = 0; j < m_numRows; j++)
-			{
-				GetCellSize(GetRowAt(j), GetColAt(i), &cell_rows, &cell_cols);
+		//for (int i = m_numFrozenCols; i < col; i++)
+		//{
+		//	for (int j = 0; j < m_numRows; j++)
+		//	{
+		//		GetCellSize(GetRowAt(j), GetColAt(i), &cell_rows, &cell_cols);
 
-				if ((cell_rows > 1) || (cell_cols > 1))
-					return false;
-			}
-		}
+		//		if ((cell_rows > 1) || (cell_cols > 1))
+		//			return false;
+		//	}
+		//}
 	}
 
 	m_numFrozenRows = row;

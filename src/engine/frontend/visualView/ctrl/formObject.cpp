@@ -293,6 +293,8 @@ bool CValueForm::InitializeFormModule()
 
 			m_procUnit->Execute(m_compileModule->m_cByteCode, true);
 		}
+
+		PrepareNames();
 	}
 
 #pragma region _control_guard_

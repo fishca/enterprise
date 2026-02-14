@@ -163,8 +163,8 @@ public:
 	void SetRowFreeze(int row);
 	void SetColFreeze(int col);
 
-	int GetRowFreeze() const { return m_spreadsheetDesc.GetColFreeze(); }
-	int GetColFreeze() const { return m_spreadsheetDesc.GetRowFreeze(); }
+	int GetRowFreeze() const { return m_spreadsheetDesc.GetRowFreeze(); }
+	int GetColFreeze() const { return m_spreadsheetDesc.GetColFreeze(); }
 
 	// ------ label and gridline formatting
 	//

@@ -519,7 +519,7 @@ public:
 	static bool CompareObjectName(const wxString& className, eValueTypes valueType) {
 		return stringUtils::CompareString(className, GetNameObjectFromVT(valueType));
 	}
-	
+
 	static wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false);
 	static wxString GetNameObjectFromVT(eValueTypes valueType, bool upper = false);
 	static eValueTypes GetVTByID(const class_identifier_t& clsid);
@@ -609,7 +609,10 @@ public:
 
 #pragma region attribute_support
 
-	virtual CMethodHelper* GetPMethods() const { return nullptr; }
+	virtual CMethodHelper* GetPMethods() const {
+		return m_typeClass == eValueTypes::TYPE_REFFER && m_pRef != nullptr ?
+			m_pRef->GetPMethods() : nullptr;
+	}
 
 	//collect 
 	virtual void PrepareNames() const;

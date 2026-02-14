@@ -5880,15 +5880,15 @@ bool wxGridExt::FreezeTo(int row, int col)
 	if (row > m_numFrozenRows || col > m_numFrozenCols)
 	{
 		// check that it fits in client size
-		int cw, ch;
-		GetClientSize(&cw, &ch);
+		//int cw, ch;
+		//GetClientSize(&cw, &ch);
 
-		cw -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
-		ch -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
+		//cw -= (GridRowAreaEnabled() ? wxCalcGridScale(m_rowAreaWidth, GetGridZoom()) : 0) + wxCalcGridScale(m_rowLabelWidth, GetGridZoom());
+		//ch -= (GridColAreaEnabled() ? wxCalcGridScale(m_colAreaHeight, GetGridZoom()) : 0) + wxCalcGridScale(m_colLabelHeight, GetGridZoom());
 
-		if ((row > 0 && GetRowBottom(row - 1, GetGridZoom()) >= ch) ||
-			(col > 0 && GetColRight(col - 1, GetGridZoom()) >= cw))
-			return false;
+		//if ((row > 0 && GetRowBottom(row - 1, GetGridZoom()) >= ch) ||
+		//	(col > 0 && GetColRight(col - 1, GetGridZoom()) >= cw))
+		//	return false;
 
 		// check all involved cells for merged ones
 		//int cell_rows, cell_cols;
@@ -7144,32 +7144,49 @@ void wxGridExt::DrawCellBorder(wxDC& dc, const wxGridExtCellCoords& coords, cons
 	if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
-		dc.DrawLine(rect.GetLeft() - borderLeft.m_width, rect.GetTop() - borderLeft.m_width,
-			rect.GetLeft() - borderLeft.m_width, rect.GetBottom() + borderLeft.m_width);
+
+		if (m_gridLinesEnabled)
+			dc.DrawLine(rect.GetLeft() - 1, rect.GetTop() - 1,
+				rect.GetLeft() - 1, rect.GetBottom() + 1);
+		else
+			dc.DrawLine(rect.GetLeft(), rect.GetTop(),
+				rect.GetLeft(), rect.GetBottom() + 1);
 	}
 
 	wxGridExtCellBorder borderRight = attr->GetBorderRight();
 	if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
-		dc.DrawLine(rect.GetRight() + borderRight.m_width, rect.GetTop() - borderRight.m_width,
-			rect.GetRight() + borderRight.m_width, rect.GetBottom() + borderRight.m_width);
+		if (m_gridLinesEnabled)
+			dc.DrawLine(rect.GetRight() + 1, rect.GetTop() - 1,
+				rect.GetRight() + 1, rect.GetBottom() + 1);
+		else
+			dc.DrawLine(rect.GetRight() + 1, rect.GetTop(),
+				rect.GetRight() + 1, rect.GetBottom() + 1);
 	}
 
 	wxGridExtCellBorder borderTop = attr->GetBorderTop();
 	if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
-		dc.DrawLine(rect.GetLeft() - borderTop.m_width, rect.GetTop() - borderTop.m_width,
-			rect.GetRight() + borderTop.m_width, rect.GetTop() - borderTop.m_width);
+		if (m_gridLinesEnabled)
+			dc.DrawLine(rect.GetLeft() - 1, rect.GetTop() - 1,
+				rect.GetRight() + 1, rect.GetTop() - 1);
+		else
+			dc.DrawLine(rect.GetLeft(), rect.GetTop(),
+				rect.GetRight() + 1, rect.GetTop());
 	}
 
 	wxGridExtCellBorder borderBottom = attr->GetBorderBottom();
 	if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT)
 	{
 		dc.SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
-		dc.DrawLine(rect.GetLeft() - borderBottom.m_width, rect.GetBottom() + borderBottom.m_width,
-			rect.GetRight() + borderBottom.m_width, rect.GetBottom() + borderBottom.m_width);
+		if (m_gridLinesEnabled)
+			dc.DrawLine(rect.GetLeft() - 1, rect.GetBottom() + 1,
+				rect.GetRight() + 1, rect.GetBottom() + 1);
+		else
+			dc.DrawLine(rect.GetLeft(), rect.GetBottom() + 1,
+				rect.GetRight() + 1, rect.GetBottom() + 1);
 	}
 }
 
@@ -7444,7 +7461,7 @@ void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), 
 	int rightCol = GetColPos(internalXToCol(right, gridWindow));
 	int bottomRow = GetRowPos(internalYToRow(bottom, gridWindow));
 
-	if (gridWindow == m_gridWin)
+	if (gridWindow != NULL)
 	{
 		wxRegion clippedcells(0, 0, cw, ch);
 
@@ -7462,14 +7479,14 @@ void wxGridExt::DrawAllGridWindowLines(wxDC& dc, const wxRegion& WXUNUSED(reg), 
 				case CellSpan_Main:
 					rect = CellToRect(j, i);
 					rect.Offset(-gridOffset);
-					CalcScrolledPosition(rect.x, rect.y, &rect.x, &rect.y);
+					CalcGridWindowScrolledPosition(rect.x, rect.y, &rect.x, &rect.y, gridWindow);
 					clippedcells.Subtract(rect);
 					break;
 
 				case CellSpan_Inside:
 					rect = CellToRect(j + cell_rows, i + cell_cols);
 					rect.Offset(-gridOffset);
-					CalcScrolledPosition(rect.x, rect.y, &rect.x, &rect.y);
+					CalcGridWindowScrolledPosition(rect.x, rect.y, &rect.x, &rect.y, gridWindow);
 					clippedcells.Subtract(rect);
 					break;
 
@@ -9237,7 +9254,7 @@ int wxGridExt::GetFirstFullyVisibleRow() const
 	return row;
 }
 
-int wxGridExt::GetFirstFullyVisibleColumn() const
+int wxGridExt::GetFirstFullyVisibleCol() const
 {
 	if (m_numCols == 0)
 		return -1;
@@ -11710,7 +11727,7 @@ wxGridExtCellRenderer* wxGridExt::GetDefaultRendererForCell(int row, int col) co
 	static wxString typeName;
 	if (!m_table->GetTypeName(row, col, typeName))
 		return NULL;
-	
+
 	return GetDefaultRendererForType(typeName);
 }
 
@@ -13157,7 +13174,7 @@ wxGridExtBlockCoords wxGridExt::GetSelectedCellRange() const
 {
 	int row1 = m_numRows, col1 = m_numCols,
 		row2 = 0, col2 = 0; bool hasBlocks = false;
-	
+
 	for (const auto& coords : wxGridExt::GetSelectedBlocks()) {
 		if (row1 > coords.GetTopRow()) row1 = coords.GetTopRow();
 		if (col1 > coords.GetLeftCol()) col1 = coords.GetLeftCol();

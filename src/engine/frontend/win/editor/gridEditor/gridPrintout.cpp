@@ -162,6 +162,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 		}
 		cellInitialW = m_doc->GetRowLabelSize();
 	}
+	
 	////////////////////////////////
 
 	// Draw cell content //
@@ -209,30 +210,6 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 					horz, vert,
 					m_doc->GetCellTextOrient(row, col)
 				);
-
-				CSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
-				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
-					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetTop(), rect.GetLeft() - 1, rect.GetBottom() + 1);
-				}
-
-				CSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
-				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
-					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
-					dc->DrawLine(rect.GetRight() + 2, rect.GetTop(), rect.GetRight() + 2, rect.GetBottom() + 1);
-				}
-
-				CSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
-				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
-					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
-				}
-
-				CSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
-				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
-					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
-				}
 			}
 			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
 				
@@ -261,11 +238,40 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 					horz, vert,
 					m_doc->GetCellTextOrient(row, col)
 				);
+			}
+
+			countWidth += m_doc->GetColSize(col);
+		}
+
+		countHeight += m_doc->GetRowSize(row);
+	}
+
+	// Draw border content //
+	countHeight = cellInitialH;
+
+	for (int row = m_rowsPerPage.Item(rowIndex); row < toRow; row++) {
+
+		countWidth = cellInitialW;
+
+		for (int col = m_colsPerPage.Item(colIndex); col < toCol; col++) {
+
+			int cell_rows, cell_cols;
+			if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_Main) {
+
+				int colSize = 0, rowSize = 0;
+
+				for (int i = col; i < col + cell_cols; i++)
+					colSize += m_doc->GetColSize(i);
+
+				for (int i = row; i < row + cell_rows; i++)
+					rowSize += m_doc->GetRowSize(i);
+
+				wxRect rect(countWidth, countHeight, colSize, rowSize);
 
 				CSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
 				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetTop(), rect.GetLeft() - 1, rect.GetBottom() + 1);
+					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetLeft() + 1, rect.GetBottom() + 1);
 				}
 
 				CSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
@@ -277,13 +283,41 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 				CSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
 				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
+					dc->DrawLine(rect.GetLeft() + 1 , rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
 				}
 
 				CSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
 				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
 					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
-					dc->DrawLine(rect.GetLeft() - 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
+					dc->DrawLine(rect.GetLeft() + 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
+				}
+			}
+			else if (m_doc->GetCellSize(row, col, &cell_rows, &cell_cols) == wxGridExt::CellSpan_None) {
+
+				wxRect rect(countWidth, countHeight, m_doc->GetColSize(col), m_doc->GetRowSize(row));
+
+				CSpreadsheetBorderDescription borderLeft = m_doc->GetCellBorderLeft(row, col);
+				if (borderLeft.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
+					dc->SetPen(wxPen(borderLeft.m_colour, borderLeft.m_width, borderLeft.m_style));
+					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetLeft() + 1, rect.GetBottom() + 1);
+				}
+
+				CSpreadsheetBorderDescription borderRight = m_doc->GetCellBorderRight(row, col);
+				if (borderRight.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
+					dc->SetPen(wxPen(borderLeft.m_colour, borderRight.m_width, borderRight.m_style));
+					dc->DrawLine(rect.GetRight() + 2, rect.GetTop(), rect.GetRight() + 2, rect.GetBottom() + 1);
+				}
+
+				CSpreadsheetBorderDescription borderTop = m_doc->GetCellBorderTop(row, col);
+				if (borderTop.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
+					dc->SetPen(wxPen(borderTop.m_colour, borderTop.m_width, borderTop.m_style));
+					dc->DrawLine(rect.GetLeft() + 1, rect.GetTop(), rect.GetRight() + 2, rect.GetTop());
+				}
+
+				CSpreadsheetBorderDescription borderBottom = m_doc->GetCellBorderBottom(row, col);
+				if (borderBottom.m_style != wxPenStyle::wxPENSTYLE_TRANSPARENT) {
+					dc->SetPen(wxPen(borderBottom.m_colour, borderBottom.m_width, borderBottom.m_style));
+					dc->DrawLine(rect.GetLeft() + 1, rect.GetBottom() + 1, rect.GetRight() + 2, rect.GetBottom() + 1);
 				}
 			}
 

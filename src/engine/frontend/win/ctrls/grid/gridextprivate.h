@@ -943,7 +943,7 @@ public:
 	}
 	virtual void MakeLineCurrent(wxGridExt* grid, int line) const wxOVERRIDE
 	{
-		grid->SetCurrentCell(line, grid->GetFirstFullyVisibleColumn());
+		grid->SetCurrentCell(line, grid->GetFirstFullyVisibleCol());
 	}
 
 };

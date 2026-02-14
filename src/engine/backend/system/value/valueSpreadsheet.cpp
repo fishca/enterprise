@@ -321,10 +321,10 @@ bool CValueSpreadsheetDocument::SetPropVal(const long lPropNum, const CValue& va
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		m_spreadsheetDoc->SetRowFreeze(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetColFreeze(varPropVal.GetInteger());
 		return true;
 	case eFixedTop:
-		m_spreadsheetDoc->SetColFreeze(varPropVal.GetInteger());
+		m_spreadsheetDoc->SetRowFreeze(varPropVal.GetInteger());
 		return true;
 	case eAreas:
 		return false;
@@ -349,10 +349,10 @@ bool CValueSpreadsheetDocument::GetPropVal(const long lPropNum, CValue& pvarProp
 	switch (lPropNum)
 	{
 	case eFixedLeft:
-		pvarPropVal = m_spreadsheetDoc->GetRowFreeze();
+		pvarPropVal = m_spreadsheetDoc->GetColFreeze();
 		return true;
 	case eFixedTop:
-		pvarPropVal = m_spreadsheetDoc->GetColFreeze();
+		pvarPropVal = m_spreadsheetDoc->GetRowFreeze();
 		return true;
 	case eAreas:
 		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentAreaCollection>(m_spreadsheetDoc);

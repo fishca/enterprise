@@ -127,12 +127,12 @@ void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue
 		if (!procFounded) {
 			int endPos = m_codeEditor->GetLineEndPosition(lineEnd);
 			wxString offset = endPos > 0 ?
-				"\r\n\r\n" : "";
+				wxT("\r\n\r\n") : wxT("");
 			m_codeEditor->Replace(endPos, endPos,
 				offset +
-				"procedure " + strEvent + "(" + prcArgs + ")\r\n"
+				wxT("Procedure ") + strEvent + wxT("(") + prcArgs + wxT(")\r\n")
 				"\t\r\n"
-				"endProcedure"
+				wxT("EndProcedure")
 			);
 			int patchLine = endPos > 0 ?
 				2 : -1;
@@ -149,7 +149,7 @@ void CVisualEditorNotebook::ActivateEditor()
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		m_visualEditor->ActivateEditor();
-	else if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) 
+	else if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR)
 		m_codeEditor->ActivateEditor();
 }
 

@@ -185,7 +185,7 @@ CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 
 	commonSizer->Add(m_mainToolBar, 0, wxEXPAND);
 
-	m_treeControl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxSIMPLE_BORDER | wxTR_TWIST_BUTTONS);
+	m_treeControl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxSIMPLE_BORDER | wxTR_NO_LINES | wxTR_TWIST_BUTTONS);
 	controlSizer->Add(m_treeControl, 1, wxALL | wxEXPAND, 5);
 	m_treeControl->SetDoubleBuffered(true);
 
@@ -194,7 +194,7 @@ CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 	m_propertyGridManager = new wxPropertyGridManager(this, WXOES_PROPERTY_GRID, wxDefaultPosition, wxDefaultSize, wxPG_BOLD_MODIFIED | wxPG_SPLITTER_AUTO_CENTER | wxPG_DESCRIPTION | wxPG_TOOLTIPS | wxPGMAN_DEFAULT_STYLE);
 	m_propertyGridManager->SetExtraStyle(wxPG_EX_NATIVE_DOUBLE_BUFFERING);
 
-	m_propertyGridPage = m_propertyGridManager->AddPage(_("default"), wxNullBitmap);
+	m_propertyGridPage = m_propertyGridManager->AddPage(_("Default"), wxNullBitmap);
 
 	controlSizer->Add(m_propertyGridManager, 1, wxALL | wxEXPAND, 5);
 	commonSizer->Add(controlSizer, 1, wxEXPAND, 5);

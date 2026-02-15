@@ -159,13 +159,13 @@ void CFunctionList::OnButtonOk(wxCommandEvent& event)
 			int endPos = m_codeEditor->GetLineEndPosition(line.m_line);
 
 			wxString offset = endPos > 0 ?
-				"\r\n\r\n" : "";
+				wxT("\r\n\r\n") : wxT("");
 
 			m_codeEditor->Replace(endPos, endPos,
 				offset +
-				"procedure " + m_listProcedures->GetItemText(lSelectedItem) + "(" + prcArgs + ")\r\n"
-				"\t\r\n"
-				"endProcedure"
+				wxT("Procedure ") + m_listProcedures->GetItemText(lSelectedItem) + wxT("(") + prcArgs + wxT(")\r\n")
+				wxT("\t\r\n")
+				wxT("EndProcedure")
 			);
 
 			m_codeEditor->GotoLine(line.m_line + (endPos > 0 ? 2 : 0));

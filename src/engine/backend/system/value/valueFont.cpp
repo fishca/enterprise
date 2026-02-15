@@ -52,12 +52,12 @@ void CValueFont::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("size"));
-	m_methodHelper.AppendProp(wxT("family"));
-	m_methodHelper.AppendProp(wxT("style"));
-	m_methodHelper.AppendProp(wxT("weight"));
-	m_methodHelper.AppendProp(wxT("underlined"));
-	m_methodHelper.AppendProp(wxT("face"));
+	m_methodHelper.AppendProp(wxT("Size"));
+	m_methodHelper.AppendProp(wxT("Family"));
+	m_methodHelper.AppendProp(wxT("Style"));
+	m_methodHelper.AppendProp(wxT("Weight"));
+	m_methodHelper.AppendProp(wxT("Underlined"));
+	m_methodHelper.AppendProp(wxT("Face"));
 }
 
 bool CValueFont::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -117,4 +117,4 @@ bool CValueFont::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueFont, "font", string_to_clsid("VL_FONT"));
+VALUE_TYPE_REGISTER(CValueFont, "Font", string_to_clsid("VL_FONT"));

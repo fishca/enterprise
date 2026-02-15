@@ -41,8 +41,8 @@ void CValueSize::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("x"));
-	m_methodHelper.AppendProp(wxT("y"));
+	m_methodHelper.AppendProp(wxT("X"));
+	m_methodHelper.AppendProp(wxT("Y"));
 }
 
 bool CValueSize::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -77,4 +77,4 @@ bool CValueSize::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueSize, "size", string_to_clsid("VL_SIZE"));
+VALUE_TYPE_REGISTER(CValueSize, "Size", string_to_clsid("VL_SIZE"));

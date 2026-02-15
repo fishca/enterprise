@@ -152,9 +152,9 @@ void CValueSelectorRecordDataObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("next", "next()");
-	m_methodHelper->AppendFunc("reset", "reset()");
-	m_methodHelper->AppendFunc("getObject", "getObject()");
+	m_methodHelper->AppendFunc(wxT("Next"), wxT("Next()"));
+	m_methodHelper->AppendFunc(wxT("Reset"), wxT("Reset()"));
+	m_methodHelper->AppendFunc(wxT("GetObject"), wxT("GetObject()"));
 
 	//set object name 
 	wxString objectName;
@@ -185,7 +185,7 @@ void CValueSelectorRecordDataObject::PrepareNames() const
 		);
 	}
 
-	m_methodHelper->AppendProp(wxT("reference"), m_metaObject->GetMetaID());
+	m_methodHelper->AppendProp(wxT("Reference"), m_metaObject->GetMetaID());
 }
 
 bool CValueSelectorRecordDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
@@ -230,11 +230,11 @@ bool CValueSelectorRecordDataObject::GetPropVal(const long lPropNum, CValue& pva
 
 void CValueSelectorRegisterDataObject::PrepareNames() const
 {
-	m_methodHelper->AppendFunc("next", "next()");
-	m_methodHelper->AppendFunc("reset", "reset()");
+	m_methodHelper->AppendFunc(wxT("Next"), wxT("Next()"));
+	m_methodHelper->AppendFunc(wxT("Reset"), wxT("Reset()"));
 
 	if (m_metaObject->HasRecordManager()) {
-		m_methodHelper->AppendFunc("getRecordManager", "getRecordManager()");
+		m_methodHelper->AppendFunc(wxT("GetRecordManager"), wxT("GetRecordManager()"));
 	}
 
 	//set object name 

@@ -36,7 +36,7 @@ void CValueCheckbox::PrepareNames() const
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendProp(wxT("value"), eControlValue, eControl);
+	m_methodHelper->AppendProp(wxT("Value"), eControlValue, eControl);
 }
 
 bool CValueCheckbox::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -193,4 +193,4 @@ bool CValueCheckbox::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueCheckbox, "checkbox", "widget", string_to_clsid("CT_CHKB"));
+CONTROL_TYPE_REGISTER(CValueCheckbox, "Checkbox", "Widget", string_to_clsid("CT_CHKB"));

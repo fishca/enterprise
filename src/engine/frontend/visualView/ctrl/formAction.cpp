@@ -27,12 +27,12 @@ CValueForm::CActionCollection CValueForm::GetActionCollection(const form_identif
 	IActionDataObject* srcAction = dynamic_cast<IActionDataObject*>(CValueForm::GetSourceObject());
 	if (srcAction != nullptr) srcAction->AppendActionCollection(actionData, formType);
 
-	actionData.AddAction(wxT("close"), _("Close"), g_picCloseFormCLSID, false, enClose);
-	actionData.AddAction(wxT("update"), _("Update"), g_picUpdateFormCLSID, false, enUpdate);
-	actionData.AddAction(wxT("help"), _("Help"), g_picHelpFormCLSID, false, enHelp);
+	actionData.AddAction(wxT("Close"), _("Close"), g_picCloseFormCLSID, false, enClose);
+	actionData.AddAction(wxT("Update"), _("Update"), g_picUpdateFormCLSID, false, enUpdate);
+	actionData.AddAction(wxT("Help"), _("Help"), g_picHelpFormCLSID, false, enHelp);
 
 	actionData.AddSeparator();
-	actionData.AddAction(wxT("change"), _("Change form"), g_picChangeFormCLSID, false, enChange);
+	actionData.AddAction(wxT("Change"), _("Change form"), g_picChangeFormCLSID, false, enChange);
 
 	return actionData;
 }

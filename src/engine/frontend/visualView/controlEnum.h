@@ -22,8 +22,8 @@ class FRONTEND_API CValueEnumOrient :
 public:
 	CValueEnumOrient() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxHORIZONTAL, wxT("horizontal"), _("Horizontal"));
-		AddEnumeration(wxVERTICAL, wxT("vertical"), _("Vertical"));
+		AddEnumeration(wxHORIZONTAL, wxT("Horizontal"), _("Horizontal"));
+		AddEnumeration(wxVERTICAL, wxT("Vertical"), _("Vertical"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumOrient);
@@ -34,8 +34,8 @@ class FRONTEND_API CValueEnumStretch :
 public:
 	CValueEnumStretch() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxStretch::wxSHRINK, wxT("shrink"), _("Shrink"));
-		AddEnumeration(wxStretch::wxEXPAND, wxT("expand"), _("Expand"));
+		AddEnumeration(wxStretch::wxSHRINK, wxT("Shrink"), _("Shrink"));
+		AddEnumeration(wxStretch::wxEXPAND, wxT("Expand"), _("Expand"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumStretch);
@@ -48,8 +48,8 @@ class FRONTEND_API CValueEnumOrientNotebookPage :
 public:
 	CValueEnumOrientNotebookPage() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_TOP, wxT("top"), _("Top"));
-		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_BOTTOM, wxT("bottom"), _("Bottom"));
+		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_TOP, wxT("Top"), _("Top"));
+		AddEnumeration(wxAuiNotebookOption::wxAUI_NB_BOTTOM, wxT("Bottom"), _("Bottom"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumOrientNotebookPage);
@@ -60,9 +60,9 @@ class FRONTEND_API CValueEnumHorizontalAlignment :
 public:
 	CValueEnumHorizontalAlignment() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAlignment::wxALIGN_LEFT, wxT("left"), _("Left"));
-		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"), _("Center"));
-		AddEnumeration(wxAlignment::wxALIGN_RIGHT, wxT("right"), _("Right"));
+		AddEnumeration(wxAlignment::wxALIGN_LEFT, wxT("Left"), _("Left"));
+		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("Center"), _("Center"));
+		AddEnumeration(wxAlignment::wxALIGN_RIGHT, wxT("Right"), _("Right"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumHorizontalAlignment);
@@ -73,9 +73,9 @@ class FRONTEND_API CValueEnumVerticalAlignment :
 public:
 	CValueEnumVerticalAlignment() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(wxAlignment::wxALIGN_TOP, wxT("top"), _("Top"));
-		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("center"), _("Center"));
-		AddEnumeration(wxAlignment::wxALIGN_BOTTOM, wxT("bottom"), _("Bottom"));
+		AddEnumeration(wxAlignment::wxALIGN_TOP, wxT("Top"), _("Top"));
+		AddEnumeration(wxAlignment::wxALIGN_CENTER, wxT("Center"), _("Center"));
+		AddEnumeration(wxAlignment::wxALIGN_BOTTOM, wxT("Bottom"), _("Bottom"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumVerticalAlignment);
@@ -86,8 +86,8 @@ class FRONTEND_API CValueEnumTitleLocation :
 public:
 	CValueEnumTitleLocation() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(enTitleLocation::eLeft, wxT("left"), _("Left"));
-		AddEnumeration(enTitleLocation::eRight, wxT("right"), _("Right"));
+		AddEnumeration(enTitleLocation::eLeft, wxT("Left"), _("Left"));
+		AddEnumeration(enTitleLocation::eRight, wxT("Right"), _("Right"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumTitleLocation);
@@ -98,10 +98,10 @@ class FRONTEND_API CValueEnumRepresentation :
 public:
 	CValueEnumRepresentation() : IEnumeration() {}
 	virtual void CreateEnumeration() {
-		AddEnumeration(enRepresentation::eRepresentation_Auto, wxT("auto"), _("Auto"));
-		AddEnumeration(enRepresentation::eRepresentation_Text, wxT("text"), _("Text"));
-		AddEnumeration(enRepresentation::eRepresentation_Picture, wxT("picture"), _("Picture"));
-		AddEnumeration(enRepresentation::eRepresentation_PictureAndText, wxT("pictureText"), _("Picture and text"));
+		AddEnumeration(enRepresentation::eRepresentation_Auto, wxT("Auto"), _("Auto"));
+		AddEnumeration(enRepresentation::eRepresentation_Text, wxT("Text"), _("Text"));
+		AddEnumeration(enRepresentation::eRepresentation_Picture, wxT("Picture"), _("Picture"));
+		AddEnumeration(enRepresentation::eRepresentation_PictureAndText, wxT("PictureAndText"), _("Picture and text"));
 	}
 private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumRepresentation);

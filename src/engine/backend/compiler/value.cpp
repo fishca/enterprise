@@ -1224,11 +1224,11 @@ CValue CValue::GetValue(bool getThis)
 //*                       Runtime register                             *
 //**********************************************************************
 
-PRIMITIVE_TYPE_REGISTER(CValue, "undefined", eValueTypes::TYPE_EMPTY, g_valueUndefinedCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "Undefined", eValueTypes::TYPE_EMPTY, g_valueUndefinedCLSID);
 
-PRIMITIVE_TYPE_REGISTER(CValue, "boolean", eValueTypes::TYPE_BOOLEAN, g_valueBooleanCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "number", eValueTypes::TYPE_NUMBER, g_valueNumberCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "date", eValueTypes::TYPE_DATE, g_valueDateCLSID);
-PRIMITIVE_TYPE_REGISTER(CValue, "string", eValueTypes::TYPE_STRING, g_valueStringCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "Boolean", eValueTypes::TYPE_BOOLEAN, g_valueBooleanCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "Number", eValueTypes::TYPE_NUMBER, g_valueNumberCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "Date", eValueTypes::TYPE_DATE, g_valueDateCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "String", eValueTypes::TYPE_STRING, g_valueStringCLSID);
 
-PRIMITIVE_TYPE_REGISTER(CValue, "null", eValueTypes::TYPE_NULL, g_valueNullCLSID);
+PRIMITIVE_TYPE_REGISTER(CValue, "Null", eValueTypes::TYPE_NULL, g_valueNullCLSID);

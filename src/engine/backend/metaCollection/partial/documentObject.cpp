@@ -184,7 +184,7 @@ void CValueRecordDataObjectDocument::ShowFormValue(const wxString& strFormName, 
 	}
 
 	//if form is not initialized then generate  
-	IBackendValueForm* const valueForm = 
+	IBackendValueForm* const valueForm =
 		GetFormValue(strFormName, ownerControl);
 
 	if (valueForm != nullptr) {
@@ -473,17 +473,17 @@ void CValueRecordDataObjectDocument::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("isNew", "isNew()");
-	m_methodHelper->AppendFunc("copy", "copy()");
-	m_methodHelper->AppendFunc("fill", 1, "fill(object)");
-	m_methodHelper->AppendFunc("write", 2, "write(writeMode, postingMode)");
-	m_methodHelper->AppendFunc("delete", "delete()");
-	m_methodHelper->AppendFunc("modified", "modified()");
-	m_methodHelper->AppendFunc("getFormObject", 2, "getFormObject(string, owner)");
-	m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
+	m_methodHelper->AppendFunc(wxT("IsNew"), wxT("IsNew()"));
+	m_methodHelper->AppendFunc(wxT("Copy"), wxT("Copy()"));
+	m_methodHelper->AppendFunc(wxT("Fill"), 1, wxT("Fill(object : any)"));
+	m_methodHelper->AppendFunc(wxT("Write"), 2, wxT("Write(writeMode : writeMode, postingMode : postingMode)"));
+	m_methodHelper->AppendFunc(wxT("Delete"), wxT("Delete()"));
+	m_methodHelper->AppendFunc(wxT("Modified"), wxT("Modified()"));
+	m_methodHelper->AppendFunc(wxT("GetFormObject"), 2, wxT("GetFormObject(name : string, owner : any)"));
+	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("thisObject"), true, false, eThisObject, eSystem);
-	m_methodHelper->AppendProp(wxT("registerRecords"), true, false, eRegisterRecords, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("RegisterRecords"), true, false, eRegisterRecords, eSystem);
 
 	//set object name 
 	wxString objectName;
@@ -639,9 +639,10 @@ enum {
 	enWriteRegister = 0
 };
 
-void CValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() const {
+void CValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() const
+{
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("write", "write()");
+	m_methodHelper->AppendFunc(wxT("Write"), wxT("Write()"));
 	for (auto& pair : m_records) {
 		IValueRecordSetObject* record = pair.second;
 		wxASSERT(record);
@@ -685,4 +686,4 @@ bool CValueRecordDataObjectDocument::CRecorderRegisterDocument::CallAsFunc(const
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "recorderRegister", string_to_clsid("VL_RGST"));
+SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "RecorderRegister", string_to_clsid("VL_RGST"));

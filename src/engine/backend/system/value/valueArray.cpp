@@ -46,17 +46,17 @@ void CValueArray::CheckIndex(unsigned int index) const //array index must start 
 void CValueArray::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
-	m_methodHelper.AppendConstructor(1, "array(number)");
+	m_methodHelper.AppendConstructor(1, wxT("Array(num : number)"));
 
-	m_methodHelper.AppendFunc("add", 1, "add(value)");
-	m_methodHelper.AppendFunc("insert", 2, "insert(index, value)");
+	m_methodHelper.AppendFunc(wxT("Add"), 1, wxT("Add(value : any)"));
+	m_methodHelper.AppendFunc(wxT("Insert"), 2, wxT("Insert(index, value : any)"));
 
-	m_methodHelper.AppendFunc("count", "count()");
-	m_methodHelper.AppendFunc("find", 1, "find(value)");
-	m_methodHelper.AppendFunc("clear", "clear()");
-	m_methodHelper.AppendFunc("get", 1, "get(index)");
-	m_methodHelper.AppendFunc("set", 1, "get(index)");
-	m_methodHelper.AppendFunc("remove", 1, "remove(index)");
+	m_methodHelper.AppendFunc(wxT("Count"), wxT("Count()"));
+	m_methodHelper.AppendFunc(wxT("Find"), 1, wxT("Find(value : any)"));
+	m_methodHelper.AppendFunc(wxT("Clear"), wxT("Clear()"));
+	m_methodHelper.AppendFunc(wxT("Get"), 1, wxT("Get(index)"));
+	m_methodHelper.AppendFunc(wxT("Set"), 2, wxT("Set(index, value : any)"));
+	m_methodHelper.AppendFunc(wxT("Remove"), 1, wxT("Remove(index : number)"));
 }
 
 bool CValueArray::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
@@ -79,9 +79,9 @@ bool CValueArray::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue
 		Clear(); 
 		return true;
 	case enGet:
-		return GetAt(*paParams[0], pvarRetValue);;
+		return GetAt(*paParams[0], pvarRetValue);
 	case enSet:  
-		return SetAt(*paParams[0], *paParams[1]);;
+		return SetAt(*paParams[0], *paParams[1]);
 	case enRemove: 
 		Remove(paParams[0]->GetUInteger());
 		return true;
@@ -108,4 +108,4 @@ bool CValueArray::SetAt(const CValue& varKeyValue, const CValue& varValue)//arra
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueArray, "array", string_to_clsid("VL_ARR"));
+VALUE_TYPE_REGISTER(CValueArray, "Array", string_to_clsid("VL_ARR"));

@@ -117,4 +117,4 @@ bool CValueStaticBoxSizer::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueStaticBoxSizer, "staticboxsizer", "sizer", string_to_clsid("CT_SSZER"));
+CONTROL_TYPE_REGISTER(CValueStaticBoxSizer, "Staticboxsizer", "Sizer", string_to_clsid("CT_SSZER"));

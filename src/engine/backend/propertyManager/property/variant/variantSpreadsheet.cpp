@@ -2,5 +2,5 @@
 
 wxString wxVariantDataSpreadsheet::MakeString() const
 {
-	return _("spreadsheet");
+	return _("Template");
 }

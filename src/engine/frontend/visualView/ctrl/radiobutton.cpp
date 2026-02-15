@@ -60,4 +60,4 @@ bool CValueRadioButton::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueRadioButton, "radiobutton", "widget", string_to_clsid("CT_RDBT"));
+CONTROL_TYPE_REGISTER(CValueRadioButton, "Radiobutton", "Widget", string_to_clsid("CT_RDBT"));

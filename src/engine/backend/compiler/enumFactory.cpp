@@ -43,4 +43,4 @@ bool CEnumFactory::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-CONTEXT_TYPE_REGISTER(CEnumFactory, "enumManager", string_to_clsid("CO_ENMR"));
+CONTEXT_TYPE_REGISTER(CEnumFactory, "EnumManager", string_to_clsid("CO_ENMR"));

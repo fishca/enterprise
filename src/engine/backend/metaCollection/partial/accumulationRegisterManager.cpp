@@ -69,17 +69,17 @@ void CValueManagerDataObjectAccumulationRegister::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("createRecordSet", "createRecordSet()");
-	m_methodHelper->AppendFunc("createRecordKey", "createRecordKey()");
-	m_methodHelper->AppendFunc("balance", 2, "balance(period, filter...)");
-	m_methodHelper->AppendFunc("turnovers", 4, "turnovers(beginOfPeriod, endOfPeriod, filter...)");
-	m_methodHelper->AppendFunc("select", "select()");
-	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getRecordForm", 3, "getRecordForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
+	m_methodHelper->AppendFunc(wxT("CreateRecordSet"), wxT("CreateRecordSet()"));
+	m_methodHelper->AppendFunc(wxT("CreateRecordKey"), wxT("CreateRecordKey()"));
+	m_methodHelper->AppendFunc(wxT("Balance"), 2, wxT("Balance(period, filter...)"));
+	m_methodHelper->AppendFunc(wxT("Turnovers"), 4, wxT("Turnovers(beginOfPeriod, endOfPeriod, filter...)"));
+	m_methodHelper->AppendFunc(wxT("Select"), wxT("Select()"));
+	m_methodHelper->AppendFunc(wxT("GetForm"), 3, wxT("GetForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetRecordForm"), 3, wxT("GetRecordForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(string)"));
 
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
+	CValue * pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
 		// add methods from context
 		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {

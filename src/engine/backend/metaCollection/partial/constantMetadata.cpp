@@ -21,8 +21,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectConstant, CValueMetaObjectAttribute)
 CValueMetaObjectConstant::CValueMetaObjectConstant() : CValueMetaObjectAttribute()
 {
 	//set default proc
-	m_propertyModule->GetMetaObject()->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	m_propertyModule->GetMetaObject()->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	m_propertyModule->GetMetaObject()->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
 CValueMetaObjectConstant::~CValueMetaObjectConstant()
@@ -167,4 +167,4 @@ IBackendValueForm* CValueMetaObjectConstant::GetObjectForm()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectConstant, "constant", g_metaConstantCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectConstant, "Constant", g_metaConstantCLSID);

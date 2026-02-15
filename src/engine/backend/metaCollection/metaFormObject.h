@@ -154,9 +154,9 @@ private:
 		return FillGenericFormType(prop);
 	}
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("form"), _("Form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("formType"), _("Type"), &CValueMetaObjectForm::FillFormType);
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("FormData"), _("Form"));
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("Form"), _("Form"));
+	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("FormType"), _("Type"), &CValueMetaObjectForm::FillFormType);
 };
 
 // -----------------------------------------------------------------------
@@ -229,10 +229,10 @@ protected:
 
 private:
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("formData"), _("Form"));
+	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categorySecondary, wxT("FormData"), _("Form"));
 
 #pragma region role
-	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("use"), _("Use"));
+	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("Use"), _("Use"));
 #pragma endregion
 };
 

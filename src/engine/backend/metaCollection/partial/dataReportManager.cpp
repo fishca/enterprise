@@ -77,9 +77,9 @@ void CValueManagerDataObjectReport::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("create", "create()");
-	m_methodHelper->AppendFunc("getForm", "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
+	m_methodHelper->AppendFunc(wxT("Create"), wxT("Create()"));
+	m_methodHelper->AppendFunc(wxT("GetForm"), wxT("GetForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
@@ -124,7 +124,7 @@ bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pv
 void CValueManagerDataObjectExternalReport::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("create", 1, "create(fullPath)");
+	m_methodHelper->AppendFunc(wxT("Create"), 1, wxT("Create(fullPath : string)"));
 }
 
 #include "backend/system/systemManager.h"
@@ -154,4 +154,4 @@ bool CValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CV
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalReport, "externalManagerReport", string_to_clsid("MG_EXTR"));
+SYSTEM_TYPE_REGISTER(CValueManagerDataObjectExternalReport, "ExternalManagerReport", string_to_clsid("MG_EXTR"));

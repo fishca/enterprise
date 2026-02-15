@@ -15,8 +15,8 @@ private:
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("formRecord"), _("Form record"), eFormRecord);
-		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
+		formList.AppendItem(wxT("FormRecord"), _("Form record"), eFormRecord);
+		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
 		return formList;
 	}
 
@@ -207,16 +207,16 @@ private:
 
 	CValueMetaObjectRecordManager* m_metaRecordManager;
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("recordSetModule"), _("Record set module")));
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("RecordSetModule"), _("Record set module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("ManagerModule"), _("Manager module")));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormRecord"), _("Default Record Form"), &CValueMetaObjectInformationRegister::FillFormRecord);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectInformationRegister::FillFormList);
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	CPropertyList* m_propertyDefFormRecord = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormRecord"), _("Default Record Form"), &CValueMetaObjectInformationRegister::FillFormRecord);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectInformationRegister::FillFormList);
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("data"));
-	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
-	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("writeMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	CPropertyEnum<CValueEnumPeriodicity>* m_propertyPeriodicity = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumPeriodicity>>(m_categoryData, wxT("Periodicity"), _("Periodicity"), ePeriodicity::eNonPeriodic);
+	CPropertyEnum<CValueEnumWriteRegisterMode>* m_propertyWriteMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumWriteRegisterMode>>(m_categoryData, wxT("WriteMode"), _("Write mode"), eWriteRegisterMode::eIndependent);
 
 	friend class CValueRecordSetObjectInformationRegister;
 	friend class CValueRecordManagerObjectInformationRegister;

@@ -45,7 +45,7 @@ bool CValueRecordDataObjectConstant::InitializeObject(const CValueRecordDataObje
 	if (!m_compileModule) {
 		m_compileModule = new CCompileModule(m_metaObject->GetModuleObject());
 		m_compileModule->SetParent(moduleManager->GetCompileModule());
-		m_compileModule->AddContextVariable(wxT("thisObject"), this);
+		m_compileModule->AddContextVariable(wxT("ThisObject"), this);
 	}
 
 	try {
@@ -215,7 +215,7 @@ bool CValueRecordDataObjectConstant::GetValueByMetaID(const meta_identifier_t& i
 void CValueRecordDataObjectConstant::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProp(wxT("value"),
+	m_methodHelper->AppendProp(wxT("Value"),
 		true, true, eValue, eSystem
 	);
 

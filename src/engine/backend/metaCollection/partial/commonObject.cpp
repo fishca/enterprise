@@ -1345,7 +1345,7 @@ IValueTable* IValueRecordDataObject::GetTableByMetaID(const meta_identifier_t& i
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define thisObject wxT("thisObject")
+#define thisObject wxT("ThisObject")
 
 void IValueRecordDataObject::PrepareEmptyObject()
 {
@@ -1375,8 +1375,8 @@ void IValueRecordDataObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("getFormObject", 2, "getFormObject(string, owner)");
-	m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
+	m_methodHelper->AppendFunc(wxT("GetFormObject"), 2, wxT("GetFormObject(name : string, owner : any)"));
+	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
 	m_methodHelper->AppendProp(thisObject,
 		true, false, eThisObject, eSystem
@@ -2930,8 +2930,8 @@ bool IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::GetPropVal(co
 void CValueRecordKeyObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("isEmpty", "isEmpty()");
-	m_methodHelper->AppendFunc("metaData", "metaData()");
+	m_methodHelper->AppendFunc(wxT("IsEmpty"), wxT("IsEmpty()"));
+	m_methodHelper->AppendFunc(wxT("Metadata"), wxT("Metadata()"));
 
 	wxString objectName;
 
@@ -2946,7 +2946,6 @@ void CValueRecordKeyObject::PrepareNames() const
 			object->GetMetaID()
 		);
 	}
-
 }
 
 //////////////////////////////////////////////////////////////
@@ -2976,9 +2975,10 @@ void IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::PrepareNames(
 void IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::CValueRecordSetObjectRegisterKeyDescriptionValue::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc(wxT("set"), 1, "set(value)");
-	m_methodHelper->AppendProp(wxT("value"), m_metaId);
-	m_methodHelper->AppendProp(wxT("use"));
+	m_methodHelper->AppendFunc(wxT("Set"), 1, wxT("Set(value: any)"));
+
+	m_methodHelper->AppendProp(wxT("Value"), m_metaId);
+	m_methodHelper->AppendProp(wxT("Use"));
 }
 
 enum Prop
@@ -3074,8 +3074,8 @@ bool IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::CValueRecordS
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection, "recordSetRegisterColumn", string_to_clsid("VL_RSCL"));
-SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection::CValueRecordSetRegisterColumnInfo, "recordSetRegisterColumnInfo", string_to_clsid("VL_RSCI"));
+SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection, "RecordSetRegisterColumn", string_to_clsid("VL_RSCL"));
+SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection::CValueRecordSetRegisterColumnInfo, "RecordSetRegisterColumnInfo", string_to_clsid("VL_RSCI"));
 
-SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue, "recordSetRegisterKey", string_to_clsid("VL_RSCK"));
-SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::CValueRecordSetObjectRegisterKeyDescriptionValue, "recordSetRegisterKeyDescription", string_to_clsid("VL_RDVL"));
+SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue, "RecordSetRegisterKey", string_to_clsid("VL_RSCK"));
+SYSTEM_TYPE_REGISTER(IValueRecordSetObject::CValueRecordSetObjectRegisterKeyValue::CValueRecordSetObjectRegisterKeyDescriptionValue, "RecordSetRegisterKeyDescription", string_to_clsid("VL_RDVL"));

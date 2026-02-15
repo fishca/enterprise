@@ -89,4 +89,4 @@ bool CValueSlider::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueSlider, "slider", "widget", string_to_clsid("CT_SLID"));
+CONTROL_TYPE_REGISTER(CValueSlider, "Slider", "Widget", string_to_clsid("CT_SLID"));

@@ -38,4 +38,4 @@ bool CValueMetaObjectRole::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectRole, "role", g_metaRoleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectRole, "Role", g_metaRoleCLSID);

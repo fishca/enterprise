@@ -71,16 +71,16 @@ void CValueGlobalContextManager::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendProp(wxT("constants"));
-	m_methodHelper->AppendProp(wxT("catalogs"));
-	m_methodHelper->AppendProp(wxT("documents"));
-	m_methodHelper->AppendProp(wxT("enumerations"));
-	m_methodHelper->AppendProp(wxT("dataProcessors"));
-	m_methodHelper->AppendProp(wxT("externalDataProcessors"));
-	m_methodHelper->AppendProp(wxT("reports"));
-	m_methodHelper->AppendProp(wxT("externalReports"));
-	m_methodHelper->AppendProp(wxT("informationRegisters"));
-	m_methodHelper->AppendProp(wxT("accumulationRegisters"));
+	m_methodHelper->AppendProp(wxT("Constants"));
+	m_methodHelper->AppendProp(wxT("Catalogs"));
+	m_methodHelper->AppendProp(wxT("Documents"));
+	m_methodHelper->AppendProp(wxT("Enumerations"));
+	m_methodHelper->AppendProp(wxT("DataProcessors"));
+	m_methodHelper->AppendProp(wxT("ExternalDataProcessors"));
+	m_methodHelper->AppendProp(wxT("Reports"));
+	m_methodHelper->AppendProp(wxT("ExternalReports"));
+	m_methodHelper->AppendProp(wxT("InformationRegisters"));
+	m_methodHelper->AppendProp(wxT("AccumulationRegisters"));
 }
 
 #include "backend/metaCollection/partial/dataProcessorManager.h"
@@ -129,5 +129,5 @@ bool CValueGlobalContextManager::GetPropVal(const long lPropNum, CValue& pvarPro
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueGlobalContextManager, "globalContextManager", string_to_clsid("MG_SYSM"));
-SYSTEM_TYPE_REGISTER(CValueGlobalContextStructureManager, "globalContextStructureManager", string_to_clsid("MG_SYAM"));
+SYSTEM_TYPE_REGISTER(CValueGlobalContextManager, "GlobalContextManager", string_to_clsid("MG_SYSM"));
+SYSTEM_TYPE_REGISTER(CValueGlobalContextStructureManager, "GlobalContextStructureManager", string_to_clsid("MG_SYAM"));

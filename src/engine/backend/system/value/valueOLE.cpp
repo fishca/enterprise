@@ -629,21 +629,8 @@ void CValueOLE::PrepareNames() const
 
 				wxString strMethodName = wxConvertStringFromOle(strName);
 				SysFreeString(strName);
+				
 				wxString methodHelper = strMethodName;
-
-				if (strMethodName.Length() > 2) {
-					wxString sMethodL = strMethodName.Left(2);
-					sMethodL.MakeLower();
-					if (sMethodL[1] == strMethodName[1]) {
-						strMethodName[0] = sMethodL[0];
-						methodHelper[0] = sMethodL[0];
-					}
-				}
-				else {
-					strMethodName.MakeLower();
-					methodHelper.MakeLower();
-				}
-
 				methodHelper += wxT("(");
 
 				for (unsigned int k = 0; k < (UINT)funcInfo->cParams; k++) {
@@ -653,7 +640,7 @@ void CValueOLE::PrepareNames() const
 						switch (vt)
 						{
 						case VT_BOOL:
-							methodHelper += wxT("bool");
+							methodHelper += wxT("boolean");
 							break;
 						case VT_UI1:
 						case VT_I2:
@@ -951,4 +938,4 @@ bool CValueOLE::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue**
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueOLE, "comObject", string_to_clsid("VL_OLE"));
+VALUE_TYPE_REGISTER(CValueOLE, "ComObject", string_to_clsid("VL_OLE"));

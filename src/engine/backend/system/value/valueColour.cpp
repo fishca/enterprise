@@ -50,9 +50,9 @@ void CValueColour::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("r"));
-	m_methodHelper.AppendProp(wxT("g"));
-	m_methodHelper.AppendProp(wxT("b"));
+	m_methodHelper.AppendProp(wxT("R"));
+	m_methodHelper.AppendProp(wxT("G"));
+	m_methodHelper.AppendProp(wxT("B"));
 }
 
 bool CValueColour::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -93,4 +93,4 @@ bool CValueColour::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueColour, "colour", string_to_clsid("VL_COLOR"));
+VALUE_TYPE_REGISTER(CValueColour, "Colour", string_to_clsid("VL_COLOR"));

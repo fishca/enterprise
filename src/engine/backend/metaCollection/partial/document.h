@@ -27,9 +27,9 @@ private:
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("formObject"), _("Form object"), eFormObject);
-		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
-		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
+		formList.AppendItem(wxT("FormObject"), _("Form object"), eFormObject);
+		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
+		formList.AppendItem(wxT("FormSelect"), _("Form select"), eFormSelect);
 		return formList;
 	}
 
@@ -183,21 +183,21 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("objectModule"), _("Object module")));
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("ObjectModule"), _("Object module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("ManagerModule"), _("Manager module")));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CValueMetaObjectDocument::FillFormObject);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectDocument::FillFormList);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CValueMetaObjectDocument::FillFormSelect);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &CValueMetaObjectDocument::FillFormObject);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectDocument::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormSelect"), _("Default Select Form"), &CValueMetaObjectDocument::FillFormSelect);
 
-	CPropertyRecord* m_propertyRegisterRecord = IPropertyObject::CreateProperty<CPropertyRecord>(m_categoryData, wxT("listRegisterRecord"), _("List register record"));
+	CPropertyRecord* m_propertyRegisterRecord = IPropertyObject::CreateProperty<CPropertyRecord>(m_categoryData, wxT("ListRegisterRecord"), _("List register record"));
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("number"), _("Number"), wxEmptyString, 11, true));
-	CPropertyInnerAttribute<>* m_propertyAttributeDate = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateDate(wxT("date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
-	CPropertyInnerAttribute<>* m_propertyAttributePosted = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("posted"), _("Posted"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("Number"), _("Number"), wxEmptyString, 11, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeDate = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateDate(wxT("Date"), _("Date"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePosted = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("Posted"), _("Posted"), wxEmptyString));
 
 	friend class CValueRecordDataObjectDocument;
 	friend class IMetaData;

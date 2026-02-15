@@ -32,9 +32,9 @@ void CValueDatabaseLayer::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendFunc(wxT("prepareStatement"), 1, wxT("prepareStatement(string: query, ...)"));
-	m_methodHelper.AppendFunc(wxT("runQuery"), 1, wxT("runQuery(string: query, ...)"));
-	m_methodHelper.AppendFunc(wxT("runQueryWithResults"), 1, wxT("runQueryWithResults(string: query, ...)"));
+	m_methodHelper.AppendFunc(wxT("PrepareStatement"), 1, wxT("PrepareStatement(string: query, ...)"));
+	m_methodHelper.AppendFunc(wxT("RunQuery"), 1, wxT("RunQuery(string: query, ...)"));
+	m_methodHelper.AppendFunc(wxT("RunQueryWithResults"), 1, wxT("RunQueryWithResults(string: query, ...)"));
 }
 
 #include "backend/backend_exception.h"
@@ -92,4 +92,4 @@ bool CValueDatabaseLayer::CallAsProc(const long lMethodNum, CValue** paParams, c
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueDatabaseLayer, "databaseLayer", string_to_clsid("VL_DBLY"));
+VALUE_TYPE_REGISTER(CValueDatabaseLayer, "DatabaseLayer", string_to_clsid("VL_DBLY"));

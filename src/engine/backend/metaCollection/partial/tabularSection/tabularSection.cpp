@@ -514,20 +514,20 @@ void IValueTabularSectionDataObject::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	if (m_readOnly) {
-		m_methodHelper->AppendFunc("count", "count()", enCount, eTabularSection);
-		m_methodHelper->AppendFunc("find", 2, "find(value, col)", enFind, eTabularSection);
-		m_methodHelper->AppendFunc("unload", "unload()", enUnload, eTabularSection);
-		m_methodHelper->AppendFunc("getMetadata", "getMetadata()", enGetMetadata, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"), enCount, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Find"), 2, wxT("Find(value : any, columnName : string)"), enFind, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Unload"), wxT("Unload()"), enUnload, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"), enGetMetadata, eTabularSection);
 	}
 	else {
-		m_methodHelper->AppendFunc("add", "add()", enAddValue, eTabularSection);
-		m_methodHelper->AppendFunc("count", "count()", enCount, eTabularSection);
-		m_methodHelper->AppendFunc("find", 2, "find(value, col)", enFind, eTabularSection);
-		m_methodHelper->AppendFunc("delete", 1, "delete(row)", enDelete, eTabularSection);
-		m_methodHelper->AppendFunc("clear", "clear()", enClear, eTabularSection);
-		m_methodHelper->AppendFunc("load", 1, "load(table)", enLoad, eTabularSection);
-		m_methodHelper->AppendFunc("unload", "unload()", enUnload, eTabularSection);
-		m_methodHelper->AppendFunc("getMetadata", "getMetadata()", enGetMetadata, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Add"), wxT("Add()"), enAddValue, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"), enCount, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Find"), 2, wxT("Find(value : any, columnName : string)"), enFind, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Delete"), 1, wxT("delete(row : tabularSectionRow)"), enDelete, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Clear"), wxT("Clear()"), enClear, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Load"), 1, wxT("Load(table : any table)"), enLoad, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("Unload"), wxT("Unload()"), enUnload, eTabularSection);
+		m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"), enGetMetadata, eTabularSection);
 	}
 }
 
@@ -535,5 +535,5 @@ void IValueTabularSectionDataObject::PrepareNames() const
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection, "tabularSectionColumn", string_to_clsid("VL_TSCL"));
-SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo, "tabularSectionColumnInfo", string_to_clsid("VL_CI"));
+SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection, "TabularSectionColumn", string_to_clsid("VL_TSCL"));
+SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo, "TabularSectionColumnInfo", string_to_clsid("VL_CI"));

@@ -145,4 +145,4 @@ bool CValueNotebookPage::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueNotebookPage, "notebookPage", "notebookPage", g_controlNotebookPageCLSID);
+S_CONTROL_TYPE_REGISTER(CValueNotebookPage, "NotebookPage", "NotebookPage", g_controlNotebookPageCLSID);

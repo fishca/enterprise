@@ -35,4 +35,4 @@ bool CValueGuid::Init(CValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueGuid, "guid", string_to_clsid("VL_GUID"));
+VALUE_TYPE_REGISTER(CValueGuid, "Guid", string_to_clsid("VL_GUID"));

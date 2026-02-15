@@ -84,11 +84,11 @@ void CPrecompileCode::PrepareModuleData()
 			CValue* managerVariable = pair.second;
 			managerVariable->PrepareNames();
 			for (unsigned int i = 0; i < managerVariable->GetNProps(); i++) {
-				wxString sAttributeName = managerVariable->GetPropName(i);
+				const wxString& strAttributeName = managerVariable->GetPropName(i);
 				//determine the number and type of the variable
 				CPrecompileVariable cVariables;
-				cVariables.strName = sAttributeName;
-				cVariables.strRealName = sAttributeName;
+				cVariables.strName = strAttributeName;
+				cVariables.strRealName = strAttributeName;
 
 				cVariables.nNumber = i;
 				cVariables.bContext = true;
@@ -96,18 +96,18 @@ void CPrecompileCode::PrepareModuleData()
 
 				cVariables.m_valContext = managerVariable;
 
-				GetContext()->cVariables[stringUtils::MakeUpper(sAttributeName)] = cVariables;
+				GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;
 			}
 			//добавляем методы из менеджера
 			for (unsigned int i = 0; i < managerVariable->GetNMethods(); i++) {
-				wxString sMethodName = managerVariable->GetMethodName(i);
+				const wxString& strMethodName = managerVariable->GetMethodName(i);
 
-				CPrecompileContext *compileContext = new CPrecompileContext();
+				CPrecompileContext* compileContext = new CPrecompileContext();
 				compileContext->nReturn = managerVariable->HasRetVal(i) ? RETURN_FUNCTION : RETURN_PROCEDURE;
-				compileContext->pModule = this; 
+				compileContext->pModule = this;
 
-				CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, compileContext);
-				pFunction->strRealName = sMethodName;
+				CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, compileContext);
+				pFunction->strRealName = strMethodName;
 				pFunction->strShortDescription = managerVariable->GetMethodHelper(i);
 				pFunction->nStart = i;
 				pFunction->bContext = true;
@@ -116,7 +116,7 @@ void CPrecompileCode::PrepareModuleData()
 				pFunction->m_valContext = managerVariable;
 
 				// check for typing
-				GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction;
+				GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction;
 			}
 		}
 		unsigned int nNumberAttr = 0;
@@ -127,13 +127,13 @@ void CPrecompileCode::PrepareModuleData()
 				if (cParser.ParseModule(module->GetModuleText())) {
 					for (auto code : cParser.GetAllContent()) {
 						if (code.eType == eExportVariable) {
-							wxString sAttributeName = code.strName;
-							if (m_cContext.FindVariable(sAttributeName))
+							wxString strAttributeName = code.strName;
+							if (m_cContext.FindVariable(strAttributeName))
 								continue;
 							//determine the number and type of the variable
 							CPrecompileVariable cVariables;
-							cVariables.strName = sAttributeName;
-							cVariables.strRealName = sAttributeName;
+							cVariables.strName = strAttributeName;
+							cVariables.strRealName = strAttributeName;
 
 							cVariables.nNumber = nNumberAttr;
 							cVariables.bContext = true;
@@ -141,18 +141,18 @@ void CPrecompileCode::PrepareModuleData()
 
 							cVariables.m_valContext = module;
 
-							GetContext()->cVariables[stringUtils::MakeUpper(sAttributeName)] = cVariables;	nNumberAttr++;
+							GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;	nNumberAttr++;
 						}
 						else if (code.eType == eExportProcedure) {
-							wxString sMethodName = code.strName;
-							if (m_cContext.FindFunction(sMethodName))
+							wxString strMethodName = code.strName;
+							if (m_cContext.FindFunction(strMethodName))
 								continue;
 							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 							procContext->SetModule(this);
 							procContext->nReturn = RETURN_PROCEDURE;
 
-							CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, procContext);
-							pFunction->strRealName = sMethodName;
+							CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
+							pFunction->strRealName = strMethodName;
 							pFunction->strShortDescription = code.strShortDescription;
 
 							pFunction->nStart = nNumberFunc;
@@ -162,18 +162,18 @@ void CPrecompileCode::PrepareModuleData()
 							pFunction->m_valContext = module;
 
 							// check for typing
-							GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction; nNumberFunc++;
+							GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 						}
 						else if (code.eType == eExportFunction) {
-							wxString sMethodName = code.strName;
-							if (m_cContext.FindFunction(sMethodName)) continue;
+							wxString strMethodName = code.strName;
+							if (m_cContext.FindFunction(strMethodName)) continue;
 
 							CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 							procContext->SetModule(this);
 							procContext->nReturn = RETURN_FUNCTION;
 
-							CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, procContext);
-							pFunction->strRealName = sMethodName;
+							CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
+							pFunction->strRealName = strMethodName;
 							pFunction->strShortDescription = code.strShortDescription;
 
 							pFunction->nStart = nNumberFunc;
@@ -183,7 +183,7 @@ void CPrecompileCode::PrepareModuleData()
 							pFunction->m_valContext = module;
 
 							// check for typing
-							GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction; nNumberFunc++;
+							GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 						}
 					}
 				}
@@ -203,14 +203,14 @@ void CPrecompileCode::PrepareModuleData()
 				if (moduleManager->FindCompileModule(moduleObject, pRefData)) {
 					//adding variables from context
 					for (long i = 0; i < pRefData->GetNProps(); i++) {
-						wxString sAttributeName = pRefData->GetPropName(i);
-						if (m_cContext.FindVariable(sAttributeName))
+						wxString strAttributeName = pRefData->GetPropName(i);
+						if (m_cContext.FindVariable(strAttributeName))
 							continue;
 
 						//determine the number and type of the variable
 						CPrecompileVariable cVariables;
-						cVariables.strName = sAttributeName;
-						cVariables.strRealName = sAttributeName;
+						cVariables.strName = strAttributeName;
+						cVariables.strRealName = strAttributeName;
 
 						cVariables.nNumber = i;
 						cVariables.bContext = true;
@@ -218,13 +218,13 @@ void CPrecompileCode::PrepareModuleData()
 
 						cVariables.m_valContext = pRefData;
 
-						GetContext()->cVariables[stringUtils::MakeUpper(sAttributeName)] = cVariables;
+						GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariables;
 					}
 
 					// add methods from context
 					for (long i = 0; i < pRefData->GetNMethods(); i++) {
-						wxString sMethodName = pRefData->GetMethodName(i);
-						if (m_cContext.FindFunction(sMethodName))
+						wxString strMethodName = pRefData->GetMethodName(i);
+						if (m_cContext.FindFunction(strMethodName))
 							continue;
 
 						CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
@@ -235,8 +235,8 @@ void CPrecompileCode::PrepareModuleData()
 						else
 							procContext->nReturn = RETURN_PROCEDURE;
 
-						CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, procContext);
-						pFunction->strRealName = sMethodName;
+						CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
+						pFunction->strRealName = strMethodName;
 						pFunction->strShortDescription = pRefData->GetMethodHelper(i);
 						pFunction->nStart = i;
 						pFunction->bContext = true;
@@ -245,7 +245,7 @@ void CPrecompileCode::PrepareModuleData()
 						pFunction->m_valContext = pRefData;
 
 						// check for typing
-						GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction;
+						GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction;
 					}
 
 					if (moduleObject != nullptr) {
@@ -255,33 +255,33 @@ void CPrecompileCode::PrepareModuleData()
 							unsigned int nNumberFunc = pRefData->GetNMethods() + 1;
 							for (auto code : cParser.GetAllContent()) {
 								if (code.eType == eExportVariable) {
-									wxString sAttributeName = code.strName;
-									if (m_cContext.FindVariable(sAttributeName))
+									const wxString& strAttributeName = code.strName;
+									if (m_cContext.FindVariable(strAttributeName))
 										continue;
 									//determine the number and type of the variable
-									CPrecompileVariable cVariables;
-									cVariables.strName = sAttributeName;
-									cVariables.strRealName = sAttributeName;
+									CPrecompileVariable cVariable;
+									cVariable.strName = strAttributeName;
+									cVariable.strRealName = strAttributeName;
 
-									cVariables.nNumber = nNumberAttr;
-									cVariables.bContext = true;
-									cVariables.bExport = true;
+									cVariable.nNumber = nNumberAttr;
+									cVariable.bContext = true;
+									cVariable.bExport = true;
 
-									cVariables.m_valContext = pRefData;
+									cVariable.m_valContext = pRefData;
 
-									GetContext()->cVariables[stringUtils::MakeUpper(sAttributeName)] = cVariables;	nNumberAttr++;
+									GetContext()->cVariables[stringUtils::MakeUpper(strAttributeName)] = cVariable;	nNumberAttr++;
 								}
 								else if (code.eType == eExportProcedure) {
-									wxString sMethodName = code.strName;
-									if (m_cContext.FindFunction(sMethodName))
+									const wxString& strMethodName = code.strName;
+									if (m_cContext.FindFunction(strMethodName))
 										continue;
 
 									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 									procContext->SetModule(this);
 									procContext->nReturn = RETURN_PROCEDURE;
 
-									CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, procContext);
-									pFunction->strRealName = sMethodName;
+									CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
+									pFunction->strRealName = strMethodName;
 									pFunction->strShortDescription = code.strShortDescription;
 
 									pFunction->nStart = nNumberFunc;
@@ -291,19 +291,19 @@ void CPrecompileCode::PrepareModuleData()
 									pFunction->m_valContext = pRefData;
 
 									// check for typing
-									GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction; nNumberFunc++;
+									GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 								}
 								else if (code.eType == eExportFunction) {
-									wxString sMethodName = code.strName;
-									if (m_cContext.FindFunction(sMethodName))
+									const wxString& strMethodName = code.strName;
+									if (m_cContext.FindFunction(strMethodName))
 										continue;
 
 									CPrecompileContext* procContext = new CPrecompileContext(GetContext());//создаем новый контекст, в котором будем компилировать тело функции
 									procContext->SetModule(this);
 									procContext->nReturn = RETURN_FUNCTION;
 
-									CPrecompileFunction* pFunction = new CPrecompileFunction(sMethodName, procContext);
-									pFunction->strRealName = sMethodName;
+									CPrecompileFunction* pFunction = new CPrecompileFunction(strMethodName, procContext);
+									pFunction->strRealName = strMethodName;
 									pFunction->strShortDescription = code.strShortDescription;
 
 									pFunction->nStart = nNumberFunc;
@@ -313,7 +313,7 @@ void CPrecompileCode::PrepareModuleData()
 									pFunction->m_valContext = pRefData;
 
 									// check for typing
-									GetContext()->cFunctions[stringUtils::MakeUpper(sMethodName)] = pFunction; nNumberFunc++;
+									GetContext()->cFunctions[stringUtils::MakeUpper(strMethodName)] = pFunction; nNumberFunc++;
 								}
 							}
 						}
@@ -807,7 +807,7 @@ bool CPrecompileCode::CompileFunction()
 				strType = GetTypeVar();
 			}
 
-			CParamValue sVariable;
+			CParamValue variable;
 
 			if (IsNextKeyWord(KEY_VAL))
 			{
@@ -815,10 +815,10 @@ bool CPrecompileCode::CompileFunction()
 			}
 
 			wxString strRealName = GETIdentifier(true);
-			sVariable.m_paramName = stringUtils::MakeUpper(strRealName);
+			variable.m_paramName = stringUtils::MakeUpper(strRealName);
 
 			// register this variable as local
-			if (m_pContext->FindVariable(sVariable.m_paramName)) return false;//было объявление + повторное объявление = ошибка
+			if (m_pContext->FindVariable(variable.m_paramName)) return false;//было объявление + повторное объявление = ошибка
 
 			if (IsNextDelimeter('[')) { // this is an array
 				GETDelimeter('[');
@@ -841,9 +841,9 @@ bool CPrecompileCode::CompileFunction()
 			}
 
 			m_pContext->AddVariable(strRealName, strType, false, false, valObject);
-			sVariable.m_paramType = strType;
+			variable.m_paramType = strType;
 
-			pFunction->aParamList.push_back(sVariable);
+			pFunction->aParamList.push_back(variable);
 
 			if (IsNextDelimeter(')'))
 				break;
@@ -1022,21 +1022,21 @@ bool CPrecompileCode::CompileBlock()
 					m_numCurrentCompile--;// step back
 
 					int nSet = 1;
-					CParamValue sVariable = GetCurrentIdentifier(nSet);//получаем левую часть выражения (до знака '=')
+					CParamValue variable = GetCurrentIdentifier(nSet);//получаем левую часть выражения (до знака '=')
 					if (nSet)//если есть правая часть, т.е. знак '='
 					{
 						GETDelimeter('=');//это присваивание переменной какого-то выражения
 
 						CParamValue expression = GetExpression();
-						sVariable.m_paramType = expression.m_paramType;
-						sVariable.m_paramObject = expression.m_paramObject;
+						variable.m_paramType = expression.m_paramType;
+						variable.m_paramObject = expression.m_paramObject;
 
-						if (m_pContext->FindVariable(sVariable.m_paramName)) {
-							m_pContext->cVariables[sVariable.m_paramName].m_valObject = expression.m_paramObject;
+						if (m_pContext->FindVariable(variable.m_paramName)) {
+							m_pContext->cVariables[variable.m_paramName].m_valObject = expression.m_paramObject;
 						}
 						else
 						{
-							m_pContext->AddVariable(sVariable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject);
+							m_pContext->AddVariable(variable.m_paramName, expression.m_paramType, false, false, expression.m_paramObject);
 						}
 					}
 				}
@@ -1057,7 +1057,7 @@ bool CPrecompileCode::CompileNewObject()
 	wxString objectName = GETIdentifier(true);
 	int nNumber = GetConstString(objectName);
 
-	std::vector <CParamValue> aParamList;
+	std::vector <CParamValue> listParam;
 
 	if (IsNextDelimeter('('))// this is a method call
 	{
@@ -1069,11 +1069,11 @@ bool CPrecompileCode::CompileNewObject()
 			if (IsNextDelimeter(','))
 			{
 				CParamValue data; // missing parameter
-				aParamList.push_back(data);
+				listParam.push_back(data);
 			}
 			else
 			{
-				aParamList.emplace_back(GetExpression());
+				listParam.emplace_back(GetExpression());
 
 				if (IsNextDelimeter(')')) break;
 			}
@@ -1145,7 +1145,7 @@ bool CPrecompileCode::CompileFor()
 	wxString strRealName = GETIdentifier(true);
 	//wxString strName = stringUtils::MakeUpper(strRealName);
 
-	CParamValue sVariable = GetVariable(strRealName);
+	CParamValue variable = GetVariable(strRealName);
 
 	if (IsNextDelimeter('='))
 		GETDelimeter('=');
@@ -1174,7 +1174,7 @@ bool CPrecompileCode::CompileForeach()
 	wxString strRealName = GETIdentifier(true);
 	wxString strName = stringUtils::MakeUpper(strRealName);
 
-	CParamValue sVariable = GetVariable(strRealName);
+	CParamValue variable = GetVariable(strRealName);
 
 	GETKeyWord(KEY_IN);
 
@@ -1404,20 +1404,20 @@ wxString CPrecompileCode::GetTypeVar(const wxString& strType)
  */
 CParamValue CPrecompileCode::GetExpression(int nPriority)
 {
-	CParamValue sVariable;
+	CParamValue variable;
 	CLexem lex = GETLexem();
 
 	// first we process Left operators
 	if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NOT) ||
 		(lex.m_lexType == DELIMITER && lex.m_numData == '!')) {
-		sVariable = GetVariable();
+		variable = GetVariable();
 		CParamValue sVariable2 = GetExpression(gs_operPriority['!']);
-		sVariable.m_paramType = wxT("NUMBER");
+		variable.m_paramType = wxT("NUMBER");
 	}
 	else if ((lex.m_lexType == KEYWORD && lex.m_numData == KEY_NEW)) {
 
 		const wxString& objectName = GETIdentifier();
-		std::vector <CParamValue> aParamList;
+		std::vector <CParamValue> listParam;
 
 
 		if (IsNextDelimeter('(')) { // this is a method call	
@@ -1428,10 +1428,10 @@ CParamValue CPrecompileCode::GetExpression(int nPriority)
 					CParamValue data;
 					//data.nArray = DEF_VAR_SKIP;// missing parameter
 					//data.nIndex = DEF_VAR_SKIP;
-					aParamList.push_back(data);
+					listParam.push_back(data);
 				}
 				else {
-					aParamList.emplace_back(GetExpression());
+					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
 				GETDelimeter(',');
@@ -1439,36 +1439,37 @@ CParamValue CPrecompileCode::GetExpression(int nPriority)
 			GETDelimeter(')');
 		}
 
-		CValue** pRefLocVars = aParamList.size() ? new CValue * [aParamList.size()] : nullptr;
-		for (unsigned int i = 0; i < aParamList.size(); i++) {
-			pRefLocVars[i] = &aParamList[i].m_paramObject;
-		}
+		CValue** pRefLocVars = listParam.size() ? 
+			new CValue * [listParam.size()] : nullptr;
+		
+		for (unsigned int i = 0; i < listParam.size(); i++) 
+			pRefLocVars[i] = &listParam[i].m_paramObject;
 
 		try {
-			sVariable.m_paramObject = CValue::CreateObject(objectName,
-				pRefLocVars, aParamList.size()
+			variable.m_paramObject = CValue::CreateObject(objectName,
+				pRefLocVars, listParam.size()
 			);
 		}
 		catch (...) {
 		}
 
-		if (pRefLocVars != nullptr)
-			delete[]pRefLocVars;
-
-		return sVariable;
+		if (pRefLocVars != nullptr) 
+			wxDELETEA(pRefLocVars);
+	
+		return variable;
 	}
 	else if (lex.m_lexType == DELIMITER && lex.m_numData == '(')
 	{
-		sVariable = GetExpression();
+		variable = GetExpression();
 		GETDelimeter(')');
 	}
 	else if (lex.m_lexType == DELIMITER && lex.m_numData == '?')
 	{
-		sVariable = GetVariable();
+		variable = GetVariable();
 		//CByteUnit code;
 		//AddLineInfo(code);
 		//code.nOper = OPER_ITER;
-		/*code.Param1 = sVariable;*/
+		/*code.Param1 = variable;*/
 		GETDelimeter('(');
 		/*code.Param2 =*/ GetExpression();
 		GETDelimeter(',');
@@ -1482,11 +1483,11 @@ CParamValue CPrecompileCode::GetExpression(int nPriority)
 	{
 		m_numCurrentCompile--;// step back
 		int nSet = 0;
-		sVariable = GetCurrentIdentifier(nSet);
+		variable = GetCurrentIdentifier(nSet);
 	}
 	else if (lex.m_lexType == CONSTANT)
 	{
-		sVariable = FindConst(lex.m_valData);
+		variable = FindConst(lex.m_valData);
 	}
 	else if ((lex.m_lexType == DELIMITER && lex.m_numData == '+') || (lex.m_lexType == DELIMITER && lex.m_numData == '-'))
 	{
@@ -1494,31 +1495,31 @@ CParamValue CPrecompileCode::GetExpression(int nPriority)
 		int nCurPriority = gs_operPriority[lex.m_numData];
 
 		if (nPriority >= nCurPriority)
-			return sVariable; //сравниваем приоритеты левой (предыдущей операции) и текущей выполняемой операции
+			return variable; //сравниваем приоритеты левой (предыдущей операции) и текущей выполняемой операции
 
 		//Это задание пользователем знака выражения
 		if (lex.m_numData == '+')// do nothing (ignore)
 		{
-			sVariable = GetExpression(nPriority);
-			sVariable.m_paramType = wxT("NUMBER");
-			return sVariable;
+			variable = GetExpression(nPriority);
+			variable.m_paramType = wxT("NUMBER");
+			return variable;
 		}
 		else
 		{
-			sVariable = GetExpression(100);//super high priority!
-			sVariable = GetVariable();
-			sVariable.m_paramType = wxT("NUMBER");
+			variable = GetExpression(100);//super high priority!
+			variable = GetVariable();
+			variable.m_paramType = wxT("NUMBER");
 		}
 	}
 
 	//Теперь обрабатываем Правые операторы
-	//итак в sVariable имеем первый индекс переменной выражения
+	//итак в variable имеем первый индекс переменной выражения
 
 MOperation:
 
 	lex = PreviewGetLexem();
 
-	if (lex.m_lexType == DELIMITER && lex.m_numData == ')') return sVariable;
+	if (lex.m_lexType == DELIMITER && lex.m_numData == ')') return variable;
 
 	//смотрим есть ли далее операторы выполнения действий над данной переменной
 	if ((lex.m_lexType == DELIMITER && lex.m_numData != ';') || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_AND) || (lex.m_lexType == KEYWORD && lex.m_numData == KEY_OR))
@@ -1588,10 +1589,10 @@ MOperation:
 				{
 					SetOper(OPER_EQ);
 				}
-				else return sVariable;
+				else return variable;
 
 				CParamValue sVariable1 = GetVariable();
-				CParamValue sVariable2 = sVariable;
+				CParamValue sVariable2 = variable;
 				CParamValue sVariable3 = GetExpression(nCurPriority);
 
 				//доп. проверка на запрещенные операции
@@ -1601,7 +1602,7 @@ MOperation:
 						OPER_MULT == nOper ||
 						OPER_AND == nOper ||
 						OPER_OR == nOper)
-						return sVariable;
+						return variable;
 				}
 
 				sVariable1.m_paramType = sVariable2.m_paramType;
@@ -1610,33 +1611,34 @@ MOperation:
 					sVariable1.m_paramType = wxT("NUMBER");
 				}
 
-				sVariable = sVariable1;
+				variable = sVariable1;
 				goto MOperation;
 			}
 		}
 	}
-	return sVariable;
+	return variable;
 }
 
 /*
  * GetCurrentIdentifier
- * Назначение:
- * Компилирование идентификатора (определение его типа как переменной,атрибута или функции,метода)
- * nIsSet - на входе:  1 - признак того что возможно ожидается присваивание выражения (если встретится знак '=')
- * Возвращаемое значение:
- * nIsSet - на выходе: 1 - признак того что точно ожидается присваивание выражения (т.е. должен встретиться знак '=')
- * номер идекса переменной, где лежит значение идентификатора
+ * Purpose:
+ * Compiling an identifier (defining its type as a variable, attribute or function, method)
+ * numIsSet - at the input: 1 - a sign that an expression assignment may be expected (if the '=' sign is encountered)
+ * Return value:
+ * numIsSet - at the output: 1 - a sign that the assignment of the expression is exactly expected (i.e. the '=' sign must be encountered)
+ * index number of the variable where the identifier value lies
 */
+
 CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 {
 	int nPrevSet = nIsSet;
 
-	CParamValue sVariable = GetVariable();
+	CParamValue variable = GetVariable();
 
-	wxString strRealName = GETIdentifier(true);
-	wxString strName = stringUtils::MakeUpper(strRealName);
+	const wxString& strRealName = GETIdentifier(true);
+	const wxString& strName = stringUtils::MakeUpper(strRealName);
 
-	int nStartPos = m_listLexem[m_numCurrentCompile].m_numString;
+	const int nStartPos = m_listLexem[m_numCurrentCompile].m_numString;
 
 	if (!m_bCalcValue && (nStartPos + strRealName.length() == m_nCurrentPos ||
 		nStartPos + strRealName.length() == m_nCurrentPos - 1)) {
@@ -1647,7 +1649,7 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 			if (m_listLexem[i].m_lexType == ENDPROGRAM)
 				endContext = i;
 		}
-		nIsSet = 0; m_numCurrentCompile = endContext; return sVariable;
+		nIsSet = 0; m_numCurrentCompile = endContext; return variable;
 	}
 
 	m_strLastExpression = strRealName;
@@ -1657,7 +1659,7 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 		CValue valContext;
 		if (m_cContext.FindFunction(strRealName, valContext, true))
 		{
-			std::vector <CParamValue> aParamList;
+			std::vector <CParamValue> listParam;
 			GETDelimeter('(');
 			while (m_numCurrentCompile + 1 < m_listLexem.size()
 				&& !IsNextDelimeter(')'))
@@ -1665,11 +1667,11 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 				if (IsNextDelimeter(','))
 				{
 					CParamValue data;
-					aParamList.push_back(data);
+					listParam.push_back(data);
 				}
 				else
 				{
-					aParamList.emplace_back(GetExpression());
+					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
 				GETDelimeter(',');
@@ -1679,30 +1681,40 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 
 			const long lMethodNum = valContext.FindMethod(strName);
 			if (lMethodNum != wxNOT_FOUND && valContext.HasRetVal(lMethodNum)) {
-				CValue** pRefLocVars = new CValue * [aParamList.size() ? aParamList.size() : 1];
-				for (unsigned int i = 0; i < aParamList.size(); i++) {
-					pRefLocVars[i] = &aParamList[i].m_paramObject;
+				
+				size_t paramCount = valContext.GetNParams(lMethodNum) > 0 ?
+					valContext.GetNParams(lMethodNum) : 1;
+				paramCount = listParam.size() > 0 ? listParam.size() : paramCount;
+
+				CValue** pRefLocVars = new CValue * [paramCount];
+				for (unsigned int i = 0; i < paramCount; i++) {
+					if (i < listParam.size())
+						pRefLocVars[i] = &listParam[i].m_paramObject;
+					else
+						pRefLocVars[i] = new CValue;
 				}
-				if (aParamList.size() == 0) {
-					CValue cValue = eValueTypes::TYPE_EMPTY;
-					pRefLocVars[0] = &cValue;
-				}
+
 				try {
-					valContext.CallAsFunc(lMethodNum, sVariable.m_paramObject, pRefLocVars, aParamList.size());
+					valContext.CallAsFunc(lMethodNum, variable.m_paramObject, pRefLocVars, listParam.size());
 				}
 				catch (...) {
 				}
-				SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
-				delete[]pRefLocVars;
+				
+				SetVariable(variable.m_paramName, variable.m_paramObject);
+
+				for (unsigned int i = listParam.size(); i < paramCount; i++)
+					wxDELETE(pRefLocVars[i]);
+				
+				wxDELETEA(pRefLocVars);
 			}
 		}
 		else
 		{
-			sVariable = GetCallFunction(strName);
+			variable = GetCallFunction(strName);
 		}
 
 		if (IsTypeVar(strName)) { // this is a type cast
-			sVariable.m_paramObject = GetTypeVar(strName);
+			variable.m_paramObject = GetTypeVar(strName);
 		}
 
 		nIsSet = 0;
@@ -1722,28 +1734,28 @@ CParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 			if (IsNextDelimeter('=') && nPrevSet == 1) {
 				GETDelimeter('=');
 				CParamValue sParam = GetExpression();
-				sVariable.m_paramObject = sParam.m_paramObject;
-				return sVariable;
+				variable.m_paramObject = sParam.m_paramObject;
+				return variable;
 			}
 			else {
 				const long lPropNum = valContext.FindProp(strName);
 				if (lPropNum != wxNOT_FOUND) {
 					try {
-						valContext.GetPropVal(lPropNum, sVariable.m_paramObject);
+						valContext.GetPropVal(lPropNum, variable.m_paramObject);
 					}
 					catch (...) {
 					}
-					SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
+					SetVariable(variable.m_paramName, variable.m_paramObject);
 				}
 			}
 		}
 		else {
 			nIsSet = 1;
-			sVariable = GetVariable(strRealName, bCheckError);
+			variable = GetVariable(strRealName, bCheckError);
 		}
 	}
 
-MLabel:
+loopLabel:
 
 	if (IsNextDelimeter('['))// this is an array
 	{
@@ -1766,11 +1778,11 @@ MLabel:
 			GETDelimeter('=');
 
 			CParamValue sData = GetExpression();
-			return sVariable;
+			return variable;
 		}
-		else sVariable = GetVariable();
+		else variable = GetVariable();
 
-		goto MLabel;
+		goto loopLabel;
 	}
 
 	if (IsNextDelimeter('.'))// this is a method call или атрибута агрегатного объекта
@@ -1792,19 +1804,19 @@ MLabel:
 		if (m_listLexem[m_numCurrentCompile].m_numString > (m_nCurrentPos - strRealMethod.length() - 1))
 		{
 			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
-			m_valObject = sVariable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
-			return sVariable;
+			m_valObject = variable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
+			return variable;
 		}
 		else if (m_listLexem[m_numCurrentCompile].m_lexType == ENDPROGRAM)
 		{
 			m_strLastExpression = sTempExpression; nLastPosition = m_numCurrentCompile; m_strLastKeyword = strRealMethod;
-			m_valObject = sVariable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
-			return sVariable;
+			m_valObject = variable.m_paramObject; m_numCurrentCompile = m_listLexem.size() - 1; nIsSet = 0;
+			return variable;
 		}
 
 		if (IsNextDelimeter('('))// this is a method call
 		{
-			std::vector <CParamValue> aParamList;
+			std::vector <CParamValue> listParam;
 			GETDelimeter('(');
 			while (m_numCurrentCompile + 1 < m_listLexem.size()
 				&& !IsNextDelimeter(')'))
@@ -1814,11 +1826,11 @@ MLabel:
 					CParamValue data;
 					//data.nArray = DEF_VAR_SKIP;// missing parameter
 					//data.nIndex = DEF_VAR_SKIP;
-					aParamList.push_back(data);
+					listParam.push_back(data);
 				}
 				else
 				{
-					aParamList.emplace_back(GetExpression());
+					listParam.emplace_back(GetExpression());
 					if (IsNextDelimeter(')')) break;
 				}
 				GETDelimeter(',');
@@ -1826,34 +1838,39 @@ MLabel:
 
 			GETDelimeter(')');
 
-			CValue parentValue = sVariable.m_paramObject;
-			sVariable = GetVariable();
+			CValue parentValueObject = variable.m_paramObject;
 
-			const long lMethodNum = parentValue.FindMethod(sMethod);
-			if (lMethodNum != wxNOT_FOUND && parentValue.HasRetVal(lMethodNum)) {
-				
-				CValue** paParams = new CValue * [aParamList.size() ? aParamList.size() : 1];
-				
-				if (aParamList.size() == 0) {
-					CValue cValue = eValueTypes::TYPE_EMPTY;
-					paParams[0] = &cValue;
-				}
-				
-				for (unsigned int i = 0; i < aParamList.size(); i++) {
-					paParams[i] = &aParamList[i].m_paramObject;
+			variable = GetVariable();
+
+			const long lMethodNum = parentValueObject.FindMethod(sMethod);
+			if (lMethodNum != wxNOT_FOUND && parentValueObject.HasRetVal(lMethodNum)) {
+
+				size_t paramCount = parentValueObject.GetNParams(lMethodNum) > 0 ?
+					parentValueObject.GetNParams(lMethodNum) : 1;
+
+				paramCount = listParam.size() > 0 ? listParam.size() : paramCount;
+
+				CValue** pRefLocVars = new CValue * [paramCount];
+
+				for (unsigned int i = 0; i < paramCount; i++) {
+					if (i < listParam.size())
+						pRefLocVars[i] = &listParam[i].m_paramObject;
+					else 
+						pRefLocVars[i] = new CValue;
 				}
 
-				if (aParamList.size() >= parentValue.GetNParams(lMethodNum)) {
-					
-					try {
-						parentValue.CallAsFunc(lMethodNum, sVariable.m_paramObject, paParams, aParamList.size());
-					}
-					catch (...) {
-					}
-
-					SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
-					delete[]paParams;
+				try {
+					parentValueObject.CallAsFunc(lMethodNum, variable.m_paramObject, pRefLocVars, listParam.size());
 				}
+				catch (...) {
+				}
+
+				SetVariable(variable.m_paramName, variable.m_paramObject);
+
+				for (unsigned int i = listParam.size(); i < paramCount; i++)
+					wxDELETE(pRefLocVars[i]);
+
+				wxDELETEA(pRefLocVars);
 			}
 
 			nIsSet = 0;
@@ -1870,37 +1887,37 @@ MLabel:
 
 			if (IsNextDelimeter('=') && nPrevSet == 1) {
 				GETDelimeter('=');
-				CValue parentValue = sVariable.m_paramObject;
+				CValue parentValueObject = variable.m_paramObject;
 				CParamValue sParam = GetExpression();
-				const long lPropNum = parentValue.FindProp(strRealMethod);
+				const long lPropNum = parentValueObject.FindProp(strRealMethod);
 				if (lPropNum != wxNOT_FOUND) {
 					try {
-						parentValue.SetPropVal(lPropNum, sParam.m_paramObject);
+						parentValueObject.SetPropVal(lPropNum, sParam.m_paramObject);
 					}
 					catch (...) {
 					}
 				}
-				return sVariable;
+				return variable;
 			}
 			else {
-				CValue parentValue = sVariable.m_paramObject;
-				sVariable = GetVariable();
-				const long lPropNum = parentValue.FindProp(sMethod);
+				CValue parentValueObject = variable.m_paramObject;
+				variable = GetVariable();
+				const long lPropNum = parentValueObject.FindProp(sMethod);
 				if (lPropNum != wxNOT_FOUND) {
 					try {
-						parentValue.GetPropVal(lPropNum, sVariable.m_paramObject);
+						parentValueObject.GetPropVal(lPropNum, variable.m_paramObject);
 					}
 					catch (...)
 					{
 					}
 				}
-				SetVariable(sVariable.m_paramName, sVariable.m_paramObject);
+				SetVariable(variable.m_paramName, variable.m_paramObject);
 			}
 		}
-		goto MLabel;
+		goto loopLabel;
 	}
 
-	return sVariable;
+	return variable;
 }//GetCurrentIdentifier
 
 /**
@@ -1908,7 +1925,7 @@ MLabel:
  */
 CParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
 {
-	std::vector<CParamValue> aParamList;
+	std::vector<CParamValue> listParam;
 
 	GETDelimeter('(');
 
@@ -1920,11 +1937,11 @@ CParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
 			CParamValue data;
 			//data.nArray = DEF_VAR_SKIP;// missing parameter
 			//data.nIndex = DEF_VAR_SKIP;
-			aParamList.push_back(data);
+			listParam.push_back(data);
 		}
 		else
 		{
-			aParamList.emplace_back(GetExpression());
+			listParam.emplace_back(GetExpression());
 
 			if (IsNextDelimeter(')')) break;
 		}
@@ -1934,16 +1951,15 @@ CParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
 
 	CValue retValue;
 
-	if (m_cContext.cFunctions.find(strName) != m_cContext.cFunctions.end())
-	{
+	if (m_cContext.cFunctions.find(strName) != m_cContext.cFunctions.end()) {
 		CPrecompileFunction* pDefFunction = m_cContext.cFunctions[strName];
-		pDefFunction->aParamList = aParamList;
+		pDefFunction->aParamList = listParam;
 		retValue = pDefFunction->RealRetValue.m_paramObject;
 	}
 
-	CParamValue sVariable = GetVariable();
-	sVariable.m_paramObject = retValue;
-	return sVariable;
+	CParamValue variable = GetVariable();
+	variable.m_paramObject = retValue;
+	return variable;
 }
 
 /**
@@ -1974,9 +1990,9 @@ CParamValue CPrecompileCode::GetVariable(const wxString& strName, bool bCheckErr
 CParamValue CPrecompileCode::GetVariable()
 {
 	const wxString& strVarName = wxString::Format("@%d", m_pContext->nTempVar); //@ - для гарантии уникальности имени
-	CParamValue sVariable = m_pContext->GetVariable(strVarName, false);//временную переменную ищем только в локальном контексте
+	CParamValue variable = m_pContext->GetVariable(strVarName, false);//временную переменную ищем только в локальном контексте
 	m_pContext->nTempVar++;
-	return sVariable;
+	return variable;
 }
 
 void CPrecompileCode::SetVariable(const wxString& strVarName, const CValue& varVal)

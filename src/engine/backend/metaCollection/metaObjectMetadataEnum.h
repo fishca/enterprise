@@ -10,8 +10,8 @@ public:
 	//CValueEnumVersion(eProgramVersion v) : IEnumeration(v) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(version_oes_1_0_0, wxT("oes_1_0_0"), _("1.0.0"));
-		AddEnumeration(version_oes_last, wxT("oes_last"), _("Don't use compatibility"));
+		AddEnumeration(version_oes_1_0_0, wxT("OES_1_0_0"), _("1.0.0"));
+		AddEnumeration(version_oes_last, wxT("OES_Last"), _("Don't use compatibility"));
 	};
 };
 

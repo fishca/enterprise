@@ -278,11 +278,11 @@ void CValueTypeDescription::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendConstructor(4, "typeDescription(type, qNumber, qDate, qString)");
+	m_methodHelper->AppendConstructor(4, wxT("typeDescription(type, qNumber, qDate, qString)"));
 
-	m_methodHelper->AppendFunc("containType", 1, "containsType(type)");
-	m_methodHelper->AppendFunc("adjustValue", 1, "adjustValue(value = undefined");
-	m_methodHelper->AppendFunc("types", "types()");
+	m_methodHelper->AppendFunc(wxT("ContainType"), 1, wxT("containsType(type : type)"));
+	m_methodHelper->AppendFunc(wxT("AdjustValue"), 1, wxT("AdjustValue(value = undefined : any"));
+	m_methodHelper->AppendFunc(wxT("Types"), wxT("Types()"));
 }
 
 bool CValueTypeDescription::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
@@ -310,9 +310,9 @@ bool CValueTypeDescription::CallAsFunc(const long lMethodNum, CValue& pvarRetVal
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueType, "type", string_to_clsid("VL_TYPE"));
-VALUE_TYPE_REGISTER(CValueTypeDescription, "typeDescription", string_to_clsid("VL_TYPED"));
+VALUE_TYPE_REGISTER(CValueType, "Type", string_to_clsid("VL_TYPE"));
+VALUE_TYPE_REGISTER(CValueTypeDescription, "TypeDescription", string_to_clsid("VL_TYPED"));
 
-VALUE_TYPE_REGISTER(CValueQualifierNumber, "qualifierNumber", string_to_clsid("VL_QNUM"));
-VALUE_TYPE_REGISTER(CValueQualifierDate, "qualifierDate", string_to_clsid("VL_QDAT"));
-VALUE_TYPE_REGISTER(CValueQualifierString, "qualifierString", string_to_clsid("VL_QSTR"));
+VALUE_TYPE_REGISTER(CValueQualifierNumber, "QualifierNumber", string_to_clsid("VL_QNUM"));
+VALUE_TYPE_REGISTER(CValueQualifierDate, "QualifierDate", string_to_clsid("VL_QDAT"));
+VALUE_TYPE_REGISTER(CValueQualifierString, "QualifierString", string_to_clsid("VL_QSTR"));

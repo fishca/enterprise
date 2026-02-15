@@ -37,7 +37,7 @@ protected:
 	bool IsValidCode(const wxString& strLangCode);
 
 private:
-	CPropertyUString* m_propertyCode = IPropertyObject::CreateProperty<CPropertyUString>(m_categorySecondary, wxT("code"), _("Code"), wxT("en"));
+	CPropertyUString* m_propertyCode = IPropertyObject::CreateProperty<CPropertyUString>(m_categorySecondary, wxT("Code"), _("Code"), wxT("en"));
 };
 
 #endif 

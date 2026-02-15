@@ -21,4 +21,4 @@ bool CValueMetaObjectEnum::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectEnum, "enum", g_metaEnumCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectEnum, "Enum", g_metaEnumCLSID);

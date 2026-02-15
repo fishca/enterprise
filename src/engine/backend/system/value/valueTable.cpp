@@ -53,15 +53,15 @@ void CValueTableMemory::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendFunc("add", "add()");
-	m_methodHelper.AppendFunc("clone", "clone()");
-	m_methodHelper.AppendFunc("count", "count()");
-	m_methodHelper.AppendFunc("find", 2, "find(value, column)");
-	m_methodHelper.AppendFunc("delete", 1, "delete(row)");
-	m_methodHelper.AppendFunc("clear", "clear()");
-	m_methodHelper.AppendFunc("sort", 2, "sort(column, ascending = true)");
+	m_methodHelper.AppendFunc(wxT("Add"), wxT("Add()"));
+	m_methodHelper.AppendFunc(wxT("Clone"), wxT("Clone()"));
+	m_methodHelper.AppendFunc(wxT("Count"), wxT("Count()"));
+	m_methodHelper.AppendFunc(wxT("Find"), 2, wxT("Find(value : any, column : string)"));
+	m_methodHelper.AppendFunc(wxT("Delete"), 1, wxT("Delete(row : tableRow)"));
+	m_methodHelper.AppendFunc(wxT("Clear"), wxT("Clear()"));
+	m_methodHelper.AppendFunc(wxT("Sort"), 2, wxT("Sort(column : string, ascending = true : boolean)"));
 
-	m_methodHelper.AppendProp("columns");
+	m_methodHelper.AppendProp(wxT("Columns"));
 
 	if (m_tableColumnCollection != nullptr)
 		m_tableColumnCollection->PrepareNames();
@@ -163,8 +163,8 @@ void CValueTableMemory::CValueTableColumnCollection::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc(wxT("addColumn"), 4, "add(name, type, caption, width)");
-	m_methodHelper->AppendProc(wxT("removeColumn"), 1, "removeColumn(name)");
+	m_methodHelper->AppendFunc(wxT("AddColumn"), 4, wxT("Add(name : string, type : typeDescription, caption, width)"));
+	m_methodHelper->AppendProc(wxT("RemoveColumn"), 1, wxT("RemoveColumn(name : string)"));
 }
 
 #include "valueType.h"
@@ -360,8 +360,8 @@ void CValueTableMemory::Clear()
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueTableMemory, "table", g_valueTableCLSID);
+VALUE_TYPE_REGISTER(CValueTableMemory, "Table", g_valueTableCLSID);
 
-SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection, "tableValueColumn", string_to_clsid("VL_TVCLM"));
-SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo, "tableValueColumnInfo", string_to_clsid("VL_TVCLI"));
-SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableReturnLine, "tableValueRow", string_to_clsid("VL_TVROW"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection, "TableValueColumn", string_to_clsid("VL_TVCLM"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo, "TableValueColumnInfo", string_to_clsid("VL_TVCLI"));
+SYSTEM_TYPE_REGISTER(CValueTableMemory::CValueTableReturnLine, "TableValueRow", string_to_clsid("VL_TVROW"));

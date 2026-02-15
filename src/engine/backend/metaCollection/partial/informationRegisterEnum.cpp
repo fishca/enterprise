@@ -8,5 +8,5 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumWriteRegisterMode, CValue);
 //***********************************************************************
 
 //add new enumeration
-ENUM_TYPE_REGISTER(CValueEnumPeriodicity, "periodicity", string_to_clsid("EN_PRST"));
-ENUM_TYPE_REGISTER(CValueEnumWriteRegisterMode, "writeRegisterMode", string_to_clsid("EN_WMOD"));
+ENUM_TYPE_REGISTER(CValueEnumPeriodicity, "InformationPeriodicity", string_to_clsid("EN_PRST"));
+ENUM_TYPE_REGISTER(CValueEnumWriteRegisterMode, "InformationWriteRegisterMode", string_to_clsid("EN_WMOD"));

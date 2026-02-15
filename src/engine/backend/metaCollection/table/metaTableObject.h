@@ -121,9 +121,9 @@ protected:
 
 private:
 
-	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("group"), _("Group"));
-	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("itemMode"), _("Item mode"), eItemMode::eItemMode_Item);
-	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IValueMetaObjectCompositeData::CreateNumber(wxT("numberLine"), _("N"), wxEmptyString, 6, 0));
+	CPropertyCategory* m_categoryGroup = IPropertyObject::CreatePropertyCategory(wxT("Group"), _("Group"));
+	CPropertyEnum<CValueEnumItemMode>* m_propertyUse = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumItemMode>>(m_categoryGroup, wxT("ItemMode"), _("Item mode"), eItemMode::eItemMode_Item);
+	CPropertyInnerAttribute<>* m_propertyNumberLine = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryGroup, IValueMetaObjectCompositeData::CreateNumber(wxT("NumberLine"), _("N"), wxEmptyString, 6, 0));
 };
 
 #endif

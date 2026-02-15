@@ -72,7 +72,7 @@ protected:
 	//frame owner 
 	CValueForm* m_formOwner;
 
-	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("name"), _("Name"), _("Object name"), wxT(""));
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_category, wxT("Name"), _("Name"), _("Object name"), wxT(""));
 };
 
 #endif // !_BASE_H_

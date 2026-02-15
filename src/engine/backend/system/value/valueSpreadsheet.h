@@ -47,8 +47,8 @@ public:
 	CValueEnumSpreadsheetOrient() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetOrientation::enOrient_Horizontal, wxT("horizontal"), _("Horizontal"));
-		AddEnumeration(enSpreadsheetOrientation::enOrient_Vertical, wxT("vertical"), _("Vertical"));
+		AddEnumeration(enSpreadsheetOrientation::enOrient_Horizontal, wxT("Horizontal"), _("Horizontal"));
+		AddEnumeration(enSpreadsheetOrientation::enOrient_Vertical, wxT("Vertical"), _("Vertical"));
 	}
 
 private:
@@ -62,9 +62,9 @@ public:
 	CValueEnumSpreadsheetHorizontalAlignment() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Left, wxT("left"), _("Left"));
-		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Center, wxT("center"), _("Center"));
-		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Right, wxT("right"), _("Right"));
+		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Left, wxT("Left"), _("Left"));
+		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Center, wxT("Center"), _("Center"));
+		AddEnumeration(enSpreadsheetAlignmentHorz::enAlignmentHorz_Right, wxT("Right"), _("Right"));
 	}
 
 private:
@@ -78,9 +78,9 @@ public:
 	CValueEnumSpreadsheetVerticalAlignment() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Top, wxT("top"), _("Top"));
-		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Center, wxT("center"), _("Center"));
-		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Bottom, wxT("bottom"), _("Bottom"));
+		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Top, wxT("Top"), _("Top"));
+		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Center, wxT("Center"), _("Center"));
+		AddEnumeration(enSpreadsheetAlignmentVert::enAlignmentVert_Bottom, wxT("Bottom"), _("Bottom"));
 	}
 
 private:
@@ -94,8 +94,8 @@ public:
 	CValueEnumSpreadsheetFitMode() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetFitMode::enFitMode_Overflow, wxT("overflow"), _("Overflow"));
-		AddEnumeration(enSpreadsheetFitMode::enFitMode_Clip, wxT("clip"), _("Clip"));
+		AddEnumeration(enSpreadsheetFitMode::enFitMode_Overflow, wxT("Overflow"), _("Overflow"));
+		AddEnumeration(enSpreadsheetFitMode::enFitMode_Clip, wxT("Clip"), _("Clip"));
 	}
 
 private:
@@ -109,12 +109,12 @@ public:
 	CValueEnumSpreadsheetBorder() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Transparent, wxT("none"), _("None"));
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Solid, wxT("solid"), _("Solid"));
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Dot, wxT("dotted"), _("Dotted"));
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_ShortDash, wxT("thin_dashed"), _("Thin dashed"));
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_DotDash, wxT("thick_dashed"), _("Thick dashed"));
-		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_LongDash, wxT("large_dashed"), _("Large dashed"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Transparent, wxT("None"), _("None"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Solid, wxT("Solid"), _("Solid"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_Dot, wxT("Dotted"), _("Dotted"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_ShortDash, wxT("ThinDashed"), _("Thin dashed"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_DotDash, wxT("ThickDashed"), _("Thick dashed"));
+		AddEnumeration(enSpreadsheetPenStyle::enPenStyle_LongDash, wxT("LargeDashed"), _("Large dashed"));
 	}
 
 private:
@@ -129,9 +129,9 @@ public:
 	CValueEnumSpreadsheetFillType() : IEnumeration() {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrText, wxT("text"), _("Text"));
-		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrParameter, wxT("parameter"), _("Parameter"));
-		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate, wxT("template"), _("Template"));
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrText, wxT("Text"), _("Text"));
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrParameter, wxT("Parameter"), _("Parameter"));
+		AddEnumeration(enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate, wxT("Template"), _("Template"));
 	}
 
 private:
@@ -175,6 +175,14 @@ private:
 
 class BACKEND_API CValueSpreadsheetDocumentBorder :
 	public CValue {
+
+	enum
+	{
+		enPropStyle,
+		enPropColour,
+		enPropWidth
+	};
+
 public:
 
 	wxPenStyle GetStyle() const { return m_style; }
@@ -187,10 +195,22 @@ public:
 
 	virtual bool IsEmpty() const { return false; }
 
+	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+		//PrepareNames(); 
+		return &m_methodHelper;
+	}
+
+	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
+
 private:
 	wxPenStyle m_style = wxPENSTYLE_TRANSPARENT;
 	wxColour m_colour = *wxBLACK;
 	int m_width = 1;
+
+	static CMethodHelper m_methodHelper;
 
 	wxDECLARE_DYNAMIC_CLASS(CValueSpreadsheetDocumentBorder);
 };

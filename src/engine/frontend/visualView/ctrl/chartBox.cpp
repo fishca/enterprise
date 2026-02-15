@@ -169,4 +169,4 @@ bool CValueChartBox::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueChartBox, "chartbox", "container", string_to_clsid("CT_CHRB"));
+CONTROL_TYPE_REGISTER(CValueChartBox, "Chartbox", "Container", string_to_clsid("CT_CHRB"));

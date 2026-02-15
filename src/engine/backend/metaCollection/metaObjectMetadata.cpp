@@ -32,10 +32,10 @@ wxString CValueMetaObjectConfiguration::GetLangCode() const
 CValueMetaObjectConfiguration::CValueMetaObjectConfiguration() : IValueMetaObject(configurationDefaultName)
 {
 	//set default proc
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeStart", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onStart", eContentHelper::eProcedureHelper);
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure("beforeExit", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleConfiguration)->SetDefaultProcedure("onExit", eContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeStart"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnStart"), eContentHelper::eProcedureHelper);
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("BeforeExit"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleConfiguration)->SetDefaultProcedure(wxT("OnExit"), eContentHelper::eProcedureHelper);
 
 	//set def metaid
 	m_metaId = defaultMetaID;
@@ -144,4 +144,4 @@ bool CValueMetaObjectConfiguration::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectConfiguration, "commonMetadata", g_metaCommonMetadataCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectConfiguration, "CommonMetadata", g_metaCommonMetadataCLSID);

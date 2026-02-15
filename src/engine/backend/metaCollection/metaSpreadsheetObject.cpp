@@ -57,5 +57,5 @@ bool CValueMetaObjectCommonSpreadsheet::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectSpreadsheet, "template", g_metaTemplateCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectCommonSpreadsheet, "commonTemplate", g_metaCommonTemplateCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectSpreadsheet, "Template", g_metaTemplateCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCommonSpreadsheet, "CommonTemplate", g_metaCommonTemplateCLSID);

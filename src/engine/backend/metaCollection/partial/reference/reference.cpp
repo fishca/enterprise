@@ -270,10 +270,10 @@ void CValueReferenceDataObject::PrepareNames() const
 	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		m_methodHelper->AppendFunc(wxT("isEmpty"), wxT("IsEmpty()"));
-		m_methodHelper->AppendFunc(wxT("getMetadata"), wxT("getMetadata()"));
-		m_methodHelper->AppendFunc(wxT("getObject"), wxT("getObject()"));
-		m_methodHelper->AppendFunc(wxT("getGuid"), wxT("getGuid()"));
+		m_methodHelper->AppendFunc(wxT("IsEmpty"), wxT("IsEmpty()"));
+		m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
+		m_methodHelper->AppendFunc(wxT("GetObject"), wxT("GetObject()"));
+		m_methodHelper->AppendFunc(wxT("GetGuid"), wxT("GetGuid()"));
 
 		wxString objectName;
 
@@ -308,8 +308,8 @@ void CValueReferenceDataObject::PrepareNames() const
 		}
 	}
 	else {
-		m_methodHelper->AppendFunc(wxT("isEmpty"), wxT("IsEmpty()"));
-		m_methodHelper->AppendFunc(wxT("getMetadata"), wxT("getMetadata()"));
+		m_methodHelper->AppendFunc(wxT("IsEmpty"), wxT("IsEmpty()"));
+		m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 	}
 }
 

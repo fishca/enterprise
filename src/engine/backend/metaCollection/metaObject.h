@@ -648,11 +648,11 @@ protected:
 
 protected:
 
-	CPropertyCategory* m_categoryCommon = IPropertyObject::CreatePropertyCategory(wxT("common"), _("Common"));
-	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("name"), _("Name"), _("Name of metadata object"), wxEmptyString);
-	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
-	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("comment"), _("Comment"), _("Comment"), wxEmptyString);
-	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("secondary"), _("Secondary"));
+	CPropertyCategory* m_categoryCommon = IPropertyObject::CreatePropertyCategory(wxT("Common"), _("Common"));
+	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("Name"), _("Name"), _("Name of metadata object"), wxEmptyString);
+	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("Synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
+	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("Comment"), _("Comment"), _("Comment"), wxEmptyString);
+	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("Secondary"), _("Secondary"));
 };
 
 extern BACKEND_API CRestructureInfo s_restructureInfo;

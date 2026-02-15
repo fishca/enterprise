@@ -5,7 +5,7 @@
 #include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////
-#define thisObject wxT("thisObject")
+#define thisObject wxT("ThisObject")
 //////////////////////////////////////////////////////////////////////////////////
 //  CValueModuleManagerExternalDataProcessor
 //////////////////////////////////////////////////////////////////////////////////
@@ -615,5 +615,5 @@ long CValueModuleManagerExternalReport::FindProp(const wxString& strName) const
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalDataProcessor, "externalDataProcessorModuleManager", string_to_clsid("SO_EDMM"));
-SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalReport, "externalReportModuleManager", string_to_clsid("SO_ERMM"));
+SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalDataProcessor, "ExternalDataProcessorModuleManager", string_to_clsid("SO_EDMM"));
+SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalReport, "ExternalReportModuleManager", string_to_clsid("SO_ERMM"));

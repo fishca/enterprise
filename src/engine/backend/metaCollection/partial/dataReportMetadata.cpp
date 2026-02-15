@@ -309,5 +309,5 @@ void CValueMetaObjectReport::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectReport, "report", g_metaReportCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectExternalReport, "externalReport", g_metaExternalReportCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectReport, "Report", g_metaReportCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectExternalReport, "ExternalReport", g_metaExternalReportCLSID);

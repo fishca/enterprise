@@ -135,4 +135,4 @@ bool CValueMetaObjectTableData::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectTableData, "tabularSection", g_metaTableCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectTableData, "TabularSection", g_metaTableCLSID);

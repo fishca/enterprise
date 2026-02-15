@@ -197,13 +197,13 @@ protected:
 private:
 
 #pragma region __property_define_h__
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"));
-	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
-	CEventControl* m_eventSelection = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ "control", "rowSelected", "standardProcessing" });
-	CEventControl* m_eventOnActivateRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("onActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {"control"} });
-	CEventControl* m_eventBeforeAddRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("beforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ "control", "cancel", "clone" });
-	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("beforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ "control", "cancel" });
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"));
+	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	CEventControl* m_eventSelection = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("Selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ wxT("Control"), wxT("RowSelected"), wxT("StandardProcessing") });
+	CEventControl* m_eventOnActivateRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
+	CEventControl* m_eventBeforeAddRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
+	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
 #pragma endregion 
 
 	bool m_dataViewCreated, m_dataViewUpdated,
@@ -355,39 +355,39 @@ private:
 
 	form_identifier_t m_model_id;
 
-	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("info"), _("Info"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("title"), _("Title"), wxT(""));
-	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("passwordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
-	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("multilineMode"), _("Multiline mode"), _("Multiline mode"), false);
-	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("texteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
+	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("Title"), _("Title"), wxT(""));
+	CPropertyBoolean* m_propertyPasswordMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("PasswordMode"), _("Password mode"), _("Mode in which typed characters are replaced with a special character"), false);
+	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("MultilineMode"), _("Multiline mode"), _("Multiline mode"), false);
+	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("TexteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
-	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("source"), _("Source"), eValueTypes::TYPE_STRING);
-	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("choiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"), eValueTypes::TYPE_STRING);
+	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("ChoiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
 
-	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("button"), _("Button"));
+	CPropertyCategory* m_categoryButton = IPropertyObject::CreatePropertyCategory(wxT("Button"), _("Button"));
 	CPropertyBoolean* m_propertySelectButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonSelect"), _("Select button"), true);
 	CPropertyBoolean* m_propertyClearButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonClear"), _("Clear button"), true);
 	CPropertyBoolean* m_propertyOpenButton = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryButton, wxT("buttonOpen"), _("Open button"), false);
 
-	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("style"), _("Style"));
-	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("width"), _("Width"), wxDVC_DEFAULT_WIDTH);
-	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("align"), _("Align"), wxALIGN_LEFT);
-	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryStyle, wxT("representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("picture"), _("Picture"));
+	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("Style"), _("Style"));
+	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("Width"), _("Width"), wxDVC_DEFAULT_WIDTH);
+	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("Align"), _("Align"), wxALIGN_LEFT);
+	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryStyle, wxT("Representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("Picture"), _("Picture"));
 
-	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("visible"), _("Visible"), true);
-	CPropertyBoolean* m_propertyResizable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("resizable"), _("Resizable"), true);
-	//CPropertyBoolean* m_propertySortable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("sortable"), _("Sortable"), false);
-	CPropertyBoolean* m_propertyReorderable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("reorderable"), _("Reorderable"), true);
+	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Visible"), _("Visible"), true);
+	CPropertyBoolean* m_propertyResizable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Resizable"), _("Resizable"), true);
+	//CPropertyBoolean* m_propertySortable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Sortable"), _("Sortable"), false);
+	CPropertyBoolean* m_propertyReorderable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Reorderable"), _("Reorderable"), true);
 
-	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("event"), _("Event"));
-	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("onChange"), _("Change"), wxArrayString{ wxT("control") });
-	CEventControl* m_eventStartChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startChoice"), _("Start choice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventStartListChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("startListChoice"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("clearing"), _("Clearing"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("opening"), _("Opening"), wxArrayString{ wxT("control"), wxT("standartProcessing") });
-	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("choiceProcessing"), _("Choice processing"), wxArrayString{ wxT("control"), wxT("valueSelected"), wxT("standartProcessing") });
+	CPropertyCategory* m_propertyEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
+	CEventControl* m_eventOnChange = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("OnChange"), _("Change"), wxArrayString{ wxT("Control") });
+	CEventControl* m_eventStartChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("StartChoice"), _("Start choice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	CEventControl* m_eventStartListChoice = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("StartListChoice"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	CEventControl* m_eventClearing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("Clearing"), _("Clearing"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("Opening"), _("Opening"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
+	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("ChoiceProcessing"), _("Choice processing"), wxArrayString{ wxT("Control"), wxT("ValueSelected"), wxT("StandartProcessing") });
 
 	friend class CValueViewRenderer;
 };

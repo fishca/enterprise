@@ -74,9 +74,9 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categorySecondary, wxT("picture"), _("Picture"));
+	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categorySecondary, wxT("Picture"), _("Picture"));
 #pragma region role
-	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("use"), _("Use"));
+	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("Use"), _("Use"));
 #pragma endregion
 };
 

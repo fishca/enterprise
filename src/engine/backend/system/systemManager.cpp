@@ -114,104 +114,104 @@ void CSystemFunction::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	//--- Базовые:
-	m_methodHelper->AppendFunc("boolean", 1, "boolean(value)");
-	m_methodHelper->AppendFunc("number", 1, "number(value)");
-	m_methodHelper->AppendFunc("date", 1, "date(value)");
-	m_methodHelper->AppendFunc("string", 1, "string(value)");
+	m_methodHelper->AppendFunc(wxT("Boolean"), 1, wxT("Boolean(value : any)"));
+	m_methodHelper->AppendFunc(wxT("Number"), 1, wxT("Number(value: any)"));
+	m_methodHelper->AppendFunc(wxT("Date"), 1, wxT("Date(value: any)"));
+	m_methodHelper->AppendFunc(wxT("String"), 1, wxT("String(value: any)"));
 	//--- Математические:
-	m_methodHelper->AppendFunc("round", 3, "round(number, number, roundMode)");
-	m_methodHelper->AppendFunc("int", 1, "int(number)");
-	m_methodHelper->AppendFunc("log10", 1, "log10(number)");
-	m_methodHelper->AppendFunc("ln", 1, "ln(number)");
-	m_methodHelper->AppendFunc("max", -1, "max(number, ...)");
-	m_methodHelper->AppendFunc("min", -1, "min(number, ...)");
-	m_methodHelper->AppendFunc("sqrt", 1, "sqrt(number)");
+	m_methodHelper->AppendFunc(wxT("Round"), 3, wxT("Round(num : number, number, roundMode)"));
+	m_methodHelper->AppendFunc(wxT("Lnt"), 1, wxT("Lnt(num : number)"));
+	m_methodHelper->AppendFunc(wxT("Log10"), 1, wxT("Log10(num : number)"));
+	m_methodHelper->AppendFunc(wxT("Ln"), 1, wxT("Ln(num : number)"));
+	m_methodHelper->AppendFunc(wxT("Max"), -1, wxT("Max(num : number, ...)"));
+	m_methodHelper->AppendFunc(wxT("Min"), -1, wxT("Min(num : number, ...)"));
+	m_methodHelper->AppendFunc(wxT("Sqrt"), 1, wxT("Sqrt(num : number)"));
 	//--- Строковые:
-	m_methodHelper->AppendFunc("strLen", 1, "strLen(string)");
-	m_methodHelper->AppendFunc("isBlankString", 1, "isBlankString(string)");
-	m_methodHelper->AppendFunc("trimL", 1, "trimL(string)");
-	m_methodHelper->AppendFunc("trimR", 1, "trimR(string)");
-	m_methodHelper->AppendFunc("trimAll", 1, "trimAll(string)");
-	m_methodHelper->AppendFunc("left", 2, "left(string, number)");
-	m_methodHelper->AppendFunc("right", 2, "right(string, number)");
-	m_methodHelper->AppendFunc("mid", 3, "mid(string, number, number)");
-	m_methodHelper->AppendFunc("find", 3, "find(string, string, number)");
-	m_methodHelper->AppendFunc("strReplace", 3, "strReplace(string, string, string)");
-	m_methodHelper->AppendFunc("strCountOccur", 2, "strCountOccur(string, string)");
-	m_methodHelper->AppendFunc("strLineCount", 1, "strLineCount(string)");
-	m_methodHelper->AppendFunc("strGetLine", 1, "strGetLine(string)");
-	m_methodHelper->AppendFunc("upper", 1, "upper(string)");
-	m_methodHelper->AppendFunc("lower", 1, "lower(string)");
-	m_methodHelper->AppendFunc("chr", 1, "chr(number)");
-	m_methodHelper->AppendFunc("asc", 1, "asc(string)");
-	m_methodHelper->AppendFunc("tstr", 2, "tstr(string, lang)");
+	m_methodHelper->AppendFunc(wxT("StrLen"), 1, wxT("StrLen(str : string)"));
+	m_methodHelper->AppendFunc(wxT("IsBlankString"), 1, wxT("IsBlankString(str : string)"));
+	m_methodHelper->AppendFunc(wxT("TrimL"), 1, wxT("TrimL(str : string)"));
+	m_methodHelper->AppendFunc(wxT("TrimR"), 1, wxT("TrimR(str : string)"));
+	m_methodHelper->AppendFunc(wxT("TrimAll"), 1, wxT("TrimAll(str : string)"));
+	m_methodHelper->AppendFunc(wxT("Left"), 2, wxT("Left(str : string, number)"));
+	m_methodHelper->AppendFunc(wxT("Right"), 2, wxT("Right(str : string, number)"));
+	m_methodHelper->AppendFunc(wxT("Mid"), 3, wxT("Mid(str : string, number, number)"));
+	m_methodHelper->AppendFunc(wxT("Find"), 3, wxT("Find(str : string, string, number)"));
+	m_methodHelper->AppendFunc(wxT("StrReplace"), 3, wxT("StrReplace(str : string, string, string)"));
+	m_methodHelper->AppendFunc(wxT("StrCountOccur"), 2, wxT("StrCountOccur(str : string, string)"));
+	m_methodHelper->AppendFunc(wxT("StrLineCount"), 1, wxT("StrLineCount(str : string)"));
+	m_methodHelper->AppendFunc(wxT("StrGetLine"), 1, wxT("StrGetLine(str : string)"));
+	m_methodHelper->AppendFunc(wxT("Upper"), 1, wxT("Upper(str : string)"));
+	m_methodHelper->AppendFunc(wxT("Lower"), 1, wxT("Lower(str : string)"));
+	m_methodHelper->AppendFunc(wxT("Chr"), 1, wxT("Chr(num : number)"));
+	m_methodHelper->AppendFunc(wxT("Asc"), 1, wxT("Asc(str : string)"));
+	m_methodHelper->AppendFunc(wxT("Tstr"), 2, wxT("Tstr(text : string, langCode : string)"));
 	//--- Работа с датой и временем:
-	m_methodHelper->AppendFunc("currentDate", "currentDate()");
-	m_methodHelper->AppendFunc("workingDate", 1, "workingDate(date)");
-	m_methodHelper->AppendFunc("addMonth", 2, "addMonth(date, number)");
-	m_methodHelper->AppendFunc("begOfMonth", 1, "begOfMonth(date)");
-	m_methodHelper->AppendFunc("endOfMonth", 1, "endOfMonth(date)");
-	m_methodHelper->AppendFunc("begOfQuart", 1, "begOfQuart(date)");
-	m_methodHelper->AppendFunc("endOfQuart", 1, "endOfQuart(date)");
-	m_methodHelper->AppendFunc("begOfYear", 1, "begOfYear(date)");
-	m_methodHelper->AppendFunc("endOfYear", 1, "endOfYear(date)");
-	m_methodHelper->AppendFunc("begOfWeek", 1, "begOfWeek(date)");
-	m_methodHelper->AppendFunc("endOfWeek", 1, "endOfWeek(date)");
-	m_methodHelper->AppendFunc("begOfDay", 1, "begOfDay(date)");
-	m_methodHelper->AppendFunc("endOfDay", 1, "endOfDay(date)");
-	m_methodHelper->AppendFunc("getYear", 1, "getYear(date)");
-	m_methodHelper->AppendFunc("getMonth", 1, "getMonth(date)");
-	m_methodHelper->AppendFunc("getDay", 1, "getDay(date)");
-	m_methodHelper->AppendFunc("getHour", 1, "getHour(date)");
-	m_methodHelper->AppendFunc("getMinute", 1, "getMinute(date)");
-	m_methodHelper->AppendFunc("getSecond", 1, "getSecond(date)");
-	m_methodHelper->AppendFunc("getWeekOfYear", 1, "getWeekOfYear(date)");
-	m_methodHelper->AppendFunc("getDayOfYear", 1, "getDayOfYear(date)");
-	m_methodHelper->AppendFunc("getDayOfWeek", 1, "getDayOfWeek(date)");
-	m_methodHelper->AppendFunc("getQuartOfYear", 1, "getQuartOfYear(date)");
+	m_methodHelper->AppendFunc(wxT("CurrentDate"), wxT("CurrentDate()"));
+	m_methodHelper->AppendFunc(wxT("WorkingDate"), 1, wxT("WorkingDate(d : date)"));
+	m_methodHelper->AppendFunc(wxT("AddMonth"), 2, wxT("AddMonth(d : date, num : number)"));
+	m_methodHelper->AppendFunc(wxT("BegOfMonth"), 1, wxT("BegOfMonth(d : date)"));
+	m_methodHelper->AppendFunc(wxT("EndOfMonth"), 1, wxT("EndOfMonth(d : date)"));
+	m_methodHelper->AppendFunc(wxT("BegOfQuart"), 1, wxT("BegOfQuart(d : date)"));
+	m_methodHelper->AppendFunc(wxT("EndOfQuart"), 1, wxT("EndOfQuart(d : date)"));
+	m_methodHelper->AppendFunc(wxT("BegOfYear"), 1, wxT("BegOfYear(d : date)"));
+	m_methodHelper->AppendFunc(wxT("EndOfYear"), 1, wxT("EndOfYear(d : date)"));
+	m_methodHelper->AppendFunc(wxT("BegOfWeek"), 1, wxT("BegOfWeek(d : date)"));
+	m_methodHelper->AppendFunc(wxT("EndOfWeek"), 1, wxT("EndOfWeek(d : date)"));
+	m_methodHelper->AppendFunc(wxT("BegOfDay"), 1, wxT("BegOfDay(d : date)"));
+	m_methodHelper->AppendFunc(wxT("EndOfDay"), 1, wxT("EndOfDay(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetYear"), 1, wxT("GetYear(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetMonth"), 1, wxT("GetMonth(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetDay"), 1, wxT("GetDay(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetHour"), 1, wxT("GetHour(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetMinute"), 1, wxT("GetMinute(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetSecond"), 1, wxT("GetSecond(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetWeekOfYear"), 1, wxT("GetWeekOfYear(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetDayOfYear"), 1, wxT("GetDayOfYear(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetDayOfWeek"), 1, wxT("GetDayOfWeek(d : date)"));
+	m_methodHelper->AppendFunc(wxT("GetQuartOfYear"), 1, wxT("GetQuartOfYear(d : date)"));
 	//--- Работа с файлами: 
-	m_methodHelper->AppendFunc("fileDelete", 1, "fileDelete(string)");
-	m_methodHelper->AppendFunc("fileCopy", 2, "fileCopy(string, string)");
-	m_methodHelper->AppendFunc("getTempDir", "getTempDir()");
-	m_methodHelper->AppendFunc("getTempFileName", "getTempFileName()");
+	m_methodHelper->AppendFunc(wxT("FileDelete"), 1, wxT("FileDelete(fileName : string)"));
+	m_methodHelper->AppendFunc(wxT("FileCopy"), 2, wxT("FileCopy(fileDstName : string, fileSrcName : string)"));
+	m_methodHelper->AppendFunc(wxT("GetTempDir"), wxT("GetTempDir()"));
+	m_methodHelper->AppendFunc(wxT("GetTempFileName"), wxT("GetTempFileName()"));
 	//--- Работа с окнами: 
-	m_methodHelper->AppendFunc("activeWindow", "activeWindow()");
+	m_methodHelper->AppendFunc(wxT("ActiveWindow"), wxT("ActiveWindow()"));
 	//--- Специальные:
-	m_methodHelper->AppendProc("message", 2, "message(string, statusMessage)");
-	m_methodHelper->AppendFunc("alert", 1, "alert(string)");
-	m_methodHelper->AppendFunc("question", 2, "question(string, questionMode)");
-	m_methodHelper->AppendFunc("setStatus", 1, "setStatus(string)");
-	m_methodHelper->AppendFunc("clearMessages", "clearMessages()");
-	m_methodHelper->AppendFunc("setError", 1, "setError(string)");
-	m_methodHelper->AppendFunc("raise", 1, "raise(string)");
-	m_methodHelper->AppendFunc("errorDescription", "errorDescription()");
-	m_methodHelper->AppendFunc("isEmptyValue", 1, "isEmptyValue(value)");
-	m_methodHelper->AppendFunc("evaluate", 1, "evaluate(string)");
-	m_methodHelper->AppendFunc("execute", 2, "execute(string)");
-	m_methodHelper->AppendFunc("format", 2, "format(value, string)");
-	m_methodHelper->AppendFunc("type", 1, "type(string)");
-	m_methodHelper->AppendFunc("typeOf", 1, "typeOf(value)");
-	m_methodHelper->AppendFunc("rand", "rand()");
-	m_methodHelper->AppendFunc("argCount", "argCount()");
-	m_methodHelper->AppendFunc("argValue", "argValue()");
-	m_methodHelper->AppendFunc("computerName", "computerName()");
-	m_methodHelper->AppendFunc("runApp", 1, "runApp(string)");
-	m_methodHelper->AppendFunc("setAppTitle", 1, "setAppTitle(string)");
-	m_methodHelper->AppendFunc("userDir", "userDir()");
-	m_methodHelper->AppendFunc("userName", "userName()");
-	m_methodHelper->AppendFunc("userPassword", "userPassword()");
-	m_methodHelper->AppendFunc("exclusiveMode", "exclusiveMode()");
-	m_methodHelper->AppendFunc("generalLanguage", "generalLanguage()");
-	m_methodHelper->AppendFunc("endJob", 1, "endJob(boolean)");
-	m_methodHelper->AppendFunc("userInterruptProcessing", "userInterruptProcessing()");
-	m_methodHelper->AppendFunc("accessRight", 2, "accessRight(string, metadata)");
-	m_methodHelper->AppendFunc("isInRole", 1, "isInRole(string)");
-	m_methodHelper->AppendFunc("getCommonForm", 3, "getCommonForm(string, owner, uniqueGuid)");
-	m_methodHelper->AppendProc("showCommonForm", 3, "showCommonForm(string, owner, uniqueGuid)");
-	m_methodHelper->AppendFunc("getCommonTemplate", 1, "getCommonTemplate(string)");
-	m_methodHelper->AppendProc("beginTransaction", "beginTransaction()");
-	m_methodHelper->AppendProc("commitTransaction", "commitTransaction()");
-	m_methodHelper->AppendProc("rollBackTransaction", "rollBackTransaction()");
+	m_methodHelper->AppendProc(wxT("Message"), 2, wxT("Message(message : string, statusMessage : statusMessage)"));
+	m_methodHelper->AppendFunc(wxT("Alert"), 1, wxT("Alert(message : string)"));
+	m_methodHelper->AppendFunc(wxT("Question"), 2, wxT("Question(message : string, questionMode)"));
+	m_methodHelper->AppendFunc(wxT("SetStatus"), 1, wxT("SetStatus(text : string)"));
+	m_methodHelper->AppendFunc(wxT("ClearMessages"), wxT("ClearMessages()"));
+	m_methodHelper->AppendFunc(wxT("SetError"), 1, wxT("SetError(string)"));
+	m_methodHelper->AppendFunc(wxT("Raise"), 1, wxT("Raise(string)"));
+	m_methodHelper->AppendFunc(wxT("ErrorDescription"), wxT("ErrorDescription()"));
+	m_methodHelper->AppendFunc(wxT("IsEmptyValue"), 1, wxT("IsEmptyValue(value : any)"));
+	m_methodHelper->AppendFunc(wxT("Evaluate"), 1, wxT("Evaluate(expr : string)"));
+	m_methodHelper->AppendFunc(wxT("Execute"), 2, wxT("Execute(expr : string)"));
+	m_methodHelper->AppendFunc(wxT("Format"), 2, wxT("Format(value : any, format : string)"));
+	m_methodHelper->AppendFunc(wxT("Type"), 1, wxT("Type(strType : string)"));
+	m_methodHelper->AppendFunc(wxT("TypeOf"), 1, wxT("TypeOf(value : any)"));
+	m_methodHelper->AppendFunc(wxT("Rand"), wxT("Rand()"));
+	m_methodHelper->AppendFunc(wxT("ArgCount"), wxT("ArgCount()"));
+	m_methodHelper->AppendFunc(wxT("ArgValue"), wxT("ArgValue()"));
+	m_methodHelper->AppendFunc(wxT("ComputerName"), wxT("ComputerName()"));
+	m_methodHelper->AppendFunc(wxT("RunApp"), 1, wxT("RunApp(command : string)"));
+	m_methodHelper->AppendFunc(wxT("SetAppTitle"), 1, wxT("SetAppTitle(title : string)"));
+	m_methodHelper->AppendFunc(wxT("UserDir"), wxT("UserDir()"));
+	m_methodHelper->AppendFunc(wxT("UserName"), wxT("UserName()"));
+	m_methodHelper->AppendFunc(wxT("UserPassword"), wxT("UserPassword()"));
+	m_methodHelper->AppendFunc(wxT("ExclusiveMode"), wxT("ExclusiveMode()"));
+	m_methodHelper->AppendFunc(wxT("GeneralLanguage"), wxT("GeneralLanguage()"));
+	m_methodHelper->AppendFunc(wxT("EndJob"), 1, wxT("EndJob(force : boolean)"));
+	m_methodHelper->AppendFunc(wxT("UserInterruptProcessing"), wxT("UserInterruptProcessing()"));
+	m_methodHelper->AppendFunc(wxT("AccessRight"), 2, wxT("AccessRight(strRole : string, metadata)"));
+	m_methodHelper->AppendFunc(wxT("IsInRole"), 1, wxT("IsInRole(strRole : string)"));
+	m_methodHelper->AppendFunc(wxT("GetCommonForm"), 3, wxT("GetCommonForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendProc(wxT("ShowCommonForm"), 3, wxT("ShowCommonForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetCommonTemplate"), 1, wxT("GetCommonTemplate(name : string)"));
+	m_methodHelper->AppendProc(wxT("BeginTransaction"), wxT("BeginTransaction()"));
+	m_methodHelper->AppendProc(wxT("CommitTransaction"), wxT("CommitTransaction()"));
+	m_methodHelper->AppendProc(wxT("RollBackTransaction"), wxT("RollBackTransaction()"));
 };
 
 #include "backend/compiler/enumUnit.h"
@@ -340,7 +340,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
 			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
 			return true;
-		case enGetCommonTemplate: 
+		case enGetCommonTemplate:
 			pvarRetValue = GetCommonTemplate(paParams[0]->GetString());
 			return true;
 			//--- Тразакции:
@@ -367,7 +367,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
 			return true;
 
-		case enGetCommonTemplate: 
+		case enGetCommonTemplate:
 			pvarRetValue = GetCommonTemplate(paParams[0]->GetString());
 			return true;
 		}
@@ -446,4 +446,4 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxOESRandModule, wxModule)
 //*                       Runtime register                             *
 //**********************************************************************
 
-CONTEXT_TYPE_REGISTER(CSystemFunction, "sysManager", string_to_clsid("CO_SYSM"));
+CONTEXT_TYPE_REGISTER(CSystemFunction, "SystemManager", string_to_clsid("CO_SYSM"));

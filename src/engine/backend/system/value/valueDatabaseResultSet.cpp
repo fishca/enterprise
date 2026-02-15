@@ -25,7 +25,7 @@ CValueResultSet::~CValueResultSet()
 void CValueResultSet::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc(wxT("next"), wxT("next()"));
+	m_methodHelper->AppendFunc(wxT("Next"), wxT("Next()"));
 
 	if (m_resultSet != nullptr) {
 		IResultSetMetaData* resultSetMetaData = m_resultSet->GetMetaData();
@@ -85,4 +85,4 @@ bool CValueResultSet::CallAsProc(const long lMethodNum, CValue** paParams, const
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueResultSet, "databaseResultSet", string_to_clsid("VL_DBRS"));
+SYSTEM_TYPE_REGISTER(CValueResultSet, "DatabaseResultSet", string_to_clsid("VL_DBRS"));

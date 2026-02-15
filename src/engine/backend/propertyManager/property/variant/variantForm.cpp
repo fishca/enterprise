@@ -2,5 +2,5 @@
 
 wxString wxVariantDataForm::MakeString() const
 {
-	return _("form");
+	return _("Form");
 }

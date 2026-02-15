@@ -73,4 +73,4 @@ bool CValueStaticText::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueStaticText, "statictext", "widget", string_to_clsid("CT_STTX"));
+CONTROL_TYPE_REGISTER(CValueStaticText, "Statictext", "Widget", string_to_clsid("CT_STTX"));

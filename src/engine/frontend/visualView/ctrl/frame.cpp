@@ -338,7 +338,7 @@ void IValueFrame::PrepareNames() const
 		}
 	}
 
-	m_methodHelper->AppendProp(wxT("events"), true, false, 0, eEvent);
+	m_methodHelper->AppendProp(wxT("Events"), true, false, 0, eEvent);
 
 	if (m_valEventContainer != nullptr) m_valEventContainer->PrepareNames();
 }

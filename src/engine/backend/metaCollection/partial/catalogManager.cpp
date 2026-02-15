@@ -10,7 +10,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectCatalog, CValue);
 
-CValueManagerDataObjectCatalog::CValueManagerDataObjectCatalog(CValueMetaObjectCatalog* metaObject) : 
+CValueManagerDataObjectCatalog::CValueManagerDataObjectCatalog(CValueMetaObjectCatalog* metaObject) :
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
@@ -24,7 +24,7 @@ CValueMetaObjectCommonModule* CValueManagerDataObjectCatalog::GetModuleManager()
 
 #include "reference/reference.h"
 
-CValueReferenceDataObject* CValueManagerDataObjectCatalog::EmptyRef() const 
+CValueReferenceDataObject* CValueManagerDataObjectCatalog::EmptyRef() const
 {
 	return CValueReferenceDataObject::Create(m_metaObject);
 }
@@ -76,16 +76,16 @@ void CValueManagerDataObjectCatalog::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("createElement", "createElement()");
-	m_methodHelper->AppendFunc("createGroup", "createGroup()");
-	m_methodHelper->AppendFunc("select", "select()");
-	m_methodHelper->AppendFunc("findByCode", 1, "findByCode(string)");
-	m_methodHelper->AppendFunc("findByDescription", 1, "findByDescription(string)");
-	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
-	m_methodHelper->AppendFunc("emptyRef", "emptyRef()");
+	m_methodHelper->AppendFunc(wxT("CreateElement"), wxT("CreateElement()"));
+	m_methodHelper->AppendFunc(wxT("CreateGroup"), wxT("CreateGroup()"));
+	m_methodHelper->AppendFunc(wxT("Select"), wxT("Select()"));
+	m_methodHelper->AppendFunc(wxT("FindByCode"), 1, wxT("FindByCode(code : string)"));
+	m_methodHelper->AppendFunc(wxT("FindByDescription"), 1, wxT("FindByDescription(descr : string)"));
+	m_methodHelper->AppendFunc(wxT("GetForm"), 3, wxT("GetForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetSelectForm"), 3, wxT("GetSelectForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
+	m_methodHelper->AppendFunc(wxT("EmptyRef"), wxT("EmptyRef()"));
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
@@ -146,7 +146,7 @@ bool CValueManagerDataObjectCatalog::CallAsFunc(const long lMethodNum, CValue& p
 		return true;
 	case eEmptyRef:
 		pvarRetValue = EmptyRef();
-		return true; 
+		return true;
 	}
 
 	IValueModuleManager* moduleManager = metaData->GetModuleManager();

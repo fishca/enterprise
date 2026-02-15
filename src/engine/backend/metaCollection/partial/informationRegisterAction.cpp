@@ -16,9 +16,9 @@ CValueRecordManagerObjectInformationRegister::CActionCollection CValueRecordMana
 {
 	CActionCollection registerActions(this);
 
-	registerActions.AddAction(wxT("saveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
-	registerActions.AddAction(wxT("save"), _("Save"), g_picSaveCLSID, true, eSave);
-	registerActions.AddAction(wxT("clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
+	registerActions.AddAction(wxT("SaveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
+	registerActions.AddAction(wxT("Save"), _("Save"), g_picSaveCLSID, true, eSave);
+	registerActions.AddAction(wxT("Clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
 
 	return registerActions;
 }

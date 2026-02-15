@@ -4,6 +4,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocumentArea, CValue);
 wxIMPLEMENT_DYNAMIC_CLASS(CValueSpreadsheetDocumentBorder, CValue);
 
 CValue::CMethodHelper CValueSpreadsheetDocumentArea::m_methodHelper;
+CValue::CMethodHelper CValueSpreadsheetDocumentBorder::m_methodHelper;
 
 enum
 {
@@ -29,22 +30,22 @@ enum
 void CValueSpreadsheetDocumentArea::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
-	m_methodHelper.AppendProp(wxT("backgroundColour"));
-	m_methodHelper.AppendProp(wxT("textColour"));
-	m_methodHelper.AppendProp(wxT("textOrient"));
-	m_methodHelper.AppendProp(wxT("font"));
-	m_methodHelper.AppendProp(wxT("alignHorizontal"));
-	m_methodHelper.AppendProp(wxT("alignVertical"));
+	m_methodHelper.AppendProp(wxT("BackgroundColour"));
+	m_methodHelper.AppendProp(wxT("TextColour"));
+	m_methodHelper.AppendProp(wxT("TextOrient"));
+	m_methodHelper.AppendProp(wxT("Font"));
+	m_methodHelper.AppendProp(wxT("AlignHorizontal"));
+	m_methodHelper.AppendProp(wxT("AlignVertical"));
 
-	m_methodHelper.AppendProp(wxT("borderLeft"));
-	m_methodHelper.AppendProp(wxT("borderRight"));
-	m_methodHelper.AppendProp(wxT("borderTop"));
-	m_methodHelper.AppendProp(wxT("borderBottom"));
+	m_methodHelper.AppendProp(wxT("BorderLeft"));
+	m_methodHelper.AppendProp(wxT("BorderRight"));
+	m_methodHelper.AppendProp(wxT("BorderTop"));
+	m_methodHelper.AppendProp(wxT("BorderBottom"));
 
-	m_methodHelper.AppendProp(wxT("size"));
-	m_methodHelper.AppendProp(wxT("readOnly"));
+	m_methodHelper.AppendProp(wxT("Size"));
+	m_methodHelper.AppendProp(wxT("ReadOnly"));
 
-	m_methodHelper.AppendProp(wxT("value"));
+	m_methodHelper.AppendProp(wxT("Value"));
 }
 
 #include "valueFont.h"
@@ -237,5 +238,5 @@ bool CValueSpreadsheetDocumentArea::CallAsProc(const long lMethodNum, CValue** p
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentArea, "spreadsheetArea", string_to_clsid("VL_SPSTA"));
-VALUE_TYPE_REGISTER(CValueSpreadsheetDocumentBorder, "spreadsheetBorder", string_to_clsid("VL_SPSTB"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentArea, "SpreadsheetArea", string_to_clsid("VL_SPSTA"));
+VALUE_TYPE_REGISTER(CValueSpreadsheetDocumentBorder, "SpreadsheetBorder", string_to_clsid("VL_SPSTB"));

@@ -4,7 +4,7 @@
 void CValueOutput::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("message", 1, "message(str)");
+	m_methodHelper->AppendFunc(wxT("Message"), 1, "Message(str : string)");
 }
 
 bool CValueOutput::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
@@ -20,4 +20,4 @@ bool CValueOutput::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValu
 	return false;
 }
 
-CONTEXT_TYPE_REGISTER(CValueOutput, "valueOutput", string_to_clsid("IN_OUTP"))
+CONTEXT_TYPE_REGISTER(CValueOutput, "ValueOutput", string_to_clsid("IN_OUTP"))

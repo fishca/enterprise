@@ -111,8 +111,8 @@ void IValueFrame::CValueEventContainer::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("property", 2, "property(key, valueFound)");
-	m_methodHelper->AppendFunc("count", "count()");
+	m_methodHelper->AppendFunc(wxT("Property"), 2, wxT("Property(key : string, valueFound : event)"));
+	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
 
 	for (unsigned int idx = 0; idx < m_controlEvent->GetEventCount(); idx++) {
 		IEvent* event = m_controlEvent->GetEvent(idx);
@@ -159,12 +159,12 @@ bool IValueFrame::CValueEventContainer::CallAsFunc(const long lMethodNum, CValue
 {
 	switch (lMethodNum)
 	{
-		case enControlProperty:
-			pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : CValue());
-			return true;
-		case enControlCount:
-			pvarRetValue = Count();
-			return true;
+	case enControlProperty:
+		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : CValue());
+		return true;
+	case enControlCount:
+		pvarRetValue = Count();
+		return true;
 	}
 
 	return false;
@@ -174,4 +174,4 @@ bool IValueFrame::CValueEventContainer::CallAsFunc(const long lMethodNum, CValue
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueFrame::CValueEventContainer, "eventContainer", string_to_clsid("VL_EVCT"));
+SYSTEM_TYPE_REGISTER(IValueFrame::CValueEventContainer, "EventContainer", string_to_clsid("VL_EVCT"));

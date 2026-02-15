@@ -8,8 +8,8 @@
 
 #include "backend/appData.h"
 
-#define objectManager wxT("manager")
-#define objectMetadataManager wxT("metadata")
+#define objectManager wxT("Manager")
+#define objectMetadataManager wxT("Metadata")
 
 //*********************************************************************************************************
 //*                                   Singleton class "moduleManager"                                     *
@@ -363,7 +363,7 @@ bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueModuleManagerConfiguration, "configModuleManager", string_to_clsid("SO_COMM"));
+SYSTEM_TYPE_REGISTER(CValueModuleManagerConfiguration, "ConfigModuleManager", string_to_clsid("SO_COMM"));
 
-SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueModuleUnit, "moduleManager", string_to_clsid("SO_MODL"));
-SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueMetadataUnit, "metadata", string_to_clsid("SO_METD"));
+SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueModuleUnit, "ModuleManager", string_to_clsid("SO_MODL"));
+SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueMetadataUnit, "Metadata", string_to_clsid("SO_METD"));

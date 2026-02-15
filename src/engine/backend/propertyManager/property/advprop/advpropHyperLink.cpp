@@ -23,7 +23,7 @@ wxPGHyperLinkProperty::~wxPGHyperLinkProperty()
 
 wxString wxPGHyperLinkProperty::ValueToString(wxVariant& value, int argFlags) const
 {
-	return _("open");
+	return _("Open");
 }
 
 bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,

@@ -104,4 +104,4 @@ bool CValueToolbar::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueToolbar, "toolbar", "toolbar", g_controlToolBarCLSID);
+CONTROL_TYPE_REGISTER(CValueToolbar, "Toolbar", "Toolbar", g_controlToolBarCLSID);

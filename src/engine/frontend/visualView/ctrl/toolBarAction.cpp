@@ -14,7 +14,7 @@ bool CValueToolbar::GetActionSource(CPropertyList* property)
 	class CValueToolbarActionParser {
 	public:
 		static inline void FillActionSource(IValueFrame* element, CPropertyList* property) {
-			if (element->GetClassName() == wxT("tablebox")) {
+			if (element->GetClassName() == wxT("Tablebox")) {
 				property->AppendItem(
 					element->GetControlName(),
 					stringUtils::GenerateSynonym(element->GetControlName()),

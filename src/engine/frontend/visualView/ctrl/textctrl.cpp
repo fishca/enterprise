@@ -79,7 +79,7 @@ void CValueTextCtrl::PrepareNames() const
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendProp(wxT("value"), eControlValue, eControl);
+	m_methodHelper->AppendProp(wxT("Value"), eControlValue, eControl);
 }
 
 bool CValueTextCtrl::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -324,4 +324,4 @@ bool CValueTextCtrl::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueTextCtrl, "textctrl", "widget", string_to_clsid("CT_TXTC"));
+CONTROL_TYPE_REGISTER(CValueTextCtrl, "Textctrl", "Widget", string_to_clsid("CT_TXTC"));

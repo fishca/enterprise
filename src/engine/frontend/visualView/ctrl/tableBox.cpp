@@ -456,8 +456,8 @@ void CValueTableBox::PrepareNames() const
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendProp(wxT("value"), eTableValue, eControl);
-	m_methodHelper->AppendProp(wxT("currentRow"), eCurrentRow, eControl);
+	m_methodHelper->AppendProp(wxT("Value"), eTableValue, eControl);
+	m_methodHelper->AppendProp(wxT("CurrentRow"), eCurrentRow, eControl);
 }
 
 bool CValueTableBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -513,4 +513,4 @@ bool CValueTableBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueTableBox, "tablebox", "container", g_controlTableBoxCLSID);
+CONTROL_TYPE_REGISTER(CValueTableBox, "Tablebox", "Container", g_controlTableBoxCLSID);

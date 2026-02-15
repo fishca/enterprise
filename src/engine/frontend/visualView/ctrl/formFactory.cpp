@@ -14,37 +14,37 @@ inline void SetDefaultLayoutProperties(CValueSizerItem* sizerItem)
 	IValueFrame* child = sizerItem->GetChild(0);
 	const wxString& obj_type = child->GetObjectTypeName();
 
-	if (obj_type == wxT("sizer")) {
+	if (obj_type == wxT("Sizer")) {
 		sizerItem->SetBorder(0);
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxEXPAND);
 	}
-	else if (child->GetClassName() == wxT("splitter") ||
-		child->GetClassName() == wxT("spacer")) {
+	else if (child->GetClassName() == wxT("Splitter") ||
+		child->GetClassName() == wxT("Spacer")) {
 		sizerItem->SetProportion(1);
 		sizerItem->SetFlagState(wxEXPAND);
 	}
-	else if (child->GetClassName() == wxT("staticline")) {
+	else if (child->GetClassName() == wxT("Staticline")) {
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxEXPAND);
 	}
-	else if (child->GetClassName() == wxT("toolbar")) {
+	else if (child->GetClassName() == wxT("Toolbar")) {
 		sizerItem->SetBorder(0);
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxEXPAND);
 	}
-	else if (child->GetClassName() == wxT("notebook")) {
+	else if (child->GetClassName() == wxT("Notebook")) {
 		sizerItem->SetProportion(1);
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxEXPAND);
 	}
-	else if (obj_type == wxT("widget") ||
-		obj_type == wxT("statusbar")) {
+	else if (obj_type == wxT("Widget") ||
+		obj_type == wxT("Statusbar")) {
 		sizerItem->SetProportion(0);
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxSHRINK);
 	}
-	else if (obj_type == wxT("container")) {
+	else if (obj_type == wxT("Container")) {
 		sizerItem->SetProportion(1);
 		sizerItem->SetFlagBorder(wxALL);
 		sizerItem->SetFlagState(wxEXPAND);
@@ -93,10 +93,10 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 					else {
 						const IValueFrame* parentControl = control->GetParent();
 						if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
-							strOriginalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+							strOriginalName = parentControl->GetControlName() + control->GetClassName();
 						}
 						else if (parentControl != nullptr && g_controlToolBarSeparatorCLSID == control->GetClassType()) {
-							strOriginalName = parentControl->GetControlName() + wxT("_") + control->GetClassName();
+							strOriginalName = parentControl->GetControlName() + control->GetClassName();
 						}
 						else {
 							strOriginalName = control->GetClassName();
@@ -151,8 +151,8 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 	if (controlParent) {
 		bool sizer = false;
 
-		if (classType == wxT("form")) sizer = true;
-		else if (classType == wxT("sizer")) sizer = controlParent->GetObjectTypeName() == wxT("sizer") || controlParent->GetObjectTypeName() == wxT("form") ? false : true;
+		if (classType == wxT("Form")) sizer = true;
+		else if (classType == wxT("Sizer")) sizer = controlParent->GetObjectTypeName() == wxT("Sizer") || controlParent->GetObjectTypeName() == wxT("Form") ? false : true;
 
 		//FIXME! Esto es un parche para evitar crear los tipos menubar,statusbar y
 		//toolbar en un form que no sea wxFrame.
@@ -160,56 +160,56 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 		//de forms (como childType de project), pero hay mucho código no válido
 		//para forms que no sean de tipo "form". Dicho de otra manera, hay
 		//código que dependen del nombre del tipo, cosa que hay que evitar.
-		if (controlParent->GetObjectTypeName() == wxT("form") && controlParent->GetClassName() != wxT("clientForm") &&
-			(classType == wxT("statusbar") ||
-				classType == wxT("menubar") ||
-				classType == wxT("ribbonbar") ||
-				classType == wxT("toolbar")))
+		if (controlParent->GetObjectTypeName() == wxT("Form") && controlParent->GetClassName() != wxT("ClientForm") &&
+			(classType == wxT("Statusbar") ||
+				classType == wxT("Menubar") ||
+				classType == wxT("Ribbonbar") ||
+				classType == wxT("Toolbar")))
 
 			return nullptr; // tipo no válido
 
 		// No menu dropdown for wxToolBar until wx 2.9 :(
-		if (controlParent->GetObjectTypeName() == wxT("tool"))
+		if (controlParent->GetObjectTypeName() == wxT("Tool"))
 		{
 			IValueFrame* gParent = controlParent->GetParent();
 
 			if (
-				(gParent->GetClassName() == wxT("toolbar")) &&
-				(className == wxT("menu"))
+				(gParent->GetClassName() == wxT("Toolbar")) &&
+				(className == wxT("Menu"))
 				)
 				return nullptr; // not a valid type
 		}
 
-		if (controlParent->GetObjectTypeName() == wxT("toolbar"))
+		if (controlParent->GetObjectTypeName() == wxT("Toolbar"))
 		{
-			if (classType == wxT("tool") /*|| classType == wxT("widget")*/)
+			if (classType == wxT("Tool") /*|| classType == wxT("widget")*/)
 			{
 				object = NewObject(className, controlParent);
 				//set enabled item
 				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
-		else if (controlParent->GetObjectTypeName() == wxT("notebook"))
+		else if (controlParent->GetObjectTypeName() == wxT("Notebook"))
 		{
-			if (classType == wxT("notebookPage")) {
+			if (classType == wxT("NotebookPage")) {
 				object = NewObject(className, controlParent);
 				//set enabled item
 				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
-		else if (controlParent->GetObjectTypeName() == wxT("container")
-			&& controlParent->GetClassName() == wxT("tablebox"))
+		else if (controlParent->GetObjectTypeName() == wxT("Container")
+			&& controlParent->GetClassName() == wxT("Tablebox"))
 		{
-			if (classType == wxT("tableboxColumn"))
+			if (classType == wxT("TableboxColumn"))
 			{
 				object = NewObject(className, controlParent);
 				//set enabled item
 				//object->SetReadOnly(controlParent->IsEditable());
 			}
 		}
-		else if (controlParent->GetObjectTypeName() == wxT("notebookPage"))
+		else if (controlParent->GetObjectTypeName() == wxT("NotebookPage"))
 		{
-			CValueSizerItem* sizerItem = NewObject<CValueSizerItem>("sizerItem", controlParent);
+			CValueSizerItem* sizerItem = NewObject<CValueSizerItem>("SizerItem", controlParent);
 			IValueFrame* obj = NewObject(className, sizerItem);
 
 			if (controlParent) {
@@ -225,7 +225,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 				// sizerItem es un tipo de objeto reservado, para que el uso sea
 				// más práctico se asignan unos valores por defecto en función
 				// del tipo de objeto creado
-				if (sizerItem->IsSubclassOf(wxT("sizerItem"))) {
+				if (sizerItem->IsSubclassOf(wxT("SizerItem"))) {
 					SetDefaultLayoutProperties(sizerItem);
 				}
 
@@ -236,7 +236,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			controlParent->GetComponentType() == COMPONENT_TYPE_SIZER ||
 			controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
 		{
-			CValueSizerItem* sizerItem = NewObject< CValueSizerItem>("sizerItem", controlParent);
+			CValueSizerItem* sizerItem = NewObject< CValueSizerItem>("SizerItem", controlParent);
 			IValueFrame* obj = NewObject(className, sizerItem);
 
 			//if (controlParent) {

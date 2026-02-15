@@ -14,8 +14,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectAccumulationRegister, IValueMetaObject
 CValueMetaObjectAccumulationRegister::CValueMetaObjectAccumulationRegister() : IValueMetaObjectRegisterData()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
 CValueMetaObjectAccumulationRegister::~CValueMetaObjectAccumulationRegister()
@@ -313,4 +313,4 @@ ISourceDataObject* CValueMetaObjectAccumulationRegister::CreateSourceObject(IVal
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectAccumulationRegister, "accumulationRegister", g_metaAccumulationRegisterCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectAccumulationRegister, "AccumulationRegister", g_metaAccumulationRegisterCLSID);

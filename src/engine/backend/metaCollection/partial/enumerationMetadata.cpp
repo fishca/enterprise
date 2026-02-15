@@ -236,4 +236,4 @@ void CValueMetaObjectEnumeration::OnRemoveMetaForm(IValueMetaObjectForm* metaFor
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectEnumeration, "enumeration", g_metaEnumerationCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectEnumeration, "Enumeration", g_metaEnumerationCLSID);

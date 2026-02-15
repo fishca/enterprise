@@ -77,7 +77,7 @@ m_commonObject(nullptr), m_moduleManager(nullptr), m_configOpened(false)
 				wxASSERT_MSG(false, "commonLanguage->OnLoadMetaObject() == false");
 			}
 
-			commonLanguage->SetName(wxT("english"));
+			commonLanguage->SetName(wxT("English"));
 		}
 
 		commonLanguage->PrepareNames();

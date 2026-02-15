@@ -41,8 +41,8 @@ void CValuePoint::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("x"));
-	m_methodHelper.AppendProp(wxT("y"));
+	m_methodHelper.AppendProp(wxT("X"));
+	m_methodHelper.AppendProp(wxT("Y"));
 }
 
 bool CValuePoint::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -79,4 +79,4 @@ bool CValuePoint::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValuePoint, "point", string_to_clsid("VL_PONT"));
+VALUE_TYPE_REGISTER(CValuePoint, "Point", string_to_clsid("VL_PONT"));

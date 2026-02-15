@@ -86,4 +86,4 @@ bool CValueButton::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueButton, "button", "widget", string_to_clsid("CT_BUTN"));
+CONTROL_TYPE_REGISTER(CValueButton, "Button", "Widget", string_to_clsid("CT_BUTN"));

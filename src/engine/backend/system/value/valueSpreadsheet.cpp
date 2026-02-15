@@ -5,6 +5,40 @@
 
 #include "backend/system/value/valueMap.h"
 
+void CValueSpreadsheetDocumentBorder::PrepareNames() const
+{
+	m_methodHelper.ClearHelper();
+
+	m_methodHelper.AppendProp(wxT("Style"));
+	m_methodHelper.AppendProp(wxT("Colour"));
+	m_methodHelper.AppendProp(wxT("Width"));
+}
+
+bool CValueSpreadsheetDocumentBorder::SetPropVal(const long lPropNum, const CValue& varPropVal)
+{
+	return false;
+}
+
+#include "valueColour.h"
+
+bool CValueSpreadsheetDocumentBorder::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	switch (lPropNum)
+	{
+	case enPropStyle:
+		pvarPropVal = CValue::CreateEnumObject<CValueEnumSpreadsheetBorder>(m_style);
+		return true;
+	case enPropColour:
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueColour>(m_colour);
+		return true;
+	case enPropWidth:
+		pvarPropVal = m_width;
+		return true;
+	}
+
+	return false;
+}
+
 class CValueSpreadsheetDocumentRange :
 	public CValue {
 
@@ -46,13 +80,11 @@ public:
 		return &m_methodHelper;
 	}
 
-	virtual void PrepareNames() const // this method is automatically called to initialize attribute and method names.
-	{
+	virtual void PrepareNames() const { // this method is automatically called to initialize attribute and method names
 		m_methodHelper.ClearHelper();
-
-		m_methodHelper.AppendProp(wxT("label"));
-		m_methodHelper.AppendProp(wxT("start"));
-		m_methodHelper.AppendProp(wxT("end"));
+		m_methodHelper.AppendProp(wxT("Label"));
+		m_methodHelper.AppendProp(wxT("Start"));
+		m_methodHelper.AppendProp(wxT("End"));
 	}
 
 private:
@@ -221,10 +253,10 @@ public:
 
 		m_methodHelper->ClearHelper();
 
-		m_methodHelper->AppendFunc(wxT("count"), wxT("count"));
-		m_methodHelper->AppendProc(wxT("fill"), 1, wxT("fill(any : value)"));
-		m_methodHelper->AppendFunc(wxT("get"), 1, wxT("get(parameter: string)"));
-		m_methodHelper->AppendProc(wxT("set"), 2, wxT("set(parameter: string, any: value)"));
+		m_methodHelper->AppendFunc(wxT("Count"), wxT("Count"));
+		m_methodHelper->AppendProc(wxT("Fill"), 1, wxT("Fill(any : value)"));
+		m_methodHelper->AppendFunc(wxT("Get"), 1, wxT("Get(parameter: string)"));
+		m_methodHelper->AppendProc(wxT("Set"), 2, wxT("Set(parameter: string, any: value)"));
 
 		for (int idx = 0; idx < m_spreadsheetDoc->GetSpreadsheetDesc().GetCellCount(); idx++) {
 
@@ -296,24 +328,24 @@ void CValueSpreadsheetDocument::PrepareNames() const
 	m_methodHelper.ClearHelper();
 
 	//freeze row/col
-	m_methodHelper.AppendProp(wxT("fixedLeft"), eFixedLeft);
-	m_methodHelper.AppendProp(wxT("fixedTop"), eFixedTop);
-	m_methodHelper.AppendProp(wxT("areas"), eAreas);
-	m_methodHelper.AppendProp(wxT("parameters"), eParameters);
-	m_methodHelper.AppendProp(wxT("readOnly"), eReadOnly);
-	m_methodHelper.AppendProp(wxT("printerName"), ePrinterName);
-	m_methodHelper.AppendProp(wxT("languageCode"), eLanguageCode);
+	m_methodHelper.AppendProp(wxT("FixedLeft"), eFixedLeft);
+	m_methodHelper.AppendProp(wxT("FixedTop"), eFixedTop);
+	m_methodHelper.AppendProp(wxT("Areas"), eAreas);
+	m_methodHelper.AppendProp(wxT("Parameters"), eParameters);
+	m_methodHelper.AppendProp(wxT("ReadOnly"), eReadOnly);
+	m_methodHelper.AppendProp(wxT("PrinterName"), ePrinterName);
+	m_methodHelper.AppendProp(wxT("LanguageCode"), eLanguageCode);
 
-	m_methodHelper.AppendFunc(wxT("area"), 2, wxT("area(string: left, string: top = <empty>)"));
-	m_methodHelper.AppendFunc(wxT("range"), 2, wxT("area(number: row start, number: row end, number: col start = -1, number: col end = -1)"));
-	m_methodHelper.AppendProc(wxT("putVerticalPageBreak"), wxT("putVerticalPageBreak()"));
-	m_methodHelper.AppendProc(wxT("putHorizontalPageBreak"), wxT("putHorizontalPageBreak()"));
-	m_methodHelper.AppendFunc(wxT("getArea"), 1, wxT("getArea(string: label)"));
-	m_methodHelper.AppendProc(wxT("clear"), wxT("clear()"));
-	m_methodHelper.AppendProc(wxT("print"), wxT("print(bool: showPrintDlg = true)"));
-	m_methodHelper.AppendProc(wxT("show"), 1, wxT("show(string: title)"));
-	m_methodHelper.AppendProc(wxT("put"), 1, wxT("put(spreadsheetDocument: table)"));
-	m_methodHelper.AppendProc(wxT("join"), 1, wxT("join(spreadsheetDocument: table)"));
+	m_methodHelper.AppendFunc(wxT("Area"), 2, wxT("Area(string: left, string: top = <empty>)"));
+	m_methodHelper.AppendFunc(wxT("Range"), 2, wxT("Range(number: row start, number: row end, number: col start = -1, number: col end = -1)"));
+	m_methodHelper.AppendProc(wxT("PutVerticalPageBreak"), wxT("PutVerticalPageBreak()"));
+	m_methodHelper.AppendProc(wxT("PutHorizontalPageBreak"), wxT("PutHorizontalPageBreak()"));
+	m_methodHelper.AppendFunc(wxT("GetArea"), 1, wxT("GetArea(string: label)"));
+	m_methodHelper.AppendProc(wxT("Clear"), wxT("Clear()"));
+	m_methodHelper.AppendProc(wxT("Print"), wxT("Print(bool: showPrintDlg = true)"));
+	m_methodHelper.AppendProc(wxT("Show"), 1, wxT("Show(string: title)"));
+	m_methodHelper.AppendProc(wxT("Put"), 1, wxT("Put(spreadsheetDocument: table)"));
+	m_methodHelper.AppendProc(wxT("Join"), 1, wxT("Join(spreadsheetDocument: table)"));
 }
 
 bool CValueSpreadsheetDocument::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -485,13 +517,14 @@ bool CValueSpreadsheetDocument::CallAsProc(const long lMethodNum, CValue** paPar
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueSpreadsheetDocument, "spreadsheetDocument", string_to_clsid("VL_SPSTD"));
-SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentRange, "spreadsheetAreaRange", string_to_clsid("SY_SPPRA"));
-SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentAreaCollection, "spreadsheetAreaCollection", string_to_clsid("SY_SPAEA"));
-SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentParameterCollection, "spreadsheetParameterCollection", string_to_clsid("SY_SPPRM"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetOrient, "spreadsheetOrient", string_to_clsid("EN_SORNT"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetHorizontalAlignment, "spreadsheetHorizontalAlignment", string_to_clsid("EN_SHOAL"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetVerticalAlignment, "spreadsheetVerticalAlignment", string_to_clsid("EN_SVEAL"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetBorder, "spreadsheetBorder", string_to_clsid("EN_SBORD"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFitMode, "spreadsheetFitMode", string_to_clsid("EN_SFTMD"));
-ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFillType, "spreadsheetTemplate", string_to_clsid("EN_SFTMP"));
+VALUE_TYPE_REGISTER(CValueSpreadsheetDocument, "SpreadsheetDocument", string_to_clsid("VL_SPSTD"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentRange, "SpreadsheetAreaRange", string_to_clsid("SY_SPPRA"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentAreaCollection, "SpreadsheetAreaCollection", string_to_clsid("SY_SPAEA"));
+SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentParameterCollection, "SpreadsheetParameterCollection", string_to_clsid("SY_SPPRM"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetOrient, "SpreadsheetOrient", string_to_clsid("EN_SORNT"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetHorizontalAlignment, "SpreadsheetHorizontalAlignment", string_to_clsid("EN_SHOAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetVerticalAlignment, "SpreadsheetVerticalAlignment", string_to_clsid("EN_SVEAL"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetBorder, "SpreadsheetBorder", string_to_clsid("EN_SBORD"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFitMode, "SpreadsheetFitMode", string_to_clsid("EN_SFTMD"));
+ENUM_TYPE_REGISTER(CValueEnumSpreadsheetFillType, "SpreadsheetTemplate", string_to_clsid("EN_SFTMP"));
+

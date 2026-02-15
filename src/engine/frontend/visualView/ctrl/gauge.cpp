@@ -81,4 +81,4 @@ bool CValueGauge::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueGauge, "gauge", "widget", string_to_clsid("CT_GAUG"));
+CONTROL_TYPE_REGISTER(CValueGauge, "Gauge", "Widget", string_to_clsid("CT_GAUG"));

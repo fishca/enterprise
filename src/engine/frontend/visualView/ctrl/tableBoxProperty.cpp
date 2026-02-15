@@ -46,10 +46,10 @@ void CValueTableBox::OnPropertyChanged(IProperty* property, const wxVariant& old
 					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 						CValueTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(
-								m_formOwner->CreateControl(wxT("tableboxColumn"), this), CValueTableBoxColumn
+								m_formOwner->CreateControl(wxT("TableboxColumn"), this), CValueTableBoxColumn
 							);
 						wxASSERT(tableBoxColumn);
-						tableBoxColumn->SetControlName(GetControlName() + wxT("_") + object->GetName());
+						tableBoxColumn->SetControlName(GetControlName() + object->GetName());
 						tableBoxColumn->SetCaption(object->GetSynonym());
 						tableBoxColumn->SetSource(object->GetMetaID());
 						tableBoxColumn->SetVisibleColumn(true);

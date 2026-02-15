@@ -93,7 +93,7 @@ void CValueGridBox::PrepareNames() const
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendProp(wxT("value"), eGridValue, eControl);
+	m_methodHelper->AppendProp(wxT("Value"), eGridValue, eControl);
 }
 
 bool CValueGridBox::SetPropVal(const long lPropNum, const CValue& varPropVal)
@@ -128,4 +128,4 @@ bool CValueGridBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueGridBox, "gridbox", "container", string_to_clsid("CT_GRID"));
+CONTROL_TYPE_REGISTER(CValueGridBox, "Gridbox", "Container", string_to_clsid("CT_GRID"));

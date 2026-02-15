@@ -78,7 +78,7 @@ void CValueHTMLBox::PrepareNames() const // this method is automatically called 
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendFunc("setPage", 1, "setPage(string)", enSetPage, wxNOT_FOUND);
+	m_methodHelper->AppendFunc(wxT("SetPage"), 1, wxT("SetPage(p: page)"), enSetPage, wxNOT_FOUND);
 }
 
 bool CValueHTMLBox::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)       //method call
@@ -99,4 +99,4 @@ bool CValueHTMLBox::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CVal
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueHTMLBox, "htmlbox", "container", string_to_clsid("CT_HTML"));
+CONTROL_TYPE_REGISTER(CValueHTMLBox, "Htmlbox", "Container", string_to_clsid("CT_HTML"));

@@ -28,8 +28,8 @@ bool CValueContainer::ContainerComparator::operator() (const CValue& lhs, const 
 void CValueContainer::CValueReturnContainer::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
-	m_methodHelper.AppendProp(wxT("key"));
-	m_methodHelper.AppendProp(wxT("value"));
+	m_methodHelper.AppendProp(wxT("Key"));
+	m_methodHelper.AppendProp(wxT("Value"));
 }
 
 bool CValueContainer::CValueReturnContainer::SetPropVal(const long lPropNum, CValue& cValue)
@@ -78,13 +78,13 @@ CValueContainer::~CValueContainer() {
 void CValueContainer::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc(wxT("count"), "count()");
-	m_methodHelper->AppendFunc(wxT("property"), 2, "property(key, valueFound)");
+	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
+	m_methodHelper->AppendFunc(wxT("Property"), 2, wxT("Property(key : any, valueFound : any)"));
 
 	if (!m_bReadOnly) {
-		m_methodHelper->AppendFunc(wxT("clear"), "clear()");
-		m_methodHelper->AppendFunc(wxT("delete"), 1, "delete(key)");
-		m_methodHelper->AppendFunc(wxT("insert"), 2, "insert(key, value)");
+		m_methodHelper->AppendFunc(wxT("Clear"), wxT("Clear()"));
+		m_methodHelper->AppendFunc(wxT("Delete"), 1, wxT("Delete(key : any)"));
+		m_methodHelper->AppendFunc(wxT("Insert"), 2, wxT("Insert(key : any, value : any)"));
 	}
 
 	for (auto keyValue : m_containerValues) {
@@ -259,7 +259,7 @@ bool CValueStructure::Property(const CValue& varKeyValue, CValue& cValueFound)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueContainer, "container", string_to_clsid("VL_CONTR"));
-VALUE_TYPE_REGISTER(CValueStructure, "structure", string_to_clsid("VL_STRUT"));
+VALUE_TYPE_REGISTER(CValueContainer, "Container", string_to_clsid("VL_CONTR"));
+VALUE_TYPE_REGISTER(CValueStructure, "Structure", string_to_clsid("VL_STRUT"));
 
-SYSTEM_TYPE_REGISTER(CValueContainer::CValueReturnContainer, "keyValue", string_to_clsid("VL_KEVAL"));
+SYSTEM_TYPE_REGISTER(CValueContainer::CValueReturnContainer, "KeyValue", string_to_clsid("VL_KEVAL"));

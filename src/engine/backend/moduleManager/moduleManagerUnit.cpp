@@ -23,7 +23,7 @@ IValueModuleManager::CValueModuleUnit::~CValueModuleUnit()
 	wxDELETE(m_methodHelper);
 }
 
-#define objectManager wxT("manager")
+#define objectManager wxT("Manager")
 
 //common module 
 bool IValueModuleManager::CValueModuleUnit::CreateCommonModule()

@@ -21,15 +21,15 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectCatalog, IValueMetaObjectRecordDataHie
 CValueMetaObjectCatalog::CValueMetaObjectCatalog() : IValueMetaObjectRecordDataHierarchyMutableRef()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeDelete"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnDelete"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure("filling", eContentHelper::eProcedureHelper, { "source", "standartProcessing" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onCopy", eContentHelper::eProcedureHelper, { "source" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("Filling"), eContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnCopy"), eContentHelper::eProcedureHelper, { wxT("Source") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure("setNewCode", eContentHelper::eProcedureHelper, { "prefix", "standartProcessing" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("SetNewCode"), eContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
 }
 
 CValueMetaObjectCatalog::~CValueMetaObjectCatalog()
@@ -469,4 +469,4 @@ void CValueMetaObjectCatalog::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectCatalog, "catalog", g_metaCatalogCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCatalog, "Catalog", g_metaCatalogCLSID);

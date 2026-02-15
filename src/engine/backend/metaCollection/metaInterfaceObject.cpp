@@ -49,4 +49,4 @@ bool CValueMetaObjectInterface::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectInterface, "interface", g_metaInterfaceCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectInterface, "Interface", g_metaInterfaceCLSID);

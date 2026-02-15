@@ -28,10 +28,10 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 		CValueToolbar* mainToolBar =
 			wxDynamicCast(
-				CValueForm::CreateControl(wxT("toolbar")), CValueToolbar
+				CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
 			);
 
-		mainToolBar->SetControlName(wxT("mainToolbar"));
+		mainToolBar->SetControlName(wxT("MainToolbar"));
 		mainToolBar->SetActionSrc(FORM_ACTION);
 
 		const IValueMetaObjectGenericData* metaObjectValue = m_sourceObject->GetSourceMetaObject();
@@ -45,20 +45,20 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				CValue* currSrcData = actionData.GetSourceDataByID(action_id);
 				if (currSrcData != prevSrcData
 					&& prevSrcData != nullptr) {
-					CValueForm::CreateControl(wxT("toolSeparator"), mainToolBar);
+					CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 				}
 				CValueToolBarItem* toolBarItem =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("tool"), mainToolBar), CValueToolBarItem
+						CValueForm::CreateControl(wxT("Tool"), mainToolBar), CValueToolBarItem
 					);
-				toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(action_id));
+				toolBarItem->SetControlName(mainToolBar->GetControlName() + actionData.GetNameByID(action_id));
 				//toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
 				//toolBarItem->SetToolTip(actionData.GetCaptionByID(action_id));
 				toolBarItem->SetAction(action_id);
 				prevSrcData = currSrcData;
 			}
 			else {
-				CValueForm::CreateControl(wxT("toolSeparator"), mainToolBar);
+				CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 			}
 		}
 
@@ -67,7 +67,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 			mainTableBox =
 				wxDynamicCast(
-					CValueForm::CreateControl(wxT("tablebox")), CValueTableBox
+					CValueForm::CreateControl(wxT("Tablebox")), CValueTableBox
 				);
 
 			mainTableBox->SetControlName(sourceExplorer.GetSourceName());
@@ -81,9 +81,9 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 			if (sourceExplorer.IsTableSection()) {
 				CValueTableBoxColumn* tableBoxColumn =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("tableboxColumn"), mainTableBox), CValueTableBoxColumn
+						CValueForm::CreateControl(wxT("TableboxColumn"), mainTableBox), CValueTableBoxColumn
 					);
-				tableBoxColumn->SetControlName(mainTableBox->GetControlName() + wxT("_") + nextSourceExplorer.GetSourceName());
+				tableBoxColumn->SetControlName(mainTableBox->GetControlName() + nextSourceExplorer.GetSourceName());
 				tableBoxColumn->SetVisibleColumn(nextSourceExplorer.IsVisible() || sourceExplorer.GetHelperCount() == 1);
 				tableBoxColumn->SetSource(nextSourceExplorer.GetSourceId());
 			}
@@ -95,14 +95,14 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 					CValueToolbar* toolBar =
 						wxDynamicCast(
-							CValueForm::CreateControl(wxT("toolbar")), CValueToolbar
+							CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
 						);
 
-					toolBar->SetControlName(wxT("toolbar_") + nextSourceExplorer.GetSourceName());
+					toolBar->SetControlName(wxT("Toolbar") + nextSourceExplorer.GetSourceName());
 
 					CValueTableBox* tableBox =
 						wxDynamicCast(
-							CValueForm::CreateControl(wxT("tablebox")), CValueTableBox
+							CValueForm::CreateControl(wxT("Tablebox")), CValueTableBox
 						);
 
 					tableBox->SetControlName(nextSourceExplorer.GetSourceName());
@@ -117,20 +117,20 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 							CValue* currSrcData = actionData.GetSourceDataByID(action_id);
 							if (currSrcData != prevSrcData
 								&& prevSrcData != nullptr) {
-								CValueForm::CreateControl(wxT("toolSeparator"), toolBar);
+								CValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
 							}
 							CValueToolBarItem* toolBarItem =
 								wxDynamicCast(
-									CValueForm::CreateControl(wxT("tool"), toolBar), CValueToolBarItem
+									CValueForm::CreateControl(wxT("Tool"), toolBar), CValueToolBarItem
 								);
-							toolBarItem->SetControlName(toolBar->GetControlName() + wxT("_") + actionData.GetNameByID(action_id));
+							toolBarItem->SetControlName(toolBar->GetControlName() + actionData.GetNameByID(action_id));
 							//toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
 							//toolBarItem->SetToolTip(actionData.GetCaptionByID(action_id));
 							toolBarItem->SetAction(action_id);
 							prevSrcData = currSrcData;
 						}
 						else {
-							CValueForm::CreateControl(wxT("toolSeparator"), toolBar);
+							CValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
 						}
 					}
 
@@ -139,9 +139,9 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 						CValueTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("tableboxColumn"), tableBox), CValueTableBoxColumn
+								CValueForm::CreateControl(wxT("TableboxColumn"), tableBox), CValueTableBoxColumn
 							);
-						tableBoxColumn->SetControlName(tableBox->GetControlName() + wxT("_") + colSourceExplorer.GetSourceName());
+						tableBoxColumn->SetControlName(tableBox->GetControlName() + colSourceExplorer.GetSourceName());
 						//tableBoxColumn->SetCaption(colSourceExplorer.GetSourceSynonym());
 						tableBoxColumn->SetVisibleColumn(colSourceExplorer.IsVisible()
 							|| nextSourceExplorer.GetHelperCount() == 1);
@@ -153,7 +153,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 						&& nextSourceExplorer.GetClsidList().size() == 1) {
 						CValueCheckbox* checkbox =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("checkbox")), CValueCheckbox
+								CValueForm::CreateControl(wxT("Checkbox")), CValueCheckbox
 							);
 						checkbox->SetControlName(nextSourceExplorer.GetSourceName());
 						//checkbox->SetCaption(nextSourceExplorer.GetSourceSynonym());
@@ -173,7 +173,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 						CValueTextCtrl* textCtrl =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("textctrl")), CValueTextCtrl
+								CValueForm::CreateControl(wxT("Textctrl")), CValueTextCtrl
 							);
 						textCtrl->SetControlName(nextSourceExplorer.GetSourceName());
 						//textCtrl->SetCaption(nextSourceExplorer.GetSourceSynonym());
@@ -193,10 +193,10 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 		CValueToolbar* mainToolBar =
 			wxDynamicCast(
-				CValueForm::CreateControl(wxT("toolbar")), CValueToolbar
+				CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
 			);
 
-		mainToolBar->SetControlName(wxT("mainToolbar"));
+		mainToolBar->SetControlName(wxT("MainToolbar"));
 		mainToolBar->SetActionSrc(FORM_ACTION);
 
 		CValueTableBox* mainTableBox = nullptr;
@@ -209,15 +209,15 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 			if (id != wxNOT_FOUND) {
 				CValueToolBarItem* toolBarItem =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("tool"), mainToolBar), CValueToolBarItem
+						CValueForm::CreateControl(wxT("Tool"), mainToolBar), CValueToolBarItem
 					);
-				toolBarItem->SetControlName(mainToolBar->GetControlName() + wxT("_") + actionData.GetNameByID(id));
+				toolBarItem->SetControlName(mainToolBar->GetControlName() + actionData.GetNameByID(id));
 				//toolBarItem->SetCaption(actionData.GetCaptionByID(id));
 				//toolBarItem->SetToolTip(actionData.GetCaptionByID(id));
 				toolBarItem->SetAction(id);
 			}
 			else {
-				CValueForm::CreateControl(wxT("toolSeparator"), mainToolBar);
+				CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 			}
 		}
 	}

@@ -180,5 +180,5 @@ bool CValueMetaObjectAttributePredefined::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectAttribute, "attribute", g_metaAttributeCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectAttributePredefined, "predefinedAttribute", g_metaPredefinedAttributeCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectAttribute, "Attribute", g_metaAttributeCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectAttributePredefined, "PredefinedAttribute", g_metaPredefinedAttributeCLSID);

@@ -97,4 +97,4 @@ bool CValueMetaObjectLanguage::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectLanguage, "language", g_metaLanguageCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectLanguage, "Language", g_metaLanguageCLSID);

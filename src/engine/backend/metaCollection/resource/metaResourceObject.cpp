@@ -15,4 +15,4 @@ eSelectorDataType CValueMetaObjectResource::GetFilterDataType() const
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectResource, "resource", g_metaResourceCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectResource, "Resource", g_metaResourceCLSID);

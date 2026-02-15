@@ -17,7 +17,7 @@ CValueListDataObjectEnumRef::CActionCollection CValueListDataObjectEnumRef::GetA
 	CActionCollection actionData(this);
 
 	if (m_choiceMode)
-		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
+		actionData.AddAction(wxT("Select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 
 	const CActionCollection& data =
 		IValueTable::GetActionCollection(formType);
@@ -60,7 +60,7 @@ CValueListDataObjectRef::CActionCollection CValueListDataObjectRef::GetActionCol
 	CActionCollection actionData(this);
 
 	if (m_choiceMode)
-		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
+		actionData.AddAction(wxT("Select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 
 	if (m_choiceMode)
 		actionData.AddSeparator();
@@ -84,7 +84,7 @@ CValueListDataObjectRef::CActionCollection CValueListDataObjectRef::GetActionCol
 		}
 	}
 
-	actionData.InsertAction(3, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
+	actionData.InsertAction(3, wxT("MarkAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 
 	return actionData;
 }
@@ -112,12 +112,12 @@ CValueListDataObjectRef::CActionCollection CValueTreeDataObjectFolderRef::GetAct
 	CActionCollection actionData(this);
 
 	if (m_choiceMode) {
-		actionData.AddAction(wxT("select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
+		actionData.AddAction(wxT("Select"), _("Select"), g_picSelectCLSID, true, eChooseValue);
 		actionData.AddSeparator();
 	}
 
 	if (m_listMode == LIST_FOLDER || m_listMode == LIST_ITEM || m_listMode == LIST_ITEM_FOLDER) {
-		actionData.AddAction(wxT("addFolder"), _("Add folder"), g_picAddFolderCLSID, true, eAddFolder);
+		actionData.AddAction(wxT("AddFolder"), _("Add folder"), g_picAddFolderCLSID, true, eAddFolder);
 	}
 
 	CActionCollection data =
@@ -143,10 +143,10 @@ CValueListDataObjectRef::CActionCollection CValueTreeDataObjectFolderRef::GetAct
 	}
 
 	if (m_choiceMode) {
-		actionData.InsertAction(5, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
+		actionData.InsertAction(5, wxT("MarkAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 	}
 	else {
-		actionData.InsertAction(4, wxT("markAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
+		actionData.InsertAction(4, wxT("MarkAsDelete"), _("Mark as delete"), g_picMarkAsDeleteCLSID, true, eMarkAsDelete);
 	}
 
 	return actionData;

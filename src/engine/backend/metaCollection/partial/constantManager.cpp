@@ -59,8 +59,8 @@ enum Func {
 void CValueManagerDataObjectConstant::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
-	m_methodHelper.AppendFunc("set", 1, "set(value)");
-	m_methodHelper.AppendFunc("get", "get()");
+	m_methodHelper.AppendFunc(wxT("Set"), 1, wxT("Set(value : any)"));
+	m_methodHelper.AppendFunc(wxT("Get"), wxT("Get()"));
 }
 
 bool CValueManagerDataObjectConstant::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)

@@ -10,8 +10,8 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectDocument, CValue);
 
-CValueManagerDataObjectDocument::CValueManagerDataObjectDocument(CValueMetaObjectDocument* metaObject) : 
-	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject) 
+CValueManagerDataObjectDocument::CValueManagerDataObjectDocument(CValueMetaObjectDocument* metaObject) :
+	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
 
@@ -76,14 +76,14 @@ void CValueManagerDataObjectDocument::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("createDocument", "createDocument()");
-	m_methodHelper->AppendFunc("select", "select()");
-	m_methodHelper->AppendFunc("findByNumber", 2, "findByNumber(string, date)");
-	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
-	m_methodHelper->AppendFunc("emptyRef", "emptyRef()");
+	m_methodHelper->AppendFunc(wxT("CreateDocument"), wxT("CreateDocument()"));
+	m_methodHelper->AppendFunc(wxT("Select"), wxT("Select()"));
+	m_methodHelper->AppendFunc(wxT("FindByNumber"), 2, wxT("FindByNumber(number : string, date)"));
+	m_methodHelper->AppendFunc(wxT("GetForm"), 3, wxT("GetForm(name : string, owner, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetSelectForm"), 3, wxT("GetSelectForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
+	m_methodHelper->AppendFunc(wxT("EmptyRef"), wxT("EmptyRef()"));
 
 	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {

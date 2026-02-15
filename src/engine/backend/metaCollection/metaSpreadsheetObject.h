@@ -40,8 +40,8 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 private:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("Template"));
-	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("templateData"), _("Template data"));
+	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
+	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
 };
 
 class BACKEND_API CValueMetaObjectCommonSpreadsheet : public IValueMetaObjectSpreadsheet {
@@ -54,8 +54,8 @@ protected:
 	virtual bool LoadData(CMemoryReader& reader);
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 private:
-	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("commonTemplate"), _("Common template"));
-	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("templateData"), _("Template data"));
+	CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("CommonTemplate"), _("Common template"));
+	CPropertySpreadsheet* m_propertyTemplate = IPropertyObject::CreateProperty<CPropertySpreadsheet>(m_categoryTemplate, wxT("TemplateData"), _("Template data"));
 };
 
 #endif 

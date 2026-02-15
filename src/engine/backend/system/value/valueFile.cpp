@@ -12,24 +12,24 @@ CValue::CMethodHelper CValueFile::m_methodHelper;
 
 void CValueFile::PrepareNames() const
 {
-	m_methodHelper.AppendConstructor(1, "file(string)");
+	m_methodHelper.AppendConstructor(1, wxT("File(path : string)"));
 
-	m_methodHelper.AppendProp("baseName");
-	m_methodHelper.AppendProp("extension");
-	m_methodHelper.AppendProp("fullName");
-	m_methodHelper.AppendProp("name");
-	m_methodHelper.AppendProp("path");
+	m_methodHelper.AppendProp(wxT("BaseName"));
+	m_methodHelper.AppendProp(wxT("Extension"));
+	m_methodHelper.AppendProp(wxT("FullName"));
+	m_methodHelper.AppendProp(wxT("Name"));
+	m_methodHelper.AppendProp(wxT("Path"));
 
-	m_methodHelper.AppendFunc("exist", "exist()");
-	//m_methodHelper.AppendMethod("getHidden", "getHidden()");
-	m_methodHelper.AppendFunc("getModificationTime", "getModificationTime()");
-	m_methodHelper.AppendFunc("getReadOnly", "getReadOnly()");
-	m_methodHelper.AppendFunc("isDirectory", "isDirectory()");
-	m_methodHelper.AppendFunc("isFile", "isFile()");
-	//m_methodHelper.AppendMethod("setHidden", "setHidden(bool)");
-	//m_methodHelper.AppendMethod("setModificationTime", "setModificationTime(date)");
-	//m_methodHelper.AppendMethod("setReadOnly", "setReadOnly(bool)");
-	m_methodHelper.AppendFunc("size", "size()");
+	m_methodHelper.AppendFunc(wxT("Exist"), wxT("Exist()"));
+	//m_methodHelper.AppendMethod(wxT("GetHidden"), wxT("GetHidden()"));
+	m_methodHelper.AppendFunc(wxT("GetModificationTime"), wxT("GetModificationTime()"));
+	m_methodHelper.AppendFunc(wxT("GetReadOnly"), wxT("GetReadOnly()"));
+	m_methodHelper.AppendFunc(wxT("IsDirectory"), wxT("IsDirectory()"));
+	m_methodHelper.AppendFunc(wxT("IsFile"), wxT("IsFile()"));
+	//m_methodHelper.AppendMethod("SetHidden", "SetHidden(bool)");
+	//m_methodHelper.AppendMethod("SetModificationTime", "SetModificationTime(date)");
+	//m_methodHelper.AppendMethod("SetReadOnly", "SetReadOnly(bool)");
+	m_methodHelper.AppendFunc(wxT("Size"), wxT("Size()"));
 }
 
 #include "backend/appData.h"
@@ -50,15 +50,15 @@ bool CValueFile::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue*
 	case enGetReadOnly: pvarRetValue = m_fileName.Length() > 0 &&
 		(!strFileName.IsDir() && strFileName.IsFileReadable()) || (strFileName.IsDir() && strFileName.IsDirReadable());
 		return true;
-	case enIsDirectory: pvarRetValue = strFileName.IsDir(); 		
+	case enIsDirectory: pvarRetValue = strFileName.IsDir();
 		return true;
-	case enIsFile: pvarRetValue = !strFileName.IsDir(); 		
+	case enIsFile: pvarRetValue = !strFileName.IsDir();
 		return true;
 		//case enSetHidden: break;
 		//case enSetModificationTime: break;
 		//case enSetReadOnly: break;
 	case enSize: {
-		const wxULongLong &size = strFileName.GetSize();
+		const wxULongLong& size = strFileName.GetSize();
 		pvarRetValue = number_t(size.GetValue());
 		return true;
 	}
@@ -78,19 +78,19 @@ bool CValueFile::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 
 	switch (lPropNum)
 	{
-	case enBaseName: 
+	case enBaseName:
 		pvarPropVal = strFileName.GetName();
 		return true;
 	case enExtension:
 		pvarPropVal = strFileName.GetExt();
 		return true;
 	case enFullName:
-		pvarPropVal = strFileName.GetFullPath(); 
+		pvarPropVal = strFileName.GetFullPath();
 		return true;
-	case enName: 
-		pvarPropVal = strFileName.GetFullName(); 
+	case enName:
+		pvarPropVal = strFileName.GetFullName();
 		return true;
-	case enPath: 
+	case enPath:
 		pvarPropVal = strFileName.GetPath();
 		return true;
 	}
@@ -118,4 +118,4 @@ bool CValueFile::Init(CValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueFile, "file", string_to_clsid("VL_FILE"));
+VALUE_TYPE_REGISTER(CValueFile, "File", string_to_clsid("VL_FILE"));

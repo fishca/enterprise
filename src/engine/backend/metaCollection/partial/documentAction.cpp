@@ -17,13 +17,13 @@ enum action {
 CValueRecordDataObjectDocument::CActionCollection CValueRecordDataObjectDocument::GetActionCollection(const form_identifier_t &formType)
 {
 	CActionCollection documentActions(this);
-	documentActions.AddAction(wxT("postAndClose"), _("Post and close"), g_picPostCLSID, true, eDefActionAndClose);
-	documentActions.AddAction(wxT("post"), _("Post"), g_picPostCLSID, true, ePost);
-	documentActions.AddAction(wxT("clearPosting"), _("Clear posting"), g_picSaveCLSID, true, eClearPosting);
+	documentActions.AddAction(wxT("PostAndClose"), _("Post and close"), g_picPostCLSID, true, eDefActionAndClose);
+	documentActions.AddAction(wxT("Post"), _("Post"), g_picPostCLSID, true, ePost);
+	documentActions.AddAction(wxT("ClearPosting"), _("Clear posting"), g_picSaveCLSID, true, eClearPosting);
 	documentActions.AddSeparator();
-	documentActions.AddAction(wxT("generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
+	documentActions.AddAction(wxT("Generate"), _("Generate"), g_picGenerateCLSID, true, eGenerate);
 	documentActions.AddSeparator();
-	documentActions.AddAction(wxT("clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
+	documentActions.AddAction(wxT("Clone"), _("Clone"), g_picCloneCLSID, true, eCopy);
 
 	return documentActions;
 }

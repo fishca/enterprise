@@ -47,17 +47,17 @@ IValueModel::CActionCollection IValueModel::GetActionCollection(const form_ident
 	CActionCollection action(this);
 
 	if (UseStandartCommand()) {
-		action.AddAction(wxT("add"), _("Add"), g_picAddCLSID, true, eAddValue);
-		action.AddAction(wxT("copy"), _("Copy"), g_picCopyCLSID, false, eCopyValue);
-		action.AddAction(wxT("edit"), _("Edit"), g_picEditCLSID, false, eEditValue);
-		action.AddAction(wxT("delete"), _("Delete"), g_picDeleteCLSID, false, eDeleteValue);
+		action.AddAction(wxT("Add"), _("Add"), g_picAddCLSID, true, eAddValue);
+		action.AddAction(wxT("Copy"), _("Copy"), g_picCopyCLSID, false, eCopyValue);
+		action.AddAction(wxT("Edit"), _("Edit"), g_picEditCLSID, false, eEditValue);
+		action.AddAction(wxT("Delete"), _("Delete"), g_picDeleteCLSID, false, eDeleteValue);
 	}
 
 	if (UseFilter()) {
 		if (UseStandartCommand()) action.AddSeparator();
-		action.AddAction(wxT("filter"), _("Filter"), g_picFilterCLSID, false, eFilter);
-		action.AddAction(wxT("filterByColumn"), _("Filter by column"), g_picFilterSetCLSID, false, eFilterByColumn);
-		action.AddAction(wxT("filterClear"), _("Filter clear"), g_picFilterClearCLSID, false, eFilterClear);
+		action.AddAction(wxT("Filter"), _("Filter"), g_picFilterCLSID, false, eFilter);
+		action.AddAction(wxT("FilterByColumn"), _("Filter by column"), g_picFilterSetCLSID, false, eFilterByColumn);
+		action.AddAction(wxT("FilterClear"), _("Filter clear"), g_picFilterClearCLSID, false, eFilterClear);
 	}
 
 	return action;
@@ -136,10 +136,10 @@ void IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::PrepareNam
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendProp(wxT("name"));
-	m_methodHelper->AppendProp(wxT("types"));
-	m_methodHelper->AppendProp(wxT("caption"));
-	m_methodHelper->AppendProp(wxT("width"));
+	m_methodHelper->AppendProp(wxT("Name"));
+	m_methodHelper->AppendProp(wxT("Types"));
+	m_methodHelper->AppendProp(wxT("Caption"));
+	m_methodHelper->AppendProp(wxT("Width"));
 }
 
 bool IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::GetPropVal(const long lPropNum, CValue& pvarPropVal)

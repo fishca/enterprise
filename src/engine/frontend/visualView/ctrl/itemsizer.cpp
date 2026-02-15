@@ -257,4 +257,4 @@ bool CValueSizerItem::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueSizerItem, "sizerItem", "sizer", string_to_clsid("CT_SIZR"));
+S_CONTROL_TYPE_REGISTER(CValueSizerItem, "SizerItem", "Sizer", string_to_clsid("CT_SIZR"));

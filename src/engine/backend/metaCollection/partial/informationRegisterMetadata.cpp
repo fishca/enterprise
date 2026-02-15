@@ -16,8 +16,8 @@ CValueMetaObjectInformationRegister::CValueMetaObjectInformationRegister() : IVa
 m_metaRecordManager(new CValueMetaObjectRecordManager())
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 }
 
 CValueMetaObjectInformationRegister::~CValueMetaObjectInformationRegister()
@@ -349,5 +349,5 @@ ISourceDataObject* CValueMetaObjectInformationRegister::CreateSourceObject(IValu
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueMetaObjectInformationRegister::CValueMetaObjectRecordManager, "recordManager", string_to_clsid("MT_RCMG"));
-METADATA_TYPE_REGISTER(CValueMetaObjectInformationRegister, "informationRegister", g_metaInformationRegisterCLSID);
+SYSTEM_TYPE_REGISTER(CValueMetaObjectInformationRegister::CValueMetaObjectRecordManager, "InformationRecordManager", string_to_clsid("MT_RCMG"));
+METADATA_TYPE_REGISTER(CValueMetaObjectInformationRegister, "InformationRegister", g_metaInformationRegisterCLSID);

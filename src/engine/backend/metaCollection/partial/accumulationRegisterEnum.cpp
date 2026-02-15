@@ -8,5 +8,5 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumAccumulationRegisterRecordType, CValue);
 //***********************************************************************
 
 //add new enumeration
-ENUM_TYPE_REGISTER(CValueEnumAccumulationRegisterType, "accumulationRegisterType", string_to_clsid("EN_RTTP"));
-ENUM_TYPE_REGISTER(CValueEnumAccumulationRegisterRecordType, "accumulationRecordType", g_enumRecordTypeCLSID);
+ENUM_TYPE_REGISTER(CValueEnumAccumulationRegisterType, "AccumulationRegisterType", string_to_clsid("EN_RTTP"));
+ENUM_TYPE_REGISTER(CValueEnumAccumulationRegisterRecordType, "AccumulationRecordType", g_enumRecordTypeCLSID);

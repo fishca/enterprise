@@ -21,7 +21,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyExternalPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyExternalPicture>(m_categorySecondary, wxT("picture"), _("Picture"));
+	CPropertyExternalPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyExternalPicture>(m_categorySecondary, wxT("Picture"), _("Picture"));
 };
 
 #endif 

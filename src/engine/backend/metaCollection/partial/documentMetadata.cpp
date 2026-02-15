@@ -30,18 +30,18 @@ public:
 CValueMetaObjectDocument::CValueMetaObjectDocument() : IValueMetaObjectRecordDataMutableRef()
 {
 	//set default proc
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeWrite", eContentHelper::eProcedureHelper, { "cancel", "writeMode", "postingMode" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onWrite", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("beforeDelete", eContentHelper::eProcedureHelper, { "cancel" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onDelete", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel"), wxT("WriteMode"), wxT("PostingMode") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnWrite"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("BeforeDelete"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnDelete"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure("posting", eContentHelper::eProcedureHelper, { "cancel", "postingMode" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("undoPosting", eContentHelper::eProcedureHelper, { "cancel" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("Posting"), eContentHelper::eProcedureHelper, { wxT("Cancel"), wxT("PostingMode") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("UndoPosting"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure("filling", eContentHelper::eProcedureHelper, { "source", "standartProcessing" });
-	(*m_propertyModuleObject)->SetDefaultProcedure("onCopy", eContentHelper::eProcedureHelper, { "source" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("Filling"), eContentHelper::eProcedureHelper, { wxT("Source"), wxT("StandartProcessing") });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("OnCopy"), eContentHelper::eProcedureHelper, { wxT("Source") });
 
-	(*m_propertyModuleObject)->SetDefaultProcedure("setNewNumber", eContentHelper::eProcedureHelper, { "prefix", "standartProcessing" });
+	(*m_propertyModuleObject)->SetDefaultProcedure(wxT("SetNewNumber"), eContentHelper::eProcedureHelper, { wxT("Prefix"), wxT("StandartProcessing") });
 }
 
 CValueMetaObjectDocument::~CValueMetaObjectDocument()
@@ -475,5 +475,5 @@ void CValueMetaObjectDocument::OnRemoveMetaForm(IValueMetaObjectForm* metaForm)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectDocument, "document", g_metaDocumentCLSID);
-SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "recordRegister", string_to_clsid("VL_RECR"));
+METADATA_TYPE_REGISTER(CValueMetaObjectDocument, "Document", g_metaDocumentCLSID);
+SYSTEM_TYPE_REGISTER(CValueRecordDataObjectDocument::CRecorderRegisterDocument, "RecordRegister", string_to_clsid("VL_RECR"));

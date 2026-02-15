@@ -39,17 +39,17 @@ enum
 void IValueModuleManager::CValueMetadataUnit::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProp("commonModules", true, false, g_metaCommonModuleCLSID);
-	m_methodHelper->AppendProp("commonForms", true, false, g_metaCommonFormCLSID);
-	m_methodHelper->AppendProp("commonTemplates", true, false, g_metaCommonTemplateCLSID);
-	m_methodHelper->AppendProp("constants", true, false, g_metaConstantCLSID);
-	m_methodHelper->AppendProp("catalogs", true, false, g_metaCatalogCLSID);
-	m_methodHelper->AppendProp("documents", true, false, g_metaDocumentCLSID);
-	m_methodHelper->AppendProp("enumerations", true, false, g_metaEnumerationCLSID);
-	m_methodHelper->AppendProp("dataProcessors", true, false, g_metaDataProcessorCLSID);
-	m_methodHelper->AppendProp("reports", true, false, g_metaReportCLSID);
-	m_methodHelper->AppendProp("informationRegisters", true, false, g_metaInformationRegisterCLSID);
-	m_methodHelper->AppendProp("accumulationRegisters", true, false, g_metaAccumulationRegisterCLSID);
+	m_methodHelper->AppendProp("CommonModules", true, false, g_metaCommonModuleCLSID);
+	m_methodHelper->AppendProp("CommonForms", true, false, g_metaCommonFormCLSID);
+	m_methodHelper->AppendProp("CommonTemplates", true, false, g_metaCommonTemplateCLSID);
+	m_methodHelper->AppendProp("Constants", true, false, g_metaConstantCLSID);
+	m_methodHelper->AppendProp("Catalogs", true, false, g_metaCatalogCLSID);
+	m_methodHelper->AppendProp("Documents", true, false, g_metaDocumentCLSID);
+	m_methodHelper->AppendProp("Enumerations", true, false, g_metaEnumerationCLSID);
+	m_methodHelper->AppendProp("DataProcessors", true, false, g_metaDataProcessorCLSID);
+	m_methodHelper->AppendProp("Reports", true, false, g_metaReportCLSID);
+	m_methodHelper->AppendProp("InformationRegisters", true, false, g_metaInformationRegisterCLSID);
+	m_methodHelper->AppendProp("AccumulationRegisters", true, false, g_metaAccumulationRegisterCLSID);
 }
 
 //****************************************************************************

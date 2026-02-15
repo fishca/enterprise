@@ -42,17 +42,17 @@ void CInterfaceEditor::OnCheckItem(wxTreeEvent& event)
 
 #include "frontend/artProvider/artProvider.h"
 
-#define commonName _("common")
-#define commonFormsName _("common forms")
+#define commonName _("Common")
+#define commonFormsName _("Common forms")
 
-#define constantsName _("constants")
+#define constantsName _("Constants")
 
-#define catalogsName _("catalogs")
-#define documentsName _("documents")
-#define dataProcessorName _("data processors")
-#define reportsName _("reports")
-#define informationRegisterName _("information Registers")
-#define accumulationRegisterName _("accumulation Registers")
+#define catalogsName _("Catalogs")
+#define documentsName _("Documents")
+#define dataProcessorName _("Data processors")
+#define reportsName _("Reports")
+#define informationRegisterName _("Information Registers")
+#define accumulationRegisterName _("Accumulation Registers")
 
 void CInterfaceEditor::InitInterface()
 {
@@ -61,7 +61,7 @@ void CInterfaceEditor::InitInterface()
 
 	wxImageList* imageList = m_interfaceCtrl->GetImageList();
 	int imageIndex = imageList->Add(typeCtor->GetClassIcon());
-	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
+	m_treeMETADATA = m_interfaceCtrl->AddRoot(_("Configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -89,7 +89,7 @@ void CInterfaceEditor::InitInterface()
 	m_treeACCUMULATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaAccumulationRegisterCLSID, accumulationRegisterName);
 
 	//Set item bold and name
-	m_interfaceCtrl->SetItemText(m_treeMETADATA, _("configuration"));
+	m_interfaceCtrl->SetItemText(m_treeMETADATA, _("Configuration"));
 	m_interfaceCtrl->SetItemBold(m_treeMETADATA);
 
 	m_interfaceCtrl->ExpandAll();

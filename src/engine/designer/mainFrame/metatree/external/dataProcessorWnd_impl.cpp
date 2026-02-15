@@ -8,12 +8,12 @@
 #include "frontend/docView/docManager.h"
 #include "backend/appData.h"
 
-#define	objectFormsName _("forms")
-#define	objectModulesName _("modules")
-#define	objectTemplatesName _("templates")
-#define objectAttributesName _("attributes")
-#define objectTablesName _("tables")
-#define objectEnumerationsName _("enums")
+#define	objectFormsName _("Forms")
+#define	objectModulesName _("Modules")
+#define	objectTemplatesName _("Templates")
+#define objectAttributesName _("Attributes")
+#define objectTablesName _("Tables")
+#define objectEnumerationsName _("Enums")
 
 //***********************************************************************
 //*                         metaData                                    * 

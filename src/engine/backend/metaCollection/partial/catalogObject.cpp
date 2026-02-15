@@ -290,16 +290,16 @@ void CValueRecordDataObjectCatalog::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("isNew", "isNew()");
-	m_methodHelper->AppendFunc("copy", "copy()");
-	m_methodHelper->AppendFunc("fill", 1, "fill(object)");
-	m_methodHelper->AppendFunc("write", "write()");
-	m_methodHelper->AppendFunc("delete", "delete()");
-	m_methodHelper->AppendFunc("modified", "modified()");
-	m_methodHelper->AppendFunc("getFormObject", 3, "getFormObject(string, owner, guid)");
-	m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
+	m_methodHelper->AppendFunc(wxT("IsNew"), wxT("IsNew()"));
+	m_methodHelper->AppendFunc(wxT("Copy"), wxT("Copy()"));
+	m_methodHelper->AppendFunc(wxT("Fill"), 1, wxT("Fill(object)"));
+	m_methodHelper->AppendFunc(wxT("Write"), wxT("Write()"));
+	m_methodHelper->AppendFunc(wxT("Delete"), wxT("Delete()"));
+	m_methodHelper->AppendFunc(wxT("Modified"), wxT("Modified()"));
+	m_methodHelper->AppendFunc(wxT("GetFormObject"), 3, wxT("GetFormObject(name : string, owner : any , id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("thisObject"), true, false, eThisObject, eSystem);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
 
 	//set object name
 	wxString objectName;

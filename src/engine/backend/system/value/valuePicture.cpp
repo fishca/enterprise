@@ -27,4 +27,4 @@ bool CValuePicture::Init(CValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValuePicture, "storagePicture", string_to_clsid("SY_PICTR"));
+VALUE_TYPE_REGISTER(CValuePicture, "StoragePicture", string_to_clsid("SY_PICTR"));

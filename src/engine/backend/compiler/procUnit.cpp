@@ -1359,4 +1359,4 @@ CProcUnitEvaluate::~CProcUnitEvaluate()
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueIterator, "iterator", g_valueIterator);
+SYSTEM_TYPE_REGISTER(CValueIterator, "Iterator", g_valueIterator);

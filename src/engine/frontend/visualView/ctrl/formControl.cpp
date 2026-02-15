@@ -51,7 +51,7 @@ bool CValueForm::CValueFormCollectionControl::GetAt(const CValue& varKeyValue, C
 	const number_t& number = varKeyValue.GetNumber();
 	if (m_formOwner->m_listControl.size() < number.ToUInt())
 		return false;
-	
+
 	auto it = m_formOwner->m_listControl.begin();
 	std::advance(it, number.ToUInt());
 	pvarValue = *it;
@@ -67,12 +67,12 @@ bool CValueForm::CValueFormCollectionControl::Property(const CValue& varKeyValue
 			return stringUtils::CompareString(key, control->GetControlName());
 		}
 	);
-	
+
 	if (it != m_formOwner->m_listControl.end()) {
 		cValueFound = *it;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -89,19 +89,19 @@ void CValueForm::CValueFormCollectionControl::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("createControl", 2, "createControl(typeControl, parentElement)");
-	m_methodHelper->AppendFunc("findControl", 1, "findControl(controlName)");
-	m_methodHelper->AppendProc("removeControl", 1, "removeControl(controlElement)");
-	m_methodHelper->AppendFunc("property", 2, "property(key, valueFound)");
-	m_methodHelper->AppendFunc("count", "count()");
+	m_methodHelper->AppendFunc(wxT("CreateControl"), 2, wxT("CreateControl(typeControl : type, parentElement : frame)"));
+	m_methodHelper->AppendFunc(wxT("FindControl"), 1, wxT("FindControl(controlName : string)"));
+	m_methodHelper->AppendProc(wxT("RemoveControl"), 1, wxT("RemoveControl(controlElement : frame)"));
+	m_methodHelper->AppendFunc(wxT("Property"), 2, wxT("Property(key : string, valueFound : frame)"));
+	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
 
 	wxString controlName;
 
 	for (auto control : m_formOwner->m_listControl) {
-		
+
 		if (!control->GetControlNameAsString(controlName))
 			continue;
-		
+
 		m_methodHelper->AppendProp(
 			controlName,
 			true,
@@ -128,7 +128,7 @@ bool CValueForm::CValueFormCollectionControl::CallAsProc(const long lMethodNum, 
 	{
 	case enControlRemove:
 		m_formOwner->RemoveControl(paParams[0]->ConvertToType<IValueFrame>());
-		return true; 
+		return true;
 	}
 	return false;
 }
@@ -158,4 +158,4 @@ bool CValueForm::CValueFormCollectionControl::CallAsFunc(const long lMethodNum, 
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueForm::CValueFormCollectionControl, "formControl", string_to_clsid("VL_CNTR"));
+SYSTEM_TYPE_REGISTER(CValueForm::CValueFormCollectionControl, "FormControl", string_to_clsid("VL_CNTR"));

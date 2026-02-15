@@ -19,8 +19,8 @@ class CValueMetaObjectEnumeration : public IValueMetaObjectRecordDataEnumRef {
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
-		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
+		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
+		formList.AppendItem(wxT("FormSelect"), _("Form select"), eFormSelect);
 		return formList;
 	}
 
@@ -134,11 +134,11 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("ManagerModule"), _("Manager module")));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectEnumeration::FillFormList);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CValueMetaObjectEnumeration::FillFormSelect);
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectEnumeration::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormSelect"), _("Default Select Form"), &CValueMetaObjectEnumeration::FillFormSelect);
 };
 
 #endif

@@ -2,5 +2,5 @@
 
 wxString wxVariantDataModule::MakeString() const
 {
-	return _("module");
+	return _("Module");
 }

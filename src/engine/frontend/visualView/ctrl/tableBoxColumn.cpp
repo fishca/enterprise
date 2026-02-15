@@ -314,4 +314,4 @@ bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueTableBoxColumn, "tableboxColumn", "tableboxColumn", g_controlTableBoxColumnCLSID);
+S_CONTROL_TYPE_REGISTER(CValueTableBoxColumn, "TableboxColumn", "TableboxColumn", g_controlTableBoxColumnCLSID);

@@ -228,7 +228,7 @@ bool CValueMetaObjectManagerModule::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectModule, "module", g_metaModuleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectModule, "Module", g_metaModuleCLSID);
 
-METADATA_TYPE_REGISTER(CValueMetaObjectCommonModule, "commonModule", g_metaCommonModuleCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectManagerModule, "managerModule", g_metaManagerCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCommonModule, "CommonModule", g_metaCommonModuleCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectManagerModule, "ManagerModule", g_metaManagerCLSID);

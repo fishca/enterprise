@@ -299,5 +299,5 @@ void CValueMetaObjectDataProcessor::OnRemoveMetaForm(IValueMetaObjectForm* metaF
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectDataProcessor, "dataProcessor", g_metaDataProcessorCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectExternalDataProcessor, "externalDataProcessor", g_metaExternalDataProcessorCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectDataProcessor, "DataProcessor", g_metaDataProcessorCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectExternalDataProcessor, "ExternalDataProcessor", g_metaExternalDataProcessorCLSID);

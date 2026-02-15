@@ -28,11 +28,11 @@ private:
 
 	virtual CFormTypeList GetFormType() const override {
 		CFormTypeList formList;
-		formList.AppendItem(wxT("formObject"), _("Form object"), eFormObject);
-		formList.AppendItem(wxT("formFolder"), _("Form group"), eFormFolder);
-		formList.AppendItem(wxT("formList"), _("Form list"), eFormList);
-		formList.AppendItem(wxT("formSelect"), _("Form select"), eFormSelect);
-		formList.AppendItem(wxT("formGroupSelect"), _("Form group select"), eFormFolderSelect);
+		formList.AppendItem(wxT("FormObject"), _("Form object"), eFormObject);
+		formList.AppendItem(wxT("FormFolder"), _("Form group"), eFormFolder);
+		formList.AppendItem(wxT("FormList"), _("Form list"), eFormList);
+		formList.AppendItem(wxT("FormSelect"), _("Form select"), eFormSelect);
+		formList.AppendItem(wxT("FormGroupSelect"), _("Form group select"), eFormFolderSelect);
 		return formList;
 	}
 
@@ -232,22 +232,22 @@ private:
 		return true;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("objectModule"), _("Object module")));
-	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("managerModule"), _("Manager module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleObject = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("ObjectModule"), _("Object module")));
+	CPropertyInnerModule<CValueMetaObjectManagerModule>* m_propertyModuleManager = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectManagerModule>>(m_categorySecondary, IValueMetaObjectCompositeData::CreateMetaObjectAndSetParent<CValueMetaObjectManagerModule>(wxT("ManagerModule"), _("Manager module")));
 
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("presetValues"), _("Preset values"));
+	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 
-	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormObject"), _("Default Object Form"), &CValueMetaObjectCatalog::FillFormObject);
-	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolder"), _("Default Folder Form"), &CValueMetaObjectCatalog::FillFormFolder);
-	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormList"), _("Default List Form"), &CValueMetaObjectCatalog::FillFormList);
-	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormSelect"), _("Default Select Form"), &CValueMetaObjectCatalog::FillFormSelect);
-	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("defaultFormFolderSelect"), _("Default Folder Select Form"), &CValueMetaObjectCatalog::FillFormFolderSelect);
+	CPropertyList* m_propertyDefFormObject = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormObject"), _("Default Object Form"), &CValueMetaObjectCatalog::FillFormObject);
+	CPropertyList* m_propertyDefFormFolder = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormFolder"), _("Default Folder Form"), &CValueMetaObjectCatalog::FillFormFolder);
+	CPropertyList* m_propertyDefFormList = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormList"), _("Default List Form"), &CValueMetaObjectCatalog::FillFormList);
+	CPropertyList* m_propertyDefFormSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormSelect"), _("Default Select Form"), &CValueMetaObjectCatalog::FillFormSelect);
+	CPropertyList* m_propertyDefFormFolderSelect = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("DefaultFormFolderSelect"), _("Default Folder Select Form"), &CValueMetaObjectCatalog::FillFormFolderSelect);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("listOwner"), _("List owner"));
+	CPropertyOwner* m_propertyOwner = IPropertyObject::CreateProperty<CPropertyOwner>(m_categoryData, wxT("ListOwner"), _("List owner"));
 
 	//default array 
-	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeOwner = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("Owner"), _("Owner"), wxEmptyString, true, eItemMode::eItemMode_Folder_Item));
 
 	friend class CValueRecordDataObjectCatalog;
 	friend class IMetaData;

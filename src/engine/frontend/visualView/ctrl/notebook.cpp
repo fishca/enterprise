@@ -130,8 +130,8 @@ void CValueNotebook::PrepareNames() const // this method is automatically called
 {
 	IValueFrame::PrepareNames();
 
-	m_methodHelper->AppendFunc(wxT("pages"), "pages()");
-	m_methodHelper->AppendFunc(wxT("activePage"), "activePage()");
+	m_methodHelper->AppendFunc(wxT("Pages"), wxT("Pages()"));
+	m_methodHelper->AppendFunc(wxT("ActivePage"), wxT("ActivePage()"));
 }
 
 #include "backend/system/value/valueMap.h"
@@ -165,4 +165,4 @@ bool CValueNotebook::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CVa
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueNotebook, "notebook", "notebook", g_controlNotebookCLSID);
+CONTROL_TYPE_REGISTER(CValueNotebook, "Notebook", "Notebook", g_controlNotebookCLSID);

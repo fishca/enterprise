@@ -68,9 +68,9 @@ wxPGEditorDialogAdapter* wxEventProperty::GetEditorDialog() const
 			const wxString &eventName = pg->GetUncommittedPropertyValue();
 			if (eventName.IsEmpty()) {
 				
-				wxPGProperty* pgProp = pg->GetPropertyByName(wxT("name"));
+				wxPGProperty* pgProp = pg->GetPropertyByName(wxT("Name"));
 				prop->SetValueFromString(
-					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + wxT("_") + prop->GetName());
+					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + prop->GetName());
 
 				SetValue(prop->GetValue());
 			}

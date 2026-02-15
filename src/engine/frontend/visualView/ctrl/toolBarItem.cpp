@@ -282,5 +282,5 @@ bool CValueToolBarSeparator::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueToolBarItem, "tool", "tool", g_controlToolBarItemCLSID);
-S_CONTROL_TYPE_REGISTER(CValueToolBarSeparator, "toolSeparator", "tool", g_controlToolBarSeparatorCLSID);
+S_CONTROL_TYPE_REGISTER(CValueToolBarItem, "Tool", "Tool", g_controlToolBarItemCLSID);
+S_CONTROL_TYPE_REGISTER(CValueToolBarSeparator, "ToolSeparator", "Tool", g_controlToolBarSeparatorCLSID);

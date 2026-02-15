@@ -418,7 +418,7 @@ protected:
 
 private:
 #pragma region role
-	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("use"), _("Use"));
+	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("Use"), _("Use"));
 #pragma endregion
 };
 
@@ -520,10 +520,10 @@ protected:
 
 protected:
 
-	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("data"), _("Data"));
-	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("presentation"), _("Presentation"));
-	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("quickChoice"), _("Quick choice"), false);
-	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateSpecialType(wxT("reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
+	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
+	CPropertyCategory* m_categoryPresentation = IPropertyObject::CreatePropertyCategory(wxT("Presentation"), _("Presentation"));
+	CPropertyBoolean* m_propertyQuickChoice = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryPresentation, wxT("QuickChoice"), _("Quick choice"), false);
+	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateSpecialType(wxT("Reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 };
 
 //metaObject with reference - for enumeration
@@ -597,7 +597,7 @@ protected:
 private:
 
 	//default attributes 
-	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateNumber(wxT("order"), _("Order"), wxEmptyString, 6, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateNumber(wxT("Order"), _("Order"), wxEmptyString, 6, true));
 };
 
 //metaObject with reference and deletion mark 
@@ -696,16 +696,16 @@ protected:
 
 protected:
 
-	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("listGeneration"), _("List generation"));
-	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("dataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("deletionMark"), _("Deletion mark"), wxEmptyString));
+	CPropertyGeneration* m_propertyGeneration = IPropertyObject::CreateProperty<CPropertyGeneration>(m_categoryData, wxT("ListGeneration"), _("List generation"));
+	CPropertyInnerAttribute<>* m_propertyAttributeDataVersion = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("DataVersion"), _("Data version"), wxEmptyString, 12, eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDeletionMark = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("DeletionMark"), _("Deletion mark"), wxEmptyString));
 
 private:
 
 #pragma region role
-	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("wrire"), _("Write"));
-	CRole* m_roleDelete = IValueMetaObject::CreateRole(wxT("delete"), _("Delete"));
+	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("Read"), _("Read"));
+	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("Wrire"), _("Write"));
+	CRole* m_roleDelete = IValueMetaObject::CreateRole(wxT("Delete"), _("Delete"));
 #pragma endregion
 };
 
@@ -849,11 +849,11 @@ protected:
 	int ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined);
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("predefinedName"), _("Predefined name"), wxEmptyString, 150, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
-	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("parent"), _("Parent"), wxEmptyString, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
-	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("isFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("PredefinedName"), _("Predefined name"), wxEmptyString, 150, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeCode = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("Code"), _("Code"), wxEmptyString, 8, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeDescription = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("Description"), _("Description"), wxEmptyString, 150, true, eItemMode::eItemMode_Folder_Item));
+	CPropertyInnerAttribute<>* m_propertyAttributeParent = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("Parent"), _("Parent"), wxEmptyString, eItemMode::eItemMode_Folder_Item, eSelectMode::eSelectMode_Folders));
+	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("IsFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 
 	//predefinded vector
 	std::vector<CPredefinedObjectValue> m_predefinedObjectVector;
@@ -1071,17 +1071,17 @@ protected:
 protected:
 
 	//create default attributes
-	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("active"), _("Active"), wxEmptyString, false, true));
-	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateDate(wxT("period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
-	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("recorder"), _("Recorder"), wxEmptyString));
-	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateNumber(wxT("lineNumber"), _("Line number"), wxEmptyString, 15, 0));
+	CPropertyInnerAttribute<>* m_propertyAttributeLineActive = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("Active"), _("Active"), wxEmptyString, false, true));
+	CPropertyInnerAttribute<>* m_propertyAttributePeriod = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateDate(wxT("Period"), _("Period"), wxEmptyString, eDateFractions::eDateFractions_DateTime, true));
+	CPropertyInnerAttribute<>* m_propertyAttributeRecorder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateEmptyType(wxT("Recorder"), _("Recorder"), wxEmptyString));
+	CPropertyInnerAttribute<>* m_propertyAttributeLineNumber = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateNumber(wxT("LineNumber"), _("Line number"), wxEmptyString, 15, 0));
 
 private:
 
 #pragma region role
-	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("write"), _("Write"));
-	CRole* m_roleDelete = IValueMetaObject::CreateRole(wxT("delete"), _("Delete"));
+	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("Read"), _("Read"));
+	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("Write"), _("Write"));
+	CRole* m_roleDelete = IValueMetaObject::CreateRole(wxT("Delete"), _("Delete"));
 #pragma endregion
 };
 

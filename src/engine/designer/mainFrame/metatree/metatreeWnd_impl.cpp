@@ -8,37 +8,37 @@
 #include "frontend/docView/docManager.h"
 #include "backend/appData.h"
 
-#define metadataName _("metadata")
-#define commonName _("common")
+#define metadataName _("Metadata")
+#define commonName _("Common")
 
-#define commonModulesName _("common modules")
-#define commonFormsName _("common forms")
-#define commonTemplatesName _("common templates")
+#define commonModulesName _("Common modules")
+#define commonFormsName _("Common forms")
+#define commonTemplatesName _("Common templates")
 
-#define interfacesName _("interfaces")
-#define rolesName _("roles")
-#define picturesName _("pictures")
-#define languagesName _("languages")
+#define interfacesName _("Interfaces")
+#define rolesName _("Roles")
+#define picturesName _("Pictures")
+#define languagesName _("Languages")
 
-#define constantsName _("constants")
+#define constantsName _("Constants")
 
-#define catalogsName _("catalogs")
-#define documentsName _("documents")
-#define enumerationsName _("enumerations")
-#define dataProcessorName _("data processors")
-#define reportsName _("reports")
-#define informationRegisterName _("information Registers")
-#define accumulationRegisterName _("accumulation Registers")
+#define catalogsName _("Catalogs")
+#define documentsName _("Documents")
+#define enumerationsName _("Enumerations")
+#define dataProcessorName _("Data processors")
+#define reportsName _("Reports")
+#define informationRegisterName _("Information Registers")
+#define accumulationRegisterName _("Accumulation Registers")
 
-#define	objectFormsName _("forms")
-#define	objectModulesName _("modules")
-#define	objectTemplatesName _("templates")
-#define objectAttributesName _("attributes")
-#define objectDimensionsName _("dimensions")
-#define objectResourcesName _("resources")
+#define	objectFormsName _("Forms")
+#define	objectModulesName _("Modules")
+#define	objectTemplatesName _("Templates")
+#define objectAttributesName _("Attributes")
+#define objectDimensionsName _("Dimensions")
+#define objectResourcesName _("Resources")
 
-#define objectTablesName _("tables")
-#define objectEnumerationsName _("enums")
+#define objectTablesName _("Tables")
+#define objectEnumerationsName _("Enums")
 
 //***********************************************************************
 //*								metadata                                * 

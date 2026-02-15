@@ -62,4 +62,4 @@ bool CValueGridSizer::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueGridSizer, "gridsizer", "sizer", string_to_clsid("CT_GSZR"));
+CONTROL_TYPE_REGISTER(CValueGridSizer, "Gridsizer", "Sizer", string_to_clsid("CT_GSZR"));

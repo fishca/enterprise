@@ -34,7 +34,7 @@ void CValueToolbar::OnPropertyChanged(IProperty* property, const wxVariant& oldV
 						m_formOwner->CreateControl(wxT("tool"), this)
 						);
 					wxASSERT(toolItem);
-					toolItem->SetControlName(GetControlName() + wxT("_") + actionData.GetNameByID(id));
+					toolItem->SetControlName(GetControlName() + actionData.GetNameByID(id));
 					//toolItem->SetCaption(actionData.GetCaptionByID(id));
 					//toolItem->SetToolTip(actionData.GetCaptionByID(id));
 					toolItem->SetAction(id);

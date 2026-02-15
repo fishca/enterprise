@@ -1052,8 +1052,8 @@ wxString CValueListRegisterObject::GetString() const
 void CValueListDataObjectEnumRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProp(wxT("choiceMode"));
-	m_methodHelper->AppendProc(wxT("refresh"), "refresh()");
+	m_methodHelper->AppendProp(wxT("ChoiceMode"));
+	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
 bool CValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
@@ -1072,8 +1072,8 @@ bool CValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, CValue** paP
 void CValueListDataObjectRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProp(wxT("choiceMode"));
-	m_methodHelper->AppendProc(wxT("refresh"), "refresh()");
+	m_methodHelper->AppendProp(wxT("ChoiceMode"));
+	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
 bool CValueListDataObjectRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
@@ -1092,8 +1092,8 @@ bool CValueListDataObjectRef::CallAsProc(const long lMethodNum, CValue** paParam
 void CValueTreeDataObjectFolderRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProp(wxT("choiceMode"));
-	m_methodHelper->AppendProc(wxT("refresh"), "refresh()");
+	m_methodHelper->AppendProp(wxT("ChoiceMode"));
+	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
 bool CValueTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
@@ -1112,7 +1112,7 @@ bool CValueTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, CValue** p
 void CValueListRegisterObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendProc(wxT("refresh"), "refresh()");
+	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
 bool CValueListRegisterObject::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
@@ -1191,10 +1191,10 @@ bool CValueListRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropV
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection, "listColumn", string_to_clsid("VL_LVC"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, "listColumnInfo", string_to_clsid("VL_LCI"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListReturnLine, "listValueRow", string_to_clsid("VL_LVR"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection, "ListColumn", string_to_clsid("VL_LVC"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, "ListColumnInfo", string_to_clsid("VL_LCI"));
+SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListReturnLine, "ListValueRow", string_to_clsid("VL_LVR"));
 
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, "treeColumn", string_to_clsid("VL_TVC"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, "treeColumnInfo", string_to_clsid("VL_TCI"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeReturnLine, "treeValueRow", string_to_clsid("VL_TVR"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, "TreeColumn", string_to_clsid("VL_TVC"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, "TreeColumnInfo", string_to_clsid("VL_TCI"));
+SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeReturnLine, "TreeValueRow", string_to_clsid("VL_TVR"));

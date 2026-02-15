@@ -340,32 +340,32 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 	private:
 
-		CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("general"), _("General"));
-		CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("name"), _("Name"), wxEmptyString);
-		CPropertyTString* m_propertyText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryGeneral, wxT("text"), _("Text"), wxEmptyString);
-		CPropertyBoolean* m_propertyReadOnly = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryGeneral, wxT("readOnly"), _("Read only"), false);
+		CPropertyCategory* m_categoryGeneral = IPropertyObject::CreatePropertyCategory(wxT("General"), _("General"));
+		CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryGeneral, wxT("Name"), _("Name"), wxEmptyString);
+		CPropertyTString* m_propertyText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryGeneral, wxT("Text"), _("Text"), wxEmptyString);
+		CPropertyBoolean* m_propertyReadOnly = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryGeneral, wxT("ReadOnly"), _("Read only"), false);
 
-		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("template"), _("Template"));
-		CPropertyEnum<CValueEnumSpreadsheetFillType>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("fillType"), _("Fill type"), enSpreadsheetFillType::enSpreadsheetFillType_StrText);
-		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("parameter"), _("Parameter"), wxEmptyString);
+		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
+		CPropertyEnum<CValueEnumSpreadsheetFillType>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("FillType"), _("Fill type"), enSpreadsheetFillType::enSpreadsheetFillType_StrText);
+		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
 
-		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("alignment"), _("Alignment"));
-		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("fit_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);
-		CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>>(m_categoryAlignment, wxT("align_horz"), _("Horizontal"), enSpreadsheetAlignmentHorz::enAlignmentHorz_Left);
-		CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>>(m_categoryAlignment, wxT("align_vert"), _("Vertical"), enSpreadsheetAlignmentVert::enAlignmentVert_Center);
-		CPropertyEnum<CValueEnumSpreadsheetOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetOrient>>(m_categoryAlignment, wxT("orient_text"), _("Orientation text"), enSpreadsheetOrientation::enOrient_Vertical);
+		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("Alignment"), _("Alignment"));
+		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("Git_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);
+		CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>* m_propertyAlignHorz = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetHorizontalAlignment>>(m_categoryAlignment, wxT("Align_horz"), _("Horizontal"), enSpreadsheetAlignmentHorz::enAlignmentHorz_Left);
+		CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>* m_propertyAlignVert = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetVerticalAlignment>>(m_categoryAlignment, wxT("Align_vert"), _("Vertical"), enSpreadsheetAlignmentVert::enAlignmentVert_Center);
+		CPropertyEnum<CValueEnumSpreadsheetOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetOrient>>(m_categoryAlignment, wxT("Orient_text"), _("Orientation text"), enSpreadsheetOrientation::enOrient_Vertical);
 
-		CPropertyCategory* m_categoryAppearance = IPropertyObject::CreatePropertyCategory(wxT("appearance"), _("Appearance"));
-		CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryAppearance, wxT("font"), _("Font"));
-		CPropertyColour* m_propertyBackgroundColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("background_colour"), _("Background colour"), wxNullColour);
-		CPropertyColour* m_propertyTextColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("text_colour"), _("Text colour"), wxNullColour);
+		CPropertyCategory* m_categoryAppearance = IPropertyObject::CreatePropertyCategory(wxT("Appearance"), _("Appearance"));
+		CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categoryAppearance, wxT("Font"), _("Font"));
+		CPropertyColour* m_propertyBackgroundColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("Background_colour"), _("Background colour"), wxNullColour);
+		CPropertyColour* m_propertyTextColour = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryAppearance, wxT("Text_colour"), _("Text colour"), wxNullColour);
 
-		CPropertyCategory* m_categoryBorder = IPropertyObject::CreatePropertyCategory(wxT("border"), _("Border"));
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("left_border"), _("Left"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("right_border"), _("Right"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("top_border"), _("Top"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("bottom_border"), _("Bottom"), enSpreadsheetPenStyle::enPenStyle_Transparent);
-		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("border_colour"), _("Colour"), wxNullColour);
+		CPropertyCategory* m_categoryBorder = IPropertyObject::CreatePropertyCategory(wxT("Border"), _("Border"));
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyLeftBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Left_border"), _("Left"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyRightBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Right_border"), _("Right"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyTopBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Top_border"), _("Top"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyEnum<CValueEnumSpreadsheetBorder>* m_propertyBottomBorder = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetBorder>>(m_categoryBorder, wxT("Bottom_border"), _("Bottom"), enSpreadsheetPenStyle::enPenStyle_Transparent);
+		CPropertyColour* m_propertyColourBorder = IPropertyObject::CreateProperty<CPropertyColour>(m_categoryBorder, wxT("Border_colour"), _("Colour"), wxNullColour);
 	};
 
 public:

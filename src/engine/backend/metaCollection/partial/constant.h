@@ -89,11 +89,11 @@ protected:
 
 private:
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("recordModule"), _("Record module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("RecordModule"), _("Record module")));
 
 #pragma region role 
-	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("read"), _("Read"));
-	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("write"), _("Write"));
+	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("Read"), _("Read"));
+	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("Write"), _("Write"));
 #pragma endregion
 
 	friend class CValueRecordDataObjectConstant;

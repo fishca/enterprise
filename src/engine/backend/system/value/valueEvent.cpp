@@ -41,5 +41,5 @@ CValueActionEvent::CValueActionEvent(const wxString& eventName, action_identifie
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueEvent, "event", string_to_clsid("SY_EVENT"));
-SYSTEM_TYPE_REGISTER(CValueActionEvent, "actionEvent", string_to_clsid("SY_ATEVT"));
+VALUE_TYPE_REGISTER(CValueEvent, "Event", string_to_clsid("SY_EVENT"));
+SYSTEM_TYPE_REGISTER(CValueActionEvent, "ActionEvent", string_to_clsid("SY_ATEVT"));

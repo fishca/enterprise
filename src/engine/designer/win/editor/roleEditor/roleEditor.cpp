@@ -1,16 +1,16 @@
 #include "roleEditor.h"
 
-#define commonName _("common")
-#define commonFormsName _("common forms")
-#define interfacesName _("interfaces")
-#define constantsName _("constants")
+#define commonName _("Common")
+#define commonFormsName _("Common forms")
+#define interfacesName _("Interfaces")
+#define constantsName _("Constants")
 
-#define catalogsName _("catalogs")
-#define documentsName _("documents")
-#define dataProcessorName _("data processors")
-#define reportsName _("reports")
-#define informationRegisterName _("information Registers")
-#define accumulationRegisterName _("accumulation Registers")
+#define catalogsName _("Catalogs")
+#define documentsName _("Documents")
+#define dataProcessorName _("Data processors")
+#define reportsName _("Reports")
+#define informationRegisterName _("Information Registers")
+#define accumulationRegisterName _("Accumulation Registers")
 
 #define ICON_SIZE 16
 
@@ -116,7 +116,7 @@ void CRoleEditor::InitRole()
 
 	wxImageList* imageList = m_roleCtrl->GetImageList();
 	const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
-	m_treeMETADATA = m_roleCtrl->AddRoot(_("configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
+	m_treeMETADATA = m_roleCtrl->AddRoot(_("Configuration"), imageIndex, imageIndex, new wxTreeItemMetaData(activeMetaData->GetCommonMetaObject()));
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -145,7 +145,7 @@ void CRoleEditor::InitRole()
 	m_treeACCUMULATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaAccumulationRegisterCLSID, accumulationRegisterName);
 
 	//Set item bold and name
-	m_roleCtrl->SetItemText(m_treeMETADATA, _("configuration"));
+	m_roleCtrl->SetItemText(m_treeMETADATA, _("Configuration"));
 	m_roleCtrl->SetItemBold(m_treeMETADATA);
 
 	m_roleCtrl->ExpandAll();

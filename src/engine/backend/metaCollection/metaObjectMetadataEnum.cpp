@@ -7,4 +7,4 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumVersion, CValue);
 //***********************************************************************
 
 //add new enumeration
-ENUM_TYPE_REGISTER(CValueEnumVersion, "programVersion", string_to_clsid("EN_VRSN"));
+ENUM_TYPE_REGISTER(CValueEnumVersion, "ProgramVersion", string_to_clsid("EN_VRSN"));

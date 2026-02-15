@@ -148,19 +148,19 @@ void CValueRecordSetObjectAccumulationRegister::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	m_methodHelper->AppendFunc("add", "add()");
-	m_methodHelper->AppendFunc("count", "count()");
-	m_methodHelper->AppendFunc("clear", "clear()");
-	m_methodHelper->AppendFunc("write", 1, "write(replace)");
-	m_methodHelper->AppendFunc("load", 1, "load(table)");
-	m_methodHelper->AppendFunc("unload", "unload()");
-	m_methodHelper->AppendFunc("modified", "modified()");
-	m_methodHelper->AppendFunc("read", "read()");
-	m_methodHelper->AppendFunc("selected", "selected()");
-	m_methodHelper->AppendFunc("getMetadata", "getMetadata()");
+	m_methodHelper->AppendFunc(wxT("Add"), wxT("Add()"));
+	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
+	m_methodHelper->AppendFunc(wxT("Clear"), wxT("Clear()"));
+	m_methodHelper->AppendFunc(wxT("Write"), 1, wxT("Write(replace : boolean)"));
+	m_methodHelper->AppendFunc(wxT("Load"), 1, wxT("Load(value: table)"));
+	m_methodHelper->AppendFunc(wxT("Unload"), wxT("Unload()"));
+	m_methodHelper->AppendFunc(wxT("Modified"), wxT("Modified()"));
+	m_methodHelper->AppendFunc(wxT("Read"), wxT("Read()"));
+	m_methodHelper->AppendFunc(wxT("Selected"), wxT("Selected()"));
+	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
-	m_methodHelper->AppendProp(wxT("thisObject"), true, false, prop::eThisObject, wxNOT_FOUND);
-	m_methodHelper->AppendProp(wxT("filter"), true, false, prop::eFilter, wxNOT_FOUND);
+	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, prop::eThisObject, wxNOT_FOUND);
+	m_methodHelper->AppendProp(wxT("Filter"), true, false, prop::eFilter, wxNOT_FOUND);
 }
 
 bool CValueRecordSetObjectAccumulationRegister::SetPropVal(const long lPropNum, const CValue& varPropVal)

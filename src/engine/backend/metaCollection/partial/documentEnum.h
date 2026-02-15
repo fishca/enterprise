@@ -22,9 +22,9 @@ public:
 	//CValueEnumDocumentWriteMode(eDocumentWriteMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Posting, wxT("posting"), _("Posting"));
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_UndoPosting, wxT("undoPosting"), _("Undo posting"));
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Write, wxT("write"), _("Write"));
+		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Posting, wxT("Posting"), _("Posting"));
+		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_UndoPosting, wxT("UndoPosting"), _("Undo posting"));
+		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Write, wxT("Write"), _("Write"));
 	}
 };
 class CValueEnumDocumentPostingMode : public IEnumeration<eDocumentPostingMode> {
@@ -34,8 +34,8 @@ public:
 	//CValueEnumDocumentPostingMode(eDocumentPostingMode mode) : IEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_RealTime, wxT("realTime"), _("Real time"));
-		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_Regular, wxT("regular"), _("Regular"));
+		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_RealTime, wxT("RealTime"), _("Real time"));
+		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_Regular, wxT("Regular"), _("Regular"));
 	}
 };
 #pragma endregion 

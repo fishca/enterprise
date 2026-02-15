@@ -55,4 +55,4 @@ bool CValueBoxSizer::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueBoxSizer, "boxsizer", "sizer", string_to_clsid("CT_BSZR"));
+CONTROL_TYPE_REGISTER(CValueBoxSizer, "Boxsizer", "Sizer", string_to_clsid("CT_BSZR"));

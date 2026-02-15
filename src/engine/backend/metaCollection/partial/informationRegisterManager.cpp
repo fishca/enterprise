@@ -10,7 +10,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister, CValue);
 
-CValueManagerDataObjectInformationRegister::CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject) : 
+CValueManagerDataObjectInformationRegister::CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject) :
 	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
 {
 }
@@ -74,21 +74,21 @@ void CValueManagerDataObjectInformationRegister::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("createRecordSet", "createRecordSet()");
-	m_methodHelper->AppendFunc("createRecordManager", "createRecordManager()");
-	m_methodHelper->AppendFunc("createRecordKey", "createRecordKey()");
-	m_methodHelper->AppendFunc("get", 2, "get(Filter...)");
-	m_methodHelper->AppendFunc("getFirst", 3, "sliceFirst(beginOfPeriod, filter...)");
-	m_methodHelper->AppendFunc("getLast", 2, "sliceLast(endOfPeriod, filter...)");
-	m_methodHelper->AppendFunc("sliceFirst", 2, "sliceFirst(beginOfPeriod, filter...)");
-	m_methodHelper->AppendFunc("sliceLast", 2, "sliceLast(endOfPeriod, filter...)");
-	m_methodHelper->AppendFunc("select", "select()");
-	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getRecordForm", 3, "getRecordForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
+	m_methodHelper->AppendFunc(wxT("CreateRecordSet"), wxT("CreateRecordSet()"));
+	m_methodHelper->AppendFunc(wxT("CreateRecordManager"), wxT("CreateRecordManager()"));
+	m_methodHelper->AppendFunc(wxT("CreateRecordKey"), wxT("CreateRecordKey()"));
+	m_methodHelper->AppendFunc(wxT("Get"), 1, wxT("Get(Filter...)"));
+	m_methodHelper->AppendFunc(wxT("GetFirst"), 3, wxT("GetFirst(beginOfPeriod, filter...)"));
+	m_methodHelper->AppendFunc(wxT("GetLast"), 2, wxT("GetLast(endOfPeriod, filter...)"));
+	m_methodHelper->AppendFunc(wxT("SliceFirst"), 2, wxT("SliceFirst(beginOfPeriod, filter...)"));
+	m_methodHelper->AppendFunc(wxT("SliceLast"), 2, wxT("SliceLast(endOfPeriod, filter...)"));
+	m_methodHelper->AppendFunc(wxT("Select"), wxT("Select()"));
+	m_methodHelper->AppendFunc(wxT("GetForm"), 3, wxT("GetForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetRecordForm"), 3, wxT("GetRecordForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(string, owner, guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(string)"));
 
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
+	CValue * pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
 	if (pRefData != nullptr) {
 		// add methods from context
 		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {

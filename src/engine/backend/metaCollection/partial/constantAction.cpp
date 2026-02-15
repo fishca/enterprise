@@ -10,8 +10,8 @@ enum
 CValueRecordDataObjectConstant::CActionCollection CValueRecordDataObjectConstant::GetActionCollection(const form_identifier_t& formType)
 {
 	CActionCollection catalogActions(this);
-	catalogActions.AddAction(wxT("saveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
-	catalogActions.AddAction(wxT("save"), _("Save"), g_picSaveCLSID, true, eSave);
+	catalogActions.AddAction(wxT("SaveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
+	catalogActions.AddAction(wxT("Save"), _("Save"), g_picSaveCLSID, true, eSave);
 	return catalogActions;
 }
 

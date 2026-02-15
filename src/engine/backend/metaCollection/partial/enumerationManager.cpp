@@ -64,10 +64,10 @@ void CValueManagerDataObjectEnumeration::PrepareNames() const
 	wxASSERT(moduleManager);
 
 	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc("getForm", 3, "getForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getListForm", 3, "getListForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getSelectForm", 3, "getSelectForm(string, owner, guid)");
-	m_methodHelper->AppendFunc("getTemplate", 1, "getTemplate(string)");
+	m_methodHelper->AppendFunc(wxT("GetForm"), 3, wxT("GetForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetSelectForm"), 3, wxT("GetSelectForm(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 
 	//fill custom attributes 
 	for (unsigned int idx = 0; idx < m_metaObject->GetChildCount(); idx++) {

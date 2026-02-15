@@ -29,4 +29,4 @@ bool CValueMetaObjectPicture::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectPicture, "picture", g_metaPictureCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectPicture, "Picture", g_metaPictureCLSID);

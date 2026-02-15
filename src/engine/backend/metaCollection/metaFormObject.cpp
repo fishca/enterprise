@@ -145,14 +145,14 @@ IValueMetaObjectForm::IValueMetaObjectForm(const wxString& name, const wxString&
 	IValueMetaObjectModule(name, synonym, comment)
 {
 	//set default proc
-	SetDefaultProcedure("beforeOpen", eContentHelper::eProcedureHelper, { "cancel" });
-	SetDefaultProcedure("onOpen", eContentHelper::eProcedureHelper);
-	SetDefaultProcedure("beforeClose", eContentHelper::eProcedureHelper, { "cancel" });
-	SetDefaultProcedure("onClose", eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("BeforeOpen"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	SetDefaultProcedure(wxT("OnOpen"), eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("BeforeClose"), eContentHelper::eProcedureHelper, { wxT("Cancel") });
+	SetDefaultProcedure(wxT("OnClose"), eContentHelper::eProcedureHelper);
 
-	SetDefaultProcedure("onReOpen", eContentHelper::eProcedureHelper);
-	SetDefaultProcedure("choiceProcessing", eContentHelper::eProcedureHelper, { { "selectedValue" }, { "choiceSource" } });
-	SetDefaultProcedure("refreshDisplay", eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("OnReOpen"), eContentHelper::eProcedureHelper);
+	SetDefaultProcedure(wxT("ChoiceProcessing"), eContentHelper::eProcedureHelper, { { wxT("SelectedValue") }, { wxT("ChoiceSource") } });
+	SetDefaultProcedure(wxT("RefreshDisplay"), eContentHelper::eProcedureHelper);
 }
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectForm, IValueMetaObjectForm)
@@ -387,5 +387,5 @@ bool CValueMetaObjectCommonForm::OnAfterCloseMetaObject()
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectForm, "form", g_metaFormCLSID);
-METADATA_TYPE_REGISTER(CValueMetaObjectCommonForm, "commonForm", g_metaCommonFormCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectForm, "Form", g_metaFormCLSID);
+METADATA_TYPE_REGISTER(CValueMetaObjectCommonForm, "CommonForm", g_metaCommonFormCLSID);

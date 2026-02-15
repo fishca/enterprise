@@ -164,23 +164,23 @@ void CValueForm::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	m_methodHelper->AppendProp(thisForm, true, false, eThisForm, eSystem);
-	m_methodHelper->AppendProp(wxT("controls"), true, false, eControls, eSystem);
-	m_methodHelper->AppendProp(wxT("dataSource"), true, false, eDataSource, eSystem);
-	m_methodHelper->AppendProp(wxT("modified"), eModified, eSystem);
-	m_methodHelper->AppendProp(wxT("formOwner"), eFormOwner, eSystem);
-	m_methodHelper->AppendProp(wxT("uniqueKey"), eUniqueKey, eSystem);
+	m_methodHelper->AppendProp(wxT("Controls"), true, false, eControls, eSystem);
+	m_methodHelper->AppendProp(wxT("DataSource"), true, false, eDataSource, eSystem);
+	m_methodHelper->AppendProp(wxT("Modified"), eModified, eSystem);
+	m_methodHelper->AppendProp(wxT("FormOwner"), eFormOwner, eSystem);
+	m_methodHelper->AppendProp(wxT("UniqueKey"), eUniqueKey, eSystem);
 
-	m_methodHelper->AppendProp(wxT("closeOnChoice"), eCloseOnChoice, eSystem);
-	m_methodHelper->AppendProp(wxT("closeOnOwnerClose"), eCloseOnOwnerClose, eSystem);
+	m_methodHelper->AppendProp(wxT("CloseOnChoice"), eCloseOnChoice, eSystem);
+	m_methodHelper->AppendProp(wxT("CloseOnOwnerClose"), eCloseOnOwnerClose, eSystem);
 
-	m_methodHelper->AppendProc(wxT("show"), "show()");
-	m_methodHelper->AppendProc(wxT("activate"), "activate()");
-	m_methodHelper->AppendProc(wxT("update"), "update()");
-	m_methodHelper->AppendProc(wxT("close"), "close()");
-	m_methodHelper->AppendFunc(wxT("isShown"), "isShown()");
-	m_methodHelper->AppendProc(wxT("attachIdleHandler"), 3, "attachIdleHandler(procedureName, interval, single)");
-	m_methodHelper->AppendProc(wxT("detachIdleHandler"), 1, "detachIdleHandler(procedureName)");
-	m_methodHelper->AppendProc(wxT("notifyChoice"), 1, "notifyChoice(value)");
+	m_methodHelper->AppendProc(wxT("Show"), wxT("Show()"));
+	m_methodHelper->AppendProc(wxT("Activate"), wxT("Activate()"));
+	m_methodHelper->AppendProc(wxT("Update"), wxT("Update()"));
+	m_methodHelper->AppendProc(wxT("Close"), wxT("Close()"));
+	m_methodHelper->AppendFunc(wxT("IsShown"), wxT("IsShown()"));
+	m_methodHelper->AppendProc(wxT("AttachIdleHandler"), 3, wxT("AttachIdleHandler(procedureName : string, interval : number, single : boolean)"));
+	m_methodHelper->AppendProc(wxT("DetachIdleHandler"), 1, wxT("DetachIdleHandler(procedureName : string)"));
+	m_methodHelper->AppendProc(wxT("NotifyChoice"), 1, wxT("NotifyChoice(value)"));
 
 	//from property 
 	for (unsigned int idx = 0; idx < IPropertyObject::GetPropertyCount(); idx++) {
@@ -362,4 +362,4 @@ bool CValueForm::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue*
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueForm, "clientForm", "form", g_controlFormCLSID);
+S_CONTROL_TYPE_REGISTER(CValueForm, "ClientForm", "Form", g_controlFormCLSID);

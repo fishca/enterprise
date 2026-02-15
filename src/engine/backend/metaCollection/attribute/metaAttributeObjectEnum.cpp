@@ -8,5 +8,5 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumSelectMode, CValue);
 //***********************************************************************
 
 //add new enumeration
-ENUM_TYPE_REGISTER(CValueEnumItemMode, "itemMode", string_to_clsid("EN_ITMO"));
-ENUM_TYPE_REGISTER(CValueEnumSelectMode, "selectMode", string_to_clsid("EN_SEMO"));
+ENUM_TYPE_REGISTER(CValueEnumItemMode, "ItemMode", string_to_clsid("EN_ITMO"));
+ENUM_TYPE_REGISTER(CValueEnumSelectMode, "SelectMode", string_to_clsid("EN_SEMO"));

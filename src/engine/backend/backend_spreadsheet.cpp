@@ -421,7 +421,7 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 					const wxString& token =
 						strTemplateValue.substr(start_pos + 1, end_pos - start_pos - 1);
 					if (!token.empty()) {
-						strTemplateValue.replace(start_pos, end_pos - start_pos, GetParameter(token).GetString());
+						strTemplateValue.replace(start_pos, end_pos - start_pos + 1, GetParameter(token).GetString());
 					}
 					else {
 						strTemplateValue.replace(start_pos, end_pos - start_pos, wxT(""));

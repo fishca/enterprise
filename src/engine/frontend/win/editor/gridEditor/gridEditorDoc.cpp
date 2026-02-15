@@ -129,6 +129,9 @@ bool CGridEditor::LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>&
 			if (row_size == nullptr)
 				continue;
 
+			if (row_size->m_row >= wxGridExt::GetNumberRows())
+				wxGridExt::AppendCols((int)row_size->m_row - wxGridExt::GetNumberRows() + 1);
+
 			wxGridExt::SetRowSize(row_size->m_row, row_size->m_height, 1.0f, false);
 		}
 
@@ -136,6 +139,9 @@ bool CGridEditor::LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>&
 			const CSpreadsheetColSizeDescription* col_size = spreadsheetDesc.GetColSizeByIdx(idx);
 			if (col_size == nullptr)
 				continue;
+
+			if (col_size->m_col >= wxGridExt::GetNumberCols())
+				wxGridExt::AppendCols((int)col_size->m_col - wxGridExt::GetNumberCols() + 1);
 
 			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
@@ -262,7 +268,10 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 			if (row_size == nullptr)
 				continue;
 
-			wxGridExt::SetRowSize(row_size->m_row, row_size->m_height, 1.0f, false);
+			if (row_size->m_row >= wxGridExt::GetNumberRows())
+				wxGridExt::AppendCols((int)row_size->m_row - wxGridExt::GetNumberRows() + 1);
+
+			wxGridExt::SetRowSize((int)row_size->m_row, row_size->m_height, 1.0f, false);
 		}
 
 		for (int idx = 0; idx < spreadsheetDesc.GetSizeNumberCols(); idx++) {
@@ -270,6 +279,9 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 			if (col_size == nullptr)
 				continue;
 
+			if (col_size->m_col >= wxGridExt::GetNumberCols())
+				wxGridExt::AppendCols((int)col_size->m_col - wxGridExt::GetNumberCols() + 1);
+			
 			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
 

@@ -465,6 +465,14 @@ void CApplicationData::CreateTableEvent()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void CApplicationData::ResetSequence()
+{
+	if (db_query->TableExists(sequence_table)) 
+		db_query->RunQuery(wxT("delete from %s;"), sequence_table);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 enum
 {
 	eBlockPswd = 0x0234530,

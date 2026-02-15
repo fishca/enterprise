@@ -34,6 +34,11 @@ enum {
 	wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE,
 	wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE,
 
+	wxID_DESIGNER_DATABASE_LOAD_FROM_FILE,
+	wxID_DESIGNER_DATABASE_SAVE_TO_FILE,
+
+	wxID_DESIGNER_DATABASE_CLEAR,
+
 	wxID_DESIGNER_ABOUT,
 	wxID_DESIGNER_END
 };
@@ -121,6 +126,10 @@ protected:
 	void OnOpenConfiguration(wxCommandEvent& event);
 	void OnRollbackConfiguration(wxCommandEvent& event);
 	void OnUpdateConfiguration(wxCommandEvent& event);
+
+	void OnLoadDatabase(wxCommandEvent& event);
+	void OnSaveDatabase(wxCommandEvent& event);
+	void OnClearDatabase(wxCommandEvent& event);
 
 	void OnConfiguration(wxCommandEvent& event);
 	void OnRunDebugCommand(wxCommandEvent& event);

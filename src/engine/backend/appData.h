@@ -288,6 +288,17 @@ public:
 	bool SaveUserData(const CApplicationDataUserInfo& userInfo) const;
 #pragma endregion
 
+	void ResetSequence();
+
+#pragma region database
+
+	bool LoadDatabase(const wxString& strFullPath);
+	bool SaveDatabase(const wxString& strFullPath);
+
+	bool ClearDatabase();
+
+#pragma endregion 
+
 private:
 	bool HasAllowedUser() const;
 	bool StartSession(const wxString& userName, const wxString& md5Password);
@@ -303,7 +314,7 @@ private:
 private:
 	wxString ComputeMd5() const { return ComputeMd5(m_userInfo.m_strUserPassword); }
 	wxString ComputeMd5(const wxString& userPassword) const;
-private:
+private:	
 	static bool TableAlreadyCreated();
 	static void CreateTableUser();
 	static void CreateTableSession();

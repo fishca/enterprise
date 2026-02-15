@@ -110,7 +110,6 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_STOP_PROGRAM, _("Stop debugging program"), _("Stop program"))->Enable(false);
 
 	m_menuDebug->AppendSeparator();
-
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS, _("Remove all breakpoits"));
 
 	m_menuConfiguration = new wxMenu;
@@ -144,6 +143,14 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 	menuItem = m_menuAdministration->Append(wxID_APPLICATION_ACTIVE_USERS, _("Active users"));
 	menuItem->Enable(activeMetaData->AccessRight_ActiveUsers());
+	m_menuAdministration->AppendSeparator();
+	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_LOAD_FROM_FILE, _("Load database"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_SAVE_TO_FILE, _("Save database"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
+	m_menuAdministration->AppendSeparator();
+	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_CLEAR, _("Clear database"));
+	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 
 	m_frameMenuBar->Append(m_menuAdministration, _("Administration"));
 
@@ -170,6 +177,10 @@ void CDocDesignerMDIFrame::InitializeDefaultMenu()
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnUsers, this, wxID_APPLICATION_USERS);
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnActiveUsers, this, wxID_APPLICATION_ACTIVE_USERS);
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnConnection, this, wxID_APPLICATION_CONNECTION);
+
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnLoadDatabase, this, wxID_DESIGNER_DATABASE_LOAD_FROM_FILE);
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnSaveDatabase, this, wxID_DESIGNER_DATABASE_SAVE_TO_FILE);
+	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnClearDatabase, this, wxID_DESIGNER_DATABASE_CLEAR);
 
 	Bind(wxEVT_MENU, &CDocDesignerMDIFrame::OnAbout, this, wxID_DESIGNER_ABOUT);
 

@@ -43,7 +43,7 @@ public:
 	virtual bool SaveDatabase(int flags = defaultFlag) { return true; }
 
 	//rollback to config db
-	virtual bool RoolbackDatabase() { return true; }
+	virtual bool RollbackDatabase() { return true; }
 
 	//load/save form file
 	virtual bool LoadFromFile(const wxString& strFileName) { return true; }
@@ -62,6 +62,9 @@ public:
 
 	//get config type 
 	virtual eConfigType GetConfigType() const = 0;
+
+	//special delete and create 
+	virtual bool ReCreateDatabase() { return false; }
 
 	//special save 
 	virtual bool OnBeforeSaveDatabase(int flags) { return false; }
@@ -234,7 +237,7 @@ public:
 	virtual bool IsFullAccess() const { return true; }
 
 	//rollback to config db
-	virtual bool RoolbackDatabase();
+	virtual bool RollbackDatabase();
 
 	//save form file
 	virtual bool SaveToFile(const wxString& strFileName);
@@ -257,6 +260,9 @@ public:
 	virtual bool OnBeforeSaveDatabase(int flags);
 	virtual bool OnSaveDatabase(int flags);
 	virtual bool OnAfterSaveDatabase(bool roolback, int flags);
+
+	//special clear 
+	virtual bool ReCreateDatabase();
 
 protected:
 

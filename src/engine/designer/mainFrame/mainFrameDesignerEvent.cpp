@@ -137,7 +137,7 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 		}
 	}
 
-	success = success && activeMetaData->RoolbackDatabase()
+	success = success && activeMetaData->RollbackDatabase()
 		&& m_metaWindow->Load();
 
 	client_window->Thaw();
@@ -203,6 +203,82 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 			);
 		}
 	}
+}
+
+void CDocDesignerMDIFrame::OnLoadDatabase(wxCommandEvent& event)
+{
+	wxFileDialog openFileDialog(this, _("Open database file"), "", "",
+		"Database files (*.edf)|*.edf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+	if (openFileDialog.ShowModal() == wxID_CANCEL)
+		return;     // the user changed idea...
+
+	objectInspector->SelectObject(nullptr);
+
+	wxAuiMDIClientWindow* client_window = GetClientWindow();
+	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
+
+	client_window->Freeze();
+
+	bool success = true;
+	wxAuiMDIChildFrame* pActiveChild = nullptr;
+	while ((pActiveChild = GetActiveChild()) != nullptr) {
+		if (!pActiveChild->Close()) {
+			// it refused to close, don't close the remaining ones either
+			success = false;
+			break;
+		}
+	}
+
+	client_window->Thaw();
+
+	if (!success)
+		return;
+
+	appData->LoadDatabase(openFileDialog.GetPath());
+	event.Skip();
+}
+
+void CDocDesignerMDIFrame::OnSaveDatabase(wxCommandEvent& event)
+{
+	wxFileDialog saveFileDialog(this, _("Save database file"), "", "",
+		"Database files (*.edf)|*.edf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+	if (saveFileDialog.ShowModal() == wxID_CANCEL)
+		return;     // the user changed idea...
+
+	appData->SaveDatabase(saveFileDialog.GetPath());
+	event.Skip();
+}
+
+void CDocDesignerMDIFrame::OnClearDatabase(wxCommandEvent& event)
+{
+	if (wxMessageBox(_("Are you sure you want to clear the database?"), _("Clear project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxNO)
+		return;
+
+	objectInspector->SelectObject(nullptr);
+
+	wxAuiMDIClientWindow* client_window = GetClientWindow();
+	wxCHECK_RET(client_window, wxS("Missing MDI Client Window"));
+
+	client_window->Freeze();
+
+	bool success = true;
+	wxAuiMDIChildFrame* pActiveChild = nullptr;
+	while ((pActiveChild = GetActiveChild()) != nullptr) {
+		if (!pActiveChild->Close()) {
+			// it refused to close, don't close the remaining ones either
+			success = false;
+			break;
+		}
+	}
+
+	client_window->Thaw();
+
+	if (!success)
+		return;
+
+	appData->ClearDatabase();
+	event.Skip();
 }
 
 void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)

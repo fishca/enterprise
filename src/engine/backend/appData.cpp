@@ -439,6 +439,30 @@ bool CApplicationData::AuthenticationAndSetUser(const wxString& strUserName, con
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool CApplicationData::LoadDatabase(const wxString& strFullPath)
+{
+	return false;
+}
+
+bool CApplicationData::SaveDatabase(const wxString& strFullPath)
+{
+	return false;
+}
+
+bool CApplicationData::ClearDatabase()
+{
+	if (!m_created_metadata)
+		return false;
+
+	if (!activeMetaData->ReCreateDatabase())
+		return false;
+
+	ResetSequence();
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 void CApplicationData::ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const
 {
 	CMemoryReader reader(buffer);

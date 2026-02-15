@@ -145,7 +145,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 		//delete tables sql
 		if (m_configNew) {
 
-			s_restructureInfo.AppendInfo("Create new database");
+			s_restructureInfo.AppendInfo(_("Create new database"));
 
 			if (!CValueMetaObjectConstant::DeleteConstantSQLTable()) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -269,8 +269,6 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 
 bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags)
 {
-	//s_restructureInfo.ResetRestructureInfo();
-
 	if (roolback) {
 
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
@@ -361,6 +359,75 @@ bool CMetaDataConfigurationStorage::OnAfterSaveDatabase(bool roolback, int flags
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool CMetaDataConfigurationStorage::ReCreateDatabase()
+{
+	if (!m_configMetadata)
+		return false;
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	db_query->BeginTransaction();
+#endif
+
+	IValueMetaObject* commonObject = m_configMetadata->GetCommonMetaObject();
+	wxASSERT(commonObject);
+
+	for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
+
+		auto child = commonObject->GetChild(idx);
+		if (!commonObject->FilterChild(child->GetClassType()))
+			continue;
+
+		IValueMetaObject* foundedMeta =
+			m_commonObject->FindAnyObjectByFilter(child->GetGuid());
+
+		bool ret = child->DeleteMetaTable(this) &&
+			(foundedMeta != nullptr && foundedMeta->CreateMetaTable(this));
+
+		if (!ret) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+			db_query->RollBack(); return false;
+#else 
+			return false;
+#endif
+		}
+	}
+
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+	db_query->Commit();
+#endif
+
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_FIREBIRD) {
+
+		db_query->BeginTransaction();
+
+		for (unsigned int idx = 0; idx < commonObject->GetChildCount(); idx++) {
+
+			auto child = commonObject->GetChild(idx);
+			if (!commonObject->FilterChild(child->GetClassType()))
+				continue;
+
+			IValueMetaObject* foundedMeta =
+				m_commonObject->FindAnyObjectByFilter(child->GetGuid());
+
+			bool ret = (foundedMeta != nullptr && foundedMeta->CreateMetaTable(this, repairMetaTable));
+
+			if (!ret) {
+#if _USE_SAVE_METADATA_IN_TRANSACTION == 1
+				db_query->RollBack(); return false;
+#else 
+				return false;
+#endif
+			}
+		}
+
+		db_query->Commit();
+	}
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool CMetaDataConfigurationStorage::SaveDatabase(int flags)
 {
 	if (OnBeforeSaveDatabase(flags)) {
@@ -372,7 +439,7 @@ bool CMetaDataConfigurationStorage::SaveDatabase(int flags)
 	return false;
 }
 
-bool CMetaDataConfigurationStorage::RoolbackDatabase()
+bool CMetaDataConfigurationStorage::RollbackDatabase()
 {
 	bool hasError = db_query->RunQuery("DELETE FROM %s;", config_save_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;
 	hasError = hasError || db_query->RunQuery("INSERT INTO %s SELECT * FROM %s;", config_save_table, config_table) == DATABASE_LAYER_QUERY_RESULT_ERROR;

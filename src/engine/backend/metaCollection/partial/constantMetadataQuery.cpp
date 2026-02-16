@@ -14,7 +14,7 @@
 
 bool CValueMetaObjectConstant::CreateConstantSQLTable()
 {
-	s_restructureInfo.AppendWarning("Create constant table");
+	s_restructureInfo.AppendWarning(_("Create constant table"));
 
 	//create constats 	
 	if (!db_query->TableExists(CValueMetaObjectConstant::GetTableNameDB())) {
@@ -75,7 +75,7 @@ bool CValueMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 	int retCode = 1;
 
 	if ((flags & createMetaTable) != 0 || (flags & repairMetaTable) != 0) {
-		
+
 		if ((flags & createMetaTable) != 0) {
 			if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD) {
 				retCode = ProcessAttribute(tableName, this, nullptr);
@@ -120,3 +120,65 @@ bool CValueMetaObjectConstant::CreateAndUpdateTableDB(IMetaDataConfiguration* sr
 
 	return true;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool CValueMetaObjectConstant::LoadTableData(const CMemoryReader& reader)
+{
+	wxString sqlText = "";
+
+	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+		sqlText = "INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(this); idx++) {
+			sqlText += "?,";
+		}
+		sqlText += "'6')";
+		sqlText += " ON CONFLICT (RECORD_KEY) ";
+		sqlText += " DO UPDATE SET " + IValueMetaObjectAttribute::GetExcludeSQLFieldName(this) + ";";
+	}
+	else {
+		sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";
+		for (unsigned int idx = 0; idx < IValueMetaObjectAttribute::GetSQLFieldCount(this); idx++) {
+			sqlText += "?,";
+		}
+		sqlText += "'6') MATCHING(RECORD_KEY);";
+	}
+
+	IPreparedStatement* dbPreparedStatement =
+		db_query->PrepareStatement(sqlText, GetTableNameDB(), IValueMetaObjectAttribute::GetSQLFieldName(this));
+
+	if (dbPreparedStatement == nullptr)
+		return false;
+
+	if (reader.r_u8())
+		IValueMetaObjectAttribute::SetBinaryData(this, reader, dbPreparedStatement);
+	
+	dbPreparedStatement->RunQuery();
+	dbPreparedStatement->Close();
+	return true;
+}
+
+#include "backend/objCtor.h"
+
+bool CValueMetaObjectConstant::SaveTableData(CMemoryWriter& writer) const
+{
+	const wxString& fieldName = GetFieldNameDB();
+	IDatabaseResultSet* dbResultSet =
+		db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), CValueMetaObjectConstant::GetTableNameDB());
+
+	if (dbResultSet == nullptr)
+		return false;
+
+	if (dbResultSet->Next()) {
+		writer.w_u8(true);
+		IValueMetaObjectAttribute::GetBinaryData(this, writer, dbResultSet);
+	}
+	else {
+		writer.w_u8(false);
+	}
+	
+	dbResultSet->Close();
+	return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////

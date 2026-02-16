@@ -348,8 +348,7 @@ wxThread::ExitCode CApplicationData::CApplicationDataSessionUpdater::Entry()
 bool CApplicationData::TableAlreadyCreated()
 {
 	return db_query->TableExists(user_table) &&
-		db_query->TableExists(session_table) &&
-		db_query->TableExists(sequence_table);
+		db_query->TableExists(session_table);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -430,45 +429,19 @@ void CApplicationData::CreateTableSession()
 	}
 }
 
-void CApplicationData::CreateTableSequence()
-{
-	if (!db_query->TableExists(sequence_table)) {
-
-		db_query->RunQuery(wxT("create table %s ("
-			"meta_guid         VARCHAR(36)   NOT NULL,"
-			"prefix			   VARCHAR(24)   NOT NULL,"
-			"number            INTEGER       NOT NULL,"
-			"primary key (meta_guid, prefix));"),
-
-			sequence_table);
-
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
-			db_query->RunQuery(
-				wxT("create index if not exists sequence_index on %s (meta_guid, prefix);"),
-				sequence_table
-			);
-		}
-		else {
-			db_query->RunQuery(
-				wxT("create index sequence_index on %s (meta_guid, prefix);"),
-				sequence_table
-			);
-		}
-	}
-}
-
 void CApplicationData::CreateTableEvent()
 {
 	if (!db_query->TableExists(event_table)) {
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-void CApplicationData::ResetSequence()
+bool CApplicationData::ClearTableUser()
 {
-	if (db_query->TableExists(sequence_table)) 
-		db_query->RunQuery(wxT("delete from %s;"), sequence_table);
+	if (!db_query->TableExists(user_table)) 
+		return false;
+
+	db_query->RunQuery(wxT("DELETE FROM %s;"), user_table);
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -587,14 +560,14 @@ bool CApplicationData::SaveUserData(const CApplicationDataUserInfo& userInfo) co
 	dbUserPrepareData->SetParamString(3, userInfo.m_strUserFullName);
 	dbUserPrepareData->SetParamDate(4, wxDateTime::Now());
 
-	CMemoryWriter writter;
+	CMemoryWriter writer;
 
-	writter.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
-	writter.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
-	writter.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
+	writer.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
+	writer.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
+	writer.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
 
-	dbUserPrepareData->SetParamNumber(5, writter.size());
-	dbUserPrepareData->SetParamBlob(6, writter.pointer(), writter.size());
+	dbUserPrepareData->SetParamNumber(5, writer.size());
+	dbUserPrepareData->SetParamBlob(6, writer.pointer(), writer.size());
 
 	const int result = dbUserPrepareData->RunQuery();
 
@@ -603,6 +576,84 @@ bool CApplicationData::SaveUserData(const CApplicationDataUserInfo& userInfo) co
 
 	db_query->CloseStatement(dbUserPrepareData);
 	return result != DATABASE_LAYER_QUERY_RESULT_ERROR;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool CApplicationData::LoadUserInfoFromBuffer(wxMemoryBuffer& buffer)
+{
+	CMemoryReader reader = buffer;
+
+	CMemoryReader* prevReaderMemory = nullptr; u64 meta_id = 0;
+
+	while (!reader.eof()) {
+
+		CMemoryReader* readerMemory = reader.open_chunk_iterator(meta_id, &*prevReaderMemory);
+		if (!readerMemory)
+			break;
+
+		CApplicationDataUserInfo userInfo;
+
+		userInfo.m_strUserGuid = readerMemory->r_stringZ();
+		userInfo.m_strUserName = readerMemory->r_stringZ();
+		userInfo.m_strUserFullName = readerMemory->r_stringZ();
+
+		wxMemoryBuffer bufferPassword;
+		if (readerMemory->r_chunk(eBlockPswd, bufferPassword)) {
+			ReadUserData_Password(bufferPassword, userInfo);
+		}
+
+		wxMemoryBuffer bufferRole;
+		if (readerMemory->r_chunk(eBlockRole, bufferRole)) {
+			ReadUserData_Role(bufferRole, userInfo);
+		}
+
+		wxMemoryBuffer bufferLang;
+		if (readerMemory->r_chunk(eBlockLang, bufferLang)) {
+			ReadUserData_Language(bufferLang, userInfo);
+		}
+
+		SaveUserData(userInfo);
+
+		prevReaderMemory = readerMemory;
+	};
+
+	return true;
+}
+
+bool CApplicationData::SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const
+{
+	IDatabaseResultSet* dbUserResult = db_query->RunQueryWithResults(wxT("SELECT guid FROM %s;"), user_table);
+
+	if (dbUserResult == nullptr)
+		return false;
+
+	CMemoryWriter writer; unsigned int idx = 0;
+
+	while (dbUserResult->Next()) {
+
+		const CApplicationDataUserInfo& userInfo = ReadUserData(CGuid(dbUserResult->GetResultString(wxT("guid"))));
+
+		CMemoryWriter userWriter;
+
+		userWriter.w_stringZ(userInfo.m_strUserGuid);
+		userWriter.w_stringZ(userInfo.m_strUserName);
+		userWriter.w_stringZ(userInfo.m_strUserFullName);
+
+		userWriter.w_chunk(eBlockPswd, SaveUserData_Password(userInfo));
+		userWriter.w_chunk(eBlockRole, SaveUserData_Role(userInfo));
+		userWriter.w_chunk(eBlockLang, SaveUserData_Language(userInfo));
+
+		writer.w_chunk(idx++, userWriter.buffer());
+	}
+
+	buffer = writer.buffer();
+
+	if (dbUserResult != nullptr)
+		dbUserResult->Close();
+
+	db_query->CloseResultSet(dbUserResult);
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

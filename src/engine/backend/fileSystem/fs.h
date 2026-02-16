@@ -55,9 +55,9 @@ public:
 	void			close_chunk();
 	u32				chunk_size() const; // returns size of currently opened chunk, 0 otherwise
 	void			w_compressed(void* ptr, u32 count);
-	void			w_compressed(const wxMemoryBuffer& m_data);
+	void			w_compressed(const wxMemoryBuffer& data);
 	void			w_chunk(u64 type, void* m_data, u32 size);
-	void			w_chunk(u64 type, const wxMemoryBuffer& m_data);
+	void			w_chunk(u64 type, const wxMemoryBuffer& data);
 	virtual bool	valid() const { return true; }
 	virtual	void	flush() = 0;
 };

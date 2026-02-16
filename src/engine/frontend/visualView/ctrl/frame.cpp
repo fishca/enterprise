@@ -168,23 +168,23 @@ IValueFrame* IValueFrame::CreatePasteObject(const CMemoryReader& reader,
 
 bool IValueFrame::CopyObject(CMemoryWriter& writer) const
 {
-	CMemoryWriter writterHeaderMemory;
-	writterHeaderMemory.w_s32(0); //reserved
-	writterHeaderMemory.w_u64(GetClassType()); //get class type 
-	writer.w_chunk(headerBlock, writterHeaderMemory.pointer(), writterHeaderMemory.size());
-	CMemoryWriter writterDataMemory;
-	if (!CopyProperty(writterDataMemory))
+	CMemoryWriter writerHeaderMemory;
+	writerHeaderMemory.w_s32(0); //reserved
+	writerHeaderMemory.w_u64(GetClassType()); //get class type 
+	writer.w_chunk(headerBlock, writerHeaderMemory.pointer(), writerHeaderMemory.size());
+	CMemoryWriter writerDataMemory;
+	if (!CopyProperty(writerDataMemory))
 		return false;
-	writer.w_chunk(dataBlock, writterDataMemory.pointer(), writterDataMemory.size());
-	CMemoryWriter writterChildMemory;
+	writer.w_chunk(dataBlock, writerDataMemory.pointer(), writerDataMemory.size());
+	CMemoryWriter writerChildMemory;
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
-		CMemoryWriter writterMemory;
+		CMemoryWriter writerMemory;
 		IValueFrame* obj = GetChild(idx);
-		if (!obj->CopyObject(writterMemory))
+		if (!obj->CopyObject(writerMemory))
 			return false;
-		writterChildMemory.w_chunk(obj->GetClassType(), writterMemory.pointer(), writterMemory.size());
+		writerChildMemory.w_chunk(obj->GetClassType(), writerMemory.pointer(), writerMemory.size());
 	}
-	writer.w_chunk(childBlock, writterChildMemory.pointer(), writterChildMemory.size());
+	writer.w_chunk(childBlock, writerChildMemory.pointer(), writerChildMemory.size());
 	return true;
 }
 

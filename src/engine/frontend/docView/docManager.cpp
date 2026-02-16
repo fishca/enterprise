@@ -154,9 +154,8 @@ void CMetaDocManager::OnFileNew(wxCommandEvent& WXUNUSED(event))
 
 void CMetaDocManager::OnFileOpen(wxCommandEvent& WXUNUSED(event))
 {
-	if (!wxDocManager::CreateDocument(wxString())) {
-		OnOpenFileFailure();
-	}
+	if (!CreateDocument(wxT(""), 0)) 
+		OnOpenFileFailure();	
 }
 
 void CMetaDocManager::OnFileRevert(wxCommandEvent& WXUNUSED(event))
@@ -487,8 +486,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, in
 
 	for (int i = 0; i < noTemplates; i++)
 	{
-		if (templates[i]->GetFlags() == wxTEMPLATE_VISIBLE
-			|| templates[i]->GetFlags() == wxTEMPLATE_ONLY_OPEN)
+		if (templates[i]->IsVisible())
 		{
 			if (!descrBuf.empty())
 				descrBuf << wxT(";");
@@ -509,8 +507,7 @@ wxDocTemplate* CMetaDocManager::SelectDocumentPath(wxDocTemplate** templates, in
 
 	for (int i = 0; i < noTemplates; i++)
 	{
-		if (templates[i]->GetFlags() == wxTEMPLATE_VISIBLE
-			|| templates[i]->GetFlags() == wxTEMPLATE_ONLY_OPEN)
+		if (templates[i]->IsVisible())
 		{
 			// add a '|' to separate this filter from the previous one
 			if (!descrBuf.empty())

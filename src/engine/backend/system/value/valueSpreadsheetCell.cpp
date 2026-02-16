@@ -239,4 +239,4 @@ bool CValueSpreadsheetDocumentArea::CallAsProc(const long lMethodNum, CValue** p
 //**********************************************************************
 
 SYSTEM_TYPE_REGISTER(CValueSpreadsheetDocumentArea, "SpreadsheetArea", string_to_clsid("VL_SPSTA"));
-VALUE_TYPE_REGISTER(CValueSpreadsheetDocumentBorder, "SpreadsheetBorder", string_to_clsid("VL_SPSTB"));
+VALUE_TYPE_REGISTER(CValueSpreadsheetDocumentBorder, "SpreadsheetBorderRow", string_to_clsid("VL_SPSBO"));

@@ -130,7 +130,6 @@ bool CApplicationData::CreateFileAppDataEnv(eRunMode runMode, const wxString& st
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
 				CApplicationData::CreateTableUser();
-				CApplicationData::CreateTableSequence();
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {
@@ -182,7 +181,6 @@ bool CApplicationData::CreateServerAppDataEnv(eRunMode runMode, const wxString& 
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
 				CApplicationData::CreateTableUser();
-				CApplicationData::CreateTableSequence();
 				CApplicationData::CreateTableEvent();
 			}
 			else if (!CApplicationData::TableAlreadyCreated()) {
@@ -439,14 +437,147 @@ bool CApplicationData::AuthenticationAndSetUser(const wxString& strUserName, con
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <wx/zipstrm.h>
+#include <wx/wfstream.h>
+#include <wx/mstream.h>
+#include <wx/filename.h>
+
 bool CApplicationData::LoadDatabase(const wxString& strFullPath)
 {
-	return false;
+	wxFileInputStream fis(strFullPath);
+	if (!fis.IsOk()) {
+		wxLogError("Couldn't open the file '%s'.", strFullPath);
+		return false;
+	}
+
+	if (!ClearDatabase() && !ClearTableUser())
+		return false;
+
+	wxZipInputStream zis(fis);
+	std::unique_ptr<wxZipEntry> entry;
+
+	// Iterate through all entries in the zip file
+	while (entry.reset(zis.GetNextEntry()), entry) {
+
+		if (!entry->IsDir() && entry->GetName() == wxT("config")) {
+
+			// Open the entry for reading and write its data to a new file
+			if (zis.OpenEntry(*entry)) {
+				wxMemoryOutputStream fos;
+				if (fos.IsOk()) {
+					zis.Read(fos); // Read from zip stream, write to file stream
+				}
+				else {
+					return false;
+				}
+
+				//load configuration 
+				wxMemoryBuffer buffer;
+				fos.CopyTo(buffer.GetAppendBuf(fos.GetSize()), fos.GetSize());
+				buffer.SetDataLen(fos.GetSize());
+
+				if (!activeMetaData->LoadConfigFromBuffer(buffer))
+					return false;
+
+				activeMetaData->RunDatabase();
+				activeMetaData->SaveDatabase(saveConfigFlag);
+			}
+		}
+		else if (!entry->IsDir() && entry->GetName() == wxT("user")) {
+
+			// Open the entry for reading and write its data to a new file
+			if (zis.OpenEntry(*entry)) {
+				wxMemoryOutputStream fos;
+				if (fos.IsOk()) {
+					zis.Read(fos); // Read from zip stream, write to file stream
+				}
+				else {
+					return false;
+				}
+
+				//load user 
+				wxMemoryBuffer buffer;
+				fos.CopyTo(buffer.GetAppendBuf(fos.GetSize()), fos.GetSize());
+				buffer.SetDataLen(fos.GetSize());
+
+				if (!LoadUserInfoFromBuffer(buffer))
+					return false;
+			}
+		}
+		else if (!entry->IsDir() && entry->GetName() == wxT("data")) {
+
+			// Open the entry for reading and write its data to a new file
+			if (zis.OpenEntry(*entry)) {
+				wxMemoryOutputStream fos;
+				if (fos.IsOk()) {
+					zis.Read(fos); // Read from zip stream, write to file stream
+				}
+				else {
+					return false;
+				}
+
+				//load data 
+				wxMemoryBuffer buffer;
+				fos.CopyTo(buffer.GetAppendBuf(fos.GetSize()), fos.GetSize());
+				buffer.SetDataLen(fos.GetSize());
+
+				if (!activeMetaData->LoadDataFromBuffer(buffer))
+					return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 bool CApplicationData::SaveDatabase(const wxString& strFullPath)
 {
-	return false;
+	// 1. Create the physical file output stream
+	wxFFileOutputStream out(strFullPath);
+	if (!out.IsOk())
+	{
+		wxLogError("Cannot create output file %s", strFullPath);
+		return false;
+	}
+
+	// 2. Wrap it in a wxZipOutputStream for compression
+	wxZipOutputStream zip(out);
+
+	// PutNextEntry sets up the new entry in the archive
+	if (zip.PutNextEntry(wxT("config"))) {
+		//save configuration 
+		wxMemoryBuffer bufferConfig;
+		if (activeMetaData->SaveConfigToBuffer(bufferConfig)) {
+			// Wrap the content in an input stream to write it easily
+			wxMemoryInputStream contentStream(bufferConfig.GetData(), bufferConfig.GetDataLen());
+			zip.Write(contentStream); // Write the data from the content stream
+		}
+	}
+
+	if (zip.PutNextEntry(wxT("user"))) {
+		//save users 
+		wxMemoryBuffer bufferUser;
+		if (!SaveUserInfoToBuffer(bufferUser))
+			return false;
+		// Wrap the content in an input stream to write it easily
+		wxMemoryInputStream contentStream(bufferUser.GetData(), bufferUser.GetDataLen());
+		zip.Write(contentStream); // Write the data from the content stream
+	}
+
+	if (zip.PutNextEntry(wxT("data"))) {
+		//save data
+		wxMemoryBuffer bufferData;
+		if (!activeMetaData->SaveDataToBuffer(bufferData))
+			return false;
+		// Wrap the content in an input stream to write it easily
+		wxMemoryInputStream contentStream(bufferData.GetData(), bufferData.GetDataLen());
+		zip.Write(contentStream); // Write the data from the content stream
+	}
+
+	// 3. Close the zip stream (this is essential to finalize the archive)
+	// The underlying file stream 'out' will be closed automatically when 'zip' goes out of scope,
+	// or when explicitly calling zip.Close().
+	return zip.Close();
 }
 
 bool CApplicationData::ClearDatabase()
@@ -457,7 +588,6 @@ bool CApplicationData::ClearDatabase()
 	if (!activeMetaData->ReCreateDatabase())
 		return false;
 
-	ResetSequence();
 	return true;
 }
 
@@ -498,31 +628,31 @@ void CApplicationData::ReadUserData_Language(const wxMemoryBuffer& buffer, CAppl
 
 wxMemoryBuffer CApplicationData::SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const
 {
-	CMemoryWriter writter;
-	writter.w_stringZ(userInfo.m_strUserGuid);
-	writter.w_stringZ(userInfo.m_strUserName);
-	writter.w_stringZ(userInfo.m_strUserFullName);
-	writter.w_stringZ(userInfo.m_strUserPassword);
-	return writter.buffer();
+	CMemoryWriter writer;
+	writer.w_stringZ(userInfo.m_strUserGuid);
+	writer.w_stringZ(userInfo.m_strUserName);
+	writer.w_stringZ(userInfo.m_strUserFullName);
+	writer.w_stringZ(userInfo.m_strUserPassword);
+	return writer.buffer();
 }
 
 wxMemoryBuffer CApplicationData::SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const
 {
-	CMemoryWriter writter;
-	writter.w_u32(userInfo.m_roleArray.size());
+	CMemoryWriter writer;
+	writer.w_u32(userInfo.m_roleArray.size());
 	for (const auto role : userInfo.m_roleArray) {
-		writter.w_stringZ(role.m_strRoleGuid);
-		writter.w_s32(role.m_miRoleId);
+		writer.w_stringZ(role.m_strRoleGuid);
+		writer.w_s32(role.m_miRoleId);
 	}
-	return writter.buffer();
+	return writer.buffer();
 }
 
 wxMemoryBuffer CApplicationData::SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const
 {
-	CMemoryWriter writter;
-	writter.w_stringZ(userInfo.m_strLanguageGuid);
-	writter.w_stringZ(userInfo.m_strLanguageCode);
-	return writter.buffer();
+	CMemoryWriter writer;
+	writer.w_stringZ(userInfo.m_strLanguageGuid);
+	writer.w_stringZ(userInfo.m_strLanguageCode);
+	return writer.buffer();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

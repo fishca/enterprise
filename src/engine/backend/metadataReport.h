@@ -82,13 +82,13 @@ protected:
 
 	//header loader/saver 
 	bool LoadHeader(CMemoryReader& readerData);
-	bool SaveHeader(CMemoryWriter& writterData);
+	bool SaveHeader(CMemoryWriter& writerData);
 
 	//loader/saver/deleter: 
 	bool LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData);
 	bool LoadChildMetadata(const class_identifier_t& clsid, CMemoryReader& readerData, IValueMetaObject* object);
-	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IValueMetaObject* object, int flags = defaultFlag);
+	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, IValueMetaObject* object, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
 

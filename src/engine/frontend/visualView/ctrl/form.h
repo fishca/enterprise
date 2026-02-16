@@ -302,7 +302,7 @@ public:
 	virtual bool LoadForm(const wxMemoryBuffer& formData);
 	bool LoadChildForm(CMemoryReader& readerData, IValueFrame* controlParent);
 	virtual wxMemoryBuffer SaveForm();
-	bool SaveChildForm(CMemoryWriter& writterData, IValueFrame* controlParent);
+	bool SaveChildForm(CMemoryWriter& writerData, IValueFrame* controlParent);
 
 	static CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
 		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);

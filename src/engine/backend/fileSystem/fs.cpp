@@ -42,21 +42,21 @@ void	IWriter::w_compressed(void* ptr, u32 count)
 	wxDELETE(dest);
 }
 
-void IWriter::w_compressed(const wxMemoryBuffer& m_data)
+void IWriter::w_compressed(const wxMemoryBuffer& data)
 {
-	w_compressed(m_data.GetData(), m_data.GetDataLen());
+	w_compressed(data.GetData(), data.GetDataLen());
 }
 
-void	IWriter::w_chunk(u64 type, void* m_data, u32 size)
+void	IWriter::w_chunk(u64 type, void* data, u32 size)
 {
 	open_chunk(type);
-	w(m_data, size);
+	w(data, size);
 	close_chunk();
 }
 
-void IWriter::w_chunk(u64 type, const wxMemoryBuffer& m_data)
+void IWriter::w_chunk(u64 type, const wxMemoryBuffer& data)
 {
-	w_chunk(type, m_data.GetData(), m_data.GetDataLen());
+	w_chunk(type, data.GetData(), data.GetDataLen());
 }
 
 void	IWriter::w_printf(const char* format, ...)

@@ -157,7 +157,7 @@ wxString IValueMetaObjectAttribute::GetCompositeSQLFieldName(const IValueMetaObj
 		+ sqlField;
 }
 
-wxString IValueMetaObjectAttribute::GetExcluteSQLFieldName(const IValueMetaObjectAttribute* metaAttr)
+wxString IValueMetaObjectAttribute::GetExcludeSQLFieldName(const IValueMetaObjectAttribute* metaAttr)
 {
 	const wxString& fieldName = metaAttr->GetFieldNameDB(); wxString sqlField = wxEmptyString;
 
@@ -697,6 +697,12 @@ void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribut
 	}
 }
 
+void IValueMetaObjectAttribute::SetValueAttribute(const IValueMetaObjectAttribute* attribute, const CValue& cValue, IPreparedStatement* statement)
+{
+	int position = 1;
+	SetValueAttribute(attribute, cValue, statement, position);
+}
+
 #include "backend/compiler/enumUnit.h"
 
 bool IValueMetaObjectAttribute::GetValueAttribute(const wxString& fieldName,
@@ -836,3 +842,275 @@ bool IValueMetaObjectAttribute::GetValueAttribute(const IValueMetaObjectAttribut
 		metaAttr, retValue, resultSet, createData
 	);
 }
+
+///////////////////////////////////////////////////
+
+void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement,
+	int& position)
+{
+	const int fieldType = reader.r_s32();
+
+	//write type & data
+	if (fieldType == eFieldTypes_Empty || fieldType == eFieldTypes_Null) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else if (fieldType == eFieldTypes_Boolean) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, reader.r_u8()); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else if (fieldType == eFieldTypes_Number) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER)) {
+
+			number_t value;
+			reader.r(&value.exponent, sizeof(value.exponent));
+			reader.r(&value.mantissa, sizeof(value.mantissa));
+			reader.r(&value.info, sizeof(value.info));
+
+			statement->SetParamNumber(position++, value); //DATA number 
+		}
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else if (fieldType == eFieldTypes_Date) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, wxLongLong(reader.r_u64())); //DATA date 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else if (fieldType == eFieldTypes_String) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING)) {
+			statement->SetParamString(position++, reader.r_stringZ()); //DATA string 
+		}
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else if (fieldType == eFieldTypes_Enum) {
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 	
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, reader.r_s32()); //DATA enum 
+
+		if (metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)) {
+			statement->SetParamNumber(position++, 0); //TYPE REF
+			statement->SetParamNull(position++); //DATA REF
+		}
+	}
+	else {
+
+		wxMemoryBuffer typeRRBuffer;
+
+		statement->SetParamInt(position++, fieldType); //TYPE
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN))
+			statement->SetParamBool(position++, false); //DATA binary 
+		if (metaAttr->ContainType(eValueTypes::TYPE_NUMBER))
+			statement->SetParamNumber(position++, 0); //DATA number 
+		if (metaAttr->ContainType(eValueTypes::TYPE_DATE))
+			statement->SetParamDate(position++, emptyDate); //DATA date 
+		if (metaAttr->ContainType(eValueTypes::TYPE_STRING))
+			statement->SetParamString(position++, wxEmptyString); //DATA string 
+
+		if (metaAttr->ContainType(eValueTypes::TYPE_ENUM))
+			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
+
+		statement->SetParamNumber(position++, reader.r_u64()); //TYPE REF
+		reader.r_chunk(rt_ref_chunk, typeRRBuffer);
+		statement->SetParamBlob(position++, typeRRBuffer.GetData(), typeRRBuffer.GetDataLen()); //DATA REF
+	}
+}
+
+void IValueMetaObjectAttribute::SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement)
+{
+	int position = 1;
+	SetBinaryData(metaAttr, reader, statement, position);
+}
+
+void IValueMetaObjectAttribute::GetBinaryData(const IValueMetaObjectAttribute* metaAttr, CMemoryWriter& writer, IDatabaseResultSet* resultSet)
+{
+	const wxString& fieldName = metaAttr->GetFieldNameDB();
+	const int fieldType = resultSet->GetResultInt(fieldName + wxT("_TYPE"));
+
+	writer.w_s32(fieldType);
+
+	//DATA boolean 
+	if (fieldType == eFieldTypes_Boolean
+		&& metaAttr->ContainType(eValueTypes::TYPE_BOOLEAN)
+		&& resultSet != nullptr) {
+		writer.w_u8(resultSet->GetResultBool(fieldName + wxT("_B")));
+	}
+	else if (fieldType == eFieldTypes_Boolean) {
+		writer.w_u8(false);
+	}
+
+	//DATA number 
+	if (fieldType == eFieldTypes_Number
+		&& metaAttr->ContainType(eValueTypes::TYPE_NUMBER)
+		&& resultSet != nullptr) {
+		const number_t& value = resultSet->GetResultNumber(fieldName + wxT("_N"));
+		writer.w(&value.exponent, sizeof(value.exponent));
+		writer.w(&value.mantissa, sizeof(value.mantissa));
+		writer.w(&value.info, sizeof(value.info));
+	}
+	else if (fieldType == eFieldTypes_Number) {
+		const number_t& value = 0;
+		writer.w(&value.exponent, sizeof(value.exponent));
+		writer.w(&value.mantissa, sizeof(value.mantissa));
+		writer.w(&value.info, sizeof(value.info));
+	}
+
+	//DATA date 
+	if (fieldType == eFieldTypes_Date
+		&& metaAttr->ContainType(eValueTypes::TYPE_DATE)
+		&& resultSet != nullptr) {
+		const wxDateTime& dt = resultSet->GetResultDate(fieldName + wxT("_D"));
+		const wxLongLong& llData = dt.GetValue();
+		writer.w_u64(llData.GetValue());
+	}
+	else if (fieldType == eFieldTypes_Date) {
+		writer.w_u64(emptyDate);
+	}
+
+	//DATA string 
+	if (fieldType == eFieldTypes_String
+		&& metaAttr->ContainType(eValueTypes::TYPE_STRING)
+		&& resultSet != nullptr) {
+		writer.w_stringZ(resultSet->GetResultString(fieldName + wxT("_S")));
+	}
+	else if (fieldType == eFieldTypes_String) {
+		writer.w_stringZ(wxEmptyString);
+	}
+
+	//DATA enum 
+	if (fieldType == eFieldTypes_Enum
+		&& metaAttr->ContainType(eValueTypes::TYPE_ENUM)
+		&& resultSet != nullptr) {
+		writer.w_s32(resultSet->GetResultInt(fieldName + wxT("_E")));
+	}
+	else if (fieldType == eFieldTypes_Enum) {
+		writer.w_s32(wxNOT_FOUND);
+	}
+
+	//DATA reference 
+	if (fieldType == eFieldTypes_Reference
+		&& metaAttr->ContainMetaType(eCtorMetaType::eCtorMetaType_Reference)
+		&& resultSet != nullptr) {
+		wxMemoryBuffer bufferData;
+		resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);
+		writer.w_u64(resultSet->GetResultLong(fieldName + wxT("_RTRef")));
+		writer.w_chunk(rt_ref_chunk, bufferData);
+	}
+	else if (fieldType == eFieldTypes_Reference) {
+		writer.w_u64(0);
+		writer.w_chunk(rt_ref_chunk, wxMemoryBuffer());
+	}
+}
+
+///////////////////////////////////////////////////

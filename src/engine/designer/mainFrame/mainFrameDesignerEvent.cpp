@@ -208,7 +208,7 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 void CDocDesignerMDIFrame::OnLoadDatabase(wxCommandEvent& event)
 {
 	wxFileDialog openFileDialog(this, _("Open database file"), "", "",
-		"Database files (*.edf)|*.edf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+		"Database files (*.obk)|*.obk", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
 		return;     // the user changed idea...
@@ -235,18 +235,29 @@ void CDocDesignerMDIFrame::OnLoadDatabase(wxCommandEvent& event)
 	if (!success)
 		return;
 
-	appData->LoadDatabase(openFileDialog.GetPath());
+	if (appData->LoadDatabase(openFileDialog.GetPath())) {
+		wxMessageBox(_("Loading of tasks completed successful. Restart the program!"));
+		appData->ForceExit();
+	}
+	else {
+		wxMessageBox(_("Error when trying to load database from a file!!"));
+	}
+
 	event.Skip();
 }
 
 void CDocDesignerMDIFrame::OnSaveDatabase(wxCommandEvent& event)
 {
 	wxFileDialog saveFileDialog(this, _("Save database file"), "", "",
-		"Database files (*.edf)|*.edf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+		"Database files (*.obk)|*.obk", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	if (saveFileDialog.ShowModal() == wxID_CANCEL)
 		return;     // the user changed idea...
 
-	appData->SaveDatabase(saveFileDialog.GetPath());
+	if (appData->SaveDatabase(saveFileDialog.GetPath()))
+		wxMessageBox(_("Data upload completed successfully!"));
+	else 
+		wxMessageBox(_("Error when trying to upload data to a file!"));
+
 	event.Skip();
 }
 
@@ -277,7 +288,11 @@ void CDocDesignerMDIFrame::OnClearDatabase(wxCommandEvent& event)
 	if (!success)
 		return;
 
-	appData->ClearDatabase();
+	if (appData->ClearDatabase())
+		wxMessageBox(_("Database cleared successfully!"));
+	else
+		wxMessageBox(_("Error when trying to clear database!"));
+	
 	event.Skip();
 }
 
@@ -296,7 +311,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 			return;
 
 		// proceed loading the file chosen by the user;
-		if (activeMetaData->LoadFromFile(openFileDialog.GetPath())) {
+		if (activeMetaData->LoadConfigFromFile(openFileDialog.GetPath())) {
 			if (m_metaWindow->Load()) {
 				if (activeMetaData->IsModified()) {
 					if (wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
@@ -314,7 +329,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 
-		if (activeMetaData->SaveToFile(saveFileDialog.GetPath())) {
+		if (activeMetaData->SaveConfigToFile(saveFileDialog.GetPath())) {
 			wxMessageBox(_("Successfully unloaded to: ") + saveFileDialog.GetPath());
 		}
 	}

@@ -669,6 +669,7 @@
       <Filter>moduleManager</Filter>
     </ClInclude>
     <ClInclude Include="value_ptr.h" />
+    <ClInclude Include="restructureInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />

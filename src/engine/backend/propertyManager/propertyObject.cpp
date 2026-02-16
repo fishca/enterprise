@@ -180,7 +180,7 @@ bool IPropertyObject::PasteProperty(CMemoryReader& reader)
 	return true;
 }
 
-bool IPropertyObject::CopyProperty(CMemoryWriter& writter) const
+bool IPropertyObject::CopyProperty(CMemoryWriter& writer) const
 {
 	CMemoryWriter propWritter;
 	for (unsigned int idx = 0; idx < GetPropertyCount(); idx++) {
@@ -193,7 +193,7 @@ bool IPropertyObject::CopyProperty(CMemoryWriter& writter) const
 		propWritter.w_chunk(idx, propDataWritter.pointer(), propDataWritter.size());
 	}
 
-	writter.w_chunk(propBlock, propWritter.pointer(), propWritter.size());
+	writer.w_chunk(propBlock, propWritter.pointer(), propWritter.size());
 
 	CMemoryWriter eventWritter;
 	for (unsigned int idx = 0; idx < GetEventCount(); idx++) {
@@ -206,7 +206,7 @@ bool IPropertyObject::CopyProperty(CMemoryWriter& writter) const
 		eventWritter.w_chunk(idx, eventDataWritter.pointer(), eventDataWritter.size());
 	}
 
-	writter.w_chunk(eventBlock, eventWritter.pointer(), eventWritter.size());
+	writer.w_chunk(eventBlock, eventWritter.pointer(), eventWritter.size());
 	return true;
 }
 

@@ -68,46 +68,46 @@ bool CValueForm::LoadChildForm(CMemoryReader& readerData, IValueFrame* controlPa
 
 wxMemoryBuffer CValueForm::SaveForm()
 {
-	CMemoryWriter writterData;
+	CMemoryWriter writerData;
 
 	//Save common object
-	CMemoryWriter writterMemory;
-	CMemoryWriter writterMetaMemory;
-	CMemoryWriter writterDataMemory;
-	if (!SaveControl(m_metaFormObject, writterDataMemory)) {
+	CMemoryWriter writerMemory;
+	CMemoryWriter writerMetaMemory;
+	CMemoryWriter writerDataMemory;
+	if (!SaveControl(m_metaFormObject, writerDataMemory)) {
 		return wxMemoryBuffer();
 	}
-	writterMetaMemory.w_chunk(eDataBlock, writterDataMemory.pointer(), writterDataMemory.size());
-	CMemoryWriter writterChildMemory;
-	if (!SaveChildForm(writterChildMemory, this))
+	writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
+	CMemoryWriter writerChildMemory;
+	if (!SaveChildForm(writerChildMemory, this))
 		return wxMemoryBuffer();
-	writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
-	writterMemory.w_chunk(GetControlID(), writterMetaMemory.pointer(), writterMetaMemory.size());
-	writterData.w_chunk(GetClassType(), writterMemory.pointer(), writterMemory.size());
+	writerMetaMemory.w_chunk(eChildBlock, writerChildMemory.pointer(), writerChildMemory.size());
+	writerMemory.w_chunk(GetControlID(), writerMetaMemory.pointer(), writerMetaMemory.size());
+	writerData.w_chunk(GetClassType(), writerMemory.pointer(), writerMemory.size());
 
 	//CValueForm::PrepareNames();
-	return writterData.buffer();
+	return writerData.buffer();
 }
 
-bool CValueForm::SaveChildForm(CMemoryWriter& writterData, IValueFrame* controlParent)
+bool CValueForm::SaveChildForm(CMemoryWriter& writerData, IValueFrame* controlParent)
 {
 	for (unsigned int idx = 0; idx < controlParent->GetChildCount(); idx++) {
-		CMemoryWriter writterMemory;
-		CMemoryWriter writterMetaMemory;
-		CMemoryWriter writterDataMemory;
+		CMemoryWriter writerMemory;
+		CMemoryWriter writerMetaMemory;
+		CMemoryWriter writerDataMemory;
 		IValueFrame* child = controlParent->GetChild(idx);
 		wxASSERT(child);
-		if (!child->SaveControl(m_metaFormObject, writterDataMemory)) {
+		if (!child->SaveControl(m_metaFormObject, writerDataMemory)) {
 			return false;
 		}
-		writterMetaMemory.w_chunk(eDataBlock, writterDataMemory.pointer(), writterDataMemory.size());
-		CMemoryWriter writterChildMemory;
-		if (!SaveChildForm(writterChildMemory, child)) {
+		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
+		CMemoryWriter writerChildMemory;
+		if (!SaveChildForm(writerChildMemory, child)) {
 			return false;
 		}
-		writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
-		writterMemory.w_chunk(child->GetControlID(), writterMetaMemory.pointer(), writterMetaMemory.size());
-		writterData.w_chunk(child->GetClassType(), writterMemory.pointer(), writterMemory.size());
+		writerMetaMemory.w_chunk(eChildBlock, writerChildMemory.pointer(), writerChildMemory.size());
+		writerMemory.w_chunk(child->GetControlID(), writerMetaMemory.pointer(), writerMetaMemory.size());
+		writerData.w_chunk(child->GetClassType(), writerMemory.pointer(), writerMemory.size());
 	}
 
 	return true;

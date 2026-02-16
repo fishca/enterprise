@@ -398,7 +398,7 @@ bool CValueRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 					}
 					sqlText += "'6')";
 					sqlText += " ON CONFLICT (RECORD_KEY) ";
-					sqlText += " DO UPDATE SET " + IValueMetaObjectAttribute::GetExcluteSQLFieldName(m_metaObject) + ";";
+					sqlText += " DO UPDATE SET " + IValueMetaObjectAttribute::GetExcludeSQLFieldName(m_metaObject) + ";";
 				}
 				else {
 					sqlText = "UPDATE OR INSERT INTO %s (%s, RECORD_KEY) VALUES(";

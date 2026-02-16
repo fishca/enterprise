@@ -57,16 +57,20 @@ public:
 	static bool CreateConstantSQLTable();
 	static bool DeleteConstantSQLTable();
 
-	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
-
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Create; }
 
 	//process default query
 	int ProcessAttribute(const wxString& tableName, IValueMetaObjectAttribute* srcAttr, IValueMetaObjectAttribute* dstAttr);
 
+	// load & save config data 
+	virtual bool LoadTableData(const CMemoryReader& reader);
+	virtual bool SaveTableData(CMemoryWriter& writer) const;
+
 protected:
+
+	//create and update table 
+	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
 
 	//get default form 
 	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {

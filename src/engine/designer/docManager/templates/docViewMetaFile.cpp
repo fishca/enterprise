@@ -93,7 +93,7 @@ bool CMetadataFileDocument::OnCreate(const wxString& path, long flags)
 // we override DoSave/OpenDocument instead of Save/LoadObject
 bool CMetadataFileDocument::DoOpenDocument(const wxString& filename)
 {
-	if (!m_metaData->LoadFromFile(filename))
+	if (!m_metaData->LoadConfigFromFile(filename))
 		return false;
 
 	if (!GetMetaTree()->Load(m_metaData))

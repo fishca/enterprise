@@ -8,8 +8,9 @@
 #include "backend/appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
-#include "backend/metaCollection/partial/tabularSection/tabularSection.h"
 
+#include "backend/metaCollection/partial/tabularSection/tabularSection.h"
+#include "backend/metaCollection/attribute/metaAttributeObject.h"
 
 //**********************************************************************************************************
 //*                                          Common functions                                              *
@@ -19,7 +20,7 @@ wxString IValueMetaObjectRecordDataRef::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
 	wxASSERT(m_metaId != 0);
-	return wxString::Format("%s%i",
+	return wxString::Format(wxT("%s%i"),
 		className, GetMetaID());
 }
 
@@ -242,6 +243,250 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 	if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 		return false;
 
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& reader)
+{
+	wxMemoryBuffer objectBuffer;
+
+	if (reader.r_chunk(1, objectBuffer)) {
+
+		const wxString& tableName = GetTableNameDB();
+		wxString queryText = "INSERT INTO " + tableName + " (";
+		queryText += "uuid";
+
+		std::map<meta_identifier_t, int> assoc; int position = 2;
+
+		for (const auto object : GetGenericAttributeArrayObject()) {
+			if (IsDataReference(object->GetMetaID()))
+				continue;
+			queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
+			assoc.insert_or_assign(object->GetMetaID(),
+				position);
+			position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+		}
+		queryText += ") VALUES (?";
+		for (const auto object : GetGenericAttributeArrayObject()) {
+			if (IsDataReference(object->GetMetaID()))
+				continue;
+			unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			for (unsigned int i = 0; i < fieldCount; i++) {
+				queryText += ", ?";
+			}
+		}
+
+		queryText += ");";
+
+		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		if (statement == nullptr)
+			return false;
+
+		CMemoryReader* rowReaderPrev = nullptr;
+		CMemoryReader objectReader(objectBuffer);
+
+		while (true) {
+
+			CMemoryReader* colReaderPrev = nullptr;
+
+			u64 row = 0;
+			CMemoryReader* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
+
+			if (rowReader == nullptr)
+				break;
+
+			while (!rowReader->eof()) {
+
+				u64 col = 0;
+				CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+
+				if (colReader == nullptr)
+					break;
+
+				IValueMetaObjectAttribute* attribute = FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+				while (!colReader->eof()) {
+					if (col > 0) {
+						wxASSERT(attribute);
+						int position = assoc[col];
+						IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+					}
+					else {
+						statement->SetParamString(1, colReader->r_stringZ());
+					}
+				}
+
+				colReaderPrev = colReader;
+			}
+
+			statement->RunQuery();
+			rowReaderPrev = rowReader;
+		}
+
+		statement->Close();
+	}
+
+	wxMemoryBuffer tableBuffer;
+	if (reader.r_chunk(2, tableBuffer)) {
+
+		CMemoryReader* tableReaderPrev = nullptr;
+		CMemoryReader objectReader(tableBuffer);
+
+		while (true) {
+
+			CMemoryReader* rowReaderPrev = nullptr;
+
+			u64 table = 0;
+			CMemoryReader* tableReader(objectReader.open_chunk_iterator(table, tableReaderPrev));
+
+			if (tableReader == nullptr)
+				break;
+
+			CValueMetaObjectTableData* object = FindAnyObjectByFilter<CValueMetaObjectTableData, meta_identifier_t>(table);
+			if (object != nullptr) {
+
+				const wxString& tableName = object->GetTableNameDB();
+				wxString queryText = "INSERT INTO " + tableName + " (";
+				queryText += "uuid";
+
+				std::map<meta_identifier_t, int> assoc; int position = 2;
+
+				for (const auto object : object->GetGenericAttributeArrayObject()) {
+					queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
+					assoc.insert_or_assign(object->GetMetaID(),
+						position);
+					position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+				}
+				queryText += ") VALUES (?";
+				for (const auto object : object->GetGenericAttributeArrayObject()) {
+					unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+					for (unsigned int i = 0; i < fieldCount; i++) {
+						queryText += ", ?";
+					}
+				}
+
+				queryText += ");";
+
+				IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+				if (statement == nullptr)
+					return false;
+
+				while (!tableReader->eof()) {
+
+					CMemoryReader* colReaderPrev = nullptr;
+
+					u64 row = 0;
+					CMemoryReader* rowReader(tableReader->open_chunk_iterator(row, rowReaderPrev));
+
+					if (rowReader == nullptr)
+						break;
+
+					while (!rowReader->eof()) {
+
+						u64 col = 0;
+						CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+
+						if (colReader == nullptr)
+							break;
+
+						IValueMetaObjectAttribute* attribute = object->FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+						while (!colReader->eof()) {
+							if (col > 0) {
+								wxASSERT(attribute);
+								int position = assoc[col];
+								IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+							}
+							else {
+								statement->SetParamString(1, colReader->r_stringZ());
+							}
+						}
+
+						colReaderPrev = colReader;
+					}
+
+					statement->RunQuery();
+					rowReaderPrev = rowReader;
+				}
+
+				statement->Close();
+			}
+
+			tableReaderPrev = tableReader;
+		}
+	}
+
+	return true;
+}
+
+bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) const
+{
+	IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
+	if (dbResultSet == nullptr)
+		return false;
+
+	unsigned int row = 0;
+
+	CMemoryWriter objectWriter;
+
+	while (dbResultSet->Next()) {
+
+		CMemoryWriter rowWriter;
+
+		CMemoryWriter rowGuidWriter;
+		rowGuidWriter.w_stringZ(dbResultSet->GetResultString(wxT("uuid")));
+		rowWriter.w_chunk(0, rowGuidWriter.buffer());
+
+		for (const auto object : GetGenericAttributeArrayObject()) {
+
+			if (IsDataReference(object->GetMetaID()))
+				continue;
+
+			CMemoryWriter attrWriter;
+			IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+			rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
+		}
+
+		objectWriter.w_chunk(row++, rowWriter.buffer());
+	}
+
+	writer.w_chunk(1, objectWriter.buffer());
+
+	dbResultSet->Close();
+
+	CMemoryWriter tableObjectWriter;
+	for (const auto table : GetTableArrayObject()) {
+
+		IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), table->GetTableNameDB());
+		if (dbResultSet == nullptr)
+			return false;
+
+		unsigned int row = 0;
+
+		CMemoryWriter tableWriter;
+
+		while (dbResultSet->Next()) {
+
+			CMemoryWriter rowWriter;
+			CMemoryWriter rowGuidWriter;
+			rowGuidWriter.w_stringZ(dbResultSet->GetResultString(wxT("uuid")));
+			rowWriter.w_chunk(0, rowGuidWriter.buffer());
+
+			for (const auto object : table->GetGenericAttributeArrayObject()) {
+				CMemoryWriter attrWriter;
+				IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+				rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
+			}
+
+			tableWriter.w_chunk(row++, rowWriter.buffer());
+		}
+
+		tableObjectWriter.w_chunk(table->GetMetaID(), tableWriter.buffer());
+
+		dbResultSet->Close();
+	}
+
+	writer.w_chunk(2, tableObjectWriter.buffer());
 	return true;
 }
 
@@ -758,6 +1003,112 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 	if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 		return false;
 
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
+{
+	wxMemoryBuffer objectBuffer;
+
+	if (reader.r_chunk(1, objectBuffer)) {
+
+		const wxString& tableName = GetTableNameDB();
+		wxString queryText = "INSERT INTO " + tableName + " (";
+
+		std::map<meta_identifier_t, int> assoc; int position = 1;
+		bool firstInsert = true, firstValue = true;
+		for (const auto object : GetGenericAttributeArrayObject()) {
+			queryText = queryText + (firstInsert ? wxT(" ") : wxT(", ")) + IValueMetaObjectAttribute::GetSQLFieldName(object);
+			assoc.insert_or_assign(object->GetMetaID(),
+				position);
+			position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			firstInsert = false;
+		}
+		queryText += ") VALUES (";
+		for (const auto object : GetGenericAttributeArrayObject()) {
+			unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			for (unsigned int i = 0; i < fieldCount; i++) {
+				queryText += (firstValue ? wxT("?") : wxT(", ?"));
+				firstValue = false;
+			}
+		}
+
+		queryText += ");";
+
+		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		if (statement == nullptr)
+			return false;
+
+		CMemoryReader* rowReaderPrev = nullptr;
+		CMemoryReader objectReader(objectBuffer);
+
+		while (true) {
+
+			CMemoryReader* colReaderPrev = nullptr;
+
+			u64 row = 0;
+			CMemoryReader* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
+
+			if (rowReader == nullptr)
+				break;
+
+			while (!rowReader->eof()) {
+
+				u64 col = 0;
+				CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+
+				if (colReader == nullptr)
+					break;
+
+				IValueMetaObjectAttribute* attribute = FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+				while (!colReader->eof()) {
+					wxASSERT(attribute);
+					int position = assoc[col];
+					IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+				}
+
+				colReaderPrev = colReader;
+			}
+
+			statement->RunQuery();
+			rowReaderPrev = rowReader;
+		}
+
+		statement->Close();
+	}
+
+	return true;
+}
+
+bool IValueMetaObjectRegisterData::SaveTableData(CMemoryWriter& writer) const
+{
+	IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
+	if (dbResultSet == nullptr)
+		return false;
+
+	unsigned int row = 0;
+
+	CMemoryWriter objectWriter;
+
+	while (dbResultSet->Next()) {
+
+		CMemoryWriter rowWriter;
+
+		for (const auto object : GetGenericAttributeArrayObject()) {
+
+			CMemoryWriter attrWriter;
+			IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+			rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
+		}
+
+		objectWriter.w_chunk(row++, rowWriter.buffer());
+	}
+
+	writer.w_chunk(1, objectWriter.buffer());
+
+	dbResultSet->Close();
 	return true;
 }
 
@@ -1559,15 +1910,17 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 
 	wxASSERT(attribute);
 
-	number_t resultCode = 1;
+	const int interval = 20000101;
 
+	number_t resultCode = 1;
 	const CTypeDescription& typeDesc = attribute->GetTypeDesc();
 
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
+			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
 			sequence_table,
+			stringUtils::IntToStr(interval),
 			m_metaObject->GetDocPath(),
 			strPrefix
 		);
@@ -1579,8 +1932,9 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
 
 		db_query->RunQuery(
-			wxT("INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) ON CONFLICT(meta_guid, prefix) DO UPDATE SET meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
+			wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) ON CONFLICT(interval, meta_guid, prefix) DO UPDATE SET interval = excluded.interval, meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
 			sequence_table,
+			stringUtils::IntToStr(interval),
 			m_metaObject->GetDocPath(),
 			strPrefix, //prefix
 			resultCode.ToString()
@@ -1591,8 +1945,9 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 	else {
 
 		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
-			wxT("SELECT meta_guid, prefix, number FROM %s WHERE meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
+			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
 			sequence_table,
+			stringUtils::IntToStr(interval),
 			m_metaObject->GetDocPath(),
 			strPrefix
 		);
@@ -1604,8 +1959,9 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 			resultCode = resultSet->GetResultNumber(wxT("number")) + 1;
 
 		db_query->RunQuery(
-			wxT("UPDATE OR INSERT INTO %s (meta_guid, prefix, number) VALUES ('%s', '%s', %s) MATCHING (meta_guid, prefix);"),
+			wxT("UPDATE OR INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) MATCHING (interval, meta_guid, prefix);"),
 			sequence_table,
+			stringUtils::IntToStr(interval),
 			m_metaObject->GetDocPath(),
 			strPrefix, //prefix
 			resultCode.ToString()

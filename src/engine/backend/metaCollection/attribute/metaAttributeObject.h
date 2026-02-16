@@ -122,7 +122,7 @@ public:
 	static unsigned short GetSQLFieldCount(const IValueMetaObjectAttribute* metaAttr);
 	static wxString GetSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& aggr = wxEmptyString);
 	static wxString GetCompositeSQLFieldName(const IValueMetaObjectAttribute* metaAttr, const wxString& cmp = wxT("="));
-	static wxString GetExcluteSQLFieldName(const IValueMetaObjectAttribute* metaAttr);
+	static wxString GetExcludeSQLFieldName(const IValueMetaObjectAttribute* metaAttr);
 
 	//get data sql
 	static sqlField_t GetSQLFieldData(const IValueMetaObjectAttribute* metaAttr);
@@ -132,11 +132,18 @@ public:
 
 	//set value attribute 
 	static void SetValueAttribute(const IValueMetaObjectAttribute* attribute, const CValue& cValue, class IPreparedStatement* statement, int& position);
+	static void SetValueAttribute(const IValueMetaObjectAttribute* attribute, const CValue& cValue, class IPreparedStatement* statement);
 
 	//get value from attribute
 	static bool GetValueAttribute(const wxString& fieldName, const eFieldTypes& fldType, const IValueMetaObjectAttribute* metaAttr, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
 	static bool GetValueAttribute(const wxString& fieldName, const IValueMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
 	static bool GetValueAttribute(const IValueMetaObjectAttribute* attribute, CValue& retValue, class IDatabaseResultSet* resultSet, bool createData = true);
+
+	//store value 
+	static void SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement,
+		int& position);
+	static void SetBinaryData(const IValueMetaObjectAttribute* metaAttr, const CMemoryReader& reader, IPreparedStatement* statement);
+	static void GetBinaryData(const IValueMetaObjectAttribute* metaAttr, CMemoryWriter& writer, IDatabaseResultSet* resultSet);
 
 	//contain type
 	bool ContainType(const eValueTypes& valType) const;

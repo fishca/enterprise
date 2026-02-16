@@ -45,9 +45,13 @@ public:
 	//rollback to config db
 	virtual bool RollbackDatabase() { return true; }
 
-	//load/save form file
-	virtual bool LoadFromFile(const wxString& strFileName) { return true; }
-	virtual bool SaveToFile(const wxString& strFileName) { return true; }
+	//load/save config form buffer
+	virtual bool LoadConfigFromBuffer(const wxMemoryBuffer& buffer) { return true; }
+	virtual bool SaveConfigToBuffer(wxMemoryBuffer& buffer) { return true; }
+
+	//load/save config form buffer
+	virtual bool LoadDataFromBuffer(const wxMemoryBuffer& buffer) { return true; }
+	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer) { return true; }
 
 	//get common module 
 	virtual CValueModuleManagerConfiguration* GetModuleManager() const = 0;
@@ -70,6 +74,10 @@ public:
 	virtual bool OnBeforeSaveDatabase(int flags) { return false; }
 	virtual bool OnSaveDatabase(int flags) { return false; }
 	virtual bool OnAfterSaveDatabase(bool roolback, int flags) { return false; }
+
+	//load/save form file
+	bool LoadConfigFromFile(const wxString& strFileName);
+	bool SaveConfigToFile(const wxString& strFileName);
 
 protected:
 
@@ -129,7 +137,7 @@ public:
 	virtual bool ClearDatabase();
 
 	//load/save form file
-	virtual bool LoadFromFile(const wxString& strFileName);
+	virtual bool LoadConfigFromBuffer(const wxMemoryBuffer& buffer);
 
 	virtual CValueModuleManagerConfiguration* GetModuleManager() const { return m_moduleManager; }
 	virtual CValueMetaObjectConfiguration* GetCommonMetaObject() const { return m_commonObject; }
@@ -177,8 +185,8 @@ protected:
 class BACKEND_API CMetaDataConfiguration : public CMetaDataConfigurationFile {
 public:
 	CMetaDataConfiguration();
-	virtual bool LoadFromFile(const wxString& strFileName) {
-		if (CMetaDataConfigurationFile::LoadFromFile(strFileName)) {
+	virtual bool LoadConfigFromFile(const wxString& strFileName) {
+		if (CMetaDataConfigurationFile::LoadConfigFromFile(strFileName)) {
 			Modify(true); //set modify for check metaData
 			return RunDatabase();
 		}
@@ -206,6 +214,14 @@ protected:
 };
 
 class BACKEND_API CMetaDataConfigurationStorage : public CMetaDataConfiguration {
+
+	struct CSequenceData {
+		int m_interval;
+		wxString m_strGuid;
+		wxString m_strPrefix;
+		int m_number;
+	};
+
 public:
 
 	CMetaDataConfigurationStorage();
@@ -240,7 +256,11 @@ public:
 	virtual bool RollbackDatabase();
 
 	//save form file
-	virtual bool SaveToFile(const wxString& strFileName);
+	virtual bool SaveConfigToBuffer(wxMemoryBuffer& buffer);
+
+	//load/save config form buffer
+	virtual bool LoadDataFromBuffer(const wxMemoryBuffer& buffer);
+	virtual bool SaveDataToBuffer(wxMemoryBuffer& buffer);
 
 	// get config metaData 
 	virtual IMetaDataConfiguration* GetConfiguration() const { return m_configMetadata; }
@@ -251,8 +271,13 @@ public:
 	////////////////////////////////////////////////////////////////
 
 	static bool TableAlreadyCreated();
+
 	static void CreateConfigTable();
 	static void CreateConfigSaveTable();
+	
+	static void CreateConfigSequence();
+
+	static void ResetSequence();
 
 	////////////////////////////////////////////////////////////////
 
@@ -270,17 +295,22 @@ protected:
 	virtual bool OnDestroy();
 
 	//header saver 
-	bool SaveHeader(CMemoryWriter& writterData);
+	bool SaveHeader(CMemoryWriter& writerData);
 
 	//loader/saver/deleter: 
-	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags = defaultFlag);
-	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, IValueMetaObject* object, int flags = defaultFlag);
+	bool SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
+	bool SaveDatabase(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags = defaultFlag);
+	bool SaveChildMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, IValueMetaObject* object, int flags = defaultFlag);
 	bool DeleteCommonMetadata(const class_identifier_t& clsid);
 	bool DeleteMetadata(const class_identifier_t& clsid);
 	bool DeleteChildMetadata(const class_identifier_t& clsid, IValueMetaObject* object);
 
 private:
+
+	//load/save sequence form buffer
+	bool LoadSequenceFromBuffer(const CMemoryReader& reader);
+	bool SaveSequenceToBuffer(CMemoryWriter& writer);
+
 	CMetaDataConfiguration* m_configMetadata;
 };
 

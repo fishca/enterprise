@@ -6,6 +6,8 @@
 #include "backend/backend_metatree.h"
 #include "backend/metaCtor.h"
 
+#include "backend/restructureInfo.h"
+
 #include "backend/interfaceHelper.h"
 #include "backend/roleHelper.h"
 
@@ -57,63 +59,7 @@ const class_identifier_t g_metaExternalDataProcessorCLSID = string_to_clsid("MD_
 const class_identifier_t g_metaExternalReportCLSID = string_to_clsid("MD_ERPT");
 
 //*******************************************************************************
-//*                             Structure changes                               *
-//*******************************************************************************
-
-enum ERestructure {
-
-	restructure_info,
-	restructure_warning,
-	restructure_error,
-};
-
-class BACKEND_API CRestructureInfo {
-
-	struct CRestructureData {
-
-		ERestructure m_type;
-		wxString m_strDescr;
-
-		CRestructureData(ERestructure t, const wxString& str) :
-			m_type(t), m_strDescr(str)
-		{
-		}
-	};
-
-	std::vector<CRestructureData> m_listRestructure;
-
-public:
-
-	bool HasRestructureInfo() const { return m_listRestructure.size() > 0; }
-
-	void AppendInfo(const wxString& str) {
-		m_listRestructure.emplace_back(
-			ERestructure::restructure_info, str
-		);
-	}
-
-	void AppendWarning(const wxString& str) {
-		m_listRestructure.emplace_back(
-			ERestructure::restructure_warning, str
-		);
-	}
-
-	void AppendError(const wxString& str) {
-		m_listRestructure.emplace_back(
-			ERestructure::restructure_error, str
-		);
-	}
-
-	void ResetRestructureInfo() { return m_listRestructure.clear(); }
-
-	wxString GetDescription(unsigned int idx) const { return m_listRestructure.at(idx).m_strDescr; }
-	ERestructure GetType(unsigned int idx) const { return m_listRestructure.at(idx).m_type; }
-
-	unsigned int GetCount() const { return m_listRestructure.size(); }
-};
-
-//*******************************************************************************
-//*                             IValueMetaObject                                     *
+//*                             IValueMetaObject                                *
 //*******************************************************************************
 
 #define defaultMetaID 1000
@@ -137,6 +83,8 @@ enum metaObjectFlags {
 	copyObjectFlag = 0x0100,
 	pasteObjectFlag = 0x0200,
 };
+
+#define rt_ref_chunk 0x800060
 
 //flags metaobject 
 #define metaDeletedFlag 0x0001000
@@ -179,7 +127,7 @@ public:
 		return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) :
 			m_propertySynonym->GetValueAsTranslateString();
 	}
-	
+
 	void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
 
 	wxString GetComment() const { return m_propertyComment->GetValueAsString(); }
@@ -338,6 +286,10 @@ public:
 	bool CreateMetaTable(IMetaDataConfiguration* srcMetaData, int flags = createMetaTable);
 	bool UpdateMetaTable(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject);
 	bool DeleteMetaTable(IMetaDataConfiguration* srcMetaData);
+
+	// load & save config data 
+	virtual bool LoadTableData(const CMemoryReader& reader) { return true; }
+	virtual bool SaveTableData(CMemoryWriter& writer) const { return true; }
 
 	//events: 
 	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);

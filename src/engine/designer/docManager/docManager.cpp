@@ -30,7 +30,7 @@ CDesignerDocManager::CDesignerDocManager()
 {
 	AddDocTemplate(g_metaExternalDataProcessorCLSID, wxT("External data processor"), wxT("*.edp"), wxT("edp"), _("Data processor Doc"), _("Data processor View"), CLASSINFO(CDataProcessorFileDocument), CLASSINFO(CDataProcessorEditView), wxTEMPLATE_VISIBLE);
 	AddDocTemplate(g_metaExternalReportCLSID, wxT("External report"), wxT("*.erp"), wxT("erp"), _("Report Doc"), _("Report View"), CLASSINFO(CReportFileDocument), CLASSINFO(CReportEditView), wxTEMPLATE_VISIBLE);
-	AddDocTemplate(g_metaCommonMetadataCLSID, wxT("Configuration"), wxT("*.mcf"), wxT("mcf"), _("Configuration Doc"), _("Configuration View"), CLASSINFO(CMetadataFileDocument), CLASSINFO(CMetadataEditView), wxTEMPLATE_ONLY_OPEN);
+	AddDocTemplate(g_metaCommonMetadataCLSID, wxT("Configuration"), wxT("*.mcf"), wxT("mcf"), _("Configuration Doc"), _("Configuration View"), CLASSINFO(CMetadataFileDocument), CLASSINFO(CMetadataEditView), wxTEMPLATE_VISIBLE | wxTEMPLATE_ONLY_OPEN);
 
 	//common objects 
 	AddDocTemplate(g_metaCommonModuleCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));

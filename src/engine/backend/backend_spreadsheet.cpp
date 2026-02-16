@@ -487,14 +487,14 @@ bool CBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)
 bool CBackendSpreadsheetObject::SaveToFile(const wxString& strFileName)
 {
 	//common data
-	CMemoryWriter writterData;
+	CMemoryWriter writerData;
 
-	if (!CSpreadsheetDescriptionMemory::SaveData(writterData, m_spreadsheetDesc))
+	if (!CSpreadsheetDescriptionMemory::SaveData(writerData, m_spreadsheetDesc))
 		return false;
 
 	std::ofstream datafile;
 	datafile.open(strFileName.ToStdWstring(), std::ios::binary);
-	datafile.write(reinterpret_cast <char*> (writterData.pointer()), writterData.size());
+	datafile.write(reinterpret_cast <char*> (writerData.pointer()), writerData.size());
 	datafile.close();
 
 	return true;

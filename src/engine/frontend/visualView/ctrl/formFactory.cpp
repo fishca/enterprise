@@ -279,18 +279,18 @@ bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 	// Write some control to clipboard
 	if (wxTheClipboard->Open()) {
 
-		CMemoryWriter writterMemory;
+		CMemoryWriter writerMemory;
 
-		CMemoryWriter writterCopyMemory;
-		writterCopyMemory.w_u8(copyOnPaste);
+		CMemoryWriter writerCopyMemory;
+		writerCopyMemory.w_u8(copyOnPaste);
 
-		writterMemory.w_chunk(copyBlock, writterCopyMemory.pointer(), writterCopyMemory.size());
+		writerMemory.w_chunk(copyBlock, writerCopyMemory.pointer(), writerCopyMemory.size());
 
-		if (srcControl->CopyObject(writterMemory)) {
+		if (srcControl->CopyObject(writerMemory)) {
 
 			wxDataObjectComposite* composite_object = new wxDataObjectComposite;
 			wxCustomDataObject* custom_object = new wxCustomDataObject(oes_clipboard_frame);
-			custom_object->SetData(writterMemory.size(), writterMemory.pointer()); // the +1 is used to force copy of the \0 character		
+			custom_object->SetData(writerMemory.size(), writerMemory.pointer()); // the +1 is used to force copy of the \0 character		
 
 			composite_object->Add(custom_object);
 			composite_object->Add(new wxTextDataObject(srcControl->GetControlName()), true);

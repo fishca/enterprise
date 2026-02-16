@@ -639,7 +639,7 @@ IValueRecordDataObject* IValueMetaObjectRecordDataMutableRef::CreateRecordDataOb
 }
 
 //***********************************************************************
-//*						IValueMetaObjectRecordDataHierarchyMutableRef			*
+//*						IValueMetaObjectRecordDataHierarchyMutableRef	*
 //***********************************************************************
 
 IValueMetaObjectRecordDataHierarchyMutableRef::IValueMetaObjectRecordDataHierarchyMutableRef()

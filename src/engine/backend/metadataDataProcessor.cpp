@@ -318,16 +318,16 @@ bool CMetaDataDataProcessor::LoadFromFile(const wxString& strFileName)
 bool CMetaDataDataProcessor::SaveToFile(const wxString& strFileName)
 {
 	//common data
-	CMemoryWriter writterData;
+	CMemoryWriter writerData;
 
 	//Save header info 
-	if (!SaveHeader(writterData))
+	if (!SaveHeader(writerData))
 		return false;
 
 	m_fullPath = strFileName;
 
 	//Save common object
-	if (!SaveCommonMetadata(g_metaExternalDataProcessorCLSID, writterData, saveConfigFlag))
+	if (!SaveCommonMetadata(g_metaExternalDataProcessorCLSID, writerData, saveConfigFlag))
 		return false;
 
 	//Delete common object
@@ -336,7 +336,7 @@ bool CMetaDataDataProcessor::SaveToFile(const wxString& strFileName)
 
 	std::ofstream datafile;
 	datafile.open(strFileName.ToStdWstring(), std::ios::binary);
-	datafile.write(reinterpret_cast <char*> (writterData.pointer()), writterData.size());
+	datafile.write(reinterpret_cast <char*> (writerData.pointer()), writerData.size());
 	datafile.close();
 
 	return true;
@@ -448,44 +448,44 @@ bool CMetaDataDataProcessor::LoadChildMetadata(const class_identifier_t&, CMemor
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveHeader(CMemoryWriter& writterData)
+bool CMetaDataDataProcessor::SaveHeader(CMemoryWriter& writerData)
 {
-	CMemoryWriter writterMemory;
-	writterMemory.w_u64(sign_dataProcessor); //sign 
-	writterMemory.w_u32(m_version); // version 1 - DEFAULT
-	writterMemory.w_stringZ(m_commonObject->GetDocPath()); //guid conf 
+	CMemoryWriter writerMemory;
+	writerMemory.w_u64(sign_dataProcessor); //sign 
+	writerMemory.w_u32(m_version); // version 1 - DEFAULT
+	writerMemory.w_stringZ(m_commonObject->GetDocPath()); //guid conf 
 
-	writterData.w_chunk(eHeaderBlock, writterMemory.pointer(), writterMemory.size());
+	writerData.w_chunk(eHeaderBlock, writerMemory.pointer(), writerMemory.size());
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writterData, int flags)
+bool CMetaDataDataProcessor::SaveCommonMetadata(const class_identifier_t& clsid, CMemoryWriter& writerData, int flags)
 {
 	//Save common object
-	CMemoryWriter writterMemory;
+	CMemoryWriter writerMemory;
 
-	CMemoryWriter writterMetaMemory;
-	CMemoryWriter writterDataMemory;
+	CMemoryWriter writerMetaMemory;
+	CMemoryWriter writerDataMemory;
 
-	if (!m_commonObject->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
+	if (!m_commonObject->SaveMetaObject(m_ownerMeta, writerDataMemory, flags)) {
 		return false;
 	}
 
-	writterMetaMemory.w_chunk(eDataBlock, writterDataMemory.pointer(), writterDataMemory.size());
+	writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 
-	CMemoryWriter writterChildMemory;
+	CMemoryWriter writerChildMemory;
 
-	if (!SaveChildMetadata(clsid, writterChildMemory, m_commonObject, flags))
+	if (!SaveChildMetadata(clsid, writerChildMemory, m_commonObject, flags))
 		return false;
 
-	writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
-	writterMemory.w_chunk(m_commonObject->GetMetaID(), writterMetaMemory.pointer(), writterMetaMemory.size());
+	writerMetaMemory.w_chunk(eChildBlock, writerChildMemory.pointer(), writerChildMemory.size());
+	writerMemory.w_chunk(m_commonObject->GetMetaID(), writerMetaMemory.pointer(), writerMetaMemory.size());
 
-	writterData.w_chunk(clsid, writterMemory.pointer(), writterMemory.size());
+	writerData.w_chunk(clsid, writerMemory.pointer(), writerMemory.size());
 	return true;
 }
 
-bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writterData, IValueMetaObject* object, int flags)
+bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemoryWriter& writerData, IValueMetaObject* object, int flags)
 {
 	for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 
@@ -493,28 +493,28 @@ bool CMetaDataDataProcessor::SaveChildMetadata(const class_identifier_t&, CMemor
 		if (!object->FilterChild(child->GetClassType()))
 			continue;
 
-		CMemoryWriter writterMemory;
+		CMemoryWriter writerMemory;
 		if (child->IsDeleted())
 			continue;
 
-		CMemoryWriter writterMetaMemory;
-		CMemoryWriter writterDataMemory;
-		if (!child->SaveMetaObject(m_ownerMeta, writterDataMemory, flags)) {
+		CMemoryWriter writerMetaMemory;
+		CMemoryWriter writerDataMemory;
+		if (!child->SaveMetaObject(m_ownerMeta, writerDataMemory, flags)) {
 			return false;
 		}
 
-		writterMetaMemory.w_chunk(eDataBlock, writterDataMemory.pointer(), writterDataMemory.size());
+		writerMetaMemory.w_chunk(eDataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 
-		CMemoryWriter writterChildMemory;
+		CMemoryWriter writerChildMemory;
 
-		if (!SaveChildMetadata(child->GetClassType(), writterChildMemory, child, flags)) {
+		if (!SaveChildMetadata(child->GetClassType(), writerChildMemory, child, flags)) {
 			return false;
 		}
 
-		writterMetaMemory.w_chunk(eChildBlock, writterChildMemory.pointer(), writterChildMemory.size());
-		writterMemory.w_chunk(child->GetMetaID(), writterMetaMemory.pointer(), writterMetaMemory.size());
+		writerMetaMemory.w_chunk(eChildBlock, writerChildMemory.pointer(), writerChildMemory.size());
+		writerMemory.w_chunk(child->GetMetaID(), writerMetaMemory.pointer(), writerMetaMemory.size());
 
-		writterData.w_chunk(child->GetClassType(), writterMemory.pointer(), writterMemory.size());
+		writerData.w_chunk(child->GetClassType(), writerMemory.pointer(), writerMemory.size());
 	}
 
 	return true;

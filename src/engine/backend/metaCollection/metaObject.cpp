@@ -421,12 +421,12 @@ bool IValueMetaObject::CopyObject(CMemoryWriter& writer) const
 
 		static bool CopyObject(const IValueMetaObject* copyObject, CMemoryWriter& writer)
 		{
-			CMemoryWriter writterHeaderMemory;
-			writterHeaderMemory.w_s32(copyObject->m_metaData->GetVersion());
-			writterHeaderMemory.w_stringZ(copyObject->m_metaCopyGuid);
-			writer.w_chunk(headerBlock, writterHeaderMemory.pointer(), writterHeaderMemory.size());
+			CMemoryWriter writerHeaderMemory;
+			writerHeaderMemory.w_s32(copyObject->m_metaData->GetVersion());
+			writerHeaderMemory.w_stringZ(copyObject->m_metaCopyGuid);
+			writer.w_chunk(headerBlock, writerHeaderMemory.pointer(), writerHeaderMemory.size());
 
-			CMemoryWriter writterChildMemory;
+			CMemoryWriter writerChildMemory;
 
 			for (const auto object : copyObject->m_children) {
 
@@ -434,27 +434,27 @@ bool IValueMetaObject::CopyObject(CMemoryWriter& writer) const
 					continue;
 				if (object->IsDeleted())
 					continue;
-				CMemoryWriter writterMemory;
-				if (!CopyObject(object, writterMemory))
+				CMemoryWriter writerMemory;
+				if (!CopyObject(object, writerMemory))
 					return false;
 
-				writterChildMemory.w_chunk(object->GetClassType(), writterMemory.pointer(), writterMemory.size());
+				writerChildMemory.w_chunk(object->GetClassType(), writerMemory.pointer(), writerMemory.size());
 			}
 
-			writer.w_chunk(childBlock, writterChildMemory.pointer(), writterChildMemory.size());
+			writer.w_chunk(childBlock, writerChildMemory.pointer(), writerChildMemory.size());
 
-			CMemoryWriter writterDataMemory;
+			CMemoryWriter writerDataMemory;
 			
-			if (!copyObject->CopyProperty(writterDataMemory))
+			if (!copyObject->CopyProperty(writerDataMemory))
 				return false;
 
-			if (!copyObject->SaveInterface(writterDataMemory))
+			if (!copyObject->SaveInterface(writerDataMemory))
 				return false;
 
-			if (!copyObject->SaveRole(writterDataMemory))
+			if (!copyObject->SaveRole(writerDataMemory))
 				return false;
 
-			writer.w_chunk(dataBlock, writterDataMemory.pointer(), writterDataMemory.size());
+			writer.w_chunk(dataBlock, writerDataMemory.pointer(), writerDataMemory.size());
 			return true;
 		}
 	};

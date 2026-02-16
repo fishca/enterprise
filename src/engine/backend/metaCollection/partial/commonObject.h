@@ -656,6 +656,10 @@ public:
 	//get command section 
 	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Combined; }
 
+	// load & save config data 
+	virtual bool LoadTableData(const CMemoryReader& reader);
+	virtual bool SaveTableData(CMemoryWriter& writer) const;
+
 protected:
 
 	//predefined array 
@@ -1019,6 +1023,10 @@ public:
 
 	//special functions for DB 
 	virtual wxString GetTableNameDB() const;
+
+	// load & save config data 
+	virtual bool LoadTableData(const CMemoryReader& reader);
+	virtual bool SaveTableData(CMemoryWriter& writer) const;
 
 protected:
 

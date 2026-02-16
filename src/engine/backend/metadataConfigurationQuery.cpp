@@ -201,10 +201,10 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	}
 
 	//common data
-	CMemoryWriter writterData;
+	CMemoryWriter writerData;
 
 	//Save header info 
-	if (!SaveHeader(writterData)) {
+	if (!SaveHeader(writerData)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 		db_query->RollBack(); return false;
 #else 
@@ -213,7 +213,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	}
 
 	//Save common object
-	if (!SaveCommonMetadata(g_metaCommonMetadataCLSID, writterData, flags)) {
+	if (!SaveCommonMetadata(g_metaCommonMetadataCLSID, writerData, flags)) {
 #if _USE_SAVE_METADATA_IN_TRANSACTION == 1
 		db_query->RollBack(); return false;
 #else 
@@ -231,7 +231,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	if (!prepStatement) return false;
 
 	prepStatement->SetParamString(1, config_name);
-	prepStatement->SetParamBlob(2, writterData.pointer(), writterData.size());
+	prepStatement->SetParamBlob(2, writerData.pointer(), writerData.size());
 	prepStatement->SetParamString(3, m_metaGuid.str());
 
 	if (prepStatement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
@@ -251,7 +251,7 @@ bool CMetaDataConfigurationStorage::OnSaveDatabase(int flags)
 	}
 
 	m_md5Hash = wxMD5::ComputeMd5(
-		wxBase64Encode(writterData.pointer(), writterData.size())
+		wxBase64Encode(writerData.pointer(), writerData.size())
 	);
 
 	if ((flags & saveConfigFlag) != 0) {
@@ -423,6 +423,7 @@ bool CMetaDataConfigurationStorage::ReCreateDatabase()
 		db_query->Commit();
 	}
 
+	ResetSequence();
 	return true;
 }
 
@@ -468,7 +469,8 @@ bool CMetaDataConfigurationStorage::RollbackDatabase()
 bool CMetaDataConfigurationStorage::TableAlreadyCreated()
 {
 	return db_query->TableExists(config_table) &&
-		db_query->TableExists(config_save_table);
+		db_query->TableExists(config_save_table) &&
+		db_query->TableExists(sequence_table);
 }
 
 void CMetaDataConfigurationStorage::CreateConfigTable() {
@@ -514,3 +516,115 @@ void CMetaDataConfigurationStorage::CreateConfigSaveTable() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CMetaDataConfigurationStorage::CreateConfigSequence()
+{
+	if (!db_query->TableExists(sequence_table)) {
+
+		db_query->RunQuery(wxT("create table %s ("
+			"interval		   INTEGER       NOT NULL,"
+			"meta_guid         VARCHAR(36)   NOT NULL,"
+			"prefix			   VARCHAR(24)   NOT NULL,"
+			"number			   INTEGER       NOT NULL,"
+			"primary key (interval, meta_guid, prefix));"),
+
+			sequence_table);
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+			db_query->RunQuery(
+				wxT("create index if not exists sequence_index on %s (interval, meta_guid, prefix);"),
+				sequence_table
+			);
+		}
+		else {
+			db_query->RunQuery(
+				wxT("create index sequence_index on %s (interval, meta_guid, prefix);"),
+				sequence_table
+			);
+		}
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CMetaDataConfigurationStorage::ResetSequence()
+{
+	if (db_query->TableExists(sequence_table))
+		db_query->RunQuery(wxT("delete from %s;"), sequence_table);
+}
+
+bool CMetaDataConfigurationStorage::LoadSequenceFromBuffer(const CMemoryReader& reader)
+{
+	if (!db_query->TableExists(sequence_table))
+		return false;
+
+	u64 seq_idx = 0;
+	CMemoryReader* seqReaderPrev = nullptr;
+
+	while (true) {
+
+		CMemoryReader* seqReader = reader.open_chunk_iterator(seq_idx, seqReaderPrev);
+
+		if (seqReader == nullptr)
+			break;
+
+		const int interval = seqReader->r_u32();
+		const wxString& strDocPath = seqReader->r_stringZ();
+		const wxString& strPrefix = seqReader->r_stringZ();
+		const int number = seqReader->r_u32();
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
+
+			db_query->RunQuery(
+				wxT("INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) ON CONFLICT(interval, meta_guid, prefix) DO UPDATE SET interval = excluded.interval, meta_guid = excluded.meta_guid, prefix = excluded.prefix, number = excluded.number;"),
+				sequence_table,
+				stringUtils::IntToStr(interval),
+				strDocPath,
+				strPrefix, //prefix
+				stringUtils::IntToStr(number)
+			);
+		}
+		else {
+
+			db_query->RunQuery(
+				wxT("UPDATE OR INSERT INTO %s (interval, meta_guid, prefix, number) VALUES (%s, '%s', '%s', %s) MATCHING (interval, meta_guid, prefix);"),
+				sequence_table,
+				stringUtils::IntToStr(interval),
+				strDocPath,
+				strPrefix, //prefix
+				stringUtils::IntToStr(number)
+			);
+		}
+
+		seqReaderPrev = seqReader;
+	};
+
+	return true;
+}
+
+bool CMetaDataConfigurationStorage::SaveSequenceToBuffer(CMemoryWriter& writer)
+{
+	if (!db_query->TableExists(sequence_table))
+		return false;
+
+	// save sequence 
+	IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(wxT("select * FROM %s;"), sequence_table);
+
+	if (resultSet == nullptr)
+		return false;
+
+	int idx = 0;
+
+	while (resultSet->Next()) {
+
+		CMemoryWriter seqWriter;
+		seqWriter.w_u32(resultSet->GetResultInt(wxT("interval")));
+		seqWriter.w_stringZ(resultSet->GetResultString(wxT("meta_guid")));
+		seqWriter.w_stringZ(resultSet->GetResultString(wxT("prefix")));
+		seqWriter.w_u32(resultSet->GetResultInt(wxT("number")));
+		writer.w_chunk(idx++, seqWriter.buffer());
+	}
+
+	resultSet->Close();
+	return true;
+}

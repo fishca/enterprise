@@ -30,6 +30,7 @@
     <ClInclude Include="backend_type.h" />
     <ClInclude Include="constantCtor.h" />
     <ClInclude Include="moduleManager\globalContextManager.h" />
+    <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="spreadsheetDescription.h" />
     <ClInclude Include="clsid.h" />
     <ClInclude Include="compiler\byteCode.h" />

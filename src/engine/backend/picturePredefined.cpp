@@ -75,42 +75,46 @@ static const wxString s_userList_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAA
 /* PNG */
 static const wxString s_authentication_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAACBklEQVR4nI2S32vTUBTH++qDL3sVfPDFP8AH/wHfBH0S9B/Yu9SQpMmE4YvtkvR2jiqssubHTbpOJ4NFK11ZW9a5NjZbOyyKE7dZqYJubl07Bmuv3MKS3i4VDxzIvef7OTnnnuPzDZh4P3kh9EC+IbEwAjhYl1j4U2A0OUQpd4JU7KLPyyTm+RWBio9GAropMmozFlz4/dqwTu1CHVWLDZSe3+gqILUnsdoR4PSiQMuM4I9fcxKEKPn0RSzXXE1voU/VfbT14dDTcQxrsBYzTgKBVo9r9q+h4KBjrUArbbeFAPxhr9QJUW6xhp48nEWTYwmUWdgkYuuF70hitYaTAIwZNi6tX4RhK7eD3ue/IcDpROzd0hcU4fVyXwXaM9Modb3KzS7W0NNHL4k7M2F1pYAadd+Ait+bEc3DQbiy1ui1UFreJu5nRPNgwq/c7Zv99IhIqycfN/YIYSq5juamc+QkKvtIYuAxZohdiPBGOj1fIcTF5a+olCX/nnlVRZN84u25ZZrwK9enxudanzf/OGI9mkFGNOOccWxqPNnCWs+NBJy+8ma23HGBg567LZU7gNcLnrCv9xbxS2EWNq3szrlpWNltPPujx7R8eWiCXiu0ehPweruc33Xh/C7ehTaO/RM+M4nWbodZ2Eol7Q4uO8zAlkCpt/4LPrMgpV4FHFzDjr+HCf8CCy0ydxOb4e4AAAAASUVORK5CYII=";
 
+/* PNG */
+static const wxString s_print_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA3klEQVR4nGNgQAIV3XP+E4MZcIGK7jn/CYFBaEBWzeRDaZX9/0HYr2orURimPrN20nYGEGP9gSv/Nxy8Apbs3v4BLwapAakF6cmsmfQebABIgBQDXjzcBFaPYUB4087/9ase49Rcu+rx/4jGnXD1GAZMWXv6f0TTTpx+B2kGqcFpwAYSMYoBU5fvhocuITx1+R7sLqjonvP/2uO3eDFIDYoLsmonXsuun/Ipu27qR2ITEkhtdh1Iz6Q9DPX19Szp5f0KmRV9SjADcGUimBxIbVJ1t3x9fT0T9fMCqdkZAMgBlvBXeYa8AAAAAElFTkSuQmCC";
+
 #pragma endregion 
 
 void RegisterAllBackendPicture()
 {
-	::RegisterBackendPicture(wxT("structure"), g_picStructureCLSID, s_structure_16_png);
-	::RegisterBackendPicture(wxT("error"), g_picErrorCLSID, s_error_16_png);
+	::RegisterBackendPicture(wxT("Structure"), g_picStructureCLSID, s_structure_16_png);
+	::RegisterBackendPicture(wxT("Error"), g_picErrorCLSID, s_error_16_png);
 
-	::RegisterBackendPicture(wxT("closeForm"), g_picCloseFormCLSID, s_closeForm_16_png);
-	::RegisterBackendPicture(wxT("updateForm"), g_picUpdateFormCLSID, s_updateForm_16_png);
-	::RegisterBackendPicture(wxT("helpForm"), g_picHelpFormCLSID, s_helpForm_16_png);
+	::RegisterBackendPicture(wxT("CloseForm"), g_picCloseFormCLSID, s_closeForm_16_png);
+	::RegisterBackendPicture(wxT("UpdateForm"), g_picUpdateFormCLSID, s_updateForm_16_png);
+	::RegisterBackendPicture(wxT("HelpForm"), g_picHelpFormCLSID, s_helpForm_16_png);
 
-	::RegisterBackendPicture(wxT("changeForm"), g_picChangeFormCLSID, s_changeForm_16_png);
+	::RegisterBackendPicture(wxT("ChangeForm"), g_picChangeFormCLSID, s_changeForm_16_png);
 
-	::RegisterBackendPicture(wxT("add"), g_picAddCLSID, s_add_16_png);
-	::RegisterBackendPicture(wxT("edit"), g_picEditCLSID, s_edit_16_png);
-	::RegisterBackendPicture(wxT("copy"), g_picCopyCLSID, s_copy_16_png);
-	::RegisterBackendPicture(wxT("delete"), g_picDeleteCLSID, s_delete_16_png);
+	::RegisterBackendPicture(wxT("Add"), g_picAddCLSID, s_add_16_png);
+	::RegisterBackendPicture(wxT("Edit"), g_picEditCLSID, s_edit_16_png);
+	::RegisterBackendPicture(wxT("Copy"), g_picCopyCLSID, s_copy_16_png);
+	::RegisterBackendPicture(wxT("Delete"), g_picDeleteCLSID, s_delete_16_png);
 
-	::RegisterBackendPicture(wxT("addFolder"), g_picAddFolderCLSID, s_addFolder_16_png);
-	::RegisterBackendPicture(wxT("select"), g_picSelectCLSID, s_select_16_png);
+	::RegisterBackendPicture(wxT("AddFolder"), g_picAddFolderCLSID, s_addFolder_16_png);
+	::RegisterBackendPicture(wxT("Select"), g_picSelectCLSID, s_select_16_png);
 
-	::RegisterBackendPicture(wxT("filter"), g_picFilterCLSID, s_filter_16_png);
-	::RegisterBackendPicture(wxT("filterSet"), g_picFilterSetCLSID, s_filterSet_16_png);
-	::RegisterBackendPicture(wxT("filterClear"), g_picFilterClearCLSID, s_filterClear_16_png);
+	::RegisterBackendPicture(wxT("Filter"), g_picFilterCLSID, s_filter_16_png);
+	::RegisterBackendPicture(wxT("FilterSet"), g_picFilterSetCLSID, s_filterSet_16_png);
+	::RegisterBackendPicture(wxT("FilterClear"), g_picFilterClearCLSID, s_filterClear_16_png);
 
-	::RegisterBackendPicture(wxT("clone"), g_picCloneCLSID, s_clone_16_png);
-	::RegisterBackendPicture(wxT("save"), g_picSaveCLSID, s_save_16_png);
-	::RegisterBackendPicture(wxT("post"), g_picPostCLSID, s_post_16_png);
-	::RegisterBackendPicture(wxT("markAsDelete"), g_picMarkAsDeleteCLSID, s_markAsDelete_16_png);
-	::RegisterBackendPicture(wxT("generate"), g_picGenerateCLSID, s_generate_16_png);
+	::RegisterBackendPicture(wxT("Clone"), g_picCloneCLSID, s_clone_16_png);
+	::RegisterBackendPicture(wxT("Save"), g_picSaveCLSID, s_save_16_png);
+	::RegisterBackendPicture(wxT("Post"), g_picPostCLSID, s_post_16_png);
+	::RegisterBackendPicture(wxT("MarkAsDelete"), g_picMarkAsDeleteCLSID, s_markAsDelete_16_png);
+	::RegisterBackendPicture(wxT("Generate"), g_picGenerateCLSID, s_generate_16_png);
+	::RegisterBackendPicture(wxT("Print"), g_picPrintCLSID, s_print_16_png);
 
-	::RegisterBackendPicture(wxT("user"), g_picUserCLSID, s_user_16_png);
-	::RegisterBackendPicture(wxT("userActive"), g_picUserActiveCLSID, s_activeUser_16_png);
-	::RegisterBackendPicture(wxT("userList"), g_picUserListCLSID, s_userList_16_png);
+	::RegisterBackendPicture(wxT("User"), g_picUserCLSID, s_user_16_png);
+	::RegisterBackendPicture(wxT("UserActive"), g_picUserActiveCLSID, s_activeUser_16_png);
+	::RegisterBackendPicture(wxT("UserList"), g_picUserListCLSID, s_userList_16_png);
 
-	::RegisterBackendPicture(wxT("authentication"), g_picAuthenticationCLSID, s_authentication_16_png);
+	::RegisterBackendPicture(wxT("Authentication"), g_picAuthenticationCLSID, s_authentication_16_png);
 }
 
 class CBackendPictureAutoLoader {

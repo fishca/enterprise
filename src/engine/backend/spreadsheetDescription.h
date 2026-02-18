@@ -214,7 +214,12 @@ struct CSpreadsheetDescription {
 		m_colAreaAt.clear();
 	}
 
-	bool IsEmptySpreadsheet() const { return GetNumberRows() == 0 && GetNumberCols() == 0; }
+	bool IsEmptySpreadsheet() const {
+		return GetCellCount() == 0 &&
+			GetBrakeNumberRows() == 0 && GetBrakeNumberCols() == 0 &&
+			GetSizeNumberRows() == 0 && GetSizeNumberCols() == 0 &&
+			GetAreaNumberRows() == 0 && GetAreaNumberCols() == 0;
+	}
 
 	const CSpreadsheetCellDescription* GetCell(int row, int col) const {
 

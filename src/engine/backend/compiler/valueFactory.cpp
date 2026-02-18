@@ -140,6 +140,7 @@ class_identifier_t CValue::GetTypeIDByRef(const wxClassInfo* classInfo)
 class_identifier_t CValue::GetTypeIDByRef(const CValue* objectRef)
 {
 	if (objectRef->m_typeClass != eValueTypes::TYPE_VALUE &&
+		objectRef->m_typeClass != eValueTypes::TYPE_OLE &&
 		objectRef->m_typeClass != eValueTypes::TYPE_ENUM) {
 		return objectRef->GetClassType();
 	}

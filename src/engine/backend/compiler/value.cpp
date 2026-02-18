@@ -421,7 +421,7 @@ bool CValue::SetBoolean(const wxString& strBoolean)
 	Reset();
 
 	m_typeClass = eValueTypes::TYPE_BOOLEAN;
-	m_bData = stringUtils::CompareString(strBoolean, wxT("true"));
+	m_bData = stringUtils::CompareString(strBoolean, wxT("True"));
 
 	return true;
 }
@@ -567,7 +567,7 @@ bool CValue::GetBoolean() const
 	case eValueTypes::TYPE_NUMBER:
 		return !m_fData.IsZero();
 	case eValueTypes::TYPE_STRING:
-		return stringUtils::CompareString(wxT("true"), stringUtils::TrimAll(GetString()));
+		return stringUtils::CompareString(wxT("True"), stringUtils::TrimAll(GetString()));
 	case eValueTypes::TYPE_DATE:
 		return false;
 	case eValueTypes::TYPE_REFFER:
@@ -613,7 +613,7 @@ wxString CValue::GetString() const
 	case eValueTypes::TYPE_NULL:
 		return wxEmptyString;
 	case eValueTypes::TYPE_BOOLEAN:
-		return m_bData ? wxT("true") : wxT("false");
+		return m_bData ? wxT("True") : wxT("False");
 	case eValueTypes::TYPE_NUMBER:
 		return m_fData.ToString();
 	case eValueTypes::TYPE_STRING:

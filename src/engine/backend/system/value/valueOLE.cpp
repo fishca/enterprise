@@ -627,11 +627,10 @@ void CValueOLE::PrepareNames() const
 				typeInfo->GetDocumentation(funcInfo->memid, &strName,
 					nullptr, nullptr, nullptr);
 
-				wxString strMethodName = wxConvertStringFromOle(strName);
+				const wxString& strMethodName = wxConvertStringFromOle(strName);
 				SysFreeString(strName);
-				
-				wxString methodHelper = strMethodName;
-				methodHelper += wxT("(");
+
+				wxString methodHelper = strMethodName + wxT("(");
 
 				for (unsigned int k = 0; k < (UINT)funcInfo->cParams; k++) {
 					VARTYPE vt = funcInfo->lprgelemdescParam[k].tdesc.vt & ~0xF000;

@@ -178,7 +178,7 @@ public:
 	static CApplicationData* Get() { return s_instance; }
 
 	///////////////////////////////////////////////////////////////////////////
-	static bool CreateAppDataEnv();
+	static bool CreateAppDataEnv(eRunMode runMode = eRunMode::eENTERPRISE_MODE);
 	///////////////////////////////////////////////////////////////////////////
 
 	static bool CreateFileAppDataEnv(eRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale = wxT(""));
@@ -213,6 +213,7 @@ public:
 
 	eRunMode GetAppMode() const { return m_runMode; }
 
+	bool LauncherMode() const { return m_runMode == eRunMode::eLAUNCHER_MODE; }
 	bool DesignerMode() const { return m_runMode == eRunMode::eDESIGNER_MODE; }
 	bool EnterpriseMode() const { return m_runMode == eRunMode::eENTERPRISE_MODE; }
 	bool ServiceMode() const { return m_runMode == eRunMode::eSERVICE_MODE; }

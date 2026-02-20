@@ -9,7 +9,12 @@
 
 bool CCodeRunnerApp::OnInit()
 {
-	CApplicationData::CreateAppDataEnv();
+	if (m_codeRunner)
+		return false; 
+
+	CApplicationData::CreateAppDataEnv(eRunMode::eENTERPRISE_MODE);
+	m_codeRunner = new CFrameCodeRunner(nullptr, wxID_ANY);
+
 	return wxApp::OnInit() && m_codeRunner->Show();
 }
 
@@ -21,7 +26,8 @@ int CCodeRunnerApp::OnExit()
 
 void CCodeRunnerApp::AppendOutput(const wxString& str)
 {
-	m_codeRunner->AppendOutput(str);
+	if (m_codeRunner)
+		m_codeRunner->AppendOutput(str);
 }
 
 wxIMPLEMENT_APP(CCodeRunnerApp);

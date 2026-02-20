@@ -4,21 +4,23 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "mainApp.h"
-#include "launcher.h"
+#include "backend/appData.h"
 
-bool CMainApp::OnInit()
+bool CLauncherApp::OnInit()
 {
-	wxDateTime::SetCountry(wxDateTime::Country::USA);
+	if (m_launcher)
+		return false;
+	
+	CApplicationData::CreateAppDataEnv(eRunMode::eLAUNCHER_MODE);
+	m_launcher = new CFrameLauncher(nullptr, wxID_ANY);
 
-	m_locale.AddCatalogLookupPathPrefix(_T("lang"));
-	m_locale.AddCatalog(m_locale.GetCanonicalName());
-
-	CFrameLauncher *launcherWnd = 
-		new CFrameLauncher(nullptr, wxID_ANY);
-	launcherWnd->Show();
-
-	return m_locale.Init(wxLANGUAGE_ENGLISH);
+	return wxApp::OnInit() && m_launcher->Show();
 }
 
+int CLauncherApp::OnExit()
+{
+	CApplicationData::DestroyAppDataEnv();
+	return wxApp::OnExit();
+}
 
-wxIMPLEMENT_APP(CMainApp);   
+wxIMPLEMENT_APP(CLauncherApp);

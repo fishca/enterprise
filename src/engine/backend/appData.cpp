@@ -86,13 +86,13 @@ CApplicationData::~CApplicationData()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CApplicationData::CreateAppDataEnv()
+bool CApplicationData::CreateAppDataEnv(eRunMode runMode)
 {
 	if (s_instance != nullptr) s_instance->DestroyAppDataEnv();
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-		s_instance = new CApplicationData(eRunMode::eENTERPRISE_MODE);
+		s_instance = new CApplicationData(runMode);
 		s_instance->ReadEngineConfig();
 
 		if (!SetLocaleAppDataEnv())

@@ -2,14 +2,18 @@
 #define _MAINAPP_H__
 
 #include <wx/app.h>
+#include "launcher.h"
 
-class CMainApp : public wxApp
-{
-	wxLocale m_locale;
+class CLauncherApp :
+	public wxApp {
 public:
 	virtual bool OnInit();
+	virtual int OnExit();
+
+private:
+	CFrameLauncher* m_launcher = nullptr;
 };
 
-wxDECLARE_APP(CMainApp);
+wxDECLARE_APP(CLauncherApp);
 
 #endif 

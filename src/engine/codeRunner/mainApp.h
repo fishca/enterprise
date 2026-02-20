@@ -4,13 +4,17 @@
 #include <wx/app.h>
 #include "codeRunner.h"
 
-class CCodeRunnerApp : public wxApp {
-	CFrameCodeRunner* m_codeRunner = new CFrameCodeRunner(nullptr, wxID_ANY);
+class CCodeRunnerApp :
+	public wxApp {
 public:
+
 	virtual bool OnInit();
 	virtual int OnExit();
 
 	void AppendOutput(const wxString& str);
+
+private:
+	CFrameCodeRunner* m_codeRunner = nullptr;
 };
 
 wxDECLARE_APP(CCodeRunnerApp);

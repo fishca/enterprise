@@ -1,4 +1,4 @@
-#ifndef __LAUNCHER_WND_H__
+п»ї#ifndef __LAUNCHER_WND_H__
 #define __LAUNCHER_WND_H__
 
 #include <wx/artprov.h>
@@ -44,7 +44,7 @@ public:
 	void SaveListIB();
 
 	//CFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Launch OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
-	CFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Запуск приложения OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
+	CFrameLauncher(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Р—Р°РїСѓСЃРє РїСЂРёР»РѕР¶РµРЅРёСЏ OES"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(450, 375), long style = wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER);
 	virtual ~CFrameLauncher();
 
 	//events:

@@ -21,7 +21,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* sizerName = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextName = new wxStaticText(this, wxID_ANY, _("Name IB:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextName = new wxStaticText(this, wxID_ANY, _("Name IB:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextName = new wxStaticText(this, wxID_ANY, _("Имя базы:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextName->Wrap(-1);
 	sizerName->Add(m_staticTextName, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -31,7 +32,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* sizerServer = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextServer = new wxStaticText(this, wxID_ANY, _("Server:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextServer = new wxStaticText(this, wxID_ANY, _("Server:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextServer = new wxStaticText(this, wxID_ANY, _("Сервер:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextServer->Wrap(-1);
 	sizerServer->Add(m_staticTextServer, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -41,7 +43,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* sizerPort = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextPort = new wxStaticText(this, wxID_ANY, _("Port:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextPort = new wxStaticText(this, wxID_ANY, _("Port:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextPort = new wxStaticText(this, wxID_ANY, _("Порт:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextPort->Wrap(-1);
 	sizerPort->Add(m_staticTextPort, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -51,7 +54,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* sizerUser = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextUser = new wxStaticText(this, wxID_ANY, _("User:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextUser = new wxStaticText(this, wxID_ANY, _("User:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextUser = new wxStaticText(this, wxID_ANY, _("Пользователь:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextUser->Wrap(-1);
 	sizerUser->Add(m_staticTextUser, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -61,7 +65,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* sizerPassword = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextPassword = new wxStaticText(this, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextPassword = new wxStaticText(this, wxID_ANY, _("Password:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextPassword = new wxStaticText(this, wxID_ANY, _("Пароль:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextPassword->Wrap(-1);
 	sizerPassword->Add(m_staticTextPassword, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -71,7 +76,8 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* sizerDataBase = new wxBoxSizer(wxHORIZONTAL);
 
-	m_staticTextDataBase = new wxStaticText(this, wxID_ANY, _("Database:"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_staticTextDataBase = new wxStaticText(this, wxID_ANY, _("Database:"), wxDefaultPosition, wxDefaultSize, 0);
+	m_staticTextDataBase = new wxStaticText(this, wxID_ANY, _("База данных:"), wxDefaultPosition, wxDefaultSize, 0);
 	m_staticTextDataBase->Wrap(-1);
 	sizerDataBase->Add(m_staticTextDataBase, 1, wxALIGN_CENTER_VERTICAL, 0);
 
@@ -81,12 +87,14 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 
 	wxBoxSizer* bSizerButton = new wxBoxSizer(wxHORIZONTAL);
 
-	m_buttonTestConnection = new wxButton(this, wxID_ANY, _("Test connection"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonTestConnection = new wxButton(this, wxID_ANY, _("Test connection"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonTestConnection = new wxButton(this, wxID_ANY, _("Проверить подключение..."), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonTestConnection->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
 
 	bSizerButton->Add(m_buttonTestConnection, 0, wxALL, 5);
 
-	m_buttonSaveConnection = new wxButton(this, wxID_ANY, _("Save connection"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonSaveConnection = new wxButton(this, wxID_ANY, _("Save connection"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonSaveConnection = new wxButton(this, wxID_ANY, _("Сохранить подключение"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonSaveConnection->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_ACTIVECAPTION));
 
 	bSizerButton->Add(m_buttonSaveConnection, 1, wxALL, 5);

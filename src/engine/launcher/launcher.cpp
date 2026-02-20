@@ -118,33 +118,38 @@ CFrameLauncher::CFrameLauncher(wxWindow* parent, wxWindowID id, const wxString& 
 
 	wxBoxSizer* sizerRight = new wxBoxSizer(wxVERTICAL);
 
-	m_buttonEnterprise = new wxButton(this, wxID_ANY, _("Enterprise"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonEnterprise = new wxButton(this, wxID_ANY, _("Enterprise"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonEnterprise = new wxButton(this, wxID_ANY, _("Предприятие"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonEnterprise->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
 	m_buttonEnterprise->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonEnterprise, this);
 
 	sizerRight->Add(m_buttonEnterprise, 0, wxALL | wxEXPAND, 5);
 
-	m_buttonDesigner = new wxButton(this, wxID_ANY, _("Designer"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonDesigner = new wxButton(this, wxID_ANY, _("Designer"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonDesigner = new wxButton(this, wxID_ANY, _("Конфигуратор"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonDesigner->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
 	m_buttonDesigner->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonDesigner, this);
 
 	sizerRight->Add(m_buttonDesigner, 0, wxALL | wxEXPAND, 5);
 	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
 
-	m_buttonAdd = new wxButton(this, wxID_ANY, _("Add"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonAdd = new wxButton(this, wxID_ANY, _("Add"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonAdd = new wxButton(this, wxID_ANY, _("Добавить"), wxDefaultPosition, wxDefaultSize, 0);
 	m_buttonAdd->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON));
 	sizerRight->Add(m_buttonAdd, 0, wxALL | wxEXPAND, 5);
 
 	m_buttonAdd->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonAdd, this);
 
-	m_buttonEdit = new wxButton(this, wxID_ANY, _("Edit"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonEdit = new wxButton(this, wxID_ANY, _("Edit"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonEdit = new wxButton(this, wxID_ANY, _("Редактировать"), wxDefaultPosition, wxDefaultSize, 0);
 
 	m_buttonEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_PASTE, wxART_BUTTON));
 	sizerRight->Add(m_buttonEdit, 0, wxALL | wxEXPAND, 5);
 
 	m_buttonEdit->Bind(wxEVT_BUTTON, &CFrameLauncher::OnButtonEdit, this);
 
-	m_buttonDelete = new wxButton(this, wxID_ANY, _("Delete"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonDelete = new wxButton(this, wxID_ANY, _("Delete"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonDelete = new wxButton(this, wxID_ANY, _("Удалить"), wxDefaultPosition, wxDefaultSize, 0);
 
 	m_buttonDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE, wxART_BUTTON));
 	sizerRight->Add(m_buttonDelete, 0, wxALL | wxEXPAND, 5);
@@ -153,7 +158,8 @@ CFrameLauncher::CFrameLauncher(wxWindow* parent, wxWindowID id, const wxString& 
 
 	sizerRight->Add(0, 0, 1, wxEXPAND, 5);
 
-	m_buttonExit = new wxButton(this, wxID_EXIT, _("Exit"), wxDefaultPosition, wxDefaultSize, 0);
+	//m_buttonExit = new wxButton(this, wxID_EXIT, _("Exit"), wxDefaultPosition, wxDefaultSize, 0);
+	m_buttonExit = new wxButton(this, wxID_EXIT, _("Выход"), wxDefaultPosition, wxDefaultSize, 0);
 
 	m_buttonExit->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON));
 	sizerRight->Add(m_buttonExit, 0, wxALL | wxEXPAND, 5);

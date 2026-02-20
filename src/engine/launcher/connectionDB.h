@@ -44,7 +44,8 @@ public:
 		const wxString& strUser, const wxString& strPassword
 	);
 
-	CDialogConnection(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Configure connect"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 270), long style = wxSYSTEM_MENU | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN | wxTAB_TRAVERSAL);
+	//CDialogConnection(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Configure connect"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 270), long style = wxSYSTEM_MENU | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN | wxTAB_TRAVERSAL);
+	CDialogConnection(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Настройка подключения"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500, 270), long style = wxSYSTEM_MENU | wxCLOSE_BOX | wxCAPTION | wxCLIP_CHILDREN | wxTAB_TRAVERSAL);
 
 	wxString GetNameIB() const { return m_textCtrlName->GetValue(); }
 	wxString GetServer() const { return m_textCtrlServer->GetValue(); }

@@ -14,7 +14,7 @@ inline wxObject* GetParentFormVisualEditor(IVisualHost* visualEdit, IValueFrame*
 	wxASSERT(parent);
 
 	wxObject* wxparent_object = visualEdit->GetWxObject(parent);
-	if (parent->GetClassName() == wxT("notebookPage")) {
+	if (parent->GetClassName() == wxT("NotebookPage")) {
 		CPanelPage* objPage =
 			dynamic_cast<CPanelPage*>(wxparent_object);
 		return objPage != nullptr ? objPage->GetSizer() : nullptr;
@@ -148,7 +148,7 @@ void CValueSizerItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualH
 	}
 
 	const IValueFrame* parent = object->GetParent();
-	if (parent->GetClassName() == wxT("notebookPage")) {
+	if (parent->GetClassName() == wxT("NotebookPage")) {
 		wxObject* wxparent_object = visualHost->GetWxObject(parent);
 		CPanelPage* objPage =
 			dynamic_cast<CPanelPage*>(wxparent_object);

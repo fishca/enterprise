@@ -165,11 +165,11 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 	if (componentType != COMPONENT_TYPE_WINDOW) {
 		item = nullptr;
 	}
-	else if (obj->GetClassName() == wxT("notebookPage")) {
+	else if (obj->GetClassName() == wxT("NotebookPage")) {
 		IValueFrame* parent = obj->GetParent();
 		item = m_baseObjects.at(parent);
 	}
-	else if (obj->GetClassName() == wxT("tableboxColumn")) {
+	else if (obj->GetClassName() == wxT("TableboxColumn")) {
 		IValueFrame* parent = obj->GetParent();
 		item = m_baseObjects.at(parent);
 	}
@@ -180,7 +180,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 		while (parent != nullptr) {
 			auto parentIt = m_baseObjects.find(parent);
 			if (parentIt != m_baseObjects.end()) {
-				if (obj->GetClassName() != wxT("notebookPage")) {
+				if (obj->GetClassName() != wxT("NotebookPage")) {
 					OnSelected(parent, parentIt->second);
 				}
 			}
@@ -199,7 +199,7 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 				item = GetWxObject(nextParent);
 			} break;
 		}
-		else if (nextParent->GetClassName() == wxT("staticboxsizer")) {
+		else if (nextParent->GetClassName() == wxT("Staticboxsizer")) {
 			if (item == nullptr) {
 				wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(GetWxObject(nextParent), wxStaticBoxSizer);
 				wxASSERT(staticBoxSizer);
@@ -216,13 +216,13 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::SetObjectSelect(IV
 	if (nextParent != nullptr) {
 		it = m_baseObjects.find(nextParent);
 		if (it != m_baseObjects.end()) {
-			if (nextParent->GetClassName() == wxT("staticboxsizer")) {
+			if (nextParent->GetClassName() == wxT("Staticboxsizer")) {
 				wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(it->second, wxStaticBoxSizer);
 				wxASSERT(staticBoxSizer);
 				selPanel = staticBoxSizer->GetStaticBox();
 			}
-			else if (nextParent->GetClassName() == wxT("notebook") ||
-				nextParent->GetClassName() == wxT("tablebox")) {
+			else if (nextParent->GetClassName() == wxT("Notebook") ||
+				nextParent->GetClassName() == wxT("Tablebox")) {
 				wxWindow* notebook = wxDynamicCast(it->second, wxWindow);
 				wxASSERT(notebook);
 				selPanel = notebook->GetParent();
@@ -521,7 +521,7 @@ void CDesignerWindow::HighlightSelection(wxDC& dc)
 			object = object->GetParent();
 		}
 
-		if (object->GetClassName() == wxT("staticboxsizer") || object->GetChildCount() > 0)
+		if (object->GetClassName() == wxT("Staticboxsizer") || object->GetChildCount() > 0)
 			DrawRectangle(dc, point, size, object);
 	}
 	else if (m_selItem != nullptr) {

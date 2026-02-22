@@ -214,7 +214,7 @@ void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject
 			{
 			case COMPONENT_TYPE_WINDOW:
 			{
-				if (obj->GetClassName() == wxT("notebookPage")) {
+				if (obj->GetClassName() == wxT("NotebookPage")) {
 					CPanelPage* pageWindow = wxDynamicCast(createdObject, CPanelPage);
 					if (pageWindow) {
 						createdWindow = pageWindow;
@@ -231,7 +231,7 @@ void IVisualHost::GenerateControl(IValueFrame* obj, wxWindow* wxparent, wxObject
 			case COMPONENT_TYPE_SIZER:
 			case COMPONENT_TYPE_SIZERITEM:
 			{
-				if (obj->GetClassName() == wxT("staticboxsizer")) {
+				if (obj->GetClassName() == wxT("Staticboxsizer")) {
 					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
 					if (staticBoxSizer) {
 						createdWindow = staticBoxSizer->GetStaticBox();
@@ -297,7 +297,7 @@ void IVisualHost::RefreshControl(IValueFrame* obj, wxWindow* wxparent, wxObject*
 			case COMPONENT_TYPE_SIZER:
 			case COMPONENT_TYPE_SIZERITEM:
 			{
-				if (obj->GetClassName() == wxT("staticboxsizer")) {
+				if (obj->GetClassName() == wxT("Staticboxsizer")) {
 					wxStaticBoxSizer* staticBoxSizer = wxDynamicCast(createdObject, wxStaticBoxSizer);
 					if (staticBoxSizer) {
 						createdWindow = staticBoxSizer->GetStaticBox();
@@ -367,7 +367,7 @@ void IVisualHost::CreateControl(IValueFrame* obj, IValueFrame* parent, bool firs
 		parentObj = GetWxObject(objParent);
 	}
 
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
+	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer")) {
 		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
 		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
 	}
@@ -398,7 +398,7 @@ void IVisualHost::CreateControl(IValueFrame* obj, IValueFrame* parent, bool firs
 	//and update it 
 	RefreshControl(objControl, windowObj, parentObj);
 
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer")) {
+	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer")) {
 		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
 		staticBoxSizer->Layout();
 	}
@@ -427,7 +427,7 @@ void IVisualHost::UpdateControl(IValueFrame* obj, IValueFrame* parent)
 		parentObj = GetWxObject(objParent);
 	}
 
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
 	{
 		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
 		wxASSERT(staticBoxSizer); windowObj = staticBoxSizer->GetStaticBox();
@@ -455,7 +455,7 @@ void IVisualHost::UpdateControl(IValueFrame* obj, IValueFrame* parent)
 
 	RefreshControl(objControl, windowObj, parentObj);
 
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
 	{
 		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
 		staticBoxSizer->Layout();
@@ -491,7 +491,7 @@ void IVisualHost::RemoveControl(IValueFrame* obj, IValueFrame* parent)
 
 	ClearControl(objControl);
 
-	if (objParent && objParent->GetClassName() == wxT("staticboxsizer"))
+	if (objParent && objParent->GetClassName() == wxT("Staticboxsizer"))
 	{
 		wxStaticBoxSizer* staticBoxSizer = dynamic_cast<wxStaticBoxSizer*>(parentObj);
 		staticBoxSizer->Layout();
@@ -544,7 +544,7 @@ void IVisualHost::ClearControl(IValueFrame* control, bool force)
 						controlParent = controlParent->GetParent();
 					}
 					wxSizer* controlParentSizer = nullptr;
-					if (controlParent->GetClassName() == wxT("notebookPage")) {
+					if (controlParent->GetClassName() == wxT("NotebookPage")) {
 						CPanelPage* pageWnd = dynamic_cast<CPanelPage*>(visualHost->GetWxObject(controlParent));
 						wxASSERT(pageWnd); controlParentSizer = pageWnd->GetSizer();
 					}

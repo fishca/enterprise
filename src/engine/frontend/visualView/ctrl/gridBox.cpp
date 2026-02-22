@@ -10,7 +10,8 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueGridBox, IValueWindow);
 //*                                 Value Notebook                                  *
 //***********************************************************************************
 
-CValueGridBox::CValueGridBox() : IValueWindow(), m_valueSpreadsheet(new CValueSpreadsheetDocument)
+CValueGridBox::CValueGridBox() : IValueWindow(), 
+m_valueSpreadsheet(CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>())
 {
 	//set default params
 	m_propertyMinSize->SetValue(wxSize(300, 100));

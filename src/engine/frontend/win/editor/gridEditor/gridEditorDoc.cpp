@@ -164,6 +164,136 @@ bool CGridEditor::SaveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) 
 	return SaveSpreadsheet(doc->GetSpreadsheetDesc());
 }
 
+void CGridEditor::PutDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
+{
+	wxGridExt::SetEvtHandlerEnabled(false);
+
+	if (m_table == nullptr) {
+		wxGridExt::SetTable(
+			new CGridEditorStringTable, true);
+	}
+
+	const int maxRowBrake = GetMaxRowBrake();
+	const int maxColBrake = GetMaxColBrake();
+
+	wxGridExt::AppendRows(doc->GetNumberRows());
+	if (doc->GetNumberCols() > m_table->GetNumberCols())
+		wxGridExt::AppendCols(doc->GetNumberCols() - m_table->GetNumberCols());
+
+	m_numRows = m_table->GetNumberRows();
+	m_numCols = m_table->GetNumberCols();
+
+	for (int row = 0; row < doc->GetNumberRows(); row++) {
+
+		for (int col = 0; col < doc->GetNumberCols(); col++) {
+
+			const CSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
+			if (cell == nullptr)
+				continue;
+
+			wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(maxRowBrake + row, col);
+			attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
+
+			if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
+				SetCellSize(maxRowBrake + row, col, cell->m_row_size, cell->m_col_size, false);
+
+			attr->SetTextOrient(cell->m_textOrient);
+			attr->SetFont(cell->m_font);
+			attr->SetBackgroundColour(cell->m_backgroundColour);
+			attr->SetTextColour(cell->m_textColour);
+
+			attr->SetBorderLeft(cell->m_borderAt[0].m_style, cell->m_borderAt[0].m_colour, cell->m_borderAt[0].m_width);
+			attr->SetBorderRight(cell->m_borderAt[1].m_style, cell->m_borderAt[1].m_colour, cell->m_borderAt[1].m_width);
+			attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
+			attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
+
+			attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
+			attr->SetReadOnly(cell->m_isReadOnly);
+
+			wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType)));
+			m_table->SetValueAsCustom(maxRowBrake + row, col, s_strTypeTextOrString, ptr.get());
+		}
+	}
+
+	for (int row = 0; row < doc->GetNumberRows(); row++)
+		SetRowSize(maxRowBrake + row, doc->GetRowSize(row));
+
+	for (int col = 0; col < doc->GetNumberCols(); col++)
+		SetColSize(col, doc->GetColSize(col));
+
+	SetRowBrake(maxRowBrake + doc->GetNumberRows());
+
+	if (maxColBrake < doc->GetNumberCols())
+		SetColBrake(maxColBrake + doc->GetNumberCols());
+
+	wxGridExt::SetEvtHandlerEnabled(true);
+}
+
+void CGridEditor::JoinDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
+{
+	wxGridExt::SetEvtHandlerEnabled(false);
+
+	if (m_table == nullptr) {
+		wxGridExt::SetTable(
+			new CGridEditorStringTable, true);
+	}
+
+	const int maxRowBrake = GetMaxRowBrake();
+	const int maxColBrake = GetMaxColBrake();
+
+	if (doc->GetNumberRows() > m_table->GetNumberRows())
+		wxGridExt::AppendRows(doc->GetNumberRows() - m_table->GetNumberRows());
+	wxGridExt::AppendCols(doc->GetNumberCols());
+
+	m_numRows = m_table->GetNumberRows();
+	m_numCols = m_table->GetNumberCols();
+
+	for (int row = 0; row < doc->GetNumberRows(); row++) {
+
+		for (int col = 0; col < doc->GetNumberCols(); col++) {
+
+			const CSpreadsheetCellDescription* cell = doc->GetSpreadsheetDesc().GetCell(row, col);
+			if (cell == nullptr)
+				continue;
+
+			wxGridExtCellAttrPtr attr = GetOrCreateCellAttrPtr(row, maxColBrake + col);
+			attr->SetAlignment(cell->m_alignHorz, cell->m_alignVert);
+
+			if (cell->m_row_size >= 0 && cell->m_col_size >= 0)
+				SetCellSize(row, maxColBrake + col, cell->m_row_size, cell->m_col_size, false);
+
+			attr->SetTextOrient(cell->m_textOrient);
+			attr->SetFont(cell->m_font);
+			attr->SetBackgroundColour(cell->m_backgroundColour);
+			attr->SetTextColour(cell->m_textColour);
+
+			attr->SetBorderLeft(cell->m_borderAt[0].m_style, cell->m_borderAt[0].m_colour, cell->m_borderAt[0].m_width);
+			attr->SetBorderRight(cell->m_borderAt[1].m_style, cell->m_borderAt[1].m_colour, cell->m_borderAt[1].m_width);
+			attr->SetBorderTop(cell->m_borderAt[2].m_style, cell->m_borderAt[2].m_colour, cell->m_borderAt[2].m_width);
+			attr->SetBorderBottom(cell->m_borderAt[3].m_style, cell->m_borderAt[3].m_colour, cell->m_borderAt[3].m_width);
+
+			attr->SetFitMode(cell->m_fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip());
+			attr->SetReadOnly(cell->m_isReadOnly);
+
+			wxSharedPtr<wxString> ptr = wxSharedPtr<wxString>(new wxString(doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType)));
+			m_table->SetValueAsCustom(row, maxColBrake + col, s_strTypeTextOrString, ptr.get());
+		}
+	}
+
+	for (int row = 0; row < doc->GetNumberRows(); row++)
+		SetRowSize(row, doc->GetRowSize(row));
+
+	for (int col = 0; col < doc->GetNumberCols(); col++)
+		SetColSize(maxColBrake + col, doc->GetColSize(col));
+
+	if (maxRowBrake < doc->GetNumberRows())
+		SetRowBrake(maxRowBrake + doc->GetNumberRows());
+
+	SetColBrake(maxColBrake + doc->GetNumberCols());
+
+	wxGridExt::SetEvtHandlerEnabled(true);
+}
+
 bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc)
 {
 	if (!spreadsheetDesc.IsEmptySpreadsheet())
@@ -281,7 +411,7 @@ bool CGridEditor::LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc
 
 			if ((int)col_size->m_col >= wxGridExt::GetNumberCols())
 				wxGridExt::AppendCols((int)col_size->m_col - wxGridExt::GetNumberCols() + 1);
-			
+
 			wxGridExt::SetColSize(col_size->m_col, col_size->m_width, 1.0f, false);
 		}
 

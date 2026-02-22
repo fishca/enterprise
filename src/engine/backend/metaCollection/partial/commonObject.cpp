@@ -1771,10 +1771,6 @@ bool IValueRecordDataObjectRef::InitializeObject(IValueRecordDataObjectRef* sour
 		};
 	}
 
-	CValuePtr<CValueReferenceDataObject> reference(
-		source != nullptr ? source->GetReference() : nullptr
-	);
-
 	if (!generate && source != nullptr)
 		PrepareEmptyObject(source);
 	else
@@ -1793,7 +1789,9 @@ bool IValueRecordDataObjectRef::InitializeObject(IValueRecordDataObjectRef* sour
 			succes = Filling();
 		}
 		else if (generate) {
-			succes = Filling(reference->GetValue());
+			CValuePtr<CValueReferenceDataObject> refPtr(
+				source != nullptr ? source->GetReference() : nullptr);
+			succes = Filling(refPtr);
 		}
 	}
 

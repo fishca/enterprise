@@ -857,13 +857,14 @@ bool CTranslateCode::GetDate(wxString* strDate) const
 		error_utf8_pos = i_utf8 + i_utf8_step;
 #endif
 		if (count_char < 2) {
-			if (c == wxT('\'')) {
-				count_char++;
-			}
 			next_pos = i + 1;
 #ifdef UTF8_LEXEM_TRANSLATE
 			next_utf8_pos = i_utf8 + i_utf8_step;
 #endif
+			if (c == wxT('\'')) {
+				count_char++;
+				continue;
+			}
 		}
 		else break;
 		if (strDate != nullptr) strDate->Append(c);

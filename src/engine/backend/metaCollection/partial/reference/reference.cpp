@@ -238,7 +238,7 @@ wxString CValueReferenceDataObject::GetString() const
 	if (m_newObject)
 		return wxEmptyString;
 	else if (!m_foundedRef)
-		return wxString::Format("%s <%i:%s>", _("Not found"), m_metaObject->GetMetaID(), m_objGuid.str());
+		return wxString::Format(wxT("%s <%i:%s>"), _("Not found"), m_metaObject->GetMetaID(), m_objGuid.str());
 
 	wxASSERT(m_metaObject);
 	return m_metaObject->GetDataPresentation(this);
@@ -333,7 +333,7 @@ bool CValueReferenceDataObject::GetPropVal(const long lPropNum, CValue& pvarProp
 			CValueTabularSectionDataObjectRef* tabularSection = nullptr;
 			if (pvarPropVal.ConvertToValue(tabularSection)) {
 				if (tabularSection->IsReadAfter()) {
-					if (!tabularSection->LoadData(m_objGuid, false)) {
+					if (!tabularSection->LoadData(m_objGuid, true)) {
 						pvarPropVal.Reset();
 						return false;
 					}

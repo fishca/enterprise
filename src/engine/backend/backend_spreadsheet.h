@@ -48,6 +48,14 @@ public:
 	// ------ cell value accessors
 	//
 	virtual void SetCellValue(int row, int col, const wxString& s) = 0;
+
+	// ------ area value accessors
+	//
+	virtual void PutArea(
+		const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) = 0;
+
+	virtual void JoinArea(
+		const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) = 0;
 };
 
 class BACKEND_API CBackendSpreadsheetObject : public wxRefCounter {

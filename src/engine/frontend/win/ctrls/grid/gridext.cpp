@@ -2049,23 +2049,25 @@ void wxGridExtStringTable::SetValue(int row, int col, const wxString& value)
 
 void wxGridExtStringTable::Clear()
 {
-	int numRows;
-	numRows = m_data.GetCount();
-	if (numRows > 0)
-	{
-		int numCols;
-		numCols = m_data[0].GetCount();
+	//int numRows;
+	//numRows = m_data.GetCount();
+	//if (numRows > 0)
+	//{
+	//	int numCols;
+	//	numCols = m_data[0].GetCount();
 
-		int row;
-		for (row = 0; row < numRows; row++)
-		{
-			int col;
-			for (col = 0; col < numCols; col++)
-			{
-				m_data[row][col].clear();
-			}
-		}
-	}
+	//	int row;
+	//	for (row = 0; row < numRows; row++)
+	//	{
+	//		int col;
+	//		for (col = 0; col < numCols; col++)
+	//		{
+	//			m_data[row][col].clear();
+	//		}
+	//	}
+	//}
+
+	m_data.Clear();
 }
 
 bool wxGridExtStringTable::InsertRows(size_t pos, size_t numRows)
@@ -5983,16 +5985,51 @@ bool wxGridExt::ProcessTableMessage(wxGridExtTableMessage& msg)
 
 // The behaviour of this function depends on the grid table class
 // Clear() function. For the default wxGridExtStringTable class the
-// behaviour is to replace all cell contents with wxEmptyString but
-// not to change the number of rows or cols.
+// behaviour is to replace all cell contents with wxEmptyString.
 //
 void wxGridExt::ClearGrid()
 {
 	if (m_table)
 	{
 		DisableCellEditControl();
+		m_cellEditCtrlEnabled = false;
+
+		wxGridExtSelectionModes selmode = m_selection ? 
+			m_selection->GetSelectionMode() : wxGridExtSelectionModes::wxGridExtSelectRowsOrColumns;
+
+		wxDELETE(m_selection);
 
 		m_table->Clear();
+
+		// Don't hold on to attributes cached from the old table
+		ClearAttrCache();
+
+		m_undoStack.clear();
+		m_redoStack.clear();
+
+		m_numRows = 0;
+		m_numCols = 0;
+		m_numFrozenRows = 0;
+		m_numFrozenCols = 0;
+
+		//Row and column positions
+		m_rowAt.Clear();
+		m_colAt.Clear();
+
+		//Area row, col positions
+		m_rowAreaAt.Clear();
+		m_colAreaAt.Clear();
+
+		// kill row and column size arrays
+		m_rowHeights.Empty();
+		m_colWidths.Empty();
+
+		m_rowBrakeAt.Clear();
+		m_colBrakeAt.Clear();
+
+		m_selection = new wxGridExtSelection(this, selmode);
+		CalcDimensions();
+
 		if (ShouldRefresh())
 			m_gridWin->Refresh();
 	}

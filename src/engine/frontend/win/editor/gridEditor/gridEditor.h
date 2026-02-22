@@ -35,18 +35,18 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		// ------ row and col formatting
 		//
 
-		virtual void SetCellBackgroundColour(int row, int col, const wxColour& colour) { m_view->SetCellBackgroundColour(row, col, colour, false); }
-		virtual void SetCellTextColour(int row, int col, const wxColour& colour) { m_view->SetCellTextColour(row, col, colour, false); }
-		virtual void SetCellTextOrient(int row, int col, const int orient) { m_view->SetCellTextOrient(row, col, orient, false); }
-		virtual void SetCellFont(int row, int col, const wxFont& font) { m_view->SetCellFont(row, col, font, false); }
-		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) { m_view->SetCellAlignment(row, col, horiz, vert, false); }
+		virtual void SetCellBackgroundColour(int row, int col, const wxColour& colour) { GetOrCreateCell(row, col)->SetCellBackgroundColour(row, col, colour, false); }
+		virtual void SetCellTextColour(int row, int col, const wxColour& colour) { GetOrCreateCell(row, col)->SetCellTextColour(row, col, colour, false); }
+		virtual void SetCellTextOrient(int row, int col, const int orient) { GetOrCreateCell(row, col)->SetCellTextOrient(row, col, orient, false); }
+		virtual void SetCellFont(int row, int col, const wxFont& font) { GetOrCreateCell(row, col)->SetCellFont(row, col, font, false); }
+		virtual void SetCellAlignment(int row, int col, const int horiz, const int vert) { GetOrCreateCell(row, col)->SetCellAlignment(row, col, horiz, vert, false); }
 		virtual void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {}
 		virtual void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {}
-		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) { m_view->SetCellSize(row, col, num_rows, num_cols, false); }
-		virtual void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) { m_view->SetCellFitMode(row, col, fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
-		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { m_view->SetCellReadOnly(row, col, isReadOnly, false); }
+		virtual void SetCellSize(int row, int col, int num_rows, int num_cols) { GetOrCreateCell(row, col)->SetCellSize(row, col, num_rows, num_cols, false); }
+		virtual void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) { GetOrCreateCell(row, col)->SetCellFitMode(row, col, fitMode == CSpreadsheetCellDescription::EFitMode::Mode_Overflow ? wxGridExtFitMode::Overflow() : wxGridExtFitMode::Clip(), false); }
+		virtual void SetCellReadOnly(int row, int col, bool isReadOnly = true) { GetOrCreateCell(row, col)->SetCellReadOnly(row, col, isReadOnly, false); }
 
 		// ------ cell brake accessors
 		//
@@ -62,9 +62,32 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		// ------ cell value accessors
 		//
-		virtual void SetCellValue(int row, int col, const wxString& s) { m_view->SetCellValue(row, col, s, false); }
+		virtual void SetCellValue(int row, int col, const wxString& s) { GetOrCreateCell(row, col)->SetCellValue(row, col, s, false); }
+
+		// ------ area value accessors
+		//
+		virtual void PutArea(
+			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->PutDocument(doc); }
+		
+		virtual void JoinArea(
+			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->JoinDocument(doc); }
 
 	private:
+
+		CGridEditor* GetOrCreateCell(int row, int col) const {
+
+			if (m_view->GetTable() != nullptr) {
+
+				if (row >= m_view->GetNumberRows())
+					m_view->AppendRows(row - m_view->GetNumberRows() + 1);
+
+				if (col >= m_view->GetNumberCols())
+					m_view->AppendCols(col - m_view->GetNumberCols() + 1);
+			}
+
+			return m_view;
+		}
+
 		CGridEditor* m_view;
 	};
 
@@ -433,6 +456,9 @@ public:
 	bool SaveDocument(wxObjectDataPtr<CBackendSpreadsheetObject>& doc) const;
 
 #pragma endregion 
+
+	void PutDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
+	void JoinDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc);
 
 	class CGridEditorPrintout* CreatePrintout() const;
 

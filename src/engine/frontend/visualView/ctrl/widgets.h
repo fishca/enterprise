@@ -363,7 +363,7 @@ private:
 	CValue m_selValue = false;
 
 	CPropertyCategory* m_categoryCheckBox = IPropertyObject::CreatePropertyCategory(wxT("Checkbox"), _("Checkbox"));
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCheckBox, wxT("Title"), _("Title"), wxT("Checkbox"));
+	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCheckBox, wxT("Title"), _("Title"), wxT(""));
 	CPropertyEnum<CValueEnumTitleLocation>* m_propertyTitleLocation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTitleLocation>>(m_categoryCheckBox, wxT("TitleLocation"), _("Title location"), enTitleLocation::eLeft);
 
 	CPropertyCategory* m_categorySource = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));

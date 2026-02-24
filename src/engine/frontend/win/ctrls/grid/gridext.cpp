@@ -5999,7 +5999,9 @@ void wxGridExt::ClearGrid()
 
 		wxDELETE(m_selection);
 
+		//Clear cell/col/row attributes 
 		m_table->Clear();
+		m_table->SetAttrProvider(NULL);
 
 		// Don't hold on to attributes cached from the old table
 		ClearAttrCache();

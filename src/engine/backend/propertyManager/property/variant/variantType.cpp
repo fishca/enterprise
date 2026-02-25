@@ -49,13 +49,13 @@ void wxVariantDataAttribute::DoSetFromMetaId(const meta_identifier_t& id)
 		const IMetaData* metaData = m_ownerProperty->GetMetaData();
 		wxASSERT(metaData);
 
-		IValueMetaObjectAttribute* attribute = metaData->FindAnyObjectByFilter<IValueMetaObjectAttribute>(id);
+		IValueMetaObjectAttribute* attribute = metaData->FindAnyObjectByFilter<IValueMetaObjectAttribute>(id, true);
 		if (attribute != nullptr && attribute->IsAllowed()) {
 			m_typeDesc.SetDefaultMetaType(attribute->GetTypeDesc());
 			return;
 		}
 
-		CValueMetaObjectTableData* metaTable = metaData->FindAnyObjectByFilter<CValueMetaObjectTableData>(id);
+		CValueMetaObjectTableData* metaTable = metaData->FindAnyObjectByFilter<CValueMetaObjectTableData>(id, true);
 		if (metaTable != nullptr && metaTable->IsAllowed()) {
 			m_typeDesc.SetDefaultMetaType(metaTable->GetTypeDesc());
 			return;

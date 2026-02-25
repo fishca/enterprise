@@ -5,7 +5,7 @@
 #include "backend/uniqueKey.h"
 
 #define defaultFormType wxNOT_FOUND
-#define formDefaultName _("Form")
+#define formDefaultName wxT("Form")
 
 // -----------------------------------------------------------------------
 // IBackendCommandItem

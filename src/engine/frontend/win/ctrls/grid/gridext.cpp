@@ -13528,7 +13528,7 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 
 	entry.m_start = start;
 	entry.m_end = end;
-	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
+	entry.m_areaLabel = wxString::Format(wxT("%s%d"), wxT("Area"), countRec);
 
 	while (countRec > 0)
 	{
@@ -13547,7 +13547,7 @@ void wxGridExt::DoRowAreaCreate(int start, int end)
 		if (!foundedName)
 			break;
 
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
+		entry.m_areaLabel = wxString::Format(wxT("%s%d"), wxT("Area"), ++countRec);
 	}
 
 	if (MakeRowAreaLabel(&entry))
@@ -13610,7 +13610,7 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 
 	entry.m_start = start;
 	entry.m_end = end;
-	entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), countRec);
+	entry.m_areaLabel = wxString::Format(wxT("%s%d"), wxT("Area"), countRec);
 
 	while (countRec > 0) {
 
@@ -13628,7 +13628,7 @@ void wxGridExt::DoColAreaCreate(int start, int end)
 		if (!foundedName)
 			break;
 
-		entry.m_areaLabel = wxString::Format(wxT("%s%d"), _("Area"), ++countRec);
+		entry.m_areaLabel = wxString::Format(wxT("%s%d"), wxT("Area"), ++countRec);
 	}
 
 	if (MakeColAreaLabel(&entry))

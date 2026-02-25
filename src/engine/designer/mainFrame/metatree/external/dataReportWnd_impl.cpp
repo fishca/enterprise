@@ -444,7 +444,7 @@ bool CDataReportTree::RenameMetaObject(IValueMetaObject* obj, const wxString& sN
 
 void CDataReportTree::InitTree()
 {
-	m_treeREPORTS = AppendRootItem(g_metaReportCLSID, _("reports"));
+	m_treeREPORTS = AppendRootItem(g_metaReportCLSID, _("Reports"));
 	//Список аттрибутов 
 	m_treeATTRIBUTES = AppendGroupItem(m_treeREPORTS, g_metaAttributeCLSID, objectAttributesName);
 	//список табличных частей 

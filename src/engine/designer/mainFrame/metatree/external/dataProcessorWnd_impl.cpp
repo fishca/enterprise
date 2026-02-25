@@ -441,7 +441,7 @@ bool CDataProcessorTree::RenameMetaObject(IValueMetaObject* obj, const wxString&
 
 void CDataProcessorTree::InitTree()
 {
-	m_treeDATAPROCESSORS = AppendRootItem(g_metaDataProcessorCLSID, _("dataProcessor"));
+	m_treeDATAPROCESSORS = AppendRootItem(g_metaDataProcessorCLSID, _("DataProcessor"));
 	//Список аттрибутов 
 	m_treeATTRIBUTES = AppendGroupItem(m_treeDATAPROCESSORS, g_metaAttributeCLSID, objectAttributesName);
 	//список табличных частей 

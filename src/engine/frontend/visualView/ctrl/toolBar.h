@@ -35,10 +35,10 @@ public:
 		if (!m_actSource->IsEmptyProperty()) {
 			CValue pvarPropVal;
 			if (m_actSource->GetDataValue(pvarPropVal))
-				return _("ToolBar: ") + stringUtils::GenerateSynonym(pvarPropVal.GetClassName());
+				return _("ToolBar") + wxT(": ") + stringUtils::GenerateSynonym(pvarPropVal.GetClassName());
 		}
 
-		return _("ToolBar:") + _("<empty source>");
+		return _("ToolBar") + wxT(": ") + _("<empty source>");
 	}
 
 	//control factory 

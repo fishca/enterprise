@@ -1422,7 +1422,7 @@ void CMetadataTree::InitTree()
 	wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 	wxASSERT(imageList);
 
-	m_treeMETADATA = AppendRootItem(g_metaCommonMetadataCLSID, _("configuration"));
+	m_treeMETADATA = AppendRootItem(g_metaCommonMetadataCLSID, _("Configuration"));
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -1459,7 +1459,7 @@ void CMetadataTree::InitTree()
 	m_treeACCUMULATION_REGISTERS = AppendGroupItem(m_treeMETADATA, g_metaAccumulationRegisterCLSID, accumulationRegisterName);
 
 	//Set item bold and name
-	m_metaTreeCtrl->SetItemText(m_treeMETADATA, _("configuration"));
+	m_metaTreeCtrl->SetItemText(m_treeMETADATA, _("Configuration"));
 	m_metaTreeCtrl->SetItemBold(m_treeMETADATA);
 }
 

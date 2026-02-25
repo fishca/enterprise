@@ -1,0 +1,4171 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Перевод для es\n"
+"POT-Creation-Date: 2026-02-24 13:51+0300\n"
+"PO-Revision-Date: 2026-02-25 11:16+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+"X-Poedit-Basepath: src\n"
+"X-Poedit-Flags-xgettext: --add-comments\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: _\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: engine/launcher/connectionDB.cpp\n"
+"X-Poedit-SearchPath-2: engine/launcher/connectionDB.h\n"
+"X-Poedit-SearchPath-3: engine/launcher/launcher.cpp\n"
+"X-Poedit-SearchPath-4: engine/launcher/launcher.h\n"
+"X-Poedit-SearchPath-5: engine/launcher/mainApp.cpp\n"
+"X-Poedit-SearchPath-6: engine/launcher/mainApp.h\n"
+
+#: engine/backend/appData.h:224
+#: engine/designer/mainFrame/mainFrameDesigner.h:62
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:147
+#: engine/designer/mainFrameDesigner.h:50
+#: engine/designer/mainFrameDesignerEvent.cpp:92
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:9
+#: engine/enterprise/mainFrameDesigner.h:50
+#: engine/enterprise/mainFrameDesignerEvent.cpp:92
+#: engine/launcher/launcher.cpp:127
+msgid "Designer"
+msgstr "Конфигуратор"
+
+#: engine/backend/appData.h:226
+msgid "Thick client"
+msgstr "Тонкий клиент"
+
+#: engine/backend/appData.h:228
+msgid "Deamon"
+msgstr "Демон"
+
+#: engine/backend/appDataQuery.cpp:238
+#, c-format
+msgid ""
+"Another designer process is already running:\n"
+"%s, %s, %s"
+msgstr ""
+"Другой процесс конфигуратора уже запущен\n"
+"%s, %s, %s"
+
+#: engine/backend/backend_exception.cpp:21
+#, c-format
+msgid "Usage: %s <filename>"
+msgstr "Используйте %s <filename>"
+
+#: engine/backend/backend_exception.cpp:22
+#, c-format
+msgid "Error reading file %s"
+msgstr "Ошибка чтения файла %s"
+
+#: engine/backend/backend_exception.cpp:23
+#, c-format
+msgid "Error opening file %s"
+msgstr "Ошибка открытия файла %s"
+
+#: engine/backend/backend_exception.cpp:24
+#, c-format
+msgid "ASSERT: Module system error %s in line %d"
+msgstr "ASSERT: Системная ошибка модуля %s в строке %d"
+
+#: engine/backend/backend_exception.cpp:25
+#, c-format
+msgid "ASSERT_VALID: Module system error %s in line %d"
+msgstr "ASSERT_VALID: Системная ошибка модуля %s в строке %d"
+
+#: engine/backend/backend_exception.cpp:26
+#, c-format
+msgid ""
+"System error(out of array) when trying to process an error with a number %d"
+msgstr ""
+"Системная ошибка (недостаточно данных в массиве) при попытке обработки "
+"ошибки с числом %d"
+
+#: engine/backend/backend_exception.cpp:27
+#, c-format
+msgid ""
+"Symbol expected :\n"
+"%s"
+msgstr ""
+"Ожидаемый символ:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:28
+#, c-format
+msgid ""
+"Word expected :\n"
+"%s"
+msgstr ""
+"Ожидаемое слово:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:29
+#, c-format
+msgid ""
+"Constant boolean expected:\n"
+"%s"
+msgstr ""
+"Ожидается логическая константа:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:30
+#, c-format
+msgid ""
+"Constant number expected:\n"
+"%s"
+msgstr ""
+"Ожидаемое постоянное число:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:31
+#, c-format
+msgid ""
+"Constant string expected:\n"
+"%s"
+msgstr ""
+"Ожидается строковая константа:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:32
+#, c-format
+msgid ""
+"Constant date expected:\n"
+"%s"
+msgstr ""
+"Ожидается константа типа дата:\n"
+"%s"
+
+#: engine/backend/backend_exception.cpp:33
+#, c-format
+msgid "Duplicate identifier %s"
+msgstr "Повторяющийся идентификатор %s"
+
+#. ERROR_IDENTIFIER_DUPLICATE
+#: engine/backend/backend_exception.cpp:34
+#, c-format
+msgid "Label '%s' not defined"
+msgstr "Метка '%s' не определена"
+
+#: engine/backend/backend_exception.cpp:35
+msgid "One of the keywords is expected!"
+msgstr "Ожидается одно из ключевых слов!"
+
+#: engine/backend/backend_exception.cpp:36
+msgid "Module code expected"
+msgstr "Ожидается код модуля"
+
+#: engine/backend/backend_exception.cpp:37
+msgid "Identifier expected"
+msgstr "Ожидается идентификатор"
+
+#. ERROR_IDENTIFIER_DEFINE
+#: engine/backend/backend_exception.cpp:38
+msgid "Region name expected"
+msgstr "Ожидается имя региона"
+
+#. ERROR_IDENTIFIER_REGION
+#: engine/backend/backend_exception.cpp:39
+msgid "Keyword or identifier expected"
+msgstr "Ожидается ключевое слово или идентификатор"
+
+#. ERROR_CODE
+#: engine/backend/backend_exception.cpp:40
+#, c-format
+msgid "Symbol expected '%s'"
+msgstr "Ожидаемый символ: '%s'"
+
+#. ERROR_DELIMETER
+#: engine/backend/backend_exception.cpp:41
+msgid "Closing parenthesis or comma expected"
+msgstr "Ожидается закрывающая скобка или запятая"
+
+#. ERROR_FUNC_DELIMETER
+#: engine/backend/backend_exception.cpp:42
+msgid "Function or procedure declaration keyword expected"
+msgstr "Ожидается ключевое слово для объявления функции или процедуры"
+
+#. ERROR_FUNC_DEFINE
+#: engine/backend/backend_exception.cpp:43
+msgid "Module cannot have a return statement"
+msgstr "Модуль не может содержать оператор return"
+
+#. ERROR_RETURN
+#: engine/backend/backend_exception.cpp:44
+msgid "Expected constant"
+msgstr "Ожидается константа"
+
+#. ERROR_CONST_DEFINE
+#: engine/backend/backend_exception.cpp:45
+msgid "An operator is expected to complete a procedure or function!"
+msgstr "От оператора ожидается выполнение процедуры или функции!"
+
+#. ERROR_ENDFUNC_DEFINE
+#: engine/backend/backend_exception.cpp:46
+#, c-format
+msgid "Error writing file: %s"
+msgstr "Ошибка записи файла: %s"
+
+#. ERROR_FILE_WRITE
+#: engine/backend/backend_exception.cpp:47
+#, c-format
+msgid ""
+"Error in expression:\n"
+"%s"
+msgstr ""
+"Ошибка в выражении:\n"
+"%s"
+
+#. ERROR_EXPRESSION
+#: engine/backend/backend_exception.cpp:48
+#, c-format
+msgid "Keyword expected %s"
+msgstr "Ожидаемое ключевое слово %s"
+
+#. ERROR_KEYWORD
+#: engine/backend/backend_exception.cpp:49
+#, c-format
+msgid "Identifier '%s' not found"
+msgstr "Идентификатор '%s' не найден"
+
+#. ERROR_IDENTIFIER_NOT_FOUND
+#: engine/backend/backend_exception.cpp:50
+msgid "Operator Break can be used only inside the cycle"
+msgstr "Оператор Прервать(Break) можно использовать только внутри цикла"
+
+#. ERROR_USE_BREAK
+#: engine/backend/backend_exception.cpp:51
+msgid "Operator Continue can be used only inside the cycle"
+msgstr "Оператор «Продолжить(Continue)» можно использовать только внутри цикла"
+
+#. ERROR_USE_CONTINUE
+#: engine/backend/backend_exception.cpp:52
+msgid "Operator Return cannot be used outside the procedure or function"
+msgstr ""
+"Операция «Возврат (Return)» не может использоваться вне рамок процедуры или "
+"функции"
+
+#. ERROR_USE_RETURN
+#: engine/backend/backend_exception.cpp:53
+msgid "Expected program operators"
+msgstr "Ожидаемые операторы программы"
+
+#. ERROR_USE_BLOCK
+#: engine/backend/backend_exception.cpp:54
+msgid "Expected expression"
+msgstr "Ожидаемое выражение"
+
+#. ERROR_EXPRESSION_REQUIRE
+#: engine/backend/backend_exception.cpp:55
+#, c-format
+msgid "Procedure or function not detected (%s)"
+msgstr "Процедура или функция не обнаружена (%s)"
+
+#. ERROR_CALL_FUNCTION
+#: engine/backend/backend_exception.cpp:56
+#, c-format
+msgid "Variable with the specified name is already defined (%s)"
+msgstr "Переменная с указанным именем уже определена (%s)"
+
+#. ERROR_DEF_VARIABLE
+#: engine/backend/backend_exception.cpp:57
+#, c-format
+msgid "A procedure or function with the specified name is already defined (%s)"
+msgstr "Процедура или функция с указанным именем уже определена (%s)"
+
+#. ERROR_DEF_FUNCTION
+#: engine/backend/backend_exception.cpp:58
+msgid "Too many parameters"
+msgstr "Слишком много параметров"
+
+#. ERROR_MANY_PARAMS
+#: engine/backend/backend_exception.cpp:59
+msgid "Not enough parameters"
+msgstr "Недостаточно параметров"
+
+#. ERROR_FEW_PARAMS
+#: engine/backend/backend_exception.cpp:60
+#, c-format
+msgid "Var is not found (%s)"
+msgstr "Переменная не найдена (%s)"
+
+#. ERROR_VAR_NOT_FOUND
+#: engine/backend/backend_exception.cpp:61
+msgid "Unexpected program code termination"
+msgstr "Неожиданное завершение работы программного кода"
+
+#. ERROR_END_PROGRAM
+#: engine/backend/backend_exception.cpp:62
+msgid "This module may contain only definitions of procedures and functions"
+msgstr "Данный модуль может содержать только определения процедур и функций"
+
+#. ERROR_ONLY_FUNCTION
+#: engine/backend/backend_exception.cpp:63
+#, c-format
+msgid "Use procedure as function (%s)"
+msgstr "Процедур используется как функция (%s)"
+
+#. ERROR_USE_PROCEDURE_AS_FUNCTION
+#: engine/backend/backend_exception.cpp:64
+msgid "Expected integer positive sign constant"
+msgstr "Ожидаемая целочисленная константа с положительным знаком"
+
+#. ERROR_ARRAY_SIZE_CONST
+#: engine/backend/backend_exception.cpp:65
+msgid "Re-import the parent module"
+msgstr "Повторно импортируйте родительский модуль"
+
+#. ERROR_DUBLICATE_IMPORT
+#: engine/backend/backend_exception.cpp:66
+msgid "Module not found"
+msgstr "Модуль не найден"
+
+#. ERROR_MODULE_NOT_FOUND
+#: engine/backend/backend_exception.cpp:67
+msgid "The import statement must be at the beginning of the module"
+msgstr "Оператор импорта должен находиться в начале модуля"
+
+#. ERROR_USE_IMPORT
+#: engine/backend/backend_exception.cpp:68
+msgid "Final conditional compilation statement expected"
+msgstr "Ожидается окончательный оператор условной компиляции"
+
+#. ERROR_USE_ENDDEF
+#: engine/backend/backend_exception.cpp:69
+msgid "A pending region statement is expected"
+msgstr "Ожидается предварительное заявление региона"
+
+#. ERROR_USE_ENDREGION
+#: engine/backend/backend_exception.cpp:71
+#, c-format
+msgid "Constructor not found (%s)"
+msgstr "Конструктор не найден (%s)"
+
+#. ERROR_CALL_CONSTRUCTOR
+#: engine/backend/backend_exception.cpp:73
+msgid "Type error define"
+msgstr "Ошибка типа определения"
+
+#. ERROR_TYPE_DEF
+#: engine/backend/backend_exception.cpp:74
+msgid "Bad variable type"
+msgstr "Неправильный тип переменной"
+
+#. ERROR_BAD_TYPE
+#: engine/backend/backend_exception.cpp:75
+msgid "Bad value type"
+msgstr "Значение не правильного типа"
+
+#. ERROR_BAD_TYPE_EXPRESSION
+#: engine/backend/backend_exception.cpp:76
+msgid "Variable must be a numeric type"
+msgstr "Переменная должна быть числового типа"
+
+#. ERROR_NUMBER_TYPE
+#: engine/backend/backend_exception.cpp:78
+msgid "Boolean value expected"
+msgstr "Ожидаемое логическое значение"
+
+#. ERROR_BAD_TYPE_EXPRESSION_B
+#: engine/backend/backend_exception.cpp:79
+msgid "Numeric value expected"
+msgstr "Ожидаемое числовое значение"
+
+#. ERROR_BAD_TYPE_EXPRESSION_N
+#: engine/backend/backend_exception.cpp:80
+msgid "String value expected"
+msgstr "Ожидается строковое значение"
+
+#. ERROR_BAD_TYPE_EXPRESSION_S
+#: engine/backend/backend_exception.cpp:81
+msgid "Date value expected"
+msgstr "Ожидается значение типа Дата"
+
+#. ERROR_BAD_TYPE_EXPRESSION_D
+#: engine/backend/backend_exception.cpp:83
+msgid "Variable type does not support this operation"
+msgstr "Данный тип переменной не поддерживает эту операцию"
+
+#: engine/backend/backend_exception.h:178
+msgid "The program was stopped by the user!"
+msgstr "Программа была остановлена ​​пользователем!"
+
+#: engine/backend/backend_exception.h:184
+#: engine/backend/metadataConfiguration.cpp:653
+msgid "Not enough access rights for this user!"
+msgstr "У этого пользователя недостаточно прав доступа!"
+
+#: engine/backend/backend_form.cpp:33
+msgid "Context functions are not available in this frontend library!"
+msgstr ""
+"В этой библиотеке для фронтенда функции контекстного управления недоступны!"
+
+#: engine/backend/backend_form.cpp:39 engine/backend/backend_form.cpp:46
+#: engine/backend/backend_form.cpp:53 engine/backend/backend_form.cpp:60
+#: engine/backend/backend_form.cpp:67 engine/backend/backend_form.cpp:74
+#: engine/backend/backend_form.cpp:81
+#: engine/backend/system/value/valueSpreadsheet.cpp:489
+#: engine/backend/system/value/valueSpreadsheet.cpp:495
+msgid "Context functions are not available!"
+msgstr "Контекстные функции недоступны!"
+
+#: engine/backend/compiler/compileCode.cpp:711
+#: engine/backend/compiler/compileCode.cpp:1119
+#: engine/backend/compiler/compileContext.cpp:71
+msgid "Recursive call of modules!"
+msgstr "Рекурсивный вызов модулей!"
+
+#: engine/backend/compiler/procUnit.cpp:105
+msgid ""
+"Number of recursive calls exceeded the maximum allowed value!\n"
+"Call stack :"
+msgstr ""
+"Количество рекурсивных вызовов превысило максимально допустимое значение!\n"
+"Стек вызовов:"
+
+#: engine/backend/compiler/procUnit.cpp:174
+#, c-format
+msgid "Subtraction operation cannot be applied for this type (%s)"
+msgstr "Операция вычитания для этого типа невозможна (%s)"
+
+#: engine/backend/compiler/procUnit.cpp:195
+#, c-format
+msgid "Multiplication operation cannot be applied for this type (%s)"
+msgstr "Операция умножения для этого типа данных невозможна (%s)"
+
+#: engine/backend/compiler/procUnit.cpp:206
+#: engine/backend/compiler/procUnit.cpp:222
+#: engine/backend/compiler/procUnit.cpp:771
+#: engine/backend/compiler/procUnit.cpp:772
+#: engine/backend/compiler/procUnit.cpp:807
+#: engine/backend/compiler/procUnit.cpp:808
+msgid "Divide by zero"
+msgstr "Деление на ноль"
+
+#: engine/backend/compiler/procUnit.cpp:210
+#, c-format
+msgid "Division operation cannot be applied for this type (%s)"
+msgstr "Операция деления не может быть применена для этого типа (%s)"
+
+#: engine/backend/compiler/procUnit.cpp:227
+#, c-format
+msgid "Modulo operation cannot be applied for this type (%s)"
+msgstr "Операция по модулю для этого типа (%s) неприменима."
+
+#: engine/backend/compiler/procUnit.cpp:404
+#, c-format
+msgid ""
+"No attribute or method found '%s' - a variable is not an aggregate object"
+msgstr ""
+"Атрибут или метод '%s' не найден — переменная не является агрегатным объектом"
+
+#: engine/backend/compiler/procUnit.cpp:406
+#, c-format
+msgid "Aggregate object field not found '%s'"
+msgstr "Поле агрегатного объекта не найдено '%s'"
+
+#: engine/backend/compiler/procUnit.cpp:487
+msgid "No execution context defined!"
+msgstr "Контекст выполнения не определен!"
+
+#: engine/backend/compiler/procUnit.cpp:489
+msgid "No execution code set!"
+msgstr "Код выполнения не установлен!"
+
+#: engine/backend/compiler/procUnit.cpp:557
+msgid "Only variables with type can be used to organize the loop \"number\""
+msgstr ""
+"Для организации \"номера\" цикла можно использовать только переменные, "
+"имеющие определенный тип."
+
+#: engine/backend/compiler/procUnit.cpp:564
+msgid "Undefined value iterator"
+msgstr "Итератор неопределенного значения"
+
+#: engine/backend/compiler/procUnit.cpp:617
+#, c-format
+msgid "Object field not writable (%s)"
+msgstr "Поле объекта недоступно для записи (%s)"
+
+#: engine/backend/compiler/procUnit.cpp:627
+#: engine/backend/debugger/debugServer.cpp:709
+#, c-format
+msgid "Object field not readable (%s)"
+msgstr "Поле объекта недоступно для чтения (%s)"
+
+#: engine/backend/compiler/procUnit.cpp:648
+#, c-format
+msgid ""
+"Error value %d must %d (It is recommended to turn off method optimization)"
+msgstr ""
+"Значение ошибки %d должно быть %d (рекомендуется отключить оптимизацию "
+"метода)"
+
+#: engine/backend/compiler/procUnit.cpp:723
+#: engine/backend/compiler/procUnit.cpp:785
+#: engine/backend/compiler/procUnit.cpp:797
+#: engine/backend/compiler/procUnit.cpp:821
+#, c-format
+msgid "Cannot set array value '%s'"
+msgstr "Невозможно задать значение массива '%s'."
+
+#: engine/backend/compiler/procUnit.cpp:727
+#: engine/backend/compiler/procUnit.cpp:789
+#: engine/backend/compiler/procUnit.cpp:801
+#: engine/backend/compiler/procUnit.cpp:825
+#, c-format
+msgid "Cannot get array value '%s'"
+msgstr "Не удается получить значение массива '%s'."
+
+#: engine/backend/compiler/procUnit.cpp:749
+msgid "Cannot set return value in procedure!"
+msgstr "Невозможно установить возвращаемое значение в процедуре!"
+
+#: engine/backend/compiler/procUnit.cpp:900
+#, c-format
+msgid "Module: %s not compiled!"
+msgstr "Модуль: %s не скомпилирован!"
+
+#: engine/backend/compiler/procUnit.cpp:908
+#, c-format
+msgid ""
+"System error - compilation failed (#1)\n"
+"Module:%s\n"
+"Parent1:%s\n"
+"Parent2:%s"
+msgstr ""
+"Системная ошибка - сбой компиляции (#1)\n"
+"Модуль:%s\n"
+"Родитель1:%s\n"
+"Родитель2:%s"
+
+#: engine/backend/compiler/procUnit.cpp:916
+#, c-format
+msgid ""
+"System error - compilation failed (#2)\n"
+"Module1:%s\n"
+"Parent1:%s"
+msgstr ""
+"Системная ошибка - сбой компиляции (#2)\n"
+"Module1:%s\n"
+"Parent1:%s"
+
+#: engine/backend/compiler/procUnit.cpp:979
+#: engine/backend/compiler/procUnit.cpp:1007
+#: engine/backend/compiler/procUnit.cpp:1035
+#: engine/backend/compiler/procUnit.cpp:1092
+#: engine/backend/compiler/procUnit.cpp:1119
+msgid "Module not compiled!"
+msgstr "Модуль не скомпилирован!"
+
+#: engine/backend/compiler/procUnit.cpp:987
+#, c-format
+msgid "Procedure or function \"%s\" not found!"
+msgstr "Процедура или функция \"%s\" не найдена!"
+
+#: engine/backend/compiler/procUnit.cpp:1015
+#, c-format
+msgid "Function \"%s\" not found!"
+msgstr "Функция \"%s\" не найдена!"
+
+#: engine/backend/compiler/procUnit.cpp:1043
+#, c-format
+msgid "Procedure \"%s\" not found!"
+msgstr "Процедура \"%s\" не найдена!"
+
+#: engine/backend/compiler/procUnit.cpp:1097
+msgid "Error calling module procedure!"
+msgstr "Ошибка при вызове процедуры модуля!"
+
+#: engine/backend/compiler/procUnit.cpp:1124
+msgid "Error calling module function!"
+msgstr "Ошибка при вызове функции модуля!"
+
+#: engine/backend/compiler/translateCode.cpp:107
+msgid "Recursive module call (#3)"
+msgstr "Рекурсивный вызов модуля (#3)"
+
+#: engine/backend/compiler/value.cpp:156
+msgid "Attempt to assign a value to a write-denied variable"
+msgstr "Попытка присвоить значение переменной, запись которой запрещена"
+
+#: engine/backend/compiler/value.cpp:595
+msgid "Cannot convert string to number!"
+msgstr "Невозможно преобразовать строку в число!"
+
+#: engine/backend/compiler/value.cpp:774
+#: engine/frontend/visualView/ctrl/frame.cpp:32
+#: engine/frontend/visualView/ctrl/frame.cpp:37
+#: engine/frontend/visualView/ctrl/frame.cpp:47
+msgid "Class not registered"
+msgstr "Класс не зарегистрирован"
+
+#: engine/backend/compiler/valueFactory.cpp:31
+#: engine/backend/metadataDataProcessorFactory.cpp:27
+#: engine/backend/metadataFactory.cpp:23
+#: engine/backend/metadataReportFactory.cpp:27
+#, c-format
+msgid "Error initializing object '%s'"
+msgstr "Ошибка инициализации объекта '%s'"
+
+#: engine/backend/compiler/valueFactory.cpp:38
+#, c-format
+msgid "Error creating object '%llu'"
+msgstr "Ошибка при создании объекта '%llu'"
+
+#: engine/backend/compiler/valueFactory.cpp:51
+#: engine/backend/compiler/valueFactory.cpp:54
+#: engine/backend/metadataFactory.cpp:41
+#, c-format
+msgid "Object '%s' is exist"
+msgstr "Объект '%s' существует"
+
+#: engine/backend/compiler/valueFactory.cpp:85
+#, c-format
+msgid "Object '%s' is not register"
+msgstr "Объект '%s' не зарегистрирован"
+
+#: engine/backend/compiler/valueFactory.cpp:96
+#: engine/backend/compiler/valueFactory.cpp:159
+#: engine/backend/metadataFactory.cpp:71 engine/backend/metadataFactory.cpp:79
+#, c-format
+msgid "Object '%s' is not exist"
+msgstr "Объект '%s' не существует"
+
+#: engine/backend/compiler/valueFactory.cpp:170
+#, c-format
+msgid "Object with id '%llu' is not exist"
+msgstr "Объект с идентификатором '%llu' не существует."
+
+#: engine/backend/debugger/debugClient.cpp:290
+#: engine/backend/debugger/debugClient.cpp:295
+msgid "Cannot set breakpoint in unsaved copy!"
+msgstr "Невозможно установить точку останова в несохраненной копии!"
+
+#: engine/backend/debugger/debugServer.cpp:74
+msgid "Client not connected!"
+msgstr "Клиент не подключен!"
+
+#: engine/backend/debugger/debugServer.cpp:423
+msgid "Failed to create an instance in thread!"
+msgstr "Не удалось создать экземпляр в потоке!"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:243
+#: engine/backend/metaCollection/partial/accumulationRegister.h:196
+#: engine/backend/metaCollection/partial/commonObject.h:523
+#: engine/backend/metaCollection/partial/informationRegister.h:217
+#: engine/frontend/visualView/ctrl/tableBox.h:200
+#: engine/frontend/visualView/ctrl/tableBox.h:364
+#: engine/frontend/visualView/ctrl/widgets.h:201
+#: engine/frontend/visualView/ctrl/widgets.h:369
+msgid "Data"
+msgstr "Данные"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:244
+#: engine/backend/metaCollection/metaFormObject.h:159
+#: engine/backend/propertyManager/property/advprop/advpropSource.cpp:22
+#: engine/designer/mainFrame/local/localWindow.cpp:110
+#: engine/designer/mainFrame/watch/watchctrl.cpp:25
+msgid "Type"
+msgstr "Тип"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:245
+msgid "Attribute"
+msgstr "Атрибут"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:246
+msgid "Fill check"
+msgstr "Проверить заполнение"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:247
+#: engine/backend/metaCollection/partial/commonObject.h:524
+msgid "Presentation"
+msgstr "Представление"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:248
+msgid "Select group and items"
+msgstr "Выберите группу и элементы"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:249
+#: engine/backend/metaCollection/table/metaTableObject.h:124
+msgid "Group"
+msgstr "Группа"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObject.h:250
+#: engine/backend/metaCollection/table/metaTableObject.h:125
+msgid "Item mode"
+msgstr "Режим элемента"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:25
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:37
+msgid "Items"
+msgstr "Элементы"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:26
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:38
+msgid "Folders"
+msgstr "Папки"
+
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:27
+#: engine/backend/metaCollection/attribute/metaAttributeObjectEnum.h:39
+msgid "Folders and items"
+msgstr "Папки и элементы"
+
+#: engine/backend/metaCollection/metaFormObject.h:8
+#: engine/backend/metaCollection/metaFormObject.h:157
+#: engine/backend/metaCollection/metaFormObject.h:158
+#: engine/backend/metaCollection/metaFormObject.h:232
+#: engine/backend/propertyManager/property/variant/variantForm.cpp:5
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:88
+#: engine/frontend/visualView/ctrl/toolBarAction.cpp:8
+msgid "Form"
+msgstr "Форма"
+
+#: engine/backend/metaCollection/metaFormObject.h:235
+#: engine/backend/metaCollection/metaInterfaceObject.h:79
+#: engine/backend/metaCollection/partial/commonObject.h:421
+#: engine/frontend/win/ctrls/dataView.cpp:439
+msgid "Use"
+msgstr "Использовать"
+
+#: engine/backend/metaCollection/metaFormObjectMenu.cpp:11
+msgid "Open form"
+msgstr "Открыть форму"
+
+#: engine/backend/metaCollection/metaInterfaceObject.h:77
+#: engine/backend/metaCollection/metaPictureObject.h:24
+#: engine/frontend/visualView/controlEnum.h:103
+#: engine/frontend/visualView/ctrl/notebook.h:124
+#: engine/frontend/visualView/ctrl/tableBox.h:377
+#: engine/frontend/visualView/ctrl/toolBar.h:233
+#: engine/frontend/visualView/ctrl/widgets.h:47
+msgid "Picture"
+msgstr "Картинка"
+
+#: engine/backend/metaCollection/metaInterfaceObjectMenu.cpp:6
+msgid "Open interface"
+msgstr "Открыть интерфейс"
+
+#: engine/backend/metaCollection/metaLanguageObject.h:40
+#: engine/backend/metaCollection/partial/commonObject.h:857
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:10
+msgid "Code"
+msgstr "Код"
+
+#: engine/backend/metaCollection/metaModuleObject.h:147
+#: engine/backend/metaCollection/metaModuleObject.h:209
+#: engine/backend/metaCollection/metaModuleObject.h:234
+#: engine/backend/propertyManager/property/variant/variantModule.cpp:5
+#: engine/designer/mainFrame/stack/stackWindow.cpp:111
+msgid "Module"
+msgstr "Модуль"
+
+#: engine/backend/metaCollection/metaModuleObject.h:210
+msgid "Common module"
+msgstr "Общий модуль"
+
+#: engine/backend/metaCollection/metaModuleObject.h:211
+msgid "Global module"
+msgstr "Глобальный модуль"
+
+#: engine/backend/metaCollection/metaModuleObjectMenu.cpp:11
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:113
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:113
+msgid "Open module"
+msgstr "Открыть модуль"
+
+#: engine/backend/metaCollection/metaObject.h:603
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:12
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:45
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:3
+msgid "Common"
+msgstr "Общие"
+
+#: engine/backend/metaCollection/metaObject.h:604
+#: engine/classChecker/classCheckerWnd.cpp:13
+#: engine/designer/mainFrame/local/localWindow.cpp:108
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:27
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:27
+#: engine/designer/mainFrame/watch/watchctrl.cpp:21
+#: engine/frontend/visualView/ctrl/control.h:75
+#: engine/frontend/win/ctrls/dataView.cpp:440
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:41
+#: engine/frontend/win/dlgs/userList.cpp:98
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:344
+msgid "Name"
+msgstr "Имя"
+
+#: engine/backend/metaCollection/metaObject.h:604
+msgid "Name of metadata object"
+msgstr "Название объекта метаданных"
+
+#: engine/backend/metaCollection/metaObject.h:605
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:32
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:32
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:46
+msgid "Synonym"
+msgstr "Синоним"
+
+#: engine/backend/metaCollection/metaObject.h:605
+msgid "Synonym of metadata object"
+msgstr "Синоним объекта метаданных"
+
+#: engine/backend/metaCollection/metaObject.h:606
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:37
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:37
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:51
+msgid "Comment"
+msgstr "Комментарий"
+
+#: engine/backend/metaCollection/metaObject.h:607
+msgid "Secondary"
+msgstr "Вторичный"
+
+#: engine/backend/metaCollection/metaObjectMetadata.cpp:99
+msgid "! Doesn't have default language "
+msgstr "! Нет языка по умолчанию "
+
+#. *****************************************************************************************
+#. *                                  metaData object                                      *
+#. *****************************************************************************************
+#. Add 'configuration' property (common for all other children)
+#. Set item bold and name
+#: engine/backend/metaCollection/metaObjectMetadata.h:13
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:101
+#: engine/designer/mainFrame/mainFrameDesigner.cpp:64
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:137
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:120
+#: engine/designer/mainFrameDesignerCmd.cpp:125
+#: engine/designer/mainFrameDesignerMenu.cpp:118
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:64
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:92
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:119
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:148
+#: engine/enterprise/mainFrameDesignerCmd.cpp:125
+#: engine/enterprise/mainFrameDesignerMenu.cpp:118
+msgid "Configuration"
+msgstr "Конфигурация"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:146
+msgid "Configuration module"
+msgstr "Модуль конфигурации"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:148
+#: engine/backend/metaCollection/partial/accumulationRegister.h:194
+#: engine/backend/metaCollection/partial/catalog.h:238
+#: engine/backend/metaCollection/partial/dataProcessor.h:116
+#: engine/backend/metaCollection/partial/dataReport.h:119
+#: engine/backend/metaCollection/partial/document.h:189
+#: engine/backend/metaCollection/partial/enumeration.h:139
+#: engine/backend/metaCollection/partial/informationRegister.h:213
+msgid "Preset values"
+msgstr "Предварительно заданные значения"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:149
+msgid "Default role"
+msgstr "Роль по умолчанию"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:149
+msgid "Default configuration role"
+msgstr "Роль конфигурации по умолчанию"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:150
+msgid "Default language"
+msgstr "Язык по умолчанию"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:150
+msgid "Default configuration language"
+msgstr "Язык конфигурации по умолчанию"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:152
+msgid "Compatibility"
+msgstr "Совместимость"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:153
+msgid "Version"
+msgstr "Версия"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:156
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:155
+#: engine/designer/mainFrameDesignerMenu.cpp:124
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:93
+#: engine/enterprise/mainFrameDesignerMenu.cpp:124
+msgid "Administration"
+msgstr "Администрирование"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:157
+msgid "Data administration"
+msgstr "Администрирование данных"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:158
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:126
+msgid "Update database configuration"
+msgstr "Обновите конфигурацию базы данных"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:159
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:144
+#: engine/designer/mainFrameDesignerMenu.cpp:123
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:92
+#: engine/enterprise/mainFrameDesignerMenu.cpp:123
+#: engine/frontend/win/dlgs/activeUser.h:27
+msgid "Active users"
+msgstr "Активные пользователи"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:160
+msgid "Exclusive mode"
+msgstr "Монопольный режим"
+
+#: engine/backend/metaCollection/metaObjectMetadata.h:161
+msgid "Mode \"All functions\""
+msgstr "Режим \"Все функции\""
+
+#: engine/backend/metaCollection/metaObjectMetadataEnum.h:13
+msgid "1.0.0"
+msgstr ""
+
+#: engine/backend/metaCollection/metaObjectMetadataEnum.h:14
+msgid "Don't use compatibility"
+msgstr "Не используйте совместимость"
+
+#: engine/backend/metaCollection/metaObjectMetadataMenu.cpp:12
+msgid "Open configuration module"
+msgstr "Откройте модуль конфигурации"
+
+#: engine/backend/metaCollection/metaRoleObjectMenu.cpp:6
+msgid "Open role"
+msgstr "Открыть роль"
+
+#: engine/backend/metaCollection/metaSpreadsheetObject.h:43
+#: engine/backend/propertyManager/property/variant/variantSpreadsheet.cpp:5
+#: engine/backend/system/value/valueSpreadsheet.h:134
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:348
+msgid "Template"
+msgstr "Шаблон"
+
+#: engine/backend/metaCollection/metaSpreadsheetObject.h:44
+#: engine/backend/metaCollection/metaSpreadsheetObject.h:58
+msgid "Template data"
+msgstr "Данные шаблона"
+
+#: engine/backend/metaCollection/metaSpreadsheetObject.h:57
+msgid "Common template"
+msgstr "Общий шаблон"
+
+#: engine/backend/metaCollection/metaSpreadsheetObjectMenu.cpp:11
+msgid "Open template"
+msgstr "Открыть шаблон"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:17
+#: engine/backend/metaCollection/partial/catalog.h:33
+#: engine/backend/metaCollection/partial/document.h:31
+#: engine/backend/metaCollection/partial/enumeration.h:22
+#: engine/backend/metaCollection/partial/informationRegister.h:19
+msgid "Form list"
+msgstr "Список форм"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:191
+#: engine/backend/metaCollection/partial/informationRegister.h:210
+msgid "Record set module"
+msgstr "Модуль набора записей"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:192
+#: engine/backend/metaCollection/partial/catalog.h:236
+#: engine/backend/metaCollection/partial/dataProcessor.h:114
+#: engine/backend/metaCollection/partial/dataReport.h:117
+#: engine/backend/metaCollection/partial/document.h:187
+#: engine/backend/metaCollection/partial/enumeration.h:137
+#: engine/backend/metaCollection/partial/informationRegister.h:211
+msgid "Manager module"
+msgstr "Модуль менеджера"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:195
+#: engine/backend/metaCollection/partial/catalog.h:242
+#: engine/backend/metaCollection/partial/document.h:192
+#: engine/backend/metaCollection/partial/enumeration.h:140
+#: engine/backend/metaCollection/partial/informationRegister.h:215
+msgid "Default List Form"
+msgstr "Форма списка по умолчанию"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:197
+msgid "Register type"
+msgstr "Тип регистра"
+
+#: engine/backend/metaCollection/partial/accumulationRegister.h:199
+msgid "Record type"
+msgstr "Тип записи"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterEnum.h:23
+msgid "Balances"
+msgstr "Балансовый"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterEnum.h:24
+msgid "Turnovers"
+msgstr "Обороты"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterEnum.h:38
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:218
+msgid "Expense"
+msgstr "Расходы"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterEnum.h:39
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:213
+msgid "Receipt"
+msgstr "Приход"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:17
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:19
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:188
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:190
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:14
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:16
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:71
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:73
+#: engine/backend/metaCollection/partial/catalogManager_impl.cpp:16
+#: engine/backend/metaCollection/partial/catalogManager_impl.cpp:18
+#: engine/backend/metaCollection/partial/catalogManager_impl.cpp:55
+#: engine/backend/metaCollection/partial/catalogManager_impl.cpp:57
+#: engine/backend/metaCollection/partial/catalogObject.cpp:142
+#: engine/backend/metaCollection/partial/catalogObject.cpp:144
+#: engine/backend/metaCollection/partial/catalogObject.cpp:220
+#: engine/backend/metaCollection/partial/catalogObject.cpp:222
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1129
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1131
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1170
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1172
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1265
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1267
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1371
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1373
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1426
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1428
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1445
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1447
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1478
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1480
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1489
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1491
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1538
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1540
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1592
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1594
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1650
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1652
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1708
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1710
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1860
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1862
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1907
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1909
+#: engine/backend/metaCollection/partial/constantObject.cpp:294
+#: engine/backend/metaCollection/partial/constantObject.cpp:296
+#: engine/backend/metaCollection/partial/constantObject.cpp:342
+#: engine/backend/metaCollection/partial/constantObject.cpp:344
+#: engine/backend/metaCollection/partial/documentManager_impl.cpp:15
+#: engine/backend/metaCollection/partial/documentManager_impl.cpp:17
+#: engine/backend/metaCollection/partial/documentObject.cpp:231
+#: engine/backend/metaCollection/partial/documentObject.cpp:233
+#: engine/backend/metaCollection/partial/documentObject.cpp:392
+#: engine/backend/metaCollection/partial/documentObject.cpp:394
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:17
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:19
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:89
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:91
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:166
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:168
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:345
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:347
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:524
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:526
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:714
+#: engine/backend/metaCollection/partial/informationRegisterManager_impl.cpp:716
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:16
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:18
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:73
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:75
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:206
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:208
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:246
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:248
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:13
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:15
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:343
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:345
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:780
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:782
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:1162
+#: engine/backend/metaCollection/partial/list/objectListQuery.cpp:1164
+msgid "Database is not open!"
+msgstr "База данных не открыта!"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:37
+msgid "Balance"
+msgstr "Баланс"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterManager_impl.cpp:207
+msgid "Turnover"
+msgstr "Оборот"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterMetadata.cpp:131
+#: engine/backend/metaCollection/partial/informationRegisterMetadata.cpp:138
+msgid "! Doesn't have any recorder "
+msgstr "! Нет другого регистратора "
+
+#: engine/backend/metaCollection/partial/accumulationRegisterMetadataMenu.cpp:12
+#: engine/backend/metaCollection/partial/informationRegisterMetadataMenu.cpp:11
+msgid "Open record set module"
+msgstr "Модуль «Открыть набор записей»"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterMetadataMenu.cpp:14
+#: engine/backend/metaCollection/partial/catalogMetadataMenu.cpp:14
+#: engine/backend/metaCollection/partial/dataProcessorMetadataMenu.cpp:13
+#: engine/backend/metaCollection/partial/dataReportMetadataMenu.cpp:13
+#: engine/backend/metaCollection/partial/documentMetadataMenu.cpp:13
+#: engine/backend/metaCollection/partial/enumerationMetadataMenu.cpp:11
+#: engine/backend/metaCollection/partial/informationRegisterMetadataMenu.cpp:13
+msgid "Open manager module"
+msgstr "Открыть модуль менеджера"
+
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:35
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:42
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:51
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:92
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:99
+#: engine/backend/metaCollection/partial/accumulationRegisterObject.cpp:108
+#: engine/backend/metaCollection/partial/catalogObject.cpp:165
+#: engine/backend/metaCollection/partial/catalogObject.cpp:186
+#: engine/backend/metaCollection/partial/catalogObject.cpp:197
+#: engine/backend/metaCollection/partial/documentObject.cpp:268
+#: engine/backend/metaCollection/partial/documentObject.cpp:308
+#: engine/backend/metaCollection/partial/documentObject.cpp:327
+#: engine/backend/metaCollection/partial/documentObject.cpp:335
+#: engine/backend/metaCollection/partial/documentObject.cpp:347
+#: engine/backend/metaCollection/partial/documentObject.cpp:355
+#: engine/backend/metaCollection/partial/documentObject.cpp:366
+#: engine/backend/metaCollection/partial/documentObject.cpp:420
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:37
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:44
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:53
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:94
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:101
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:110
+msgid "Failed to write object in db!"
+msgstr "Не удалось записать объект в базу данных!"
+
+#: engine/backend/metaCollection/partial/catalog.h:31
+#: engine/backend/metaCollection/partial/document.h:30
+msgid "Form object"
+msgstr "Форма объекта"
+
+#: engine/backend/metaCollection/partial/catalog.h:32
+msgid "Form group"
+msgstr "Форма группы"
+
+#: engine/backend/metaCollection/partial/catalog.h:34
+#: engine/backend/metaCollection/partial/document.h:32
+#: engine/backend/metaCollection/partial/enumeration.h:23
+msgid "Form select"
+msgstr "Форма выбора"
+
+#: engine/backend/metaCollection/partial/catalog.h:35
+msgid "Form group select"
+msgstr "Форма выбора группы"
+
+#: engine/backend/metaCollection/partial/catalog.h:235
+#: engine/backend/metaCollection/partial/dataProcessor.h:113
+#: engine/backend/metaCollection/partial/dataReport.h:116
+#: engine/backend/metaCollection/partial/document.h:186
+msgid "Object module"
+msgstr "Модуль объекта"
+
+#: engine/backend/metaCollection/partial/catalog.h:240
+#: engine/backend/metaCollection/partial/dataProcessor.h:117
+#: engine/backend/metaCollection/partial/dataReport.h:120
+#: engine/backend/metaCollection/partial/document.h:191
+msgid "Default Object Form"
+msgstr "Форма объекта по умолчанию"
+
+#: engine/backend/metaCollection/partial/catalog.h:241
+msgid "Default Folder Form"
+msgstr "Форма папки по умолчанию"
+
+#: engine/backend/metaCollection/partial/catalog.h:243
+#: engine/backend/metaCollection/partial/document.h:193
+#: engine/backend/metaCollection/partial/enumeration.h:141
+msgid "Default Select Form"
+msgstr "Форма выбора по умолчанию"
+
+#: engine/backend/metaCollection/partial/catalog.h:244
+msgid "Default Folder Select Form"
+msgstr "Форма выбора папки по умолчанию"
+
+#. ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#: engine/backend/metaCollection/partial/catalog.h:247
+msgid "List owner"
+msgstr "Список владельцев"
+
+#. default array
+#: engine/backend/metaCollection/partial/catalog.h:250
+msgid "Owner"
+msgstr "Владелец"
+
+#: engine/backend/metaCollection/partial/catalogAction.cpp:20
+#: engine/backend/metaCollection/partial/constantAction.cpp:13
+#: engine/backend/metaCollection/partial/informationRegisterAction.cpp:19
+msgid "Save and close"
+msgstr "Сохранить и выйти"
+
+#: engine/backend/metaCollection/partial/catalogAction.cpp:21
+#: engine/backend/metaCollection/partial/constantAction.cpp:14
+#: engine/backend/metaCollection/partial/informationRegisterAction.cpp:20
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:17
+#: engine/designer/mainFrameDesignerCmd.cpp:18
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:18
+#: engine/enterprise/mainFrameDesignerCmd.cpp:18
+msgid "Save"
+msgstr "Сохранить"
+
+#: engine/backend/metaCollection/partial/catalogAction.cpp:23
+#: engine/backend/metaCollection/partial/documentAction.cpp:24
+msgid "Generate"
+msgstr "Сгенерировать"
+
+#: engine/backend/metaCollection/partial/catalogAction.cpp:25
+#: engine/backend/metaCollection/partial/documentAction.cpp:26
+#: engine/backend/metaCollection/partial/informationRegisterAction.cpp:21
+msgid "Clone"
+msgstr "Клонировать"
+
+#: engine/backend/metaCollection/partial/catalogMetadataMenu.cpp:12
+#: engine/backend/metaCollection/partial/dataProcessorMetadataMenu.cpp:11
+#: engine/backend/metaCollection/partial/dataReportMetadataMenu.cpp:11
+#: engine/backend/metaCollection/partial/documentMetadataMenu.cpp:11
+msgid "Open object module"
+msgstr "Открыть модуль объекта"
+
+#: engine/backend/metaCollection/partial/catalogObject.cpp:242
+#: engine/backend/metaCollection/partial/catalogObject.cpp:249
+#: engine/backend/metaCollection/partial/catalogObject.cpp:258
+#: engine/backend/metaCollection/partial/documentObject.cpp:413
+#: engine/backend/metaCollection/partial/documentObject.cpp:430
+#: engine/backend/metaCollection/partial/documentObject.cpp:437
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:260
+msgid "Failed to delete object in db!"
+msgstr "Не удалось удалить объект из базы данных!"
+
+#: engine/backend/metaCollection/partial/commonObject.cpp:67
+#, c-format
+msgid "Form not found '%s'"
+msgstr "Форма не найдена '%s'"
+
+#: engine/backend/metaCollection/partial/commonObject.cpp:103
+#, c-format
+msgid "Template not found '%s'"
+msgstr "Шаблон не найден '%s'"
+
+#: engine/backend/metaCollection/partial/commonObject.cpp:114
+msgid "Template not found!"
+msgstr "Шаблон не найден!"
+
+#: engine/backend/metaCollection/partial/commonObject.cpp:2532
+#: engine/backend/metaCollection/partial/tabularSection/tabularSection.cpp:50
+#: engine/backend/system/value/valueTable.cpp:137
+msgid "Array index out of bounds"
+msgstr "Индекс массива выходит за пределы допустимого диапазона"
+
+#: engine/backend/metaCollection/partial/commonObject.cpp:2703
+#: engine/backend/metaCollection/partial/tabularSection/tabularSection.cpp:458
+#: engine/backend/system/value/valueArray.cpp:41
+#: engine/backend/system/value/valueTable.cpp:226
+msgid "Index goes beyond array"
+msgstr "Индекс выходит за рамки массива"
+
+#: engine/backend/metaCollection/partial/commonObject.h:525
+msgid "Quick choice"
+msgstr "Быстрый выбор"
+
+#: engine/backend/metaCollection/partial/commonObject.h:526
+msgid "Reference"
+msgstr "Ссылка"
+
+#. default attributes
+#: engine/backend/metaCollection/partial/commonObject.h:600
+msgid "Order"
+msgstr "Порядок"
+
+#: engine/backend/metaCollection/partial/commonObject.h:703
+msgid "List generation"
+msgstr "Формирование списка"
+
+#: engine/backend/metaCollection/partial/commonObject.h:704
+msgid "Data version"
+msgstr "Версия данных"
+
+#: engine/backend/metaCollection/partial/commonObject.h:705
+msgid "Deletion mark"
+msgstr "Пометка удаления"
+
+#: engine/backend/metaCollection/partial/commonObject.h:710
+#: engine/backend/metaCollection/partial/commonObject.h:1090
+#: engine/backend/metaCollection/partial/constant.h:99
+msgid "Read"
+msgstr "Чтение"
+
+#: engine/backend/metaCollection/partial/commonObject.h:711
+#: engine/backend/metaCollection/partial/commonObject.h:1091
+#: engine/backend/metaCollection/partial/constant.h:100
+#: engine/backend/metaCollection/partial/documentEnum.h:27
+msgid "Write"
+msgstr "Запись"
+
+#: engine/backend/metaCollection/partial/commonObject.h:712
+#: engine/backend/metaCollection/partial/commonObject.h:1092
+#: engine/backend/tableInfo.cpp:53
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:77
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:366
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:77
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:369
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:28
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:52
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:103
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:101
+#: engine/frontend/win/dlgs/userList.cpp:88
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:221
+#: engine/launcher/launcher.cpp:146
+msgid "Delete"
+msgstr "Удаление"
+
+#. create default attributes
+#: engine/backend/metaCollection/partial/commonObject.h:856
+msgid "Predefined name"
+msgstr "Предопределенное значение"
+
+#: engine/backend/metaCollection/partial/commonObject.h:858
+msgid "Description"
+msgstr "Описание"
+
+#: engine/backend/metaCollection/partial/commonObject.h:859
+msgid "Parent"
+msgstr "Родитель"
+
+#: engine/backend/metaCollection/partial/commonObject.h:860
+msgid "Is folder"
+msgstr "Это папка"
+
+#. create default attributes
+#: engine/backend/metaCollection/partial/commonObject.h:1082
+msgid "Active"
+msgstr "Активный"
+
+#: engine/backend/metaCollection/partial/commonObject.h:1083
+msgid "Period"
+msgstr "Период"
+
+#: engine/backend/metaCollection/partial/commonObject.h:1084
+msgid "Recorder"
+msgstr "Регистратор"
+
+#: engine/backend/metaCollection/partial/commonObject.h:1085
+msgid "Line number"
+msgstr "Номер строки"
+
+#: engine/backend/metaCollection/partial/commonObject.h:1394
+#: engine/backend/metaCollection/partial/commonObject.h:1477
+#: engine/backend/metaCollection/partial/commonObject.h:1901
+msgid "Creating"
+msgstr "Создание"
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:31
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:785
+msgid "Create attribute "
+msgstr "Создать атрибут "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:36
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:790
+msgid "Changing attribute "
+msgstr "Изменить атрибут "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:40
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:794
+msgid "Removed attribute "
+msgstr "Удалить атрибут "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:52
+msgid "Create tabular section "
+msgstr "Создать табличную часть "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:77
+msgid "Changing tabular section "
+msgstr "Изменить табличную часть "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:90
+msgid "Removed tabular section "
+msgstr "Удалить табличную часть "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:104
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:539
+msgid "Create "
+msgstr "Создать "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:156
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:587
+msgid "Changed "
+msgstr "Измененный "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:225
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:612
+msgid "Removed "
+msgstr "Удаленный "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:502
+msgid "Create enumeration "
+msgstr "Создать перечисление "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:513
+msgid "Changing enumeration "
+msgstr "Изменить перечисление "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:523
+msgid "Removed enumeration "
+msgstr "Удалить перечисление "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:747
+msgid "Create dimension "
+msgstr "Создать измерение "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:752
+msgid "Changing dimension "
+msgstr "Изменить измерение "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:756
+msgid "Removed dimension "
+msgstr "Удалить измерение "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:766
+msgid "Create resource "
+msgstr "Создать ресурс "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:771
+msgid "Changing resource "
+msgstr "Изменить ресурс "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:775
+msgid "Removed resource "
+msgstr "Удалить ресурс "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:832
+msgid "Append register "
+msgstr "Добавить регистр "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:913
+msgid "Changed register "
+msgstr "Изменить регистр "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:998
+msgid "Remove register "
+msgstr "Удалить регистр "
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1181
+#: engine/backend/metaCollection/partial/constantObject.cpp:381
+#, c-format
+msgid "%s is a required field"
+msgstr "Поле %s обязательно для заполнения"
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1455
+msgid "This entry already exists. It is not possible to write a new value!"
+msgstr "Эта запись уже существует. Записать новое значение невозможно!"
+
+#: engine/backend/metaCollection/partial/commonObjectQuery.cpp:1721
+#, c-format
+msgid "The %s is required on line %i of the %s"
+msgstr "%s необходимо указать в строке %i %s"
+
+#: engine/backend/metaCollection/partial/constant.h:96
+msgid "Record module"
+msgstr "Модуль записи"
+
+#: engine/backend/metaCollection/partial/constantMetadataMenu.cpp:12
+msgid "Open constant module"
+msgstr "Открыть модуль константы"
+
+#: engine/backend/metaCollection/partial/constantMetadataQuery.cpp:17
+msgid "Create constant table"
+msgstr "Создать таблицу констант"
+
+#: engine/backend/metaCollection/partial/constantMetadataQuery.cpp:55
+msgid "Create constant "
+msgstr "Создать константу "
+
+#: engine/backend/metaCollection/partial/constantMetadataQuery.cpp:60
+msgid "Changing constant "
+msgstr "Изменить константу "
+
+#: engine/backend/metaCollection/partial/constantMetadataQuery.cpp:64
+msgid "Removed constant "
+msgstr "Удалить константу "
+
+#: engine/backend/metaCollection/partial/constantObject.cpp:368
+msgid "failed to write object in db!"
+msgstr "не удалось записать объект в базу данных!"
+
+#: engine/backend/metaCollection/partial/dataProcessor.h:25
+msgid "Form data processor"
+msgstr "Процессор данных формы"
+
+#: engine/backend/metaCollection/partial/dataReport.h:24
+msgid "Form report"
+msgstr "Форма отчета"
+
+#: engine/backend/metaCollection/partial/document.h:195
+msgid "List register record"
+msgstr "Список записей в регистре"
+
+#. create default attributes
+#: engine/backend/metaCollection/partial/document.h:198
+msgid "Number"
+msgstr "Число"
+
+#: engine/backend/metaCollection/partial/document.h:199
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:18
+msgid "Date"
+msgstr "Дата"
+
+#: engine/backend/metaCollection/partial/document.h:200
+msgid "Posted"
+msgstr "Опубликовано"
+
+#: engine/backend/metaCollection/partial/documentAction.cpp:20
+msgid "Post and close"
+msgstr "Опубликовать и закрыть"
+
+#: engine/backend/metaCollection/partial/documentAction.cpp:21
+msgid "Post"
+msgstr "Почта"
+
+#: engine/backend/metaCollection/partial/documentAction.cpp:22
+msgid "Clear posting"
+msgstr "Четкая публикация"
+
+#: engine/backend/metaCollection/partial/documentEnum.h:25
+msgid "Posting"
+msgstr "Размещение"
+
+#: engine/backend/metaCollection/partial/documentEnum.h:26
+msgid "Undo posting"
+msgstr "Отменить публикацию"
+
+#: engine/backend/metaCollection/partial/documentEnum.h:37
+msgid "Real time"
+msgstr "В реальном времени"
+
+#: engine/backend/metaCollection/partial/documentEnum.h:38
+msgid "Regular"
+msgstr "Обычный"
+
+#: engine/backend/metaCollection/partial/documentObject.cpp:248
+msgid "Failed to post object in db!"
+msgstr "Не удалось отправить объект в базу данных!"
+
+#: engine/backend/metaCollection/partial/enumerationMetadata.cpp:150
+msgid "! Doesn't have any enumeration "
+msgstr "Не содержит перечислений "
+
+#: engine/backend/metaCollection/partial/informationRegister.h:18
+msgid "Form record"
+msgstr "Форма записи"
+
+#: engine/backend/metaCollection/partial/informationRegister.h:214
+msgid "Default Record Form"
+msgstr "Форма записи по умолчанию"
+
+#: engine/backend/metaCollection/partial/informationRegister.h:218
+msgid "Periodicity"
+msgstr "Периодичность"
+
+#: engine/backend/metaCollection/partial/informationRegister.h:219
+msgid "Write mode"
+msgstr "Режим записи"
+
+#: engine/backend/metaCollection/partial/informationRegisterEnum.h:24
+msgid "Non periodic"
+msgstr "Непериодический"
+
+#: engine/backend/metaCollection/partial/informationRegisterEnum.h:25
+msgid "Within second"
+msgstr "В течение секунды"
+
+#: engine/backend/metaCollection/partial/informationRegisterEnum.h:26
+msgid "Within day"
+msgstr "В течение дня"
+
+#: engine/backend/metaCollection/partial/informationRegisterEnum.h:36
+msgid "Independent"
+msgstr "Независимый"
+
+#: engine/backend/metaCollection/partial/informationRegisterEnum.h:37
+msgid "Subordinate recorder"
+msgstr "Подчиненный регистратор"
+
+#: engine/backend/metaCollection/partial/informationRegisterObject.cpp:220
+msgid "failed to save object in db!"
+msgstr "не удалось сохранить объект в базе данных!"
+
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:20
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:63
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:115
+msgid "Select"
+msgstr "Выбирать"
+
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:87
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:146
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:149
+msgid "Mark as delete"
+msgstr "Пометка удаления"
+
+#: engine/backend/metaCollection/partial/list/objectListAction.cpp:120
+msgid "Add folder"
+msgstr "Добавить папку"
+
+#: engine/backend/metaCollection/partial/reference/reference.cpp:241
+msgid "Not found"
+msgstr "Не найдено"
+
+#: engine/backend/metaCollection/partial/tabularSection/tabularSection.cpp:81
+#: engine/backend/metaCollection/partial/tabularSection/tabularSection.cpp:94
+msgid "<deleted metaobject>"
+msgstr "<удаленный метаобъект>"
+
+#: engine/backend/metaCollection/partial/tabularSection/tabularSectionQuery.cpp:64
+#, c-format
+msgid "The %s is required on line %i of the %s list"
+msgstr "%s необходимо указать в строке %i списка %s."
+
+#: engine/backend/metaCollection/table/metaTableObject.h:126
+msgid "N"
+msgstr "№"
+
+#: engine/backend/metadataConfigurationQuery.cpp:148
+msgid "Create new database"
+msgstr "Создать новую базу данных"
+
+#. wxString emptyString(wxEmptyString);
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:81
+msgid "Point Size"
+msgstr "Размер пункта"
+
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:84
+msgid "Family"
+msgstr "Семья"
+
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:94
+msgid "Face Name"
+msgstr "Имя"
+
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:101
+#: engine/frontend/visualView/ctrl/tableBox.h:373
+msgid "Style"
+msgstr "Стиль"
+
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:104
+msgid "Weight"
+msgstr "Масса"
+
+#: engine/backend/propertyManager/property/advprop/advpropFont.cpp:107
+msgid "Underlined"
+msgstr "Подчеркнуто"
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropGeneration.cpp:121
+msgid "Choice generation"
+msgstr "Поколение выбора"
+
+#: engine/backend/propertyManager/property/advprop/advpropHyperLink.cpp:26
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:16
+#: engine/designer/mainFrameDesignerCmd.cpp:17
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:17
+#: engine/enterprise/mainFrameDesignerCmd.cpp:17
+msgid "Open"
+msgstr "Открыть"
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropList.cpp:107
+msgid "Select object"
+msgstr "Выбрать объект"
+
+#: engine/backend/propertyManager/property/advprop/advpropNumber.h:44
+msgid "Value must be higher."
+msgstr "Значение должно быть больше."
+
+#: engine/backend/propertyManager/property/advprop/advpropNumber.h:52
+msgid "Value must be less."
+msgstr "Значение должно быть меньше."
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropOwner.cpp:123
+msgid "Choice owner"
+msgstr "Выбрать владельца"
+
+#. Add 'source' property (common for all other children)
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:33
+msgid "Load from backend"
+msgstr "Загрузка с бэкэнда"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:34
+msgid "Load from file"
+msgstr "Загрузить из файла"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:87
+msgid "Load from configuration"
+msgstr "Загрузить из конфигурации"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:90
+#: engine/frontend/visualView/ctrl/tableBox.h:201
+#: engine/frontend/visualView/ctrl/tableBox.h:365
+#: engine/frontend/visualView/ctrl/toolBar.h:95
+#: engine/frontend/visualView/ctrl/widgets.h:202
+#: engine/frontend/visualView/ctrl/widgets.h:370
+msgid "Source"
+msgstr "Источник"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:91
+msgid "Select a source picture"
+msgstr "Выбрать источник картинки"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:95
+#: engine/enterprise/win/dlg/enterpriseOption.cpp:30
+msgid "System"
+msgstr "Система"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:96
+msgid "Image from engine collections"
+msgstr "Изображение из коллекции двигателей"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:102
+msgid "Image from configuration"
+msgstr "Изображение из конфигурации"
+
+#. Add 'file_path' property (common for 'Load From File' and 'Load From Embedded File' choices)
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:107
+msgid "File path"
+msgstr "Путь к файлу"
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:108
+msgid "Path to the image file."
+msgstr "Путь к файлу изображения."
+
+#: engine/backend/propertyManager/property/advprop/advpropPicture.cpp:343
+msgid "Choose a picture"
+msgstr "Выберите картинку"
+
+#: engine/backend/propertyManager/property/advprop/advpropPoint.cpp:18
+msgid "X"
+msgstr ""
+
+#: engine/backend/propertyManager/property/advprop/advpropPoint.cpp:19
+msgid "Y"
+msgstr ""
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropRecord.cpp:120
+msgid "Choice recorder"
+msgstr "Выберите записыватель"
+
+#: engine/backend/propertyManager/property/advprop/advpropSize.cpp:17
+#: engine/frontend/visualView/ctrl/tableBox.h:374
+msgid "Width"
+msgstr "Ширина"
+
+#: engine/backend/propertyManager/property/advprop/advpropSize.cpp:18
+msgid "Height"
+msgstr "Высота"
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropSource.cpp:132
+#: engine/backend/propertyManager/property/advprop/advpropSource.cpp:302
+msgid "Choice source"
+msgstr "Выберите источник"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:19
+msgid "Date and time"
+msgstr "Дата и время"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:20
+msgid "Time"
+msgstr "Время"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:91
+msgid "Precision"
+msgstr "Точность"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:93
+msgid "Scale"
+msgstr "Шкала"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:95
+msgid "Date time"
+msgstr "Дата"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:97
+msgid "Length"
+msgstr "Длина"
+
+#. launch editor dialog
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:495
+msgid "Choice type"
+msgstr "Выберите тип"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:508
+msgid "Composite data type"
+msgstr "Составной тип данных"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:540
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:586
+msgid "Length:"
+msgstr "Длина:"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:561
+msgid "Date format:"
+msgstr "Формат даты:"
+
+#: engine/backend/propertyManager/property/advprop/advpropType.cpp:605
+msgid "Scale:"
+msgstr "Шкала:"
+
+#: engine/backend/propertyManager/property/variant/variantPicture.cpp:25
+msgid "Backend picture"
+msgstr "Изображение бэкэнда"
+
+#: engine/backend/propertyManager/property/variant/variantPicture.cpp:27
+msgid "Configuration picture"
+msgstr "Картинка конфигурации"
+
+#: engine/backend/propertyManager/property/variant/variantPicture.cpp:29
+msgid "External picture"
+msgstr "Внешняя картинка"
+
+#. append default value
+#: engine/backend/propertyManager/property/variant/variantSource.cpp:57
+#: engine/backend/propertyManager/property/variant/variantSource.cpp:65
+#: engine/backend/propertyManager/property/variant/variantSource.cpp:66
+#: engine/backend/propertyManager/property/variant/variantSource.cpp:70
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:63
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:396
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:510
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:63
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:399
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:509
+msgid "<not selected>"
+msgstr "<не выбрано>"
+
+#: engine/backend/propertyManager/propertyObject.h:26
+msgid "property and event"
+msgstr "свойства и события"
+
+#: engine/backend/srcExplorer.h:30 engine/backend/srcExplorer.h:57
+msgid "Ref"
+msgstr "Ссылка"
+
+#: engine/backend/system/systemManagerEnum.h:14
+msgid "Information"
+msgstr "Информация"
+
+#: engine/backend/system/systemManagerEnum.h:15
+#: engine/backend/system/systemManagerFunc.cpp:520
+msgid "Warning"
+msgstr "Предупреждение"
+
+#: engine/backend/system/systemManagerEnum.h:16
+msgid "Error"
+msgstr "Ошибка"
+
+#: engine/backend/system/systemManagerEnum.h:27
+msgid "Yes or no"
+msgstr "Да или нет"
+
+#: engine/backend/system/systemManagerEnum.h:28
+msgid "Yes or no or cancel"
+msgstr "Да или нет или отмена"
+
+#: engine/backend/system/systemManagerEnum.h:29
+#: engine/backend/system/systemManagerEnum.h:43
+#: engine/frontend/win/dlgs/generation.cpp:53
+#: engine/frontend/win/dlgs/selectData.cpp:64
+msgid "Ok"
+msgstr "Ок"
+
+#: engine/backend/system/systemManagerEnum.h:30
+msgid "Ok or cancel"
+msgstr "Ок или отмена"
+
+#: engine/backend/system/systemManagerEnum.h:41
+#: engine/backend/system/systemManagerEnum.h:42
+msgid "Yes"
+msgstr "Да"
+
+#: engine/backend/system/systemManagerEnum.h:44
+#: engine/designer/win/dlg/functionSearcher/functionSearcher.cpp:22
+#: engine/designer/win/dlg/lineInput/lineInput.cpp:30
+#: engine/frontend/win/dlgs/applyChange.cpp:36
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:79
+#: engine/frontend/win/dlgs/generation.cpp:55
+#: engine/frontend/win/dlgs/selectData.cpp:66
+msgid "Cancel"
+msgstr "Отмена"
+
+#: engine/backend/system/systemManagerEnum.h:55
+msgid "Round 15 as 10"
+msgstr "15-й раунд как 10"
+
+#: engine/backend/system/systemManagerEnum.h:56
+msgid "Round 15 as 20"
+msgstr "15-й раунд как 20-й"
+
+#: engine/backend/system/systemManagerFunc.cpp:134
+msgid "Incorrect argument value for built-in function (Sqrt)"
+msgstr "Некорректное значение аргумента для встроенной функции (Sqrt)."
+
+#: engine/backend/system/systemManagerFunc.cpp:541
+msgid "Question"
+msgstr "Вопрос"
+
+#: engine/backend/system/systemManagerFunc.cpp:844
+msgid "Cannot convert value"
+msgstr "Невозможно преобразовать значение"
+
+#: engine/backend/system/systemManagerFunc.cpp:850
+#, c-format
+msgid "Type not found '%s'"
+msgstr "Тип не найден '%s'"
+
+#: engine/backend/system/systemManagerFunc.cpp:873
+msgid "Invalid argument index"
+msgstr "Неверный индекс аргумента"
+
+#: engine/backend/system/systemManagerFunc.cpp:972
+#, c-format
+msgid "Common form not found '%s'"
+msgstr "Общая форма '%s' не найдена"
+
+#: engine/backend/system/systemManagerFunc.cpp:1000
+#, c-format
+msgid "Common template not found '%s'"
+msgstr "Общий шаблон \"%s\" не найден"
+
+#: engine/backend/system/value/valueDatabasePrepareStatement.cpp:71
+msgid "Index goes beyond statement"
+msgstr "Индекс выходит за рамки простого утверждения."
+
+#: engine/backend/system/value/valueMap.cpp:149
+#, c-format
+msgid "Key '%s' is already using!"
+msgstr "Ключ '%s' уже используется!"
+
+#: engine/backend/system/value/valueMap.cpp:193
+#, c-format
+msgid "Key '%s' not found!"
+msgstr "Ключ '%s' не найден!"
+
+#. **********************************************************************
+#. *                            CValueStructure                         *
+#. **********************************************************************
+#: engine/backend/system/value/valueMap.cpp:201
+msgid "Error conversion value. Must be string!"
+msgstr "Ошибка преобразования значения. Должна быть строкой!"
+
+#: engine/backend/system/value/valueOLE.cpp:464
+#, c-format
+msgid "Failed to create an instance of \"%s\""
+msgstr "Не удалось создать экземпляр \"%s\"."
+
+#: engine/backend/system/value/valueOLE.cpp:530
+#, c-format
+msgid "Failed to create an instance of '%s'"
+msgstr "Не удалось создать экземпляр '%s'."
+
+#: engine/backend/system/value/valueOLE.cpp:892
+msgid ""
+"The number of elements provided to DISPPARAMS is different from the number "
+"of arguments accepted by the method or property."
+msgstr ""
+"Количество элементов, передаваемых в DISPPARAMS, отличается от количества "
+"аргументов, принимаемых методом или свойством."
+
+#: engine/backend/system/value/valueOLE.cpp:895
+msgid "One of the arguments in rgvarg is not a valid variant type. "
+msgstr "Один из аргументов в rgvarg не является допустимым типом варианта."
+
+#: engine/backend/system/value/valueOLE.cpp:898
+msgid ""
+"The requested member does not exist, or the call to Invoke tried to set the "
+"value of a read-only property."
+msgstr ""
+"Запрошенный элемент не существует, или же вызов функции Invoke попытался "
+"установить значение свойства, доступного только для чтения."
+
+#: engine/backend/system/value/valueOLE.cpp:901
+msgid "This implementation of IDispatch does not support named arguments."
+msgstr "Данная реализация IDispatch не поддерживает именованные аргументы."
+
+#: engine/backend/system/value/valueOLE.cpp:904
+msgid ""
+"One of the arguments in rgvarg could not be coerced to the specified type."
+msgstr ""
+"Один из аргументов в функции rgvarg не удалось преобразовать к указанному "
+"типу."
+
+#: engine/backend/system/value/valueOLE.cpp:907
+msgid ""
+"One of the parameter DISPIDs does not correspond to a parameter on the "
+"method. In this case, puArgErr should be set to the first argument that "
+"contains the error."
+msgstr ""
+"Один из параметров DISPID не соответствует параметру метода. В этом случае "
+"puArgErr следует установить равным первому аргументу, содержащему ошибку."
+
+#: engine/backend/system/value/valueOLE.cpp:910
+msgid ""
+"One or more of the arguments could not be coerced. The index within rgvarg "
+"of the first parameter with the incorrect type is returned in the puArgErr "
+"parameter."
+msgstr ""
+"Один или несколько аргументов не удалось преобразовать в нужный тип. В "
+"параметре puArgErr возвращается индекс первого параметра с некорректным "
+"типом в пределах rgvarg."
+
+#: engine/backend/system/value/valueOLE.cpp:913
+msgid "The interface identifier passed in riid is not IID_NULL.)"
+msgstr "Идентификатор интерфейса, переданный в riid, не равен IID_NULL."
+
+#: engine/backend/system/value/valueOLE.cpp:916
+msgid ""
+"The member being invoked interprets string arguments according to the LCID, "
+"and the LCID is not recognized. If the LCID is not needed to interpret "
+"arguments, this error should not be returned."
+msgstr ""
+"The member being invoked interprets string arguments according to the LCID, "
+"and the LCID is not recognized. If the LCID is not needed to interpret "
+"arguments, this error should not be returned."
+
+#: engine/backend/system/value/valueOLE.cpp:919
+msgid "A required parameter was omitted."
+msgstr "Был пропущен обязательный параметр."
+
+#: engine/backend/system/value/valueOLE.cpp:922
+msgid "Error: get method return unknown code"
+msgstr "Ошибка: метод get возвращает неизвестный код"
+
+#: engine/backend/system/value/valueSpreadsheet.h:50
+#: engine/frontend/visualView/controlEnum.h:25
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:354
+msgid "Horizontal"
+msgstr "Горизонтальный"
+
+#: engine/backend/system/value/valueSpreadsheet.h:51
+#: engine/frontend/visualView/controlEnum.h:26
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:355
+msgid "Vertical"
+msgstr "Вертикальный"
+
+#: engine/backend/system/value/valueSpreadsheet.h:65
+#: engine/frontend/visualView/controlEnum.h:63
+#: engine/frontend/visualView/controlEnum.h:89
+#: engine/frontend/visualView/ctrl/sizer.h:118
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:364
+msgid "Left"
+msgstr "Лево"
+
+#: engine/backend/system/value/valueSpreadsheet.h:66
+#: engine/backend/system/value/valueSpreadsheet.h:82
+#: engine/frontend/visualView/controlEnum.h:64
+#: engine/frontend/visualView/controlEnum.h:77
+msgid "Center"
+msgstr "Центр"
+
+#: engine/backend/system/value/valueSpreadsheet.h:67
+#: engine/frontend/visualView/controlEnum.h:65
+#: engine/frontend/visualView/controlEnum.h:90
+#: engine/frontend/visualView/ctrl/sizer.h:119
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:365
+msgid "Right"
+msgstr "Право"
+
+#: engine/backend/system/value/valueSpreadsheet.h:81
+#: engine/frontend/visualView/controlEnum.h:51
+#: engine/frontend/visualView/controlEnum.h:76
+#: engine/frontend/visualView/ctrl/sizer.h:120
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:366
+msgid "Top"
+msgstr "Верх"
+
+#: engine/backend/system/value/valueSpreadsheet.h:83
+#: engine/frontend/visualView/controlEnum.h:52
+#: engine/frontend/visualView/controlEnum.h:78
+#: engine/frontend/visualView/ctrl/sizer.h:121
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:367
+msgid "Bottom"
+msgstr "Низ"
+
+#: engine/backend/system/value/valueSpreadsheet.h:97
+msgid "Overflow"
+msgstr "Переполнение"
+
+#: engine/backend/system/value/valueSpreadsheet.h:98
+msgid "Clip"
+msgstr "Обрезать"
+
+#: engine/backend/system/value/valueSpreadsheet.h:112
+msgid "None"
+msgstr "Никто"
+
+#: engine/backend/system/value/valueSpreadsheet.h:113
+msgid "Solid"
+msgstr "Сплошной"
+
+#: engine/backend/system/value/valueSpreadsheet.h:114
+msgid "Dotted"
+msgstr "Пунктирный"
+
+#: engine/backend/system/value/valueSpreadsheet.h:115
+msgid "Thin dashed"
+msgstr "Тонкие пунктирные линии"
+
+#: engine/backend/system/value/valueSpreadsheet.h:116
+msgid "Thick dashed"
+msgstr "Толстый пунктирный"
+
+#: engine/backend/system/value/valueSpreadsheet.h:117
+msgid "Large dashed"
+msgstr "Большой пунктирный"
+
+#: engine/backend/system/value/valueSpreadsheet.h:132
+#: engine/frontend/visualView/controlEnum.h:102
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:345
+msgid "Text"
+msgstr "Текст"
+
+#: engine/backend/system/value/valueSpreadsheet.h:133
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:350
+msgid "Parameter"
+msgstr "Параметр"
+
+#: engine/backend/tableInfo.cpp:50
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:145
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:93
+#: engine/frontend/win/dlgs/userList.cpp:85 engine/launcher/launcher.cpp:134
+msgid "Add"
+msgstr "Добавить"
+
+#: engine/backend/tableInfo.cpp:51
+#: engine/designer/mainFrame/output/outputWindow.cpp:250
+#: engine/frontend/win/dlgs/userList.cpp:86
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:213
+msgid "Copy"
+msgstr "Копировать"
+
+#: engine/backend/tableInfo.cpp:52
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:76
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:364
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:76
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:367
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:27
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:51
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:102
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:732
+#: engine/frontend/win/dlgs/userList.cpp:87 engine/launcher/launcher.cpp:140
+msgid "Edit"
+msgstr "Редактировать"
+
+#: engine/backend/tableInfo.cpp:58 engine/frontend/win/ctrls/dataView.cpp:424
+msgid "Filter"
+msgstr "Фильтр"
+
+#: engine/backend/tableInfo.cpp:59
+msgid "Filter by column"
+msgstr "Фильтр по столбцу"
+
+#: engine/backend/tableInfo.cpp:60
+msgid "Filter clear"
+msgstr "Фильтр очищен"
+
+#. Get bitmap from art provider
+#: engine/backend/typeconv.h:176 engine/backend/typeconv.h:571
+msgid "Load From Art Provider"
+msgstr "Загрузка от поставщика произведений искусства"
+
+#: engine/backend/typeconv.h:558
+msgid "Load From File"
+msgstr "Загрузить из файла"
+
+#: engine/classChecker/classCheckerWnd.cpp:15
+msgid "class identifier"
+msgstr "идентификатор класса"
+
+#: engine/classChecker/classCheckerWnd.cpp:26
+msgid "Output"
+msgstr "Выходной"
+
+#: engine/classChecker/classCheckerWnd.cpp:28
+msgid "Result"
+msgstr "Результат"
+
+#: engine/classChecker/classCheckerWnd.h:25
+msgid "Class identifier checker"
+msgstr "проверка идентификатора класса"
+
+#: engine/codeRunner/codeRunner.cpp:17
+#: engine/designer/win/editor/codeEditor/codeEditor.cpp:474
+msgid "No syntax errors detected!"
+msgstr "Синтаксических ошибок не обнаружено!"
+
+#: engine/codeRunner/codeRunner.cpp:630
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:150
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:98
+msgid "Syntax control"
+msgstr "Синтаксический контроль"
+
+#: engine/codeRunner/codeRunner.cpp:635
+msgid "Run code"
+msgstr "Запустить код"
+
+#: engine/codeRunner/codeRunner.cpp:640
+msgid "Clear output"
+msgstr "Очистить вывод"
+
+#: engine/codeRunner/codeRunner.h:91
+msgid "Code runner"
+msgstr "Кодраннер"
+
+#: engine/deamon/deamon.cpp:88
+msgid "Failed to connection!"
+msgstr "Не удалось установить соединение!"
+
+#: engine/deamon/deamon.cpp:88
+msgid "Connection error"
+msgstr "Ошибка подключения"
+
+#: engine/designer/docManager/docManager.cpp:31
+#: engine/enterprise/docManager/docManager.cpp:17
+msgid "Data processor Doc"
+msgstr "Документация по обработке"
+
+#: engine/designer/docManager/docManager.cpp:31
+#: engine/enterprise/docManager/docManager.cpp:17
+msgid "Data processor View"
+msgstr "Просмотр обработки"
+
+#: engine/designer/docManager/docManager.cpp:32
+#: engine/enterprise/docManager/docManager.cpp:18
+msgid "Report Doc"
+msgstr "Отчет"
+
+#: engine/designer/docManager/docManager.cpp:32
+#: engine/enterprise/docManager/docManager.cpp:18
+msgid "Report View"
+msgstr "Просмотр отчета"
+
+#: engine/designer/docManager/docManager.cpp:33
+msgid "Configuration Doc"
+msgstr "Документация по настройке"
+
+#: engine/designer/docManager/docManager.cpp:33
+msgid "Configuration View"
+msgstr "Вид конфигурации"
+
+#: engine/designer/docManager/docManager.cpp:38
+#: engine/frontend/docView/docManager.cpp:110
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:131
+msgid "Spreadsheet document"
+msgstr "Табличный документ"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:74
+msgid "Test form\tCtrl+R"
+msgstr "Тестировать форму\tCtrl+R"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:86
+msgid "Controls"
+msgstr "Элементы управления"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:145
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:93
+msgid "Add comments"
+msgstr "Добавить комментарий"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:147
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:95
+msgid "Remove comments"
+msgstr "Удалить комментарий"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:147
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:95
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:734
+msgid "Remove"
+msgstr "Удалить"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:150
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:98
+msgid "Syntax"
+msgstr "Синтаксис"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:153
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:101
+msgid "Goto line"
+msgstr "Перейти к строке"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:153
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:101
+msgid "Goto"
+msgstr "Перейти"
+
+#: engine/designer/docManager/templates/docViewFormEditor.cpp:154
+#: engine/designer/docManager/templates/docViewModuleEditor.cpp:102
+#: engine/designer/win/dlg/functionSearcher/functionSearcher.cpp:18
+#: engine/designer/win/dlg/functionSearcher/functionSearcher.cpp:31
+msgid "Procedures and functions"
+msgstr "Функции и процедуры"
+
+#: engine/designer/mainFrame/local/localWindow.cpp:109
+#: engine/designer/mainFrame/watch/watchctrl.cpp:23
+#: engine/frontend/visualView/ctrl/widgets.h:467
+#: engine/frontend/visualView/ctrl/widgets.h:497
+#: engine/frontend/win/ctrls/dataView.cpp:450
+msgid "Value"
+msgstr "Значение"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:29
+#: engine/designer/mainFrameDesignerEvent.cpp:23
+#: engine/enterprise/mainFrameDesignerEvent.cpp:23
+msgid "Debugger is already running!"
+msgstr "Отладчик уже запущен!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:34
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:47
+#: engine/designer/mainFrameDesignerEvent.cpp:28
+#: engine/designer/mainFrameDesignerEvent.cpp:51
+#: engine/enterprise/mainFrameDesignerEvent.cpp:28
+#: engine/enterprise/mainFrameDesignerEvent.cpp:51
+msgid "Configuration '"
+msgstr "Конфигурация '"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:34
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:47
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:317
+#: engine/designer/mainFrameDesignerEvent.cpp:28
+#: engine/designer/mainFrameDesignerEvent.cpp:51
+#: engine/designer/mainFrameDesignerEvent.cpp:115
+#: engine/enterprise/mainFrameDesignerEvent.cpp:28
+#: engine/enterprise/mainFrameDesignerEvent.cpp:51
+#: engine/enterprise/mainFrameDesignerEvent.cpp:115
+msgid "Save project"
+msgstr "Сохранить проект"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:147
+#: engine/designer/mainFrameDesignerEvent.cpp:92
+#: engine/enterprise/mainFrameDesignerEvent.cpp:92
+msgid "Successfully rolled back to database configuration!"
+msgstr "Конфигурация базы данных успешно восстановлена!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:156
+#: engine/designer/mainFrameDesignerEvent.cpp:274
+#: engine/enterprise/mainFrameDesignerEvent.cpp:274
+msgid ""
+"To update the database configuration you need stop debugging.\n"
+"Do you want to continue?"
+msgstr ""
+"Для обновления конфигурации базы данных необходимо остановить отладку.\n"
+"Продолжить?"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:179
+msgid "Failed to save database!"
+msgstr "Не удалось сохранить базу данных!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:201
+msgid "Failed to update database!"
+msgstr "Не удалось обновить базу данных!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:210
+msgid "Open database file"
+msgstr "Откройте файл базы данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:239
+msgid "Loading of tasks completed successful. Restart the program!"
+msgstr "Загрузка задач успешно завершена. Перезапустите программу!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:243
+msgid "Error when trying to load database from a file!!"
+msgstr "Ошибка при попытке загрузить базу данных из файла!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:251
+msgid "Save database file"
+msgstr "Сохраните файл базы данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:257
+msgid "Data upload completed successfully!"
+msgstr "Загрузка данных успешно завершена!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:259
+msgid "Error when trying to upload data to a file!"
+msgstr "Ошибка при попытке загрузить данные в файл!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:266
+msgid "Are you sure you want to clear the database?"
+msgstr "Вы уверены, что хотите очистить базу данных?"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:266
+msgid "Clear project"
+msgstr "Очистить проект"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:292
+msgid "Database cleared successfully!"
+msgstr "База данных успешно очищена!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:294
+msgid "Error when trying to clear database!"
+msgstr "Ошибка при попытке очистить базу данных!"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:303
+#: engine/designer/mainFrameDesignerEvent.cpp:100
+#: engine/enterprise/mainFrameDesignerEvent.cpp:100
+msgid "Open configuration file"
+msgstr "Откройте файл конфигурации"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:327
+#: engine/designer/mainFrameDesignerEvent.cpp:124
+#: engine/enterprise/mainFrameDesignerEvent.cpp:124
+msgid "Save configuration file"
+msgstr "Сохраните файл конфигурации"
+
+#: engine/designer/mainFrame/mainFrameDesignerEvent.cpp:333
+#: engine/designer/mainFrameDesignerEvent.cpp:130
+#: engine/enterprise/mainFrameDesignerEvent.cpp:130
+msgid "Successfully unloaded to: "
+msgstr "Разгрузка успешно завершена: "
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:66
+#: engine/designer/mainFrameDesignerMenu.cpp:62
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:47
+#: engine/enterprise/mainFrameDesignerMenu.cpp:62
+msgid "Re&vert..."
+msgstr "Возвращаться..."
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:100
+#: engine/designer/mainFrameDesignerMenu.cpp:96
+#: engine/enterprise/mainFrameDesignerMenu.cpp:96
+msgid "Start debugging"
+msgstr "Начать отладку"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:101
+#: engine/designer/mainFrameDesignerMenu.cpp:97
+#: engine/enterprise/mainFrameDesignerMenu.cpp:97
+msgid "Start without debugging"
+msgstr "Запуск без отладки"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:102
+#: engine/designer/mainFrameDesignerMenu.cpp:98
+#: engine/enterprise/mainFrameDesignerMenu.cpp:98
+msgid "Attach for debugging..."
+msgstr "Прикрепите файл для отладки..."
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:105
+#: engine/designer/mainFrameDesignerMenu.cpp:101
+#: engine/enterprise/mainFrameDesignerMenu.cpp:101
+msgid "Continue"
+msgstr "Продолжить"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:106
+#: engine/designer/mainFrameDesignerMenu.cpp:102
+#: engine/enterprise/mainFrameDesignerMenu.cpp:102
+msgid "Pause"
+msgstr "Пауза"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:107
+#: engine/designer/mainFrameDesignerMenu.cpp:103
+#: engine/enterprise/mainFrameDesignerMenu.cpp:103
+msgid "Step into"
+msgstr "Шагните в"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:108
+#: engine/designer/mainFrameDesignerMenu.cpp:104
+#: engine/enterprise/mainFrameDesignerMenu.cpp:104
+msgid "Step over"
+msgstr "Перешагните"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:109
+#: engine/designer/mainFrameDesignerMenu.cpp:105
+#: engine/enterprise/mainFrameDesignerMenu.cpp:105
+msgid "Stop debugging"
+msgstr "Остановить отладку"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:110
+#: engine/designer/mainFrameDesignerMenu.cpp:106
+#: engine/enterprise/mainFrameDesignerMenu.cpp:106
+msgid "Stop debugging program"
+msgstr "Остановить отладку программы"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:110
+#: engine/designer/mainFrameDesignerMenu.cpp:106
+#: engine/enterprise/mainFrameDesignerMenu.cpp:106
+msgid "Stop program"
+msgstr "Остановить программу"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:113
+#: engine/designer/mainFrameDesignerMenu.cpp:110
+#: engine/enterprise/mainFrameDesignerMenu.cpp:110
+msgid "Remove all breakpoits"
+msgstr "Удалите все точки останова"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:119
+msgid "Open database configuration"
+msgstr "Открыть конфигурацию базы данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:122
+msgid "Rollback to database configuration"
+msgstr "Откат к конфигурации базы данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:132
+#: engine/designer/mainFrameDesignerMenu.cpp:115
+#: engine/enterprise/mainFrameDesignerMenu.cpp:115
+msgid "Load configuraion"
+msgstr "Загрузить конфигурацию"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:134
+#: engine/designer/mainFrameDesignerMenu.cpp:116
+#: engine/enterprise/mainFrameDesignerMenu.cpp:116
+msgid "Save configuration"
+msgstr "Сохранить конфигурацию"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:138
+#: engine/designer/mainFrameDesignerMenu.cpp:119
+#: engine/enterprise/mainFrameDesignerMenu.cpp:119
+msgid "Debug"
+msgstr "Отладка"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:142
+#: engine/designer/mainFrameDesignerMenu.cpp:122
+#: engine/enterprise/mainFrameDesignerMenu.cpp:122
+msgid "Users"
+msgstr "Пользователи"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:147
+msgid "Load database"
+msgstr "Загрузить базу данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:149
+msgid "Save database"
+msgstr "Сохранить базу данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:152
+msgid "Clear database"
+msgstr "Очистить базу данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:158
+#: engine/designer/mainFrameDesignerMenu.cpp:127
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:87
+#: engine/enterprise/mainFrameDesignerMenu.cpp:127
+msgid "Tools"
+msgstr "Опции"
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:159
+#: engine/designer/mainFrameDesignerMenu.cpp:128
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:88
+#: engine/enterprise/mainFrameDesignerMenu.cpp:128
+msgid "Options..."
+msgstr "Опции..."
+
+#: engine/designer/mainFrame/mainFrameDesignerMenu.cpp:162
+#: engine/designer/mainFrameDesignerMenu.cpp:131
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:97
+#: engine/enterprise/mainFrameDesignerMenu.cpp:131
+msgid "About"
+msgstr "О программе"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:15
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:75
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:361
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:374
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:75
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:364
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:377
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:26
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:50
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:101
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:729
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:742
+#: engine/designer/mainFrameDesignerCmd.cpp:16
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:16
+#: engine/enterprise/mainFrameDesignerCmd.cpp:16
+msgid "New"
+msgstr "Новый"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:18
+#: engine/designer/mainFrameDesignerCmd.cpp:19
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:19
+#: engine/enterprise/mainFrameDesignerCmd.cpp:19
+msgid "Save as"
+msgstr "Сохранить как"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:20
+#: engine/designer/mainFrameDesignerCmd.cpp:21
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:21
+#: engine/enterprise/mainFrameDesignerCmd.cpp:21
+msgid "Find"
+msgstr "Найти"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:22
+#: engine/designer/mainFrameDesignerCmd.cpp:23
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:23
+#: engine/enterprise/mainFrameDesignerCmd.cpp:23
+msgid "Redo"
+msgstr "Применить"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:23
+#: engine/designer/mainFrameDesignerCmd.cpp:24
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:24
+#: engine/enterprise/mainFrameDesignerCmd.cpp:24
+msgid "Undo"
+msgstr "Отменить"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:26
+msgid "Update database"
+msgstr "Обновить базу данных"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:62
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:63
+msgid "Ready"
+msgstr "Готово"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:96
+#: engine/designer/mainFrameDesignerCmd.cpp:98
+#: engine/enterprise/mainFrame/mainFrameEnterpriseParts.cpp:98
+#: engine/enterprise/mainFrameDesignerCmd.cpp:98
+msgid "Messages"
+msgstr "Сообщения"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:97
+msgid "Local variable"
+msgstr "Локальные переменные"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:98
+#: engine/designer/mainFrameDesignerCmd.cpp:101
+#: engine/enterprise/mainFrameDesignerCmd.cpp:101
+msgid "Call stack"
+msgstr "Стек вызова"
+
+#: engine/designer/mainFrame/mainFrameDesignerParts.cpp:99
+#: engine/designer/mainFrameDesignerCmd.cpp:104
+#: engine/enterprise/mainFrameDesignerCmd.cpp:104
+msgid "Watch"
+msgstr "Переменные"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:42
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:42
+msgid "Default form:"
+msgstr "Форма по умолчанию:"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:75
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:75
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:26
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:50
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:101
+msgid "New item"
+msgstr "Новый элемент"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:76
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:76
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:27
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:51
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:102
+msgid "Edit item"
+msgstr "Редактировать элемент"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:77
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:77
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:28
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:52
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:103
+msgid "Delete item"
+msgstr "Удалить элемент"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:79
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:79
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:30
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:54
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:105
+msgid "Up"
+msgstr "Вверх"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:79
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:79
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:30
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:54
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:105
+msgid "Up item"
+msgstr "Вверх элемент"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:80
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:80
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:31
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:55
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:106
+msgid "Down"
+msgstr "Вниз"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:80
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:80
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:31
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:55
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:106
+msgid "Down item"
+msgstr "Вниз элемент"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:82
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:82
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:33
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:57
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:108
+#: engine/designer/win/dlg/functionSearcher/functionSearcher.cpp:25
+msgid "Sort"
+msgstr "Сортировать"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd.cpp:82
+#: engine/designer/mainFrame/metatree/external/dataReportWnd.cpp:82
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:33
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:57
+#: engine/designer/mainFrame/metatree/metatreeWnd.cpp:108
+msgid "Sort item"
+msgstr "Сортировать элементы"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:11
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:11
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:33
+msgid "Forms"
+msgstr "Формы"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:12
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:12
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:34
+msgid "Modules"
+msgstr "Модули"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:13
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:13
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:35
+msgid "Templates"
+msgstr "Шаблоны"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:14
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:14
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:36
+msgid "Attributes"
+msgstr "Реквизиты"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:15
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:15
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:40
+msgid "Tables"
+msgstr "Таблицы"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:16
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:16
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:41
+msgid "Enums"
+msgstr "Перечисления"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:370
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:373
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:738
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:755
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:493
+#: engine/frontend/mainFrame/mainFrameParts.cpp:22
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:246
+msgid "Properties"
+msgstr "Свойства"
+
+#: engine/designer/mainFrame/metatree/external/dataProcessorWnd_impl.cpp:444
+msgid "dataProcessor"
+msgstr "Обработка"
+
+#: engine/designer/mainFrame/metatree/external/dataReportWnd_impl.cpp:447
+msgid "reports"
+msgstr "Отчеты"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:11
+msgid "Metadata"
+msgstr "Метаданные"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:14
+msgid "Common modules"
+msgstr "Общие модули"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:15
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:46
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:4
+msgid "Common forms"
+msgstr "Общие формы"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:16
+msgid "Common templates"
+msgstr "Общие шаблоны"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:18
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:5
+msgid "Interfaces"
+msgstr "Интерфейсы"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:19
+msgid "Roles"
+msgstr "Роли"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:20
+msgid "Pictures"
+msgstr "Картинки"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:21
+msgid "Languages"
+msgstr "Языки"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:23
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:48
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:6
+#: engine/enterprise/win/dlg/functionAll.cpp:61
+msgid "Constants"
+msgstr "Константы"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:25
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:50
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:8
+#: engine/enterprise/win/dlg/functionAll.cpp:66
+msgid "Catalogs"
+msgstr "Справочники"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:26
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:51
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:9
+#: engine/enterprise/win/dlg/functionAll.cpp:71
+msgid "Documents"
+msgstr "Документы"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:27
+msgid "Enumerations"
+msgstr "Перечисления"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:28
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:52
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:10
+#: engine/enterprise/win/dlg/functionAll.cpp:76
+msgid "Data processors"
+msgstr "Обработки"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:29
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:53
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:11
+#: engine/enterprise/win/dlg/functionAll.cpp:81
+msgid "Reports"
+msgstr "Отчеты"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:30
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:54
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:12
+msgid "Information Registers"
+msgstr "Регистры сведений"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:31
+#: engine/designer/win/editor/interfaceEditor/interfaceEditor.cpp:55
+#: engine/designer/win/editor/roleEditor/roleEditor.cpp:13
+msgid "Accumulation Registers"
+msgstr "Регистры накопления"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:37
+msgid "Dimensions"
+msgstr "Измерения"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:38
+msgid "Resources"
+msgstr "Ресурсы"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:544
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:595
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:659
+msgid "Open data processor file"
+msgstr "Открыть файл внешней обработки"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:545
+msgid "Data processor files (*.edp)|*.edp"
+msgstr "Файлы обработок (*.edp)|*.edp"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:565
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:620
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:675
+msgid "Open report file"
+msgstr "Открыть внешний отчет"
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:707
+msgid "Replace data processor, report..."
+msgstr "Заменить обработку, отчет..."
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:709
+msgid "Save data processor, report..."
+msgstr "Сохранить обработку, отчет..."
+
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:749
+msgid "Insert data processor, report..."
+msgstr "Вставить обработку, отчет..."
+
+#. Set item bold and name
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:1425
+#: engine/designer/mainFrame/metatree/metatreeWnd_impl.cpp:1462
+msgid "configuration"
+msgstr "конфигурация"
+
+#: engine/designer/mainFrame/output/outputWindow.cpp:252
+msgid "Clear"
+msgstr "Очистить"
+
+#: engine/designer/mainFrame/stack/stackWindow.cpp:110
+msgid "Line"
+msgstr "Строка"
+
+#: engine/designer/mainFrameDesignerCmd.cpp:26
+#: engine/enterprise/mainFrameDesignerCmd.cpp:26
+msgid "Save metadata"
+msgstr "Сохранить метаданные"
+
+#: engine/designer/mainFrameDesignerMenu.cpp:113
+#: engine/enterprise/mainFrameDesignerMenu.cpp:113
+msgid "Return to database configuration"
+msgstr "Вернуться к конфигурации базы данных"
+
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:9
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:14
+#: engine/frontend/win/dlgs/activeUser.cpp:20
+#: engine/frontend/win/dlgs/userItem.cpp:115
+#: engine/frontend/win/dlgs/userItem.h:48
+msgid "User"
+msgstr "Пользователь"
+
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:10
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:15
+#: engine/frontend/win/dlgs/activeUser.cpp:23
+msgid "Computer"
+msgstr "Компьютер"
+
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:11
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:16
+msgid "Port"
+msgstr "Порт"
+
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:68
+msgid "Available debug items:"
+msgstr "Доступные предметы отладки"
+
+#: engine/designer/win/dlg/debugItem/debugItem.cpp:75
+msgid "Attached debug items:"
+msgstr "Подключенные предметы отладки"
+
+#: engine/designer/win/dlg/debugItem/debugItem.h:22
+msgid "Debug items"
+msgstr "Предметы отладки"
+
+#: engine/designer/win/dlg/functionSearcher/functionSearcher.cpp:20
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:74
+msgid "OK"
+msgstr "ОК"
+
+#: engine/designer/win/dlg/lineInput/lineInput.cpp:15
+msgid "Enter line number:"
+msgstr "Введите номер строки"
+
+#: engine/designer/win/dlg/lineInput/lineInput.cpp:27
+msgid "Go to"
+msgstr "Перейти"
+
+#: engine/designer/win/dlg/lineInput/lineInput.h:29
+msgid "Go to line"
+msgstr "Перейти к строке"
+
+#: engine/designer/win/editor/codeEditor/codeEditor.cpp:429
+#: engine/frontend/docView/templates/docViewHelp.cpp:84
+#: engine/frontend/docView/templates/docViewText.cpp:84
+#, c-format
+msgid "\"%s\" not found!"
+msgstr "\"%s\" не найден!"
+
+#: engine/designer/win/editor/codeEditor/codeEditor.cpp:430
+#: engine/frontend/docView/templates/docViewHelp.cpp:84
+#: engine/frontend/docView/templates/docViewText.cpp:84
+msgid "Not Found!"
+msgstr "Не найдено!"
+
+#: engine/designer/win/editor/codeEditor/codeEditor.cpp:485
+msgid "Errors were found while checking module. Do you want to continue ?"
+msgstr "При проверке модуля обнаружены ошибки. Вы хотите продолжить?"
+
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:87
+msgid "Do you rename an existing procedure?"
+msgstr "Желаете переименовать существующую процедуру?"
+
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:87
+msgid "Rename"
+msgstr "Переименовать"
+
+#: engine/designer/win/editor/visualEditor/visualEditorNotebook.cpp:101
+msgid "Do you delete an existing procedure?"
+msgstr "Желаете удалить процедуру?"
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:478
+msgid "Cut\tCtrl+X"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:480
+msgid "Copy\tCtrl+C"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:482
+msgid "Paste\tCtrl+V"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:485
+msgid "Delete\tCtrl+D"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:488
+msgid "Move Up\tAlt+Up"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorObjectTree.cpp:490
+msgid "Move Down\tAlt+Down"
+msgstr ""
+
+#: engine/designer/win/editor/visualEditor/visualEditorPanel.cpp:41
+msgid "Tree elements"
+msgstr "Дерево элементов"
+
+#: engine/enterprise/mainFrame/mainFrameEnterprise.h:30
+#: engine/launcher/launcher.cpp:121
+msgid "Enterprise"
+msgstr "Предприятие"
+
+#: engine/enterprise/mainFrame/mainFrameEnterpriseInterface.cpp:543
+msgid "Create"
+msgstr "Создать"
+
+#: engine/enterprise/mainFrame/mainFrameEnterpriseInterface.cpp:587
+msgid "Report"
+msgstr "Отчет"
+
+#: engine/enterprise/mainFrame/mainFrameEnterpriseInterface.cpp:631
+msgid "Service"
+msgstr "Сервис"
+
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:82
+msgid "All operations..."
+msgstr "Все функции..."
+
+#: engine/enterprise/mainFrame/mainFrameEnterpriseMenu.cpp:83
+msgid "Operations"
+msgstr "Операции"
+
+#: engine/enterprise/win/dlg/enterpriseOption.cpp:28
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:343
+msgid "General"
+msgstr "Общий"
+
+#: engine/enterprise/win/dlg/enterpriseOption.cpp:32
+msgid "Debugging in the current session"
+msgstr "Отладка в текущей сессии"
+
+#: engine/enterprise/win/dlg/enterpriseOption.h:29
+msgid "Options"
+msgstr "Опции"
+
+#: engine/enterprise/win/dlg/functionAll.cpp:86
+msgid "Information registers"
+msgstr "Регистры сведений"
+
+#: engine/enterprise/win/dlg/functionAll.cpp:91
+msgid "Accumulation registers"
+msgstr "Регистры накопления"
+
+#: engine/enterprise/win/dlg/functionAll.h:33
+msgid "All operations"
+msgstr "Все функции"
+
+#: engine/frontend/docView/docManager.cpp:107
+msgid "Text document"
+msgstr "Текстовый документ"
+
+#: engine/frontend/docView/docManager.cpp:107
+msgid "Text Doc"
+msgstr "Текстовый документ"
+
+#: engine/frontend/docView/docManager.cpp:107
+msgid "Text View"
+msgstr "Просмотре текста"
+
+#: engine/frontend/docView/docManager.cpp:110
+msgid "Spreadsheet Doc"
+msgstr "Табличный документ"
+
+#: engine/frontend/docView/docManager.cpp:110
+msgid "Spreadsheet View"
+msgstr "Просмотр табличного документа"
+
+#: engine/frontend/docView/docManager.cpp:113
+msgid "Help document"
+msgstr "Справка"
+
+#: engine/frontend/docView/docManager.cpp:113
+msgid "Help Doc"
+msgstr "Справочный документ"
+
+#: engine/frontend/docView/docManager.cpp:113
+msgid "Help View"
+msgstr "Просмотр справки"
+
+#: engine/frontend/docView/docManager.cpp:408
+#, c-format
+msgid "The format of file '%s' couldn't be determined."
+msgstr "Не удалось определить формат файла '%s'."
+
+#: engine/frontend/docView/docManager.cpp:498
+msgid "OES files ("
+msgstr "OES файлы ("
+
+#: engine/frontend/docView/docManager.cpp:528
+#: engine/frontend/docView/docManager.cpp:581
+msgid "Open File"
+msgstr "Открыть файл"
+
+#: engine/frontend/docView/docManager.cpp:544
+msgid "File error"
+msgstr "Файловая ошибка"
+
+#: engine/frontend/docView/docManager.cpp:546
+msgid "Sorry, could not open this file."
+msgstr "Извините, не удалось открыть этот файл."
+
+#. Since we do not add files with non-default extensions to the
+#. file history this can only happen if the application changes the
+#. allowed templates in runtime.
+#: engine/frontend/docView/docManager.cpp:580
+msgid "Sorry, the format for this file is unknown."
+msgstr "Извините, формат этого файла неизвестен."
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:79
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:143
+msgid "Add area"
+msgstr "Добавить область"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:80
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:145
+msgid "Delete area"
+msgstr "Удалить область"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:81
+#: engine/frontend/win/ctrls/grid/gridext.cpp:13492
+#: engine/frontend/win/ctrls/grid/gridext.cpp:13511
+#: engine/frontend/win/ctrls/grid/gridext.cpp:13574
+#: engine/frontend/win/ctrls/grid/gridext.cpp:13592
+msgid "Area"
+msgstr "Область"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:84
+msgid "Freeze row"
+msgstr "Зафиксироваь строку"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:85
+msgid "Freeze column"
+msgstr "Зафиксировать колонку"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:86
+msgid "Freeze"
+msgstr "Фиксация"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:89
+msgid "Add brake row"
+msgstr "Добавить зафиксированный ряд"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:90
+msgid "Add brake column"
+msgstr "Добавить фиксированную колонку"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:91
+msgid "Delete brake row"
+msgstr "Удалить зафиксированный ряд"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:92
+msgid "Delete brake column"
+msgstr "Удалить зафиксированную колонку"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:93
+msgid "Print brake"
+msgstr ""
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:96
+msgid "Left border"
+msgstr "Левая граница"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:97
+msgid "Top border"
+msgstr "Верхняя граница"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:98
+msgid "Right border"
+msgstr "Правая граница"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:99
+msgid "Bottom border"
+msgstr "Нижняя граница"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:101
+msgid "Border all"
+msgstr "Все границы"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:102
+msgid "Border around"
+msgstr "Границы везде"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:103
+msgid "No border"
+msgstr "Нет границ"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:104
+#: engine/frontend/visualView/ctrl/sizer.h:116
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:363
+msgid "Border"
+msgstr "Граница"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:107
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:148
+msgid "Show cells"
+msgstr "Показать ячейки"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:108
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:149
+msgid "Show headers"
+msgstr "Показать заголовки"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:109
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:150
+msgid "Show area"
+msgstr "Показать область"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:112
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:140
+msgid "Merge cells"
+msgstr "Объединить ячейки"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:114
+msgid "Spreadsheet"
+msgstr "Табличный документ"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:145
+msgid "Remove area"
+msgstr "Удалить область"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:152
+msgid "Dock table"
+msgstr "Зафиксировать таблицу"
+
+#: engine/frontend/docView/templates/docViewSpreadsheet.cpp:398
+msgid "Save As"
+msgstr "Сохранить как"
+
+#: engine/frontend/visualView/controlEnum.h:37
+msgid "Shrink"
+msgstr "Сократить"
+
+#: engine/frontend/visualView/controlEnum.h:38
+msgid "Expand"
+msgstr "Расширить"
+
+#: engine/frontend/visualView/controlEnum.h:101
+msgid "Auto"
+msgstr "Авто"
+
+#: engine/frontend/visualView/controlEnum.h:104
+msgid "Picture and text"
+msgstr "Картинка и текст"
+
+#: engine/frontend/visualView/ctrl/control.h:75
+msgid "Object name"
+msgstr "Имя объекта"
+
+#: engine/frontend/visualView/ctrl/form.h:440
+msgid "Frame"
+msgstr "Рамка"
+
+#: engine/frontend/visualView/ctrl/form.h:441
+#: engine/frontend/visualView/ctrl/notebook.h:121
+#: engine/frontend/visualView/ctrl/sizer.h:198
+#: engine/frontend/visualView/ctrl/tableBox.h:359
+#: engine/frontend/visualView/ctrl/toolBar.h:231
+#: engine/frontend/visualView/ctrl/widgets.h:45
+#: engine/frontend/visualView/ctrl/widgets.h:83
+#: engine/frontend/visualView/ctrl/widgets.h:196
+#: engine/frontend/visualView/ctrl/widgets.h:366
+#: engine/frontend/visualView/ctrl/widgets.h:408
+msgid "Title"
+msgstr "Заголовок"
+
+#: engine/frontend/visualView/ctrl/form.h:442
+#: engine/frontend/visualView/ctrl/sizer.h:200
+#: engine/frontend/visualView/ctrl/window.h:31
+msgid "Foreground"
+msgstr "Передний план"
+
+#: engine/frontend/visualView/ctrl/form.h:442
+#: engine/frontend/visualView/ctrl/sizer.h:200
+#: engine/frontend/visualView/ctrl/window.h:31
+msgid "Sets the foreground colour of the window."
+msgstr "Задает цвет переднего плана окна."
+
+#: engine/frontend/visualView/ctrl/form.h:443
+#: engine/frontend/visualView/ctrl/sizer.h:201
+#: engine/frontend/visualView/ctrl/window.h:32
+msgid "Background"
+msgstr "Фон"
+
+#: engine/frontend/visualView/ctrl/form.h:443
+#: engine/frontend/visualView/ctrl/sizer.h:201
+#: engine/frontend/visualView/ctrl/window.h:32
+msgid "Sets the background colour of the window."
+msgstr "Задает цвет фона окна."
+
+#: engine/frontend/visualView/ctrl/form.h:444
+#: engine/frontend/visualView/ctrl/sizer.h:205
+#: engine/frontend/visualView/ctrl/toolBar.h:236
+#: engine/frontend/visualView/ctrl/window.h:34
+msgid "Enabled"
+msgstr "Включено"
+
+#: engine/frontend/visualView/ctrl/form.h:444
+#: engine/frontend/visualView/ctrl/sizer.h:205
+#: engine/frontend/visualView/ctrl/window.h:34
+msgid ""
+"Enable or disable the window for user input.Note that when a parent window "
+"is disabled, all of its children are disabled as well and they are reenabled "
+"again when the parent is."
+msgstr ""
+"Включайте или отключайте окно для ввода данных пользователем. Обратите "
+"внимание, что когда родительское окно отключено, все его дочерние окна также "
+"отключаются и снова включаются при отключении родительского окна."
+
+#: engine/frontend/visualView/ctrl/form.h:445
+#: engine/frontend/visualView/ctrl/notebook.h:125
+#: engine/frontend/visualView/ctrl/sizer.h:22
+msgid "Sizer"
+msgstr "Размер"
+
+#: engine/frontend/visualView/ctrl/form.h:446
+#: engine/frontend/visualView/ctrl/notebook.h:126
+#: engine/frontend/visualView/ctrl/sizer.h:148
+#: engine/frontend/visualView/ctrl/sizer.h:170
+#: engine/frontend/visualView/ctrl/sizer.h:197
+#: engine/frontend/visualView/ctrl/widgets.h:437
+#: engine/frontend/visualView/ctrl/widgets.h:468
+#: engine/frontend/visualView/ctrl/widgets.h:498
+msgid "Orient"
+msgstr ""
+
+#: engine/frontend/visualView/ctrl/formAction.cpp:30
+msgid "Close"
+msgstr "Закрыть"
+
+#: engine/frontend/visualView/ctrl/formAction.cpp:31
+msgid "Update"
+msgstr "Обновить"
+
+#: engine/frontend/visualView/ctrl/formAction.cpp:32
+msgid "Help"
+msgstr "Помощь"
+
+#: engine/frontend/visualView/ctrl/formAction.cpp:35
+msgid "Change form"
+msgstr "Изменить форму"
+
+#: engine/frontend/visualView/ctrl/formDocView.cpp:126
+msgid "An error occurred while trying to save the form!"
+msgstr "Произошла ошибка при попытке сохранить форму!"
+
+#: engine/frontend/visualView/ctrl/formObject.cpp:386
+msgid "Error occurred while trying to create a form element!"
+msgstr "Произошла ошибка при попытке создания элемента формы!"
+
+#: engine/frontend/visualView/ctrl/formObject.cpp:495
+msgid "Help will appear here sometime, but not today."
+msgstr "Помощь когда-нибудь здесь появится, но не сегодня."
+
+#: engine/frontend/visualView/ctrl/formObject.cpp:622
+#: engine/frontend/visualView/ctrl/formObject.cpp:649
+msgid "Procedure can enter only numbers, letters and the symbol \"_\""
+msgstr "В процедуру можно вводить только цифры, буквы и символ \"_\"."
+
+#: engine/frontend/visualView/ctrl/notebook.h:30
+#: engine/frontend/visualView/ctrl/notebook.h:71
+msgid "Notebook"
+msgstr "Блокнот"
+
+#: engine/frontend/visualView/ctrl/notebook.h:72
+msgid "Orient page"
+msgstr "Ориентация страницы"
+
+#. event
+#: engine/frontend/visualView/ctrl/notebook.h:73
+#: engine/frontend/visualView/ctrl/tableBox.h:202
+#: engine/frontend/visualView/ctrl/tableBox.h:384
+#: engine/frontend/visualView/ctrl/widgets.h:50
+#: engine/frontend/visualView/ctrl/widgets.h:210
+#: engine/frontend/visualView/ctrl/widgets.h:372
+msgid "Event"
+msgstr "Событие"
+
+#: engine/frontend/visualView/ctrl/notebook.h:74
+msgid "Page changed"
+msgstr "Страница изменена"
+
+#: engine/frontend/visualView/ctrl/notebook.h:95
+#: engine/frontend/visualView/ctrl/notebook.h:96
+msgid "Page item: "
+msgstr "Элемент сраницы:"
+
+#: engine/frontend/visualView/ctrl/notebook.h:96
+#: engine/frontend/visualView/ctrl/toolBar.h:206
+#: engine/frontend/win/dlgs/formEditor.h:134
+msgid "<empty caption>"
+msgstr "<пустой заголовок>"
+
+#: engine/frontend/visualView/ctrl/notebook.h:120
+msgid "Page"
+msgstr "Страница"
+
+#: engine/frontend/visualView/ctrl/notebook.h:122
+#: engine/frontend/visualView/ctrl/sizer.h:206
+#: engine/frontend/visualView/ctrl/tableBox.h:379
+#: engine/frontend/visualView/ctrl/window.h:35
+msgid "Visible"
+msgstr "Видимость"
+
+#: engine/frontend/visualView/ctrl/notebook.h:123
+#: engine/frontend/visualView/ctrl/tableBox.h:376
+#: engine/frontend/visualView/ctrl/toolBar.h:232
+#: engine/frontend/visualView/ctrl/widgets.h:46
+msgid "Representation"
+msgstr "Представление"
+
+#: engine/frontend/visualView/ctrl/notebookMenu.cpp:10
+msgid "Add page\tInsert"
+msgstr "Добавить страницу\tВставить"
+
+#: engine/frontend/visualView/ctrl/sizer.h:23
+#: engine/frontend/visualView/ctrl/window.h:28
+msgid "Minimum size"
+msgstr "Минимальный размер"
+
+#: engine/frontend/visualView/ctrl/sizer.h:23
+#: engine/frontend/visualView/ctrl/window.h:28
+msgid ""
+"Sets the minimum size of the window, to indicate to the sizer layout "
+"mechanism that this is the minimum required size."
+msgstr ""
+"Задает минимальный размер окна, чтобы указать механизму компоновки размера, "
+"что это минимально необходимый размер."
+
+#: engine/frontend/visualView/ctrl/sizer.h:114
+msgid "Sizer item"
+msgstr "Размер элемента"
+
+#: engine/frontend/visualView/ctrl/sizer.h:115
+msgid "Proportion"
+msgstr "Пропорции"
+
+#: engine/frontend/visualView/ctrl/sizer.h:117
+msgid "Size"
+msgstr "Размер"
+
+#: engine/frontend/visualView/ctrl/sizer.h:122
+msgid "Stretch"
+msgstr "Растяжение"
+
+#: engine/frontend/visualView/ctrl/sizer.h:199
+#: engine/frontend/visualView/ctrl/window.h:30
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:359
+msgid "Font"
+msgstr "Шрифт"
+
+#: engine/frontend/visualView/ctrl/sizer.h:199
+#: engine/frontend/visualView/ctrl/window.h:30
+msgid ""
+"Sets the font for this window. This should not be use for a parent window if "
+"you don't want its font to be inherited by its children"
+msgstr ""
+"Задает шрифт для этого окна. Не следует использовать этот параметр для "
+"родительского окна, если вы не хотите, чтобы его шрифт наследовался "
+"дочерними окнами."
+
+#: engine/frontend/visualView/ctrl/sizer.h:202
+#: engine/frontend/visualView/ctrl/toolBar.h:235
+#: engine/frontend/visualView/ctrl/window.h:33
+msgid "Tooltip"
+msgstr "Подсказка"
+
+#: engine/frontend/visualView/ctrl/sizer.h:202
+#: engine/frontend/visualView/ctrl/window.h:33
+msgid "Attach a tooltip to the window."
+msgstr "Прикрепите всплывающую подсказку к окну."
+
+#: engine/frontend/visualView/ctrl/sizer.h:203
+#: engine/frontend/visualView/ctrl/toolBar.h:234
+msgid "Context menu"
+msgstr "Контекстное меню"
+
+#: engine/frontend/visualView/ctrl/sizer.h:203
+msgid ""
+"Generates event handler for displaying of menu assigned to this widgets as a "
+"context menu."
+msgstr ""
+"Генерирует обработчик событий для отображения меню, назначенного этому "
+"виджету, в виде контекстного меню."
+
+#: engine/frontend/visualView/ctrl/sizer.h:204
+msgid "Context help"
+msgstr "Контекстная справка"
+
+#: engine/frontend/visualView/ctrl/sizer.h:204
+msgid ""
+"Attach context-sensitive help to the window. Note: The Project's "
+"&quot;help_provider&quot; property must be set for context-sensitive help to "
+"work."
+msgstr ""
+"Добавьте контекстно-зависимую справку в окно. Примечание: Для корректной "
+"работы контекстно-зависимой справки необходимо установить свойство "
+"«help_provider» проекта."
+
+#: engine/frontend/visualView/ctrl/sizer.h:206
+#: engine/frontend/visualView/ctrl/window.h:35
+msgid "Indicates that a pane caption should be visible."
+msgstr "Указывает, что заголовок панели должен быть виден."
+
+#: engine/frontend/visualView/ctrl/sizer.h:230
+msgid "Rows"
+msgstr "Строки"
+
+#: engine/frontend/visualView/ctrl/sizer.h:231
+msgid "Cols"
+msgstr "Колонки"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:84
+#: engine/frontend/visualView/ctrl/tableBox.h:87
+msgid "TableBox:"
+msgstr ""
+
+#: engine/frontend/visualView/ctrl/tableBox.h:87
+#: engine/frontend/visualView/ctrl/toolBar.h:41
+msgid "<empty source>"
+msgstr "<пустой источник>"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:203
+msgid "Selection"
+msgstr "Выделение"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:203
+msgid "On double mouse click or pressing of Enter."
+msgstr "При двойном щелчке мыши или нажатии клавиши Enter."
+
+#: engine/frontend/visualView/ctrl/tableBox.h:204
+msgid "Activate row"
+msgstr "Активировать строку"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:204
+msgid "When row is activated"
+msgstr "Когда строка активирована"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:205
+msgid "Before add row"
+msgstr "Перед добавлением строки"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:205
+msgid "When row addition mode is called"
+msgstr "Когда вызывается режим добавления строк"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:206
+msgid "Before delete row"
+msgstr "Перед удалением строки"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:206
+msgid "When row deletion is called"
+msgstr "Когда вызывается удаление строки"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:358
+msgid "Info"
+msgstr "Информация"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:360
+#: engine/frontend/visualView/ctrl/widgets.h:197
+msgid "Password mode"
+msgstr "Режим пароля"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:360
+#: engine/frontend/visualView/ctrl/widgets.h:197
+msgid "Mode in which typed characters are replaced with a special character"
+msgstr "Режим, в котором набранные символы заменяются специальным символом."
+
+#: engine/frontend/visualView/ctrl/tableBox.h:361
+#: engine/frontend/visualView/ctrl/widgets.h:198
+msgid "Multiline mode"
+msgstr "Многострочный режим"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:362
+#: engine/frontend/visualView/ctrl/widgets.h:199
+msgid "Textedit mode"
+msgstr "Режим редактирования текста"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:362
+#: engine/frontend/visualView/ctrl/widgets.h:199
+msgid "Whether or not text editing is enabled in the text box "
+msgstr "Включено ли редактирование текста в текстовом поле."
+
+#: engine/frontend/visualView/ctrl/tableBox.h:366
+#: engine/frontend/visualView/ctrl/widgets.h:203
+msgid "Choice form"
+msgstr "Форма выбора"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:368
+#: engine/frontend/visualView/ctrl/widgets.h:44
+#: engine/frontend/visualView/ctrl/widgets.h:205
+msgid "Button"
+msgstr "Кнопка"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:369
+#: engine/frontend/visualView/ctrl/widgets.h:206
+msgid "Select button"
+msgstr "Кнопка выбора"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:370
+#: engine/frontend/visualView/ctrl/widgets.h:207
+msgid "Clear button"
+msgstr "Кнопка очистки"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:371
+#: engine/frontend/visualView/ctrl/widgets.h:208
+msgid "Open button"
+msgstr "Кнопка открытия"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:375
+msgid "Align"
+msgstr "Выравнивание"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:380
+msgid "Resizable"
+msgstr "Изменяемый размер"
+
+#. CPropertyBoolean* m_propertySortable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Sortable"), _("Sortable"), false);
+#: engine/frontend/visualView/ctrl/tableBox.h:382
+msgid "Reorderable"
+msgstr ""
+
+#: engine/frontend/visualView/ctrl/tableBox.h:385
+#: engine/frontend/visualView/ctrl/widgets.h:211
+msgid "Change"
+msgstr "Изменять"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:386
+#: engine/frontend/visualView/ctrl/widgets.h:212
+msgid "Start choice"
+msgstr "Начальный выбор"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:388
+#: engine/frontend/visualView/ctrl/widgets.h:214
+msgid "Clearing"
+msgstr "Очистка"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:389
+#: engine/frontend/visualView/ctrl/widgets.h:215
+msgid "Opening"
+msgstr "Открытие"
+
+#: engine/frontend/visualView/ctrl/tableBox.h:390
+#: engine/frontend/visualView/ctrl/widgets.h:216
+msgid "Choice processing"
+msgstr "Обработка выбора"
+
+#: engine/frontend/visualView/ctrl/tableBoxMenu.cpp:10
+msgid "Add column\tInsert"
+msgstr "Добавить колонку\tВставить"
+
+#: engine/frontend/visualView/ctrl/tableBoxProperty.cpp:27
+msgid "The data source has been changed. Refill columns?"
+msgstr "Источник данных изменен. Нужно заполнить столбцы?"
+
+#: engine/frontend/visualView/ctrl/tableBoxProperty.cpp:28
+msgid "TableBox"
+msgstr ""
+
+#: engine/frontend/visualView/ctrl/toolBar.h:38
+msgid "ToolBar: "
+msgstr "Панель инструментов: "
+
+#: engine/frontend/visualView/ctrl/toolBar.h:41
+msgid "ToolBar:"
+msgstr "Панель инструментов:"
+
+#: engine/frontend/visualView/ctrl/toolBar.h:94
+#: engine/frontend/visualView/ctrl/toolBarProperty.cpp:20
+msgid "Toolbar"
+msgstr "Панель инструментов"
+
+#: engine/frontend/visualView/ctrl/toolBar.h:229
+msgid "Item"
+msgstr "Элемент"
+
+#: engine/frontend/visualView/ctrl/toolBar.h:238
+msgid "Action"
+msgstr "Действие"
+
+#: engine/frontend/visualView/ctrl/toolBar.h:260
+msgid "Separator"
+msgstr "Разделитель"
+
+#: engine/frontend/visualView/ctrl/toolBarEvent.cpp:99
+msgid "Test"
+msgstr "Тест"
+
+#: engine/frontend/visualView/ctrl/toolBarMenu.cpp:11
+msgid "Add tool\tInsert"
+msgstr "Добавить инструмент\tВставить"
+
+#: engine/frontend/visualView/ctrl/toolBarMenu.cpp:12
+msgid "Add separator\tInsert"
+msgstr "Добавить разделитель\tВставить"
+
+#: engine/frontend/visualView/ctrl/toolBarProperty.cpp:19
+msgid "The data source has been changed. Refill Tools?"
+msgstr "Источник данных изменен. Инструменты перезаполнить?"
+
+#: engine/frontend/visualView/ctrl/typeControl.cpp:346
+msgid "Incorrect data entered into field. Do you want to cancel?"
+msgstr "В поле введены неверные данные. Хотите отменить?"
+
+#: engine/frontend/visualView/ctrl/widgets.h:51
+msgid "Button pressed"
+msgstr "Кнопка нажата"
+
+#: engine/frontend/visualView/ctrl/widgets.h:80
+msgid "Static text"
+msgstr "Надпись"
+
+#: engine/frontend/visualView/ctrl/widgets.h:81
+msgid "Markup"
+msgstr "Разметка"
+
+#: engine/frontend/visualView/ctrl/widgets.h:82
+msgid "Wrap"
+msgstr "Сворачивать"
+
+#: engine/frontend/visualView/ctrl/widgets.h:195
+msgid "Textbox"
+msgstr "Текстовое поле"
+
+#: engine/frontend/visualView/ctrl/widgets.h:213
+msgid "Start list choice"
+msgstr "Выбор из начального списка"
+
+#: engine/frontend/visualView/ctrl/widgets.h:365
+msgid "Checkbox"
+msgstr "Флажок"
+
+#: engine/frontend/visualView/ctrl/widgets.h:367
+msgid "Title location"
+msgstr "Местоположение заголовка"
+
+#: engine/frontend/visualView/ctrl/widgets.h:373
+msgid "Checkbox clicked"
+msgstr "Флажок нажат"
+
+#: engine/frontend/visualView/ctrl/widgets.h:407
+msgid "Radio button"
+msgstr "Радиокнопка"
+
+#: engine/frontend/visualView/ctrl/widgets.h:409
+msgid "Selected"
+msgstr "Выбранный"
+
+#: engine/frontend/visualView/ctrl/widgets.h:436
+msgid "Static line"
+msgstr "Статическая линия"
+
+#: engine/frontend/visualView/ctrl/widgets.h:464
+msgid "Slider"
+msgstr "Слайдер"
+
+#: engine/frontend/visualView/ctrl/widgets.h:465
+msgid "Min value"
+msgstr "Минимальное значение"
+
+#: engine/frontend/visualView/ctrl/widgets.h:466
+msgid "Max value"
+msgstr "Максимальное значение"
+
+#: engine/frontend/visualView/ctrl/widgets.h:495
+msgid "Gauge"
+msgstr "Измерять"
+
+#: engine/frontend/visualView/ctrl/widgets.h:496
+msgid "Range"
+msgstr "Диапазон"
+
+#: engine/frontend/visualView/ctrl/window.h:27
+msgid "Window"
+msgstr "Окно"
+
+#: engine/frontend/visualView/ctrl/window.h:29
+msgid "Maximum size"
+msgstr "Максимальный размер"
+
+#: engine/frontend/visualView/ctrl/window.h:29
+msgid ""
+"Sets the maximum size of the window, to indicate to the sizer layout "
+"mechanism that this is the maximum allowable size."
+msgstr ""
+"Задает максимальный размер окна, чтобы указать механизму компоновки размера, "
+"что это максимально допустимый размер."
+
+#: engine/frontend/visualView/special/valueFileDialog.h:26
+msgid "chooseDirectory"
+msgstr "выбратьКаталог"
+
+#: engine/frontend/visualView/special/valueFileDialog.h:27
+msgid "open"
+msgstr "открыть"
+
+#: engine/frontend/visualView/special/valueFileDialog.h:28
+msgid "save"
+msgstr "сохранить"
+
+#: engine/frontend/win/ctrls/charts/wxareachartctrl.cpp:83
+#: engine/frontend/win/ctrls/charts/wxhistogramctrl.cpp:83
+#: engine/frontend/win/ctrls/charts/wxlinechartctrl.cpp:85
+#: engine/frontend/win/ctrls/charts/wxmath2dplotctrl.cpp:185
+msgid "Save file"
+msgstr "Сохранить файл"
+
+#: engine/frontend/win/ctrls/dataView.cpp:442
+msgid "Comparison"
+msgstr "Сравнение"
+
+#: engine/frontend/win/ctrls/grid/gridext.cpp:6722
+msgid "Copying more than one selected block to clipboard is not supported."
+msgstr ""
+"Копирование более одного выбранного блока в буфер обмена не поддерживается."
+
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10722
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10756
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10778
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10812
+msgid "Wrong area name!"
+msgstr "Неправильное название области!"
+
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10722
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10756
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10778
+#: engine/frontend/win/ctrls/grid/gridext.cpp:10812
+msgid "Grid editor"
+msgstr "Редактор сетки"
+
+#: engine/frontend/win/ctrls/grid/gridext.h:1237
+msgid "Identifier area"
+msgstr "Область идентификатора"
+
+#: engine/frontend/win/dlgs/about.cpp:16
+msgid "About..."
+msgstr "О программе..."
+
+#: engine/frontend/win/dlgs/about.cpp:19
+#, c-format
+msgid "Open enterprise solutions, build %i"
+msgstr "Открытые корпоративные решения, создайте %i"
+
+#: engine/frontend/win/dlgs/about.cpp:22
+msgid "a RAD tool powered by wxWidgets framework"
+msgstr ""
+"инструмент быстрой разработки приложений (RAD), работающий на основе "
+"фреймворка wxWidgets"
+
+#: engine/frontend/win/dlgs/about.cpp:24
+msgid "(C) 2026 Maxim 'nouverbe' Kornienko"
+msgstr "(C) 2026 Максим 'nouverbe' Корниенко"
+
+#: engine/frontend/win/dlgs/about.cpp:31
+msgid "Thanks:"
+msgstr "Спасибо:"
+
+#: engine/frontend/win/dlgs/about.cpp:33
+msgid "- wxWidgets team, wxFormBuilder team, 2C, Tomasz Sowa etc..."
+msgstr ""
+
+#: engine/frontend/win/dlgs/activeUser.cpp:21
+msgid "Application"
+msgstr "Приложение"
+
+#: engine/frontend/win/dlgs/activeUser.cpp:22
+msgid "Started"
+msgstr "Началь работы"
+
+#: engine/frontend/win/dlgs/activeUser.cpp:24
+msgid "Session"
+msgstr "Сессия"
+
+#: engine/frontend/win/dlgs/applyChange.cpp:4
+msgid "Design changes"
+msgstr "Изменения в дизайне"
+
+#: engine/frontend/win/dlgs/applyChange.cpp:15
+msgid "Changes detected in metadata structure:"
+msgstr "Обнаружены изменения в структуре метаданных:"
+
+#: engine/frontend/win/dlgs/applyChange.cpp:34
+msgid "Apply"
+msgstr "Применить"
+
+#: engine/frontend/win/dlgs/authorization.cpp:17
+msgid "Login:"
+msgstr "Имя пользователя:"
+
+#: engine/frontend/win/dlgs/authorization.cpp:21
+#: engine/frontend/win/dlgs/connectionDB.cpp:44
+#: engine/frontend/win/dlgs/userItem.cpp:104
+#: engine/launcher/connectionDB.cpp:64
+msgid "Password:"
+msgstr "Пароль:"
+
+#: engine/frontend/win/dlgs/authorization.cpp:64
+msgid "Wrong user or password entered!"
+msgstr "Введены неверные логин или пароль!"
+
+#: engine/frontend/win/dlgs/authorization.h:16
+msgid "Authentication to information base"
+msgstr "Аутентификация в базе данных"
+
+#: engine/frontend/win/dlgs/choiceTemplate.h:43
+msgid "Select document type"
+msgstr "Выберите тип документа"
+
+#: engine/frontend/win/dlgs/choiceTemplate.h:47
+msgid "Templates:"
+msgstr "Шаблоны:"
+
+#: engine/frontend/win/dlgs/colHeight.cpp:11
+msgid "Maximun column width"
+msgstr "Максимальная ширина столбца"
+
+#: engine/frontend/win/dlgs/colHeight.h:32
+msgid "Column width"
+msgstr "Ширина столбца"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:14
+#: engine/launcher/connectionDB.cpp:34
+msgid "Server:"
+msgstr "Сервер:"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:24
+#: engine/launcher/connectionDB.cpp:44
+msgid "Port:"
+msgstr "Порт:"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:34
+#: engine/launcher/connectionDB.cpp:54
+msgid "User:"
+msgstr "Пользователь:"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:48
+msgid "wetyu"
+msgstr "ветю"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:54
+#: engine/launcher/connectionDB.cpp:74
+msgid "Database:"
+msgstr "База данных:"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:64
+#: engine/launcher/connectionDB.cpp:84
+msgid "Test connection"
+msgstr "Проверить соединение"
+
+#: engine/frontend/win/dlgs/connectionDB.cpp:69
+#: engine/launcher/connectionDB.cpp:89
+msgid "Save connection"
+msgstr "Сохранить соединение"
+
+#: engine/frontend/win/dlgs/connectionDB.h:37
+msgid "Connect to PostgreSQL"
+msgstr "Подключение к PostgreSQL"
+
+#: engine/frontend/win/dlgs/errorDialog.cpp:46
+msgid "Close window"
+msgstr "Закрыть окно"
+
+#: engine/frontend/win/dlgs/errorDialog.cpp:49
+msgid "Go to designer"
+msgstr "Перейти в конфигуратор"
+
+#: engine/frontend/win/dlgs/errorDialog.cpp:52
+msgid "Close program"
+msgstr "Закрыть программу"
+
+#: engine/frontend/win/dlgs/errorDialog.h:32
+msgid "Critical failure"
+msgstr "Критический сбой"
+
+#: engine/frontend/win/dlgs/formEditor.cpp:174
+msgid "Form editor"
+msgstr "Редактор форм"
+
+#: engine/frontend/win/dlgs/formEditor.cpp:182
+msgid "Up control"
+msgstr "Управление вверх"
+
+#: engine/frontend/win/dlgs/formEditor.cpp:183
+msgid "Down control"
+msgstr "Управление вниз"
+
+#: engine/frontend/win/dlgs/formEditor.cpp:197
+msgid "Default"
+msgstr "По умолчанию"
+
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:14
+msgid " form wizard"
+msgstr " мастер форм"
+
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:24
+msgid "Select form type"
+msgstr "Выберите тип формы"
+
+#: engine/frontend/win/dlgs/formSelector/formSelector.cpp:32
+msgid "Generic form"
+msgstr "Общая форма"
+
+#: engine/frontend/win/dlgs/generation.cpp:24
+msgid "Select generation"
+msgstr "Выберите поколение"
+
+#: engine/frontend/win/dlgs/rowHeight.cpp:11
+msgid "Maximun row height"
+msgstr "Максимальная высота ряда"
+
+#: engine/frontend/win/dlgs/rowHeight.h:32
+msgid "Row height"
+msgstr "Высота строки"
+
+#: engine/frontend/win/dlgs/selectData.cpp:34
+msgid "Select data type"
+msgstr "Выберите тип данных"
+
+#: engine/frontend/win/dlgs/userItem.cpp:82
+msgid "Name:"
+msgstr "Имя:"
+
+#: engine/frontend/win/dlgs/userItem.cpp:86
+msgid "Full name:"
+msgstr "Полное имя:"
+
+#: engine/frontend/win/dlgs/userItem.cpp:121
+msgid "Role:"
+msgstr "Роль:"
+
+#: engine/frontend/win/dlgs/userItem.cpp:123
+msgid "Language:"
+msgstr "Язык:"
+
+#: engine/frontend/win/dlgs/userItem.cpp:169
+msgid "Other"
+msgstr "Другой"
+
+#: engine/frontend/win/dlgs/userItem.cpp:279
+msgid ""
+"After recording, there would not be a single role with admin rights. The "
+"action is impossible!"
+msgstr ""
+"После записи не останется ни одной роли с правами администратора. Выполнение "
+"действия невозможно!"
+
+#: engine/frontend/win/dlgs/userList.cpp:100
+msgid "Full name"
+msgstr "Полное имя"
+
+#: engine/frontend/win/dlgs/userList.h:35
+msgid "User list"
+msgstr "Список пользователей"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:215
+msgid "Paste"
+msgstr "Вставить"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:227
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:237
+msgid "Hide"
+msgstr "Скрыть"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:229
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:239
+msgid "Display"
+msgstr "Дисплей"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:231
+msgid "Column width..."
+msgstr "Ширина столбца..."
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.cpp:241
+msgid "Row height..."
+msgstr "Высота ряда..."
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:346
+msgid "Read only"
+msgstr "Только чтение"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:349
+msgid "Fill type"
+msgstr "Тип заливки"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:352
+msgid "Alignment"
+msgstr "Выравнивание"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:353
+msgid "Fit mode"
+msgstr "Режим подгонки"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:356
+msgid "Orientation text"
+msgstr "Ориентация текста"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:358
+msgid "Appearance"
+msgstr "Внешний вид"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:360
+msgid "Background colour"
+msgstr "Цвет фона"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:361
+msgid "Text colour"
+msgstr "Цвет текста"
+
+#: engine/frontend/win/editor/gridEditor/gridEditor.h:368
+msgid "Colour"
+msgstr "Цвет"
+
+#: engine/launcher/connectionDB.cpp:24
+msgid "Name IB:"
+msgstr "Имя IB:"
+
+#: engine/launcher/connectionDB.h:47
+msgid "Configure connect"
+msgstr "Настроить подключение"
+
+#: engine/launcher/launcher.cpp:154
+msgid "Exit"
+msgstr "Выход"
+
+#: engine/launcher/launcher.h:46
+msgid "Launch OES"
+msgstr "Запуск OES"

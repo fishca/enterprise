@@ -686,8 +686,16 @@ start_label:
 				}
 				else {
 					// operator =
-					//if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET)
-					//	CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+					if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_LET) {
+						lCodeLine++;
+						CValue* pNextVariable2 = &variable2;
+						lCodeLine--;
+						if (pRetValue == pNextVariable2)
+							CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+					}
+					else if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_RET) {
+						CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+					}
 					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;
 			}

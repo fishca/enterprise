@@ -151,6 +151,8 @@ private:
 #endif
 
 	static bool ms_evalMode;
+
+	mutable bool m_errorHandled;
 	wxString m_strErrorDescription;
 };
 

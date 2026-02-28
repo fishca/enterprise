@@ -604,13 +604,13 @@ struct CSpreadsheetDescription {
 	void AddRowBrake(int row) { m_rowBrakeAt.emplace_back(row); }
 	void AddColBrake(int col) { m_colBrakeAt.emplace_back(col); }
 
-	void DeleteRowBrake(int row) { m_rowBrakeAt.erase(std::remove(m_colBrakeAt.begin(), m_colBrakeAt.end(), row)); }
+	void DeleteRowBrake(int row) { m_rowBrakeAt.erase(std::remove(m_rowBrakeAt.begin(), m_rowBrakeAt.end(), row)); }
 	void DeleteColBrake(int col) { m_colBrakeAt.erase(std::remove(m_colBrakeAt.begin(), m_colBrakeAt.end(), col)); }
 
 	void SetRowBrake(int row) {
 		if (m_rowBrakeAt.size() != 0)
 			m_rowBrakeAt[std::distance(m_rowBrakeAt.begin(),
-				std::max_element(m_rowBrakeAt.begin(), m_rowBrakeAt.end()))] = wxMax(wxMin(m_rowBrakeAt[m_colBrakeAt.size() - 1], GetNumberCols() - 1), row);
+				std::max_element(m_rowBrakeAt.begin(), m_rowBrakeAt.end()))] = wxMax(wxMin(m_rowBrakeAt[m_rowBrakeAt.size() - 1], GetNumberRows() - 1), row);
 		else
 			m_rowBrakeAt.emplace_back(row);
 	}

@@ -461,6 +461,7 @@ enum Func {
 	eDelete,
 	eModified,
 	eGetFormObject,
+	enGetTemplate,
 	eGetMetadata
 };
 
@@ -480,6 +481,7 @@ void CValueRecordDataObjectDocument::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Delete"), wxT("Delete()"));
 	m_methodHelper->AppendFunc(wxT("Modified"), wxT("Modified()"));
 	m_methodHelper->AppendFunc(wxT("GetFormObject"), 2, wxT("GetFormObject(name : string, owner : any)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
 	m_methodHelper->AppendProp(wxT("ThisObject"), true, false, eThisObject, eSystem);
@@ -624,6 +626,9 @@ bool CValueRecordDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& p
 			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
+		return true;
+	case Func::enGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
 		return true;
 	case Func::eGetMetadata:
 		pvarRetValue = m_metaObject;

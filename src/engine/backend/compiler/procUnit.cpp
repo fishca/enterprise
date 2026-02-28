@@ -694,7 +694,11 @@ start_label:
 							CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
 					}
 					else if (m_pByteCode->m_listCode[lCodeLine + 1].m_numOper == OPER_RET) {
-						CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
+						lCodeLine++;
+						CValue* pNextVariable1 = &variable1;
+						lCodeLine--;
+						if (pRetValue == pNextVariable1)
+							CBackendCoreException::Error(ERROR_USE_PROCEDURE_AS_FUNCTION, funcName, funcName);
 					}
 					pVariable2->CallAsProc(lMethodNum, cRunContext.m_pRefLocVars, cRunContext.m_lParamCount);
 				} break;

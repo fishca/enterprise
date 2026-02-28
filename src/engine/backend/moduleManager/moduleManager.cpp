@@ -354,7 +354,7 @@ bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
 	}
 
 	if (CApplicationData::IsForceExit())
-		return false;
+		return true;
 
 	return result;
 }

@@ -1210,6 +1210,7 @@ protected:
 	};
 	enum helperFunc {
 		eGetFormObject,
+		enGetTemplate,
 		eGetMetadata
 	};
 protected:

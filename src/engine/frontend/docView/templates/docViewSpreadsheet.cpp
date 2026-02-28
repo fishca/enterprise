@@ -104,9 +104,15 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 	menu->AppendSubMenu(menuBorder, _("Border"));
 
 	menuItem = menu->AppendSeparator();
-	menuItem = menu->Append(wxID_SHOW_CELL, _("Show cells"));
-	menuItem = menu->Append(wxID_SHOW_HEADER, _("Show headers"));
-	menuItem = menu->Append(wxID_SHOW_AREA, _("Show area"));
+	
+	menuItem = menu->AppendCheckItem(wxID_SHOW_CELL, _("Show cells"));
+	menuItem->Check(m_gridEditor->GridLinesEnabled());
+	
+	menuItem = menu->AppendCheckItem(wxID_SHOW_HEADER, _("Show headers"));
+	menuItem->Check(true);
+
+	menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
+	menuItem->Check(true);
 
 	menuItem = menu->AppendSeparator();
 	menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));

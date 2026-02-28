@@ -226,7 +226,7 @@ public:
 		case eENTERPRISE_MODE:
 			return _("Thick client");
 		case eSERVICE_MODE:
-			return _("Deamon");
+			return _("Daemon");
 		}
 		return wxEmptyString;
 	}

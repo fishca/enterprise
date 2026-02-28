@@ -6,6 +6,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="deamon.cpp" />
+    <ClCompile Include="daemon.cpp" />
   </ItemGroup>
 </Project>

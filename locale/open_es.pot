@@ -28,7 +28,7 @@ msgid "Thick client"
 msgstr ""
 
 #: backend/appData.h:229
-msgid "Deamon"
+msgid "Daemon"
 msgstr ""
 
 #: backend/appDataQuery.cpp:238

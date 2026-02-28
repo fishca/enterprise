@@ -480,7 +480,21 @@ bool IValueMetaObject::PasteObject(CMemoryReader& reader)
 			pasteObject->m_metaGuid = readerHeaderMemory->r_stringZ();
 
 			//and running initialization
-			if (!pasteObject->OnBeforeRunMetaObject(pasteObjectFlag))
+			if (!pasteObject->OnBeforeRunMetaObject(onlyLoadFlag))
+				return false;
+
+
+			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+
+			if (!pasteObject->PasteProperty(*readerDataMemory))
+				return false;
+
+			pasteObject->BuildNewName();
+
+			pasteObject->LoadInterface(*readerDataMemory);
+			pasteObject->LoadRole(*readerDataMemory);
+
+			if (!pasteObject->OnAfterRunMetaObject(onlyLoadFlag))
 				return false;
 
 			std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
@@ -501,19 +515,6 @@ bool IValueMetaObject::PasteObject(CMemoryReader& reader)
 					prevReaderMemory = readerMemory;
 				} while (true);
 			}
-
-			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
-
-			if (!pasteObject->PasteProperty(*readerDataMemory))
-				return false;
-
-			pasteObject->BuildNewName();
-
-			pasteObject->LoadInterface(*readerDataMemory);
-			pasteObject->LoadRole(*readerDataMemory);
-
-			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
-				return false;
 
 			return true;
 		}
@@ -530,7 +531,20 @@ bool IValueMetaObject::PasteObject(CMemoryReader& reader)
 			/*pasteObject->m_metaGuid =*/ readerHeaderMemory->r_stringZ();
 
 			//and running initialization
-			if (!pasteObject->OnBeforeRunMetaObject(pasteObjectFlag))
+			if (!pasteObject->OnBeforeRunMetaObject(onlyLoadFlag))
+				return false;
+
+			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
+
+			if (!pasteObject->PasteProperty(*readerDataMemory))
+				return false;
+
+			pasteObject->BuildNewName();
+
+			pasteObject->LoadInterface(*readerDataMemory);
+			pasteObject->LoadRole(*readerDataMemory);
+
+			if (!pasteObject->OnAfterRunMetaObject(onlyLoadFlag))
 				return false;
 
 			std::shared_ptr <CMemoryReader> readerChildMemory(reader.open_chunk(childBlock));
@@ -552,20 +566,7 @@ bool IValueMetaObject::PasteObject(CMemoryReader& reader)
 				} while (true);
 			}
 
-			std::shared_ptr <CMemoryReader>readerDataMemory(reader.open_chunk(dataBlock));
-
-			if (!pasteObject->PasteProperty(*readerDataMemory))
-				return false;
-
-			pasteObject->BuildNewName();
-
-			pasteObject->LoadInterface(*readerDataMemory);
-			pasteObject->LoadRole(*readerDataMemory);
-
-			if (!pasteObject->OnAfterRunMetaObject(pasteObjectFlag))
-				return false;
-
-			return true;
+			return pasteObject->OnReloadMetaObject();
 		}
 	};
 

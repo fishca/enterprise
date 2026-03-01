@@ -71,51 +71,54 @@ bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
 wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 {
 	wxMenuBar* mb = new wxMenuBar;
-
 	wxMenu* menu = new wxMenu;
-	wxMenuItem* menuItem = nullptr;
 
-	wxMenu* menuArea = new wxMenu;
-	menuItem = menuArea->Append(wxID_AREA_ADD, _("Add area"));
-	menuItem = menuArea->Append(wxID_AREA_DELETE, _("Delete area"));
-	menu->AppendSubMenu(menuArea, _("Area"));
+	if (m_gridEditor != nullptr) {
 
-	wxMenu* menuFreeze = new wxMenu;
-	menuItem = menuFreeze->Append(wxID_FREEZE_ROW, _("Freeze row"));
-	menuItem = menuFreeze->Append(wxID_FREEZE_COL, _("Freeze column"));
-	menu->AppendSubMenu(menuFreeze, _("Freeze"));
+		wxMenuItem* menuItem = nullptr;
 
-	wxMenu* menuPrintBrake = new wxMenu;
-	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_ADD, _("Add brake row"));
-	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_ADD, _("Add brake column"));
-	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_DELETE, _("Delete brake row"));
-	menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_DELETE, _("Delete brake column"));
-	menu->AppendSubMenu(menuPrintBrake, _("Print brake"));
+		wxMenu* menuArea = new wxMenu;
+		menuItem = menuArea->Append(wxID_AREA_ADD, _("Add area"));
+		menuItem = menuArea->Append(wxID_AREA_DELETE, _("Delete area"));
+		menu->AppendSubMenu(menuArea, _("Area"));
 
-	wxMenu* menuBorder = new wxMenu;
-	menuItem = menuBorder->Append(wxID_BORDER_LEFT, _("Left border"));
-	menuItem = menuBorder->Append(wxID_BORDER_TOP, _("Top border"));
-	menuItem = menuBorder->Append(wxID_BORDER_RIGHT, _("Right border"));
-	menuItem = menuBorder->Append(wxID_BORDER_BOTTOM, _("Bottom border"));
-	menuBorder->AppendSeparator();
-	menuItem = menuBorder->Append(wxID_BORDER_ALL, _("Border all"));
-	menuItem = menuBorder->Append(wxID_BORDER_AROUND, _("Border around"));
-	menuItem = menuBorder->Append(wxID_BORDER_NONE, _("No border"));
-	menu->AppendSubMenu(menuBorder, _("Border"));
+		wxMenu* menuFreeze = new wxMenu;
+		menuItem = menuFreeze->Append(wxID_FREEZE_ROW, _("Freeze row"));
+		menuItem = menuFreeze->Append(wxID_FREEZE_COL, _("Freeze column"));
+		menu->AppendSubMenu(menuFreeze, _("Freeze"));
 
-	menuItem = menu->AppendSeparator();
-	
-	menuItem = menu->AppendCheckItem(wxID_SHOW_CELL, _("Show cells"));
-	menuItem->Check(m_gridEditor->GridLinesEnabled());
-	
-	menuItem = menu->AppendCheckItem(wxID_SHOW_HEADER, _("Show headers"));
-	menuItem->Check(true);
+		wxMenu* menuPrintBrake = new wxMenu;
+		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_ADD, _("Add brake row"));
+		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_ADD, _("Add brake column"));
+		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_DELETE, _("Delete brake row"));
+		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_DELETE, _("Delete brake column"));
+		menu->AppendSubMenu(menuPrintBrake, _("Print brake"));
 
-	menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
-	menuItem->Check(true);
+		wxMenu* menuBorder = new wxMenu;
+		menuItem = menuBorder->Append(wxID_BORDER_LEFT, _("Left border"));
+		menuItem = menuBorder->Append(wxID_BORDER_TOP, _("Top border"));
+		menuItem = menuBorder->Append(wxID_BORDER_RIGHT, _("Right border"));
+		menuItem = menuBorder->Append(wxID_BORDER_BOTTOM, _("Bottom border"));
+		menuBorder->AppendSeparator();
+		menuItem = menuBorder->Append(wxID_BORDER_ALL, _("Border all"));
+		menuItem = menuBorder->Append(wxID_BORDER_AROUND, _("Border around"));
+		menuItem = menuBorder->Append(wxID_BORDER_NONE, _("No border"));
+		menu->AppendSubMenu(menuBorder, _("Border"));
 
-	menuItem = menu->AppendSeparator();
-	menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
+		menuItem = menu->AppendSeparator();
+
+		menuItem = menu->AppendCheckItem(wxID_SHOW_CELL, _("Show cells"));
+		menuItem->Check(m_gridEditor->GridLinesEnabled());
+
+		menuItem = menu->AppendCheckItem(wxID_SHOW_HEADER, _("Show headers"));
+		menuItem->Check(true);
+
+		menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
+		menuItem->Check(true);
+
+		menuItem = menu->AppendSeparator();
+		menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
+	}
 
 	mb->Append(menu, _("Spreadsheet"));
 	return mb;
@@ -168,8 +171,13 @@ bool CSpreadsheetEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+
 		m_gridEditor->Freeze();
-		return m_gridEditor->Destroy();
+
+		m_gridEditor->Destroy();
+		m_gridEditor = nullptr;
+
+		return true;
 	}
 
 	return false;

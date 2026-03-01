@@ -2,7 +2,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CReportEditView, CMetaView);
 
-bool CReportEditView::OnCreate(CMetaDocument *doc, long flags)
+bool CReportEditView::OnCreate(CMetaDocument* doc, long flags)
 {
 	m_metaTree = new CDataReportTree(doc, m_viewFrame);
 	m_metaTree->SetReadOnly(false);
@@ -15,7 +15,7 @@ void CReportEditView::OnActivateView(bool activate, wxView* activeView, wxView* 
 	if (activate) m_metaTree->ActivateTree();
 }
 
-void CReportEditView::OnDraw(wxDC *WXUNUSED(dc))
+void CReportEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
@@ -31,8 +31,13 @@ bool CReportEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+
 		m_metaTree->Freeze();
-		return m_metaTree->Destroy();
+
+		m_metaTree->Destroy();
+		m_metaTree = nullptr;
+
+		return true;
 	}
 
 	return false;
@@ -94,7 +99,7 @@ void CReportFileDocument::Modify(bool modified)
 	CMetaDocument::Modify(modified);
 }
 
-CDataReportTree *CReportFileDocument::GetMetaTree() const
+CDataReportTree* CReportFileDocument::GetMetaTree() const
 {
 	wxView* view = GetFirstView();
 	return view ? wxDynamicCast(view, CReportEditView)->GetMetaTree() : nullptr;

@@ -75,7 +75,7 @@ bool CMetaDocument::OnCreate(const wxString& path, long flags)
 
 	view->SetDocument(this);
 
-	CDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
+	CFrontendDocMDIFrame::CreateChildFrame(view.get(), wxDefaultPosition, wxDefaultSize, style);
 
 	if (!view->OnCreate(this, flags))
 		return false;

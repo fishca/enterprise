@@ -116,7 +116,7 @@ void CLocalWindow::ClearAndCreate()
 
 CLocalWindow* CLocalWindow::GetLocalWindow()
 {
-	if (CDocDesignerMDIFrame::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetLocalWindow();
 	return nullptr; 
 }

@@ -21,7 +21,7 @@ bool CDialogGeneration::ShowModal(meta_identifier_t& id)
 #define ICON_SIZE 16
 
 CDialogGeneration::CDialogGeneration(IMetaData* metaData, const CMetaDescription& metaDesc) :
-	wxDialog(CDocMDIFrame::GetFrame(), wxID_ANY, _("Select generation"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_metaDesc(metaDesc)
+	wxDialog(CFrontendDocMDIFrame::GetFrame(), wxID_ANY, _("Select generation"), wxDefaultPosition, wxSize(315, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_metaDesc(metaDesc)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 

@@ -20,7 +20,7 @@ class COutputWindow : public wxStyledTextCtrl {
 	/**
 	* Constructor.
 	*/
-	COutputWindow(class FRONTEND_API CDocMDIFrame* parent, wxWindowID winid);
+	COutputWindow(class FRONTEND_API CFrontendDocMDIFrame* parent, wxWindowID winid);
 
 public:
 
@@ -79,7 +79,7 @@ public:
 
 private:
 
-	friend class CDocEnterpriseMDIFrame;
+	friend class CFrontendDocMDIFrameEnterprise;
 
 	/**
 	 * Outputs text using the passed in text attribute. This method will only

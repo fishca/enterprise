@@ -117,7 +117,7 @@ void CStackWindow::ClearAndCreate()
 
 CStackWindow* CStackWindow::GetStackWindow()
 {
-	if (CDocMDIFrame::GetFrame())
+	if (CFrontendDocMDIFrame::GetFrame())
 		return mainFrame->GetStackWindow();
 	return nullptr; 
 }

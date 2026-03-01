@@ -14,7 +14,7 @@ class CStackWindow : public wxPanel {
 	wxListCtrl* m_treeCtrl;
 private:
 	CStackWindow(wxWindow* parent, int id = wxID_ANY);
-	friend class CDocDesignerMDIFrame;
+	friend class CFrontendDocMDIFrameDesigner;
 public:
 
 	virtual ~CStackWindow();

@@ -84,7 +84,7 @@ public:
 
 private:
 
-	friend class CDocDesignerMDIFrame;
+	friend class CFrontendDocMDIFrameDesigner;
 
 	/**
 	 * Creates a blank entry at the end of the list (for easily adding new items)

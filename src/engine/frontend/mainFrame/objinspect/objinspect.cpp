@@ -51,7 +51,7 @@ void CObjectInspector::SavePosition()
 
 CObjectInspector* CObjectInspector::GetObjectInspector()
 {
-	return CDocMDIFrame::GetObjectInspector();
+	return CFrontendDocMDIFrame::GetObjectInspector();
 }
 
 #include "frontend/visualView/formdefs.h"

@@ -301,7 +301,7 @@ private:
 		}
 	}
 
-	friend class CDocMDIFrame;
+	friend class CFrontendDocMDIFrame;
 
 	wxPropertyGridManager* CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const;
 

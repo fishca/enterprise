@@ -174,7 +174,7 @@ int CEnterpriseApp::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(CDocEnterpriseMDIFrame);
+	mainFrameCreate(CFrontendDocMDIFrameEnterprise);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword, m_debugEnable ? _app_start_create_debug_server_flag : _app_start_default_flag)) {
 		const wxString& strLastError = CBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);

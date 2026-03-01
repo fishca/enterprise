@@ -20,17 +20,17 @@ enum {
 	wxID_ENTERPRISE_END
 };
 
-#define mainFrame	(CDocEnterpriseMDIFrame::GetFrame())
+#define mainFrame	(CFrontendDocMDIFrameEnterprise::GetFrame())
 
-class CDocEnterpriseMDIFrame : public CDocMDIFrame {
+class CFrontendDocMDIFrameEnterprise : public CFrontendDocMDIFrame {
 public:
 
-	static CDocEnterpriseMDIFrame* GetFrame();
+	static CFrontendDocMDIFrameEnterprise* GetFrame();
 
-	CDocEnterpriseMDIFrame(const wxString& title = _("Enterprise"),
+	CFrontendDocMDIFrameEnterprise(const wxString& title = _("Enterprise"),
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
-	virtual ~CDocEnterpriseMDIFrame();
+	virtual ~CFrontendDocMDIFrameEnterprise();
 
 	virtual void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	virtual void ClearMessage() { m_outputWindow->ClearAll(); }

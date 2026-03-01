@@ -16,10 +16,10 @@
 
 class CMetaView;
 
-#define mainFrame            		 (CDocMDIFrame::GetFrame())
-#define mainFrameCreate(frame)       (CDocMDIFrame::InitFrame(new frame))
-#define mainFrameShow()				 (CDocMDIFrame::ShowFrame())
-#define mainFrameDestroy()  		 (CDocMDIFrame::DestroyFrame())
+#define mainFrame            		 (CFrontendDocMDIFrame::GetFrame())
+#define mainFrameCreate(frame)       (CFrontendDocMDIFrame::InitFrame(new frame))
+#define mainFrameShow()				 (CFrontendDocMDIFrame::ShowFrame())
+#define mainFrameDestroy()  		 (CFrontendDocMDIFrame::DestroyFrame())
 
 #include "objinspect/objinspect.h"
 
@@ -36,7 +36,7 @@ class CMetaView;
 #define wxAUI_DEFAULT_COLOUR wxColour(41, 57, 85) 
 #define wxAUI_WHITE_COLOUR wxColour(255, 255, 255) 
 
-class FRONTEND_API CDocMDIFrame :
+class FRONTEND_API CFrontendDocMDIFrame :
 	public IBackendDocMDIFrame, public wxAuiMDIParentFrame,
 	public wxDocParentFrameAnyBase {
 public:
@@ -104,6 +104,14 @@ public:
 	//destroy window 
 	virtual bool Destroy() override;
 
+	// update frame manager 
+	void UpdateManager() {
+		if (!m_callUpdateFrameManager) {
+			m_callUpdateFrameManager = true;
+			CallAfter(&CFrontendDocMDIFrame::UpdateFrameManager);
+		}
+	}
+
 protected:
 
 	// hook the document manager into event handling chain here
@@ -118,7 +126,7 @@ protected:
 	virtual bool AllowRun() const { return true; }
 	virtual bool AllowClose() const { return true; }
 
-	CDocMDIFrame(const wxString& title,
+	CFrontendDocMDIFrame(const wxString& title,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxDEFAULT_FRAME_STYLE,
@@ -132,7 +140,7 @@ protected:
 
 public:
 
-	virtual ~CDocMDIFrame();
+	virtual ~CFrontendDocMDIFrame();
 
 	static wxWindow* CreateChildFrame(CMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
@@ -143,10 +151,10 @@ public:
 		return nullptr;
 	}
 
-	static CDocMDIFrame* GetFrame() { return s_instance; }
+	static CFrontendDocMDIFrame* GetFrame() { return s_instance; }
 
 	// Force the static appData instance to Init()
-	static void InitFrame(CDocMDIFrame* mf);
+	static void InitFrame(CFrontendDocMDIFrame* mf);
 	static bool ShowFrame();
 
 	static void DestroyFrame();
@@ -166,6 +174,8 @@ public:
 
 protected:
 
+	void UpdateFrameManager();
+
 	// Events 
 	void OnCloseWindow(wxCloseEvent& event);
 	void OnExit(wxCommandEvent& WXUNUSED(event));
@@ -182,7 +192,7 @@ protected:
 		void Refresh() { Repaint(); }
 	};
 
-	static CDocMDIFrame* s_instance;
+	static CFrontendDocMDIFrame* s_instance;
 
 	CObjectInspector* m_objectInspector;
 
@@ -190,7 +200,7 @@ protected:
 	FontColorSettings     m_fontColorSettings;
 	EditorSettings        m_editorSettings;
 
-	bool m_callRaiseFrame;
+	bool m_callRaiseFrame, m_callUpdateFrameManager;
 
 	wxAuiToolBar* m_mainFrameToolbar;
 	wxAuiToolBar* m_docToolbar;

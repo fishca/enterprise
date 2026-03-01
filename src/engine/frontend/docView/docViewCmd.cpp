@@ -18,7 +18,7 @@ void CMetaView::Activate(bool activate)
 	wxDocManager* docManager = m_viewDocument != nullptr ?
 		m_viewDocument->GetDocumentManager() : wxDocManager::GetDocumentManager();
 
-	if (docManager != nullptr && CDocMDIFrame::GetFrame()) {
+	if (docManager != nullptr && CFrontendDocMDIFrame::GetFrame()) {
 		mainFrame->ActivateView(this, activate);
 		OnActivateView(activate, this, docManager->GetCurrentView());
 		docManager->ActivateView(this, activate);

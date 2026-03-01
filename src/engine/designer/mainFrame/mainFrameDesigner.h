@@ -52,18 +52,18 @@ enum {
 	wxID_APPLICATION_CONNECTION,
 };
 
-#define mainFrame	(CDocDesignerMDIFrame::GetFrame())
+#define mainFrame	(CFrontendDocMDIFrameDesigner::GetFrame())
 
-class CDocDesignerMDIFrame : public CDocMDIFrame {
+class CFrontendDocMDIFrameDesigner : public CFrontendDocMDIFrame {
 public:
 
-	static CDocDesignerMDIFrame* GetFrame();
+	static CFrontendDocMDIFrameDesigner* GetFrame();
 
-	CDocDesignerMDIFrame(const wxString& title = _("Designer"),
+	CFrontendDocMDIFrameDesigner(const wxString& title = _("Designer"),
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
-	virtual ~CDocDesignerMDIFrame();
+	virtual ~CFrontendDocMDIFrameDesigner();
 
 	void Message(const wxString& strMessage, eStatusMessage status) { m_outputWindow->SharedOutput(strMessage, status); }
 	void ClearMessage() { m_outputWindow->ClearAll(); }

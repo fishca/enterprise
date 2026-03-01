@@ -20,9 +20,9 @@
 //*                                 mainFrame                                       *
 //***********************************************************************************
 
-CDocMDIFrame* CDocMDIFrame::s_instance = nullptr;
+CFrontendDocMDIFrame* CFrontendDocMDIFrame::s_instance = nullptr;
 
-void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
+void CFrontendDocMDIFrame::InitFrame(CFrontendDocMDIFrame* frame)
 {
 	if (s_instance == nullptr && frame != nullptr) {
 		s_instance = frame;
@@ -30,7 +30,7 @@ void CDocMDIFrame::InitFrame(CDocMDIFrame* frame)
 	}
 }
 
-bool CDocMDIFrame::ShowFrame()
+bool CFrontendDocMDIFrame::ShowFrame()
 {
 	if (s_instance != nullptr && !s_instance->IsShown() && !CApplicationData::IsForceExit()) {
 
@@ -38,7 +38,7 @@ bool CDocMDIFrame::ShowFrame()
 
 		s_instance->SetSize(800, 600);
 		s_instance->SetFocus();
-		
+
 		s_instance->Center();
 
 		if (s_instance->Show()) {
@@ -52,7 +52,7 @@ bool CDocMDIFrame::ShowFrame()
 	return false;
 }
 
-void CDocMDIFrame::DestroyFrame()
+void CFrontendDocMDIFrame::DestroyFrame()
 {
 	if (s_instance != nullptr) {
 		s_instance->Destroy();
@@ -63,19 +63,19 @@ void CDocMDIFrame::DestroyFrame()
 //*                                 Constructor                                     *
 //***********************************************************************************
 
-CDocMDIFrame::CDocMDIFrame(const wxString& title,
+CFrontendDocMDIFrame::CFrontendDocMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
 	const wxString& strName)
-	: wxDocParentFrameAnyBase(this), m_objectInspector(nullptr), m_callRaiseFrame(false)
+	: wxDocParentFrameAnyBase(this), m_objectInspector(nullptr), m_callRaiseFrame(false), m_callUpdateFrameManager(false)
 {
 	Create(title, pos, size, style | wxNO_FULL_REPAINT_ON_RESIZE);
 }
 
 #include "backend/compiler/value.h"
 
-bool CDocMDIFrame::Create(const wxString& title,
+bool CFrontendDocMDIFrame::Create(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
@@ -86,8 +86,8 @@ bool CDocMDIFrame::Create(const wxString& title,
 
 	m_docManager = nullptr;
 
-	this->Bind(wxEVT_MENU, &CDocMDIFrame::OnExit, this, wxID_EXIT);
-	this->Bind(wxEVT_CLOSE_WINDOW, &CDocMDIFrame::OnCloseWindow, this);
+	this->Bind(wxEVT_MENU, &CFrontendDocMDIFrame::OnExit, this, wxID_EXIT);
+	this->Bind(wxEVT_CLOSE_WINDOW, &CFrontendDocMDIFrame::OnCloseWindow, this);
 
 	this->SetArtProvider(new wxAuiLunaTabArt());
 
@@ -99,7 +99,7 @@ bool CDocMDIFrame::Create(const wxString& title,
 	return true;
 }
 
-wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style)
+wxWindow* CFrontendDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, const wxSize& size, long style)
 {
 	// create a child valueForm of appropriate class for the current mode
 	CMetaDocument* document = view->GetDocument();
@@ -129,7 +129,7 @@ wxWindow* CDocMDIFrame::CreateChildFrame(CMetaView* view, const wxPoint& pos, co
 	return subframe;
 }
 
-void CDocMDIFrame::RefreshFrame()
+void CFrontendDocMDIFrame::RefreshFrame()
 {
 	if (m_docManager != nullptr) {
 		for (auto& doc : m_docManager->GetDocumentsVector())
@@ -139,12 +139,12 @@ void CDocMDIFrame::RefreshFrame()
 	Refresh();
 }
 
-void CDocMDIFrame::RaiseFrame()
+void CFrontendDocMDIFrame::RaiseFrame()
 {
-	if (!m_callRaiseFrame && CDocMDIFrame::IsFocusable()) {
+	if (!m_callRaiseFrame && CFrontendDocMDIFrame::IsFocusable()) {
 		CallAfter([&]() {
 			if (!CApplicationData::IsForceExit())
-				CDocMDIFrame::Raise();
+				CFrontendDocMDIFrame::Raise();
 			m_callRaiseFrame = false;
 			}
 		);
@@ -153,7 +153,7 @@ void CDocMDIFrame::RaiseFrame()
 }
 
 #if wxUSE_MENUS
-void CDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
+void CFrontendDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 {
 	if (m_pMyMenuBar == nullptr) {
 
@@ -168,7 +168,7 @@ void CDocMDIFrame::SetMenuBar(wxMenuBar* pMenuBar)
 }
 #endif // wxUSE_MENUS
 
-wxAuiMDIClientWindow* CDocMDIFrame::OnCreateClient()
+wxAuiMDIClientWindow* CFrontendDocMDIFrame::OnCreateClient()
 {
 	class wxAuiMDIClientWindowImpl : public wxAuiMDIClientWindow {
 	public:
@@ -190,7 +190,7 @@ wxAuiMDIClientWindow* CDocMDIFrame::OnCreateClient()
 }
 
 // bring window to front
-void CDocMDIFrame::Raise()
+void CFrontendDocMDIFrame::Raise()
 {
 #if __WXMSW__
 	// Simulate a key press
@@ -201,7 +201,7 @@ void CDocMDIFrame::Raise()
 	wxAuiMDIParentFrame::Raise();
 }
 
-bool CDocMDIFrame::Destroy()
+bool CFrontendDocMDIFrame::Destroy()
 {
 	wxAuiMDIClientWindow* client_window = GetClientWindow();
 	wxCHECK_MSG(client_window, false, wxS("Missing MDI Client Window"));
@@ -224,23 +224,49 @@ bool CDocMDIFrame::Destroy()
 		wxAuiMDIParentFrame::Destroy();
 }
 
-CDocMDIFrame::~CDocMDIFrame()
+CFrontendDocMDIFrame::~CFrontendDocMDIFrame()
 {
 	if (s_instance == this) s_instance = nullptr;
+
 	// deinitialize the valueForm manager
 	m_mgr.UnInit();
+}
+
+void CFrontendDocMDIFrame::UpdateFrameManager()
+{
+	unsigned int view_count = 0;
+
+	if (m_docManager != nullptr) {
+		for (auto& doc : m_docManager->GetDocumentsVector()) {
+			for (auto& view : doc->GetViewsVector()) view_count++;
+		}
+	}
+
+	if (view_count == 0) m_docToolbar->Clear();
+
+	wxAuiPaneInfo& infoToolBar = m_mgr.GetPane(m_docToolbar);
+	infoToolBar.Show(m_docToolbar->GetToolCount() > 0);
+
+	infoToolBar.BestSize(m_docToolbar->GetSize());
+	infoToolBar.FloatingSize(
+		m_docToolbar->GetSize().x,
+		m_docToolbar->GetSize().y + 25
+	);
+
+	m_mgr.Update();
+	m_callUpdateFrameManager = false;
 }
 
 //********************************************************************************
 //*                                    System                                    *
 //********************************************************************************
 
-void CDocMDIFrame::OnExit(wxCommandEvent& WXUNUSED(event))
+void CFrontendDocMDIFrame::OnExit(wxCommandEvent& WXUNUSED(event))
 {
 	this->Close();
 }
 
-void CDocMDIFrame::OnCloseWindow(wxCloseEvent& event)
+void CFrontendDocMDIFrame::OnCloseWindow(wxCloseEvent& event)
 {
 	bool allowClose = event.CanVeto() ? AllowClose() : true;
 	// The user decided not to close finally, abort.

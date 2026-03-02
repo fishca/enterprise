@@ -30,8 +30,13 @@ bool CDataProcessorEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+		
 		m_metaTree->Freeze();
-		return m_metaTree->Destroy();
+		
+		m_metaTree->Destroy();
+		m_metaTree = nullptr;
+
+		return true;
 	}
 
 	return false;

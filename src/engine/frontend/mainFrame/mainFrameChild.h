@@ -297,7 +297,7 @@ protected:
 
 			pClientWindow->SetEvtHandlerEnabled(true);
 		}
-
+	
 		pClientWindow->Thaw();
 
 		return success_destroy;

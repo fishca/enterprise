@@ -8,7 +8,7 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void CDocDesignerMDIFrame::CreateWideGui()
+void CFrontendDocMDIFrameDesigner::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
@@ -70,7 +70,7 @@ void CDocDesignerMDIFrame::CreateWideGui()
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void CDocDesignerMDIFrame::CreateBottomPane()
+void CFrontendDocMDIFrameDesigner::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;
@@ -105,7 +105,7 @@ void CDocDesignerMDIFrame::CreateBottomPane()
 	m_mgr.AddPane(auiNotebook, paneInfo);
 }
 
-void CDocDesignerMDIFrame::CreateMetadataPane()
+void CFrontendDocMDIFrameDesigner::CreateMetadataPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_METADATA).IsOk())
 		return;
@@ -123,7 +123,7 @@ void CDocDesignerMDIFrame::CreateMetadataPane()
 	m_mgr.AddPane(m_metaWindow, paneInfo);
 }
 
-void CDocDesignerMDIFrame::UpdateEditorOptions()
+void CFrontendDocMDIFrameDesigner::UpdateEditorOptions()
 {
 	for (auto& doc : m_docManager->GetDocumentsVector())
 		doc->UpdateAllViews();

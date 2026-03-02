@@ -68,8 +68,13 @@ bool CModuleEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+
 		m_codeEditor->Freeze();
-		return m_codeEditor->Destroy();
+
+		m_codeEditor->Destroy();
+		m_codeEditor = nullptr;
+
+		return true;
 	}
 
 	return false;

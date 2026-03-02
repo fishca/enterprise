@@ -167,7 +167,7 @@ int CDesignerApp::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(CDocDesignerMDIFrame);
+	mainFrameCreate(CFrontendDocMDIFrameDesigner);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword)) {
 		const wxString& strLastError = CBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);

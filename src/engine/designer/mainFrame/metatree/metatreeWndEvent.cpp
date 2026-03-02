@@ -341,7 +341,7 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 		return;
 
 	m_ownerTree->Freeze();
-	
+
 	if (wxTheClipboard->Open() && wxTheClipboard->IsSupported(oes_clipboard_metadata)) {
 
 		wxCustomDataObject data(oes_clipboard_metadata);
@@ -366,7 +366,7 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 	}
 
 	m_ownerTree->Thaw();
-	
+
 	RefreshSelectedItem();
 	event.Skip();
 }
@@ -390,11 +390,11 @@ void CMetadataTree::CMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
 
 		wxWindow* focus_win = event.GetWindow();
-		while (focus_win != nullptr && !focus_win->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
+		while (focus_win != nullptr && focus_win != objectInspector) {
 			focus_win = focus_win->GetParent();
 		}
 
-		if (focus_win != nullptr) {
+		if (focus_win == nullptr) {
 
 			const CAuiDocChildFrame* focus_child_win =
 				static_cast<CAuiDocChildFrame*>(mainFrame->GetActiveChild());

@@ -23,7 +23,7 @@
 
 #include "backend/metadataConfiguration.h"
 
-void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
+void CFrontendDocMDIFrameDesigner::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 {
 	if (debugClient->HasConnections()) {
 		wxMessageBox(_("Debugger is already running!"));
@@ -41,7 +41,7 @@ void CDocDesignerMDIFrame::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 	appData->RunApplication(wxT("enterprise"));
 }
 
-void CDocDesignerMDIFrame::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event))
+void CFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event))
 {
 	if (activeMetaData->IsModified()) {
 		if (wxMessageBox(_("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
@@ -56,7 +56,7 @@ void CDocDesignerMDIFrame::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(eve
 
 #include "win/dlg/debugItem/debugItem.h"
 
-void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
+void CFrontendDocMDIFrameDesigner::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 {
 	CWindowPtr<CDialogDebugItem> dlg(new CDialogDebugItem(this, wxID_ANY));
 	dlg->Show();
@@ -68,7 +68,7 @@ void CDocDesignerMDIFrame::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 #include "docManager/docManager.h"
 #include "docManager/templates/docViewMetaFile.h"
 
-void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnOpenConfiguration(wxCommandEvent& event)
 {
 	IMetaDataConfiguration* configDatabase = activeMetaData->GetConfiguration();
 	wxASSERT(configDatabase);
@@ -118,7 +118,7 @@ void CDocDesignerMDIFrame::OnOpenConfiguration(wxCommandEvent& event)
 	}
 }
 
-void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnRollbackConfiguration(wxCommandEvent& event)
 {
 	objectInspector->SelectObject(nullptr);
 
@@ -148,7 +148,7 @@ void CDocDesignerMDIFrame::OnRollbackConfiguration(wxCommandEvent& event)
 	}
 }
 
-void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnUpdateConfiguration(wxCommandEvent& event)
 {
 	bool canSave = true;
 	if (debugClient->HasConnections()) {
@@ -205,7 +205,7 @@ void CDocDesignerMDIFrame::OnUpdateConfiguration(wxCommandEvent& event)
 	}
 }
 
-void CDocDesignerMDIFrame::OnLoadDatabase(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnLoadDatabase(wxCommandEvent& event)
 {
 	wxFileDialog openFileDialog(this, _("Open database file"), "", "",
 		"Database files (*.obk)|*.obk", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
@@ -246,7 +246,7 @@ void CDocDesignerMDIFrame::OnLoadDatabase(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocDesignerMDIFrame::OnSaveDatabase(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnSaveDatabase(wxCommandEvent& event)
 {
 	wxFileDialog saveFileDialog(this, _("Save database file"), "", "",
 		"Database files (*.obk)|*.obk", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -261,7 +261,7 @@ void CDocDesignerMDIFrame::OnSaveDatabase(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocDesignerMDIFrame::OnClearDatabase(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnClearDatabase(wxCommandEvent& event)
 {
 	if (wxMessageBox(_("Are you sure you want to clear the database?"), _("Clear project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxNO)
 		return;
@@ -296,7 +296,7 @@ void CDocDesignerMDIFrame::OnClearDatabase(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 {
 	if (wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE == event.GetId())
 	{
@@ -335,7 +335,7 @@ void CDocDesignerMDIFrame::OnConfiguration(wxCommandEvent& event)
 	}
 }
 
-void CDocDesignerMDIFrame::OnRunDebugCommand(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnRunDebugCommand(wxCommandEvent& event)
 {
 	switch (event.GetId())
 	{
@@ -367,7 +367,7 @@ void CDocDesignerMDIFrame::OnRunDebugCommand(wxCommandEvent& event)
 //*                                    Tool                                      *
 //********************************************************************************
 
-void CDocDesignerMDIFrame::OnToolsSettings(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnToolsSettings(wxCommandEvent& event)
 {
 	SettingsDialog dialog(this);
 
@@ -412,7 +412,7 @@ void CDocDesignerMDIFrame::OnToolsSettings(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/userList.h"
 
-void CDocDesignerMDIFrame::OnUsers(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnUsers(wxCommandEvent& event)
 {
 	CWindowPtr<CDialogUserList> dlg(new CDialogUserList(this, wxID_ANY));
 	dlg->Show();
@@ -420,7 +420,7 @@ void CDocDesignerMDIFrame::OnUsers(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/activeUser.h"
 
-void CDocDesignerMDIFrame::OnActiveUsers(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnActiveUsers(wxCommandEvent& event)
 {
 	CWindowPtr<CDialogActiveUser> dlg(new CDialogActiveUser(this, wxID_ANY));
 	dlg->Show();
@@ -428,7 +428,7 @@ void CDocDesignerMDIFrame::OnActiveUsers(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/connectionDB.h"
 
-void CDocDesignerMDIFrame::OnConnection(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnConnection(wxCommandEvent& event)
 {
 	CDialogConnection dlg(this, wxID_ANY);
 	dlg.ShowModal();
@@ -436,7 +436,7 @@ void CDocDesignerMDIFrame::OnConnection(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/about.h"
 
-void CDocDesignerMDIFrame::OnAbout(wxCommandEvent& event)
+void CFrontendDocMDIFrameDesigner::OnAbout(wxCommandEvent& event)
 {
 	CDialogAbout dlg(this, wxID_ANY);
 	dlg.ShowModal();

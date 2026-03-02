@@ -9,7 +9,7 @@
 #include "frontend/mainFrame/mainFrame.h"
 
 CDialogSelectTypeForm::CDialogSelectTypeForm(IValueMetaObject* metaValue, IValueMetaObjectForm* metaObject)
-	: wxDialog(CDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
+	: wxDialog(CFrontendDocMDIFrame::GetFrame(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(480, 320), wxDEFAULT_DIALOG_STYLE | wxDIALOG_ADAPTATION_ANY_SIZER), m_metaObject(metaObject)
 {
 	SetTitle(metaValue->GetSynonym() + _(" form wizard"));
 }

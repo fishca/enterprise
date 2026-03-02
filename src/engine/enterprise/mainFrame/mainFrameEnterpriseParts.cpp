@@ -8,7 +8,7 @@
 
 #include "frontend/artProvider/artProvider.h"
 
-void CDocEnterpriseMDIFrame::CreateWideGui()
+void CFrontendDocMDIFrameEnterprise::CreateWideGui()
 {
 	m_mainFrameToolbar = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_LAYOUT);
 	m_mainFrameToolbar->SetToolBitmapSize(wxSize(16, 16));
@@ -72,7 +72,7 @@ void CDocEnterpriseMDIFrame::CreateWideGui()
 #include "frontend/win/ctrls/floatingNotebook.h"
 #include "frontend/win/theme/luna_tabart.h"
 
-void CDocEnterpriseMDIFrame::CreateBottomPane()
+void CFrontendDocMDIFrameEnterprise::CreateBottomPane()
 {
 	if (m_mgr.GetPane(wxAUI_PANE_BOTTOM).IsOk())
 		return;

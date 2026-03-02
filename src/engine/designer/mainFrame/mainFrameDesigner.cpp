@@ -16,11 +16,11 @@
 
 ///////////////////////////////////////////////////////////////////
 
-CDocDesignerMDIFrame* CDocDesignerMDIFrame::GetFrame() {
-	CDocMDIFrame* instance = CDocMDIFrame::GetFrame();
+CFrontendDocMDIFrameDesigner* CFrontendDocMDIFrameDesigner::GetFrame() {
+	CFrontendDocMDIFrame* instance = CFrontendDocMDIFrame::GetFrame();
 	if (instance != nullptr) {
-		CDocDesignerMDIFrame* designer_instance =
-			dynamic_cast<CDocDesignerMDIFrame*>(instance);
+		CFrontendDocMDIFrameDesigner* designer_instance =
+			dynamic_cast<CFrontendDocMDIFrameDesigner*>(instance);
 		wxASSERT(designer_instance);
 		return designer_instance;
 	}
@@ -29,9 +29,9 @@ CDocDesignerMDIFrame* CDocDesignerMDIFrame::GetFrame() {
 
 ///////////////////////////////////////////////////////////////////
 
-CDocDesignerMDIFrame::CDocDesignerMDIFrame(const wxString& title,
+CFrontendDocMDIFrameDesigner::CFrontendDocMDIFrameDesigner(const wxString& title,
 	const wxPoint& pos,
-	const wxSize& size) : CDocMDIFrame(title, pos, size),
+	const wxSize& size) : CFrontendDocMDIFrame(title, pos, size),
 
 	m_metaWindow(nullptr),
 
@@ -43,19 +43,19 @@ CDocDesignerMDIFrame::CDocDesignerMDIFrame(const wxString& title,
 	m_docManager = new CDesignerDocManager;
 }
 
-CDocDesignerMDIFrame::~CDocDesignerMDIFrame()
+CFrontendDocMDIFrameDesigner::~CFrontendDocMDIFrameDesigner()
 {
 	wxDELETE(m_docManager);
 }
 
-void CDocDesignerMDIFrame::CreateGUI()
+void CFrontendDocMDIFrameDesigner::CreateGUI()
 {
 	CreateWideGui();
 }
 
 static bool s_setModify = false, s_modified = false;
 
-void CDocDesignerMDIFrame::Modify(bool modify)
+void CFrontendDocMDIFrameDesigner::Modify(bool modify)
 {
 	wxAuiPaneInfo& paneInfo = m_mgr.GetPane(wxAUI_PANE_METADATA);
 
@@ -88,12 +88,12 @@ void CDocDesignerMDIFrame::Modify(bool modify)
 	}
 }
 
-bool CDocDesignerMDIFrame::IsModified() const
+bool CFrontendDocMDIFrameDesigner::IsModified() const
 {
 	return s_modified;
 }
 
-void CDocDesignerMDIFrame::LoadOptions()
+void CFrontendDocMDIFrameDesigner::LoadOptions()
 {
 	// Disable logging since it's ok if the options file is not there.
 	wxLogNull logNo;
@@ -147,7 +147,7 @@ void CDocDesignerMDIFrame::LoadOptions()
 	UpdateEditorOptions();
 }
 
-void CDocDesignerMDIFrame::SaveOptions()
+void CFrontendDocMDIFrameDesigner::SaveOptions()
 {
 	// Disable logging since it's ok if the options file saving isn't successful.
 	wxLogNull logNo;
@@ -177,7 +177,7 @@ void CDocDesignerMDIFrame::SaveOptions()
 }
 
 #pragma region debugger 
-void CDocDesignerMDIFrame::Debugger_OnSessionStart()
+void CFrontendDocMDIFrameDesigner::Debugger_OnSessionStart()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_OVER, true);
@@ -187,7 +187,7 @@ void CDocDesignerMDIFrame::Debugger_OnSessionStart()
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 
-void CDocDesignerMDIFrame::Debugger_OnSessionEnd()
+void CFrontendDocMDIFrameDesigner::Debugger_OnSessionEnd()
 {
 	if (!debugClient->HasConnections()) {
 		m_menuDebug->Enable(wxID_DESIGNER_DEBUG_STEP_INTO, false);
@@ -199,25 +199,25 @@ void CDocDesignerMDIFrame::Debugger_OnSessionEnd()
 	}
 }
 
-void CDocDesignerMDIFrame::Debugger_OnEnterLoop()
+void CFrontendDocMDIFrameDesigner::Debugger_OnEnterLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, false);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, true);
 }
 
-void CDocDesignerMDIFrame::Debugger_OnLeaveLoop()
+void CFrontendDocMDIFrameDesigner::Debugger_OnLeaveLoop()
 {
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_PAUSE, true);
 	m_menuDebug->Enable(wxID_DESIGNER_DEBUG_NEXT_POINT, false);
 }
 #pragma endregion 
 
-bool CDocDesignerMDIFrame::Show(bool show)
+bool CFrontendDocMDIFrameDesigner::Show(bool show)
 {
 	if (show && !m_metaWindow->Load())
 		return false;
 
-	bool ret = CDocMDIFrame::Show(show);
+	bool ret = CFrontendDocMDIFrame::Show(show);
 	if (ret) {
 		if (!outputWindow->IsEmpty()) {
 			outputWindow->SetFocus();
@@ -230,12 +230,12 @@ bool CDocDesignerMDIFrame::Show(bool show)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CDocDesignerMDIFrame::OnInitializeConfiguration(eConfigType cfg)
+void CFrontendDocMDIFrameDesigner::OnInitializeConfiguration(eConfigType cfg)
 {
 	IDebuggerClientBridge::SetDebuggerClientBridge(new CDebuggerClientBridge);
 }
 
-void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
+void CFrontendDocMDIFrameDesigner::OnDestroyConfiguration(eConfigType cfg)
 {
 	IDebuggerClientBridge::SetDebuggerClientBridge(nullptr);
 }
@@ -244,7 +244,7 @@ void CDocDesignerMDIFrame::OnDestroyConfiguration(eConfigType cfg)
 
 #include "backend/metadataConfiguration.h"
 
-bool CDocDesignerMDIFrame::AllowRun() const
+bool CFrontendDocMDIFrameDesigner::AllowRun() const
 {
 	if (activeMetaData != nullptr && activeMetaData->StartMainModule())
 		return true;
@@ -252,7 +252,7 @@ bool CDocDesignerMDIFrame::AllowRun() const
 	return false;
 }
 
-bool CDocDesignerMDIFrame::AllowClose() const
+bool CFrontendDocMDIFrameDesigner::AllowClose() const
 {
 	if (activeMetaData != nullptr) {
 

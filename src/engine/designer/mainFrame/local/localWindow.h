@@ -14,7 +14,7 @@ class CLocalWindow : public wxPanel {
 	wxListCtrl* m_treeCtrl;
 private:
 	CLocalWindow(wxWindow* parent, int id = wxID_ANY);
-	friend class CDocDesignerMDIFrame;
+	friend class CFrontendDocMDIFrameDesigner;
 public:
 
 	virtual ~CLocalWindow();

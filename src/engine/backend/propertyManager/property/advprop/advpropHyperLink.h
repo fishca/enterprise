@@ -26,6 +26,10 @@ public:
 
 	virtual void OnSetValue() override;
 
+	// Refresh values of child properties.
+	// Automatically called after value is set.
+	virtual void RefreshChildren();
+
 protected:
 	IPropertyObject* m_ownerProperty = nullptr;
 private:

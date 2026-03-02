@@ -7,6 +7,8 @@
 
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGHyperLinkProperty, wxPGProperty, HyperLink)
 
+#include "backend/metaCollection/metaObject.h"
+
 wxPGHyperLinkProperty::wxPGHyperLinkProperty(IPropertyObject* ownerProperty, const wxString& label,
 	const wxString& name, const wxVariant& value) : wxPGProperty(label, name), m_ownerProperty(ownerProperty) {
 
@@ -34,7 +36,6 @@ bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
 }
 
 #include "backend/metadata.h"
-#include "backend/metaCollection/metaObject.h"
 
 void wxPGHyperLinkProperty::OnSetValue()
 {
@@ -52,4 +53,9 @@ void wxPGHyperLinkProperty::OnSetValue()
 			);
 		}
 	}
+}
+
+void wxPGHyperLinkProperty::RefreshChildren()
+{
+	wxPGProperty::Enable(true);
 }

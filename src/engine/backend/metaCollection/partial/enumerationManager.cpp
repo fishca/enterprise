@@ -70,16 +70,12 @@ void CValueManagerDataObjectEnumeration::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 
 	//fill custom attributes 
-	for (unsigned int idx = 0; idx < m_metaObject->GetChildCount(); idx++) {
-		auto child = m_metaObject->GetChild(idx);
-		if (g_metaEnumCLSID != child->GetClassType())
-			continue;
-		if (child->IsDeleted())
-			continue;
+	for (auto object : m_metaObject->GetEnumObjectArray()) {
+
 		m_methodHelper->AppendProp(
-			child->GetName(),
+			object->GetName(),
 			true, false,
-			child->GetMetaID(),
+			object->GetMetaID(),
 			wxNOT_FOUND
 		);
 	}
@@ -96,14 +92,20 @@ void CValueManagerDataObjectEnumeration::PrepareNames() const
 //****************************************************************************
 //*                              Override attribute                          *
 //****************************************************************************
-bool CValueManagerDataObjectEnumeration::SetPropVal(const long lPropNum, CValue& cValue) {
+bool CValueManagerDataObjectEnumeration::SetPropVal(const long lPropNum, CValue& cValue)
+{
 	return false;
 }
 
-bool CValueManagerDataObjectEnumeration::GetPropVal(const long lPropNum, CValue& pvarPropVal) {
-	pvarPropVal = CValueReferenceDataObject::Create(m_metaObject,
-		m_metaObject->GetEnumObjectArray()[lPropNum]->GetGuid()
-	);
+bool CValueManagerDataObjectEnumeration::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	const IValueMetaObject* valueObject =
+		m_metaObject->FindEnumObjectByFilter<meta_identifier_t>(m_methodHelper->GetPropData(lPropNum));
+
+	if (valueObject == nullptr)
+		return false;
+
+	pvarPropVal = CValueReferenceDataObject::Create(m_metaObject, valueObject->GetGuid());
 	return true;
 }
 

@@ -123,12 +123,11 @@ public:
 	wxString GetName() const { return m_propertyName->GetValueAsString(); }
 	void SetName(const wxString& strName) { m_propertyName->SetValue(strName); }
 
-	wxString GetSynonym() const {
-		return m_propertySynonym->IsEmptyProperty() ? stringUtils::GenerateSynonym(GetName()) :
-			m_propertySynonym->GetValueAsTranslateString();
+	virtual wxString GetSynonym() const {
+		return !m_propertySynonym->IsEmptyProperty() ?
+			m_propertySynonym->GetValueAsTranslateString() : stringUtils::GenerateSynonym(GetName());
 	}
-
-	void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
+	virtual void SetSynonym(const wxString& synonym) { m_propertySynonym->SetValue(synonym); }
 
 	wxString GetComment() const { return m_propertyComment->GetValueAsString(); }
 	void SetComment(const wxString& comment) { m_propertyComment->SetValue(comment); }

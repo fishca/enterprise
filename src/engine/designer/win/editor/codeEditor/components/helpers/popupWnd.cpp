@@ -323,7 +323,7 @@ void COESPopupWindow::OnFocus(wxFocusEvent& event)
 
 #endif // __WXOSX_COCOA__
 
-COESListBoxWin::COESListBoxWin(wxWindow* parent, ÑListBoxVisualData *visualData, int h)
+COESListBoxWin::COESListBoxWin(wxWindow* parent, CListBoxVisualData *visualData, int h)
 	: COESPopupWindow(parent), m_visualData(visualData)
 {
 	m_listBox = new COESListBox(this, m_visualData, h);

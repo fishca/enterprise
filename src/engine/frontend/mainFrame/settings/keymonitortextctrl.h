@@ -12,10 +12,10 @@
 //!          the wxKeyMonitorTextCtrl displays exactly the string
 //!          "Ctrl+Shift+A"
 //!
-class KeyMonitorTextCtrl : public wxTextCtrl
+class CKeyMonitorTextCtrl : public wxTextCtrl
 {
 public:
-    KeyMonitorTextCtrl(
+    CKeyMonitorTextCtrl(
         wxWindow* parent,
         wxWindowID id,
         const wxString& value = wxEmptyString,
@@ -26,7 +26,7 @@ public:
         const wxString& name = wxTextCtrlNameStr) :
         wxTextCtrl(parent, id, value, pos, size, style, validator, name) {}
 
-    virtual ~KeyMonitorTextCtrl() {}
+    virtual ~CKeyMonitorTextCtrl() {}
 
 public:
 

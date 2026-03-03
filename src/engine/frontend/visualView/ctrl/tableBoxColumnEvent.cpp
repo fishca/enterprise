@@ -47,8 +47,8 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 			);
 		}
 
-		ÑDataViewColumnContainer* columnObject =
-			dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
+		CDataViewColumnContainer* columnObject =
+			dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
 
 		if (columnObject != nullptr) {
 			CValueViewRenderer* renderer = columnObject->GetRenderer();
@@ -79,8 +79,8 @@ void CValueTableBoxColumn::OnTextEnter(wxCommandEvent& event)
 
 void CValueTableBoxColumn::OnKillFocus(wxFocusEvent& event)
 {
-	ÑDataViewColumnContainer* columnObject =
-		dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
+	CDataViewColumnContainer* columnObject =
+		dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
 
 	if (columnObject != nullptr) {
 		CValueViewRenderer* renderer = columnObject->GetRenderer();
@@ -111,8 +111,8 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 			setType = true;
 		}
 		if (!setType) {
-			ÑDataViewColumnContainer* columnObject =
-				dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
+			CDataViewColumnContainer* columnObject =
+				dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
 			wxASSERT(columnObject);
 			CValueViewRenderer* columnRenderer = columnObject->GetRenderer();
 			wxASSERT(columnRenderer);

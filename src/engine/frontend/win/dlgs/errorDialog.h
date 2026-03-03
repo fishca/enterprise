@@ -24,9 +24,9 @@ class FRONTEND_API CDialogError : public wxDialog {
 public:
 
 	//Editor setting 
-	void SetEditorSettings(const EditorSettings& settings);
+	void SetEditorSettings(const CEditorSettings& settings);
 	//Font setting 
-	void SetFontColorSettings(const FontColorSettings& settings);
+	void SetFontColorSettings(const CFontColorSettings& settings);
 
 	CDialogError(class CFrontendDocMDIFrame* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("Critical failure"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION | wxSYSTEM_MENU | wxCLOSE_BOX | wxSTAY_ON_TOP);

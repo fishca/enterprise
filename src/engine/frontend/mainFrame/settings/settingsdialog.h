@@ -8,16 +8,16 @@
 // Forward declarations.
 //
 
-class KeyBinderDialog;
-class FontColorSettingsPanel;
-class EditorSettingsPanel;
+class CKeyBinderDialog;
+class CFontColorSettingsPanel;
+class CEditorSettingsPanel;
 
 #include "frontend/frontend.h"
 
 /**
  * Settings dialog class.
  */
-class FRONTEND_API SettingsDialog : public wxPropertySheetDialog
+class FRONTEND_API CSettingsDialog : public wxPropertySheetDialog
 {
 
 public:
@@ -25,7 +25,7 @@ public:
     /**
      * Constructor.
      */
-    explicit SettingsDialog(wxWindow* parent);
+    explicit CSettingsDialog(wxWindow* parent);
 
     /**
      * Called when the dialog is initialized.
@@ -41,25 +41,25 @@ public:
     /**
      * Returns the key binder part of the settings dialog.
      */
-    KeyBinderDialog* GetKeyBinderDialog() const;
+    CKeyBinderDialog* GetKeyBinderDialog() const;
 
     /**
      * Returns the font and color part of the settings dialog.
      */
-    FontColorSettingsPanel* GetFontColorSettingsPanel() const;
+    CFontColorSettingsPanel* GetFontColorSettingsPanel() const;
 
     /**
      * Returns the editor part of the settings dialog.
      */
-    EditorSettingsPanel* GetEditorSettingsPanel() const;
+    CEditorSettingsPanel* GetEditorSettingsPanel() const;
 
     wxDECLARE_EVENT_TABLE();
 
 private:
 
-    KeyBinderDialog*            m_keyBinderDialog;
-    FontColorSettingsPanel*     m_fontColorSettingsPanel;
-    EditorSettingsPanel*        m_editorSettingsPanel;
+    CKeyBinderDialog*            m_keyBinderDialog;
+    CFontColorSettingsPanel*     m_fontColorSettingsPanel;
+    CEditorSettingsPanel*        m_editorSettingsPanel;
 
 };
 

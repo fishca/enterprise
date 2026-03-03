@@ -35,7 +35,7 @@ public:
 	wxString strCurrentWord;
 
 	COESListBoxWin *lb;
-	ÑListBoxVisualData* m_visualData;
+	CListBoxVisualData* m_visualData;
 	wxStyledTextCtrl *m_owner;
 
 	wxEvtHandler *m_evtHandler;

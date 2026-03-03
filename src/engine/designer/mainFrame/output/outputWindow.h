@@ -49,7 +49,7 @@ public:
 	/**
 	 * Sets the font and color settings used in the output window.
 	 */
-	void SetFontColorSettings(const class FontColorSettings& settings);
+	void SetFontColorSettings(const class CFontColorSettings& settings);
 
 	/**
 	 * Adds a message to the end of the log.

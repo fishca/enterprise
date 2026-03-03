@@ -5,7 +5,7 @@
 #include <wx/wx.h>
 #include <wx/xml/xml.h>
 
-EditorSettings::EditorSettings()
+CEditorSettings::CEditorSettings()
 {
     m_indentSize                    = 4;
     m_useTabs                       = false;
@@ -16,77 +16,77 @@ EditorSettings::EditorSettings()
     m_showWhiteSpaces               = false;
 }
 
-void EditorSettings::SetIndentSize(unsigned int indentSize)
+void CEditorSettings::SetIndentSize(unsigned int indentSize)
 {
     m_indentSize = wxMin(indentSize, 32);
 }
 
-void EditorSettings::SetUseTabs(bool useTabs)
+void CEditorSettings::SetUseTabs(bool useTabs)
 {
     m_useTabs = useTabs;
 }
 
-void EditorSettings::SetRemoveTabsOnLoad(bool removeTabsOnLoad)
+void CEditorSettings::SetRemoveTabsOnLoad(bool removeTabsOnLoad)
 {
     m_removeTabsOnLoad = removeTabsOnLoad;
 }
 
-unsigned int EditorSettings::GetIndentSize() const
+unsigned int CEditorSettings::GetIndentSize() const
 {
     return m_indentSize;
 }
 
-bool EditorSettings::GetUseTabs() const
+bool CEditorSettings::GetUseTabs() const
 {
     return m_useTabs;
 }
 
-bool EditorSettings::GetRemoveTabsOnLoad() const
+bool CEditorSettings::GetRemoveTabsOnLoad() const
 {
     return m_removeTabsOnLoad;
 }
 
-bool EditorSettings::GetShowLineNumbers() const
+bool CEditorSettings::GetShowLineNumbers() const
 {
     return m_showLineNumbers;
 }
 
-void EditorSettings::SetShowLineNumbers(bool showLineNumbers)
+void CEditorSettings::SetShowLineNumbers(bool showLineNumbers)
 {
     m_showLineNumbers = showLineNumbers;
 }
 
-bool EditorSettings::GetMostRecentlyUsedTabSwitching() const
+bool CEditorSettings::GetMostRecentlyUsedTabSwitching() const
 {
     return m_mostRecentlyUsedTabSwitching;
 };
 
-void EditorSettings::SetMostRecentlyUsedTabSwitching(bool mostRecentlyUsedTabSwitching)
+void CEditorSettings::SetMostRecentlyUsedTabSwitching(bool mostRecentlyUsedTabSwitching)
 {
     m_mostRecentlyUsedTabSwitching = mostRecentlyUsedTabSwitching;
 }
 
-bool EditorSettings::GetEnableAutoComplete() const
+bool CEditorSettings::GetEnableAutoComplete() const
 {
     return m_enableAutoComplete;
 }
 
-void EditorSettings::SetEnableAutoComplete(bool enableAutoComplete)
+void CEditorSettings::SetEnableAutoComplete(bool enableAutoComplete)
 {
     m_enableAutoComplete = enableAutoComplete;
 }
 
-bool EditorSettings::GetShowWhiteSpace() const 
+bool CEditorSettings::GetShowWhiteSpace() const 
 {
     return m_showWhiteSpaces;
 }
 
-void EditorSettings::SetShowWhiteSpace(bool showWhiteSpace)
+void CEditorSettings::SetShowWhiteSpace(bool showWhiteSpace)
 {
     m_showWhiteSpaces = showWhiteSpace; 
 }
 
-wxXmlNode* EditorSettings::Save(const wxString& tag) const
+wxXmlNode* CEditorSettings::Save(const wxString& tag) const
 {
 
     wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, tag);    
@@ -103,7 +103,7 @@ wxXmlNode* EditorSettings::Save(const wxString& tag) const
 
 }
 
-void EditorSettings::Load(wxXmlNode* root)
+void CEditorSettings::Load(wxXmlNode* root)
 {
 
     wxXmlNode* node = root->GetChildren();

@@ -14,7 +14,7 @@
 CAutoComplete::CAutoComplete(wxStyledTextCtrl* textCtrl) :
 	active(false),
 	lb(nullptr),
-	m_visualData(new ÑListBoxVisualData(5)),
+	m_visualData(new CListBoxVisualData(5)),
 	m_evtHandler(nullptr),
 	m_owner(textCtrl),
 	posStart(0),

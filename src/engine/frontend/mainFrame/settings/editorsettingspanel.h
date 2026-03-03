@@ -4,23 +4,23 @@
 #include <wx/wx.h>
 #include <wx/radiobut.h>
 
-#include "EditorSettings.h"
+#include "editorSettings.h"
 
 /**
  * This class handles the UI for modifying the editor settings page of the
  * settings dialog.
  */
-class FRONTEND_API EditorSettingsPanel : public wxPanel
+class FRONTEND_API CEditorSettingsPanel : public wxPanel
 {
 	
 public:
 
-	EditorSettingsPanel( wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 461,438 ), int style = wxTAB_TRAVERSAL );
+	CEditorSettingsPanel( wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 461,438 ), int style = wxTAB_TRAVERSAL );
 
     void Initialize();
     
-    void SetSettings(const EditorSettings& settings);
-    const EditorSettings& GetSettings() const;
+    void SetSettings(const CEditorSettings& settings);
+    const CEditorSettings& GetSettings() const;
     
     /**
      * Called when "Insert spaces" radio button is selected.
@@ -89,8 +89,7 @@ private:
     wxCheckBox*     m_enableAutoComplete;
     wxCheckBox*     m_showWhiteSpace;
 
-    EditorSettings  m_settings;
-	
+    CEditorSettings  m_settings;
 };
 
 #endif

@@ -159,9 +159,9 @@ public:
 
 	static void DestroyFrame();
 
-	KeyBinder             GetKeyBinder() const { return m_keyBinder; }
-	FontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
-	EditorSettings        GetEditorSettings() const { return m_editorSettings; }
+	CKeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	CFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	CEditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	/**
 	* Show property in mainFrame
@@ -196,9 +196,9 @@ protected:
 
 	CObjectInspector* m_objectInspector;
 
-	KeyBinder             m_keyBinder;
-	FontColorSettings     m_fontColorSettings;
-	EditorSettings        m_editorSettings;
+	CKeyBinder             m_keyBinder;
+	CFontColorSettings     m_fontColorSettings;
+	CEditorSettings        m_editorSettings;
 
 	bool m_callRaiseFrame, m_callUpdateFrameManager;
 

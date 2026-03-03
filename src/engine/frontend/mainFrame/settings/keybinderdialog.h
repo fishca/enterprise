@@ -5,18 +5,18 @@
 #include <wx/button.h>
 #include <wx/treectrl.h>
 
-#include "KeyBinder.h"
+#include "keyBinder.h"
 
 //
 // Forward declarations.
 //
 
-class KeyMonitorTextCtrl;
+class CKeyMonitorTextCtrl;
 
 /**
  * Dialog for customizing the key bindings.
  */
-class FRONTEND_API KeyBinderDialog : public wxPanel
+class FRONTEND_API CKeyBinderDialog : public wxPanel
 {
 
 public:
@@ -24,13 +24,13 @@ public:
     /**
      * Constructor.
      */
-    KeyBinderDialog(wxWindow* parent, int id = -1, wxPoint pos = wxDefaultPosition,
+    CKeyBinderDialog(wxWindow* parent, int id = -1, wxPoint pos = wxDefaultPosition,
         wxSize size = wxSize( 430, 420 ), int style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 
     /**
      * Destructor.
      */
-    virtual ~KeyBinderDialog();
+    virtual ~CKeyBinderDialog();
 
     /**
      * Finializes the initialization. Should be called after the commands have been added.
@@ -71,7 +71,7 @@ public:
     /**
      * Adds a command that can be configured using the dialog.
      */
-    void AddCommand(const KeyBinder::Command& command);
+    void AddCommand(const CKeyBinder::Command& command);
 
     /**
      * Returns the number of commands that have been assigned.
@@ -81,7 +81,7 @@ public:
     /**
      * Returns the ith command.
      */
-    const KeyBinder::Command& GetCommand(unsigned int i) const;
+    const CKeyBinder::Command& GetCommand(unsigned int i) const;
 
     DECLARE_EVENT_TABLE()
 
@@ -99,7 +99,7 @@ private:
 
     struct CommandData : public wxTreeItemData
     {
-        KeyBinder::Command* command;
+        CKeyBinder::Command* command;
     };
 
 	wxStaticText*                       m_staticText1;
@@ -109,7 +109,7 @@ private:
 	wxButton*                           m_removeButton;    
 	wxButton*                           m_removeAllButton;
 	wxStaticText*                       m_staticText3;
-	KeyMonitorTextCtrl*                 m_keyMonitorCtrl;
+	CKeyMonitorTextCtrl*                 m_keyMonitorCtrl;
 	wxStaticText*                       m_staticText4;
 	wxTextCtrl*                         m_currentlyAssignedCtrl;
 	wxButton*                           m_addButton;
@@ -117,7 +117,7 @@ private:
 	wxTextCtrl*                         m_descriptionCtrl;
 	wxStdDialogButtonSizer*             m_sdbSizer3;
 
-    std::vector<KeyBinder::Command*>    m_commands;
+    std::vector<CKeyBinder::Command*>    m_commands;
 
 };
 

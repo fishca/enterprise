@@ -71,7 +71,7 @@ COutputWindow* COutputWindow::GetOutputWindow()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void COutputWindow::SetFontColorSettings(const FontColorSettings& settings)
+void COutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -80,10 +80,10 @@ void COutputWindow::SetFontColorSettings(const FontColorSettings& settings)
 	StyleClearAll();
 	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	SetSelForeground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).foreColor);
-	SetSelBackground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).backColor);
+	SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
 
 	StyleSetFont(wxSTC_C_DEFAULT, font);
 	StyleSetFont(wxSTC_C_IDENTIFIER, font);
@@ -198,9 +198,9 @@ void COutputWindow::OnContextMenu(wxContextMenuEvent& event)
 
 	wxMenu* popupMenu = new wxMenu;
 
-	wxMenuItem* menuItemCopy = popupMenu->Append(idcmdCopy, wxT("Copy"));
+	wxMenuItem* menuItemCopy = popupMenu->Append(idcmdCopy, _("Copy"));
 	menuItemCopy->Enable(wxStyledTextCtrl::CanCopy());
-	wxMenuItem* menuItemClear = popupMenu->Append(idcmdClear, wxT("Clear"));
+	wxMenuItem* menuItemClear = popupMenu->Append(idcmdClear, _("Clear"));
 
 	wxStyledTextCtrl::PopupMenu(popupMenu, pt);
 	//event.Skip();

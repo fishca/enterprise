@@ -94,7 +94,7 @@ CDialogError::CDialogError(CFrontendDocMDIFrame* parent, wxWindowID id,
 	wxDialog::SetFocus();
 }
 
-void CDialogError::SetEditorSettings(const EditorSettings& settings)
+void CDialogError::SetEditorSettings(const CEditorSettings& settings)
 {
 	unsigned int m_bIndentationSize = settings.GetIndentSize();
 
@@ -122,7 +122,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-void CDialogError::SetFontColorSettings(const FontColorSettings& settings)
+void CDialogError::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -131,73 +131,73 @@ void CDialogError::SetFontColorSettings(const FontColorSettings& settings)
 	m_errorOutput->StyleClearAll();
 	m_errorOutput->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	m_errorOutput->SetSelForeground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).foreColor);
-	m_errorOutput->SetSelBackground(true, settings.GetColors(FontColorSettings::DisplayItem_Selection).backColor);
+	m_errorOutput->SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
+	m_errorOutput->SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_DEFAULT, font);
 	m_errorOutput->StyleSetFont(wxSTC_C_IDENTIFIER, font);
 
-	m_errorOutput->StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	m_errorOutput->StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_STYLE_DEFAULT, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	m_errorOutput->StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(FontColorSettings::DisplayItem_Default).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_IDENTIFIER, settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Comment);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Comment);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_COMMENT, font);
 	m_errorOutput->StyleSetFont(wxSTC_C_COMMENTLINE, font);
 	m_errorOutput->StyleSetFont(wxSTC_C_COMMENTDOC, font);
 
-	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENT, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTLINE, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(FontColorSettings::DisplayItem_Comment).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_COMMENTDOC, settings.GetColors(CFontColorSettings::DisplayItem_Comment).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Keyword);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Keyword);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_WORD, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_WORD, settings.GetColors(FontColorSettings::DisplayItem_Keyword).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_WORD, settings.GetColors(CFontColorSettings::DisplayItem_Keyword).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Operator);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Operator);
 	m_errorOutput->StyleSetFont(wxSTC_C_OPERATOR, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(FontColorSettings::DisplayItem_Operator).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_OPERATOR, settings.GetColors(CFontColorSettings::DisplayItem_Operator).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_String);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_String);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_STRING, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_STRING, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_STRING, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_STRINGEOL, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_STRINGEOL, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_CHARACTER, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(FontColorSettings::DisplayItem_String).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_CHARACTER, settings.GetColors(CFontColorSettings::DisplayItem_String).backColor);
 
-	font = settings.GetFont(FontColorSettings::DisplayItem_Number);
+	font = settings.GetFont(CFontColorSettings::DisplayItem_Number);
 
 	m_errorOutput->StyleSetFont(wxSTC_C_NUMBER, font);
-	m_errorOutput->StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).foreColor);
-	m_errorOutput->StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(FontColorSettings::DisplayItem_Number).backColor);
+	m_errorOutput->StyleSetForeground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).foreColor);
+	m_errorOutput->StyleSetBackground(wxSTC_C_NUMBER, settings.GetColors(CFontColorSettings::DisplayItem_Number).backColor);
 
 	m_errorOutput->StyleSetSize(wxSTC_STYLE_LINENUMBER, font.GetPointSize());
 
 	// Set the caret color as the inverse of the background color so it's always visible.
-	m_errorOutput->SetCaretForeground(GetInverse(settings.GetColors(FontColorSettings::DisplayItem_Default).backColor));
+	m_errorOutput->SetCaretForeground(GetInverse(settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor));
 }
 
 void CDialogError::OnButtonCloseProgramClick(wxCommandEvent& event)

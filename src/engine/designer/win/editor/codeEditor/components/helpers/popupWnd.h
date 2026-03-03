@@ -116,7 +116,7 @@ class COESListBoxWin : public COESPopupWindow
 
 public:
 
-	COESListBoxWin(wxWindow*, ÑListBoxVisualData *, int);
+	COESListBoxWin(wxWindow*, CListBoxVisualData *, int);
 	COESListBox *GetListBox() const {
 		return m_listBox; 
 	}
@@ -127,7 +127,7 @@ protected:
 
 private:
 
-	ÑListBoxVisualData* m_visualData;
+	CListBoxVisualData* m_visualData;
 };
 
 

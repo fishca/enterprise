@@ -16,7 +16,7 @@ class wxXmlNode;
  * This class stores font and color settings for code display and syntax
  * highlighting.
  */
-class FRONTEND_API FontColorSettings
+class FRONTEND_API CFontColorSettings
 {
 
 public:
@@ -47,7 +47,7 @@ public:
     /**
      * Constructor. Sets the font and colors to the defaults.
      */
-    FontColorSettings();
+    CFontColorSettings();
 
     /**
      * Returns the number of display items the settings store information for.

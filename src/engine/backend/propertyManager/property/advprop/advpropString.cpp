@@ -41,7 +41,7 @@ bool wxGeneralStringProperty::StringToValue(wxVariant& variant,
 	int argFlags) const
 {
 	if (stringUtils::CheckCorrectName(text) >= 0) {
-		wxMessageBox(wxT("You can enter only numbers, letters and the symbol \"_\""), wxT("Error entering value"));
+		wxMessageBox(_("You can enter only numbers, letters and the symbol \"_\""), _("Error entering value"));
 		return false;
 	}
 

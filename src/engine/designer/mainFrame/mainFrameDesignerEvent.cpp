@@ -369,19 +369,19 @@ void CFrontendDocMDIFrameDesigner::OnRunDebugCommand(wxCommandEvent& event)
 
 void CFrontendDocMDIFrameDesigner::OnToolsSettings(wxCommandEvent& event)
 {
-	SettingsDialog dialog(this);
+	CSettingsDialog dialog(this);
 
-	KeyBinderDialog* keyBinder = dialog.GetKeyBinderDialog();
+	CKeyBinderDialog* keyBinder = dialog.GetKeyBinderDialog();
 
 	for (unsigned int i = 0; i < m_keyBinder.GetNumCommands(); ++i)
 	{
 		keyBinder->AddCommand(m_keyBinder.GetCommand(i));
 	}
 
-	FontColorSettingsPanel* fontColorSettings = dialog.GetFontColorSettingsPanel();
+	CFontColorSettingsPanel* fontColorSettings = dialog.GetFontColorSettingsPanel();
 	fontColorSettings->SetSettings(m_fontColorSettings);
 
-	EditorSettingsPanel* editorSettings = dialog.GetEditorSettingsPanel();
+	CEditorSettingsPanel* editorSettings = dialog.GetEditorSettingsPanel();
 	editorSettings->SetSettings(m_editorSettings);
 
 	if (dialog.ShowModal() == wxID_OK)

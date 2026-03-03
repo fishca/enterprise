@@ -253,7 +253,7 @@ void CMetaDocManager::OnFindDialog(wxCommandEvent& event)
 {
 	if (nullptr == m_findDialog)
 	{
-		m_findDialog = new wxFindReplaceDialog(mainFrame, &m_findData, wxT("Find"));
+		m_findDialog = new wxFindReplaceDialog(mainFrame, &m_findData, _("Find"));
 		m_findDialog->Centre(wxCENTRE_ON_SCREEN | wxBOTH);
 
 		m_findDialog->Bind(wxEVT_FIND, &CMetaDocManager::OnFind, this);

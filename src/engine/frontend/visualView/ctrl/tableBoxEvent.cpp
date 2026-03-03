@@ -5,8 +5,8 @@
 
 void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
 {
-	ÑDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<ÑDataViewColumnContainer*>(event.GetDataViewColumn());
+	CDataViewColumnContainer* dataViewColumn =
+		dynamic_cast<CDataViewColumnContainer*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 	if (g_visualHostContext != nullptr) {
 		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
@@ -61,8 +61,8 @@ void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
 
 void CValueTableBox::OnColumnReordered(wxDataViewEvent& event)
 {
-	ÑDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<ÑDataViewColumnContainer*>(event.GetDataViewColumn());
+	CDataViewColumnContainer* dataViewColumn =
+		dynamic_cast<CDataViewColumnContainer*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 
 	CValueTableBoxColumn* columnObject = dataViewColumn->GetControl();
@@ -211,8 +211,8 @@ void CValueTableBox::OnHeaderResizing(wxHeaderCtrlEvent& event)
 {
 	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
-		ÑDataViewColumnContainer* dataViewColumn =
-			dynamic_cast<ÑDataViewColumnContainer*>(dataViewCtrl->GetColumn(event.GetColumn()));
+		CDataViewColumnContainer* dataViewColumn =
+			dynamic_cast<CDataViewColumnContainer*>(dataViewCtrl->GetColumn(event.GetColumn()));
 		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
 		wxASSERT(columnControl);
 		columnControl->SetWidthColumn(event.GetWidth());

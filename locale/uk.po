@@ -2,17 +2,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2026-02-21 17:47+0200\n"
-"PO-Revision-Date: 2026-02-21 17:48+0200\n"
+"PO-Revision-Date: 2026-02-25 22:32+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: en\n"
+"Language: uk_UA\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.8\n"
-"X-Poedit-Basepath: ../../src/engine\n"
-"X-Poedit-KeywordsList: _\n"
-"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-Basepath: .\n"
 
 #: backend/appData.h:225 designer/mainFrame/mainFrameDesigner.h:62
 #: designer/mainFrame/mainFrameDesignerEvent.cpp:147
@@ -28,7 +26,7 @@ msgid "Thick client"
 msgstr ""
 
 #: backend/appData.h:229
-msgid "Daemon"
+msgid "Deamon"
 msgstr ""
 
 #: backend/appDataQuery.cpp:238
@@ -3871,7 +3869,7 @@ msgstr ""
 #: frontend/win/editor/gridEditor/gridEditor.cpp:229
 #: frontend/win/editor/gridEditor/gridEditor.cpp:239
 msgid "Display"
-msgstr ""
+msgstr "Показати"
 
 #: frontend/win/editor/gridEditor/gridEditor.cpp:231
 msgid "Column width..."
@@ -3899,36 +3897,36 @@ msgstr ""
 
 #: frontend/win/editor/gridEditor/gridEditor.h:356
 msgid "Orientation text"
-msgstr ""
+msgstr "Орієнтаційний текст"
 
 #: frontend/win/editor/gridEditor/gridEditor.h:358
 msgid "Appearance"
-msgstr ""
+msgstr "Вигляд"
 
 #: frontend/win/editor/gridEditor/gridEditor.h:360
 msgid "Background colour"
-msgstr ""
+msgstr "Колір фону"
 
 #: frontend/win/editor/gridEditor/gridEditor.h:361
 msgid "Text colour"
-msgstr ""
+msgstr "Колір тексту"
 
 #: frontend/win/editor/gridEditor/gridEditor.h:368
 msgid "Colour"
-msgstr ""
+msgstr "Колір"
 
 #: launcher/connectionDB.cpp:24
 msgid "Name IB:"
-msgstr ""
+msgstr "Найменування ІБ:"
 
 #: launcher/connectionDB.h:47
 msgid "Configure connect"
-msgstr ""
+msgstr "Налаштувати підключення"
 
 #: launcher/launcher.cpp:156
 msgid "Exit"
-msgstr ""
+msgstr "Вихід"
 
 #: launcher/launcher.h:46
 msgid "Launch OES"
-msgstr ""
+msgstr "Запуск OES"

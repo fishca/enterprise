@@ -11,7 +11,7 @@
 #include "frontend/win/dlgs/activeUser.h"
 #include "frontend/win/dlgs/about.h"
 
-void CDocEnterpriseMDIFrame::OnClickAllOperation(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnClickAllOperation(wxCommandEvent& event)
 {
 	CDialogFunctionAll* dlg = new CDialogFunctionAll(this, wxID_ANY);
 	dlg->Show();
@@ -19,7 +19,7 @@ void CDocEnterpriseMDIFrame::OnClickAllOperation(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocEnterpriseMDIFrame::OnToolsSettings(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnToolsSettings(wxCommandEvent& event)
 {
 	CDialogEnterpriseOption* dlg = new CDialogEnterpriseOption(this, wxID_ANY);
 	dlg->Show();
@@ -27,7 +27,7 @@ void CDocEnterpriseMDIFrame::OnToolsSettings(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocEnterpriseMDIFrame::OnActiveUsers(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnActiveUsers(wxCommandEvent& event)
 {
 	CDialogActiveUser* dlg = new CDialogActiveUser(this, wxID_ANY);
 	dlg->Show();
@@ -35,7 +35,7 @@ void CDocEnterpriseMDIFrame::OnActiveUsers(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDocEnterpriseMDIFrame::OnAbout(wxCommandEvent& event)
+void CFrontendDocMDIFrameEnterprise::OnAbout(wxCommandEvent& event)
 {
 	CDialogAbout* dlg = new CDialogAbout(this, wxID_ANY);
 	dlg->Show();

@@ -1376,6 +1376,7 @@ void IValueRecordDataObject::PrepareNames() const
 	m_methodHelper->ClearHelper();
 
 	m_methodHelper->AppendFunc(wxT("GetFormObject"), 2, wxT("GetFormObject(name : string, owner : any)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("GetMetadata()"));
 
 	m_methodHelper->AppendProp(thisObject,
@@ -1514,6 +1515,9 @@ bool IValueRecordDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetVa
 			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
+		return true;
+	case enGetTemplate:
+		pvarRetValue = GetMetaObject()->GetTemplate(paParams[0]->GetString());
 		return true;
 	case eGetMetadata:
 		pvarRetValue = GetMetaObject();

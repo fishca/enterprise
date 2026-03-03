@@ -65,7 +65,7 @@ bool CFormEditView::OnCreate(CMetaDocument* doc, long flags)
 #if wxUSE_MENUS	
 wxMenuBar* CFormEditView::CreateMenuBar() const
 {
-	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
+	if (m_visualNotebook != nullptr && m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_DESIGNER) {
 
 		wxMenuBar* mb = new wxMenuBar;
 
@@ -112,15 +112,20 @@ void CFormEditView::OnDraw(wxDC* WXUNUSED(dc))
 bool CFormEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
-	 
+
 	if (deleteWindow) {
 		GetFrame()->Destroy();
 		SetFrame(nullptr);
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+
 		m_visualNotebook->Freeze();
-		return m_visualNotebook->Destroy();
+
+		m_visualNotebook->Destroy();
+		m_visualNotebook = nullptr;
+
+		return true;
 	}
 
 	return false;
@@ -133,14 +138,14 @@ bool CFormEditView::OnClose(bool deleteWindow)
 
 wxPrintout* CFormEditView::OnCreatePrintout()
 {
-	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) 
+	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR)
 		return new CCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
 	return new CFormPrintout(m_visualNotebook->GetVisualHost(), m_viewDocument->GetTitle());
 }
 
 void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
-	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
+	if (m_visualNotebook != nullptr && m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR) {
 		if (!toolbar->GetToolCount()) {
 			toolbar->AddTool(wxID_ADD_COMMENTS, _("Add comments"), wxArtProvider::GetBitmap(wxART_ADD_COMMENT, wxART_DOC_MODULE), _("Add"), wxItemKind::wxITEM_NORMAL);
 			toolbar->EnableTool(wxID_ADD_COMMENTS, m_visualNotebook->IsEditable());
@@ -154,7 +159,7 @@ void CFormEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 			toolbar->AddTool(wxID_PROCEDURES_FUNCTIONS, _("Procedures and functions"), wxArtProvider::GetBitmap(wxART_PROC_AND_FUNC, wxART_DOC_MODULE), _("Procedures and functions"), wxItemKind::wxITEM_NORMAL);
 		}
 	}
-	else {
+	else if (m_visualNotebook != nullptr) {
 		for (auto control : m_controlDataArray) {
 			toolbar->AddTool(control.m_id, control.m_name, control.m_bmp, control.m_name);
 			toolbar->EnableTool(control.m_id, m_visualNotebook->IsEditable());

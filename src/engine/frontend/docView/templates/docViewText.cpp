@@ -40,8 +40,13 @@ bool CTextEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+
 		m_textEditor->Freeze();
-		return m_textEditor->Destroy();
+
+		m_textEditor->Destroy();
+		m_textEditor = nullptr;
+
+		return true;
 	}
 
 	return false;

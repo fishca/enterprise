@@ -10,7 +10,7 @@
 //*                                Hotkey support                                *
 //********************************************************************************
 
-void CDocEnterpriseMDIFrame::SetDefaultHotKeys()
+void CFrontendDocMDIFrameEnterprise::SetDefaultHotKeys()
 {
 	// Setup the hotkeys.
 	m_keyBinder.SetShortcut(wxID_NEW, wxT("Ctrl+N"));
@@ -31,7 +31,7 @@ void CDocEnterpriseMDIFrame::SetDefaultHotKeys()
 //*                                Default menu                                  *
 //********************************************************************************
 
-void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
+void CFrontendDocMDIFrameEnterprise::InitializeDefaultMenu()
 {
 	m_frameMenuBar = new wxMenuBar;
 
@@ -105,10 +105,10 @@ void CDocEnterpriseMDIFrame::InitializeDefaultMenu()
 
 	SetDefaultHotKeys();
 
-	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnClickAllOperation, this, wxID_ENTERPRISE_ALL_OPERATIONS);
-	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnToolsSettings, this, wxID_ENTERPRISE_SETTING);
-	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnActiveUsers, this, wxID_ENTERPRISE_ACTIVE_USERS);
-	Bind(wxEVT_MENU, &CDocEnterpriseMDIFrame::OnAbout, this, wxID_ENTERPRISE_ABOUT);
+	Bind(wxEVT_MENU, &CFrontendDocMDIFrameEnterprise::OnClickAllOperation, this, wxID_ENTERPRISE_ALL_OPERATIONS);
+	Bind(wxEVT_MENU, &CFrontendDocMDIFrameEnterprise::OnToolsSettings, this, wxID_ENTERPRISE_SETTING);
+	Bind(wxEVT_MENU, &CFrontendDocMDIFrameEnterprise::OnActiveUsers, this, wxID_ENTERPRISE_ACTIVE_USERS);
+	Bind(wxEVT_MENU, &CFrontendDocMDIFrameEnterprise::OnAbout, this, wxID_ENTERPRISE_ABOUT);
 
 	m_keyBinder.UpdateWindow(this);
 	m_keyBinder.UpdateMenuBar(mb);

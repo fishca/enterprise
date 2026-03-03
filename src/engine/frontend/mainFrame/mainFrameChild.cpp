@@ -14,7 +14,7 @@ CAuiDocChildFrame::~CAuiDocChildFrame()
 {
 	wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 
-	if (pParentFrame && CDocMDIFrame::GetFrame()) {
+	if (pParentFrame && CFrontendDocMDIFrame::GetFrame()) {
 		if (pParentFrame->GetActiveChild() == this) {
 			pParentFrame->SetActiveChild(nullptr);
 			pParentFrame->SetChildMenuBar(nullptr);

@@ -29,7 +29,7 @@ static const wxCmdLineEntryDesc s_cmdLineDesc[] = {
 
 int main(int argc, char** argv)
 {
-	wxApp::CheckBuildOptions(WX_BUILD_OPTIONS_SIGNATURE, "deamon");
+	wxApp::CheckBuildOptions(WX_BUILD_OPTIONS_SIGNATURE, "daemon");
 
 	wxInitializer initializer(argc, argv);
 	if (!initializer.IsOk()) {

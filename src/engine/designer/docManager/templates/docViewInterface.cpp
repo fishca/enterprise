@@ -41,11 +41,16 @@ bool CInterfaceEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+		
 		m_interfaceEditor->Freeze();
+		
 		m_interfaceEditor->Destroy();
+		m_interfaceEditor = nullptr;
+
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 // ----------------------------------------------------------------------------

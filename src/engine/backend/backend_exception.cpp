@@ -92,7 +92,7 @@ bool CBackendException::ms_evalMode = false;
 //////////////////////////////////////////////////////////////////////
 
 CBackendException::CBackendException(const wxString& strErrorDescription)
-	: m_strErrorDescription(strErrorDescription)
+	: m_strErrorDescription(strErrorDescription), m_errorHandled(false)
 {
 #ifdef DEBUG
 	wxLogDebug(strErrorDescription);
@@ -113,41 +113,46 @@ void CBackendException::ProcessError(const CBackendException* err, const CByteUn
 	const wxString& strModuleName = error.m_strModuleName;
 	const wxString& strDocPath = error.m_strDocPath;
 
-	if (activeMetaData != nullptr) {
+	if (err != nullptr && !err->m_errorHandled) {
 
-		wxString strModuleData;
+		if (activeMetaData != nullptr) {
 
-		if (!isEvalMode && strFileName.IsEmpty()) {
-			const CGuid& guidDocPath = error.m_strDocPath;
-			const IValueMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
-			wxASSERT(foundedDoc);
-			strModuleData = foundedDoc->GetModuleText();
+			wxString strModuleData;
+
+			if (!isEvalMode && strFileName.IsEmpty()) {
+				const CGuid& guidDocPath = error.m_strDocPath;
+				const IValueMetaObjectModule* foundedDoc = activeMetaData->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
+				wxASSERT(foundedDoc);
+				strModuleData = foundedDoc->GetModuleText();
+			}
+			else if (!isEvalMode && !strFileName.IsEmpty() && backend_mainFrame != nullptr) {
+				const IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
+				wxASSERT(metadata);
+				const CGuid& guidDocPath = error.m_strDocPath;
+				const IValueMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
+				wxASSERT(foundedDoc);
+				strModuleData = foundedDoc->GetModuleText();
+			}
+
+			const wxString& strCodeError = isEvalMode ? wxEmptyString :
+				CBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
+
+			CBackendException::ProcessExceptionError(strFileName,
+				strModuleName, strDocPath,
+				error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
+				strCodeError, wxNOT_FOUND, err->GetErrorDescription()
+			);
 		}
-		else if (!isEvalMode && !strFileName.IsEmpty() && backend_mainFrame != nullptr) {
-			const IMetaData* metadata = backend_mainFrame->FindMetadataByPath(strFileName);
-			wxASSERT(metadata);
-			const CGuid& guidDocPath = error.m_strDocPath;
-			const IValueMetaObjectModule* foundedDoc = metadata->FindAnyObjectByFilter<IValueMetaObjectModule>(guidDocPath, true);
-			wxASSERT(foundedDoc);
-			strModuleData = foundedDoc->GetModuleText();
+		else {
+
+			CBackendException::ProcessExceptionError(strFileName,
+				strModuleName, strDocPath,
+				error.m_numString, error.m_numLine + 1,
+				wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
+			);
 		}
 
-		const wxString& strCodeError = isEvalMode ? wxEmptyString :
-			CBackendException::FindErrorCodeLine(strModuleData, error.m_numString);
-
-		CBackendException::ProcessExceptionError(strFileName,
-			strModuleName, strDocPath,
-			error.m_numString, isEvalMode ? error.m_numLine : error.m_numLine + 1,
-			strCodeError, wxNOT_FOUND, err->GetErrorDescription()
-		);
-	}
-	else {
-
-		CBackendException::ProcessExceptionError(strFileName,
-			strModuleName, strDocPath,
-			error.m_numString, error.m_numLine + 1,
-			wxEmptyString, wxNOT_FOUND, err->GetErrorDescription()
-		);
+		err->m_errorHandled = true;
 	}
 
 	//throw this exception

@@ -282,6 +282,7 @@ enum recordManager
 	enReadRecordManager,
 	enSelectedRecordManager,
 	enGetFormRecord,
+	enGetTemplate,
 	enGetMetadataRecordManager
 };
 
@@ -339,6 +340,7 @@ void CValueRecordManagerObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Read"), wxT("Read()"));
 	m_methodHelper->AppendFunc(wxT("Selected"), wxT("Selected()"));
 	m_methodHelper->AppendFunc(wxT("GetFormRecord"), 3, wxT("GetFormRecord(name : string, owner : any, id : guid)"));
+	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("GetMetadata"), wxT("getMetadata()"));
 
 	//set object name 
@@ -468,6 +470,9 @@ bool CValueRecordManagerObjectInformationRegister::CallAsFunc(const long lMethod
 			lSizeArray > 0 ? paParams[0]->GetString() : wxEmptyString,
 			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr
 		);
+		return true;
+	case enGetTemplate:
+		pvarRetValue = m_metaObject->GetTemplate(paParams[0]->GetString());
 		return true;
 	case recordManager::enGetMetadataRecordManager:
 		pvarRetValue = m_metaObject;

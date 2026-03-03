@@ -845,7 +845,7 @@ wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////////////
 
-void CDocEnterpriseMDIFrame::CreateSubSystem()
+void CFrontendDocMDIFrameEnterprise::CreateSubSystem()
 {
 	bool hasInterface = false;
 

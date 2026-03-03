@@ -41,8 +41,13 @@ bool CRoleEditView::OnClose(bool deleteWindow)
 	}
 
 	if (CMetaView::OnClose(deleteWindow)) {
+	
 		m_roleEditor->Freeze();
-		return m_roleEditor->Destroy();
+	
+		m_roleEditor->Destroy();
+		m_roleEditor = nullptr;
+
+		return true;
 	}
 
 	return false;

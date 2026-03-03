@@ -32,7 +32,7 @@ wxEND_EVENT_TABLE()
 
 #include "mainFrame/mainFrameDesigner.h"
 
-COutputWindow::COutputWindow(CDocMDIFrame* parent, wxWindowID winid)
+COutputWindow::COutputWindow(CFrontendDocMDIFrame* parent, wxWindowID winid)
 	: wxStyledTextCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	// initialize styles
@@ -64,7 +64,7 @@ COutputWindow::COutputWindow(CDocMDIFrame* parent, wxWindowID winid)
 
 COutputWindow* COutputWindow::GetOutputWindow()
 {
-	if (CDocDesignerMDIFrame::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetOutputWindow();
 	return nullptr; 
 }

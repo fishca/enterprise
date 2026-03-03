@@ -40,7 +40,7 @@ CWatchWindow::CWatchWindow(wxWindow* parent, wxWindowID winid)
 
 CWatchWindow* CWatchWindow::GetWatchWindow()
 {
-	if (CDocDesignerMDIFrame::GetFrame())
+	if (CFrontendDocMDIFrameDesigner::GetFrame())
 		return mainFrame->GetWatchWindow();
 	return nullptr;
 }

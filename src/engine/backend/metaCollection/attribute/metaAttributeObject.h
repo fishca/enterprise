@@ -255,14 +255,14 @@ class BACKEND_API CValueMetaObjectAttributePredefined : public IValueMetaObjectA
 private:
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_BOOLEAN);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierNumber& qNumber, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_NUMBER);
 		m_typeDesc.SetNumber(qNumber.m_precision, qNumber.m_scale);
@@ -270,7 +270,7 @@ private:
 	}
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierDate& qDate, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_DATE);
 		m_typeDesc.SetDate(qDate.m_dateTime);
@@ -278,7 +278,7 @@ private:
 	}
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, const CQualifierString& qString, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(eValueTypes::TYPE_STRING);
 		m_typeDesc.SetString(qString.m_length);
@@ -287,7 +287,7 @@ private:
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(clsid);
 		m_fillCheck = fillCheck; m_defValue = defValue;
@@ -295,14 +295,14 @@ private:
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment,
 		const class_identifier_t& clsid, const CTypeDescription::CTypeData& descr, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.SetDefaultMetaType(clsid, descr);
 		m_fillCheck = fillCheck; m_defValue = defValue;
 	}
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, eItemMode itemMode, eSelectMode selectMode)
-		: IValueMetaObjectAttribute(name, synonym, comment), m_itemMode(itemMode), m_selectMode(selectMode)
+		: IValueMetaObjectAttribute(name, wxT(""), comment), m_itemMode(itemMode), m_selectMode(selectMode), m_strSynonym(synonym)
 	{
 		m_typeDesc.ClearMetaType();
 		m_fillCheck = fillCheck;
@@ -316,6 +316,10 @@ public:
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// synonym translate
+	virtual wxString GetSynonym() const { return m_strSynonym; }
+	virtual void SetSynonym(const wxString& strSynonym) {}
 
 	//check if attribute is fill 
 	virtual bool FillCheck() const { return m_fillCheck && m_typeDesc.GetClsidCount() > 0; }
@@ -335,9 +339,12 @@ protected:
 private:
 
 	mutable CTypeDescription m_typeDesc;
+
 	bool m_fillCheck;
 	eItemMode m_itemMode;
 	eSelectMode m_selectMode;
+
+	wxString m_strSynonym;
 };
 
 #endif

@@ -95,12 +95,8 @@ wxString CValueTableBoxColumn::GetControlTitle() const
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, GetControlTitle(),
-		wxNOT_FOUND,
-		m_propertyWidth->GetValueAsUInteger(),
-		m_propertyAlign->GetValueAsEnum(),
-		wxDATAVIEW_COL_REORDERABLE
-	);
+	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, wxT(""),
+		wxNOT_FOUND, wxDVC_DEFAULT_WIDTH, wxALIGN_CENTER, wxDATAVIEW_COL_REORDERABLE);
 
 	dataViewColumn->SetControl(this);
 	return dataViewColumn;

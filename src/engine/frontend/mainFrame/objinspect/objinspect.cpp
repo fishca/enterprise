@@ -201,7 +201,10 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	pg->GetGrid()->SetMarginColour(wxDefaultStypeBGColour.ChangeLightness(95));
 	
 	pg->GetGrid()->SetCaptionBackgroundColour(wxDefaultStypeBGColour.ChangeLightness(95));
+
 	pg->GetGrid()->SetCaptionTextColour(*wxBLACK);
+	pg->GetGrid()->SetCellDisabledTextColour(*wxBLACK);
+
 	pg->GetGrid()->SetCellTextColour(*wxBLACK);
 
 	return pg;

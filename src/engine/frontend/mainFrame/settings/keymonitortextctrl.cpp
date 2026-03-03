@@ -2,14 +2,14 @@
 #include "keymonitortextctrl.h"
 #include "keybinder.h"
 
-IMPLEMENT_CLASS(KeyMonitorTextCtrl, wxTextCtrl)
+IMPLEMENT_CLASS(CKeyMonitorTextCtrl, wxTextCtrl)
 
-BEGIN_EVENT_TABLE(KeyMonitorTextCtrl, wxTextCtrl)
-    EVT_KEY_DOWN(KeyMonitorTextCtrl::OnKey)
-    EVT_KEY_UP(KeyMonitorTextCtrl::OnKey)
+BEGIN_EVENT_TABLE(CKeyMonitorTextCtrl, wxTextCtrl)
+    EVT_KEY_DOWN(CKeyMonitorTextCtrl::OnKey)
+    EVT_KEY_UP(CKeyMonitorTextCtrl::OnKey)
 END_EVENT_TABLE()
 
-void KeyMonitorTextCtrl::OnKey(wxKeyEvent &event)
+void CKeyMonitorTextCtrl::OnKey(wxKeyEvent &event)
 {
 
     // backspace cannot be used as shortcut key...
@@ -32,11 +32,11 @@ void KeyMonitorTextCtrl::OnKey(wxKeyEvent &event)
         // other alphanumeric char, thus generating an invalid keystroke
         // which must be cleared out...
 
-        KeyBinder::Key key;
+        CKeyBinder::Key key;
         key.code    = event.GetKeyCode();
         key.flags   = event.GetModifiers();
 
-        SetValue(KeyBinder::GetKeyBindingAsText(key));
+        SetValue(CKeyBinder::GetKeyBindingAsText(key));
         SetInsertionPointEnd();
 
     }

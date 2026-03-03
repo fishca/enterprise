@@ -7,54 +7,54 @@
 
 #include <wx/bookctrl.h>
     
-BEGIN_EVENT_TABLE(SettingsDialog, wxPropertySheetDialog)
-    EVT_INIT_DIALOG(        SettingsDialog::OnInitDialog)
+BEGIN_EVENT_TABLE(CSettingsDialog, wxPropertySheetDialog)
+    EVT_INIT_DIALOG(        CSettingsDialog::OnInitDialog)
     EVT_HELP(wxID_ANY,                      OnHelp) 
 END_EVENT_TABLE()
 
-SettingsDialog::SettingsDialog(wxWindow* parent)
-    : wxPropertySheetDialog(parent, -1, "Settings", wxDefaultPosition, wxSize(450, 450), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) 
+CSettingsDialog::CSettingsDialog(wxWindow* parent)
+    : wxPropertySheetDialog(parent, -1, _("Settings"), wxDefaultPosition, wxSize(450, 450), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) 
 {
     SetMinSize(wxSize(450, 450));
 
     CreateButtons(wxOK | wxCANCEL);
     
-    m_keyBinderDialog = new KeyBinderDialog(GetBookCtrl());
-    GetBookCtrl()->AddPage(m_keyBinderDialog, wxT("Key Bindings"));
+    m_keyBinderDialog = new CKeyBinderDialog(GetBookCtrl());
+    GetBookCtrl()->AddPage(m_keyBinderDialog, _("Key Bindings"));
 
-    m_editorSettingsPanel = new EditorSettingsPanel(GetBookCtrl());
-    GetBookCtrl()->AddPage(m_editorSettingsPanel, wxT("Editor"));
+    m_editorSettingsPanel = new CEditorSettingsPanel(GetBookCtrl());
+    GetBookCtrl()->AddPage(m_editorSettingsPanel, _("Editor"));
 
-    m_fontColorSettingsPanel = new FontColorSettingsPanel(GetBookCtrl());
-    GetBookCtrl()->AddPage(m_fontColorSettingsPanel, wxT("Font and Colors"));
+    m_fontColorSettingsPanel = new CFontColorSettingsPanel(GetBookCtrl());
+    GetBookCtrl()->AddPage(m_fontColorSettingsPanel, _("Font and Colors"));
 
     LayoutDialog();
 
 }
 
-void SettingsDialog::OnInitDialog(wxInitDialogEvent& event)
+void CSettingsDialog::OnInitDialog(wxInitDialogEvent& event)
 {
     m_keyBinderDialog->Initialize();
     m_fontColorSettingsPanel->Initialize();
     m_editorSettingsPanel->Initialize();
 }
 
-KeyBinderDialog* SettingsDialog::GetKeyBinderDialog() const
+CKeyBinderDialog* CSettingsDialog::GetKeyBinderDialog() const
 {
     return m_keyBinderDialog;
 }
 
-FontColorSettingsPanel* SettingsDialog::GetFontColorSettingsPanel() const
+CFontColorSettingsPanel* CSettingsDialog::GetFontColorSettingsPanel() const
 {
     return m_fontColorSettingsPanel;
 }
 
-EditorSettingsPanel* SettingsDialog::GetEditorSettingsPanel() const
+CEditorSettingsPanel* CSettingsDialog::GetEditorSettingsPanel() const
 {
     return m_editorSettingsPanel;
 }
 
-void SettingsDialog::OnHelp(wxHelpEvent&)
+void CSettingsDialog::OnHelp(wxHelpEvent&)
 {
     wxCommandEvent event( wxEVT_SHOW_HELP_EVENT, GetId() );
     event.SetEventObject( this );

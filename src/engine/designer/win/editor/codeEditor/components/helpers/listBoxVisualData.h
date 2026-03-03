@@ -7,11 +7,11 @@
 // Helper classes for ListBox
 
 // The class manages the colours, images, and other data needed for popup lists.
-class ÑListBoxVisualData
+class CListBoxVisualData
 {
 public:
-	ÑListBoxVisualData(int d);
-	virtual ~ÑListBoxVisualData();
+	CListBoxVisualData(int d);
+	virtual ~CListBoxVisualData();
 
 	// ListBoxImpl implementation
 	void SetDesiredVisibleRows(int d);

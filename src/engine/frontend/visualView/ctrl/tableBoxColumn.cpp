@@ -95,7 +95,7 @@ wxString CValueTableBoxColumn::GetControlTitle() const
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	ÑDataViewColumnContainer* dataViewColumn = new ÑDataViewColumnContainer(this, wxT(""),
+	CDataViewColumnContainer* dataViewColumn = new CDataViewColumnContainer(this, wxT(""),
 		wxNOT_FOUND, wxDVC_DEFAULT_WIDTH, wxALIGN_CENTER, wxDATAVIEW_COL_REORDERABLE);
 
 	dataViewColumn->SetControl(this);
@@ -106,7 +106,7 @@ void CValueTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVi
 {
 	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	ÑDataViewColumnContainer* dataViewColumn = dynamic_cast<ÑDataViewColumnContainer*>(wxobject);
+	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->AppendColumn(dataViewColumn);
@@ -119,7 +119,7 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 {
 	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	ÑDataViewColumnContainer* dataViewColumn = dynamic_cast<ÑDataViewColumnContainer*>(wxobject);
+	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	const unsigned int order_position = GetParentPosition();
@@ -163,7 +163,7 @@ void CValueTableBoxColumn::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
 	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(visualHost->GetWxObject(GetOwner()));
 	wxASSERT(dataViewCtrl);
-	ÑDataViewColumnContainer* dataViewColumn = dynamic_cast<ÑDataViewColumnContainer*>(obj);
+	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(obj);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->DeleteColumn(dataViewColumn);
@@ -198,8 +198,8 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 		);
 	}
 
-	ÑDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<ÑDataViewColumnContainer*>(GetWxObject());
+	CDataViewColumnContainer* dataViewColumn =
+		dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
 
 	if (dataViewColumn != nullptr) {
 		CValueViewRenderer* renderer = dataViewColumn->GetRenderer();

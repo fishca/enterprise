@@ -13,7 +13,7 @@ class wxString;
 /**
  * This class stores settings that apply to the code editor.
  */
-class FRONTEND_API EditorSettings
+class FRONTEND_API CEditorSettings
 {
 
 public:
@@ -21,7 +21,7 @@ public:
     /**
      * Constructor. Initializes the settings to the default values.
      */
-    EditorSettings();
+    CEditorSettings();
 
     /**
      * Sets the number of characters per indent.

@@ -136,14 +136,14 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-// ÑDataViewColumnContainer
+// CDataViewColumnContainer
 // ----------------------------------------------------------------------------
 
-class ÑDataViewColumnContainer : public wxDataViewColumn,
+class CDataViewColumnContainer : public wxDataViewColumn,
 	public wxObject {
 public:
 
-	ÑDataViewColumnContainer(CValueTableBoxColumn* col,
+	CDataViewColumnContainer(CValueTableBoxColumn* col,
 		const wxString& title,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
@@ -154,7 +154,7 @@ public:
 	{
 	}
 
-	ÑDataViewColumnContainer(CValueTableBoxColumn* col,
+	CDataViewColumnContainer(CValueTableBoxColumn* col,
 		const wxBitmap& bitmap,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
@@ -165,7 +165,7 @@ public:
 	{
 	}
 
-	virtual ~ÑDataViewColumnContainer() {}
+	virtual ~CDataViewColumnContainer() {}
 
 	CValueViewRenderer* GetRenderer() const {
 		return dynamic_cast<CValueViewRenderer*>(m_renderer);

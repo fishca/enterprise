@@ -115,13 +115,13 @@ bool CMetaDocument::OnCloseDocument()
 		docManager->RemoveDocument(this);
 	}
 
-	IBackendMetadataTree* metatree =
+	IBackendMetadataTree* metaTree =
 		m_metaObject != nullptr ? m_metaObject->GetMetaDataTree() : nullptr;
 
-	if (metatree == nullptr)
+	if (metaTree == nullptr)
 		objectInspector->SelectObject(nullptr);
 	else
-		metatree->Activate();
+		metaTree->Activate();
 
 	// Tell all views that we're about to close
 	NotifyClosing();

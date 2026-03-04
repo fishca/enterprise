@@ -1,9 +1,9 @@
 ﻿////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metatree window
+//	Description : metaTree window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "metatreeWnd.h"
+#include "treeConfiguration.h"
 #include "frontend/mainFrame/objinspect/objinspect.h"
 #include "frontend/docView/docManager.h"
 #include "backend/appData.h"

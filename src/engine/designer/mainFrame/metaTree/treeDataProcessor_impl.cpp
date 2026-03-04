@@ -3,7 +3,7 @@
 //	Description : dataprocessor window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "dataReportWnd.h"
+#include "treeDataProcessor.h"
 #include "frontend/mainFrame/mainFrame.h"
 #include "frontend/docView/docManager.h"
 #include "backend/appData.h"
@@ -19,22 +19,22 @@
 //*                         metaData                                    * 
 //***********************************************************************
 
-void CDataReportTree::ActivateItem(const wxTreeItemId& item)
+void CDataProcessorTree::ActivateItem(const wxTreeItemId& item)
 {
-	IValueMetaObject* m_currObject = GetMetaObject(item);
+	IValueMetaObject* currObject = GetMetaObject(item);
 
-	if (!m_currObject)
+	if (currObject == nullptr)
 		return;
 
-	OpenFormMDI(m_currObject);
+	OpenFormMDI(currObject);
 }
 
-IValueMetaObject* CDataReportTree::NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool rubObject)
+IValueMetaObject* CDataProcessorTree::NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject)
 {
-	return m_metaData->CreateMetaObject(clsid, parent, rubObject);
+	return m_metaData->CreateMetaObject(clsid, parent, runObject);
 }
 
-IValueMetaObject* CDataReportTree::CreateItem(bool showValue)
+IValueMetaObject* CDataProcessorTree::CreateItem(bool showValue)
 {
 	const wxTreeItemId& item = GetSelectionIdentifier();
 	if (!item.IsOk()) return nullptr;
@@ -55,16 +55,13 @@ IValueMetaObject* CDataReportTree::CreateItem(bool showValue)
 			CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 			//if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 		}
-
-		if (prev_selected == objectInspector->GetSelectedObject())
-			objectInspector->SelectObject(createdObject);
 	}
 
 	m_metaTreeCtrl->RefreshSelectedItem();
 	return createdObject;
 }
 
-wxTreeItemId CDataReportTree::FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
+wxTreeItemId CDataProcessorTree::FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select, bool scroll)
 {
 	m_metaTreeCtrl->Freeze();
 
@@ -101,10 +98,11 @@ wxTreeItemId CDataReportTree::FillItem(IValueMetaObject* metaItem, const wxTreeI
 
 	if (scroll)
 		m_metaTreeCtrl->ScrollTo(createdItem);
+
 	return createdItem;
 }
 
-void CDataReportTree::EditItem()
+void CDataProcessorTree::EditItem()
 {
 	wxTreeItemId selection = m_metaTreeCtrl->GetSelection();
 
@@ -119,7 +117,7 @@ void CDataReportTree::EditItem()
 	OpenFormMDI(m_currObject);
 }
 
-void CDataReportTree::RemoveItem()
+void CDataProcessorTree::RemoveItem()
 {
 	wxTreeItemId selection = m_metaTreeCtrl->GetSelection();
 
@@ -143,12 +141,12 @@ void CDataReportTree::RemoveItem()
 	//Delete item from tree
 	m_metaTreeCtrl->Delete(selection);
 
-	const wxTreeItemId nextSelection = m_metaTreeCtrl->GetFocusedItem();
-
 	for (auto& doc : docManager->GetDocumentsVector()) {
 		CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
 		if (metaDoc != nullptr) metaDoc->UpdateAllViews();
 	}
+
+	const wxTreeItemId& nextSelection = m_metaTreeCtrl->GetFocusedItem();
 
 	if (nextSelection.IsOk()) {
 		UpdateToolbar(GetMetaObject(nextSelection), nextSelection);
@@ -158,7 +156,7 @@ void CDataReportTree::RemoveItem()
 	UpdateChoiceSelection();
 }
 
-void CDataReportTree::EraseItem(const wxTreeItemId& item)
+void CDataProcessorTree::EraseItem(const wxTreeItemId& item)
 {
 	IValueMetaObject* const metaObject = GetMetaObject(item);
 	for (auto& doc : docManager->GetDocumentsVector()) {
@@ -169,20 +167,18 @@ void CDataReportTree::EraseItem(const wxTreeItemId& item)
 	}
 }
 
-void CDataReportTree::SelectItem()
+void CDataProcessorTree::SelectItem()
 {
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
-		return;
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IValueMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
 	objectInspector->SelectObject(metaObject);
 }
 
-void CDataReportTree::PropertyItem()
+void CDataProcessorTree::PropertyItem()
 {
-	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
-		return;
+	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE) return;
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	IValueMetaObject* metaObject = GetMetaObject(selection);
 	UpdateToolbar(metaObject, selection);
@@ -191,7 +187,7 @@ void CDataReportTree::PropertyItem()
 	objectInspector->SelectObject(metaObject);
 }
 
-void CDataReportTree::Collapse()
+void CDataProcessorTree::Collapse()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	CTreeData* data =
@@ -200,7 +196,7 @@ void CDataReportTree::Collapse()
 		data->m_expanded = false;
 }
 
-void CDataReportTree::Expand()
+void CDataProcessorTree::Expand()
 {
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	CTreeData* data =
@@ -209,10 +205,11 @@ void CDataReportTree::Expand()
 		data->m_expanded = true;
 }
 
-void CDataReportTree::UpItem()
+void CDataProcessorTree::UpItem()
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
+
 	m_metaTreeCtrl->Freeze();
 	const wxTreeItemId& selection = m_metaTreeCtrl->GetSelection();
 	const wxTreeItemId& nextItem = m_metaTreeCtrl->GetPrevSibling(selection);
@@ -238,7 +235,7 @@ void CDataReportTree::UpItem()
 			);
 
 			auto tree = m_metaTreeCtrl;
-			std::function<void(CDataReportTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataProcessorTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -266,7 +263,7 @@ void CDataReportTree::UpItem()
 	m_metaTreeCtrl->Thaw();
 }
 
-void CDataReportTree::DownItem()
+void CDataProcessorTree::DownItem()
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
@@ -296,7 +293,7 @@ void CDataReportTree::DownItem()
 			);
 
 			auto tree = m_metaTreeCtrl;
-			std::function<void(CDataReportTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataReportTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
+			std::function<void(CDataProcessorTreeCtrl*, const wxTreeItemId&, const wxTreeItemId&)> swap = [&swap](CDataProcessorTreeCtrl* tree, const wxTreeItemId& dst, const wxTreeItemId& src) {
 				wxTreeItemIdValue coockie; wxTreeItemId nextId = tree->GetFirstChild(dst, coockie);
 				while (nextId.IsOk()) {
 					wxTreeItemId newId = tree->AppendItem(src,
@@ -324,7 +321,7 @@ void CDataReportTree::DownItem()
 	m_metaTreeCtrl->Thaw();
 }
 
-void CDataReportTree::SortItem()
+void CDataProcessorTree::SortItem()
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
@@ -341,7 +338,7 @@ void CDataReportTree::SortItem()
 	m_metaTreeCtrl->Thaw();
 }
 
-void CDataReportTree::CommandItem(unsigned int id)
+void CDataProcessorTree::CommandItem(unsigned int id)
 {
 	if (appData->GetAppMode() != eRunMode::eDESIGNER_MODE)
 		return;
@@ -354,7 +351,7 @@ void CDataReportTree::CommandItem(unsigned int id)
 
 #include "frontend/artProvider/artProvider.h"
 
-void CDataReportTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
+void CDataProcessorTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId& item)
 {
 	IValueMetaObject* metaObject = GetMetaObject(item);
 
@@ -380,7 +377,7 @@ void CDataReportTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId
 	}
 }
 
-void CDataReportTree::UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item)
+void CDataProcessorTree::UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item)
 {
 	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly);
 	m_metaTreeToolbar->EnableTool(ID_METATREE_EDIT, obj != nullptr && item != m_metaTreeCtrl->GetRootItem());
@@ -393,23 +390,20 @@ void CDataReportTree::UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& i
 	m_metaTreeToolbar->Refresh();
 }
 
-void CDataReportTree::UpdateChoiceSelection()
+void CDataProcessorTree::UpdateChoiceSelection()
 {
 	m_defaultFormValue->Clear();
 	m_defaultFormValue->AppendString(_("<not selected>"));
 
-	CValueMetaObjectReport* commonMetadata = m_metaData->GetReport();
+	CValueMetaObjectDataProcessor* commonMetadata = m_metaData->GetDataProcessor();
 	wxASSERT(commonMetadata);
 
 	int defSelection = 0;
 
-	for (auto metaForm : commonMetadata->GetFormArrayObject())
-	{
-		if (CValueMetaObjectReport::eFormReport != metaForm->GetTypeForm())
+	for (auto metaForm : commonMetadata->GetFormArrayObject()) {
+		if (CValueMetaObjectDataProcessor::eFormDataProcessor != metaForm->GetTypeForm())
 			continue;
-
 		int selection_id = m_defaultFormValue->Append(metaForm->GetName(), reinterpret_cast<void*>(metaForm->GetMetaID()));
-
 		if (commonMetadata->GetDefFormObject() == metaForm->GetMetaID()) {
 			defSelection = selection_id;
 		}
@@ -419,7 +413,7 @@ void CDataReportTree::UpdateChoiceSelection()
 	m_defaultFormValue->SendSelectionChangedEvent(wxEVT_CHOICE);
 }
 
-bool CDataReportTree::RenameMetaObject(IValueMetaObject* obj, const wxString& sNewName)
+bool CDataProcessorTree::RenameMetaObject(IValueMetaObject* obj, const wxString& sNewName)
 {
 	wxTreeItemId curItem = m_metaTreeCtrl->GetSelection();
 
@@ -427,11 +421,14 @@ bool CDataReportTree::RenameMetaObject(IValueMetaObject* obj, const wxString& sN
 		return false;
 
 	if (m_metaData->RenameMetaObject(obj, sNewName)) {
+
 		CMetaDocument* currDocument = GetDocument(obj);
-		if (currDocument != nullptr) {
+
+		if (currDocument) {
 			currDocument->SetTitle(obj->GetClassName() + wxT(": ") + sNewName);
 			currDocument->OnChangeFilename(true);
 		}
+
 		//update choice if need
 		UpdateChoiceSelection();
 
@@ -442,26 +439,26 @@ bool CDataReportTree::RenameMetaObject(IValueMetaObject* obj, const wxString& sN
 	return false;
 }
 
-void CDataReportTree::InitTree()
+void CDataProcessorTree::InitTree()
 {
-	m_treeREPORTS = AppendRootItem(g_metaReportCLSID, _("Reports"));
+	m_treeDATAPROCESSORS = AppendRootItem(g_metaDataProcessorCLSID, _("DataProcessor"));
 	//Список аттрибутов 
-	m_treeATTRIBUTES = AppendGroupItem(m_treeREPORTS, g_metaAttributeCLSID, objectAttributesName);
+	m_treeATTRIBUTES = AppendGroupItem(m_treeDATAPROCESSORS, g_metaAttributeCLSID, objectAttributesName);
 	//список табличных частей 
-	m_treeTABLES = AppendGroupItem(m_treeREPORTS, g_metaTableCLSID, objectTablesName);
+	m_treeTABLES = AppendGroupItem(m_treeDATAPROCESSORS, g_metaTableCLSID, objectTablesName);
 	//Формы
-	m_treeFORM = AppendGroupItem(m_treeREPORTS, g_metaFormCLSID, objectFormsName);
-	//Таблицы
-	m_treeTEMPLATES = AppendGroupItem(m_treeREPORTS, g_metaTemplateCLSID, objectTablesName);
+	m_treeFORM = AppendGroupItem(m_treeDATAPROCESSORS, g_metaFormCLSID, objectFormsName);
+	//Макеты
+	m_treeTEMPLATES = AppendGroupItem(m_treeDATAPROCESSORS, g_metaTemplateCLSID, objectTablesName);
 }
 
-void CDataReportTree::ActivateTree()
+void CDataProcessorTree::ActivateTree()
 {
 	if (m_metaData != nullptr)
 		objectInspector->SelectObject(GetMetaObject(m_metaTreeCtrl->GetSelection()));
 }
 
-void CDataReportTree::ClearTree()
+void CDataProcessorTree::ClearTree()
 {
 	for (auto& doc : docManager->GetDocumentsVector()) {
 		const CMetaDocument* metaDoc = wxDynamicCast(doc, CMetaDocument);
@@ -475,27 +472,31 @@ void CDataReportTree::ClearTree()
 	m_metaTreeCtrl->SetEvtHandlerEnabled(false);
 
 	//delete all child item
-	if (m_treeATTRIBUTES.IsOk()) m_metaTreeCtrl->DeleteChildren(m_treeATTRIBUTES);
-	if (m_treeTABLES.IsOk()) m_metaTreeCtrl->DeleteChildren(m_treeTABLES);
-	if (m_treeFORM.IsOk()) m_metaTreeCtrl->DeleteChildren(m_treeFORM);
-	if (m_treeTEMPLATES.IsOk()) m_metaTreeCtrl->DeleteChildren(m_treeTEMPLATES);
+	if (m_treeATTRIBUTES.IsOk())
+		m_metaTreeCtrl->DeleteChildren(m_treeATTRIBUTES);
+	if (m_treeTABLES.IsOk())
+		m_metaTreeCtrl->DeleteChildren(m_treeTABLES);
+	if (m_treeFORM.IsOk())
+		m_metaTreeCtrl->DeleteChildren(m_treeFORM);
+	if (m_treeTEMPLATES.IsOk())
+		m_metaTreeCtrl->DeleteChildren(m_treeTEMPLATES);
 
 	//delete all items
 	m_metaTreeCtrl->DeleteAllItems();
 
-	//initialize tree
+	//Initialize tree
 	InitTree();
 
 	//enable event
 	m_metaTreeCtrl->SetEvtHandlerEnabled(true);
 }
 
-void CDataReportTree::FillData()
+void CDataProcessorTree::FillData()
 {
-	CValueMetaObjectReport* commonMetadata = m_metaData->GetReport();
+	CValueMetaObjectDataProcessor* commonMetadata = m_metaData->GetDataProcessor();
 	wxASSERT(commonMetadata);
-	m_metaTreeCtrl->SetItemText(m_treeREPORTS, commonMetadata->GetName());
-	m_metaTreeCtrl->SetItemData(m_treeREPORTS, new wxTreeItemMetaData(commonMetadata));
+	m_metaTreeCtrl->SetItemText(m_treeDATAPROCESSORS, commonMetadata->GetName());
+	m_metaTreeCtrl->SetItemData(m_treeDATAPROCESSORS, new wxTreeItemMetaData(commonMetadata));
 
 	//set value data
 	m_nameValue->SetValue(commonMetadata->GetName());
@@ -542,7 +543,7 @@ void CDataReportTree::FillData()
 	for (auto metaTemplates : commonMetadata->GetTemplateArrayObject()) {
 		if (metaTemplates->IsDeleted())
 			continue;
-		AppendItem(m_treeTEMPLATES, metaTemplates);
+		const wxTreeItemId& hItem = AppendItem(m_treeTEMPLATES, metaTemplates);
 	}
 
 	//update choice selection
@@ -558,7 +559,7 @@ void CDataReportTree::FillData()
 	UpdateToolbar(nullptr, m_treeATTRIBUTES);
 }
 
-bool CDataReportTree::Load(CMetaDataReport* metaData)
+bool CDataProcessorTree::Load(CMetaDataDataProcessor* metaData)
 {
 	ClearTree();
 	m_metaData = metaData;
@@ -571,14 +572,14 @@ bool CDataReportTree::Load(CMetaDataReport* metaData)
 	return true;
 }
 
-bool CDataReportTree::Save()
+bool CDataProcessorTree::Save()
 {
-	CValueMetaObjectReport* m_commonMetadata = m_metaData->GetReport();
-	wxASSERT(m_commonMetadata);
+	CValueMetaObjectDataProcessor* commonMetadata = m_metaData->GetDataProcessor();
+	wxASSERT(commonMetadata);
 
-	m_commonMetadata->SetName(m_nameValue->GetValue());
-	m_commonMetadata->SetSynonym(m_synonymValue->GetValue());
-	m_commonMetadata->SetComment(m_commentValue->GetValue());
+	commonMetadata->SetName(m_nameValue->GetValue());
+	commonMetadata->SetSynonym(m_synonymValue->GetValue());
+	commonMetadata->SetComment(m_commentValue->GetValue());
 
 	wxASSERT(m_metaData);
 

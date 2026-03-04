@@ -2,7 +2,7 @@
 #define _MAINFRAME_DESIGNER_H__
 
 #include "frontend/mainFrame/mainFrame.h"
-#include "mainFrame/metatree/metatreeWnd.h"
+#include "mainFrame/metaTree/treeConfiguration.h"
 
 #if defined(mainFrame)
 #undef mainFrame

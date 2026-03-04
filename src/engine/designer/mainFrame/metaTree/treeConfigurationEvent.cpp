@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metatree events
+//	Description : metaTree events
 ////////////////////////////////////////////////////////////////////////////
 
-#include "metaTreeWnd.h"
+#include "treeConfiguration.h"
 
 void CMetadataTree::CMetaTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 {

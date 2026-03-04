@@ -2,7 +2,7 @@
 #define _DATA_PROC_H__
 
 #include "frontend/docView/docView.h"
-#include "mainFrame/metatree/external/dataProcessorWnd.h"
+#include "mainFrame/metaTree/treeDataProcessor.h"
 
 // The view using a standard wxTextCtrl to show its contents
 class CDataProcessorEditView : public CMetaView

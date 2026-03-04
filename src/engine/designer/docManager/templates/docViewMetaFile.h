@@ -2,7 +2,7 @@
 #define _METADATA_DOC_H__
 
 #include "frontend/docView/docView.h"
-#include "mainFrame/metatree/metatreeWnd.h"
+#include "mainFrame/metaTree/treeConfiguration.h"
 
 // The view using a standard wxTextCtrl to show its contents
 class CMetadataEditView : public CMetaView {

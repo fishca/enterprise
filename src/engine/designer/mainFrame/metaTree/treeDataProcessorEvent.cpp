@@ -3,7 +3,7 @@
 //	Description : dataprocessor events
 ////////////////////////////////////////////////////////////////////////////
 
-#include "dataProcessorWnd.h"
+#include "treeDataProcessor.h"
 
 void CDataProcessorTree::CDataProcessorTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 {

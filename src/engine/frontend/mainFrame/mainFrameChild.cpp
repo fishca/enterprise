@@ -65,7 +65,10 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 	wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 	wxASSERT_MSG(pParentFrame, wxT("Missing MDI Parent Frame"));
 
-	const bool is_active_child = 
+	if (pOldMenuBar == pParentFrame->GetMenuBar())
+		pParentFrame->SetChildMenuBar(nullptr);
+
+	const bool is_active_child =
 		pParentFrame->GetActiveChild() == this;
 
 	if (m_pMenuBar != nullptr) {
@@ -73,7 +76,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 		// replace current menu bars
 		if (is_active_child)
 			pParentFrame->SetChildMenuBar(nullptr);
-				
+
 		wxMenuBar* pMenuBar = pParentFrame->GetMenuBar();
 
 		if (pMenuBar != nullptr) {
@@ -110,11 +113,13 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 		m_pMenuBar->SetParent(pParentFrame);
 
 		if (is_active_child)
-			pParentFrame->SetChildMenuBar(this);		
+			pParentFrame->SetChildMenuBar(this);
 	}
 	else if (is_active_child) {
 		pParentFrame->SetChildMenuBar(nullptr);
 	}
+
+	wxDELETE(pOldMenuBar);
 }
 
 wxMenuBar* CAuiDocChildFrame::GetMenuBar() const

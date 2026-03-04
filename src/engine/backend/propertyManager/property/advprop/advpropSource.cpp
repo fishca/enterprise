@@ -146,7 +146,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 				wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 
 			// Make an state image list containing small icons
-			tc->SetImageList(GetSourceImageList());
+			tc->AssignImageList(GetSourceImageList());
 
 			rowsizer->Add(tc, wxSizerFlags(1).Expand().Border(wxALL, spacing));
 			topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
@@ -313,7 +313,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			wxTreeCtrl* tc = new wxTreeCtrl(dlg, wxID_ANY,
 				wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxSUNKEN_BORDER);
 
-			tc->SetImageList(GetSourceImageList());
+			tc->AssignImageList(GetSourceImageList());
 
 			rowsizer->Add(tc, wxSizerFlags(1).Expand().Border(wxALL, spacing));
 			topsizer->Add(rowsizer, wxSizerFlags(1).Expand());

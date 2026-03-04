@@ -35,7 +35,7 @@ CFunctionList::CFunctionList(CMetaDocument* moduleDoc, CCodeEditor* parent)
 	wxImageList* imageList = new wxImageList(ICON_SIZE, ICON_SIZE);
 	int procRed = imageList->Add(wxArtProvider::GetIcon(wxART_PROCEDURE_RED, wxART_AUTOCOMPLETE));
 	int funcRed = imageList->Add(wxArtProvider::GetIcon(wxART_FUNCTION_RED, wxART_AUTOCOMPLETE));
-	m_listProcedures->SetImageList(imageList, wxIMAGE_LIST_SMALL);
+	m_listProcedures->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
 	const IValueMetaObjectModule* metaModule = dynamic_cast<const IValueMetaObjectModule*>(moduleDoc->GetMetaObject());
 	wxASSERT(metaModule);

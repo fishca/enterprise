@@ -424,7 +424,7 @@ bool CMetaDataConfigurationFile::LoadConfigFromBuffer(const wxMemoryBuffer& buff
 
 bool CMetaDataConfigurationFile::LoadHeader(CMemoryReader& readerData)
 {
-	CMemoryReader* readerMemory = readerData.open_chunk(eHeaderBlock);
+	std::shared_ptr<CMemoryReader> readerMemory(readerData.open_chunk(eHeaderBlock));
 
 	if (!readerMemory)
 		return false;
@@ -437,19 +437,18 @@ bool CMetaDataConfigurationFile::LoadHeader(CMemoryReader& readerData)
 	wxString metaGuid;
 	readerMemory->r_stringZ(metaGuid);
 
-	readerMemory->close();
 	return true;
 }
 
 bool CMetaDataConfigurationFile::LoadCommonMetadata(const class_identifier_t& clsid, CMemoryReader& readerData)
 {
-	CMemoryReader* readerMemory = readerData.open_chunk(clsid);
+	std::shared_ptr<CMemoryReader> readerMemory(readerData.open_chunk(clsid));
 
 	if (!readerMemory)
 		return false;
 
 	u64 meta_id = 0;
-	CMemoryReader* readerMetaMemory = readerMemory->open_chunk_iterator(meta_id);
+	std::shared_ptr <CMemoryReader> readerMetaMemory(readerMemory->open_chunk_iterator(meta_id));
 
 	if (!readerMetaMemory)
 		return true;

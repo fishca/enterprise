@@ -5,7 +5,7 @@
 #include "frontend/visualView/ctrl/control.h"
 
 #define defaultFormId 1
-#define thisForm wxT("thisForm")
+#define thisForm wxT("ThisForm")
 
 //********************************************************************************************
 //*                                     Defines                                              *

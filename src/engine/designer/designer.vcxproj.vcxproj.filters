@@ -33,32 +33,14 @@
     <ClCompile Include="win\dlg\debugItem\debugItem.cpp">
       <Filter>win\dlg\debugItem</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\metatree\metatreeWnd.cpp">
-      <Filter>mainFrame\metatree</Filter>
+    <ClCompile Include="mainFrame\metatree\treeConfiguration.cpp">
+      <Filter>mainFrame\metaTree</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\metatree\metatreeWnd_impl.cpp">
-      <Filter>mainFrame\metatree</Filter>
+    <ClCompile Include="mainFrame\metatree\treeConfiguration_impl.cpp">
+      <Filter>mainFrame\metaTree</Filter>
     </ClCompile>
-    <ClCompile Include="mainFrame\metatree\metatreeWndEvent.cpp">
-      <Filter>mainFrame\metatree</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataProcessorWnd.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataProcessorWnd_impl.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataProcessorWndEvent.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataReportWnd.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataReportWnd_impl.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClCompile>
-    <ClCompile Include="mainFrame\metatree\external\dataReportWndEvent.cpp">
-      <Filter>mainFrame\metatree\external</Filter>
+    <ClCompile Include="mainFrame\metatree\treeConfigurationEvent.cpp">
+      <Filter>mainFrame\metaTree</Filter>
     </ClCompile>
     <ClCompile Include="win\editor\codeEditor\codeEditor.cpp">
       <Filter>win\editor\codeEditor</Filter>
@@ -162,6 +144,24 @@
     <ClCompile Include="docManager\templates\docViewRole.cpp">
       <Filter>docManager\templates</Filter>
     </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataProcessor.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataProcessor_impl.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataProcessorEvent.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataReport.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataReport_impl.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
+    <ClCompile Include="mainFrame\metatree\treeDataReportEvent.cpp">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainApp.h" />
@@ -189,14 +189,8 @@
     <ClInclude Include="win\dlg\debugItem\debugItem.h">
       <Filter>win\dlg\debugItem</Filter>
     </ClInclude>
-    <ClInclude Include="mainFrame\metatree\metatreeWnd.h">
-      <Filter>mainFrame\metatree</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\metatree\external\dataProcessorWnd.h">
-      <Filter>mainFrame\metatree\external</Filter>
-    </ClInclude>
-    <ClInclude Include="mainFrame\metatree\external\dataReportWnd.h">
-      <Filter>mainFrame\metatree\external</Filter>
+    <ClInclude Include="mainFrame\metatree\treeConfiguration.h">
+      <Filter>mainFrame\metaTree</Filter>
     </ClInclude>
     <ClInclude Include="win\editor\codeEditor\codeEditor.h">
       <Filter>win\editor\codeEditor</Filter>
@@ -288,6 +282,12 @@
     <ClInclude Include="docManager\templates\docViewRole.h">
       <Filter>docManager\templates</Filter>
     </ClInclude>
+    <ClInclude Include="mainFrame\metatree\treeDataProcessor.h">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClInclude>
+    <ClInclude Include="mainFrame\metatree\treeDataReport.h">
+      <Filter>mainFrame\metaTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="res">
@@ -307,12 +307,6 @@
     </Filter>
     <Filter Include="mainFrame\debugger">
       <UniqueIdentifier>{fe3f1769-61f3-4769-a64d-92911c0f4120}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mainFrame\metatree">
-      <UniqueIdentifier>{826f5b9e-e0db-4825-ba90-b3d0442b3ff5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mainFrame\metatree\external">
-      <UniqueIdentifier>{8f8fb7b4-9b8b-4847-aaa6-90581b7006bb}</UniqueIdentifier>
     </Filter>
     <Filter Include="win">
       <UniqueIdentifier>{eeb061da-1a61-46bf-8977-9cb8aaf2337b}</UniqueIdentifier>
@@ -370,6 +364,9 @@
     </Filter>
     <Filter Include="mainFrame\watch">
       <UniqueIdentifier>{5e54e3dc-905a-425b-90ed-ba143ea5bef3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mainFrame\metaTree">
+      <UniqueIdentifier>{826f5b9e-e0db-4825-ba90-b3d0442b3ff5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,8 @@ CAutoComplete::~CAutoComplete()
 		lb->GetListBox()->Destroy();
 		lb->Destroy();
 	}
+
+	delete m_visualData;
 }
 
 bool CAutoComplete::Active() const

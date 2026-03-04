@@ -126,7 +126,7 @@ CDialogUserItem::CDialogUserItem(wxWindow* parent, wxWindowID id, const wxString
 	wxImageList* imageList = new wxImageList(16, 16);
 
 	m_choiceRole = new wxCheckTree(m_other, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
-	m_choiceRole->SetImageList(imageList);
+	m_choiceRole->AssignImageList(imageList);
 
 	const wxTreeItemId& root = m_choiceRole->AddRoot(wxT(""));
 

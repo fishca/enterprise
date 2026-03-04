@@ -1,5 +1,5 @@
-#ifndef _DATAPROCESSOR_WND_H__
-#define _DATAPROCESSOR_WND_H__
+#ifndef _DATAREPORT_WND_H__
+#define _DATAREPORT_WND_H__
 
 #include <wx/aui/aui.h>
 #include <wx/aui/auibar.h>
@@ -7,15 +7,14 @@
 #include <wx/statbox.h>
 #include <wx/statline.h>
 
-#include "mainFrame/metatree/metatreeWnd.h"
-#include "backend/metadataDataProcessor.h"
- 
-class CDataProcessorTree : public IMetaDataTree {
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorTree);
+#include "mainFrame/metaTree/treeConfiguration.h"
+#include "backend/metadataReport.h"
 
+class CDataReportTree : public IMetaDataTree {
+	wxDECLARE_DYNAMIC_CLASS(CDataReportTree);
 private:
 
-	wxTreeItemId m_treeDATAPROCESSORS;
+	wxTreeItemId m_treeREPORTS;
 
 	wxTreeItemId m_treeATTRIBUTES;
 	wxTreeItemId m_treeTABLES;
@@ -92,13 +91,11 @@ protected:
 
 	wxButton* m_buttonModule;
 
-	class CDataProcessorTreeCtrl : public wxTreeCtrl {
+	class CDataReportTreeCtrl : public wxTreeCtrl {
 		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
 	private:
-
-		CDataProcessorTree* m_ownerTree;
+		CDataReportTree* m_ownerTree;
 		CMetaView* m_metaView;
-
 	public:
 
 		void RefreshSelectedItem(bool scroll = true) {
@@ -112,9 +109,9 @@ protected:
 			wxTreeCtrl::Update();
 		}
 
-		CDataProcessorTreeCtrl();
-		CDataProcessorTreeCtrl(wxWindow* parentWnd, CDataProcessorTree* ownerWnd);
-		virtual ~CDataProcessorTreeCtrl();
+		CDataReportTreeCtrl();
+		CDataReportTreeCtrl(wxWindow* parentWnd, CDataReportTree* ownerWnd);
+		virtual ~CDataReportTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -176,8 +173,8 @@ protected:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	CDataProcessorTreeCtrl* m_metaTreeCtrl;
-	CMetaDataDataProcessor* m_metaData;
+	CDataReportTreeCtrl* m_metaTreeCtrl;
+	CMetaDataReport* m_metaData;
 
 private:
 
@@ -186,7 +183,7 @@ private:
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
-		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 		return m_metaTreeCtrl->AddRoot(name.IsEmpty() ? typeCtor->GetClassName() : name,
 			imageIndex,
 			imageIndex,
@@ -200,7 +197,7 @@ private:
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
-		const int imageIndex = imageList->Add(typeCtor->GetClassIcon());
+		int imageIndex = imageList->Add(typeCtor->GetClassIcon());
 		return m_metaTreeCtrl->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name,
 			imageIndex,
 			imageIndex,
@@ -224,7 +221,7 @@ private:
 		IValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
-		const int imageIndex = imageList->Add(metaObject->GetIcon());
+		int imageIndex = imageList->Add(metaObject->GetIcon());
 		return m_metaTreeCtrl->AppendItem(parent, metaObject->GetName(),
 			imageIndex,
 			imageIndex,
@@ -234,7 +231,7 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject = true);
+	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool rubObject = true);
 	IValueMetaObject* CreateItem(bool showValue = true);
 
 	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
@@ -258,7 +255,8 @@ private:
 
 	void FillData();
 
-	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const
+	{
 		if (!item.IsOk())
 			return nullptr;
 		CTreeDataMetaItem* data =
@@ -282,13 +280,12 @@ public:
 
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
 
-	CDataProcessorTree() { }
-	CDataProcessorTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
-	virtual ~CDataProcessorTree();
-	
-	void InitTree();
+	CDataReportTree() { }
+	CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxWindowID id = wxID_ANY);
+	virtual ~CDataReportTree();
 
-	bool Load(CMetaDataDataProcessor* metaData);
+	void InitTree();
+	bool Load(CMetaDataReport* metaData);
 	bool Save();
 
 	void ActivateTree();

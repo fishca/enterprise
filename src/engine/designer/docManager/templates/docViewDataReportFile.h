@@ -2,7 +2,7 @@
 #define _DATA_REPORT_H__
 
 #include "frontend/docView/docView.h"
-#include "mainFrame/metatree/external/dataReportWnd.h"
+#include "mainFrame/metaTree/treeDataReport.h"
 
 // The view using a standard wxTextCtrl to show its contents
 class CReportEditView : public CMetaView

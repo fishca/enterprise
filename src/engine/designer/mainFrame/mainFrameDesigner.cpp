@@ -64,7 +64,7 @@ void CFrontendDocMDIFrameDesigner::Modify(bool modify)
 		wxString caption = _("Configuration") + ' ';
 
 		if (s_setModify && modify) {
-			caption += '*'; s_modified = true;
+			caption += wxT('*'); s_modified = true;
 		}
 		else {
 			s_modified = false;
@@ -259,7 +259,8 @@ bool CFrontendDocMDIFrameDesigner::AllowClose() const
 		bool allowClose = true;
 
 		if (IsModified()) {
-			const int answer = wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
+			const int answer = wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), activeMetaData->GetConfigName()),
+				wxTheApp->GetAppDisplayName(), wxYES | wxNO | wxCANCEL | wxCENTRE | wxICON_QUESTION, (wxWindow*)this);
 			if (answer == wxYES) {
 				allowClose = activeMetaData->SaveDatabase();
 			}

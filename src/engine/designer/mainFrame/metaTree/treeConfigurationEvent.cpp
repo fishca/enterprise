@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metatree events
+//	Description : metaTree events
 ////////////////////////////////////////////////////////////////////////////
 
-#include "metaTreeWnd.h"
+#include "treeConfiguration.h"
 
 void CMetadataTree::CMetaTreeCtrl::OnLeftDClick(wxMouseEvent& event)
 {
@@ -376,7 +376,7 @@ void CMetadataTree::CMetaTreeCtrl::OnPasteItem(wxCommandEvent& event)
 
 void CMetadataTree::CMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 {
-	if (event.GetEventType() == wxEVT_SET_FOCUS) {
+	if (docManager != nullptr && event.GetEventType() == wxEVT_SET_FOCUS) {
 
 		const wxTreeItemId& item = GetSelection();
 
@@ -387,7 +387,7 @@ void CMetadataTree::CMetaTreeCtrl::OnSetFocus(wxFocusEvent& event)
 			m_metaView->Activate(true);
 		}
 	}
-	else if (event.GetEventType() == wxEVT_KILL_FOCUS) {
+	else if (docManager != nullptr && event.GetEventType() == wxEVT_KILL_FOCUS) {
 
 		wxWindow* focus_win = event.GetWindow();
 		while (focus_win != nullptr && focus_win != objectInspector) {

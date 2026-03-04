@@ -14,9 +14,9 @@ class IMetaDataTree : public wxPanel,
 	wxDECLARE_ABSTRACT_CLASS(IMetaDataTree);
 public:
 
-	IMetaDataTree() : wxPanel(), m_docParent(nullptr), m_bReadOnly(false) {}
+	IMetaDataTree() : wxPanel(), m_docParent(nullptr), m_searchTree(nullptr), m_bReadOnly(false) {}
 	IMetaDataTree(wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(nullptr), m_bReadOnly(false) {}
-	IMetaDataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_bReadOnly(false) {}
+	IMetaDataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_searchTree(nullptr), m_bReadOnly(false) {}
 
 	virtual form_identifier_t SelectFormType(CValueMetaObjectForm* metaObject) const;
 	virtual void Activate();

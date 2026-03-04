@@ -23,7 +23,7 @@ CRoleEditor::CRoleEditor(wxWindow* parent,
 	m_roleCtrl->Bind(wxEVT_TREE_SEL_CHANGED, &CRoleEditor::OnSelectedItem, this);
 
 	//set image list
-	m_roleCtrl->SetImageList(
+	m_roleCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 

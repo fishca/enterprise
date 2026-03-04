@@ -361,7 +361,7 @@ bool CFirebirdDatabaseLayer::Close()
 
 	if (m_pDatabase)
 	{
-		while (m_fbNode)
+		while (m_fbNode != NULL)
 		{
 			if (m_fbNode->m_pTransaction)
 			{
@@ -372,10 +372,10 @@ bool CFirebirdDatabaseLayer::Close()
 
 			fb_tr_list *tr_link = m_fbNode->prev;
 
-			if (m_fbNode->prev) {
-				wxDELETE(m_fbNode);
-			}
+			if (m_fbNode->prev == NULL)
+				break;
 
+			wxDELETE(m_fbNode);
 			m_fbNode = tr_link;
 		}
 

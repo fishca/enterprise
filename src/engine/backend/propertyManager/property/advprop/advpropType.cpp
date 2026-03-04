@@ -681,7 +681,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			tc->SetFocus();
 
 			// Make an state image list containing small icons
-			tc->SetImageList(
+			tc->AssignImageList(
 				new wxImageList(icon_size, icon_size)
 			);
 

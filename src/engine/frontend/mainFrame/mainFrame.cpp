@@ -67,8 +67,9 @@ CFrontendDocMDIFrame::CFrontendDocMDIFrame(const wxString& title,
 	const wxPoint& pos,
 	const wxSize& size,
 	long style,
-	const wxString& strName)
-	: wxDocParentFrameAnyBase(this), m_objectInspector(nullptr), m_callRaiseFrame(false), m_callUpdateFrameManager(false)
+	const wxString& strName) : wxDocParentFrameAnyBase(this),
+	m_objectInspector(nullptr), m_docToolbar(nullptr), m_mainFrameToolbar(nullptr),
+	m_callRaiseFrame(false), m_callUpdateFrameManager(false)
 {
 	Create(title, pos, size, style | wxNO_FULL_REPAINT_ON_RESIZE);
 }

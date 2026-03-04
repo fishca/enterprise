@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Author		: Maxim Kornienko
-//	Description : metatree window
+//	Description : metaTree window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "metatreeWnd.h"
+#include "treeConfiguration.h"
 #include "backend/debugger/debugClient.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
@@ -11,7 +11,7 @@ wxIMPLEMENT_ABSTRACT_CLASS(IMetaDataTree, wxPanel);
 wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree, IMetaDataTree);
 
 //**********************************************************************************
-//*                                  metatree									   *
+//*                                  metaTree									   *
 //**********************************************************************************
 
 #define ICON_SIZE 16
@@ -64,7 +64,7 @@ CMetadataTree::CMetadataTree(wxWindow* parent, int id)
 	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeCtrl->SetImageList(
+	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
@@ -115,7 +115,7 @@ CMetadataTree::CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id)
 	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeCtrl->SetImageList(
+	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
@@ -148,6 +148,9 @@ CMetadataTree::~CMetadataTree()
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnUpItem, m_metaTreeCtrl, ID_METATREE_UP);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnDownItem, m_metaTreeCtrl, ID_METATREE_DOWM);
 	m_metaTreeToolbar->Unbind(wxEVT_MENU, &CMetadataTree::CMetaTreeCtrl::OnSortItem, m_metaTreeCtrl, ID_METATREE_SORT);
+
+	if (m_searchTree)
+		m_searchTree->Destroy();
 }
 
 //**********************************************************************************
@@ -155,7 +158,7 @@ CMetadataTree::~CMetadataTree()
 wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
-//*                                  metatree window						       *
+//*                                  metaTree window						       *
 //**********************************************************************************
 
 wxBEGIN_EVENT_TABLE(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl)

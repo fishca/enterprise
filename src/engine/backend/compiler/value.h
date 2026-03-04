@@ -418,8 +418,7 @@ public:
 	//runtime support:
 	template<typename T, typename... Args>
 	static T* CreateAndPrepareValueRef(Args&&... args) {
-		auto ptr = static_cast<T*>(malloc(sizeof(T)));
-		T* created_value = ::new (ptr) T(std::forward<Args>(args)...);
+		T* created_value = ::new T(std::forward<Args>(args)...);
 		if (created_value == nullptr)
 			return nullptr;
 		created_value->PrepareNames();

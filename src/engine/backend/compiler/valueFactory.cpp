@@ -55,7 +55,8 @@ void CValue::RegisterCtor(IAbstractTypeCtor* typeCtor)
 		}
 
 #ifdef DEBUG
-		wxLogDebug(wxT("* Register class '%s' with clsid '%s:%llu' "), typeCtor->GetClassName(), clsid_to_string(typeCtor->GetClassType()), typeCtor->GetClassType());
+		if (wxTheApp != NULL)
+			wxLogDebug(wxT("* Register class '%s' with clsid '%s:%llu' "), typeCtor->GetClassName(), clsid_to_string(typeCtor->GetClassType()), typeCtor->GetClassType());
 #endif
 
 		s_factoryCtorCountChanges++;
@@ -72,7 +73,8 @@ void CValue::UnRegisterCtor(IAbstractTypeCtor*& typeCtor)
 		typeCtor->CallEvent(eCtorObjectTypeEvent::eCtorObjectTypeEvent_UnRegister);
 
 #ifdef DEBUG
-		wxLogDebug(wxT("* Unregister class '%s' with clsid '%s:%llu' "), typeCtor->GetClassName(), clsid_to_string(typeCtor->GetClassType()), typeCtor->GetClassType());
+		if (wxTheApp != NULL)
+			wxLogDebug(wxT("* Unregister class '%s' with clsid '%s:%llu' "), typeCtor->GetClassName(), clsid_to_string(typeCtor->GetClassType()), typeCtor->GetClassType());
 #endif
 		s_factoryCtors->erase(
 			std::remove(s_factoryCtors->begin(), s_factoryCtors->end(), typeCtor)

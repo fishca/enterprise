@@ -229,9 +229,6 @@ public:
 
 	virtual bool OnBeforeCloseMetaObject();
 	virtual bool OnAfterCloseMetaObject();
-
-private:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("Module"), _("Module"));
 };
 
 #endif

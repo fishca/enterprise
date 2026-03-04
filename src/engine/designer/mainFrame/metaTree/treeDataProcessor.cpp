@@ -3,7 +3,7 @@
 //	Description : dataprocessor window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "dataProcessorWnd.h"
+#include "treeDataProcessor.h"
 
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_toolbarart.h"
@@ -90,7 +90,7 @@ CDataProcessorTree::CDataProcessorTree(CMetaDocument* docParent, wxWindow* paren
 	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeCtrl->SetImageList(
+	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
@@ -222,7 +222,7 @@ void CDataProcessorTree::OnButtonModuleClicked(wxCommandEvent& event)
 wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorTree::CDataProcessorTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
-//*                                  metatree window						       *
+//*                                  metaTree window						       *
 //**********************************************************************************
 
 wxBEGIN_EVENT_TABLE(CDataProcessorTree::CDataProcessorTreeCtrl, wxTreeCtrl)

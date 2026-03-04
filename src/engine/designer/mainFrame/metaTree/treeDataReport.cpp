@@ -3,7 +3,7 @@
 //	Description : dataprocessor window
 ////////////////////////////////////////////////////////////////////////////
 
-#include "dataReportWnd.h"
+#include "treeDataReport.h"
 
 #include "frontend/artProvider/artProvider.h"
 #include "frontend/win/theme/luna_toolbarart.h"
@@ -90,7 +90,7 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeCtrl->SetImageList(
+	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
@@ -222,7 +222,7 @@ void CDataReportTree::OnButtonModuleClicked(wxCommandEvent& event)
 wxIMPLEMENT_DYNAMIC_CLASS(CDataReportTree::CDataReportTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
-//*                                  metatree window						       *
+//*                                  metaTree window						       *
 //**********************************************************************************
 
 wxBEGIN_EVENT_TABLE(CDataReportTree::CDataReportTreeCtrl, wxTreeCtrl)

@@ -67,7 +67,7 @@ void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 
 	m_menuFile->AppendSeparator();
 	m_menuFile->Append(wxID_PRINT);
-	m_menuFile->Append(wxID_PRINT_SETUP, "Print &Setup...");
+	m_menuFile->Append(wxID_PRINT_SETUP, _("Print &Setup..."));
 	m_menuFile->Append(wxID_PREVIEW);
 
 	m_menuFile->AppendSeparator();
@@ -110,7 +110,7 @@ void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	m_menuDebug->Append(wxID_DESIGNER_DEBUG_STOP_PROGRAM, _("Stop debugging program"), _("Stop program"))->Enable(false);
 
 	m_menuDebug->AppendSeparator();
-	m_menuDebug->Append(wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS, _("Remove all breakpoits"));
+	m_menuDebug->Append(wxID_DESIGNER_DEBUG_REMOVE_ALL_DEBUGPOINTS, _("Remove all breakpoints"));
 
 	m_menuConfiguration = new wxMenu;
 
@@ -129,7 +129,7 @@ void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 
 	m_menuConfiguration->AppendSeparator();
 
-	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuraion"));
+	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE, _("Load configuration"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 	menuItem = m_menuConfiguration->Append(wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE, _("Save configuration"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
@@ -144,9 +144,9 @@ void CFrontendDocMDIFrameDesigner::InitializeDefaultMenu()
 	menuItem = m_menuAdministration->Append(wxID_APPLICATION_ACTIVE_USERS, _("Active users"));
 	menuItem->Enable(activeMetaData->AccessRight_ActiveUsers());
 	m_menuAdministration->AppendSeparator();
-	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_LOAD_FROM_FILE, _("Load database"));
+	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_LOAD_FROM_FILE, _("Restore database"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
-	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_SAVE_TO_FILE, _("Save database"));
+	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_SAVE_TO_FILE, _("Dump database"));
 	menuItem->Enable(activeMetaData->AccessRight_DataAdministration());
 	m_menuAdministration->AppendSeparator();
 	menuItem = m_menuAdministration->Append(wxID_DESIGNER_DATABASE_CLEAR, _("Clear database"));

@@ -90,7 +90,7 @@ CDataReportTree::CDataReportTree(CMetaDocument* docParent, wxWindow* parent, wxW
 	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
 
 	//set image list
-	m_metaTreeCtrl->SetImageList(
+	m_metaTreeCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 

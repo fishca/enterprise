@@ -115,6 +115,8 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 	else if (is_active_child) {
 		pParentFrame->SetChildMenuBar(nullptr);
 	}
+
+	wxDELETE(pOldMenuBar);
 }
 
 wxMenuBar* CAuiDocChildFrame::GetMenuBar() const

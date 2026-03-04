@@ -1874,7 +1874,7 @@ bool CMetadataTree::Save()
 {
 	wxASSERT(m_metaData);
 
-	if (m_metaData->IsModified() && wxMessageBox("Configuration '" + m_metaData->GetConfigName() + "' has been changed. Save?", wxT("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES)
+	if (m_metaData->IsModified() && wxMessageBox(wxString::Format(_("Configuration '%s' has been changed. Save?"), m_metaData->GetConfigName()), wxTheApp->GetAppDisplayName(), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES)
 		return m_metaData->SaveDatabase();
 
 	return false;

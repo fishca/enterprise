@@ -11,7 +11,7 @@ CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
 	m_interfaceCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CInterfaceEditor::OnCheckItem, this);
 
 	//set image list
-	m_interfaceCtrl->SetImageList(
+	m_interfaceCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 

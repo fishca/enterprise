@@ -31,7 +31,7 @@ void CFrontendDocMDIFrameDesigner::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 	}
 
 	if (activeMetaData->IsModified()) {
-		if (wxMessageBox(_("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+		if (wxMessageBox(wxString::Format(_("Configuration '%s' has been changed.\nDo you want to save?"), activeMetaData->GetConfigName()), wxTheApp->GetAppDisplayName(), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
 			if (!activeMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
@@ -44,7 +44,7 @@ void CFrontendDocMDIFrameDesigner::OnStartDebug(wxCommandEvent& WXUNUSED(event))
 void CFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug(wxCommandEvent& WXUNUSED(event))
 {
 	if (activeMetaData->IsModified()) {
-		if (wxMessageBox(_("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?"), _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+		if (wxMessageBox(wxString::Format(_("Configuration '%s' has been changed.\nDo you want to save?"), activeMetaData->GetConfigName()), wxTheApp->GetAppDisplayName(), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
 			if (!activeMetaData->SaveDatabase(saveConfigFlag)) {
 				return;
 			}
@@ -144,7 +144,7 @@ void CFrontendDocMDIFrameDesigner::OnRollbackConfiguration(wxCommandEvent& event
 
 	if (success) {
 		objectInspector->SelectObject(activeMetaData->GetCommonMetaObject());
-		wxMessageBox(_("Successfully rolled back to database configuration!"), _("Designer"), wxOK | wxCENTRE, this);
+		wxMessageBox(_("Successfully rolled back to database configuration!"), wxTheApp->GetAppDisplayName(), wxOK | wxCENTRE, this);
 	}
 }
 
@@ -153,7 +153,7 @@ void CFrontendDocMDIFrameDesigner::OnUpdateConfiguration(wxCommandEvent& event)
 	bool canSave = true;
 	if (debugClient->HasConnections()) {
 		if (wxMessageBox(
-			_("To update the database configuration you need stop debugging.\nDo you want to continue?"), wxMessageBoxCaptionStr,
+			_("To update the database configuration you need stop debugging.\nDo you want to continue?"), wxTheApp->GetAppDisplayName(),
 			wxYES_NO | wxCENTRE | wxICON_INFORMATION, this) == wxNO) {
 			return;
 		}
@@ -263,7 +263,7 @@ void CFrontendDocMDIFrameDesigner::OnSaveDatabase(wxCommandEvent& event)
 
 void CFrontendDocMDIFrameDesigner::OnClearDatabase(wxCommandEvent& event)
 {
-	if (wxMessageBox(_("Are you sure you want to clear the database?"), _("Clear project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxNO)
+	if (wxMessageBox(_("Are you sure you want to clear the database?"), wxTheApp->GetAppDisplayName(), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxNO)
 		return;
 
 	objectInspector->SelectObject(nullptr);
@@ -301,7 +301,7 @@ void CFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 	if (wxID_DESIGNER_CONFIGURATION_LOAD_FROM_FILE == event.GetId())
 	{
 		wxFileDialog openFileDialog(this, _("Open configuration file"), "", "",
-			"Configuration files (*.mcf)|*.mcf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			wxT("Configuration files (*.mcf)|*.mcf"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 		if (openFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
@@ -314,7 +314,8 @@ void CFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 		if (activeMetaData->LoadConfigFromFile(openFileDialog.GetPath())) {
 			if (m_metaWindow->Load()) {
 				if (activeMetaData->IsModified()) {
-					if (wxMessageBox("Configuration '" + activeMetaData->GetConfigName() + "' has been changed.\nDo you want to save?", _("Save project"), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
+					if (wxMessageBox(wxString::Format(_("Configuration '%s' has been changed.\nDo you want to save?"), 
+						activeMetaData->GetConfigName()), wxTheApp->GetAppDisplayName(), wxYES_NO | wxCENTRE | wxICON_QUESTION, this) == wxYES) {
 						OnUpdateConfiguration(event);
 					}
 				}
@@ -325,7 +326,7 @@ void CFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 	else if (wxID_DESIGNER_CONFIGURATION_SAVE_TO_FILE == event.GetId())
 	{
 		wxFileDialog saveFileDialog(this, _("Save configuration file"), "", "",
-			"Configuration files (*.mcf)|*.mcf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+			wxT("Configuration files (*.mcf)|*.mcf"), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 		if (saveFileDialog.ShowModal() == wxID_CANCEL)
 			return;     // the user changed idea...
 

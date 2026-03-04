@@ -23,7 +23,7 @@ void CDialogActiveUser::RefreshActiveUserTable()
 		m_activeTable->AppendColumn(_("Computer"), wxLIST_FORMAT_LEFT, 145);
 		m_activeTable->AppendColumn(_("Session"), wxLIST_FORMAT_LEFT, 0); //hide 
 
-		m_activeTable->SetImageList(imageList, wxIMAGE_LIST_SMALL);
+		m_activeTable->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
 		const int imageUser =
 			imageList->Add(CBackendPicture::GetPicture(g_picUserCLSID));

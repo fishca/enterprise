@@ -22,7 +22,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValue, wxObject);
 #ifdef DEBUG_VALUE
 static unsigned int s_nCreateCount = 0;
 #define DEBUG_VALUE_CREATE() \
-	wxLogDebug(wxT("Create %d"), s_nCreateCount++); 
+	if (wxTheApp != NULL) wxLogDebug(wxT("Create %d"), s_nCreateCount++); 
 #else 
 #define DEBUG_VALUE_CREATE() 
 #endif
@@ -147,7 +147,7 @@ CValue::~CValue()
 	if (m_typeClass == eValueTypes::TYPE_REFFER && m_pRef && m_pRef != this)
 		m_pRef->DecrRef();
 #ifdef DEBUG_VALUE
-	wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
+	if (wxTheApp != NULL) wxLogDebug(wxT("Delete %d"), --s_nCreateCount);
 #endif
 }
 

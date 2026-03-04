@@ -27,7 +27,7 @@ CDialogFunctionAll::CDialogFunctionAll(wxWindow* parent, wxWindowID id, const wx
 	m_treeCtrlElements->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(CDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick), nullptr, this);
 
 	//set image list
-	m_treeCtrlElements->SetImageList(
+	m_treeCtrlElements->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 

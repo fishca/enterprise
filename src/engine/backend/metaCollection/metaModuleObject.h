@@ -16,7 +16,18 @@ template <typename T>
 class CPropertyInnerModule : public IProperty {
 public:
 
-	T* GetMetaObject() const { return m_metaObject; }
+	template <typename... Args>
+	CPropertyInnerModule(CPropertyCategory* cat, Args&&... args)
+		: IProperty(cat, 
+			std::get<0>(std::forward_as_tuple(args...)), 
+			std::get<1>(std::forward_as_tuple(args...)), 
+			wxNullVariant), m_metaObject(nullptr)
+	{
+		IValueMetaObject* parent =
+			static_cast<IValueMetaObject*>(m_owner);
+		wxASSERT(parent);
+		m_metaObject = parent->CreateMetaObjectAndSetParent<T>(args...);
+	}
 
 	CPropertyInnerModule(CPropertyCategory* cat, T* metaObject)
 		: IProperty(cat, metaObject->GetName(), metaObject->GetSynonym(), wxNullVariant), m_metaObject(metaObject)
@@ -26,6 +37,9 @@ public:
 	virtual ~CPropertyInnerModule() {}
 
 	// get meta object 
+	T* GetMetaObject() const { return m_metaObject; }
+
+	// get meta object via pointer 
 	T* operator->() { return GetMetaObject(); }
 
 	//get property for grid 

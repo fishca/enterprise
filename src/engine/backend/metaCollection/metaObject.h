@@ -362,6 +362,16 @@ public:
 
 #pragma endregion 
 
+	template<typename T, typename... Args>
+	T* CreateMetaObjectAndSetParent(Args&&... args) {
+		T* createdObject = CValue::CreateAndConvertObjectValueRef<T>(args...);
+		wxASSERT(createdObject);
+		//set child/parent
+		createdObject->SetParent(this);
+		this->AddChild(createdObject);
+		return createdObject;
+	}
+
 protected:
 
 	//create and update table 
@@ -373,16 +383,6 @@ protected:
 	virtual bool DeleteData() { return true; }
 
 protected:
-
-	template<typename T, typename... Args>
-	T* CreateMetaObjectAndSetParent(Args&&... args) {
-		T* createdObject = CValue::CreateAndConvertObjectValueRef<T>(args...);
-		wxASSERT(createdObject);
-		//set child/parent
-		createdObject->SetParent(this);
-		this->AddChild(createdObject);
-		return createdObject;
-	}
 
 #pragma region interface_h
 	virtual void DoSetInterface(const meta_identifier_t& id, const bool& val = true);

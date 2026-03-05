@@ -143,7 +143,7 @@ private:
 		return false;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("ConfigurationModule"), _("Configuration module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, wxT("ConfigurationModule"), _("Configuration module"));
 
 	CPropertyCategory* m_propertyPresetValues = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
 	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("DefaultRole"), _("Default role"), _("Default configuration role"), &CValueMetaObjectConfiguration::FillRoleList);

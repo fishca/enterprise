@@ -5080,48 +5080,44 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 		wxGridExtCellCoords blockStart = m_currentCellCoords;
 		wxGridExtCellCoords blockEnd = coords;
 
-		int row = coords.GetRow(), col = coords.GetCol();
-		int cell_rows, cell_cols;
+		const int rowStart = m_currentCellCoords.GetRow() < coords.GetRow() ?
+			m_currentCellCoords.GetRow() : coords.GetRow();
+		const int colStart = m_currentCellCoords.GetCol() < coords.GetCol() ?
+			m_currentCellCoords.GetCol() : coords.GetCol();
 
-		if (GetCellSize(row, col, &cell_rows, &cell_cols) == CellSpan_Main)
+		const int rowEnd = m_currentCellCoords.GetRow() > coords.GetRow() ?
+			m_currentCellCoords.GetRow() : coords.GetRow();
+		const int colEnd = m_currentCellCoords.GetCol() > coords.GetCol() ?
+			m_currentCellCoords.GetCol() : coords.GetCol();
+		
+		for (int row = rowStart; row <= rowEnd; row++)
 		{
-			int end_row = row + cell_rows - 1;
-			int end_col = col + cell_cols - 1;
-
-			int cell_start_rows, cell_start_cols;
-			GetCellSize(end_row, end_col, &cell_start_rows, &cell_start_cols);
-
-			int start_row = end_row + cell_start_rows;
-			int start_col = end_col + cell_start_cols;
-
-			if (m_currentCellCoords.GetRow() <= row)
+			for (int col = colStart; col <= colEnd; col++)
 			{
-				if (start_row < blockStart.GetRow())
-					blockStart.SetRow(start_row);
+				int cell_rows, cell_cols;
+				if (GetCellSize(row, col, &cell_rows, &cell_cols) != CellSpan_Inside)
+				{
+					int end_row = row + cell_rows - 1;
+					int end_col = col + cell_cols - 1;
 
-				blockEnd.SetRow(end_row);
-			}
-			else if (m_currentCellCoords.GetRow() > row)
-			{
-				if (end_row > blockStart.GetRow())
-					blockStart.SetRow(end_row);
+					int cell_start_rows, cell_start_cols;
+					GetCellSize(end_row, end_col, &cell_start_rows, &cell_start_cols);
 
-				blockEnd.SetRow(start_row);
-			}
+					int start_row = end_row + cell_start_rows;
+					int start_col = end_col + cell_start_cols;
 
-			if (m_currentCellCoords.GetCol() <= col)
-			{
-				if (start_col < blockStart.GetCol())
-					blockStart.SetCol(start_col);
+					if (start_row < blockStart.GetRow())
+						blockStart.SetRow(start_row);
 
-				blockEnd.SetCol(end_col);
-			}
-			else if (m_currentCellCoords.GetCol() > col)
-			{
-				if (end_col > blockStart.GetCol())
-					blockStart.SetCol(end_col);
+					if (end_row > blockEnd.GetRow())
+						blockEnd.SetRow(end_row);
 
-				blockEnd.SetCol(start_col);
+					if (start_col < blockStart.GetCol())		
+						blockStart.SetCol(start_col);
+					
+					if (end_col > blockEnd.GetCol()) 
+						blockEnd.SetCol(end_col);			
+				}
 			}
 		}
 
@@ -5994,7 +5990,7 @@ void wxGridExt::ClearGrid()
 		DisableCellEditControl();
 		m_cellEditCtrlEnabled = false;
 
-		wxGridExtSelectionModes selmode = m_selection ? 
+		wxGridExtSelectionModes selmode = m_selection ?
 			m_selection->GetSelectionMode() : wxGridExtSelectionModes::wxGridExtSelectRowsOrColumns;
 
 		wxDELETE(m_selection);

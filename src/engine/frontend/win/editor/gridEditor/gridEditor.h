@@ -243,7 +243,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetValueAsCustom(int row, int col, const wxString& typeName, void* value) {
 
 			if (value && stringUtils::CompareString(typeName, s_strTypeTextOrString)) {
-				const wxString* s = static_cast<wxString*>(value);		
+				const wxString* s = static_cast<wxString*>(value);
 				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
 					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
 				if (iterator != m_setColRowType.end())
@@ -446,6 +446,8 @@ public:
 	void DeleteArea();
 
 #pragma endregion
+
+	bool GridHeaderEnabled() const { return m_rowLabelWidth > 0 || m_colLabelHeight > 0; }
 
 	void ShowCells() { wxGridExt::EnableGridLines(!m_gridLinesEnabled); }
 

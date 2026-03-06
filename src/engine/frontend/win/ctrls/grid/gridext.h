@@ -2237,13 +2237,10 @@ public:
 		CalcDimensions();
 	}
 
-	bool GridRowAreaEnabled() const {
-		return m_areaEnabled && m_rowAreaAt.Count() > 0;
-	}
+	bool GridAreaEnabled() const { return m_areaEnabled; }
 
-	bool GridColAreaEnabled() const {
-		return m_areaEnabled && m_colAreaAt.Count() > 0;
-	}
+	bool GridRowAreaEnabled() const { return m_areaEnabled && m_rowAreaAt.Count() > 0; }
+	bool GridColAreaEnabled() const { return m_areaEnabled && m_colAreaAt.Count() > 0; }
 
 	// grid lines
 	// ----------

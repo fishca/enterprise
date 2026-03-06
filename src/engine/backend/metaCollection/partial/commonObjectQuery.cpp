@@ -452,7 +452,7 @@ bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) 
 
 	writer.w_chunk(1, objectWriter.buffer());
 
-	dbResultSet->Close();
+	db_query->CloseResultSet(dbResultSet);
 
 	CMemoryWriter tableObjectWriter;
 	for (const auto table : GetTableArrayObject()) {
@@ -483,7 +483,7 @@ bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) 
 
 		tableObjectWriter.w_chunk(table->GetMetaID(), tableWriter.buffer());
 
-		dbResultSet->Close();
+		db_query->CloseResultSet(dbResultSet);
 	}
 
 	writer.w_chunk(2, tableObjectWriter.buffer());
@@ -1108,7 +1108,7 @@ bool IValueMetaObjectRegisterData::SaveTableData(CMemoryWriter& writer) const
 
 	writer.w_chunk(1, objectWriter.buffer());
 
-	dbResultSet->Close();
+	db_query->CloseResultSet(dbResultSet);
 	return true;
 }
 
@@ -1638,9 +1638,9 @@ bool IValueRecordSetObject::ReadData(const CUniquePairKey& key)
 		m_selected = true;
 	}
 
-	resultSet->Close();
 	db_query->CloseResultSet(resultSet);
 	db_query->CloseStatement(statement);
+	
 	return GetRowCount() > 0;
 }
 
@@ -1696,9 +1696,9 @@ bool IValueRecordSetObject::ReadData()
 		m_selected = true;
 	}
 
-	resultSet->Close();
 	db_query->CloseResultSet(resultSet);
 	db_query->CloseStatement(statement);
+
 	return GetRowCount() > 0;
 }
 

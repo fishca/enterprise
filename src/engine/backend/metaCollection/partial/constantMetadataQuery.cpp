@@ -177,7 +177,7 @@ bool CValueMetaObjectConstant::SaveTableData(CMemoryWriter& writer) const
 		writer.w_u8(false);
 	}
 	
-	dbResultSet->Close();
+	db_query->CloseResultSet(dbResultSet);
 	return true;
 }
 

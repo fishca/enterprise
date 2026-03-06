@@ -40,6 +40,7 @@ CValueReferenceDataObject* CValueManagerDataObjectCatalog::FindByCode(const CVal
 					if (foundedGuid.isValid()) foundedReference = CValueReferenceDataObject::Create(m_metaObject, foundedGuid);		
 				}
 				db_query->CloseResultSet(databaseResultSet);
+				db_query->CloseStatement(statement);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}
@@ -78,6 +79,7 @@ CValueReferenceDataObject* CValueManagerDataObjectCatalog::FindByDescription(con
 					if (foundedGuid.isValid()) foundedReference = CValueReferenceDataObject::Create(m_metaObject, foundedGuid);			
 				}
 				db_query->CloseResultSet(databaseResultSet);
+				db_query->CloseStatement(statement);
 				if (foundedReference != nullptr) return foundedReference;		
 			}
 		}

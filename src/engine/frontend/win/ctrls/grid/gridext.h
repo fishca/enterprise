@@ -134,26 +134,18 @@ class wxGridExtDirectionOperations;
 // global grid scale 
 // ----------------------------------------------------------------------------
 
-inline int wxCalcGridScale(int v, float s)
+inline int wxCalcGridScale(const int& v, const float& s)
 {
-	const float scale = v * s;
-	const float scale_int = int(scale);
-
-	if (scale_int + 0.5f <= scale)
-		return scale_int + 1;
-
-	return scale_int;
+	if (s == 1.0f)
+		return v;
+	return static_cast<int>(v * s + 0.5f);
 }
 
-inline int wxRestoreGridScale(int v, float s)
+inline int wxRestoreGridScale(const int& v, const float& s)
 {
-	const float scale = v / s;
-	const float scale_int = int(scale);
-
-	if (scale_int + 0.5f <= scale)
-		return scale_int + 1;
-
-	return scale_int;
+	if (s == 1.0f)
+		return v;
+	return static_cast<int>(v / s + 0.5f);
 }
 
 // ----------------------------------------------------------------------------

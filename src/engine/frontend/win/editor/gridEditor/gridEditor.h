@@ -68,7 +68,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		//
 		virtual void PutArea(
 			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->PutDocument(doc); }
-		
+
 		virtual void JoinArea(
 			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->JoinDocument(doc); }
 
@@ -150,6 +150,16 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 	};
 
 	class CGridEditorStringTable : public wxGridExtStringTable {
+
+		struct CGridEditorStringTableFillType {
+
+			CGridEditorStringTableFillType(int row, int col, enSpreadsheetFillType type) :
+				m_row(row), m_col(col), m_fillType(type) {
+			}
+
+			int m_row, m_col;
+			enSpreadsheetFillType m_fillType;
+		};
 
 	public:
 
@@ -233,18 +243,31 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		virtual void SetValueAsCustom(int row, int col, const wxString& typeName, void* value) {
 
 			if (value && stringUtils::CompareString(typeName, s_strTypeTextOrString)) {
-				const wxString* s = static_cast<wxString*>(value);
-				m_setValue.insert_or_assign(std::make_pair(row, col), enSpreadsheetFillType_StrText);
+				const wxString* s = static_cast<wxString*>(value);		
+				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
+					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
+				if (iterator != m_setColRowType.end())
+					m_setColRowType.erase(iterator);
 				CGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeTemplate)) {
 				const wxString* s = static_cast<wxString*>(value);
-				m_setValue.insert_or_assign(std::make_pair(row, col), enSpreadsheetFillType_StrTemplate);
+				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
+					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
+				if (iterator == m_setColRowType.end())
+					m_setColRowType.emplace_back(row, col, enSpreadsheetFillType_StrTemplate);
+				else
+					iterator->m_fillType = enSpreadsheetFillType_StrTemplate;
 				CGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeParameter)) {
 				const wxString* s = static_cast<wxString*>(value);
-				m_setValue.insert_or_assign(std::make_pair(row, col), enSpreadsheetFillType_StrParameter);
+				auto iterator = std::find_if(m_setColRowType.begin(), m_setColRowType.end(),
+					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
+				if (iterator == m_setColRowType.end())
+					m_setColRowType.emplace_back(row, col, enSpreadsheetFillType_StrParameter);
+				else
+					iterator->m_fillType = enSpreadsheetFillType_StrParameter;
 				CGridEditorStringTable::SetValue(row, col, *s);
 			}
 		}
@@ -299,14 +322,16 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 	private:
 
 		enSpreadsheetFillType GetTypeString(int row, int col) const {
-			auto iterator =
-				m_setValue.find(std::make_pair(row, col));
-			if (iterator != m_setValue.end())
-				return iterator->second;
+
+			for (const auto& value : m_setColRowType) {
+				if (value.m_row == row && value.m_col == col)
+					return value.m_fillType;
+			}
+
 			return enSpreadsheetFillType_StrText;
 		}
 
-		std::map<std::pair<int, int>, enSpreadsheetFillType> m_setValue;
+		std::vector<CGridEditorStringTableFillType> m_setColRowType;
 	};
 
 	// the property of grid 

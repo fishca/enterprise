@@ -157,7 +157,7 @@ IBackendValueForm* CValueMetaObjectCatalog::GetFolderSelectForm(const wxString& 
 
 wxString CValueMetaObjectCatalog::GetDataPresentation(const IValueDataObject* objValue) const
 {
-	CValue vDescription;
+	static CValue vDescription;
 	if (objValue->GetValueByMetaID((*m_propertyAttributeDescription)->GetMetaID(), vDescription))
 		return vDescription.GetString();
 	return wxEmptyString;

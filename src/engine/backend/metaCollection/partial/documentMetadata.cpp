@@ -141,7 +141,7 @@ IBackendValueForm* CValueMetaObjectDocument::GetSelectForm(const wxString& strFo
 
 wxString CValueMetaObjectDocument::GetDataPresentation(const IValueDataObject* objValue) const
 {
-	CValue vDate, vNumber;
+	static CValue vDate, vNumber;
 	if (!objValue->GetValueByMetaID((*m_propertyAttributeDate)->GetMetaID(), vDate))
 		return wxEmptyString;
 	if (!objValue->GetValueByMetaID((*m_propertyAttributeNumber)->GetMetaID(), vNumber))

@@ -407,7 +407,12 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 					const wxString& token =
 						strTemplateValue.substr(start_pos + 1, end_pos - start_pos - 1);
 					if (!token.empty()) {
-						strTemplateValue.replace(start_pos, end_pos - start_pos + 1, GetParameter(token).GetString());
+						
+						static CValue cVal;						
+						if (GetParameter(token, cVal))
+							strTemplateValue.replace(start_pos, end_pos - start_pos + 1, cVal.GetString());
+						else
+							strTemplateValue.replace(start_pos, end_pos - start_pos + 1, wxT(""));
 					}
 					else {
 						strTemplateValue.replace(start_pos, end_pos - start_pos, wxT(""));
@@ -430,8 +435,9 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 	}
 	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 
-		if (!strValue.IsEmpty())
-			return CBackendLocalization::CreateLocalizationRawLocText(GetParameter(strValue).GetString());
+		static CValue cVal; 
+		if (!strValue.IsEmpty() && GetParameter(strValue, cVal))
+			return CBackendLocalization::CreateLocalizationRawLocText(cVal.GetString());
 	}
 
 	return strValue;

@@ -5,55 +5,43 @@
 
 class CValueManagerDataObjectDataProcessor :
 	public IValueManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor);
 public:
+
+	CValueManagerDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~CValueManagerDataObjectDataProcessor() {}
 
 	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
 	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
 
-	CValueManagerDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject = nullptr);
-	virtual ~CValueManagerDataObjectDataProcessor();
-
-	virtual CMethodHelper* GetPMethods() const {  // get a reference to the class helper for parsing attribute and method names
-		//PrepareNames();
-		return m_methodHelper;
-	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 
-	//Get ref class 
-	virtual class_identifier_t GetClassType() const;
-
-	//types 
-	virtual wxString GetClassName() const;
-	virtual wxString GetString() const;
-
 protected:
-
-	CMethodHelper* m_methodHelper;
 	CValueMetaObjectDataProcessor* m_metaObject;
+private:
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor);
 };
 
 class CValueManagerDataObjectExternalDataProcessor :
-	public IValueManagerDataObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor);
+	public IValueManagerObject {
 public:
-	
-	CValueManagerDataObjectExternalDataProcessor();
-	virtual ~CValueManagerDataObjectExternalDataProcessor();
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const { return nullptr; }
+	CValueManagerDataObjectExternalDataProcessor() {}
+	virtual ~CValueManagerDataObjectExternalDataProcessor() {}
+
 	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
 
 	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
-		return m_methodHelper;
+		return &m_methodHelper;
 	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
 	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
 
 protected:
-	CMethodHelper* m_methodHelper;
+	static CMethodHelper m_methodHelper;
+private:
+	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor);
 };
 
 #endif 

@@ -1182,14 +1182,43 @@ private:
 
 // Manager with metaobject 
 #pragma region managers
-class BACKEND_API IValueManagerDataObject : public CValue {
+class BACKEND_API IValueManagerObject : public CValue {
 public:
 
-	IValueManagerDataObject() : CValue(eValueTypes::TYPE_VALUE, true) {}
-	virtual ~IValueManagerDataObject() {}
+	IValueManagerObject() : CValue(eValueTypes::TYPE_VALUE, true) {}
+	virtual ~IValueManagerObject() {}
+
+	virtual IValueMetaObject* GetMetaObject() const = 0;
+};
+
+class BACKEND_API IValueManagerDataObject : public IValueManagerObject {
+public:
+
+	IValueManagerDataObject() : IValueManagerObject(), m_methodHelper(new CMethodHelper) {}
+	virtual ~IValueManagerDataObject() { wxDELETE(m_methodHelper); }
 
 	virtual CValueMetaObjectCommonModule* GetModuleManager() const = 0;
-	virtual IValueMetaObject* GetMetaObject() const = 0;
+	virtual IValueMetaObjectGenericData* GetMetaObject() const = 0;
+
+	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+		//PrepareNames(); 
+		return m_methodHelper;
+	}
+
+	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
+
+	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+
+	//Get ref class 
+	virtual class_identifier_t GetClassType() const;
+
+	virtual wxString GetClassName() const;
+	virtual wxString GetString() const;
+
+protected:
+	//methods 
+	CMethodHelper* m_methodHelper;
 };
 #pragma endregion 
 

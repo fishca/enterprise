@@ -104,9 +104,9 @@ CValueSpreadsheetDocument* IValueMetaObjectGenericData::GetTemplate(const wxStri
 			return nullptr;
 		}
 
-		CValueSpreadsheetDocument* valueSpreadsheetDocument = 
+		CValueSpreadsheetDocument* valueSpreadsheetDocument =
 			new CValueSpreadsheetDocument(creator->GetSpreadsheetDesc());
-		
+
 		valueSpreadsheetDocument->PrepareNames();
 		return valueSpreadsheetDocument;
 	}
@@ -1208,11 +1208,106 @@ IValueRecordManagerObject* IValueMetaObjectRegisterData::CopyRecordManagerObject
 }
 
 //***********************************************************************
-//*                        ISourceDataObject							*
+//*                        IValueManagerDataObject						*
 //***********************************************************************
 
+void IValueManagerDataObject::PrepareNames() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	m_methodHelper->ClearHelper();
+
+	CValue* pRefData = moduleManager->FindCommonModule(GetModuleManager());
+	if (pRefData != nullptr) {
+		// add methods from context
+		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {
+			m_methodHelper->CopyMethod(pRefData->GetPMethods(), idx);
+		}
+	}
+}
+
+bool IValueManagerDataObject::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	CValue* pRefData =
+		moduleManager->FindCommonModule(GetModuleManager());
+
+	if (pRefData != nullptr)
+		return pRefData->CallAsProc(lMethodNum, paParams, lSizeArray);
+
+	return false;
+}
+
+bool IValueManagerDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	CValue* pRefData =
+		moduleManager->FindCommonModule(GetModuleManager());
+
+	if (pRefData != nullptr)
+		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+
+	return false;
+}
+
+class_identifier_t IValueManagerDataObject::GetClassType() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassType();
+}
+
+wxString IValueManagerDataObject::GetClassName() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
+wxString IValueManagerDataObject::GetString() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
 //***********************************************************************
-//*                        IValueRecordDataObject							*
+//*                        IValueRecordDataObject						*
 //***********************************************************************
 
 wxIMPLEMENT_ABSTRACT_CLASS(IValueRecordDataObject, CValue);

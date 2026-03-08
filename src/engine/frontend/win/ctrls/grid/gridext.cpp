@@ -4397,6 +4397,8 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 
 	if (event.Dragging())
 	{
+		bool callForceRefresh = !m_isDragging;
+
 		if (!m_isDragging)
 		{
 			m_isDragging = true;
@@ -4469,6 +4471,12 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 					m_dragLastPos = markerPos;
 					m_dragLastColour = markerColour;
 				}
+			}
+
+			if (callForceRefresh) {
+				ForceRefresh();
+
+				wxLogDebug(wxT("callForceRefresh"));
 			}
 		}
 		return;
@@ -5089,7 +5097,7 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 			m_currentCellCoords.GetRow() : coords.GetRow();
 		const int colEnd = m_currentCellCoords.GetCol() > coords.GetCol() ?
 			m_currentCellCoords.GetCol() : coords.GetCol();
-		
+
 		for (int row = rowStart; row <= rowEnd; row++)
 		{
 			for (int col = colStart; col <= colEnd; col++)
@@ -5112,11 +5120,11 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 					if (end_row > blockEnd.GetRow())
 						blockEnd.SetRow(end_row);
 
-					if (start_col < blockStart.GetCol())		
+					if (start_col < blockStart.GetCol())
 						blockStart.SetCol(start_col);
-					
-					if (end_col > blockEnd.GetCol()) 
-						blockEnd.SetCol(end_col);			
+
+					if (end_col > blockEnd.GetCol())
+						blockEnd.SetCol(end_col);
 				}
 			}
 		}
@@ -7267,7 +7275,6 @@ void wxGridExt::DrawCellHighlight(wxDC& dc, int row, int col, const wxGridExtCel
 			rect.GetRight() + 1, rect.GetBottom());
 	}
 
-	RefreshBlock(row, col, row, col);
 }
 
 wxPen wxGridExt::GetDefaultGridLinePen()
@@ -11983,6 +11990,9 @@ void wxGridExt::DoSetRowSize(int row, int height)
 
 	CalcDimensions();
 
+	//support printing
+	SetRowBrake(row);
+
 	if (ShouldRefresh())
 	{
 		// We need to check the size of all the currently visible cells and
@@ -12071,9 +12081,6 @@ void wxGridExt::DoSetRowSize(int row, int height)
 				refreshLowerPart(m_frozenColGridWin);
 		}
 	}
-
-	//support printing
-	SetRowBrake(row);
 
 	if (m_dragRowOrCol == -1)
 	{

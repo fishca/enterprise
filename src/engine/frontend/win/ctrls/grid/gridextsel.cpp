@@ -691,8 +691,12 @@ bool wxGridExtSelection::ExtendCurrentBlock(const wxGridExtCellCoords& blockStar
 		for (int i = 0; i < 4; ++i)
 		{
 			const wxGridExtBlockCoords& refreshBlock = refreshBlocks.m_parts[i];
-			m_grid->RefreshBlock(refreshBlock.GetTopLeft(),
-				refreshBlock.GetBottomRight());
+
+			if (!refreshBlock)
+				continue;
+
+			m_grid->RefreshBlock(wxMax(refreshBlock.GetTopRow() - 1, 0), wxMax(refreshBlock.GetLeftCol() - 1, 0),
+				wxMin(refreshBlock.GetBottomRow() + 1, m_grid->GetNumberRows() - 1), wxMin(refreshBlock.GetRightCol() + 1, m_grid->GetNumberCols() - 1));
 		}
 	}
 

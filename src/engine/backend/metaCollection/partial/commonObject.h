@@ -379,7 +379,7 @@ enum eObjectMode {
 	OBJECT_FOLDER
 };
 
-//metaObject with file 
+//meta object with file 
 class BACKEND_API IValueMetaObjectRecordDataExt : public IValueMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRecordDataExt);
 public:
@@ -422,7 +422,7 @@ private:
 #pragma endregion
 };
 
-//metaObject with reference 
+//meta object with reference 
 class BACKEND_API IValueMetaObjectRecordDataRef : public IValueMetaObjectRecordData {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRecordDataRef);
 
@@ -526,7 +526,7 @@ protected:
 	CPropertyInnerAttribute<>* m_propertyAttributeReference = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateSpecialType(wxT("Reference"), _("Reference"), wxEmptyString, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY)));
 };
 
-//metaObject with reference - for enumeration
+//meta object with reference - for enumeration
 class BACKEND_API IValueMetaObjectRecordDataEnumRef : public IValueMetaObjectRecordDataRef {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRecordDataEnumRef);
 protected:
@@ -600,7 +600,7 @@ private:
 	CPropertyInnerAttribute<>* m_propertyAttributeOrder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateNumber(wxT("Order"), _("Order"), wxEmptyString, 6, true));
 };
 
-//metaObject with reference and deletion mark 
+//meta object with reference and deletion mark 
 class BACKEND_API IValueMetaObjectRecordDataMutableRef : public IValueMetaObjectRecordDataRef {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRecordDataMutableRef);
 protected:
@@ -713,21 +713,47 @@ private:
 #pragma endregion
 };
 
-//metaObject with reference and deletion mark and group/object type
-class BACKEND_API IValueMetaObjectRecordDataHierarchyMutableRef : public IValueMetaObjectRecordDataMutableRef {
-
+//meta object with reference and deletion mark and group/object type and predefined values 
+class BACKEND_API IValueMetaObjectRecordDataHierarchyMutableRef :
+	public IValueMetaObjectRecordDataMutableRef {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRecordDataHierarchyMutableRef);
-
-	struct CPredefinedObjectValue {
-
-		CGuid m_valueGuid;
-
-		CValue m_valueCode;
-		CValue m_valueDescription;
-		CValue m_valueIsFolder;
-	};
-
 public:
+
+	class CPredefinedValueObject : public wxRefCounter {
+	public:
+
+		CPredefinedValueObject(
+			const CGuid& predefinedGuid, const wxString& strPredefinedName,
+			const wxString& strCode, const wxString& strDescription,
+			bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
+			:
+			m_predefinedItemGuid(predefinedGuid),
+			m_strPredefinedName(strPredefinedName),
+			m_strCode(strCode), m_strDescription(strDescription),
+			m_valueIsFolder(valueIsFolder),
+			m_valueParent(valueParent)
+		{
+		}
+
+		CGuid GetPredefinedGuid() const { return m_predefinedItemGuid; }
+		wxString GetPredefinedName() const { return m_strPredefinedName; }
+		wxString GetPredefinedCode() const { return m_strCode; }
+		wxString GetPredefinedDescription() const { return m_strDescription; }
+		bool IsPredefinedFolder() const { return m_valueIsFolder; }
+		wxObjectDataPtr<CPredefinedValueObject> GetPredefinedParent() const { return m_valueParent; }
+
+	private:
+
+		CGuid m_predefinedItemGuid;
+
+		wxString m_strPredefinedName;
+		wxString m_strCode;
+		wxString m_strDescription;
+
+		bool m_valueIsFolder;
+
+		wxObjectDataPtr<CPredefinedValueObject> m_valueParent;
+	};
 
 	CValueMetaObjectAttributePredefined* GetDataPredefinedName() const { return m_propertyAttributePredefined->GetMetaObject(); }
 	virtual bool IsDataPredefinedName(const meta_identifier_t& id) const { return id == (*m_propertyAttributePredefined)->GetMetaID(); }
@@ -790,6 +816,32 @@ public:
 	virtual IBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 #pragma endregion 
 
+	//find predefined value
+	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const {
+
+		auto iterator = std::find_if(m_predefinedObjectVector.begin(), m_predefinedObjectVector.end(),
+			[predefinedGuid](const auto& value) { return predefinedGuid == value->GetPredefinedGuid(); });
+
+		if (iterator != m_predefinedObjectVector.end())
+			return *iterator;
+
+		return wxObjectDataPtr<CPredefinedValueObject>();
+	}
+
+	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const {
+
+		auto iterator = std::find_if(m_predefinedObjectVector.begin(), m_predefinedObjectVector.end(),
+			[predefinedName](const auto& value) { return predefinedName == value->GetPredefinedName(); });
+
+		if (iterator != m_predefinedObjectVector.end())
+			return *iterator;
+
+		return wxObjectDataPtr<CPredefinedValueObject>();
+	}
+
+	//predefined values 
+	const std::vector<wxObjectDataPtr<CPredefinedValueObject>>& GetPredefinedValueArray() const { return m_predefinedObjectVector; }
+
 protected:
 
 	/**
@@ -837,20 +889,8 @@ protected:
 		return true;
 	}
 
-	//find predefined value
-	const CPredefinedObjectValue* FindPredefinedValue(const CGuid& valueGuid) const {
-
-		auto iterator = std::find_if(m_predefinedObjectVector.begin(), m_predefinedObjectVector.end(),
-			[valueGuid](const auto& value) { return value.m_valueGuid == valueGuid; });
-
-		if (iterator != m_predefinedObjectVector.end())
-			return &(*iterator);
-
-		return nullptr;
-	}
-
 	//process default query
-	int ProcessPredefinedValue(const wxString& tableName, const CPredefinedObjectValue* srcPredefined, const CPredefinedObjectValue* dstPredefined);
+	int ProcessPredefinedValue(const wxString& tableName, const wxObjectDataPtr<CPredefinedValueObject>& srcPredefined, const wxObjectDataPtr<CPredefinedValueObject>& dstPredefined);
 
 	//create default attributes
 	CPropertyInnerAttribute<>* m_propertyAttributePredefined = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateString(wxT("PredefinedName"), _("Predefined name"), wxEmptyString, 150, eItemMode::eItemMode_Folder_Item));
@@ -860,10 +900,10 @@ protected:
 	CPropertyInnerAttribute<>* m_propertyAttributeIsFolder = IPropertyObject::CreateProperty<CPropertyInnerAttribute<>>(m_categoryCommon, IValueMetaObjectCompositeData::CreateBoolean(wxT("IsFolder"), _("Is folder"), wxEmptyString, eItemMode::eItemMode_Folder_Item));
 
 	//predefinded vector
-	std::vector<CPredefinedObjectValue> m_predefinedObjectVector;
+	std::vector<wxObjectDataPtr<CPredefinedValueObject>> m_predefinedObjectVector;
 };
 
-//metaObject with key   
+//meta object with key   
 class BACKEND_API IValueMetaObjectRegisterData :
 	public IValueMetaObjectGenericData {
 	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectRegisterData);
@@ -1180,8 +1220,9 @@ private:
 
 #pragma endregion 
 
-// Manager with metaobject 
+//manager with meta object  
 #pragma region managers
+
 class BACKEND_API IValueManagerObject : public CValue {
 public:
 
@@ -1220,9 +1261,22 @@ protected:
 	//methods 
 	CMethodHelper* m_methodHelper;
 };
+
+class BACKEND_API IValueManagerDataObjectPredefined : public IValueManagerDataObject {
+
+public:
+
+	virtual IValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const = 0;
+
+	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
+
+	virtual bool SetPropVal(const long lPropNum, CValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+};
+
 #pragma endregion 
 
-//Object with metaobject 
+//object with metaobject 
 #pragma region objects 
 class BACKEND_API IValueRecordDataObject : public CValue, public IActionDataObject,
 	public ISourceDataObject, public IValueDataObject, public IModuleDataObject {
@@ -1452,9 +1506,7 @@ public:
 	}
 
 	//get unique identifier 
-	virtual CUniqueKey GetGuid() const {
-		return m_objGuid;
-	}
+	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//copy new object
 	virtual IValueRecordDataObjectRef* CopyObjectValue();
@@ -1509,8 +1561,8 @@ public:
 
 	//get metaData from object 
 	virtual IValueMetaObjectRecordDataHierarchyMutableRef* GetMetaObject() const {
-		return (IValueMetaObjectRecordDataHierarchyMutableRef*)m_metaObject;
-	};
+		return static_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(m_metaObject);
+	}
 
 	//copy new object
 	virtual IValueRecordDataObjectRef* CopyObjectValue();
@@ -1538,7 +1590,7 @@ protected:
 };
 #pragma endregion
 
-//Object with register type 
+//object with register type 
 #pragma region registers 
 class BACKEND_API CValueRecordKeyObject : public CValue {
 	wxDECLARE_ABSTRACT_CLASS(CValueRecordKeyObject);
@@ -1690,7 +1742,7 @@ public:
 	};
 
 	class CValueRecordSetObjectRegisterKeyValue : public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CValueRecordSetObjectRegisterReturnLine);
+		wxDECLARE_DYNAMIC_CLASS(CValueRecordSetObjectRegisterKeyValue);
 	public:
 		class CValueRecordSetObjectRegisterKeyDescriptionValue : public CValue {
 			wxDECLARE_DYNAMIC_CLASS(CValueRecordSetObjectRegisterKeyDescriptionValue);
@@ -1945,7 +1997,7 @@ public:
 	virtual void SourceDecrRef() { CValue::DecrRef(); }
 
 	//get unique identifier 
-	virtual CUniqueKey GetGuid() const { return m_objGuid; };
+	virtual CUniqueKey GetGuid() const { return m_objGuid; }
 
 	//save modify 
 	virtual bool SaveModify() override { return WriteRegister(); }

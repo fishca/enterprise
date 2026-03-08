@@ -158,7 +158,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("Module"), _("Module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categoryContext, wxT("Module"), _("Module"));
 };
 
 class BACKEND_API CValueMetaObjectCommonModule : public IValueMetaObjectModule {
@@ -220,7 +220,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("Module"), _("Module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categoryContext, wxT("Module"), _("Module"));
 	CPropertyCategory* m_moduleCategory = IPropertyObject::CreatePropertyCategory(wxT("Common module"), _("Common module"));
 	CPropertyBoolean* m_propertyGlobalModule = IPropertyObject::CreateProperty<CPropertyBoolean>(m_moduleCategory, wxT("GlobalModule"), _("Global module"), false);
 };

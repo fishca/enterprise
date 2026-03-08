@@ -34,7 +34,7 @@ enum Func {
 
 void CValueManagerDataObjectCatalog::PrepareNames() const
 {
-	IValueManagerDataObject::PrepareNames();
+	IValueManagerDataObjectPredefined::PrepareNames();
 
 	m_methodHelper->AppendFunc(wxT("CreateElement"), wxT("CreateElement()"));
 	m_methodHelper->AppendFunc(wxT("CreateGroup"), wxT("CreateGroup()"));

@@ -715,15 +715,17 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::LoadData(CMemoryReader& data
 	unsigned int size = predefinedReader.r_u32();
 	for (unsigned int i = 0; i < size; i++)
 	{
-		CPredefinedObjectValue entry;
+		const CGuid& valueGuid =
+			predefinedReader.r_stringZ();
 
-		entry.m_valueGuid = predefinedReader.r_stringZ();
+		wxString valueName = predefinedReader.r_stringZ();
+		wxString valueCode = predefinedReader.r_stringZ();
+		wxString valueDescription = predefinedReader.r_stringZ();
 
-		entry.m_valueCode = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		entry.m_valueDescription = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		entry.m_valueIsFolder = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		bool valueIsFolder = predefinedReader.r_u8();
 
-		m_predefinedObjectVector.emplace_back(std::move(entry));
+		m_predefinedObjectVector.emplace_back(
+			new CPredefinedValueObject(valueGuid, valueName, valueCode, valueDescription));
 	}
 
 	//load default attributes:
@@ -742,13 +744,15 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::SaveData(CMemoryWriter& data
 	CMemoryWriter predefinedWritter;
 	predefinedWritter.w_u32(m_predefinedObjectVector.size());
 
-	for (const CPredefinedObjectValue& value : m_predefinedObjectVector)
+	for (const auto& value : m_predefinedObjectVector)
 	{
-		predefinedWritter.w_stringZ(value.m_valueGuid);
+		predefinedWritter.w_stringZ(value->GetPredefinedGuid());
+		predefinedWritter.w_stringZ(value->GetPredefinedName());
 
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueCode));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueDescription));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueIsFolder));
+		predefinedWritter.w_stringZ(value->GetPredefinedCode());
+		predefinedWritter.w_stringZ(value->GetPredefinedDescription());
+
+		predefinedWritter.w_u8(value->IsPredefinedFolder());
 	}
 
 	dataWritter.w_chunk(predefinedBlock, predefinedWritter.buffer());
@@ -1304,6 +1308,42 @@ wxString IValueManagerDataObject::GetString() const
 		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
+}
+
+//***********************************************************************
+//*                        IValueManagerDataObjectPredefined			*
+//***********************************************************************
+
+
+void IValueManagerDataObjectPredefined::PrepareNames() const
+{
+	const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	IValueManagerDataObject::PrepareNames();
+
+	//fill custom values 
+	for (const auto object : valueMetaObject->GetPredefinedValueArray()) {
+		m_methodHelper->AppendProp(object->GetPredefinedName(), true, false);
+	}
+}
+
+bool IValueManagerDataObjectPredefined::SetPropVal(const long lPropNum, CValue& cValue)
+{
+	return false;
+}
+
+bool IValueManagerDataObjectPredefined::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const auto& predefinedValue =
+		valueMetaObject->FindPredefinedValue(m_methodHelper->GetPropName(lPropNum));
+	if (predefinedValue == nullptr)
+		return false;
+	pvarPropVal = CValueReferenceDataObject::Create(valueMetaObject, predefinedValue->GetPredefinedGuid());
+	return true;
 }
 
 //***********************************************************************
@@ -2141,7 +2181,7 @@ bool IValueRecordDataObjectFolderRef::GetModel(IValueModel*& tableValue, const m
 
 IValueRecordDataObjectRef* IValueRecordDataObjectFolderRef::CopyObjectValue()
 {
-	return ((IValueMetaObjectRecordDataHierarchyMutableRef*)m_metaObject)->CreateObjectValue(m_objMode, this);
+	return GetMetaObject()->CreateObjectValue(m_objMode, this);
 }
 
 bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
@@ -2149,8 +2189,17 @@ bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& 
 	const CValue& cOldValue = IValueRecordDataObjectRef::GetValueByMetaID(id);
 	if (cOldValue.GetType() == TYPE_NULL)
 		return false;
-	if (GetMetaObject()->IsDataParent(id) &&
-		varMetaVal == GetReference()) {
+
+	const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	if (valueMetaObject->IsDataParent(id) && varMetaVal == GetReference()) {
+		CBackendCoreException::Error(_("You can't change your parent to yourself!"));
+		return false;
+	}
+
+	if (valueMetaObject->IsDataPredefinedName(id)) {
+		CBackendCoreException::Error(_("You cannot change predefined value!"));
 		return false;
 	}
 

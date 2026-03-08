@@ -4,7 +4,7 @@
 #include "catalog.h"
 
 class CValueManagerDataObjectCatalog :
-	public IValueManagerDataObject {
+	public IValueManagerDataObjectPredefined {
 public:
 
 	CValueReferenceDataObject* FindByCode(const CValue& vCode) const;

@@ -4473,11 +4473,8 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 				}
 			}
 
-			if (callForceRefresh) {
+			if (callForceRefresh) 
 				ForceRefresh();
-
-				wxLogDebug(wxT("callForceRefresh"));
-			}
 		}
 		return;
 	}
@@ -11990,9 +11987,6 @@ void wxGridExt::DoSetRowSize(int row, int height)
 
 	CalcDimensions();
 
-	//support printing
-	SetRowBrake(row);
-
 	if (ShouldRefresh())
 	{
 		// We need to check the size of all the currently visible cells and
@@ -12092,6 +12086,9 @@ void wxGridExt::DoSetRowSize(int row, int height)
 
 		SendGridSizeEvent(wxEVT_GRID_ROW_MODIFIED, row, e);
 	}
+
+	//support printing
+	SetRowBrake(row);
 }
 
 void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCols)

@@ -6,7 +6,7 @@
 wxString strContributors =
 {
 	wxT("wxWidgets and wxFormBuilder, Unknown Worlds Entertaiment team\n")
-	wxT("2C team, whose ideas were taken as the basis for building the interpreter.\n")
+	wxT("2C team, whose ideas were taken as the basis for building the interpreter\n")
 	wxT("Tomasz Sowa which developed ttmath\n")
 	wxT("And also everyone who was not mentioned here")
 };

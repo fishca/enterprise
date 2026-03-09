@@ -14,11 +14,11 @@ void IValueTabularSectionDataObject::GetValueByRow(wxVariant& variant,
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr) return;
+	
 	if (m_metaTable->IsNumberLine(col))
-		variant = wxString::Format("%i", GetRow(row) + 1);
+		variant = new wxVariantDataValueNumberLine(GetRow(row) + 1);
 	else if (node->HasColumnValue(col))
 		node->GetValue(col, variant);
-
 }
 
 #include "backend/metaData.h"

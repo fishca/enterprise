@@ -11,14 +11,14 @@
 #include "frontend/visualView/ctrl/form.h"
 #include "frontend/visualView/ctrl/tableBox.h"
 
-class CValueViewRenderer : public wxDataViewCustomRenderer {
-	CValueTableBoxColumn* m_colControl;
+class CValueViewRenderer :
+	public wxDataViewCustomRenderer {
 public:
 
 	virtual void FinishSelecting() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
@@ -44,8 +44,8 @@ public:
 
 	virtual void CancelEditing() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
@@ -54,8 +54,8 @@ public:
 
 	virtual bool FinishEditing() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
@@ -66,10 +66,12 @@ public:
 	// purposes. In real programs, you should select whether the user should be
 	// able to activate or edit the cell and it doesn't make sense to switch
 	// between the two -- but this is just an example, so it doesn't stop us.
-	explicit CValueViewRenderer(CValueTableBoxColumn* col)
-		: wxDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_colControl(col)
+	explicit CValueViewRenderer(CValueTableBoxColumn* tableBoxColumn)
+		: wxDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_tableBoxColumn(tableBoxColumn)
 	{
 	}
+
+	virtual bool IsCompatibleVariantType(const wxString& variantType) const { return true; }
 
 	virtual bool Render(wxRect rect, wxDC* dc, int state) override
 	{
@@ -91,8 +93,7 @@ public:
 		return false;
 	}
 
-	virtual wxSize GetSize() const override
-	{
+	virtual wxSize GetSize() const override {
 		if (!m_valueVariant.IsNull()) {
 			return GetTextExtent(m_valueVariant);
 		}
@@ -102,9 +103,14 @@ public:
 		}
 	}
 
-	virtual bool SetValue(const wxVariant& value) override
-	{
-		m_valueVariant = value.GetString();
+	virtual bool SetValue(const wxVariant& value) override {
+
+		if (value.GetType() == wxT("number"))
+			SetAlignment(wxALIGN_RIGHT);
+		else 
+			SetAlignment(wxALIGN_LEFT);
+
+		m_valueVariant = value;
 		return true;
 	}
 
@@ -114,10 +120,7 @@ public:
 	}
 
 #if wxUSE_ACCESSIBILITY
-	virtual wxString GetAccessibleDescription() const override
-	{
-		return m_valueVariant;
-	}
+	virtual wxString GetAccessibleDescription() const override { return m_valueVariant; }
 #endif // wxUSE_ACCESSIBILITY
 
 	virtual bool HasEditorCtrl() const override {
@@ -132,6 +135,7 @@ public:
 
 private:
 
+	CValueTableBoxColumn* m_tableBoxColumn;
 	wxVariant m_valueVariant;
 };
 

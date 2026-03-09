@@ -192,10 +192,71 @@ public:
 };
 #pragma endregion 
 
+class wxVariantDataValue :
+	public wxVariantData {
+public:
+protected:
+	wxVariantDataValue() : wxVariantData() {}
+};
+
 //Common entity for tables, list, table trees 
 class BACKEND_API IValueModel : public CValue,
 	public IActionDataObject, public ITabularObject {
 	wxDECLARE_ABSTRACT_CLASS(IValueModel);
+
+	template <typename T>
+	class wxVariantDataValueImpl :
+		public wxVariantDataValue {
+
+	public:
+
+		wxVariantDataValueImpl(T&& cValue)
+			:
+			m_cValue(cValue)
+		{
+		}
+
+		virtual bool Eq(wxVariantData& data) const {
+			wxVariantDataValueImpl* srcData = dynamic_cast<wxVariantDataValueImpl*>(&data);
+			if (srcData != nullptr)
+				return m_cValue == srcData->m_cValue;
+			return false;
+		}
+
+#if wxUSE_STD_IOSTREAM
+		virtual bool Write(wxSTD ostream& str) const {
+			str << m_cValue.GetString();
+			return true;
+		}
+#endif
+		virtual bool Write(wxString& str) const {
+			str = m_cValue.GetString();
+			return true;
+		}
+
+		virtual wxString GetType() const {
+			if (m_cValue.GetType() == eValueTypes::TYPE_BOOLEAN)
+				return wxT("bool");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_NUMBER)
+				return wxT("number");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_DATE)
+				return wxT("date");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_STRING)
+				return wxT("string");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_VALUE)
+				return wxT("value");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_ENUM)
+				return wxT("enum");
+			else if (m_cValue.GetType() == eValueTypes::TYPE_OLE)
+				return wxT("ole");
+			return wxT("string");
+		}
+
+	private:
+
+		T m_cValue;
+	};
+
 protected:
 
 	//def actionData
@@ -294,6 +355,15 @@ protected:
 	CDataViewModelProvider* m_modelProvider;
 
 #pragma endregion 
+
+	class wxVariantDataValueModel :
+		public wxVariantDataValueImpl<const CValue&> {
+	public:
+		wxVariantDataValueModel(const CValue& v) :
+			wxVariantDataValueImpl(v)
+		{
+		}
+	};
 
 public:
 
@@ -792,8 +862,9 @@ public:
 		}
 
 		bool GetValue(unsigned int col, wxVariant& variant) const {
+
 			try {
-				variant = GetTableValue(col).GetString();
+				variant = new wxVariantDataValueModel(GetTableValue(col));
 				return true;
 			}
 			catch (std::out_of_range&) {
@@ -1318,7 +1389,7 @@ public:
 
 		bool GetValue(unsigned int col, wxVariant& variant) const {
 			try {
-				variant = GetTableValue(col).GetString();
+				variant = new wxVariantDataValueModel(GetTableValue(col));
 				return true;
 			}
 			catch (std::out_of_range&) {

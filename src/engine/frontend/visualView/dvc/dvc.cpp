@@ -1,9 +1,6 @@
 #include "dvc.h"
 
-#include "frontend/win/ctrls/controlCheckboxEditor.h"
 #include "frontend/win/ctrls/controlTextEditor.h"
-
-#include "frontend/visualView/ctrl/tableBox.h"
 #include "backend/appData.h"
 
 wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
@@ -24,9 +21,9 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	if (!result)
 		return nullptr;
 
-	textEditor->ShowSelectButton(m_colControl->GetSelectButton());
-	textEditor->ShowClearButton(m_colControl->GetClearButton());
-	textEditor->ShowOpenButton(m_colControl->GetOpenButton());
+	textEditor->ShowSelectButton(m_tableBoxColumn->GetSelectButton());
+	textEditor->ShowClearButton(m_tableBoxColumn->GetClearButton());
+	textEditor->ShowOpenButton(m_tableBoxColumn->GetOpenButton());
 
 	wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
 	if (parentWnd != nullptr) {
@@ -40,17 +37,17 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 		textEditor->SetFont(dv->GetFont());
 	}
 
-	textEditor->SetPasswordMode(m_colControl->GetPasswordMode());
-	textEditor->SetMultilineMode(m_colControl->GetMultilineMode());
-	textEditor->SetTextEditMode(m_colControl->GetTextEditMode());
+	textEditor->SetPasswordMode(m_tableBoxColumn->GetPasswordMode());
+	textEditor->SetMultilineMode(m_tableBoxColumn->GetMultilineMode());
+	textEditor->SetTextEditMode(m_tableBoxColumn->GetTextEditMode());
 
 	if (!appData->DesignerMode()) {
 		
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
-		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
+		textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
 		
-		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_colControl);
+		textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_tableBoxColumn);
 	}
 
 	textEditor->LayoutControls();
@@ -69,11 +66,11 @@ bool CValueViewRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value
 
 	if (!appData->DesignerMode()) {
 		
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_colControl);
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_colControl);
-		textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_colControl);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTableBoxColumn::OnSelectButtonPressed, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTableBoxColumn::OnOpenButtonPressed, m_tableBoxColumn);
+		textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTableBoxColumn::OnClearButtonPressed, m_tableBoxColumn);
 
-		textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_colControl);
+		textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTableBoxColumn::OnTextEnter, m_tableBoxColumn);
 	}
 
 	value = textEditor->GetValue();

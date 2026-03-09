@@ -24,6 +24,15 @@ private:
 		eTabularSection,
 	};
 
+	class wxVariantDataValueNumberLine :
+		public wxVariantDataValueImpl<CValue> {
+	public:
+		wxVariantDataValueNumberLine(const long& cValue)
+			: wxVariantDataValueImpl(cValue)
+		{
+		}
+	};
+
 public:
 
 	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }

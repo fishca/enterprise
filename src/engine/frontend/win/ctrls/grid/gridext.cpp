@@ -4473,7 +4473,7 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 				}
 			}
 
-			if (callForceRefresh) 
+			if (callForceRefresh)
 				ForceRefresh();
 		}
 		return;
@@ -5082,9 +5082,6 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 	// of the modifier keys matters.
 	if (m_selection)
 	{
-		wxGridExtCellCoords blockStart = m_currentCellCoords;
-		wxGridExtCellCoords blockEnd = coords;
-
 		const int rowStart = m_currentCellCoords.GetRow() < coords.GetRow() ?
 			m_currentCellCoords.GetRow() : coords.GetRow();
 		const int colStart = m_currentCellCoords.GetCol() < coords.GetCol() ?
@@ -5095,15 +5092,24 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 		const int colEnd = m_currentCellCoords.GetCol() > coords.GetCol() ?
 			m_currentCellCoords.GetCol() : coords.GetCol();
 
+		wxGridExtCellCoords blockStart(rowStart, colStart);
+		wxGridExtCellCoords blockEnd(rowEnd, colEnd);
+
 		for (int row = rowStart; row <= rowEnd; row++)
 		{
 			for (int col = colStart; col <= colEnd; col++)
 			{
 				int cell_rows, cell_cols;
-				if (GetCellSize(row, col, &cell_rows, &cell_cols) != CellSpan_Inside)
+				if (GetCellSize(row, col, &cell_rows, &cell_cols) != CellSpan::CellSpan_Inside)
 				{
 					int end_row = row + cell_rows - 1;
 					int end_col = col + cell_cols - 1;
+
+					if (end_row > blockEnd.GetRow())
+						blockEnd.SetRow(end_row);
+
+					if (end_col > blockEnd.GetCol())
+						blockEnd.SetCol(end_col);
 
 					int cell_start_rows, cell_start_cols;
 					GetCellSize(end_row, end_col, &cell_start_rows, &cell_start_cols);
@@ -5114,14 +5120,8 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 					if (start_row < blockStart.GetRow())
 						blockStart.SetRow(start_row);
 
-					if (end_row > blockEnd.GetRow())
-						blockEnd.SetRow(end_row);
-
 					if (start_col < blockStart.GetCol())
 						blockStart.SetCol(start_col);
-
-					if (end_col > blockEnd.GetCol())
-						blockEnd.SetCol(end_col);
 				}
 			}
 		}

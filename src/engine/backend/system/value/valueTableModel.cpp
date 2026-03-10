@@ -10,7 +10,7 @@
 //***********************************************************************************
 
 void CValueTableMemory::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -19,7 +19,7 @@ void CValueTableMemory::GetValueByRow(wxVariant& variant,
 }
 
 bool CValueTableMemory::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	const wxString& strData = variant.GetString();
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);

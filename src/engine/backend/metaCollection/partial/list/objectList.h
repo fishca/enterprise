@@ -16,7 +16,7 @@ private:
 
 	// implementation of base class virtuals to define model
 	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) override {
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) override {
 		if (!line.IsOk())
 			return nullptr;
 		return CValue::CreateAndPrepareValueRef<CValueDataObjectListReturnLine>(this, line);
@@ -24,7 +24,7 @@ private:
 
 public:
 
-	virtual int Compare(const wxDataViewItem& item1, const wxDataViewItem& item2,
+	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
 		unsigned int col, bool ascending) const override {
 		wxASSERT(item1.IsOk() && item2.IsOk());
 		const int long row1 = GetRow(item1);
@@ -98,7 +98,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectListReturnLine);
 	public:
 
-		CValueDataObjectListReturnLine(IValueListDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CValueDataObjectListReturnLine(IValueListDataObject* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
 		virtual ~CValueDataObjectListReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const {
@@ -134,11 +134,11 @@ public:
 	}
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const { return false; }
+	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const { return false; }
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node == nullptr)
 			return false;
@@ -216,16 +216,16 @@ public:
 		return false;
 	}
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
 	CValueListDataObjectEnumRef(IValueMetaObjectRecordDataEnumRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const;
+		const wxDataViewExtItem& row, unsigned int col) const;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
@@ -251,7 +251,7 @@ public:
 
 	//on activate item
 	virtual void ActivateItem(IBackendValueForm* srcForm,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		if (m_choiceMode)
 			ChooseValue(srcForm);
 	}
@@ -280,10 +280,10 @@ private:
 	//*                               Support model                              *
 	//****************************************************************************
 
-	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr), const int countPerPage = defaultCountPerPage);
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage);
 	virtual void RefreshItemModel(
-		const wxDataViewItem& topItem,
-		const wxDataViewItem& currentItem,
+		const wxDataViewExtItem& topItem,
+		const wxDataViewExtItem& currentItem,
 		const int countPerPage,
 		const short scroll = 0
 	);
@@ -310,16 +310,16 @@ public:
 	};
 public:
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
 	CValueListDataObjectRef(IValueMetaObjectRecordDataMutableRef* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const;
+		const wxDataViewExtItem& row, unsigned int col) const;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
@@ -345,7 +345,7 @@ public:
 
 	//on activate item
 	virtual void ActivateItem(IBackendValueForm* srcForm,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		if (m_choiceMode) {
 			ChooseValue(srcForm);
 		}
@@ -382,10 +382,10 @@ private:
 	//*                               Support model                              *
 	//****************************************************************************
 
-	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr), const int countPerPage = defaultCountPerPage);
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage);
 	virtual void RefreshItemModel(
-		const wxDataViewItem& topItem,
-		const wxDataViewItem& currentItem,
+		const wxDataViewExtItem& topItem,
+		const wxDataViewExtItem& currentItem,
 		const int countPerPage,
 		const short scroll = 0
 	);
@@ -416,16 +416,16 @@ public:
 
 	virtual bool UseStandartCommand() const { return !m_metaObject->HasRecorder(); }
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
 	CValueListRegisterObject(IValueMetaObjectRegisterData* metaObject = nullptr, const form_identifier_t& formType = wxNOT_FOUND);
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const;
+		const wxDataViewExtItem& row, unsigned int col) const;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
@@ -450,7 +450,7 @@ public:
 
 	//on activate item
 	virtual void ActivateItem(IBackendValueForm* srcForm,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		EditValue();
 	}
 
@@ -481,10 +481,10 @@ private:
 	//*                               Support model                              *
 	//****************************************************************************
 
-	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr), const int countPerPage = defaultCountPerPage);
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage);
 	virtual void RefreshItemModel(
-		const wxDataViewItem& topItem,
-		const wxDataViewItem& currentItem,
+		const wxDataViewExtItem& topItem,
+		const wxDataViewExtItem& currentItem,
 		const int countPerPage,
 		const short scroll = 0
 	);
@@ -505,7 +505,7 @@ private:
 
 	// implementation of base class virtuals to define model
 	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
 		if (!line.IsOk())
 			return nullptr;
 		return CValue::CreateAndPrepareValueRef<CValueDataObjectTreeReturnLine>(this, line);
@@ -575,7 +575,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueDataObjectTreeReturnLine);
 	public:
 
-		CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
 		virtual ~CValueDataObjectTreeReturnLine();
 
 		virtual IValueTree* GetOwnerModel() const {
@@ -611,11 +611,11 @@ public:
 	}
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const { return false; }
+	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const { return false; }
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal) { return false; }
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
 		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 		if (node == nullptr)
 			return false;
@@ -695,19 +695,19 @@ public:
 
 public:
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//Constructor
 	CValueTreeDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr,
 		const form_identifier_t& formType = wxNOT_FOUND, int listMode = LIST_ITEM, bool choiceMode = false);
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& item, unsigned int col) const override;
+		const wxDataViewExtItem& item, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& item, unsigned int col) override;
-	virtual bool GetAttrByRow(const wxDataViewItem& WXUNUSED(row), unsigned int WXUNUSED(col),
-		wxDataViewItemAttr& WXUNUSED(attr)) const override;
+		const wxDataViewExtItem& item, unsigned int col) override;
+	virtual bool GetAttrByRow(const wxDataViewExtItem& WXUNUSED(row), unsigned int WXUNUSED(col),
+		wxDataViewExtItemAttr& WXUNUSED(attr)) const override;
 
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
@@ -731,7 +731,7 @@ public:
 
 	//on activate item
 	virtual void ActivateItem(IBackendValueForm* srcForm,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		if (m_choiceMode) {
 			ChooseValue(srcForm);
 		}
@@ -769,7 +769,7 @@ private:
 	//*                               Support model                              *
 	//****************************************************************************
 
-	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr), const int countPerPage = defaultCountPerPage);
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage);
 
 private:
 

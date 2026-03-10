@@ -261,6 +261,7 @@
     <ClInclude Include="system\value\valueTable.h" />
     <ClInclude Include="system\value\valueType.h" />
     <ClInclude Include="tableInfo.h" />
+    <ClInclude Include="tableView.h" />
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="typeDescription.h" />
     <ClInclude Include="uniqueKey.h" />
@@ -564,6 +565,7 @@
     <ClCompile Include="system\value\valueTable_res.cpp" />
     <ClCompile Include="system\value\valueType.cpp" />
     <ClCompile Include="tableInfo.cpp" />
+    <ClCompile Include="tableView.cpp" />
     <ClCompile Include="typeDescription.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
     <ClCompile Include="utils\wxmd5.cpp" />

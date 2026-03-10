@@ -1,9 +1,9 @@
-#include "dvc.h"
+#include "tableBoxColumnRenderer.h"
 
 #include "frontend/win/ctrls/controlTextEditor.h"
 #include "backend/appData.h"
 
-wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
+wxWindow* CDataViewValueRenderer::CreateEditorCtrl(wxWindow* dv,
 	wxRect labelRect,
 	const wxVariant& value)
 {
@@ -25,7 +25,7 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	textEditor->ShowClearButton(m_tableBoxColumn->GetClearButton());
 	textEditor->ShowOpenButton(m_tableBoxColumn->GetOpenButton());
 
-	wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
+	wxDataViewExtCtrl* parentWnd = dynamic_cast<wxDataViewExtCtrl*>(dv->GetParent());
 	if (parentWnd != nullptr) {
 		textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
 		textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
@@ -57,7 +57,7 @@ wxWindow* CValueViewRenderer::CreateEditorCtrl(wxWindow* dv,
 	return textEditor;
 }
 
-bool CValueViewRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
+bool CDataViewValueRenderer::GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value)
 {
 	wxControlTextEditor* textEditor = wxDynamicCast(ctrl, wxControlTextEditor);
 

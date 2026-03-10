@@ -1,5 +1,5 @@
 #include "tableBox.h"
-#include "frontend/visualView/dvc/dvc.h"
+#include "tableBoxColumnRenderer.h"
 
 //***********************************************************************************
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
@@ -95,7 +95,7 @@ wxString CValueTableBoxColumn::GetControlTitle() const
 
 wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	CDataViewColumnContainer* dataViewColumn = new CDataViewColumnContainer(this, wxT(""),
+	CDataViewColumnObject* dataViewColumn = new CDataViewColumnObject(this, wxT(""),
 		wxNOT_FOUND, wxDVC_DEFAULT_WIDTH, wxALIGN_CENTER, wxDATAVIEW_COL_REORDERABLE);
 
 	dataViewColumn->SetControl(this);
@@ -104,9 +104,9 @@ wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHo
 
 void CValueTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(wxparent);
+	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(wxobject);
+	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->AppendColumn(dataViewColumn);
@@ -117,9 +117,9 @@ void CValueTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVi
 
 void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(wxparent);
+	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(wxobject);
+	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	const unsigned int order_position = GetParentPosition();
@@ -156,14 +156,14 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	if (sort != nullptr && sort->m_sortEnable && !sort->m_sortSystem && !appData->DesignerMode())
 		dataViewColumn->SetSortOrder(sort->m_sortAscending);
 
-	dataViewColumn->SetColModel(source_column);
+	dataViewColumn->SetColumnModel(source_column);
 }
 
 void CValueTableBoxColumn::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(visualHost->GetWxObject(GetOwner()));
+	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(visualHost->GetWxObject(GetOwner()));
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnContainer* dataViewColumn = dynamic_cast<CDataViewColumnContainer*>(obj);
+	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(obj);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->DeleteColumn(dataViewColumn);
@@ -186,7 +186,6 @@ bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_i
 	return id == GetOwner()->GetSource();
 }
 
-#include "frontend/visualView/dvc/dvc.h"
 #include "frontend/win/ctrls/controlTextEditor.h"
 
 bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
@@ -198,11 +197,11 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 		);
 	}
 
-	CDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
+	CDataViewColumnObject* dataViewColumn =
+		dynamic_cast<CDataViewColumnObject*>(GetWxObject());
 
 	if (dataViewColumn != nullptr) {
-		CValueViewRenderer* renderer = dataViewColumn->GetRenderer();
+		CDataViewValueRenderer* renderer = dataViewColumn->GetRenderer();
 		wxASSERT(renderer);
 		wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(renderer->GetEditorCtrl());
 		if (textEditor != nullptr) {

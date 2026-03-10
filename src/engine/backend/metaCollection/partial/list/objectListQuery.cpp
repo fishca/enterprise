@@ -7,7 +7,7 @@
 #include "backend/appData.h"
 #include "backend/databaseLayer/databaseLayer.h"
 
-void CValueListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListDataObjectEnumRef::RefreshModel(const wxDataViewExtItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -104,7 +104,7 @@ void CValueListDataObjectEnumRef::RefreshModel(const wxDataViewItem& topItem, co
 	db_query->CloseStatement(statement);
 }
 
-void CValueListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListDataObjectEnumRef::RefreshItemModel(const wxDataViewExtItem& topItem, const wxDataViewExtItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -337,7 +337,7 @@ void CValueListDataObjectEnumRef::RefreshItemModel(const wxDataViewItem& topItem
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CValueListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListDataObjectRef::RefreshModel(const wxDataViewExtItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -461,7 +461,7 @@ void CValueListDataObjectRef::RefreshModel(const wxDataViewItem& topItem, const 
 	db_query->CloseStatement(statement);
 }
 
-void CValueListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListDataObjectRef::RefreshItemModel(const wxDataViewExtItem& topItem, const wxDataViewExtItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -774,7 +774,7 @@ void CValueListDataObjectRef::RefreshItemModel(const wxDataViewItem& topItem, co
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CValueListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueListRegisterObject::RefreshModel(const wxDataViewExtItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));
@@ -875,7 +875,7 @@ void CValueListRegisterObject::RefreshModel(const wxDataViewItem& topItem, const
 	db_query->CloseStatement(statement);
 }
 
-void CValueListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, const wxDataViewItem& currentItem, const int countPerPage, const short scroll)
+void CValueListRegisterObject::RefreshItemModel(const wxDataViewExtItem& topItem, const wxDataViewExtItem& currentItem, const int countPerPage, const short scroll)
 {
 	const long row_top = GetRow(topItem);
 	const long row_current = GetRow(currentItem);
@@ -1156,7 +1156,7 @@ void CValueListRegisterObject::RefreshItemModel(const wxDataViewItem& topItem, c
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CValueTreeDataObjectFolderRef::RefreshModel(const wxDataViewItem& topItem, const int countPerPage)
+void CValueTreeDataObjectFolderRef::RefreshModel(const wxDataViewExtItem& topItem, const int countPerPage)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		CBackendCoreException::Error(_("Database is not open!"));

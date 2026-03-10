@@ -2724,8 +2724,8 @@ bool IValueRecordSetObject::LoadDataFromTable(IValueTable* srcTable)
 	}
 	unsigned int rowCount = srcTable->GetRowCount();
 	for (unsigned int row = 0; row < rowCount; row++) {
-		const wxDataViewItem& srcItem = srcTable->GetItem(row);
-		const wxDataViewItem& dstItem = GetItem(AppendRow());
+		const wxDataViewExtItem& srcItem = srcTable->GetItem(row);
+		const wxDataViewExtItem& dstItem = GetItem(AppendRow());
 		for (auto colName : columnName) {
 			CValue cRetValue;
 			if (srcTable->GetValueByMetaID(srcItem, srcTable->GetColumnIDByName(colName), cRetValue)) {
@@ -2753,8 +2753,8 @@ IValueTable* IValueRecordSetObject::SaveDataToTable() const
 	}
 	valueTable->PrepareNames();
 	for (long row = 0; row < GetRowCount(); row++) {
-		const wxDataViewItem& srcItem = GetItem(row);
-		const wxDataViewItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
+		const wxDataViewExtItem& srcItem = GetItem(row);
+		const wxDataViewExtItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
 		for (unsigned int col = 0; col < colData->GetColumnCount(); col++) {
 			CValue cRetValue;
 			IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(col);
@@ -2769,7 +2769,7 @@ IValueTable* IValueRecordSetObject::SaveDataToTable() const
 	return valueTable;
 }
 
-bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	if (!appData->DesignerMode()) {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
@@ -2786,7 +2786,7 @@ bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const m
 	return false;
 }
 
-bool IValueRecordSetObject::GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool IValueRecordSetObject::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	if (appData->DesignerMode()) {
 		const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(id);
@@ -2882,7 +2882,7 @@ IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection::CValueReco
 
 wxIMPLEMENT_DYNAMIC_CLASS(IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine, IValueTable::IValueModelReturnLine);
 
-IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine::CValueRecordSetObjectRegisterReturnLine(IValueRecordSetObject* ownerTable, const wxDataViewItem& line)
+IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine::CValueRecordSetObjectRegisterReturnLine(IValueRecordSetObject* ownerTable, const wxDataViewExtItem& line)
 	: IValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new CMethodHelper())
 {
 }

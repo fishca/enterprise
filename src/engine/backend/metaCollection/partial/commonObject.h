@@ -1641,7 +1641,7 @@ class BACKEND_API IValueRecordSetObject : public IValueTable, public IModuleData
 public:
 
 	virtual IValueModelColumnCollection* GetColumnCollection() const { return m_recordColumnCollection; }
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
 		if (!line.IsOk())
 			return nullptr;
 		return CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, line);
@@ -1714,7 +1714,7 @@ public:
 	public:
 
 		CValueRecordSetObjectRegisterReturnLine(IValueRecordSetObject* ownerTable = nullptr,
-			const wxDataViewItem& line = wxDataViewItem(nullptr));
+			const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
 		virtual ~CValueRecordSetObjectRegisterReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
@@ -1862,12 +1862,12 @@ public:
 #pragma endregion 
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const {
+	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const {
 		return false;
 	}
 
 	virtual void ActivateItem(IBackendValueForm* formOwner,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		IValueTable::RowValueStartEdit(item, col);
 	}
 
@@ -1878,9 +1878,9 @@ public:
 
 	// implementation of base class virtuals to define model
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const override;
+		const wxDataViewExtItem& row, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	//support def. methods (in runtime)
 	virtual long AppendRow(unsigned int before = 0);
@@ -1905,7 +1905,7 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CValueRecordSetObjectRegisterReturnLine>(this, wxDataViewExtItem(nullptr));
 	}
 
 	virtual CValue GetIteratorAt(unsigned int idx) override {
@@ -1933,8 +1933,8 @@ protected:
 protected:
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 protected:
 

@@ -1,12 +1,12 @@
 #ifndef __TABLE_BOX_H__
 #define __TABLE_BOX_H__
 
-#include <wx/headerctrl.h>
+#include "backend/tableInfo.h"
 
 #include "frontend/visualView/ctrl/window.h"
 #include "frontend/visualView/ctrl/typeControl.h"
 
-#include "frontend/win/ctrls/dataView.h"
+#include "frontend/win/ctrls/tableView.h"
 
 //********************************************************************************************
 //*                                 define commom clsid									     *
@@ -139,7 +139,7 @@ public:
 
 	//other
 	void AddColumn();
-	void CreateColumnCollection(wxDataViewCtrl* tableCtrl = nullptr);
+	void CreateColumnCollection(wxDataViewExtCtrl* tableCtrl = nullptr);
 
 	void CreateTable(bool recreateModel = false);
 
@@ -158,35 +158,35 @@ protected:
 	void CalculateColumnPos();
 
 	//events 
-	void OnColumnClick(wxDataViewEvent& event);
-	void OnColumnReordered(wxDataViewEvent& event);
+	void OnColumnClick(wxDataViewExtEvent& event);
+	void OnColumnReordered(wxDataViewExtEvent& event);
 
-	void OnSelectionChanged(wxDataViewEvent& event);
+	void OnSelectionChanged(wxDataViewExtEvent& event);
 
-	void OnItemActivated(wxDataViewEvent& event);
-	void OnItemCollapsed(wxDataViewEvent& event);
-	void OnItemExpanded(wxDataViewEvent& event);
-	void OnItemCollapsing(wxDataViewEvent& event);
-	void OnItemExpanding(wxDataViewEvent& event);
-	void OnItemStartEditing(wxDataViewEvent& event);
-	void OnItemEditingStarted(wxDataViewEvent& event);
-	void OnItemEditingDone(wxDataViewEvent& event);
-	void OnItemValueChanged(wxDataViewEvent& event);
+	void OnItemActivated(wxDataViewExtEvent& event);
+	void OnItemCollapsed(wxDataViewExtEvent& event);
+	void OnItemExpanded(wxDataViewExtEvent& event);
+	void OnItemCollapsing(wxDataViewExtEvent& event);
+	void OnItemExpanding(wxDataViewExtEvent& event);
+	void OnItemStartEditing(wxDataViewExtEvent& event);
+	void OnItemEditingStarted(wxDataViewExtEvent& event);
+	void OnItemEditingDone(wxDataViewExtEvent& event);
+	void OnItemValueChanged(wxDataViewExtEvent& event);
 
-	void OnItemStartInserting(wxDataViewEvent& event);
-	void OnItemStartDeleting(wxDataViewEvent& event);
+	void OnItemStartInserting(wxDataViewExtEvent& event);
+	void OnItemStartDeleting(wxDataViewExtEvent& event);
 
 	void OnHeaderResizing(wxHeaderCtrlEvent& event);
 	void OnMainWindowClick(wxMouseEvent& event);
 
 #if wxUSE_DRAG_AND_DROP
-	void OnItemBeginDrag(wxDataViewEvent& event);
-	void OnItemDropPossible(wxDataViewEvent& event);
-	void OnItemDrop(wxDataViewEvent& event);
+	void OnItemBeginDrag(wxDataViewExtEvent& event);
+	void OnItemDropPossible(wxDataViewExtEvent& event);
+	void OnItemDrop(wxDataViewExtEvent& event);
 #endif // wxUSE_DRAG_AND_DROP
 
 	void OnCommandMenu(wxCommandEvent& event);
-	void OnContextMenu(wxDataViewEvent& event);
+	void OnContextMenu(wxDataViewExtEvent& event);
 
 	void OnSize(wxSizeEvent& event);
 	void OnIdle(wxIdleEvent& event);
@@ -389,7 +389,7 @@ private:
 	CEventControl* m_eventOpening = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("Opening"), _("Opening"), wxArrayString{ wxT("Control"), wxT("StandartProcessing") });
 	CEventControl* m_eventChoiceProcessing = IPropertyObject::CreateEvent<CEventControl>(m_propertyEvent, wxT("ChoiceProcessing"), _("Choice processing"), wxArrayString{ wxT("Control"), wxT("ValueSelected"), wxT("StandartProcessing") });
 
-	friend class CValueViewRenderer;
+	friend class CDataViewValueRenderer;
 };
 
 #endif 

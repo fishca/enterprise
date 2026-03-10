@@ -135,6 +135,7 @@ bool CValue::IsRegisterCtor(const class_identifier_t& clsid)
 class_identifier_t CValue::GetTypeIDByRef(const wxClassInfo* classInfo)
 {
 	const IAbstractTypeCtor* typeCtor = GetAvailableCtor(classInfo);
+	wxASSERT(typeCtor);
 	return typeCtor != nullptr ?
 		typeCtor->GetClassType() : 0;
 }

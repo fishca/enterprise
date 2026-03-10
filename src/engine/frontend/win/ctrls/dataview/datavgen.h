@@ -253,6 +253,9 @@ public:
     virtual void SelectAll() wxOVERRIDE;
     virtual void UnselectAll() wxOVERRIDE;
 
+    virtual void SetSelectionMode(wxDataViewExtSelectionMode selmode) wxOVERRIDE;
+    virtual wxDataViewExtSelectionMode GetSelectionMode() const wxOVERRIDE;
+
     virtual void EnsureVisible( const wxDataViewExtItem & item,
                                 const wxDataViewExtColumn *column = NULL ) wxOVERRIDE;
     virtual void HitTest( const wxPoint & point, wxDataViewExtItem & item,

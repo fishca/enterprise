@@ -277,7 +277,6 @@ void CValueTableBox::OnContextMenu(wxDataViewExtEvent& event)
 		event.GetEventObject(), wxDataViewExtCtrl
 	);
 	wxASSERT(wnd);
-	wnd->SetClientData(event.GetDataViewColumn());
 	wnd->PopupMenu(&menu, event.GetPosition());
 }
 

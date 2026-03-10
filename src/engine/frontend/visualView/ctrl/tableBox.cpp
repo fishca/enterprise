@@ -13,6 +13,7 @@
 //***********************************************************************************
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBox, IValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode, CValue);
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -345,6 +346,7 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
 	}
 
+	dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 	return dataViewCtrl;
 }
 
@@ -376,6 +378,7 @@ void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 			dataViewCtrl->GetFont()
 		);
 
+		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 		dataViewCtrl->SetHeaderAttr(attr);
 	}
 }
@@ -418,11 +421,14 @@ bool CValueTableBox::LoadData(CMemoryReader& reader)
 	if (!m_propertySource->LoadData(reader))
 		return false;
 
+	m_propertyRowSelectionMode->LoadData(reader);
+
 	//events
 	m_eventSelection->LoadData(reader);
 	m_eventBeforeAddRow->LoadData(reader);
 	m_eventBeforeDeleteRow->LoadData(reader);
 	m_eventOnActivateRow->LoadData(reader);
+
 	return IValueWindow::LoadData(reader);
 }
 
@@ -431,11 +437,14 @@ bool CValueTableBox::SaveData(CMemoryWriter& writer)
 	if (!m_propertySource->SaveData(writer))
 		return false;
 
+	m_propertyRowSelectionMode->SaveData(writer);
+
 	//events
 	m_eventSelection->SaveData(writer);
 	m_eventBeforeAddRow->SaveData(writer);
 	m_eventBeforeDeleteRow->SaveData(writer);
 	m_eventOnActivateRow->SaveData(writer);
+
 	return IValueWindow::SaveData(writer);
 }
 
@@ -513,4 +522,5 @@ bool CValueTableBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Register in runtime                           *
 //***********************************************************************
 
+ENUM_TYPE_REGISTER(CValueEnumTableBoxSelectionMode, "TableboxRowSelectionMode", string_to_clsid("EN_TBXSL"));
 CONTROL_TYPE_REGISTER(CValueTableBox, "Tablebox", "Container", g_controlTableBoxCLSID);

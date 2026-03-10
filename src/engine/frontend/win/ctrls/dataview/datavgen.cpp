@@ -869,6 +869,21 @@ public:
 	bool IsRowSelected(unsigned int row);
 	void SendSelectionChangedEvent(const wxDataViewExtItem& item);
 
+	void SetSelectionMode(wxDataViewExtSelectionMode selmode)
+	{
+		if (m_selectionMode != selmode)
+		{
+			m_selectionMode = selmode;
+
+			UpdateDisplay();
+		}
+	}
+
+	wxDataViewExtSelectionMode GetSelectionMode() const
+	{
+		return m_selectionMode;
+	}
+
 	void RefreshRow(unsigned int row) { RefreshRows(row, row); }
 	void RefreshRows(unsigned int from, unsigned int to);
 	void RefreshRowsAfter(unsigned int firstRow);
@@ -1037,6 +1052,7 @@ private:
 	wxDataViewExtColumn* m_currentCol;
 	unsigned int                m_currentRow;
 	wxSelectionStore            m_selection;
+	wxDataViewExtSelectionMode m_selectionMode;
 
 	wxDataViewExtRenameTimer* m_renameTimer;
 	bool                        m_lastOnSame;
@@ -1126,15 +1142,10 @@ public:
 	{
 		wxDataViewExtCtrl* owner = m_mainWindow->GetOwner();
 		wxASSERT(owner);
-
-		wxDataViewExtColumn* col_from_client_data =
-			static_cast<wxDataViewExtColumn*>(owner->GetClientData());
-		if (col_from_client_data == nullptr) {
-			wxDataViewExtColumn* currentColumn = owner->GetCurrentColumn();
-			return currentColumn ? currentColumn->GetModelColumn() : 0;
-		}
-		owner->SetClientData(nullptr);
-		return col_from_client_data->GetModelColumn();
+		wxDataViewExtColumn* column = owner->GetCurrentColumn();
+		if (column != nullptr)
+			return column->GetModelColumn();
+		return 0;
 	}
 
 	virtual void StartEditing(const wxDataViewExtItem& item, unsigned int col) const
@@ -2208,6 +2219,7 @@ wxDataViewExtMainWindow::wxDataViewExtMainWindow(wxDataViewExtCtrl* parent, wxWi
 	SetOwner(parent);
 
 	m_editorRenderer = NULL;
+	m_selectionMode = wxDataViewExtSelectionMode::wxDataViewExtSelectRow;
 
 	m_lastOnSame = false;
 	m_renameTimer = new wxDataViewExtRenameTimer(this);
@@ -2810,7 +2822,6 @@ void wxDataViewExtMainWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 			// draw keyboard focus rect if applicable
 			if (item == m_currentRow && m_hasFocus)
 			{
-
 				if (m_useCellFocus && m_currentCol && m_currentColSetByKeyboard)
 				{
 					renderColumnFocus = true;
@@ -2907,13 +2918,57 @@ void wxDataViewExtMainWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 			// draw selection and whole-item focus:
 			if (selected && !renderColumnFocus)
 			{
-				wxRendererNative::Get().DrawItemSelectionRect
-				(
-					this,
-					dc,
-					rowRect,
-					flags
-				);
+				if (m_selectionMode == wxDataViewExtSelectionMode::wxDataViewExtSelectRow)
+				{
+					wxRendererNative::Get().DrawItemSelectionRect
+					(
+						this,
+						dc,
+						rowRect,
+						flags
+					);
+				}
+				else if (m_selectionMode == wxDataViewExtSelectionMode::wxDataViewExtSelectCell)
+				{
+					wxRect colRect(rowRect);
+
+					for (unsigned int i = col_start; i < col_last; i++)
+					{
+						wxDataViewExtColumn* col = GetOwner()->GetColumnAt(i);
+						if (col->IsHidden())
+							continue;
+
+						wxDataViewExtRenderer* cell = col->GetRenderer();
+
+						colRect.width = col->GetWidth();
+
+						if (col == m_currentCol)
+						{
+							// Draw column selection rect
+							wxRendererNative::Get().DrawItemSelectionRect
+							(
+								this,
+								dc,
+								colRect,
+								flags
+							);
+
+							break;
+						}
+
+						colRect.x += colRect.width;
+					}
+				}
+				else
+				{
+					wxRendererNative::Get().DrawItemSelectionRect
+					(
+						this,
+						dc,
+						rowRect,
+						flags
+					);
+				}
 			}
 		}
 		cur_line_start += line_height;
@@ -2976,7 +3031,8 @@ void wxDataViewExtMainWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 			// update cell_rect
 			cell_rect.height = line_height;
 
-			bool selected = m_selection.IsSelected(item);
+			bool selected = m_selectionMode == wxDataViewExtSelectCell
+				? m_selection.IsSelected(item) && col == m_currentCol : m_selection.IsSelected(item);
 
 			int state = 0;
 			if (selected)
@@ -5218,7 +5274,6 @@ void wxDataViewExtMainWindow::OnMouse(wxMouseEvent& event)
 		m_owner->ScreenToClient(&xx, &yy);
 		le.SetPosition(xx, yy);
 		m_owner->ProcessWindowEvent(le);
-		return;
 	}
 
 #if wxUSE_DRAG_AND_DROP
@@ -5449,7 +5504,7 @@ void wxDataViewExtMainWindow::OnMouse(wxMouseEvent& event)
 		else
 			Expand(current);
 	}
-	else if ((event.LeftDown() || simulateClick) && !hoverOverExpander)
+	else if (((event.LeftDown() || event.RightDown()) || simulateClick) && !hoverOverExpander)
 	{
 		m_lineBeforeLastClicked = m_lineLastClicked;
 		m_lineLastClicked = current;
@@ -5525,6 +5580,9 @@ void wxDataViewExtMainWindow::OnMouse(wxMouseEvent& event)
 		// Update selection here...
 		m_currentCol = col;
 		m_currentColSetByKeyboard = false;
+
+		if (col != oldCurrentCol)
+			UpdateDisplay();
 
 		// This flag is used to decide whether we should start editing the item
 		// label. We do it if the user clicks twice (but not double clicks,
@@ -6583,6 +6641,16 @@ void wxDataViewExtCtrl::SelectAll()
 void wxDataViewExtCtrl::UnselectAll()
 {
 	m_clientArea->UnselectAllRows();
+}
+
+void wxDataViewExtCtrl::SetSelectionMode(wxDataViewExtSelectionMode selmode)
+{
+	m_clientArea->SetSelectionMode(selmode);
+}
+
+wxDataViewExtSelectionMode wxDataViewExtCtrl::GetSelectionMode() const
+{
+	return m_clientArea->GetSelectionMode();
 }
 
 void wxDataViewExtCtrl::EnsureVisibleRowCol(int row, int column)

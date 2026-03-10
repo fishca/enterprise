@@ -20,6 +20,18 @@ const class_identifier_t g_controlTableBoxColumnCLSID = string_to_clsid("CT_TBLC
 //*                                 Value TableBox                                           *
 //********************************************************************************************
 
+class CValueEnumTableBoxSelectionMode :
+	public IEnumeration<wxDataViewExtSelectionMode> {
+public:
+	CValueEnumTableBoxSelectionMode() : IEnumeration() {}
+	virtual void CreateEnumeration() {
+		AddEnumeration(wxDataViewExtSelectionMode::wxDataViewExtSelectCell, wxT("SelectCell"), _("Select cell"));
+		AddEnumeration(wxDataViewExtSelectionMode::wxDataViewExtSelectRow, wxT("SelectRow"), _("Select row"));
+	}
+private:
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode);
+};
+
 class CValueTableBox : public IValueWindow,
 	public ITypeControlFactory, public ISourceObject {
 	wxDECLARE_DYNAMIC_CLASS(CValueTableBox);
@@ -199,6 +211,7 @@ private:
 #pragma region __property_define_h__
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"));
+	CPropertyEnum<CValueEnumTableBoxSelectionMode>* m_propertyRowSelectionMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxSelectionMode>>(m_categoryData, wxT("RowSelectionMode"), _("Row selection mode"), wxDataViewExtSelectionMode::wxDataViewExtSelectCell);
 	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
 	CEventControl* m_eventSelection = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("Selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ wxT("Control"), wxT("RowSelected"), wxT("StandardProcessing") });
 	CEventControl* m_eventOnActivateRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });

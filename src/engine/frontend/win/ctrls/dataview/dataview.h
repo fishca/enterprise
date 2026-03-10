@@ -300,9 +300,17 @@ private:
 #define wxDV_ROW_LINES               0x0010     // alternating colour in rows
 #define wxDV_VARIABLE_LINE_HEIGHT    0x0020     // variable line height
 
+// possible selection modes
+enum wxDataViewExtSelectionMode
+{
+	wxDataViewExtSelectCell = 0,  // allow selecting anything
+	wxDataViewExtSelectRow = 1,  // allow selecting only entire rows
+};
+
 class wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
 {
 public:
+
 	wxDataViewExtCtrlBase();
 	virtual ~wxDataViewExtCtrlBase();
 
@@ -312,7 +320,6 @@ public:
 	virtual bool AssociateModel(wxDataViewExtModel* model);
 	wxDataViewExtModel* GetModel();
 	const wxDataViewExtModel* GetModel() const;
-
 
 	// column management
 	// -----------------
@@ -491,6 +498,7 @@ public:
 	// one item is selected. Use GetSelectedItemsCount() or HasSelection() to
 	// check if any items are selected at all.
 	virtual int GetSelectedItemsCount() const = 0;
+
 	bool HasSelection() const { return GetSelectedItemsCount() != 0; }
 	wxDataViewExtItem GetSelection() const;
 	virtual int GetSelections(wxDataViewExtItemArray& sel) const = 0;
@@ -501,6 +509,9 @@ public:
 
 	virtual void SelectAll() = 0;
 	virtual void UnselectAll() = 0;
+
+	virtual void SetSelectionMode(wxDataViewExtSelectionMode selmode) = 0;
+	virtual wxDataViewExtSelectionMode GetSelectionMode() const = 0;
 
 	void Expand(const wxDataViewExtItem& item);
 	void ExpandChildren(const wxDataViewExtItem& item);
@@ -735,6 +746,7 @@ public:
 	void SetEditCancelled() { m_editCancelled = true; }
 
 protected:
+
 	wxDataViewExtItem      m_item;
 	int                 m_col;
 	wxDataViewExtModel* m_model;
@@ -759,6 +771,7 @@ protected:
 #endif // wxUSE_DRAG_AND_DROP
 
 private:
+
 	// Common part of non-copy ctors.
 	void Init(wxDataViewExtCtrlBase* dvc,
 		wxDataViewExtColumn* column,

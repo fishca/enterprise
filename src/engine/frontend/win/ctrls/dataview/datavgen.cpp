@@ -5215,9 +5215,14 @@ bool wxDataViewExtMainWindow::TryAdvanceCurrentColumn(wxDataViewExtTreeNode* nod
 void wxDataViewExtMainWindow::OnMouse(wxMouseEvent& event)
 {
 	if (event.GetEventType() == wxEVT_MOUSEWHEEL)
-	{
+	{		
+		// set one always one scroll
+		event.m_linesPerAction = event.m_columnsPerAction = 1;
+
 		// let the base handle mouse wheel events.
-		event.Skip();
+		if (!m_owner->ProcessWindowEvent(event))
+			event.Skip();
+
 		return;
 	}
 

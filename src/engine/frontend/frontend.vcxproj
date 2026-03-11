@@ -255,6 +255,8 @@
     <ClCompile Include="win\ctrls\checktree.cpp" />
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
     <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
+    <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp" />
+    <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp" />
     <ClCompile Include="win\ctrls\tableView.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavgen.cpp" />
@@ -463,6 +465,7 @@
     <ClInclude Include="win\ctrls\checktree.h" />
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
     <ClInclude Include="win\ctrls\controlTextEditor.h" />
+    <ClInclude Include="win\ctrls\dataview\headerctrlg.h" />
     <ClInclude Include="win\ctrls\tableView.h" />
     <ClInclude Include="win\ctrls\dataview\datavgen.h" />
     <ClInclude Include="win\ctrls\dataview\dataview.h" />

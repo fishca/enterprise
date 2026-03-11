@@ -207,7 +207,7 @@ void CValueTableBox::OnItemStartDeleting(wxDataViewExtEvent& event)
 		event.Skip();
 }
 
-void CValueTableBox::OnHeaderResizing(wxHeaderCtrlEvent& event)
+void CValueTableBox::OnHeaderResizing(wxHeaderGenericCtrlEvent& event)
 {
 	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {

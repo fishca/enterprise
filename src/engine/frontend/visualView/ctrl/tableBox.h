@@ -188,7 +188,7 @@ protected:
 	void OnItemStartInserting(wxDataViewExtEvent& event);
 	void OnItemStartDeleting(wxDataViewExtEvent& event);
 
-	void OnHeaderResizing(wxHeaderCtrlEvent& event);
+	void OnHeaderResizing(wxHeaderGenericCtrlEvent& event);
 	void OnMainWindowClick(wxMouseEvent& event);
 
 #if wxUSE_DRAG_AND_DROP

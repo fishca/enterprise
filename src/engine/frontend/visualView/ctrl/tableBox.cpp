@@ -247,7 +247,7 @@ void CValueTableBox::CalculateColumnPos()
 	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
-		wxHeaderCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
+		wxHeaderGenericCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
 		if (headerCtrl != nullptr) {
 
 			bool need_reset_columns_order = false;

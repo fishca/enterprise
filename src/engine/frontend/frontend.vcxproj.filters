@@ -809,6 +809,12 @@
     <ClCompile Include="visualView\ctrl\tableBoxColumnRenderer.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -1430,6 +1436,9 @@
     </ClInclude>
     <ClInclude Include="win\dlgs\filterDataView.h">
       <Filter>win\dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\dataview\headerctrlg.h">
+      <Filter>win\ctrl\dataview</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

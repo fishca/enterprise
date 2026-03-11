@@ -281,6 +281,8 @@ public:
 #endif // wxUSE_ACCESSIBILITY
     virtual bool Enable(bool enable = true) wxOVERRIDE;
 
+    virtual void ScrollWindow(int dx, int dy, const wxRect* rect) wxOVERRIDE;
+
     //show data filter
     virtual bool ShowFilter(struct CFilterRow& filter) { return false; }
 
@@ -308,7 +310,7 @@ public:
     // The returned pointer is null if the control has wxDV_NO_HEADER style.
     //
     // This method is only available in the generic versions.
-    wxHeaderCtrl* GenericGetHeader() const;
+    wxHeaderGenericCtrl* GenericGetHeader() const;
 
 protected:
     void EnsureVisibleRowCol( int row, int column );

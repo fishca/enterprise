@@ -41,7 +41,6 @@
 #include <wx/list.h>
 #include <wx/listimpl.cpp>
 #include <wx/imaglist.h>
-#include <wx/headerctrl.h>
 #include <wx/dnd.h>
 #include <wx/selstore.h>
 #include <wx/stopwatch.h>
@@ -219,6 +218,9 @@ void wxDataViewExtColumn::WXOnResize(int width)
 	m_width =
 		m_manuallySetWidth = width;
 
+	int idx = m_owner->GetColumnIndex(this);
+
+	m_owner->InvalidateColBestWidth(idx);
 	m_owner->OnColumnResized();
 }
 
@@ -287,11 +289,11 @@ void wxDataViewExtColumn::SetSortOrder(bool ascending)
 // wxDataViewExtHeaderWindow
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtHeaderWindow : public wxHeaderCtrl
+class wxDataViewExtHeaderWindow : public wxHeaderGenericCtrl
 {
 public:
 	wxDataViewExtHeaderWindow(wxDataViewExtCtrl* parent)
-		: wxHeaderCtrl(parent, wxID_ANY,
+		: wxHeaderGenericCtrl(parent, wxID_ANY,
 			wxDefaultPosition, wxDefaultSize,
 			wxHD_DEFAULT_STYLE | wxHD_BITMAP_ON_RIGHT)
 	{
@@ -342,7 +344,7 @@ public:
 #endif // wxUSE_ACCESSIBILITY
 
 protected:
-	// implement/override wxHeaderCtrl functions by forwarding them to the main
+	// implement/override wxHeaderGenericCtrl functions by forwarding them to the main
 	// control
 	virtual const wxHeaderColumn& GetColumn(unsigned int idx) const wxOVERRIDE
 	{
@@ -373,7 +375,7 @@ private:
 		return owner->ProcessWindowEvent(event);
 	}
 
-	void OnClick(wxHeaderCtrlEvent& event)
+	void OnClick(wxHeaderGenericCtrlEvent& event)
 	{
 		FinishEditing();
 
@@ -417,7 +419,7 @@ private:
 		SendEvent(wxEVT_DATAVIEW_COLUMN_SORTED, idx);
 	}
 
-	void OnRClick(wxHeaderCtrlEvent& event)
+	void OnRClick(wxHeaderGenericCtrlEvent& event)
 	{
 		// Event wasn't processed somewhere, use default behaviour
 		if (!SendEvent(wxEVT_DATAVIEW_COLUMN_HEADER_RIGHT_CLICK,
@@ -428,7 +430,7 @@ private:
 		}
 	}
 
-	void OnResize(wxHeaderCtrlEvent& event)
+	void OnResize(wxHeaderGenericCtrlEvent& event)
 	{
 		FinishEditing();
 
@@ -438,7 +440,7 @@ private:
 		owner->GetColumn(col)->WXOnResize(event.GetWidth());
 	}
 
-	void OnEndReorder(wxHeaderCtrlEvent& event)
+	void OnEndReorder(wxHeaderGenericCtrlEvent& event)
 	{
 		FinishEditing();
 
@@ -451,7 +453,7 @@ private:
 	wxDECLARE_NO_COPY_CLASS(wxDataViewExtHeaderWindow);
 };
 
-wxBEGIN_EVENT_TABLE(wxDataViewExtHeaderWindow, wxHeaderCtrl)
+wxBEGIN_EVENT_TABLE(wxDataViewExtHeaderWindow, wxHeaderGenericCtrl)
 EVT_HEADER_CLICK(wxID_ANY, wxDataViewExtHeaderWindow::OnClick)
 EVT_HEADER_RIGHT_CLICK(wxID_ANY, wxDataViewExtHeaderWindow::OnRClick)
 
@@ -2275,7 +2277,6 @@ wxDataViewExtMainWindow::~wxDataViewExtMainWindow()
 	delete m_rowHeightCache;
 }
 
-
 int wxDataViewExtMainWindow::GetDefaultRowHeight() const
 {
 	const int SMALL_ICON_HEIGHT = FromDIP(16);
@@ -2782,7 +2783,7 @@ void wxDataViewExtMainWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
 		dc.SetBrush(*wxTRANSPARENT_BRUSH);
 
 		// NB: Vertical rules are drawn in the last pixel of a column so that
-		//     they align perfectly with native MSW wxHeaderCtrl as well as for
+		//     they align perfectly with native MSW wxHeaderGenericCtrl as well as for
 		//     consistency with MSW native list control. There's no vertical
 		//     rule at the most-left side of the control.
 
@@ -3161,7 +3162,7 @@ void wxDataViewExtMainWindow::DrawCellBackground(wxDataViewExtRenderer* cell, wx
 	{
 		// same note as in OnPaint handler above
 		// NB: Vertical rules are drawn in the last pixel of a column so that
-		//     they align perfectly with native MSW wxHeaderCtrl as well as for
+		//     they align perfectly with native MSW wxHeaderGenericCtrl as well as for
 		//     consistency with MSW native list control. There's no vertical
 		//     rule at the most-left side of the control.
 		rectBg.width--;
@@ -3641,11 +3642,7 @@ void wxDataViewExtMainWindow::RecalculateDisplay()
 void wxDataViewExtMainWindow::ScrollWindow(int dx, int dy, const wxRect* rect)
 {
 	m_underMouse = NULL;
-
-	wxWindow::ScrollWindow(dx, dy, rect);
-
-	if (GetOwner()->m_headerArea)
-		GetOwner()->m_headerArea->ScrollWindow(dx, 0);
+	m_owner->ScrollWindow(dx, dy, rect);
 }
 
 void wxDataViewExtMainWindow::ScrollTo(int rows, int column)
@@ -5889,7 +5886,7 @@ wxBorder wxDataViewExtCtrl::GetDefaultBorder() const
 	return wxBORDER_THEME;
 }
 
-wxHeaderCtrl* wxDataViewExtCtrl::GenericGetHeader() const
+wxHeaderGenericCtrl* wxDataViewExtCtrl::GenericGetHeader() const
 {
 	return m_headerArea;
 }
@@ -6071,6 +6068,18 @@ bool wxDataViewExtCtrl::Enable(bool enable)
 	}
 
 	return changed;
+}
+
+void wxDataViewExtCtrl::ScrollWindow(int dx, int dy, const wxRect* rect)
+{
+	// We must explicitly call wxWindow version to avoid infinite recursion as
+	// wxGridExtWindow::ScrollWindow() calls this method back.
+
+	if (m_headerArea)
+		m_headerArea->ScrollWindow(dx, 0);
+
+	if (m_clientArea)
+		m_clientArea->wxWindow::ScrollWindow(dx, dy, rect);
 }
 
 bool wxDataViewExtCtrl::AssociateModel(wxDataViewExtModel* model)
@@ -6901,7 +6910,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::HitTest(const wxPoint& pt,
 		{
 			// First check if provided point belongs to the header
 			// because header control handles accesibility requestes on its own.
-			wxHeaderCtrl* dvHdr = dvCtrl->GenericGetHeader();
+			wxHeaderGenericCtrl* dvHdr = dvCtrl->GenericGetHeader();
 			if (dvHdr)
 			{
 				const wxPoint posHdr = dvHdr->ScreenToClient(pt);
@@ -7601,7 +7610,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetFocus(int* childId, wxAccessible** c
 	{
 		// First check if header is focused because header control
 		// handles accesibility requestes on its own.
-		wxHeaderCtrl* dvHdr = dvCtrl->GenericGetHeader();
+		wxHeaderGenericCtrl* dvHdr = dvCtrl->GenericGetHeader();
 		if (dvHdr)
 		{
 			if (dvHdr->HasFocus())

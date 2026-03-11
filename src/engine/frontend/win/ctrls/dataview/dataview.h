@@ -28,13 +28,13 @@
 #include <wx/withimages.h>
 #include <wx/systhemectrl.h>
 #include <wx/vector.h>
-#include <wx/headerctrl.h>
 
 class WXDLLIMPEXP_FWD_CORE wxImageList;
 class wxItemAttr;
-class WXDLLIMPEXP_FWD_CORE wxHeaderCtrl;
+class wxHeaderGenericCtrl;
 
 #include "backend/tableView.h"
+#include "headerctrlg.h"
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtCtrl globals

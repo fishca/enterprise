@@ -39,10 +39,6 @@ void CDesignerApp::OnMouseEvent(wxMouseEvent& event)
 		}
 	}
 
-#if wxUSE_MOUSEWHEEL
-	if (event.GetEventType() == wxEVT_MOUSEWHEEL) event.m_linesPerAction = 1;
-#endif
-
 	event.Skip();
 }
 

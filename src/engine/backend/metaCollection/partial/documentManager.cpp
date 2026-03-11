@@ -10,49 +10,16 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectDocument, CValue);
 
-CValueManagerDataObjectDocument::CValueManagerDataObjectDocument(CValueMetaObjectDocument* metaObject) :
-	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
+CValueMetaObjectCommonModule* CValueManagerDataObjectDocument::GetModuleManager() const
 {
-}
-
-CValueManagerDataObjectDocument::~CValueManagerDataObjectDocument() {
-	wxDELETE(m_methodHelper);
-}
-
-CValueMetaObjectCommonModule* CValueManagerDataObjectDocument::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
 }
 
 #include "reference/reference.h"
 
-CValueReferenceDataObject* CValueManagerDataObjectDocument::EmptyRef() {
+CValueReferenceDataObject* CValueManagerDataObjectDocument::EmptyRef()
+{
 	return CValueReferenceDataObject::Create(m_metaObject);
-}
-
-#include "backend/objCtor.h"
-
-class_identifier_t CValueManagerDataObjectDocument::GetClassType() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassType();
-}
-
-wxString CValueManagerDataObjectDocument::GetClassName() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
-}
-
-wxString CValueManagerDataObjectDocument::GetString() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
 }
 
 enum Func {
@@ -70,12 +37,8 @@ enum Func {
 
 void CValueManagerDataObjectDocument::PrepareNames() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
+	IValueManagerDataObject::PrepareNames();
 
-	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("CreateDocument"), wxT("CreateDocument()"));
 	m_methodHelper->AppendFunc(wxT("Select"), wxT("Select()"));
 	m_methodHelper->AppendFunc(wxT("FindByNumber"), 2, wxT("FindByNumber(number : string, date)"));
@@ -84,23 +47,12 @@ void CValueManagerDataObjectDocument::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetSelectForm"), 3, wxT("GetSelectForm(name : string, owner : any, id : guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
 	m_methodHelper->AppendFunc(wxT("EmptyRef"), wxT("EmptyRef()"));
-
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr) {
-		// add methods from context
-		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {
-			m_methodHelper->CopyMethod(pRefData->GetPMethods(), idx);
-		}
-	}
 }
 
 #include "selector/objectSelector.h"
 
 bool CValueManagerDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-
 	switch (lMethodNum)
 	{
 	case eCreateElement:
@@ -148,11 +100,5 @@ bool CValueManagerDataObjectDocument::CallAsFunc(const long lMethodNum, CValue& 
 		return true;
 	}
 
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr)
-		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
-	return false;
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }

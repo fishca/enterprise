@@ -22,9 +22,6 @@ void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
 
 void CEnterpriseApp::OnMouseEvent(wxMouseEvent& event)
 {
-#if wxUSE_MOUSEWHEEL
-	if (event.GetEventType() == wxEVT_MOUSEWHEEL) event.m_linesPerAction = 1;
-#endif
 	event.Skip();
 }
 

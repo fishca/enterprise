@@ -79,30 +79,45 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 
 		wxMenu* menuArea = new wxMenu;
 		menuItem = menuArea->Append(wxID_AREA_ADD, _("Add area"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuArea->Append(wxID_AREA_DELETE, _("Delete area"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menu->AppendSubMenu(menuArea, _("Area"));
 
 		wxMenu* menuFreeze = new wxMenu;
 		menuItem = menuFreeze->Append(wxID_FREEZE_ROW, _("Freeze row"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuFreeze->Append(wxID_FREEZE_COL, _("Freeze column"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menu->AppendSubMenu(menuFreeze, _("Freeze"));
 
 		wxMenu* menuPrintBrake = new wxMenu;
 		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_ADD, _("Add brake row"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_ADD, _("Add brake column"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_ROW_DELETE, _("Delete brake row"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuPrintBrake->Append(wxID_PRINT_BRAKE_COL_DELETE, _("Delete brake column"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menu->AppendSubMenu(menuPrintBrake, _("Print brake"));
 
 		wxMenu* menuBorder = new wxMenu;
 		menuItem = menuBorder->Append(wxID_BORDER_LEFT, _("Left border"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuBorder->Append(wxID_BORDER_TOP, _("Top border"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuBorder->Append(wxID_BORDER_RIGHT, _("Right border"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuBorder->Append(wxID_BORDER_BOTTOM, _("Bottom border"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuBorder->AppendSeparator();
 		menuItem = menuBorder->Append(wxID_BORDER_ALL, _("Border all"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuBorder->Append(wxID_BORDER_AROUND, _("Border around"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menuItem = menuBorder->Append(wxID_BORDER_NONE, _("No border"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 		menu->AppendSubMenu(menuBorder, _("Border"));
 
 		menuItem = menu->AppendSeparator();
@@ -111,13 +126,14 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 		menuItem->Check(m_gridEditor->GridLinesEnabled());
 
 		menuItem = menu->AppendCheckItem(wxID_SHOW_HEADER, _("Show headers"));
-		menuItem->Check(true);
+		menuItem->Check(m_gridEditor->GridHeaderEnabled());
 
 		menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
-		menuItem->Check(true);
+		menuItem->Check(m_gridEditor->GridAreaEnabled());
 
 		menuItem = menu->AppendSeparator();
 		menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
+		menuItem->Enable(m_gridEditor->IsEditable());
 	}
 
 	mb->Append(menu, _("Spreadsheet"));
@@ -158,7 +174,8 @@ void CSpreadsheetEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 	toolbar->AddTool(wxID_SHOW_HEADER, _("Show headers"), wxArtProvider::GetBitmap(wxART_SHOW_HEADER, wxART_DOC_TEMPLATE), _("Show headers"));
 	toolbar->AddTool(wxID_SHOW_AREA, _("Show area"), wxArtProvider::GetBitmap(wxART_SHOW_SECTION, wxART_DOC_TEMPLATE), _("Show area"));
 	toolbar->AddSeparator();
-	toolbar->AddTool(wxID_DOCK_TABLE, _("Dock table"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Dock table"));
+	toolbar->AddTool(wxID_DOCK_TABLE, _("Freeze row/col table"), wxArtProvider::GetBitmap(wxART_BORDER, wxART_DOC_TEMPLATE), _("Freeze row/col table"));
+	toolbar->EnableTool(wxID_DOCK_TABLE, m_gridEditor->IsEditable());
 }
 
 bool CSpreadsheetEditView::OnClose(bool deleteWindow)

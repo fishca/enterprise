@@ -1,12 +1,12 @@
 #include "tableBox.h" 
+#include "tableBoxColumnRenderer.h"
+
 #include "backend/appData.h"
 
-#include "frontend/visualView/dvc/dvc.h"
-
-void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
+void CValueTableBox::OnColumnClick(wxDataViewExtEvent& event)
 {
-	CDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<CDataViewColumnContainer*>(event.GetDataViewColumn());
+	CDataViewColumnObject* dataViewColumn =
+		dynamic_cast<CDataViewColumnObject*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 	if (g_visualHostContext != nullptr) {
 		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
@@ -25,7 +25,7 @@ void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
 
 			if (!appData->DesignerMode()) {
 
-				wxDataViewCtrl* dataViewCtrl = dataViewColumn->GetOwner();
+				wxDataViewExtCtrl* dataViewCtrl = dataViewColumn->GetOwner();
 				wxASSERT(dataViewCtrl);
 
 				try {
@@ -37,7 +37,7 @@ void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
 				}
 
 				if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-					const wxDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
+					const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
 					if (currLine.IsOk())
 						m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					else m_tableCurrentLine.Reset();
@@ -59,10 +59,10 @@ void CValueTableBox::OnColumnClick(wxDataViewEvent& event)
 	event.Skip();
 }
 
-void CValueTableBox::OnColumnReordered(wxDataViewEvent& event)
+void CValueTableBox::OnColumnReordered(wxDataViewExtEvent& event)
 {
-	CDataViewColumnContainer* dataViewColumn =
-		dynamic_cast<CDataViewColumnContainer*>(event.GetDataViewColumn());
+	CDataViewColumnObject* dataViewColumn =
+		dynamic_cast<CDataViewColumnObject*>(event.GetDataViewColumn());
 	wxASSERT(dataViewColumn);
 
 	CValueTableBoxColumn* columnObject = dataViewColumn->GetControl();
@@ -79,10 +79,10 @@ void CValueTableBox::OnColumnReordered(wxDataViewEvent& event)
 //*                          System event                             *
 //*********************************************************************
 
-void CValueTableBox::OnSelectionChanged(wxDataViewEvent& event)
+void CValueTableBox::OnSelectionChanged(wxDataViewExtEvent& event)
 {
-	// event is a wxDataViewEvent
-	const wxDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
 	CValue standardProcessing = true;
@@ -100,10 +100,10 @@ void CValueTableBox::OnSelectionChanged(wxDataViewEvent& event)
 	}
 }
 
-void CValueTableBox::OnItemActivated(wxDataViewEvent& event)
+void CValueTableBox::OnItemActivated(wxDataViewExtEvent& event)
 {
-	// event is a wxDataViewEvent
-	const wxDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
 	if (m_tableModel != nullptr) {
@@ -119,37 +119,37 @@ void CValueTableBox::OnItemActivated(wxDataViewEvent& event)
 	event.Skip();
 }
 
-void CValueTableBox::OnItemCollapsed(wxDataViewEvent& event)
+void CValueTableBox::OnItemCollapsed(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemExpanded(wxDataViewEvent& event)
+void CValueTableBox::OnItemExpanded(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemCollapsing(wxDataViewEvent& event)
+void CValueTableBox::OnItemCollapsing(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemExpanding(wxDataViewEvent& event)
+void CValueTableBox::OnItemExpanding(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemStartEditing(wxDataViewEvent& event)
+void CValueTableBox::OnItemStartEditing(wxDataViewExtEvent& event)
 {
-	// event is a wxDataViewEvent
-	const wxDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
-	wxDataViewCtrl* dataViewCtrl = dynamic_cast<wxDataViewCtrl*>(event.GetEventObject());
+	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(event.GetEventObject());
 	if (dataViewCtrl != nullptr) {
-		wxDataViewColumn* currentColumn = dataViewCtrl->GetCurrentColumn();
+		wxDataViewExtColumn* currentColumn = dataViewCtrl->GetCurrentColumn();
 		if (currentColumn != nullptr) {
-			wxDataViewRenderer* renderer = currentColumn->GetRenderer();
+			wxDataViewExtRenderer* renderer = currentColumn->GetRenderer();
 			if (renderer != nullptr) renderer->FinishEditing();
 		}
 	}
@@ -161,22 +161,22 @@ void CValueTableBox::OnItemStartEditing(wxDataViewEvent& event)
 		event.Skip();
 }
 
-void CValueTableBox::OnItemEditingStarted(wxDataViewEvent& event)
+void CValueTableBox::OnItemEditingStarted(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemEditingDone(wxDataViewEvent& event)
+void CValueTableBox::OnItemEditingDone(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemValueChanged(wxDataViewEvent& event)
+void CValueTableBox::OnItemValueChanged(wxDataViewExtEvent& event)
 {
 	event.Skip();
 }
 
-void CValueTableBox::OnItemStartInserting(wxDataViewEvent& event)
+void CValueTableBox::OnItemStartInserting(wxDataViewExtEvent& event)
 {
 	if (m_tableModel != nullptr && !m_tableModel->IsCallRefreshModel())
 		m_formOwner->RefreshForm();
@@ -186,10 +186,10 @@ void CValueTableBox::OnItemStartInserting(wxDataViewEvent& event)
 	event.Skip();
 }
 
-void CValueTableBox::OnItemStartDeleting(wxDataViewEvent& event)
+void CValueTableBox::OnItemStartDeleting(wxDataViewExtEvent& event)
 {
-	// event is a wxDataViewEvent
-	const wxDataViewItem& item = event.GetItem();
+	// event is a wxDataViewExtEvent
+	const wxDataViewExtItem& item = event.GetItem();
 	if (!item.IsOk())
 		return;
 	CValue cancel = false;
@@ -209,10 +209,10 @@ void CValueTableBox::OnItemStartDeleting(wxDataViewEvent& event)
 
 void CValueTableBox::OnHeaderResizing(wxHeaderCtrlEvent& event)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(GetWxObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
-		CDataViewColumnContainer* dataViewColumn =
-			dynamic_cast<CDataViewColumnContainer*>(dataViewCtrl->GetColumn(event.GetColumn()));
+		CDataViewColumnObject* dataViewColumn =
+			dynamic_cast<CDataViewColumnObject*>(dataViewCtrl->GetColumn(event.GetColumn()));
 		CValueTableBoxColumn* columnControl = dataViewColumn->GetControl();
 		wxASSERT(columnControl);
 		columnControl->SetWidthColumn(event.GetWidth());
@@ -231,11 +231,11 @@ void CValueTableBox::OnMainWindowClick(wxMouseEvent& event)
 
 #if wxUSE_DRAG_AND_DROP
 
-void CValueTableBox::OnItemBeginDrag(wxDataViewEvent& event)
+void CValueTableBox::OnItemBeginDrag(wxDataViewExtEvent& event)
 {
 }
 
-void CValueTableBox::OnItemDropPossible(wxDataViewEvent& event)
+void CValueTableBox::OnItemDropPossible(wxDataViewExtEvent& event)
 {
 	if (event.GetDataFormat() != wxDF_UNICODETEXT)
 		event.Veto();
@@ -243,7 +243,7 @@ void CValueTableBox::OnItemDropPossible(wxDataViewEvent& event)
 		event.SetDropEffect(wxDragMove);	// check 'move' drop effect
 }
 
-void CValueTableBox::OnItemDrop(wxDataViewEvent& event)
+void CValueTableBox::OnItemDrop(wxDataViewExtEvent& event)
 {
 	if (event.GetDataFormat() != wxDF_UNICODETEXT) {
 		event.Veto();
@@ -258,7 +258,7 @@ void CValueTableBox::OnCommandMenu(wxCommandEvent& event)
 	CValueTableBox::ExecuteAction(event.GetId(), m_formOwner);
 }
 
-void CValueTableBox::OnContextMenu(wxDataViewEvent& event)
+void CValueTableBox::OnContextMenu(wxDataViewExtEvent& event)
 {
 	const CActionCollection& actionData =
 		CValueTableBox::GetActionCollection(m_formOwner->GetTypeForm());
@@ -273,17 +273,16 @@ void CValueTableBox::OnContextMenu(wxDataViewEvent& event)
 				menuItem->SetBitmap(CBackendPicture::CreatePicture(pictureDesc));
 		}
 	}
-	wxDataViewCtrl* wnd = wxDynamicCast(
-		event.GetEventObject(), wxDataViewCtrl
+	wxDataViewExtCtrl* wnd = wxDynamicCast(
+		event.GetEventObject(), wxDataViewExtCtrl
 	);
 	wxASSERT(wnd);
-	wnd->SetClientData(event.GetDataViewColumn());
 	wnd->PopupMenu(&menu, event.GetPosition());
 }
 
 void CValueTableBox::OnSize(wxSizeEvent& event)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	if (m_dataViewCreated)
 		m_dataViewSizeChanged = m_dataViewUpdated || (m_dataViewSize != dataViewCtrl->GetSize()) && (m_dataViewSize != wxDefaultSize);
@@ -293,7 +292,7 @@ void CValueTableBox::OnSize(wxSizeEvent& event)
 
 void CValueTableBox::OnIdle(wxIdleEvent& event)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	if (m_dataViewSizeChanged && m_tableModel != nullptr) {
 
@@ -307,7 +306,7 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 
 		const CValue& createdValue = m_formOwner->GetCreatedValue();
 		if (!createdValue.IsEmpty()) {
-			const wxDataViewItem& currLine = m_tableModel->FindRowValue(createdValue);
+			const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(createdValue);
 			if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 			else m_tableCurrentLine.Reset();
 		}
@@ -315,7 +314,7 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 			IValueFrame* ownerControl = m_formOwner->GetOwnerControl();
 			if (ownerControl != nullptr && m_tableCurrentLine == nullptr) {
 				CValue retValue; ownerControl->GetControlValue(retValue);
-				const wxDataViewItem& currLine = m_tableModel->FindRowValue(retValue);
+				const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(retValue);
 				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 				else m_tableCurrentLine.Reset();
 			}
@@ -324,14 +323,14 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 
 		if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
 
-			const wxDataViewItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
+			const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(&(*m_tableCurrentLine));
 			if (currLine.IsOk()) {
 				m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 			}
 			else {
 				const CValue& changedValue = m_formOwner->GetChangedValue();
 				if (!changedValue.IsEmpty()) {
-					const wxDataViewItem& currLine = m_tableModel->FindRowValue(changedValue);
+					const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(changedValue);
 					if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					else m_tableCurrentLine.Reset();
 				}
@@ -360,7 +359,7 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 
 void CValueTableBox::HandleOnScroll(wxScrollWinEvent& event)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(event.GetEventObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(event.GetEventObject());
 
 	const short scroll = (event.GetEventType() == wxEVT_SCROLLWIN_TOP ||
 		event.GetEventType() == wxEVT_SCROLLWIN_LINEUP ||
@@ -371,14 +370,14 @@ void CValueTableBox::HandleOnScroll(wxScrollWinEvent& event)
 		if (m_tableModel != nullptr) {
 
 			const int countPerPage = dataViewCtrl->GetCountPerPage();
-			const wxDataViewItem& top_item = dataViewCtrl->GetTopItem();
-			const wxDataViewItem& focused_item = m_tableCurrentLine != nullptr ?
-				m_tableCurrentLine->GetLineItem() : wxDataViewItem(nullptr);
+			const wxDataViewExtItem& top_item = dataViewCtrl->GetTopItem();
+			const wxDataViewExtItem& focused_item = m_tableCurrentLine != nullptr ?
+				m_tableCurrentLine->GetLineItem() : wxDataViewExtItem(nullptr);
 
 			m_tableModel->CallRefreshItemModel(top_item, focused_item, countPerPage, scroll);
 
 			if (m_tableCurrentLine != nullptr && !m_tableModel->ValidateReturnLine(m_tableCurrentLine)) {
-				const wxDataViewItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
+				const wxDataViewExtItem& currLine = m_tableModel->FindRowValue(m_tableCurrentLine);
 				if (currLine.IsOk()) {
 					m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 					dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());

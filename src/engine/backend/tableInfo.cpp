@@ -14,9 +14,8 @@ wxIMPLEMENT_ABSTRACT_CLASS(IValueTable, IValueModel);
 wxIMPLEMENT_ABSTRACT_CLASS(IValueTree, IValueModel);
 
 IValueModel::IValueModel()
-	: CValue(eValueTypes::TYPE_VALUE), 
-	m_modelProvider(nullptr), 
-	m_srcNotifier(nullptr), 
+	: CValue(eValueTypes::TYPE_VALUE),
+	m_modelProvider(nullptr),
 	m_refreshModel(false)
 {
 	m_modelProvider = new CDataViewModelProvider(this);
@@ -28,18 +27,18 @@ IValueModel::~IValueModel()
 	m_modelProvider->DecRef();
 }
 
-wxDataViewItem IValueModel::GetSelection() const
+wxDataViewExtItem IValueModel::GetSelection() const
 {
-	if (m_srcNotifier == nullptr)
-		return wxDataViewItem(nullptr);
-	return m_srcNotifier->GetSelection();
+	if (m_modelProvider == nullptr)
+		return wxDataViewExtItem(nullptr);
+	return m_modelProvider->GetSelection();
 }
 
-void IValueModel::RowValueStartEdit(const wxDataViewItem& item, unsigned int col)
+void IValueModel::RowValueStartEdit(const wxDataViewExtItem& item, unsigned int col)
 {
-	if (m_srcNotifier == nullptr)
+	if (m_modelProvider == nullptr)
 		return;
-	m_srcNotifier->StartEditing(item, col);
+	m_modelProvider->StartEditing(item, col);
 }
 
 IValueModel::CActionCollection IValueModel::GetActionCollection(const form_identifier_t& formType)
@@ -67,40 +66,39 @@ void IValueModel::ExecuteAction(const action_identifier_t& lNumAction, IBackendV
 {
 	switch (lNumAction)
 	{
-		case eAddValue:
-			AddValue();
-			break;
-		case eCopyValue:
-			CopyValue();
-			break;
-		case eEditValue:
-			EditValue();
-			break;
-		case eDeleteValue:
-			DeleteValue();
-			break;
-		case eFilter:
-			if (ShowFilter()) {
-				CallRefreshModel(wxDataViewItem(nullptr), m_srcNotifier != nullptr ? m_srcNotifier->GetCountPerPage() : defaultCountPerPage);
-			}
-			break;
-		case eFilterByColumn:
-		{
-			const wxDataViewItem& item = GetSelection();
-			if (!item.IsOk())
-				break;
-			wxDataViewColumn* dataView = m_srcNotifier != nullptr ? m_srcNotifier->GetCurrentColumn() : nullptr;
-			if (dataView != nullptr) {
-				CValue retValue; GetValueByMetaID(item, dataView->GetModelColumn(), retValue);
-				m_filterRow.SetFilterByID(dataView->GetModelColumn(), retValue);
-			}
-			CallRefreshModel(wxDataViewItem(nullptr), m_srcNotifier != nullptr ? m_srcNotifier->GetCountPerPage() : defaultCountPerPage);
-			break;
+	case eAddValue:
+		AddValue();
+		break;
+	case eCopyValue:
+		CopyValue();
+		break;
+	case eEditValue:
+		EditValue();
+		break;
+	case eDeleteValue:
+		DeleteValue();
+		break;
+	case eFilter:
+		if (ShowFilter()) {
+			CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
 		}
-		case eFilterClear:
-			m_filterRow.ResetFilter();
-			CallRefreshModel(wxDataViewItem(nullptr), m_srcNotifier != nullptr ? m_srcNotifier->GetCountPerPage() : defaultCountPerPage);
+		break;
+	case eFilterByColumn:
+	{
+		const wxDataViewExtItem& item = GetSelection();
+		if (!item.IsOk())
 			break;
+		if (m_modelProvider != nullptr) {
+			CValue retValue; GetValueByMetaID(item, m_modelProvider->GetCurrentModelColumn(), retValue);
+			m_filterRow.SetFilterByID(m_modelProvider->GetCurrentModelColumn(), retValue);
+		}
+		CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		break;
+	}
+	case eFilterClear:
+		m_filterRow.ResetFilter();
+		CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
+		break;
 	}
 }
 
@@ -108,9 +106,9 @@ void IValueModel::ExecuteAction(const action_identifier_t& lNumAction, IBackendV
 
 bool IValueModel::ShowFilter()
 {
-	if (m_srcNotifier == nullptr)
+	if (m_modelProvider == nullptr)
 		return false;
-	return m_srcNotifier->ShowFilter(m_filterRow);
+	return m_modelProvider->ShowFilter(m_filterRow);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -146,18 +144,18 @@ bool IValueModel::IValueModelColumnCollection::IValueModelColumnInfo::GetPropVal
 {
 	switch (lPropNum)
 	{
-		case enColumnName:
-			pvarPropVal = GetColumnName();
-			return true;
-		case enColumnTypes:
-			pvarPropVal = CValue::CreateAndPrepareValueRef<CValueTypeDescription>(GetColumnType());
-			return true;
-		case enColumnCaption:
-			pvarPropVal = GetColumnCaption();
-			return true;
-		case enColumnWidth:
-			pvarPropVal = GetColumnWidth();
-			return true;
+	case enColumnName:
+		pvarPropVal = GetColumnName();
+		return true;
+	case enColumnTypes:
+		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueTypeDescription>(GetColumnType());
+		return true;
+	case enColumnCaption:
+		pvarPropVal = GetColumnCaption();
+		return true;
+	case enColumnWidth:
+		pvarPropVal = GetColumnWidth();
+		return true;
 	}
 
 	return false;
@@ -174,8 +172,6 @@ IValueModel::IValueModelColumnCollection::IValueModelColumnInfo* IValueModel::IV
 
 	return nullptr;
 }
-
-
 
 IValueModel::IValueModelColumnCollection::IValueModelColumnInfo* IValueModel::IValueModelColumnCollection::GetColumnByName(const wxString& colName) const
 {

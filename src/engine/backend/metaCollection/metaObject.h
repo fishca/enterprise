@@ -362,6 +362,16 @@ public:
 
 #pragma endregion 
 
+	template<typename T, typename... Args>
+	T* CreateMetaObjectAndSetParent(Args&&... args) {
+		T* createdObject = CValue::CreateAndConvertObjectValueRef<T>(args...);
+		wxASSERT(createdObject);
+		//set child/parent
+		createdObject->SetParent(this);
+		this->AddChild(createdObject);
+		return createdObject;
+	}
+
 protected:
 
 	//create and update table 
@@ -373,16 +383,6 @@ protected:
 	virtual bool DeleteData() { return true; }
 
 protected:
-
-	template<typename T, typename... Args>
-	T* CreateMetaObjectAndSetParent(Args&&... args) {
-		T* createdObject = CValue::CreateAndConvertObjectValueRef<T>(args...);
-		wxASSERT(createdObject);
-		//set child/parent
-		createdObject->SetParent(this);
-		this->AddChild(createdObject);
-		return createdObject;
-	}
 
 #pragma region interface_h
 	virtual void DoSetInterface(const meta_identifier_t& id, const bool& val = true);
@@ -603,7 +603,7 @@ protected:
 	CPropertyUString* m_propertyName = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryCommon, wxT("Name"), _("Name"), _("Name of metadata object"), wxEmptyString);
 	CPropertyTString* m_propertySynonym = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryCommon, wxT("Synonym"), _("Synonym"), _("Synonym of metadata object"), wxEmptyString);
 	CPropertyString* m_propertyComment = IPropertyObject::CreateProperty<CPropertyString>(m_categoryCommon, wxT("Comment"), _("Comment"), _("Comment"), wxEmptyString);
-	CPropertyCategory* m_categorySecondary = IPropertyObject::CreatePropertyCategory(wxT("Secondary"), _("Secondary"));
+	CPropertyCategory* m_categoryContext = IPropertyObject::CreatePropertyCategory(wxT("Context"), _("Context"));
 };
 
 extern BACKEND_API CRestructureInfo s_restructureInfo;

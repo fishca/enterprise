@@ -1,53 +1,17 @@
-#include "dataView.h"
+#include "tableView.h"
 #include "backend/tableInfo.h"
 
-wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_START_INSERTING, wxDataViewEvent);
-wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_START_DELETING, wxDataViewEvent);
+wxIMPLEMENT_DYNAMIC_CLASS(wxTableViewCtrl, wxDataViewExtCtrl);
 
-wxBEGIN_EVENT_TABLE(wxDataModelViewCtrl::CDataViewFreezeRowsWindow, wxWindow)
-EVT_PAINT(wxDataModelViewCtrl::CDataViewFreezeRowsWindow::OnPaint)
-wxEND_EVENT_TABLE()
-
-wxIMPLEMENT_DYNAMIC_CLASS(wxDataModelViewCtrl, wxDataViewCtrl);
-
-wxBEGIN_EVENT_TABLE(wxDataModelViewCtrl, wxDataViewCtrl)
-EVT_CHAR(wxDataModelViewCtrl::OnChar)
-EVT_RIGHT_UP(wxDataModelViewCtrl::OnRightUp)
-EVT_PAINT(wxDataModelViewCtrl::OnPaint)
-EVT_SIZE(wxDataModelViewCtrl::OnSize)
-wxEND_EVENT_TABLE()
-
-bool wxDataModelViewCtrl::AssociateModel(wxDataViewModel* model)
-{
-	if (model != nullptr) {
-		IDataViewModelProvider* dataModel = dynamic_cast<IDataViewModelProvider*>(model);
-		if (dataModel != nullptr) {
-			m_genNotifier = new wxTableModelNotifier(this);
-			dataModel->GetOwnerValueModel()->AppendNotifier(m_genNotifier);
-		}
-	}
-	else {
-		IDataViewModelProvider* dataModel = dynamic_cast<IDataViewModelProvider*>(GetModel());
-		if (dataModel != nullptr)
-			dataModel->GetOwnerValueModel()->RemoveNotifier(m_genNotifier);
-		wxDELETE(m_genNotifier);
-	}
-	return wxDataViewCtrl::AssociateModel(model);
-}
-
-#include <wx/sizer.h>
-#include <wx/dialog.h>
-#include <wx/button.h>
+#include "backend/metadataConfiguration.h"
 
 #include "frontend/win/ctrls/controlTextEditor.h"
-
 #include "frontend/visualView/ctrl/typeControl.h"
 #include "frontend/visualView/ctrl/form.h"
 
-#include "backend/metadataConfiguration.h"
 #include "backend/objCtor.h"
 
-bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
+bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 {
 	enum {
 		eModelUse = 1,
@@ -58,7 +22,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	class wxFilterDialog : public wxDialog {
 
-		class wxDataViewFilterModel : public wxDataViewVirtualListModel {
+		class wxDataViewFilterModel : public wxDataViewExtVirtualListModel {
 			CFilterRow m_filter;
 		public:
 
@@ -76,7 +40,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			};
 
 			wxDataViewFilterModel() :
-				wxDataViewVirtualListModel() {
+				wxDataViewExtVirtualListModel() {
 			}
 
 			virtual void GetValueByRow(wxVariant& variant,
@@ -137,7 +101,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			};
 		};
 
-		class wxValueViewRenderer : public wxDataViewCustomRenderer,
+		class wxValueViewRenderer : public wxDataViewExtCustomRenderer,
 			public IControlFrame {
 			wxFilterDialog* m_filterDialog;
 		public:
@@ -168,7 +132,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			// able to activate or edit the cell and it doesn't make sense to switch
 			// between the two -- but this is just an example, so it doesn't stop us.
 			wxValueViewRenderer(wxFilterDialog* filterDialog)
-				: wxDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_filterDialog(filterDialog) {
+				: wxDataViewExtCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_filterDialog(filterDialog) {
 			}
 
 			virtual bool Render(wxRect rect, wxDC* dc, int state) override {
@@ -182,8 +146,8 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual bool ActivateCell(const wxRect& cell,
-				wxDataViewModel* model,
-				const wxDataViewItem& item,
+				wxDataViewExtModel* model,
+				const wxDataViewExtItem& item,
 				unsigned int col,
 				const wxMouseEvent* mouseEvent) override {
 				return false;
@@ -239,7 +203,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 				textEditor->ShowClearButton(true);
 				textEditor->ShowOpenButton(false);
 
-				wxDataViewCtrl* parentWnd = dynamic_cast<wxDataViewCtrl*>(dv->GetParent());
+				wxDataViewExtCtrl* parentWnd = dynamic_cast<wxDataViewExtCtrl*>(dv->GetParent());
 				if (parentWnd != nullptr) {
 					textEditor->SetBackgroundColour(parentWnd->GetBackgroundColour());
 					textEditor->SetForegroundColour(parentWnd->GetForegroundColour());
@@ -280,7 +244,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 		public:
 
 			virtual bool GetControlValue(CValue& pvarControlVal) const {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -291,7 +255,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual CGuid GetControlGuid() const {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return wxNullGuid;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -301,7 +265,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual bool SetControlValue(const CValue& varValue) const {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -335,7 +299,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 			//events
 			void OnSelectButtonPressed(wxCommandEvent& event) {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -368,7 +332,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			void OnClearButtonPressed(wxCommandEvent& event) {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -380,7 +344,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			}
 
 			virtual void ChoiceProcessing(CValue& vSelected) {
-				const wxDataViewItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
+				const wxDataViewExtItem& item = m_filterDialog->m_dataViewFilter->GetSelection();
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
@@ -397,11 +361,11 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	private:
 
-		wxDataViewCtrl* m_dataViewFilter;
-		wxDataViewColumn* m_dataViewColumnUse;
-		wxDataViewColumn* m_dataViewColumnName;
-		wxDataViewColumn* m_dataViewColumnComparison;
-		wxDataViewColumn* m_dataViewColumnValue;
+		wxDataViewExtCtrl* m_dataViewFilter;
+		wxDataViewExtColumn* m_dataViewColumnUse;
+		wxDataViewExtColumn* m_dataViewColumnName;
+		wxDataViewExtColumn* m_dataViewColumnComparison;
+		wxDataViewExtColumn* m_dataViewColumnValue;
 		wxStdDialogButtonSizer* m_sdbSizer;
 		wxButton* m_sdbSizerOK;
 		wxButton* m_sdbSizerCancel;
@@ -425,7 +389,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 		{
 			wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-			m_dataViewFilter = new wxDataViewCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_SINGLE);
+			m_dataViewFilter = new wxDataViewExtCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_SINGLE);
 
 			m_dataViewFilter->SetBackgroundColour(parent->GetBackgroundColour());
 			m_dataViewFilter->SetForegroundColour(parent->GetForegroundColour());
@@ -439,15 +403,15 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			m_dataViewColumnUse = m_dataViewFilter->AppendToggleColumn(_("Use"), eModelUse, wxDATAVIEW_CELL_ACTIVATABLE, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
 			m_dataViewColumnName = m_dataViewFilter->AppendTextColumn(_("Name"), eModelName, wxDATAVIEW_CELL_INERT, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
 
-			m_dataViewColumnComparison = new wxDataViewColumn(_("Comparison"),
-				new wxDataViewChoiceByIndexRenderer(arr, wxDATAVIEW_CELL_EDITABLE, wxAlignment::wxALIGN_LEFT),
+			m_dataViewColumnComparison = new wxDataViewExtColumn(_("Comparison"),
+				new wxDataViewExtChoiceByIndexRenderer(arr, wxDATAVIEW_CELL_EDITABLE, wxAlignment::wxALIGN_LEFT),
 				eModelComparison,
 				wxNOT_FOUND,
 				wxAlignment::wxALIGN_LEFT
 			);
 			m_dataViewFilter->AppendColumn(m_dataViewColumnComparison);
 
-			m_dataViewColumnValue = new wxDataViewColumn(_("Value"),
+			m_dataViewColumnValue = new wxDataViewExtColumn(_("Value"),
 				new wxValueViewRenderer(this),
 				eModelValue,
 				wxNOT_FOUND,
@@ -486,7 +450,7 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 			delete m_filterModel;
 		}
 
-		void OnItemActivated(wxDataViewEvent& event) {
+		void OnItemActivated(wxDataViewExtEvent& event) {
 			m_dataViewFilter->EditItem(event.GetItem(), event.GetDataViewColumn());
 			event.Skip();
 		}
@@ -500,289 +464,4 @@ bool wxDataModelViewCtrl::ShowFilter(struct CFilterRow& filter)
 	}
 	dialog->Destroy();
 	return result;
-}
-
-void wxDataModelViewCtrl::OnChar(wxKeyEvent& event)
-{
-	event.Skip();
-}
-
-void wxDataModelViewCtrl::OnRightUp(wxMouseEvent& event)
-{
-	wxDataViewColumn* col = nullptr;
-	int xpos = 0;
-	unsigned int cols = GetColumnCount();
-	unsigned int i;
-	for (i = 0; i < cols; i++) {
-		wxDataViewColumn* c = GetColumnAt(i);
-		if (c->IsHidden())
-			continue;      // skip it!
-		if (event.GetX() < xpos + c->GetWidth()) {
-			col = c;
-			break;
-		}
-		xpos += c->GetWidth();
-	}
-
-	event.Skip();
-}
-
-void wxDataModelViewCtrl::OnSize(wxSizeEvent& event) {
-
-	if (m_freezeRows &&
-		m_freezeRows->GetSize().y <= m_freezeRows->GetBestSize().y) {
-		m_freezeRows->Refresh();
-	}
-
-	event.Skip();
-}
-
-void wxDataModelViewCtrl::OnPaint(wxPaintEvent& event)
-{
-	//event.Skip();
-}
-
-#include <wx/dcbuffer.h>
-
-#ifdef __WXMSW__
-#include <wx/msw/private.h>
-#endif
-
-int wxDataModelViewCtrl::CDataViewFreezeRowsWindow::GetDefaultRowHeight() const
-{
-	const int SMALL_ICON_HEIGHT = FromDIP(16);
-
-#ifdef __WXMSW__
-	// We would like to use the same line height that Explorer uses. This is
-	// different from standard ListView control since Vista.
-	if (wxGetWinVersion() >= wxWinVersion_Vista)
-		return wxMax(SMALL_ICON_HEIGHT, GetCharHeight()) + FromDIP(6);
-	else
-#endif // __WXMSW__
-		return wxMax(SMALL_ICON_HEIGHT, GetCharHeight()) + FromDIP(1);
-}
-
-void wxDataModelViewCtrl::CDataViewFreezeRowsWindow::OnPaint(wxPaintEvent& WXUNUSED(event))
-{
-	wxAutoBufferedPaintDC dc(this);
-	const wxSize size = GetClientSize();
-	dc.SetBrush(GetParent()->GetBackgroundColour());
-	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.DrawRectangle(size);
-
-	//if (m_owner->IsEmpty()) {
-	//	// No items to draw.
-	//	return;
-	//}
-
-	// prepare the DC
-	GetOwner()->PrepareDC(dc);
-	dc.SetFont(GetFont());
-
-	wxRect update = GetUpdateRegion().GetBox();
-	GetOwner()->CalcUnscrolledPosition(update.x, update.y, &update.x, &update.y);
-
-	// compute which items needs to be redrawn
-	unsigned int item_start = GetLineAt(wxMax(0, update.y));
-	unsigned int item_count =
-		wxMin((int)(GetLineAt(wxMax(0, update.y + update.height)) - item_start + 1),
-			(int)(GetRowCount() - item_start));
-
-	unsigned int item_last = item_start + item_count;
-
-	// compute which columns needs to be redrawn
-	unsigned int cols = GetOwner()->GetColumnCount();
-	if (!cols) {
-		// we assume that we have at least one column below and painting an
-		// empty control is unnecessary anyhow
-		return;
-	}
-	unsigned int col_start = 0;
-	unsigned int x_start;
-	for (x_start = 0; col_start < cols; col_start++) {
-		wxDataViewColumn* col = GetOwner()->GetColumnAt(col_start);
-		if (col->IsHidden())
-			continue;      // skip it!
-		unsigned int w = col->GetWidth();
-		if (x_start + w >= (unsigned int)update.x)
-			break;
-		x_start += w;
-	}
-
-	unsigned int col_last = col_start;
-	unsigned int x_last = x_start;
-	for (; col_last < cols; col_last++) {
-		wxDataViewColumn* col = GetOwner()->GetColumnAt(col_last);
-		if (col->IsHidden())
-			continue;      // skip it!
-		if (x_last > (unsigned int)update.GetRight())
-			break;
-		x_last += col->GetWidth();
-	}
-
-	// Instead of calling GetLineStart() for each line from the first to the
-	// last one, we will compute the starts of the lines as we iterate over
-	// them starting from this one, as this is much more efficient when using
-	// wxDV_VARIABLE_LINE_HEIGHT (and doesn't really change anything when not
-	// using it, so there is no need to use two different approaches).
-	const unsigned int first_line_start = GetLineStart(item_start);
-
-	// Draw background of alternate rows specially if required
-	if (GetOwner()->HasFlag(wxDV_ROW_LINES)) {
-		wxColour altRowColour = GetOwner()->GetAlternateRowColour();
-		if (!altRowColour.IsOk()) {
-			// Determine the alternate rows colour automatically from the
-			// background colour.
-			const wxColour bgColour = GetOwner()->GetBackgroundColour();
-
-			// Depending on the background, alternate row color
-			// will be 3% more dark or 50% brighter.
-			int alpha = bgColour.GetRGB() > 0x808080 ? 97 : 150;
-			altRowColour = bgColour.ChangeLightness(alpha);
-		}
-
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(altRowColour));
-
-		// We only need to draw the visible part, so limit the rectangle to it.
-		const int xRect = GetOwner()->CalcUnscrolledPosition(wxPoint(0, 0)).x;
-		const int widthRect = size.x;
-		unsigned int cur_line_start = first_line_start;
-		for (unsigned int item = item_start; item < item_last; item++) {
-			const int h = (item);
-			if (item % 2) {
-				dc.DrawRectangle(xRect, cur_line_start, widthRect, h);
-			}
-			cur_line_start += h;
-		}
-	}
-
-	// Draw horizontal rules if required
-	if (GetOwner()->HasFlag(wxDV_HORIZ_RULES))
-	{
-		dc.SetPen(m_penRule);
-		dc.SetBrush(*wxTRANSPARENT_BRUSH);
-
-		unsigned int cur_line_start = first_line_start;
-		for (unsigned int i = item_start; i <= item_last; i++) {
-			const int h = GetLineHeight(i);
-			dc.DrawLine(x_start, cur_line_start, x_last, cur_line_start);
-			cur_line_start += h;
-		}
-	}
-
-	// Draw vertical rules if required
-	//if (GetOwner()->HasFlag(wxDV_VERT_RULES)) {
-	//	
-	//	dc.SetPen(m_penRule);
-	//	dc.SetBrush(*wxTRANSPARENT_BRUSH);
-
-	//	// NB: Vertical rules are drawn in the last pixel of a column so that
-	//	//     they align perfectly with native MSW wxHeaderCtrl as well as for
-	//	//     consistency with MSW native list control. There's no vertical
-	//	//     rule at the most-left side of the control.
-
-	//	int x = x_start - 1;
-	//	int line_last = GetLineStart(item_last);
-	//	for (unsigned int i = col_start; i < col_last; i++)
-	//	{
-	//		wxDataViewColumn* col = GetOwner()->GetColumnAt(i);
-	//		if (col->IsHidden())
-	//			continue;       // skip it
-
-	//		x += col->GetWidth();
-
-	//		dc.DrawLine(x, first_line_start,
-	//			x, line_last);
-	//	}
-	//}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool wxTableModelNotifier::NotifyInsert(const wxDataViewItem& item)
-{
-	return SendEvent(wxEVT_DATAVIEW_ITEM_START_INSERTING, item);
-}
-
-bool wxTableModelNotifier::NotifyDelete(const wxDataViewItem& item)
-{
-	return SendEvent(wxEVT_DATAVIEW_ITEM_START_DELETING, item);
-}
-
-wxDataViewColumn* wxTableModelNotifier::GetCurrentColumn() const
-{
-	wxDataViewColumn* col_from_client_data = static_cast<wxDataViewColumn*>(m_mainWindow->GetClientData());
-	if (col_from_client_data == nullptr) return m_mainWindow->GetCurrentColumn();
-	m_mainWindow->SetClientData(nullptr);
-	return col_from_client_data;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void wxTableModelNotifier::StartEditing(const wxDataViewItem& item, unsigned int col) const
-{
-	if (!item.IsOk())
-		return;
-	int viewColumn = m_mainWindow->GetModelColumnIndex(col);
-	if (viewColumn != wxNOT_FOUND) {
-		m_mainWindow->EditItem(item,
-			m_mainWindow->GetColumn(viewColumn)
-		);
-	}
-	else if (col == 0) {
-		wxDataViewColumn* currentColumn = GetCurrentColumn();
-		if (currentColumn != nullptr) {
-			m_mainWindow->EditItem(item,
-				currentColumn
-			);
-		}
-		else if (m_mainWindow->GetColumnCount() > 0) {
-			m_mainWindow->EditItem(item,
-				m_mainWindow->GetColumnAt(0)
-			);
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool wxTableModelNotifier::SendEvent(const wxEventType& eventType, const wxDataViewItem& item)
-{
-	// Send event
-	wxDataViewEvent le(eventType, m_mainWindow, GetCurrentColumn(), item);
-	return m_mainWindow->ProcessWindowEvent(le);
-}
-
-bool wxTableModelNotifier::SendEvent(const wxEventType& eventType, const wxDataViewItem& item,
-	wxDataViewColumn* column)
-{
-	// Send event
-	wxDataViewEvent le(eventType, m_mainWindow, column, item);
-	return m_mainWindow->ProcessWindowEvent(le);
-}
-
-bool wxTableModelNotifier::ShowFilter(CFilterRow& filter)
-{
-	return m_mainWindow->ShowFilter(filter);
-}
-
-void wxTableModelNotifier::Select(const wxDataViewItem& item) const
-{
-	m_mainWindow->Select(item);
-}
-
-int wxTableModelNotifier::GetCountPerPage() const
-{
-	return m_mainWindow->GetCountPerPage();
-}
-
-wxDataViewItem wxTableModelNotifier::GetSelection() const
-{
-	return m_mainWindow->GetSelection();
-}
-
-int wxTableModelNotifier::GetSelections(wxDataViewItemArray& sel) const
-{
-	return m_mainWindow->GetSelections(sel);
 }

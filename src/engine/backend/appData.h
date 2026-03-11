@@ -19,6 +19,13 @@ enum eRunMode {
 	eSERVICE_MODE = 4		// only backmode 
 };
 
+enum eDatabaseMode {
+	eFILE,
+	eSERVER,
+
+	eNONE = 1000
+};
+
 //////////////////////////////////////////////////////////////////
 #define _app_start_default_flag 0x0000
 #define _app_start_create_debug_server_flag 0x0080
@@ -218,7 +225,7 @@ public:
 	bool EnterpriseMode() const { return m_runMode == eRunMode::eENTERPRISE_MODE; }
 	bool ServiceMode() const { return m_runMode == eRunMode::eSERVICE_MODE; }
 
-	inline wxString GetModeDescr(const eRunMode& mode) const {
+	inline wxString GetRunModeDescr(const eRunMode& mode) const {
 		switch (mode)
 		{
 		case eDESIGNER_MODE:
@@ -230,6 +237,23 @@ public:
 		}
 		return wxEmptyString;
 	}
+	
+	inline wxString GetRunModeDescr() const { return GetRunModeDescr(m_runMode); }
+
+	eDatabaseMode GetDatabaseMode() const { return m_dbMode; }
+
+	inline wxString GetDatabaseModeDescr(const eDatabaseMode& mode) const {
+		switch (mode)
+		{
+		case eFILE:
+			return _("File");
+		case eSERVER:
+			return _("Server");
+		}
+		return wxEmptyString;
+	}
+	
+	inline wxString GetDatabaseModeDescr() const { return GetDatabaseModeDescr(m_dbMode); }
 
 	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
 
@@ -239,6 +263,8 @@ public:
 	const wxString& GetUserPassword() const { return m_userInfo.m_strUserFullName; }
 	wxString GetComputerName() const { return m_strComputer; }
 	wxDateTime GetStartedDate() const { return m_startedDate; }
+
+	wxString GetLocale() const { return m_locale.GetCanonicalName(); }
 
 	std::vector<CApplicationDataShortUserInfo> GetAllowedUser() const;
 
@@ -298,23 +324,25 @@ public:
 
 #pragma endregion 
 
+	wxString GetDatabaseDescription();
+
 private:
-	
+
 	bool HasAllowedUser() const;
 	bool StartSession(const wxString& userName, const wxString& md5Password);
 	bool CloseSession();
-	
+
 	void ReadUserData_Password(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
 	void ReadUserData_Role(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
 	void ReadUserData_Language(const wxMemoryBuffer& buffer, CApplicationDataUserInfo& userInfo) const;
-	
+
 	wxMemoryBuffer SaveUserData_Password(const CApplicationDataUserInfo& userInfo) const;
 	wxMemoryBuffer SaveUserData_Role(const CApplicationDataUserInfo& userInfo) const;
 	wxMemoryBuffer SaveUserData_Language(const CApplicationDataUserInfo& userInfo) const;
-	
+
 	bool LoadUserInfoFromBuffer(wxMemoryBuffer& buffer);
 	bool SaveUserInfoToBuffer(wxMemoryBuffer& buffer) const;
-	
+
 	wxString ComputeMd5() const { return ComputeMd5(m_userInfo.m_strUserPassword); }
 	wxString ComputeMd5(const wxString& userPassword) const;
 
@@ -351,6 +379,8 @@ private:
 	bool m_connected_to_db = false;
 	bool m_created_metadata = false;
 	bool m_run_metadata = false;
+
+	eDatabaseMode m_dbMode;
 
 	// FILE ENTRY
 	wxString m_strFile;

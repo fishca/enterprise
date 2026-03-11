@@ -22,12 +22,12 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTabularSectionDataObjectRef, IValueTabularSectio
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-wxDataViewItem IValueTabularSectionDataObject::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem IValueTabularSectionDataObject::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			const wxDataViewItem& item = GetItem(row);
+			const wxDataViewExtItem& item = GetItem(row);
 			wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 			if (node != nullptr &&
 				varValue == node->GetTableValue(colInfo->GetColumnID())) {
@@ -35,12 +35,12 @@ wxDataViewItem IValueTabularSectionDataObject::FindRowValue(const CValue& varVal
 			}
 		}
 	}
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem IValueTabularSectionDataObject::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem IValueTabularSectionDataObject::FindRowValue(IValueModelReturnLine* retLine) const
 {
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
 bool IValueTabularSectionDataObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
@@ -94,7 +94,7 @@ wxString IValueTabularSectionDataObject::GetString() const
 	return _("<deleted metaobject>");
 }
 
-bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	if (m_readOnly || m_metaTable->IsNumberLine(id))
 		return false;
@@ -114,7 +114,7 @@ bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewItem& item
 	return false;
 }
 
-bool IValueTabularSectionDataObject::GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool IValueTabularSectionDataObject::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	if (m_metaTable->IsNumberLine(id)) {
 		pvarMetaVal = GetRow(item) + 1;
@@ -148,7 +148,7 @@ bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& p
 		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case enFind: {
-		const wxDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
+		const wxDataViewExtItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
 		if (item.IsOk())
 			pvarRetValue = GetRowAt(item);
 		return true;
@@ -195,7 +195,7 @@ void IValueTabularSectionDataObject::RefreshTabularSection() {
 		CValue filterValue;
 		for (long row = 0; row < IValueTable::GetRowCount(); row++) {
 
-			const wxDataViewItem& item = IValueTable::GetItem(row); bool success_compare = true;
+			const wxDataViewExtItem& item = IValueTable::GetItem(row); bool success_compare = true;
 			for (auto filter : m_filterRow.m_filters) {
 
 				if (filter.m_filterUse && GetValueByMetaID(item, filter.m_filterModel, filterValue)) {
@@ -270,8 +270,8 @@ bool IValueTabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 
 	unsigned int rowCount = srcTable->GetRowCount();
 	for (unsigned int row = 0; row < rowCount; row++) {
-		const wxDataViewItem& srcItem = srcTable->GetItem(row);
-		const wxDataViewItem& dstItem = GetItem(AppendRow());
+		const wxDataViewExtItem& srcItem = srcTable->GetItem(row);
+		const wxDataViewExtItem& dstItem = GetItem(AppendRow());
 		for (auto colName : columnName) {
 			CValue cRetValue;
 			if (srcTable->GetValueByMetaID(srcItem, srcTable->GetColumnIDByName(colName), cRetValue)) {
@@ -298,8 +298,8 @@ IValueTable* IValueTabularSectionDataObject::SaveDataToTable() const
 	}
 	valueTable->PrepareNames();
 	for (long row = 0; row < GetRowCount(); row++) {
-		const wxDataViewItem& srcItem = GetItem(row);
-		const wxDataViewItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
+		const wxDataViewExtItem& srcItem = GetItem(row);
+		const wxDataViewExtItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
 		for (unsigned int col = 0; col < colData->GetColumnCount(); col++) {
 			IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(col);
 			wxASSERT(colInfo);
@@ -316,7 +316,7 @@ IValueTable* IValueTabularSectionDataObject::SaveDataToTable() const
 	return valueTable;
 }
 
-bool CValueTabularSectionDataObjectRef::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool CValueTabularSectionDataObjectRef::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	if (varMetaVal != IValueTabularSectionDataObject::GetValueByMetaID(item, id)) {
 		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
@@ -331,7 +331,7 @@ bool CValueTabularSectionDataObjectRef::SetValueByMetaID(const wxDataViewItem& i
 	return false;
 }
 
-bool CValueTabularSectionDataObjectRef::GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool CValueTabularSectionDataObjectRef::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	return IValueTabularSectionDataObject::GetValueByMetaID(item, id, pvarMetaVal);
 }
@@ -340,7 +340,7 @@ bool CValueTabularSectionDataObjectRef::GetValueByMetaID(const wxDataViewItem& i
 //               CValueTabularSectionDataObjectReturnLine                //
 //////////////////////////////////////////////////////////////////////
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable, const wxDataViewItem& line)
+IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable, const wxDataViewExtItem& line)
 	: IValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new CMethodHelper()) {
 }
 

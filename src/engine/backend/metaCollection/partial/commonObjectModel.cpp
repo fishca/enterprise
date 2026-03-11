@@ -10,7 +10,7 @@
 //***********************************************************************************
 
 void IValueRecordSetObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -21,7 +21,7 @@ void IValueRecordSetObject::GetValueByRow(wxVariant& variant,
 #include "backend/metaData.h"
 
 bool IValueRecordSetObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	const wxString &strData = variant.GetString();
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);

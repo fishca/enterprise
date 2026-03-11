@@ -55,7 +55,7 @@
     <ClCompile Include="win\ctrls\checktree.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="win\ctrls\dataView.cpp">
+    <ClCompile Include="win\ctrls\tableView.cpp">
       <Filter>win\ctrl</Filter>
     </ClCompile>
     <ClCompile Include="win\ctrls\treelistctrl.cpp">
@@ -79,9 +79,6 @@
     </ClCompile>
     <ClCompile Include="visualView\visualEvent.cpp">
       <Filter>visualView</Filter>
-    </ClCompile>
-    <ClCompile Include="visualView\dvc\dvc.cpp">
-      <Filter>visualView\dvc</Filter>
     </ClCompile>
     <ClCompile Include="win\theme\luna_dockart.cpp">
       <Filter>win\theme</Filter>
@@ -803,6 +800,15 @@
     <ClCompile Include="visualView\controlEnum.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\datavgen.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\datavcmn.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\ctrl\tableBoxColumnRenderer.cpp">
+      <Filter>visualView\ctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -853,7 +859,7 @@
     <ClInclude Include="win\ctrls\checktree.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
-    <ClInclude Include="win\ctrls\dataView.h">
+    <ClInclude Include="win\ctrls\tableView.h">
       <Filter>win\ctrl</Filter>
     </ClInclude>
     <ClInclude Include="win\ctrls\dynamicBorder.h">
@@ -883,9 +889,6 @@
     </ClInclude>
     <ClInclude Include="visualView\visual.h">
       <Filter>visualView</Filter>
-    </ClInclude>
-    <ClInclude Include="visualView\dvc\dvc.h">
-      <Filter>visualView\dvc</Filter>
     </ClInclude>
     <ClInclude Include="win\theme\luna_dockart.h">
       <Filter>win\theme</Filter>
@@ -1413,6 +1416,21 @@
     <ClInclude Include="visualView\controlEnum.h">
       <Filter>visualView</Filter>
     </ClInclude>
+    <ClInclude Include="win\ctrls\dataview\dataview.h">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\dataview\datavgen.h">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\dataview\dvrenderers.h">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClInclude>
+    <ClInclude Include="visualView\ctrl\tableBoxColumnRenderer.h">
+      <Filter>visualView\ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="win\dlgs\filterDataView.h">
+      <Filter>win\dlg</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win">
@@ -1432,9 +1450,6 @@
     </Filter>
     <Filter Include="visualView">
       <UniqueIdentifier>{15ab1d55-40d6-4e89-96f1-2b9b0bfdc779}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="visualView\dvc">
-      <UniqueIdentifier>{5388c62b-4a7a-427f-9607-53405723f906}</UniqueIdentifier>
     </Filter>
     <Filter Include="win\theme">
       <UniqueIdentifier>{25dd471b-6260-4d4d-85b7-1d3978db9616}</UniqueIdentifier>
@@ -1480,6 +1495,9 @@
     </Filter>
     <Filter Include="win\editor\textEditor">
       <UniqueIdentifier>{565679ce-6d59-49c5-b8b4-b681aca12170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\ctrl\dataview">
+      <UniqueIdentifier>{76d86bdf-ff11-4660-b36c-3720a56b1c57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,6 @@
 #include "tableBox.h"
+#include "tableBoxColumnRenderer.h"
+
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
@@ -30,7 +32,6 @@ bool CValueTableBoxColumn::TextProcessing(wxTextCtrl* textCtrl, const wxString& 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-#include "frontend/visualView/dvc/dvc.h"
 #include "frontend/win/ctrls/controlTextEditor.h"
 
 void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
@@ -47,11 +48,11 @@ void CValueTableBoxColumn::ChoiceProcessing(CValue& vSelected)
 			);
 		}
 
-		CDataViewColumnContainer* columnObject =
-			dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
+		CDataViewColumnObject* columnObject =
+			dynamic_cast<CDataViewColumnObject*>(GetWxObject());
 
 		if (columnObject != nullptr) {
-			CValueViewRenderer* renderer = columnObject->GetRenderer();
+			CDataViewValueRenderer* renderer = columnObject->GetRenderer();
 			wxASSERT(renderer);
 			wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(renderer->GetEditorCtrl());
 			if (textEditor != nullptr) {
@@ -79,11 +80,11 @@ void CValueTableBoxColumn::OnTextEnter(wxCommandEvent& event)
 
 void CValueTableBoxColumn::OnKillFocus(wxFocusEvent& event)
 {
-	CDataViewColumnContainer* columnObject =
-		dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
+	CDataViewColumnObject* columnObject =
+		dynamic_cast<CDataViewColumnObject*>(GetWxObject());
 
 	if (columnObject != nullptr) {
-		CValueViewRenderer* renderer = columnObject->GetRenderer();
+		CDataViewValueRenderer* renderer = columnObject->GetRenderer();
 		wxASSERT(renderer);
 		renderer->FinishEditing();
 	}
@@ -111,10 +112,10 @@ void CValueTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 			setType = true;
 		}
 		if (!setType) {
-			CDataViewColumnContainer* columnObject =
-				dynamic_cast<CDataViewColumnContainer*>(GetWxObject());
+			CDataViewColumnObject* columnObject =
+				dynamic_cast<CDataViewColumnObject*>(GetWxObject());
 			wxASSERT(columnObject);
-			CValueViewRenderer* columnRenderer = columnObject->GetRenderer();
+			CDataViewValueRenderer* columnRenderer = columnObject->GetRenderer();
 			wxASSERT(columnRenderer);
 			const class_identifier_t& clsid = selValue.GetClassType();
 			if (!ITypeControlFactory::QuickChoice(this, clsid, columnRenderer->GetEditorCtrl())) {

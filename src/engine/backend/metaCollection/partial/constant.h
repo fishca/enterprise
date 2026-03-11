@@ -93,7 +93,7 @@ protected:
 
 private:
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categorySecondary, IValueMetaObject::CreateMetaObjectAndSetParent<CValueMetaObjectModule>(wxT("RecordModule"), _("Record module")));
+	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("RecordModule"), _("Record module"));
 
 #pragma region role 
 	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("Read"), _("Read"));

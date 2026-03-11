@@ -431,7 +431,7 @@ bool CValueRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 				if (hasError) {
 					m_constValue = constValue;
 					db_query_active_transaction.RollBackTransaction();
-					CBackendCoreException::Error("failed to write object in db!"); return false;
+					CBackendCoreException::Error(_("Failed to write object in db!")); return false;
 				}
 
 				{
@@ -439,7 +439,7 @@ bool CValueRecordDataObjectConstant::SetConstValue(const CValue& cValue)
 					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						CBackendCoreException::Error("failed to write object in db!"); return false;
+						CBackendCoreException::Error(_("Failed to write object in db!")); return false;
 					}
 				}
 

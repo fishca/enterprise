@@ -4397,6 +4397,8 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 
 	if (event.Dragging())
 	{
+		bool callForceRefresh = !m_isDragging;
+
 		if (!m_isDragging)
 		{
 			m_isDragging = true;
@@ -4470,6 +4472,9 @@ void wxGridExt::ProcessRowColLabelMouseEvent(const wxGridExtOperations& oper, wx
 					m_dragLastColour = markerColour;
 				}
 			}
+
+			if (callForceRefresh)
+				ForceRefresh();
 		}
 		return;
 	}
@@ -5077,51 +5082,47 @@ wxGridExt::DoGridCellDrag(wxMouseEvent& event,
 	// of the modifier keys matters.
 	if (m_selection)
 	{
-		wxGridExtCellCoords blockStart = m_currentCellCoords;
-		wxGridExtCellCoords blockEnd = coords;
+		const int rowStart = m_currentCellCoords.GetRow() < coords.GetRow() ?
+			m_currentCellCoords.GetRow() : coords.GetRow();
+		const int colStart = m_currentCellCoords.GetCol() < coords.GetCol() ?
+			m_currentCellCoords.GetCol() : coords.GetCol();
 
-		int row = coords.GetRow(), col = coords.GetCol();
-		int cell_rows, cell_cols;
+		const int rowEnd = m_currentCellCoords.GetRow() > coords.GetRow() ?
+			m_currentCellCoords.GetRow() : coords.GetRow();
+		const int colEnd = m_currentCellCoords.GetCol() > coords.GetCol() ?
+			m_currentCellCoords.GetCol() : coords.GetCol();
 
-		if (GetCellSize(row, col, &cell_rows, &cell_cols) == CellSpan_Main)
+		wxGridExtCellCoords blockStart(rowStart, colStart);
+		wxGridExtCellCoords blockEnd(rowEnd, colEnd);
+
+		for (int row = rowStart; row <= rowEnd; row++)
 		{
-			int end_row = row + cell_rows - 1;
-			int end_col = col + cell_cols - 1;
-
-			int cell_start_rows, cell_start_cols;
-			GetCellSize(end_row, end_col, &cell_start_rows, &cell_start_cols);
-
-			int start_row = end_row + cell_start_rows;
-			int start_col = end_col + cell_start_cols;
-
-			if (m_currentCellCoords.GetRow() <= row)
+			for (int col = colStart; col <= colEnd; col++)
 			{
-				if (start_row < blockStart.GetRow())
-					blockStart.SetRow(start_row);
+				int cell_rows, cell_cols;
+				if (GetCellSize(row, col, &cell_rows, &cell_cols) != CellSpan::CellSpan_Inside)
+				{
+					int end_row = row + cell_rows - 1;
+					int end_col = col + cell_cols - 1;
 
-				blockEnd.SetRow(end_row);
-			}
-			else if (m_currentCellCoords.GetRow() > row)
-			{
-				if (end_row > blockStart.GetRow())
-					blockStart.SetRow(end_row);
+					if (end_row > blockEnd.GetRow())
+						blockEnd.SetRow(end_row);
 
-				blockEnd.SetRow(start_row);
-			}
+					if (end_col > blockEnd.GetCol())
+						blockEnd.SetCol(end_col);
 
-			if (m_currentCellCoords.GetCol() <= col)
-			{
-				if (start_col < blockStart.GetCol())
-					blockStart.SetCol(start_col);
+					int cell_start_rows, cell_start_cols;
+					GetCellSize(end_row, end_col, &cell_start_rows, &cell_start_cols);
 
-				blockEnd.SetCol(end_col);
-			}
-			else if (m_currentCellCoords.GetCol() > col)
-			{
-				if (end_col > blockStart.GetCol())
-					blockStart.SetCol(end_col);
+					int start_row = end_row + cell_start_rows;
+					int start_col = end_col + cell_start_cols;
 
-				blockEnd.SetCol(start_col);
+					if (start_row < blockStart.GetRow())
+						blockStart.SetRow(start_row);
+
+					if (start_col < blockStart.GetCol())
+						blockStart.SetCol(start_col);
+				}
 			}
 		}
 
@@ -5994,7 +5995,7 @@ void wxGridExt::ClearGrid()
 		DisableCellEditControl();
 		m_cellEditCtrlEnabled = false;
 
-		wxGridExtSelectionModes selmode = m_selection ? 
+		wxGridExtSelectionModes selmode = m_selection ?
 			m_selection->GetSelectionMode() : wxGridExtSelectionModes::wxGridExtSelectRowsOrColumns;
 
 		wxDELETE(m_selection);
@@ -7271,7 +7272,6 @@ void wxGridExt::DrawCellHighlight(wxDC& dc, int row, int col, const wxGridExtCel
 			rect.GetRight() + 1, rect.GetBottom());
 	}
 
-	RefreshBlock(row, col, row, col);
 }
 
 wxPen wxGridExt::GetDefaultGridLinePen()
@@ -12076,9 +12076,6 @@ void wxGridExt::DoSetRowSize(int row, int height)
 		}
 	}
 
-	//support printing
-	SetRowBrake(row);
-
 	if (m_dragRowOrCol == -1)
 	{
 		// make up a dummy event for the grid event to use -- unfortunately we
@@ -12089,6 +12086,9 @@ void wxGridExt::DoSetRowSize(int row, int height)
 
 		SendGridSizeEvent(wxEVT_GRID_ROW_MODIFIED, row, e);
 	}
+
+	//support printing
+	SetRowBrake(row);
 }
 
 void wxGridExt::SetDefaultColSize(int width, float scale, bool resizeExistingCols)

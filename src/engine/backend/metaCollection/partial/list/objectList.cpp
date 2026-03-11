@@ -193,7 +193,7 @@ IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTree
 
 wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListReturnLine, IValueTable::IValueModelReturnLine);
 
-IValueListDataObject::CValueDataObjectListReturnLine::CValueDataObjectListReturnLine(IValueListDataObject* ownerTable, const wxDataViewItem& line) :
+IValueListDataObject::CValueDataObjectListReturnLine::CValueDataObjectListReturnLine(IValueListDataObject* ownerTable, const wxDataViewExtItem& line) :
 	IValueModelReturnLine(line), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
 }
@@ -234,7 +234,7 @@ bool IValueListDataObject::CValueDataObjectListReturnLine::GetPropVal(const long
 
 wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeReturnLine, IValueTree::IValueModelReturnLine);
 
-IValueTreeDataObject::CValueDataObjectTreeReturnLine::CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable, const wxDataViewItem& line) :
+IValueTreeDataObject::CValueDataObjectTreeReturnLine::CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable, const wxDataViewExtItem& line) :
 	IValueModelReturnLine(line),
 	m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
 {
@@ -277,12 +277,12 @@ bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::GetPropVal(const long
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueListDataObjectEnumRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem CValueListDataObjectEnumRef::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	CValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewItem item = GetItem(row);
+			wxDataViewExtItem item = GetItem(row);
 			if (item.IsOk()) {
 				wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
@@ -290,10 +290,10 @@ wxDataViewItem CValueListDataObjectEnumRef::FindRowValue(const CValue& varValue,
 			}
 		}
 	}
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem CValueListDataObjectEnumRef::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem CValueListDataObjectEnumRef::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(retLine->GetLineItem());
 	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
@@ -301,8 +301,8 @@ wxDataViewItem CValueListDataObjectEnumRef::FindRowValue(IValueModelReturnLine* 
 			return node->GetGuid() == ((wxValueTableEnumRow*)row)->GetGuid();
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewItem(*it);
-	return wxDataViewItem(nullptr);
+	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
+	return wxDataViewExtItem(nullptr);
 }
 
 CValueListDataObjectEnumRef::CValueListDataObjectEnumRef(IValueMetaObjectRecordDataEnumRef* metaObject, const form_identifier_t& formType, bool choiceMode) :
@@ -372,12 +372,12 @@ wxString CValueListDataObjectEnumRef::GetString() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueListDataObjectRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem CValueListDataObjectRef::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	CValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewItem item = GetItem(row);
+			wxDataViewExtItem item = GetItem(row);
 			if (item.IsOk()) {
 				wxValueTableListRow* node = GetViewData<wxValueTableListRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
@@ -385,10 +385,10 @@ wxDataViewItem CValueListDataObjectRef::FindRowValue(const CValue& varValue, con
 			}
 		}
 	}
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem CValueListDataObjectRef::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem CValueListDataObjectRef::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	wxValueTableListRow* node = GetViewData<wxValueTableListRow>(retLine->GetLineItem());
 	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
@@ -396,8 +396,8 @@ wxDataViewItem CValueListDataObjectRef::FindRowValue(IValueModelReturnLine* retL
 			return node->GetGuid() == ((wxValueTableListRow*)row)->GetGuid();
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewItem(*it);
-	return wxDataViewItem(nullptr);
+	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
+	return wxDataViewExtItem(nullptr);
 }
 
 CValueListDataObjectRef::CValueListDataObjectRef(IValueMetaObjectRecordDataMutableRef* metaObject, const form_identifier_t& formType, bool choiceMode) :
@@ -578,7 +578,7 @@ wxString CValueListDataObjectRef::GetString() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueTreeDataObjectFolderRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem CValueTreeDataObjectFolderRef::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	CValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
@@ -607,12 +607,12 @@ wxDataViewItem CValueTreeDataObjectFolderRef::FindRowValue(const CValue& varValu
 				break;
 		}
 		if (foundedNode != nullptr)
-			return wxDataViewItem(foundedNode);
+			return wxDataViewExtItem(foundedNode);
 	}
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem CValueTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem CValueTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(retLine->GetLineItem());
 	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const CGuid&)> findGuid =
@@ -634,8 +634,8 @@ wxDataViewItem CValueTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine
 		if (child != nullptr) findGuid(child, foundedNode, node->GetGuid());
 		if (foundedNode != nullptr) break;
 	}
-	if (foundedNode != nullptr) return wxDataViewItem(foundedNode);
-	return wxDataViewItem(nullptr);
+	if (foundedNode != nullptr) return wxDataViewExtItem(foundedNode);
+	return wxDataViewExtItem(nullptr);
 }
 
 CValueTreeDataObjectFolderRef::CValueTreeDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const form_identifier_t& formType,
@@ -865,14 +865,14 @@ wxString CValueTreeDataObjectFolderRef::GetString() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueListRegisterObject::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem CValueListRegisterObject::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	IValueRecordManagerObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
 		IValueMetaObjectRegisterData* metaObject = GetMetaObject();
 		wxASSERT(metaObject);
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewItem item = GetItem(row);
+			wxDataViewExtItem item = GetItem(row);
 			if (item.IsOk()) {
 				wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetUniquePairKey(metaObject))
@@ -881,10 +881,10 @@ wxDataViewItem CValueListRegisterObject::FindRowValue(const CValue& varValue, co
 		}
 	}
 
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem CValueListRegisterObject::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem CValueListRegisterObject::FindRowValue(IValueModelReturnLine* retLine) const
 {
 	IValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
@@ -894,8 +894,8 @@ wxDataViewItem CValueListRegisterObject::FindRowValue(IValueModelReturnLine* ret
 			return node->GetUniquePairKey(metaObject) == ((wxValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewItem(*it);
-	return wxDataViewItem(nullptr);
+	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
+	return wxDataViewExtItem(nullptr);
 }
 
 CValueListRegisterObject::CValueListRegisterObject(IValueMetaObjectRegisterData* metaObject, const form_identifier_t& formType) :

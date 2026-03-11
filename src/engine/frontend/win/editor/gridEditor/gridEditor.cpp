@@ -139,6 +139,7 @@ void CGridEditor::AddArea()
 		return;
 
 	wxGridExt::CreateArea();
+	wxGridExt::ForceRefresh();
 }
 
 void CGridEditor::DeleteArea()
@@ -147,6 +148,7 @@ void CGridEditor::DeleteArea()
 		return;
 
 	wxGridExt::DeleteArea();
+	wxGridExt::ForceRefresh();
 }
 
 void CGridEditor::MergeCells()
@@ -157,6 +159,8 @@ void CGridEditor::MergeCells()
 	const wxGridExtBlockCoords& cellRange = GetSelectedCellRange();
 	wxGridExt::SetCellSize(cellRange.GetTopRow(), cellRange.GetLeftCol(),
 		cellRange.GetBottomRow() - cellRange.GetTopRow() + 1, cellRange.GetRightCol() - cellRange.GetLeftCol() + 1);
+	
+	wxGridExt::ForceRefresh();
 }
 
 void CGridEditor::DockTable()
@@ -166,6 +170,8 @@ void CGridEditor::DockTable()
 
 	const wxGridExtBlockCoords& cellRange = GetSelectedCellRange();
 	CGridEditor::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
+
+	wxGridExt::ForceRefresh();
 }
 
 #pragma endregion

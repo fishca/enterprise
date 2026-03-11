@@ -10,21 +10,21 @@
 //***********************************************************************************
 
 void IValueTabularSectionDataObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr) return;
+
 	if (m_metaTable->IsNumberLine(col))
-		variant = wxString::Format("%i", GetRow(row) + 1);
+		variant = new wxVariantDataValueNumberLine(GetRow(row) + 1);
 	else if (node->HasColumnValue(col))
 		node->GetValue(col, variant);
-
 }
 
 #include "backend/metaData.h"
 
 bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr) return false;
@@ -72,7 +72,7 @@ void IValueTabularSectionDataObject::AddValue(unsigned int before)
 
 void IValueTabularSectionDataObject::CopyValue()
 {
-	const wxDataViewItem& currentItem = GetSelection();
+	const wxDataViewExtItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
@@ -100,17 +100,16 @@ void IValueTabularSectionDataObject::CopyValue()
 
 void IValueTabularSectionDataObject::EditValue()
 {
-	const wxDataViewItem& currentItem = GetSelection();
+	const wxDataViewExtItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	if (m_srcNotifier != nullptr) {
 
-		wxDataViewColumn* currentColunn = m_srcNotifier->GetCurrentColumn();
-		wxASSERT(currentColunn);
-		if (m_metaTable->IsNumberLine(currentColunn->GetModelColumn()))
+	if (m_modelProvider != nullptr) {
+
+		if (m_metaTable->IsNumberLine(m_modelProvider->GetCurrentModelColumn()))
 			return;
 
-		IValueTable::RowValueStartEdit(currentItem, currentColunn->GetModelColumn());
+		IValueTable::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
 	}
 	else {
 		IValueTable::RowValueStartEdit(currentItem);
@@ -121,7 +120,7 @@ void IValueTabularSectionDataObject::EditValue()
 
 void IValueTabularSectionDataObject::DeleteValue()
 {
-	const wxDataViewItem& currentItem = GetSelection();
+	const wxDataViewExtItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);

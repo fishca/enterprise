@@ -10,44 +10,8 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister, CValue);
 
-CValueManagerDataObjectInformationRegister::CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject) :
-	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
-{
-}
-
-CValueManagerDataObjectInformationRegister::~CValueManagerDataObjectInformationRegister()
-{
-	wxDELETE(m_methodHelper);
-}
-
 CValueMetaObjectCommonModule* CValueManagerDataObjectInformationRegister::GetModuleManager() const {
 	return m_metaObject->GetModuleManager();
-}
-
-#include "backend/objCtor.h"
-
-class_identifier_t CValueManagerDataObjectInformationRegister::GetClassType() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassType();
-}
-
-wxString CValueManagerDataObjectInformationRegister::GetClassName() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
-}
-
-wxString CValueManagerDataObjectInformationRegister::GetString() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
 }
 
 enum {
@@ -68,12 +32,8 @@ enum {
 
 void CValueManagerDataObjectInformationRegister::PrepareNames() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
+	IValueManagerDataObject::PrepareNames();
 
-	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("CreateRecordSet"), wxT("CreateRecordSet()"));
 	m_methodHelper->AppendFunc(wxT("CreateRecordManager"), wxT("CreateRecordManager()"));
 	m_methodHelper->AppendFunc(wxT("CreateRecordKey"), wxT("CreateRecordKey()"));
@@ -87,23 +47,12 @@ void CValueManagerDataObjectInformationRegister::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("GetRecordForm"), 3, wxT("GetRecordForm(string, owner, guid)"));
 	m_methodHelper->AppendFunc(wxT("GetListForm"), 3, wxT("GetListForm(string, owner, guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(string)"));
-
-	CValue * pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr) {
-		// add methods from context
-		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {
-			m_methodHelper->CopyMethod(pRefData->GetPMethods(), idx);
-		}
-	}
 }
 
 #include "selector/objectSelector.h"
 
 bool CValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-
 	switch (lMethodNum)
 	{
 	case eCreateRecordSet:
@@ -173,11 +122,5 @@ bool CValueManagerDataObjectInformationRegister::CallAsFunc(const long lMethodNu
 		return true;
 	}
 
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr)
-		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
-	return false;
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }

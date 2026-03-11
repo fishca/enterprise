@@ -104,9 +104,9 @@ CValueSpreadsheetDocument* IValueMetaObjectGenericData::GetTemplate(const wxStri
 			return nullptr;
 		}
 
-		CValueSpreadsheetDocument* valueSpreadsheetDocument = 
+		CValueSpreadsheetDocument* valueSpreadsheetDocument =
 			new CValueSpreadsheetDocument(creator->GetSpreadsheetDesc());
-		
+
 		valueSpreadsheetDocument->PrepareNames();
 		return valueSpreadsheetDocument;
 	}
@@ -715,15 +715,17 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::LoadData(CMemoryReader& data
 	unsigned int size = predefinedReader.r_u32();
 	for (unsigned int i = 0; i < size; i++)
 	{
-		CPredefinedObjectValue entry;
+		const CGuid& valueGuid =
+			predefinedReader.r_stringZ();
 
-		entry.m_valueGuid = predefinedReader.r_stringZ();
+		wxString valueName = predefinedReader.r_stringZ();
+		wxString valueCode = predefinedReader.r_stringZ();
+		wxString valueDescription = predefinedReader.r_stringZ();
 
-		entry.m_valueCode = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		entry.m_valueDescription = m_metaData->Deserialize(predefinedReader.r_stringZ());
-		entry.m_valueIsFolder = m_metaData->Deserialize(predefinedReader.r_stringZ());
+		bool valueIsFolder = predefinedReader.r_u8();
 
-		m_predefinedObjectVector.emplace_back(std::move(entry));
+		m_predefinedObjectVector.emplace_back(
+			new CPredefinedValueObject(valueGuid, valueName, valueCode, valueDescription));
 	}
 
 	//load default attributes:
@@ -742,13 +744,15 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::SaveData(CMemoryWriter& data
 	CMemoryWriter predefinedWritter;
 	predefinedWritter.w_u32(m_predefinedObjectVector.size());
 
-	for (const CPredefinedObjectValue& value : m_predefinedObjectVector)
+	for (const auto& value : m_predefinedObjectVector)
 	{
-		predefinedWritter.w_stringZ(value.m_valueGuid);
+		predefinedWritter.w_stringZ(value->GetPredefinedGuid());
+		predefinedWritter.w_stringZ(value->GetPredefinedName());
 
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueCode));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueDescription));
-		predefinedWritter.w_stringZ(m_metaData->Serialize(value.m_valueIsFolder));
+		predefinedWritter.w_stringZ(value->GetPredefinedCode());
+		predefinedWritter.w_stringZ(value->GetPredefinedDescription());
+
+		predefinedWritter.w_u8(value->IsPredefinedFolder());
 	}
 
 	dataWritter.w_chunk(predefinedBlock, predefinedWritter.buffer());
@@ -1208,11 +1212,142 @@ IValueRecordManagerObject* IValueMetaObjectRegisterData::CopyRecordManagerObject
 }
 
 //***********************************************************************
-//*                        ISourceDataObject							*
+//*                        IValueManagerDataObject						*
 //***********************************************************************
 
+void IValueManagerDataObject::PrepareNames() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	m_methodHelper->ClearHelper();
+
+	CValue* pRefData = moduleManager->FindCommonModule(GetModuleManager());
+	if (pRefData != nullptr) {
+		// add methods from context
+		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {
+			m_methodHelper->CopyMethod(pRefData->GetPMethods(), idx);
+		}
+	}
+}
+
+bool IValueManagerDataObject::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	CValue* pRefData =
+		moduleManager->FindCommonModule(GetModuleManager());
+
+	if (pRefData != nullptr)
+		return pRefData->CallAsProc(lMethodNum, paParams, lSizeArray);
+
+	return false;
+}
+
+bool IValueManagerDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaData* metaData = valueMetaObject->GetMetaData();
+	wxASSERT(metaData);
+
+	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	wxASSERT(moduleManager);
+
+	CValue* pRefData =
+		moduleManager->FindCommonModule(GetModuleManager());
+
+	if (pRefData != nullptr)
+		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
+
+	return false;
+}
+
+class_identifier_t IValueManagerDataObject::GetClassType() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassType();
+}
+
+wxString IValueManagerDataObject::GetClassName() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
+wxString IValueManagerDataObject::GetString() const
+{
+	const IValueMetaObjectGenericData* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const IMetaValueTypeCtor* clsFactory =
+		valueMetaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
+	wxASSERT(clsFactory);
+	return clsFactory->GetClassName();
+}
+
 //***********************************************************************
-//*                        IValueRecordDataObject							*
+//*                        IValueManagerDataObjectPredefined			*
+//***********************************************************************
+
+
+void IValueManagerDataObjectPredefined::PrepareNames() const
+{
+	const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	IValueManagerDataObject::PrepareNames();
+
+	//fill custom values 
+	for (const auto object : valueMetaObject->GetPredefinedValueArray()) {
+		m_methodHelper->AppendProp(object->GetPredefinedName(), true, false);
+	}
+}
+
+bool IValueManagerDataObjectPredefined::SetPropVal(const long lPropNum, CValue& cValue)
+{
+	return false;
+}
+
+bool IValueManagerDataObjectPredefined::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+{
+	IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	const auto& predefinedValue =
+		valueMetaObject->FindPredefinedValue(m_methodHelper->GetPropName(lPropNum));
+	if (predefinedValue == nullptr)
+		return false;
+	pvarPropVal = CValueReferenceDataObject::Create(valueMetaObject, predefinedValue->GetPredefinedGuid());
+	return true;
+}
+
+//***********************************************************************
+//*                        IValueRecordDataObject						*
 //***********************************************************************
 
 wxIMPLEMENT_ABSTRACT_CLASS(IValueRecordDataObject, CValue);
@@ -2046,7 +2181,7 @@ bool IValueRecordDataObjectFolderRef::GetModel(IValueModel*& tableValue, const m
 
 IValueRecordDataObjectRef* IValueRecordDataObjectFolderRef::CopyObjectValue()
 {
-	return ((IValueMetaObjectRecordDataHierarchyMutableRef*)m_metaObject)->CreateObjectValue(m_objMode, this);
+	return GetMetaObject()->CreateObjectValue(m_objMode, this);
 }
 
 bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
@@ -2054,8 +2189,17 @@ bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& 
 	const CValue& cOldValue = IValueRecordDataObjectRef::GetValueByMetaID(id);
 	if (cOldValue.GetType() == TYPE_NULL)
 		return false;
-	if (GetMetaObject()->IsDataParent(id) &&
-		varMetaVal == GetReference()) {
+
+	const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+	wxASSERT(valueMetaObject);
+
+	if (valueMetaObject->IsDataParent(id) && varMetaVal == GetReference()) {
+		CBackendCoreException::Error(_("You can't change your parent to yourself!"));
+		return false;
+	}
+
+	if (valueMetaObject->IsDataPredefinedName(id)) {
+		CBackendCoreException::Error(_("You cannot change predefined value!"));
 		return false;
 	}
 
@@ -2580,8 +2724,8 @@ bool IValueRecordSetObject::LoadDataFromTable(IValueTable* srcTable)
 	}
 	unsigned int rowCount = srcTable->GetRowCount();
 	for (unsigned int row = 0; row < rowCount; row++) {
-		const wxDataViewItem& srcItem = srcTable->GetItem(row);
-		const wxDataViewItem& dstItem = GetItem(AppendRow());
+		const wxDataViewExtItem& srcItem = srcTable->GetItem(row);
+		const wxDataViewExtItem& dstItem = GetItem(AppendRow());
 		for (auto colName : columnName) {
 			CValue cRetValue;
 			if (srcTable->GetValueByMetaID(srcItem, srcTable->GetColumnIDByName(colName), cRetValue)) {
@@ -2609,8 +2753,8 @@ IValueTable* IValueRecordSetObject::SaveDataToTable() const
 	}
 	valueTable->PrepareNames();
 	for (long row = 0; row < GetRowCount(); row++) {
-		const wxDataViewItem& srcItem = GetItem(row);
-		const wxDataViewItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
+		const wxDataViewExtItem& srcItem = GetItem(row);
+		const wxDataViewExtItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
 		for (unsigned int col = 0; col < colData->GetColumnCount(); col++) {
 			CValue cRetValue;
 			IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(col);
@@ -2625,7 +2769,7 @@ IValueTable* IValueRecordSetObject::SaveDataToTable() const
 	return valueTable;
 }
 
-bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	if (!appData->DesignerMode()) {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
@@ -2642,7 +2786,7 @@ bool IValueRecordSetObject::SetValueByMetaID(const wxDataViewItem& item, const m
 	return false;
 }
 
-bool IValueRecordSetObject::GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool IValueRecordSetObject::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	if (appData->DesignerMode()) {
 		const IValueMetaObjectAttribute* attribute = m_metaObject->FindAnyAttributeObjectByFilter(id);
@@ -2738,7 +2882,7 @@ IValueRecordSetObject::CValueRecordSetObjectRegisterColumnCollection::CValueReco
 
 wxIMPLEMENT_DYNAMIC_CLASS(IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine, IValueTable::IValueModelReturnLine);
 
-IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine::CValueRecordSetObjectRegisterReturnLine(IValueRecordSetObject* ownerTable, const wxDataViewItem& line)
+IValueRecordSetObject::CValueRecordSetObjectRegisterReturnLine::CValueRecordSetObjectRegisterReturnLine(IValueRecordSetObject* ownerTable, const wxDataViewExtItem& line)
 	: IValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new CMethodHelper())
 {
 }

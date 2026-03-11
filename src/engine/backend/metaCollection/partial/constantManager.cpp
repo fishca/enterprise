@@ -7,44 +7,35 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectConstant, CValue);
 
-CValueManagerDataObjectConstant::CValueManagerDataObjectConstant(CValueMetaObjectConstant* metaConst) :
-	m_metaConst(metaConst)
-{
-}
-
-CValueManagerDataObjectConstant::~CValueManagerDataObjectConstant()
-{
-}
-
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
 class_identifier_t CValueManagerDataObjectConstant::GetClassType() const
 {
-	IMetaData* metaData = m_metaConst->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
+		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
 wxString CValueManagerDataObjectConstant::GetClassName() const
 {
-	IMetaData* metaData = m_metaConst->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
+		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 wxString CValueManagerDataObjectConstant::GetString() const
 {
-	IMetaData* metaData = m_metaConst->GetMetaData();
+	const IMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaConst, eCtorMetaType::eCtorMetaType_Manager);
+		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -65,7 +56,7 @@ void CValueManagerDataObjectConstant::PrepareNames() const
 
 bool CValueManagerDataObjectConstant::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
 {
-	CValuePtr<CValueRecordDataObjectConstant> recordDataObjectValue = m_metaConst->CreateRecordDataObjectValue();
+	CValuePtr<CValueRecordDataObjectConstant> recordDataObjectValue = m_metaObject->CreateRecordDataObjectValue();
 
 	switch (lMethodNum)
 	{

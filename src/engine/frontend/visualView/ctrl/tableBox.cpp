@@ -1,4 +1,6 @@
 #include "tableBox.h"
+#include "tableBoxColumnRenderer.h"
+
 #include "form.h"
 
 #include "frontend/visualView/visualHost.h"
@@ -11,6 +13,7 @@
 //***********************************************************************************
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBox, IValueWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode, CValue);
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -62,17 +65,17 @@ void CValueTableBox::AddColumn()
 		);
 		if (column_info != nullptr) column_info->SetColumnID(columnTable->GetControlID());
 	}
-	
+
 	g_visualHostContext->RefreshEditor();
 }
 
-void CValueTableBox::CreateColumnCollection(wxDataViewCtrl* dataViewCtrl)
+void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 {
 	if (appData->DesignerMode())
 		return;
 
-	wxDataViewCtrl* tc = dataViewCtrl ?
-		dataViewCtrl : dynamic_cast<wxDataViewCtrl*>(GetWxObject());
+	wxDataViewExtCtrl* tc = dataViewCtrl ?
+		dataViewCtrl : dynamic_cast<wxDataViewExtCtrl*>(GetWxObject());
 	wxASSERT(tc);
 
 	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
@@ -241,7 +244,7 @@ m_need_calculate_pos(false)
 
 void CValueTableBox::CalculateColumnPos()
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(GetWxObject());
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
 		wxHeaderCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
@@ -256,7 +259,7 @@ void CValueTableBox::CalculateColumnPos()
 				const IValueFrame* valueFrame = GetChild(idx);
 				wxASSERT(valueFrame);
 
-				wxDataViewColumn* column = dynamic_cast<wxDataViewColumn*>(valueFrame->GetWxObject());
+				wxDataViewExtColumn* column = dynamic_cast<wxDataViewExtColumn*>(valueFrame->GetWxObject());
 
 				const unsigned int column_model_index = dataViewCtrl->GetColumnIndex(column);
 				const unsigned int column_index = headerCtrl->GetColumnPos(column_model_index);
@@ -283,7 +286,7 @@ void CValueTableBox::CalculateColumnPos()
 
 wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* dataViewCtrl = new wxDataModelViewCtrl(wxparent, wxID_ANY,
+	wxTableViewCtrl* dataViewCtrl = new wxTableViewCtrl(wxparent, wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
 		wxDV_SINGLE | wxDV_HORIZ_RULES | wxDV_VERT_RULES | wxDV_ROW_LINES | wxDV_VARIABLE_LINE_HEIGHT | wxBORDER_SIMPLE);
@@ -343,12 +346,13 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
 	}
 
+	dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 	return dataViewCtrl;
 }
 
 void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) CValueTableBox::CreateModel();
 
@@ -362,7 +366,7 @@ void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	UpdateWindow(dataViewCtrl);
 
@@ -374,20 +378,19 @@ void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 			dataViewCtrl->GetFont()
 		);
 
+		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 		dataViewCtrl->SetHeaderAttr(attr);
 	}
 }
 
-#include "frontend/visualView/dvc/dvc.h"
-
 void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(wxobject);
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
 
-		wxDataViewModel* dataViewOldModel = dataViewCtrl->GetModel();
-		wxDataViewModel* dataViewNewModel = m_tableModel != nullptr ?
+		wxDataViewExtModel* dataViewOldModel = dataViewCtrl->GetModel();
+		wxDataViewExtModel* dataViewNewModel = m_tableModel != nullptr ?
 			m_tableModel->GetDataViewModel() : nullptr;
 
 		if (dataViewNewModel != dataViewOldModel) {
@@ -403,7 +406,7 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Cleanup(wxObject* obj, IVisualHost* visualHost)
 {
-	wxDataModelViewCtrl* dataViewCtrl = dynamic_cast<wxDataModelViewCtrl*>(obj);
+	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(obj);
 	m_dataViewCreated = m_dataViewUpdated = false;
 	if (dataViewCtrl != nullptr) dataViewCtrl->AssociateModel(nullptr);
 	m_tableCurrentLine.Reset();
@@ -418,11 +421,14 @@ bool CValueTableBox::LoadData(CMemoryReader& reader)
 	if (!m_propertySource->LoadData(reader))
 		return false;
 
+	m_propertyRowSelectionMode->LoadData(reader);
+
 	//events
 	m_eventSelection->LoadData(reader);
 	m_eventBeforeAddRow->LoadData(reader);
 	m_eventBeforeDeleteRow->LoadData(reader);
 	m_eventOnActivateRow->LoadData(reader);
+
 	return IValueWindow::LoadData(reader);
 }
 
@@ -431,11 +437,14 @@ bool CValueTableBox::SaveData(CMemoryWriter& writer)
 	if (!m_propertySource->SaveData(writer))
 		return false;
 
+	m_propertyRowSelectionMode->SaveData(writer);
+
 	//events
 	m_eventSelection->SaveData(writer);
 	m_eventBeforeAddRow->SaveData(writer);
 	m_eventBeforeDeleteRow->SaveData(writer);
 	m_eventOnActivateRow->SaveData(writer);
+
 	return IValueWindow::SaveData(writer);
 }
 
@@ -513,4 +522,5 @@ bool CValueTableBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Register in runtime                           *
 //***********************************************************************
 
+ENUM_TYPE_REGISTER(CValueEnumTableBoxSelectionMode, "TableboxRowSelectionMode", string_to_clsid("EN_TBXSL"));
 CONTROL_TYPE_REGISTER(CValueTableBox, "Tablebox", "Container", g_controlTableBoxCLSID);

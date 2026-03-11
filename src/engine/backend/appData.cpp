@@ -45,7 +45,7 @@ wxString CApplicationDataSessionArray::GetStartedDate(unsigned int idx) const {
 wxString CApplicationDataSessionArray::GetApplication(unsigned int idx) const {
 	if (idx > m_listSession.size())
 		return wxEmptyString;
-	return appData->GetModeDescr(m_listSession[idx].m_runMode);
+	return appData->GetRunModeDescr(m_listSession[idx].m_runMode);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ wxCriticalSection CApplicationData::m_cs_force_exit;
 ///////////////////////////////////////////////////////////////////////////////
 
 CApplicationData::CApplicationData(eRunMode runMode) :
-	m_db(nullptr), m_runMode(runMode),
+	m_db(nullptr), m_runMode(runMode), m_dbMode(eDatabaseMode::eNONE),
 	m_sessionGuid(wxNewUniqueGuid),
 	m_startedDate(wxDateTime::Now()),
 	m_strComputer(wxGetHostName()),
@@ -127,6 +127,8 @@ bool CApplicationData::CreateFileAppDataEnv(eRunMode runMode, const wxString& st
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
 
+			s_instance->m_dbMode = eDatabaseMode::eFILE;
+
 			if (runMode == eRunMode::eDESIGNER_MODE && !CApplicationData::TableAlreadyCreated()) {
 				CApplicationData::CreateTableSession();
 				CApplicationData::CreateTableUser();
@@ -174,6 +176,8 @@ bool CApplicationData::CreateServerAppDataEnv(eRunMode runMode, const wxString& 
 
 			s_instance->m_db = db;
 			s_instance->m_exclusiveMode = runMode == eRunMode::eDESIGNER_MODE;
+
+			s_instance->m_dbMode = eDatabaseMode::eSERVER;
 
 			if (!SetLocaleAppDataEnv(strLocale))
 				return false;
@@ -589,6 +593,17 @@ bool CApplicationData::ClearDatabase()
 		return false;
 
 	return true;
+}
+
+wxString CApplicationData::GetDatabaseDescription()
+{
+	if (m_dbMode == eDatabaseMode::eFILE)
+		return m_strFile;
+
+	if (m_dbMode == eDatabaseMode::eSERVER)
+		return m_strServer + wxT(":") + m_strPort + wxT("/") + m_strDatabase;
+
+	return wxT("");
 }
 
 ///////////////////////////////////////////////////////////////////////////////

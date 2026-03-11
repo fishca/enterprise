@@ -228,6 +228,18 @@ bool CValueRecordDataObjectCatalog::DeleteObject()
 				return false;
 			}
 
+			const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
+			wxASSERT(valueMetaObject);
+
+			const CGuid& objGuid = GetGuid();
+			const auto predefinedValue =
+				valueMetaObject->FindPredefinedValue(objGuid);
+
+			if (predefinedValue != nullptr) {
+				CBackendCoreException::Error(_("Attempting to delete a predefined element!"));
+				return false;
+			}
+
 			CTransactionGuard db_query_active_transaction = db_query;
 			{
 				IBackendValueForm* const valueForm = GetForm();

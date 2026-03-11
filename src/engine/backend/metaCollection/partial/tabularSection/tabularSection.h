@@ -24,10 +24,19 @@ private:
 		eTabularSection,
 	};
 
+	class wxVariantDataValueNumberLine :
+		public wxVariantDataValueImpl<CValue> {
+	public:
+		wxVariantDataValueNumberLine(const long& cValue)
+			: wxVariantDataValueImpl(cValue)
+		{
+		}
+	};
+
 public:
 
 	virtual IValueModelColumnCollection* GetColumnCollection() const override { return m_recordColumnCollection; }
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
 		if (!line.IsOk())
 			return nullptr;
 		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, line);
@@ -35,14 +44,14 @@ public:
 
 	virtual bool HasDefaultCompare() const override { return false; }
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
-	virtual CValue GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id) const {
+	virtual CValue GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id) const {
 		CValue retValue;
 		if (GetValueByMetaID(item, id, retValue))
 			return retValue;
@@ -107,7 +116,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueTabularSectionDataObjectReturnLine);
 	public:
 
-		CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
 		virtual ~CValueTabularSectionDataObjectReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
@@ -172,17 +181,17 @@ public:
 	virtual ~IValueTabularSectionDataObject() { wxDELETE(m_methodHelper); }
 
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const override;
+		const wxDataViewExtItem& row, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool EditableLine(const wxDataViewItem& item, unsigned int col) const {
+	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const {
 		return !m_metaTable->IsNumberLine(col);
 	}
 
 	virtual void ActivateItem(IBackendValueForm* formOwner,
-		const wxDataViewItem& item, unsigned int col) {
+		const wxDataViewExtItem& item, unsigned int col) {
 		IValueTable::RowValueStartEdit(item, col);
 	}
 
@@ -226,7 +235,7 @@ public:
 	virtual bool HasIterator() const override { return true; }
 
 	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, wxDataViewExtItem(nullptr));
 	}
 
 	virtual CValue GetIteratorAt(unsigned int idx) override {
@@ -241,7 +250,7 @@ protected:
 
 	void RefreshTabularSection();
 
-	virtual void RefreshModel(const wxDataViewItem& topItem = wxDataViewItem(nullptr),
+	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr),
 		const int countPerPage = defaultCountPerPage)
 	{
 		RefreshTabularSection();
@@ -290,8 +299,8 @@ public:
 	virtual bool DeleteData();
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal);
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const;
 
 protected:
 	bool m_readAfter;

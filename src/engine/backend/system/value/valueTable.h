@@ -159,7 +159,7 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(CValueTableReturnLine);
 	public:
 
-		CValueTableReturnLine(CValueTableMemory* ownerTable = nullptr, const wxDataViewItem& line = wxDataViewItem(nullptr));
+		CValueTableReturnLine(CValueTableMemory* ownerTable = nullptr, const wxDataViewExtItem& line = wxDataViewExtItem(nullptr));
 		virtual ~CValueTableReturnLine();
 
 		virtual IValueTable* GetOwnerModel() const { return m_ownerTable; }
@@ -181,8 +181,8 @@ public:
 
 public:
 
-	virtual wxDataViewItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
-	virtual wxDataViewItem FindRowValue(IValueModelReturnLine* retLine) const;
+	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const;
+	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const;
 
 	virtual bool AutoCreateColumn() const { return true; }
 
@@ -194,21 +194,21 @@ public:
 		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, GetItem(line));
 	}
 
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewItem& line) {
+	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) {
 		if (!line.IsOk())
 			return nullptr;
 		return GetRowAt(GetRow(line));
 	}
 
 	//set meta/get meta
-	virtual bool SetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, const CValue& varMetaVal) {
+	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal) {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node == nullptr)
 			return false;
 		return node->SetValue(id, CValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(id), varMetaVal), true);
 	}
 
-	virtual bool GetValueByMetaID(const wxDataViewItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
+	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node == nullptr)
 			return false;
@@ -248,9 +248,9 @@ public:
 
 	// implementation of base class virtuals to define model
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) const override;
+		const wxDataViewExtItem& row, unsigned int col) const override;
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewItem& row, unsigned int col) override;
+		const wxDataViewExtItem& row, unsigned int col) override;
 
 	//support def. methods (in runtime)
 	long AppendRow(unsigned int before = 0);
@@ -277,7 +277,7 @@ public:
 	//Working with iterators
 	virtual bool HasIterator() const override { return true; }
 	virtual CValue GetIteratorEmpty() override {
-		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, wxDataViewItem(nullptr));
+		return CValue::CreateAndPrepareValueRef<CValueTableReturnLine>(this, wxDataViewExtItem(nullptr));
 	}
 	virtual CValue GetIteratorAt(unsigned int idx) override {
 		if (idx > (unsigned int)GetRowCount())

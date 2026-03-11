@@ -37,7 +37,9 @@ bool CValueTabularSectionDataObjectRef::LoadData(const CGuid& srcGuid, bool crea
 		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
 
 	}
-	resultSet->Close();
+
+	db_query->CloseResultSet(resultSet);
+
 	m_readAfter = true;
 	return true;
 }

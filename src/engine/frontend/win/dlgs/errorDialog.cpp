@@ -217,8 +217,10 @@ void CDialogError::OnButtonCloseWindowClick(wxCommandEvent& event)
 
 CDialogError::~CDialogError()
 {
-	// Disconnect Events
-	m_buttonCloseProgram->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseProgramClick), nullptr, this);
-	m_buttonGotoDesigner->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonGotoDesignerClick), nullptr, this);
-	m_buttonCloseWindow->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseWindowClick), nullptr, this);
+	m_errorOutput->Destroy();
+
+	// Connect Events
+	m_buttonCloseProgram->Destroy();
+	m_buttonGotoDesigner->Destroy();
+	m_buttonCloseWindow->Destroy();
 }

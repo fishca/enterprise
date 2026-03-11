@@ -10,7 +10,7 @@
 //***********************************************************************************
 
 void CValueListDataObjectEnumRef::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -19,7 +19,7 @@ void CValueListDataObjectEnumRef::GetValueByRow(wxVariant& variant,
 }
 
 bool CValueListDataObjectEnumRef::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -30,7 +30,7 @@ bool CValueListDataObjectEnumRef::SetValueByRow(const wxVariant& variant,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CValueListDataObjectRef::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -39,7 +39,7 @@ void CValueListDataObjectRef::GetValueByRow(wxVariant& variant,
 }
 
 bool CValueListDataObjectRef::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -50,7 +50,7 @@ bool CValueListDataObjectRef::SetValueByRow(const wxVariant& variant,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CValueTreeDataObjectFolderRef::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& item, unsigned int col) const
+	const wxDataViewExtItem& item, unsigned int col) const
 {
 	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 	if (node == nullptr)
@@ -59,7 +59,7 @@ void CValueTreeDataObjectFolderRef::GetValueByRow(wxVariant& variant,
 }
 
 bool CValueTreeDataObjectFolderRef::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& item, unsigned int col)
+	const wxDataViewExtItem& item, unsigned int col)
 {
 	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 	if (node == nullptr)
@@ -69,8 +69,8 @@ bool CValueTreeDataObjectFolderRef::SetValueByRow(const wxVariant& variant,
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CValueTreeDataObjectFolderRef::GetAttrByRow(const wxDataViewItem& item,
-	unsigned int col, wxDataViewItemAttr& attr) const
+bool CValueTreeDataObjectFolderRef::GetAttrByRow(const wxDataViewExtItem& item,
+	unsigned int col, wxDataViewExtItemAttr& attr) const
 {
 	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 	if (node == nullptr)
@@ -85,7 +85,7 @@ bool CValueTreeDataObjectFolderRef::GetAttrByRow(const wxDataViewItem& item,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CValueListRegisterObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col) const
+	const wxDataViewExtItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -94,7 +94,7 @@ void CValueListRegisterObject::GetValueByRow(wxVariant& variant,
 }
 
 bool CValueListRegisterObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewItem& row, unsigned int col)
+	const wxDataViewExtItem& row, unsigned int col)
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)

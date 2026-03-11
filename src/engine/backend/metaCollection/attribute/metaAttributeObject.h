@@ -251,7 +251,7 @@ private:
 };
 
 class BACKEND_API CValueMetaObjectAttributePredefined : public IValueMetaObjectAttribute {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAttribute);
+	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectAttributePredefined);
 private:
 
 	CValueMetaObjectAttributePredefined(const wxString& name, const wxString& synonym, const wxString& comment, bool fillCheck, const CValue& defValue, eItemMode itemMode, eSelectMode selectMode)

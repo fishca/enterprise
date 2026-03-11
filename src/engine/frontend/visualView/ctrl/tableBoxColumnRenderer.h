@@ -1,24 +1,23 @@
-#ifndef _DVC_H__
-#define _DVC_H__
+#ifndef __DVC_H__
+#define __DVC_H__
 
-#include <wx/dataview.h>
-#include <wx/dvrenderers.h>
+#include "frontend/win/ctrls/dataview/dataview.h"
 
 // ----------------------------------------------------------------------------
-// CValueViewRenderer
+// CDataViewValueRenderer
 // ----------------------------------------------------------------------------
 
 #include "frontend/visualView/ctrl/form.h"
 #include "frontend/visualView/ctrl/tableBox.h"
 
-class CValueViewRenderer : public wxDataViewCustomRenderer {
-	CValueTableBoxColumn* m_colControl;
+class CDataViewValueRenderer :
+	public wxDataViewExtCustomRenderer {
 public:
 
 	virtual void FinishSelecting() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
@@ -44,32 +43,34 @@ public:
 
 	virtual void CancelEditing() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
-		wxDataViewCustomRenderer::CancelEditing();
+		wxDataViewExtCustomRenderer::CancelEditing();
 	}
 
 	virtual bool FinishEditing() {
 
-		if (m_colControl != nullptr) {
-			CValueForm* valueForm = m_colControl->GetOwnerForm();
+		if (m_tableBoxColumn != nullptr) {
+			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
-		return wxDataViewCustomRenderer::FinishEditing();
+		return wxDataViewExtCustomRenderer::FinishEditing();
 	}
 
 	// This renderer can be either activatable or editable, for demonstration
 	// purposes. In real programs, you should select whether the user should be
 	// able to activate or edit the cell and it doesn't make sense to switch
 	// between the two -- but this is just an example, so it doesn't stop us.
-	explicit CValueViewRenderer(CValueTableBoxColumn* col)
-		: wxDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_colControl(col)
+	explicit CDataViewValueRenderer(CValueTableBoxColumn* tableBoxColumn)
+		: wxDataViewExtCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_tableBoxColumn(tableBoxColumn)
 	{
 	}
+
+	virtual bool IsCompatibleVariantType(const wxString& variantType) const { return true; }
 
 	virtual bool Render(wxRect rect, wxDC* dc, int state) override
 	{
@@ -83,16 +84,15 @@ public:
 	}
 
 	virtual bool ActivateCell(const wxRect& cell,
-		wxDataViewModel* model,
-		const wxDataViewItem& item,
+		wxDataViewExtModel* model,
+		const wxDataViewExtItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent) override
 	{
 		return false;
 	}
 
-	virtual wxSize GetSize() const override
-	{
+	virtual wxSize GetSize() const override {
 		if (!m_valueVariant.IsNull()) {
 			return GetTextExtent(m_valueVariant);
 		}
@@ -102,9 +102,14 @@ public:
 		}
 	}
 
-	virtual bool SetValue(const wxVariant& value) override
-	{
-		m_valueVariant = value.GetString();
+	virtual bool SetValue(const wxVariant& value) override {
+
+		if (value.GetType() == wxT("number"))
+			SetAlignment(wxALIGN_RIGHT);
+		else
+			SetAlignment(wxALIGN_LEFT);
+
+		m_valueVariant = value;
 		return true;
 	}
 
@@ -114,10 +119,7 @@ public:
 	}
 
 #if wxUSE_ACCESSIBILITY
-	virtual wxString GetAccessibleDescription() const override
-	{
-		return m_valueVariant;
-	}
+	virtual wxString GetAccessibleDescription() const override { return m_valueVariant; }
 #endif // wxUSE_ACCESSIBILITY
 
 	virtual bool HasEditorCtrl() const override {
@@ -132,60 +134,50 @@ public:
 
 private:
 
+	CValueTableBoxColumn* m_tableBoxColumn;
 	wxVariant m_valueVariant;
 };
 
 // ----------------------------------------------------------------------------
-// CDataViewColumnContainer
+// CDataViewColumnObject
 // ----------------------------------------------------------------------------
 
-class CDataViewColumnContainer : public wxDataViewColumn,
-	public wxObject {
+class CDataViewColumnObject :
+	public wxDataViewExtColumn, public wxObject {
 public:
 
-	CDataViewColumnContainer(CValueTableBoxColumn* col,
+	CDataViewColumnObject(CValueTableBoxColumn* col,
 		const wxString& title,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
 		:
-		wxDataViewColumn(title, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
+		wxDataViewExtColumn(title, new CDataViewValueRenderer(col), model_column, width, align, flags)
 	{
 	}
 
-	CDataViewColumnContainer(CValueTableBoxColumn* col,
+	CDataViewColumnObject(CValueTableBoxColumn* col,
 		const wxBitmap& bitmap,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
 		:
-		wxDataViewColumn(bitmap, new CValueViewRenderer(col), model_column, width, align, flags), m_controlId(0)
+		wxDataViewExtColumn(bitmap, new CDataViewValueRenderer(col), model_column, width, align, flags)
 	{
 	}
 
-	virtual ~CDataViewColumnContainer() {}
+	CDataViewValueRenderer* GetRenderer() const { return static_cast<CDataViewValueRenderer*>(m_renderer); }
 
-	CValueViewRenderer* GetRenderer() const {
-		return dynamic_cast<CValueViewRenderer*>(m_renderer);
-	}
+	void SetControl(CValueTableBoxColumn* control) { m_tableBoxColumn = control; }
+	CValueTableBoxColumn* GetControl() const { return m_tableBoxColumn; }
 
-	void SetControlID(unsigned int obj_id) {
-		wxASSERT(m_controlId == 0); m_controlId = obj_id;
-	}
-
-	void SetControl(CValueTableBoxColumn* control) { m_valColumn = control; }
-
-	CValueTableBoxColumn* GetControl() const { return m_valColumn; }
-	unsigned int GetControlID() const { return m_controlId; }
-
-	void SetColModel(unsigned int col_model) { m_model_column = col_model; }
+	void SetColumnModel(unsigned int col_model) { m_model_column = col_model; }
 
 private:
 
-	unsigned int m_controlId;
-	CValueTableBoxColumn* m_valColumn;
+	CValueTableBoxColumn* m_tableBoxColumn;
 };
 
 #endif // !_DVC_H__

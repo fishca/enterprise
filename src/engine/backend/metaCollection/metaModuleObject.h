@@ -16,7 +16,18 @@ template <typename T>
 class CPropertyInnerModule : public IProperty {
 public:
 
-	T* GetMetaObject() const { return m_metaObject; }
+	template <typename... Args>
+	CPropertyInnerModule(CPropertyCategory* cat, Args&&... args)
+		: IProperty(cat, 
+			std::get<0>(std::forward_as_tuple(args...)), 
+			std::get<1>(std::forward_as_tuple(args...)), 
+			wxNullVariant), m_metaObject(nullptr)
+	{
+		IValueMetaObject* parent =
+			static_cast<IValueMetaObject*>(m_owner);
+		wxASSERT(parent);
+		m_metaObject = parent->CreateMetaObjectAndSetParent<T>(args...);
+	}
 
 	CPropertyInnerModule(CPropertyCategory* cat, T* metaObject)
 		: IProperty(cat, metaObject->GetName(), metaObject->GetSynonym(), wxNullVariant), m_metaObject(metaObject)
@@ -26,6 +37,9 @@ public:
 	virtual ~CPropertyInnerModule() {}
 
 	// get meta object 
+	T* GetMetaObject() const { return m_metaObject; }
+
+	// get meta object via pointer 
 	T* operator->() { return GetMetaObject(); }
 
 	//get property for grid 
@@ -144,7 +158,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("Module"), _("Module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categoryContext, wxT("Module"), _("Module"));
 };
 
 class BACKEND_API CValueMetaObjectCommonModule : public IValueMetaObjectModule {
@@ -206,7 +220,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 private:
-	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categorySecondary, wxT("Module"), _("Module"));
+	CPropertyModule* m_propertyModule = IPropertyObject::CreateProperty<CPropertyModule>(m_categoryContext, wxT("Module"), _("Module"));
 	CPropertyCategory* m_moduleCategory = IPropertyObject::CreatePropertyCategory(wxT("Common module"), _("Common module"));
 	CPropertyBoolean* m_propertyGlobalModule = IPropertyObject::CreateProperty<CPropertyBoolean>(m_moduleCategory, wxT("GlobalModule"), _("Global module"), false);
 };

@@ -9,57 +9,11 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectReport, CValue);
 
-CValueManagerDataObjectReport::CValueManagerDataObjectReport(CValueMetaObjectReport* metaObject) :
-	m_methodHelper(new CMethodHelper()), m_metaObject(metaObject)
-{
-}
-
-CValueManagerDataObjectReport::~CValueManagerDataObjectReport()
-{
-	wxDELETE(m_methodHelper);
-}
-
 CValueMetaObjectCommonModule* CValueManagerDataObjectReport::GetModuleManager()  const { return m_metaObject->GetModuleManager(); }
-
-#include "backend/objCtor.h"
-
-class_identifier_t CValueManagerDataObjectReport::GetClassType() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassType();
-}
-
-wxString CValueManagerDataObjectReport::GetClassName() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
-}
-
-wxString CValueManagerDataObjectReport::GetString() const
-{
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_Manager);
-	wxASSERT(clsFactory);
-	return clsFactory->GetClassName();
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectExternalReport, CValue);
-
-CValueManagerDataObjectExternalReport::CValueManagerDataObjectExternalReport() :
-	m_methodHelper(new CMethodHelper())
-{
-}
-
-CValueManagerDataObjectExternalReport::~CValueManagerDataObjectExternalReport()
-{
-	wxDELETE(m_methodHelper);
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,23 +25,11 @@ enum Func {
 
 void CValueManagerDataObjectReport::PrepareNames() const
 {
-	IMetaData* metaData = m_metaObject->GetMetaData();
-	wxASSERT(metaData);
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
+	IValueManagerDataObject::PrepareNames();
 
-	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("Create"), wxT("Create()"));
 	m_methodHelper->AppendFunc(wxT("GetForm"), wxT("GetForm(name : string, owner : any, id : guid)"));
 	m_methodHelper->AppendFunc(wxT("GetTemplate"), 1, wxT("GetTemplate(name : string)"));
-
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr) {
-		// add methods from context
-		for (long idx = 0; idx < pRefData->GetNMethods(); idx++) {
-			m_methodHelper->CopyMethod(pRefData->GetPMethods(), idx);
-		}
-	}
 }
 
 bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
@@ -112,19 +54,15 @@ bool CValueManagerDataObjectReport::CallAsFunc(const long lMethodNum, CValue& pv
 		return true;
 	}
 
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
-	wxASSERT(moduleManager);
-
-	CValue* pRefData = moduleManager->FindCommonModule(m_metaObject->GetModuleManager());
-	if (pRefData != nullptr)
-		return pRefData->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
-	return false;
+	return IValueManagerDataObject::CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 }
+
+CValue::CMethodHelper CValueManagerDataObjectExternalReport::m_methodHelper;
 
 void CValueManagerDataObjectExternalReport::PrepareNames() const
 {
-	m_methodHelper->ClearHelper();
-	m_methodHelper->AppendFunc(wxT("Create"), 1, wxT("Create(fullPath : string)"));
+	m_methodHelper.ClearHelper();
+	m_methodHelper.AppendFunc(wxT("Create"), 1, wxT("Create(fullPath : string)"));
 }
 
 #include "backend/system/systemManager.h"
@@ -144,7 +82,7 @@ bool CValueManagerDataObjectExternalReport::CallAsFunc(const long lMethodNum, CV
 			return true;
 		}
 		wxDELETE(metaReport);
-		CBackendCoreException::Error("Failed to load report '%s'", paParams[0]->GetString());
+		CBackendCoreException::Error(_("Failed to load report '%s'"), paParams[0]->GetString());
 	}
 	}
 	return false;

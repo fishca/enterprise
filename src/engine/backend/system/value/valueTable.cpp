@@ -14,12 +14,12 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory, IValueTable);
 CValue::CMethodHelper CValueTableMemory::m_methodHelper;
 //////////////////////////////////////////////////////////////////////
 
-wxDataViewItem CValueTableMemory::FindRowValue(const CValue& varValue, const wxString& colName) const
+wxDataViewExtItem CValueTableMemory::FindRowValue(const CValue& varValue, const wxString& colName) const
 {
 	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			const wxDataViewItem& item = GetItem(row);
+			const wxDataViewExtItem& item = GetItem(row);
 			wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 			if (node != nullptr &&
 				varValue == node->GetTableValue((meta_identifier_t)colInfo->GetColumnID())) {
@@ -27,12 +27,12 @@ wxDataViewItem CValueTableMemory::FindRowValue(const CValue& varValue, const wxS
 			}
 		}
 	}
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
-wxDataViewItem CValueTableMemory::FindRowValue(IValueModelReturnLine* retLine) const
+wxDataViewExtItem CValueTableMemory::FindRowValue(IValueModelReturnLine* retLine) const
 {
-	return wxDataViewItem(nullptr);
+	return wxDataViewExtItem(nullptr);
 }
 
 CValueTableMemory::CValueTableMemory() : IValueTable(),
@@ -91,7 +91,7 @@ bool CValueTableMemory::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, 
 		return true;
 	case enFind:
 	{
-		const wxDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
+		const wxDataViewExtItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
 		if (item.IsOk())
 			pvarRetValue = GetRowAt(item);
 		return true;
@@ -255,7 +255,7 @@ CValueTableMemory::CValueTableColumnCollection::CValueTableColumnInfo::~CValueTa
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTableMemory::CValueTableReturnLine, IValueTable::IValueModelReturnLine);
 
-CValueTableMemory::CValueTableReturnLine::CValueTableReturnLine(CValueTableMemory* ownerTable, const wxDataViewItem& line) :
+CValueTableMemory::CValueTableReturnLine::CValueTableReturnLine(CValueTableMemory* ownerTable, const wxDataViewExtItem& line) :
 	IValueModelReturnLine(line), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable) {
 }
 
@@ -316,7 +316,7 @@ void CValueTableMemory::EditRow()
 
 void CValueTableMemory::CopyRow()
 {
-	wxDataViewItem currentItem = GetSelection();
+	wxDataViewExtItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
@@ -339,7 +339,7 @@ void CValueTableMemory::CopyRow()
 
 void CValueTableMemory::DeleteRow()
 {
-	wxDataViewItem currentItem = GetSelection();
+	wxDataViewExtItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);

@@ -103,6 +103,7 @@
     <ClCompile Include="visualView\ctrl\tableBoxColumn.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxColumnEvent.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxColumnProperty.cpp" />
+    <ClCompile Include="visualView\ctrl\tableBoxColumnRenderer.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxColumn_res.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxEvent.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxMenu.cpp" />
@@ -124,7 +125,6 @@
     <ClCompile Include="visualView\ctrl\typeControl.cpp" />
     <ClCompile Include="visualView\ctrl\window.cpp" />
     <ClCompile Include="visualView\ctrl\wrapsizer.cpp" />
-    <ClCompile Include="visualView\dvc\dvc.cpp" />
     <ClCompile Include="visualView\pageWindow.cpp" />
     <ClCompile Include="visualView\visualHost.cpp" />
     <ClCompile Include="visualView\visualHost_impl.cpp" />
@@ -255,7 +255,9 @@
     <ClCompile Include="win\ctrls\checktree.cpp" />
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
     <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
-    <ClCompile Include="win\ctrls\dataView.cpp" />
+    <ClCompile Include="win\ctrls\tableView.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavcmn.cpp" />
+    <ClCompile Include="win\ctrls\dataview\datavgen.cpp" />
     <ClCompile Include="win\ctrls\dynamicBorder.cpp" />
     <ClCompile Include="win\ctrls\grid\gridext.cpp" />
     <ClCompile Include="win\ctrls\grid\gridextctrl.cpp" />
@@ -324,11 +326,11 @@
     <ClInclude Include="visualView\ctrl\notebook.h" />
     <ClInclude Include="visualView\ctrl\sizer.h" />
     <ClInclude Include="visualView\ctrl\tableBox.h" />
+    <ClInclude Include="visualView\ctrl\tableBoxColumnRenderer.h" />
     <ClInclude Include="visualView\ctrl\toolBar.h" />
     <ClInclude Include="visualView\ctrl\typeControl.h" />
     <ClInclude Include="visualView\ctrl\widgets.h" />
     <ClInclude Include="visualView\ctrl\window.h" />
-    <ClInclude Include="visualView\dvc\dvc.h" />
     <ClInclude Include="visualView\formdefs.h" />
     <ClInclude Include="visualView\pageWindow.h" />
     <ClInclude Include="visualView\visualHost.h" />
@@ -461,7 +463,10 @@
     <ClInclude Include="win\ctrls\checktree.h" />
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
     <ClInclude Include="win\ctrls\controlTextEditor.h" />
-    <ClInclude Include="win\ctrls\dataView.h" />
+    <ClInclude Include="win\ctrls\tableView.h" />
+    <ClInclude Include="win\ctrls\dataview\datavgen.h" />
+    <ClInclude Include="win\ctrls\dataview\dataview.h" />
+    <ClInclude Include="win\ctrls\dataview\dvrenderers.h" />
     <ClInclude Include="win\ctrls\dynamicBorder.h" />
     <ClInclude Include="win\ctrls\floatingNotebook.h" />
     <ClInclude Include="win\ctrls\grid\gridext.h" />
@@ -479,6 +484,7 @@
     <ClInclude Include="win\dlgs\colHeight.h" />
     <ClInclude Include="win\dlgs\connectionDB.h" />
     <ClInclude Include="win\dlgs\errorDialog.h" />
+    <ClInclude Include="win\dlgs\filterDataView.h" />
     <ClInclude Include="win\dlgs\formEditor.h" />
     <ClInclude Include="win\dlgs\formSelector\formSelector.h" />
     <ClInclude Include="win\dlgs\generation.h" />

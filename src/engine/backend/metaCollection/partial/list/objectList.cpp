@@ -642,7 +642,7 @@ CValueTreeDataObjectFolderRef::CValueTreeDataObjectFolderRef(IValueMetaObjectRec
 	int listMode, bool choiceMode) : IValueTreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
-	IValueTreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);
+	//IValueTreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);
 	IValueTreeDataObject::AppendSort(m_metaObject->GetDataCode(), true, false);
 	IValueTreeDataObject::AppendSort(m_metaObject->GetDataDescription(), true);
 	IValueTreeDataObject::AppendSort(m_metaObject->GetDataReference());
@@ -685,14 +685,20 @@ bool CValueTreeDataObjectFolderRef::GetModel(IValueModel*& tableValue, const met
 //events 
 void CValueTreeDataObjectFolderRef::AddValue(unsigned int before)
 {
-	CValue isFolder = true; CValue cParent;
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
-	if (node != nullptr) {
-		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
-		if (!isFolder.GetBoolean())
-			node->GetValue(*m_metaObject->GetDataParent(), cParent);
-		else
-			node->GetValue(*m_metaObject->GetDataReference(), cParent);
+	CValue cParent; CValue isFolder = true;
+
+	if (m_topParentGuid.isValid()) {
+		cParent = CValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
+	}
+	else {
+		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		if (node != nullptr) {
+			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
+			if (!isFolder.GetBoolean())
+				node->GetValue(*m_metaObject->GetDataParent(), cParent);
+			else
+				node->GetValue(*m_metaObject->GetDataReference(), cParent);
+		}
 	}
 
 	CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
@@ -705,14 +711,20 @@ void CValueTreeDataObjectFolderRef::AddValue(unsigned int before)
 
 void CValueTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 {
-	CValue isFolder = true; CValue cParent;
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
-	if (node != nullptr) {
-		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
-		if (!isFolder.GetBoolean())
-			node->GetValue(*m_metaObject->GetDataParent(), cParent);
-		else
-			node->GetValue(*m_metaObject->GetDataReference(), cParent);
+	CValue cParent; CValue isFolder = true;
+
+	if (m_topParentGuid.isValid()) {
+		cParent = CValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
+	}
+	else {
+		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		if (node != nullptr) {
+			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
+			if (!isFolder.GetBoolean())
+				node->GetValue(*m_metaObject->GetDataParent(), cParent);
+			else
+				node->GetValue(*m_metaObject->GetDataReference(), cParent);
+		}
 	}
 
 	try {

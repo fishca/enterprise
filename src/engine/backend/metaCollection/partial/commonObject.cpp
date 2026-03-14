@@ -2193,7 +2193,7 @@ bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& 
 	const IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObject = GetMetaObject();
 	wxASSERT(valueMetaObject);
 
-	if (valueMetaObject->IsDataParent(id) && varMetaVal == GetReference()) {
+	if (valueMetaObject->IsDataParent(id) && varMetaVal == GetReference() && !varMetaVal.IsEmpty()) {
 		CBackendCoreException::Error(_("You can't change your parent to yourself!"));
 		return false;
 	}

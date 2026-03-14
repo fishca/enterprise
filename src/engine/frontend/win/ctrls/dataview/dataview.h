@@ -233,6 +233,13 @@ enum wxDataViewExtColumnFlags
 
 class wxDataViewExtColumnBase : public wxSettableHeaderColumn
 {
+	class wxDataViewExtFooterBase : public wxSettableHeaderColumn
+	{
+	public:
+
+
+	};
+
 public:
 	// ctor for the text columns: takes ownership of renderer
 	wxDataViewExtColumnBase(wxDataViewExtRenderer* renderer,
@@ -263,6 +270,7 @@ public:
 	wxDataViewExtCtrl* GetOwner() const { return m_owner; }
 	wxDataViewExtRenderer* GetRenderer() const { return m_renderer; }
 
+
 	// implement some of base class pure virtuals (the rest is port-dependent
 	// and done differently in generic and native versions)
 	virtual void SetBitmap(const wxBitmapBundle& bitmap) wxOVERRIDE { m_bitmap = bitmap; }
@@ -276,12 +284,14 @@ public:
 	virtual int WXGetSpecifiedWidth() const { return GetWidth(); }
 
 protected:
+	
 	wxDataViewExtRenderer* m_renderer;
 	int                      m_model_column;
 	wxBitmapBundle           m_bitmap;
 	wxDataViewExtCtrl* m_owner;
 
 private:
+
 	// common part of all ctors
 	void Init(wxDataViewExtRenderer* renderer, unsigned int model_column);
 };
@@ -300,11 +310,20 @@ private:
 #define wxDV_ROW_LINES               0x0010     // alternating colour in rows
 #define wxDV_VARIABLE_LINE_HEIGHT    0x0020     // variable line height
 
+#define wxDV_FOOTER					 0x0040     // column footer visible
+
 // possible selection modes
 enum wxDataViewExtSelectionMode
 {
 	wxDataViewExtSelectCell = 0,  // allow selecting anything
 	wxDataViewExtSelectRow = 1,  // allow selecting only entire rows
+};
+
+enum wxDataViewExtViewMode 
+{
+	wxDataViewExtTree, 
+	wxDataViewExtHierarchical, 
+	wxDataViewExtList
 };
 
 class wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
@@ -513,6 +532,11 @@ public:
 	virtual void SetSelectionMode(wxDataViewExtSelectionMode selmode) = 0;
 	virtual wxDataViewExtSelectionMode GetSelectionMode() const = 0;
 
+	virtual void SetViewMode(wxDataViewExtViewMode viewMode) = 0;
+	virtual wxDataViewExtViewMode GetViewMode() const = 0;
+
+	virtual void SetTopParent(const wxDataViewExtItem& item) const = 0;
+
 	void Expand(const wxDataViewExtItem& item);
 	void ExpandChildren(const wxDataViewExtItem& item);
 	void ExpandAncestors(const wxDataViewExtItem& item);
@@ -677,6 +701,7 @@ public:
 		m_dropEffect(event.m_dropEffect),
 		m_proposedDropIndex(event.m_proposedDropIndex)
 #endif
+		, m_viewMode(event.m_viewMode)
 	{
 	}
 
@@ -702,6 +727,9 @@ public:
 	int GetCacheTo() const { return m_cacheTo; }
 	void SetCache(int from, int to) { m_cacheFrom = from; m_cacheTo = to; }
 
+	// For wxEVT_DATAVIEW_VIEW_SET
+	wxDataViewExtViewMode GetViewMode() const { return m_viewMode; }
+	void SetViewMode(wxDataViewExtViewMode mode) { m_viewMode = mode; }
 
 #if wxUSE_DRAG_AND_DROP
 	// For drag operations
@@ -770,6 +798,8 @@ protected:
 	int                 m_proposedDropIndex;
 #endif // wxUSE_DRAG_AND_DROP
 
+	wxDataViewExtViewMode m_viewMode; 
+
 private:
 
 	// Common part of non-copy ctors.
@@ -807,6 +837,8 @@ wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_CACHE_HINT, wxDataViewExtE
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, wxDataViewExtEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, wxDataViewExtEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP, wxDataViewExtEvent);
+
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_VIEW_SET, wxDataViewExtEvent);
 
 typedef void (wxEvtHandler::* wxDataViewExtEventFunction)(wxDataViewExtEvent&);
 
@@ -1384,6 +1416,7 @@ private:
 #define wxEVT_COMMAND_DATAVIEW_ITEM_BEGIN_DRAG             wxEVT_DATAVIEW_ITEM_BEGIN_DRAG
 #define wxEVT_COMMAND_DATAVIEW_ITEM_DROP_POSSIBLE          wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE
 #define wxEVT_COMMAND_DATAVIEW_ITEM_DROP                   wxEVT_DATAVIEW_ITEM_DROP
+#define wxEVT_COMMAND_DATAVIEW_VIEW_SET					   wxEVT_DATAVIEW_VIEW_SET
 
 #endif // wxUSE_DATAVIEWCTRL
 

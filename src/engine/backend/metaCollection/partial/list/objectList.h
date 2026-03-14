@@ -709,6 +709,11 @@ public:
 	virtual bool GetAttrByRow(const wxDataViewExtItem& WXUNUSED(row), unsigned int WXUNUSED(col),
 		wxDataViewExtItemAttr& WXUNUSED(attr)) const override;
 
+	// define current parent for hierarchical view 
+	virtual bool HasParentTopItem() const { return true; }
+	virtual bool SetParentTopItem(const wxDataViewExtItem& item);
+	virtual wxDataViewExtItem GetParentTopItem() const;
+
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(IValueModel*& tableValue, const meta_identifier_t& id);
@@ -721,6 +726,7 @@ public:
 		return m_methodHelper;
 	}
 	virtual void PrepareNames() const;
+
 	//****************************************************************************
 	//*                              Override attribute                          *
 	//****************************************************************************
@@ -775,6 +781,8 @@ private:
 
 	bool m_choiceMode; int m_listMode;
 	IValueMetaObjectRecordDataHierarchyMutableRef* m_metaObject;
+
+	CGuid m_topParentGuid; 
 };
 
 #endif 

@@ -397,8 +397,8 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			m_dataViewFilter->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &wxFilterDialog::OnItemActivated, this);
 
 			wxArrayString arr;
-			arr.push_back("Equal");
-			arr.push_back("Not equal");
+			arr.push_back(_("Equal"));
+			arr.push_back(_("Not equal"));
 
 			m_dataViewColumnUse = m_dataViewFilter->AppendToggleColumn(_("Use"), eModelUse, wxDATAVIEW_CELL_ACTIVATABLE, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
 			m_dataViewColumnName = m_dataViewFilter->AppendTextColumn(_("Name"), eModelName, wxDATAVIEW_CELL_INERT, wxNOT_FOUND, wxAlignment::wxALIGN_LEFT);
@@ -455,6 +455,7 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 			event.Skip();
 		}
 	};
+
 	wxFilterDialog* dialog =
 		new wxFilterDialog(this, wxID_ANY);
 	dialog->SetFilter(filter);
@@ -462,6 +463,90 @@ bool wxTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 	if (dialog->ShowModal() == wxID_OK) {
 		filter = dialog->GetFilter(); result = true;
 	}
+	dialog->Destroy();
+	return result;
+}
+
+bool wxTableViewCtrl::ShowViewMode()
+{
+	class wxTableViewModeDialog : public wxDialog {
+
+	public:
+
+		wxTableViewModeDialog(wxWindow* parent, wxWindowID id, wxDataViewExtViewMode mode) :
+			wxDialog(parent, id, _("View mode"))
+		{
+			this->SetSizeHints(wxDefaultSize, wxDefaultSize);
+
+			wxBoxSizer* bSizerMain = new wxBoxSizer(wxVERTICAL);
+
+			wxStaticBoxSizer* sbSizerView = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, _("View")), wxVERTICAL);
+
+			m_radioBtnTree = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("Tree"), wxDefaultPosition, wxDefaultSize, 0);
+			if (mode == wxDataViewExtViewMode::wxDataViewExtTree) m_radioBtnTree->SetValue(true);
+			m_radioBtnHierarchy = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("Hierarchy"), wxDefaultPosition, wxDefaultSize, 0);
+			if (mode == wxDataViewExtViewMode::wxDataViewExtHierarchical) m_radioBtnHierarchy->SetValue(true);
+			m_radioBtnList = new wxRadioButton(sbSizerView->GetStaticBox(), wxID_ANY, _("List"), wxDefaultPosition, wxDefaultSize, 0);
+			if (mode == wxDataViewExtViewMode::wxDataViewExtList) m_radioBtnList->SetValue(true);
+
+			sbSizerView->Add(m_radioBtnTree, 0, wxALL, 5);
+			sbSizerView->Add(m_radioBtnHierarchy, 0, wxALL, 5);
+			sbSizerView->Add(m_radioBtnList, 0, wxALL, 5);
+
+			bSizerMain->Add(sbSizerView, 1, wxEXPAND, 5);
+
+			m_sdbSizer = new wxStdDialogButtonSizer();
+			m_sdbSizerOK = new wxButton(this, wxID_OK);
+			m_sdbSizer->AddButton(m_sdbSizerOK);
+			m_sdbSizerCancel = new wxButton(this, wxID_CANCEL);
+			m_sdbSizer->AddButton(m_sdbSizerCancel);
+			m_sdbSizer->Realize();
+
+			bSizerMain->Add(m_sdbSizer, 0, wxEXPAND, 5);
+
+			this->SetSizer(bSizerMain);
+			this->Layout();
+			bSizerMain->Fit(this);
+
+			wxIcon dlg_icon;
+			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picHierarchyCLSID));
+
+			wxDialog::SetIcon(dlg_icon);
+			wxDialog::Centre(wxBOTH);
+		}
+
+		wxDataViewExtViewMode GetViewMode() const
+		{
+			if (m_radioBtnTree->GetValue())
+				return wxDataViewExtViewMode::wxDataViewExtTree;
+			else if (m_radioBtnHierarchy->GetValue())
+				return wxDataViewExtViewMode::wxDataViewExtHierarchical;
+			else if (m_radioBtnList->GetValue())
+				return wxDataViewExtViewMode::wxDataViewExtList;
+
+			return wxDataViewExtViewMode::wxDataViewExtList;
+		}
+
+	private:
+
+		wxRadioButton* m_radioBtnTree;
+		wxRadioButton* m_radioBtnHierarchy;
+		wxRadioButton* m_radioBtnList;
+		wxStdDialogButtonSizer* m_sdbSizer;
+		wxButton* m_sdbSizerOK;
+		wxButton* m_sdbSizerCancel;
+	};
+
+	wxTableViewModeDialog* dialog =
+		new wxTableViewModeDialog(this, wxID_ANY, GetViewMode());
+
+	bool result = false;
+	if (dialog->ShowModal() == wxID_OK) {
+
+		wxTableViewCtrl::SetViewMode(dialog->GetViewMode());
+		result = true;
+	}
+	
 	dialog->Destroy();
 	return result;
 }

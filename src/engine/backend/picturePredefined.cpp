@@ -78,6 +78,9 @@ static const wxString s_authentication_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAA
 /* PNG */
 static const wxString s_print_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA3klEQVR4nGNgQAIV3XP+E4MZcIGK7jn/CYFBaEBWzeRDaZX9/0HYr2orURimPrN20nYGEGP9gSv/Nxy8Apbs3v4BLwapAakF6cmsmfQebABIgBQDXjzcBFaPYUB4087/9ase49Rcu+rx/4jGnXD1GAZMWXv6f0TTTpx+B2kGqcFpwAYSMYoBU5fvhocuITx1+R7sLqjonvP/2uO3eDFIDYoLsmonXsuun/Ipu27qR2ITEkhtdh1Iz6Q9DPX19Szp5f0KmRV9SjADcGUimBxIbVJ1t3x9fT0T9fMCqdkZAMgBlvBXeYa8AAAAAElFTkSuQmCC";
 
+/* PNG */
+static const wxString s_hierarchy_16_png = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAZUlEQVR4nGNgIBL4VW39jw0zkGJA9/YPKJigAWmV/f9hmGwDGCjxQhqSATjBcWfn/+iYJBccd3b+/72/H47xGYA1DI5jMQA58AgG4nFquOA4JWFAcSzgA1R1gd+AJGVkQHFuxAUAmRxGnOsR4JoAAAAASUVORK5CYII=";
+
 #pragma endregion 
 
 void RegisterAllBackendPicture()
@@ -109,6 +112,7 @@ void RegisterAllBackendPicture()
 	::RegisterBackendPicture(wxT("MarkAsDelete"), g_picMarkAsDeleteCLSID, s_markAsDelete_16_png);
 	::RegisterBackendPicture(wxT("Generate"), g_picGenerateCLSID, s_generate_16_png);
 	::RegisterBackendPicture(wxT("Print"), g_picPrintCLSID, s_print_16_png);
+	::RegisterBackendPicture(wxT("Hierarchy"), g_picHierarchyCLSID, s_hierarchy_16_png);
 
 	::RegisterBackendPicture(wxT("User"), g_picUserCLSID, s_user_16_png);
 	::RegisterBackendPicture(wxT("UserActive"), g_picUserActiveCLSID, s_activeUser_16_png);

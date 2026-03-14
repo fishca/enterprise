@@ -13,7 +13,9 @@
 //***********************************************************************************
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBox, IValueWindow);
+
 wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxViewMode, CValue);
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -320,6 +322,8 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP, &CValueTableBox::OnItemDrop, this);
 #endif // wxUSE_DRAG_AND_DROP
 
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_VIEW_SET, &CValueTableBox::OnViewSet, this);
+
 		dataViewCtrl->GenericGetHeader()->Bind(wxEVT_HEADER_RESIZING, &CValueTableBox::OnHeaderResizing, this);
 
 		dataViewCtrl->Bind(wxEVT_SCROLLWIN_TOP, &CValueTableBox::HandleOnScroll, this);
@@ -346,7 +350,6 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
 	}
 
-	dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 	return dataViewCtrl;
 }
 
@@ -366,20 +369,11 @@ void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(wxobject);
-
-	UpdateWindow(dataViewCtrl);
+	wxTableViewCtrl* dataViewCtrl = 
+		dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
-
-		wxItemAttr attr(
-			dataViewCtrl->GetForegroundColour(),
-			dataViewCtrl->GetBackgroundColour(),
-			dataViewCtrl->GetFont()
-		);
-
-		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
-		dataViewCtrl->SetHeaderAttr(attr);
+		UpdateWindow(dataViewCtrl);
 	}
 }
 
@@ -398,6 +392,20 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			dataViewCtrl->AssociateModel(dataViewNewModel);
 			m_tableCurrentLine.Reset();
 		}
+
+		dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+		dataViewCtrl->ShowFooterWindow(m_propertyFooter->GetValueAsBoolean());
+
+		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
+		dataViewCtrl->SetViewMode(m_propertyViewMode->GetValueAsEnum());
+
+		wxItemAttr attr(
+			dataViewCtrl->GetForegroundColour(),
+			dataViewCtrl->GetBackgroundColour(),
+			dataViewCtrl->GetFont()
+		);
+
+		dataViewCtrl->SetHeaderAttr(attr);
 
 		if (!appData->DesignerMode())
 			m_dataViewCreated = m_dataViewUpdated = true;
@@ -421,6 +429,9 @@ bool CValueTableBox::LoadData(CMemoryReader& reader)
 	if (!m_propertySource->LoadData(reader))
 		return false;
 
+	m_propertyHeader->LoadData(reader);
+	m_propertyFooter->LoadData(reader);
+
 	m_propertyRowSelectionMode->LoadData(reader);
 
 	//events
@@ -436,6 +447,9 @@ bool CValueTableBox::SaveData(CMemoryWriter& writer)
 {
 	if (!m_propertySource->SaveData(writer))
 		return false;
+
+	m_propertyHeader->SaveData(writer);
+	m_propertyFooter->SaveData(writer);
 
 	m_propertyRowSelectionMode->SaveData(writer);
 
@@ -523,4 +537,5 @@ bool CValueTableBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //***********************************************************************
 
 ENUM_TYPE_REGISTER(CValueEnumTableBoxSelectionMode, "TableboxRowSelectionMode", string_to_clsid("EN_TBXSL"));
+ENUM_TYPE_REGISTER(CValueEnumTableBoxViewMode, "TableboxViewMode", string_to_clsid("EN_TBXVM"));
 CONTROL_TYPE_REGISTER(CValueTableBox, "Tablebox", "Container", g_controlTableBoxCLSID);

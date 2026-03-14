@@ -243,6 +243,7 @@ protected:
 		eFilter,
 		eFilterByColumn,
 		eFilterClear,
+		eViewMode,
 	};
 
 #pragma region _data_model_h_
@@ -298,6 +299,19 @@ protected:
 
 		virtual bool IsContainer(const wxDataViewExtItem& item) const {
 			return m_ownerModel->IsContainer(item);
+		}
+
+		// define current parent for hierarchical view 
+		virtual bool HasParentTopItem() const {
+			return m_ownerModel->HasParentTopItem();
+		}
+
+		virtual bool SetParentTopItem(const wxDataViewExtItem& item) {
+			return m_ownerModel->SetParentTopItem(item);
+		}
+
+		virtual wxDataViewExtItem GetParentTopItem() const {
+			return m_ownerModel->GetParentTopItem();
 		}
 
 		// Is the container just a header or an item with all columns
@@ -422,9 +436,7 @@ public:
 		wxDECLARE_ABSTRACT_CLASS(IValueModelReturnLine);
 	public:
 
-		wxDataViewExtItem GetLineItem() const {
-			return m_lineItem;
-		};
+		wxDataViewExtItem GetLineItem() const { return m_lineItem; };
 
 		IValueModelReturnLine(const wxDataViewExtItem& lineItem) : CValue(eValueTypes::TYPE_VALUE, true), m_lineItem(lineItem) {
 			wxRefCounter* refCounter = static_cast<wxRefCounter*>(m_lineItem.GetID());
@@ -560,9 +572,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
 	virtual bool AutoCreateColumn() const { return false; }
-	virtual bool UseFilter() const { return m_filterRow.UseFilter(); }
 
 	virtual bool UseStandartCommand() const { return true; }
+	virtual bool UseFilter() const { return m_filterRow.UseFilter(); }
+	virtual bool UseViewMode() const { return !IsListModel(); }
 
 	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const { return true; }
 
@@ -602,6 +615,7 @@ public:
 
 	//show filter 
 	virtual bool ShowFilter();
+	virtual bool ShowViewMode();
 
 	/**
 	* Override actionData
@@ -642,8 +656,13 @@ public:
 
 	// define hierarchy
 	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const = 0;
-
 	virtual bool IsContainer(const wxDataViewExtItem& item) const = 0;
+
+	// define current parent for hierarchical view 
+	virtual bool HasParentTopItem() const { return false; };
+
+	virtual bool SetParentTopItem(const wxDataViewExtItem& item) { return false; }
+	virtual wxDataViewExtItem GetParentTopItem() const { return wxDataViewExtItem(nullptr); }
 
 	// Is the container just a header or an item with all columns
 	virtual bool HasContainerColumns(const wxDataViewExtItem& item) const { return false; }
@@ -1189,6 +1208,8 @@ public:
 			}
 		}
 
+		virtual bool IsContainer() const { return m_children.size() > 0; }
+
 		/////////////////////////////////////////////////////////////////////////////
 
 		template <class varType>
@@ -1201,8 +1222,6 @@ public:
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		bool IsContainer() const { return m_children.size() > 0; }
-
 		void SetParent(wxValueTreeNode* parent) {
 			if (m_parent)
 				m_parent->Remove(this);
@@ -1211,17 +1230,9 @@ public:
 			m_parent = parent;
 		}
 
-		wxValueTreeNode* GetParent() const {
-			return m_parent;
-		}
-
-		std::vector<wxValueTreeNode*>& GetChildren() {
-			return m_children;
-		}
-
-		wxValueTreeNode* GetChild(unsigned int n) const {
-			return m_children.at(n);
-		}
+		wxValueTreeNode* GetParent() const { return m_parent; }
+		std::vector<wxValueTreeNode*>& GetChildren() { return m_children; }
+		wxValueTreeNode* GetChild(unsigned int n) const { return m_children.at(n); }
 
 		bool Append(wxValueTreeNode* child, bool notify = true) {
 			child->m_valueTree = m_valueTree;
@@ -1533,6 +1544,7 @@ public:
 		return node->IsContainer();
 	}
 
+	// define current parent for hierarchical view 
 	virtual unsigned int GetChildren(const wxDataViewExtItem& parent,
 		wxDataViewExtItemArray& array) const override {
 		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(parent);

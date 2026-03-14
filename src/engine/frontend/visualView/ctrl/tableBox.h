@@ -32,6 +32,19 @@ private:
 	wxDECLARE_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode);
 };
 
+class CValueEnumTableBoxViewMode :
+	public IEnumeration<wxDataViewExtViewMode> {
+public:
+	CValueEnumTableBoxViewMode() : IEnumeration() {}
+	virtual void CreateEnumeration() {
+		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtHierarchical, wxT("Hierarchical"), _("Hierarchical"));
+		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtTree, wxT("Tree"), _("Tree"));
+		AddEnumeration(wxDataViewExtViewMode::wxDataViewExtList, wxT("List"), _("List"));
+	}
+private:
+	wxDECLARE_DYNAMIC_CLASS(CValueEnumTableBoxViewMode);
+};
+
 class CValueTableBox : public IValueWindow,
 	public ITypeControlFactory, public ISourceObject {
 	wxDECLARE_DYNAMIC_CLASS(CValueTableBox);
@@ -188,6 +201,8 @@ protected:
 	void OnItemStartInserting(wxDataViewExtEvent& event);
 	void OnItemStartDeleting(wxDataViewExtEvent& event);
 
+	void OnViewSet(wxDataViewExtEvent& event);
+
 	void OnHeaderResizing(wxHeaderGenericCtrlEvent& event);
 	void OnMainWindowClick(wxMouseEvent& event);
 
@@ -209,14 +224,20 @@ protected:
 private:
 
 #pragma region __property_define_h__
+
+	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));	
+	CPropertyBoolean* m_propertyHeader = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Header"), _("Header"), _(""), true);
+	CPropertyBoolean* m_propertyFooter = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), _(""), false);
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"));
 	CPropertyEnum<CValueEnumTableBoxSelectionMode>* m_propertyRowSelectionMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxSelectionMode>>(m_categoryData, wxT("RowSelectionMode"), _("Row selection mode"), wxDataViewExtSelectionMode::wxDataViewExtSelectCell);
+	CPropertyEnum<CValueEnumTableBoxViewMode>* m_propertyViewMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxViewMode>>(m_categoryData, wxT("ViewMode"), _("View mode"), wxDataViewExtViewMode::wxDataViewExtHierarchical);
 	CPropertyCategory* m_categoryEvent = IPropertyObject::CreatePropertyCategory(wxT("Event"), _("Event"));
 	CEventControl* m_eventSelection = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("Selection"), _("Selection"), _("On double mouse click or pressing of Enter."), wxArrayString{ wxT("Control"), wxT("RowSelected"), wxT("StandardProcessing") });
 	CEventControl* m_eventOnActivateRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("OnActivateRow"), _("Activate row"), _("When row is activated"), wxArrayString{ {wxT("Control")} });
 	CEventControl* m_eventBeforeAddRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeAddRow"), _("Before add row"), _("When row addition mode is called"), wxArrayString{ wxT("Control"), wxT("Cancel"), wxT("Clone") });
 	CEventControl* m_eventBeforeDeleteRow = IPropertyObject::CreateEvent<CEventControl>(m_categoryEvent, wxT("BeforeDeleteRow"), _("Before delete row"), _("When row deletion is called"), wxArrayString{ wxT("Control"), wxT("Cancel") });
+
 #pragma endregion 
 
 	bool m_dataViewCreated, m_dataViewUpdated,
@@ -374,6 +395,8 @@ private:
 	CPropertyBoolean* m_propertyMultilineMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("MultilineMode"), _("Multiline mode"), _("Multiline mode"), false);
 	CPropertyBoolean* m_propertyTexteditMode = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("TexteditMode"), _("Textedit mode"), _("Whether or not text editing is enabled in the text box "), true);
 
+	CPropertyTString* m_propertyFooterText = IPropertyObject::CreateProperty<CPropertyTString>(m_categoryInfo, wxT("FooterText"), _("Footer text"), wxT(""));
+
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"), eValueTypes::TYPE_STRING);
 	CPropertyList* m_propertyChoiceForm = IPropertyObject::CreateProperty<CPropertyList>(m_categoryData, wxT("ChoiceForm"), _("Choice form"), &CValueTableBoxColumn::GetChoiceForm);
@@ -385,9 +408,11 @@ private:
 
 	CPropertyCategory* m_categoryStyle = IPropertyObject::CreatePropertyCategory(wxT("Style"), _("Style"));
 	CPropertyUInteger* m_propertyWidth = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryStyle, wxT("Width"), _("Width"), wxDVC_DEFAULT_WIDTH);
-	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("Align"), _("Align"), wxALIGN_LEFT);
+	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyHeaderAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("HeaderAlign"), _("Header align"), wxALIGN_LEFT);
+	CPropertyEnum<CValueEnumHorizontalAlignment>* m_propertyFooterAlign = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumHorizontalAlignment>>(m_categoryStyle, wxT("FooterAlign"), _("Footer align"), wxALIGN_LEFT);
 	CPropertyEnum<CValueEnumRepresentation>* m_propertyRepresentation = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumRepresentation>>(m_categoryStyle, wxT("Representation"), _("Representation"), enRepresentation::eRepresentation_Auto);
-	CPropertyPicture* m_propertyPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("Picture"), _("Picture"));
+	CPropertyPicture* m_propertyHeaderPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("HeaderPicture"), _("Header picture"));
+	CPropertyPicture* m_propertyFooterPicture = IPropertyObject::CreateProperty<CPropertyPicture>(m_categoryStyle, wxT("FooterPicture"), _("Footer picture"));
 
 	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Visible"), _("Visible"), true);
 	CPropertyBoolean* m_propertyResizable = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryStyle, wxT("Resizable"), _("Resizable"), true);

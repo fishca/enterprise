@@ -1427,6 +1427,8 @@ wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, wxDataViewExtEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, wxDataViewExtEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_DROP, wxDataViewExtEvent);
 
+wxDEFINE_EVENT(wxEVT_DATAVIEW_VIEW_SET, wxDataViewExtEvent);
+
 // Common part of non-copy ctors.
 void wxDataViewExtEvent::Init(wxDataViewExtCtrlBase* dvc,
 	wxDataViewExtColumn* column,
@@ -1448,6 +1450,8 @@ void wxDataViewExtEvent::Init(wxDataViewExtCtrlBase* dvc,
 	m_dropEffect = wxDragNone;
 	m_proposedDropIndex = -1;
 #endif // wxUSE_DRAG_AND_DROP
+
+	m_viewMode = wxDataViewExtViewMode::wxDataViewExtList;
 
 	SetEventObject(dvc);
 }

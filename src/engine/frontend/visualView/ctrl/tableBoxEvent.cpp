@@ -207,6 +207,14 @@ void CValueTableBox::OnItemStartDeleting(wxDataViewExtEvent& event)
 		event.Skip();
 }
 
+void CValueTableBox::OnViewSet(wxDataViewExtEvent& event)
+{
+	if (m_dataViewCreated)
+		m_propertyViewMode->SetValue(event.GetViewMode());
+	
+	event.Skip();
+}
+
 void CValueTableBox::OnHeaderResizing(wxHeaderGenericCtrlEvent& event)
 {
 	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
@@ -268,7 +276,7 @@ void CValueTableBox::OnContextMenu(wxDataViewExtEvent& event)
 		const action_identifier_t& id = actionData.GetID(idx);
 		if (id != wxNOT_FOUND) {
 			wxMenuItem* menuItem = menu.Append(id, actionData.GetCaptionByID(id));
-			CPictureDescription &pictureDesc = actionData.GetPictureByID(id);
+			CPictureDescription& pictureDesc = actionData.GetPictureByID(id);
 			if (!pictureDesc.IsEmptyPicture())
 				menuItem->SetBitmap(CBackendPicture::CreatePicture(pictureDesc));
 		}
@@ -318,6 +326,15 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 				if (currLine.IsOk()) m_tableCurrentLine = m_tableModel->GetRowAt(currLine);
 				else m_tableCurrentLine.Reset();
 			}
+
+			if (m_tableCurrentLine != nullptr) {
+
+				const wxDataViewExtItem& item =
+					m_tableModel->GetParent(m_tableCurrentLine->GetLineItem());
+
+				dataViewCtrl->SetTopParent(item);
+			}
+
 			m_dataViewSelected = true;
 		}
 
@@ -340,11 +357,8 @@ void CValueTableBox::OnIdle(wxIdleEvent& event)
 			}
 		}
 
-		if (m_tableCurrentLine != nullptr) {
-			dataViewCtrl->Select(
-				m_tableCurrentLine->GetLineItem()
-			);
-		}
+		if (m_tableCurrentLine != nullptr)
+			dataViewCtrl->Select(m_tableCurrentLine->GetLineItem());
 	}
 
 	if (m_need_calculate_pos) {

@@ -18,6 +18,7 @@ public:
 
 	//show data filter
 	virtual bool ShowFilter(struct CFilterRow& filter);
+	virtual bool ShowViewMode();
 
 private:
 

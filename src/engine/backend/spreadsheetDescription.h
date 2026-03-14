@@ -91,6 +91,14 @@ struct CSpreadsheetCellDescription {
 	//special set
 	wxString GetValue() const { return m_value; }
 
+	bool IsEmptyParameter() const { return m_detailsParameter.IsEmpty(); }
+
+	void GetParameter(wxString& s) const { s = m_detailsParameter; }
+	void SetParameter(const wxString& s) { m_detailsParameter = s; }
+
+	//special set
+	wxString GetParameter() const { return m_detailsParameter; }
+
 	int GetSize(int* num_rows, int* num_cols) const {
 
 		if (num_rows != nullptr)
@@ -134,6 +142,7 @@ struct CSpreadsheetCellDescription {
 		m_isReadOnly = rhs->m_isReadOnly;
 		m_fillSetType = rhs->m_fillSetType;
 		m_value = rhs->m_value;
+		m_detailsParameter = rhs->m_detailsParameter;
 	}
 
 	CSpreadsheetCellDescription& operator =(const CSpreadsheetCellDescription& rhs) {
@@ -151,7 +160,8 @@ struct CSpreadsheetCellDescription {
 			&& m_textColour == rhs.m_textColour
 			&& m_borderAt == rhs.m_borderAt
 			&& m_row_size == rhs.m_row_size && m_col_size == rhs.m_col_size
-			&& m_fillSetType == rhs.m_fillSetType;
+			&& m_fillSetType == rhs.m_fillSetType
+			&& m_detailsParameter == rhs.m_detailsParameter;
 	}
 
 	unsigned int m_row, m_col;
@@ -166,7 +176,8 @@ struct CSpreadsheetCellDescription {
 	int m_row_size = 1, m_col_size = 1;
 	EFitMode m_fitMode = EFitMode::Mode_Overflow;
 	bool m_isReadOnly = false;
-	enSpreadsheetFillType m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+	enSpreadsheetFillType m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;	
+	wxString m_detailsParameter;
 };
 
 struct CSpreadsheetAreaDescription {
@@ -706,6 +717,26 @@ struct CSpreadsheetDescription {
 		const CSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_value;
+		return wxT("");
+	}
+
+	void GetCellDetailsParameter(int row, int col, wxString& s) const {
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		if (cell != nullptr)
+			s = cell->m_detailsParameter;
+	}
+
+	void SetCellDetailsParameter(int row, int col, const wxString& s) {
+		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		if (cell != nullptr)
+			cell->m_detailsParameter = s;
+	}
+
+	//special string return 
+	wxString GetCellDetailsParameter(int row, int col) const {
+		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		if (cell != nullptr)
+			return cell->m_detailsParameter;
 		return wxT("");
 	}
 

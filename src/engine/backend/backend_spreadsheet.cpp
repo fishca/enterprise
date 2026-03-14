@@ -12,6 +12,12 @@ void CBackendSpreadsheetObject::ClearSpreadsheet(int count)
 	m_spreadsheetDesc.ClearSpreadsheet(count);
 }
 
+void CBackendSpreadsheetObject::EnableEditing(bool edit)
+{
+	spreadsheetNotify->EnableEditing(edit);
+	m_editable = edit;
+}
+
 //area 
 CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowRight, int colTop, int colBottom)
 {
@@ -83,7 +89,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 
 	CSpreadsheetDescription spreadsheetDesc;
 
- 	if (r != nullptr && c != nullptr) {
+	if (r != nullptr && c != nullptr) {
 		for (int row = r->m_start; row <= (int)r->m_end; row++) {
 			for (int col = c->m_start; col <= (int)c->m_end; col++) {
 				CSpreadsheetCellDescription* cell =
@@ -160,6 +166,12 @@ void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadshee
 				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
 				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 			}
+
+			const wxString& detailsParameter =
+				cell->m_detailsParameter;
+
+			if (!detailsParameter.IsEmpty())
+				SetParameter(cell->m_detailsParameter, doc->GetParameter(cell->m_detailsParameter));
 		}
 	}
 
@@ -194,6 +206,12 @@ void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadshe
 				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
 				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
 			}
+
+			const wxString& detailsParameter =
+				cell->m_detailsParameter;
+
+			if (!detailsParameter.IsEmpty())
+				SetParameter(cell->m_detailsParameter, doc->GetParameter(cell->m_detailsParameter));
 		}
 	}
 
@@ -407,8 +425,8 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 					const wxString& token =
 						strTemplateValue.substr(start_pos + 1, end_pos - start_pos - 1);
 					if (!token.empty()) {
-						
-						static CValue cVal;						
+
+						static CValue cVal;
 						if (GetParameter(token, cVal))
 							strTemplateValue.replace(start_pos, end_pos - start_pos + 1, cVal.GetString());
 						else
@@ -435,7 +453,7 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 	}
 	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
 
-		static CValue cVal; 
+		static CValue cVal;
 		if (!strValue.IsEmpty() && GetParameter(strValue, cVal))
 			return CBackendLocalization::CreateLocalizationRawLocText(cVal.GetString());
 	}
@@ -444,6 +462,29 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 }
 
 #pragma endregion 
+
+void CBackendSpreadsheetObject::SetCellDetailsParameter(int row, int col, const wxString& s)
+{
+	//spreadsheetNotify->SetCellValue(row, col, s);
+	m_spreadsheetDesc.SetCellDetailsParameter(row, col, s);
+}
+
+bool CBackendSpreadsheetObject::OpenCellDetailsParameter(int row, int col) const
+{
+	const CSpreadsheetCellDescription* cellDesc = m_spreadsheetDesc.GetCell(row, col);
+	if (cellDesc == nullptr)
+		return false;
+
+	const wxString& detailsParameter = cellDesc->m_detailsParameter;
+
+	CValue valueParam;
+	if (!detailsParameter.IsEmpty() && GetParameter(detailsParameter, valueParam)) {
+		valueParam.ShowValue();
+		return true;
+	}
+
+	return false;
+}
 
 #pragma region __fs_h__
 

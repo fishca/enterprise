@@ -22,7 +22,8 @@ enum
 	wxID_BORDER_BOTTOM,
 	wxID_BORDER_ALL,
 	wxID_BORDER_AROUND,
-	wxID_BORDER_NONE
+	wxID_BORDER_NONE, 
+	wxID_EDITABLE
 };
 
 // ----------------------------------------------------------------------------
@@ -56,6 +57,7 @@ EVT_MENU(wxID_BORDER_BOTTOM, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_ALL, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_AROUND, CSpreadsheetEditView::OnMenuEvent)
 EVT_MENU(wxID_BORDER_NONE, CSpreadsheetEditView::OnMenuEvent)
+EVT_MENU(wxID_EDITABLE, CSpreadsheetEditView::OnMenuEvent)
 wxEND_EVENT_TABLE()
 
 bool CSpreadsheetEditView::OnCreate(CMetaDocument* doc, long flags)
@@ -130,6 +132,13 @@ wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const
 
 		menuItem = menu->AppendCheckItem(wxID_SHOW_AREA, _("Show area"));
 		menuItem->Check(m_gridEditor->GridAreaEnabled());
+
+		const IValueMetaObjectSpreadsheet* doc = 
+			GetDocument()->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		menuItem = menu->AppendCheckItem(wxID_EDITABLE, _("Editable"));
+		menuItem->Enable(doc ? doc->IsEditable() : true);
+		menuItem->Check(m_gridEditor->IsEditable());
 
 		menuItem = menu->AppendSeparator();
 		menuItem = menu->Append(wxID_MERGE_CELL, _("Merge cells"));
@@ -301,6 +310,10 @@ void CSpreadsheetEditView::OnMenuEvent(wxCommandEvent& event)
 				m_gridEditor->SetCellBorderRight(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
 				m_gridEditor->SetCellBorderBottom(row, col, wxPenStyle::wxPENSTYLE_TRANSPARENT, *wxBLACK, 1);
 			}
+		break;
+
+	case wxID_EDITABLE:
+		m_gridEditor->EnableEditing(!m_gridEditor->IsEditable());
 		break;
 	}
 

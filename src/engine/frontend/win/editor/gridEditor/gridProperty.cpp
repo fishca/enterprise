@@ -122,6 +122,9 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* p
 			wxSharedPtr<wxString>(static_cast<wxString*>(value));
 		m_propertyParameter->SetValue(*textString);
 	}
+	else if (m_propertyDetailsParameter == property) {
+		m_propertyDetailsParameter->SetValue(m_view->GetCellDetailsParameter(coords.GetTopRow(), coords.GetLeftCol()));
+	}
 }
 
 void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
@@ -192,6 +195,9 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* p
 	}
 	else if (m_propertyParameter == property) {
 		m_view->SetCellValue(coords, m_propertyParameter->GetValueAsString());
+	}
+	else if (m_propertyDetailsParameter == property) {
+		m_view->SetCellDetailsParameter(coords, m_propertyDetailsParameter->GetValueAsString());
 	}
 }
 

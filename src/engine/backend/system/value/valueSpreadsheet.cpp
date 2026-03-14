@@ -224,7 +224,9 @@ public:
 			CMethodHelper* methodHelper = paParams[0]->GetPMethods();
 			if (methodHelper != nullptr) {
 				for (int lPropPos = 0; lPropPos < m_methodHelper->GetNProps(); lPropPos++) {
-					const wxString& strPropName = methodHelper->GetPropName(lPropPos);
+					if (lPropPos >= methodHelper->GetNProps())
+						continue;
+					const wxString& strPropName = methodHelper ->GetPropName(lPropPos);
 					long lPropNum = methodHelper->FindProp(strPropName);
 					if (lPropNum == wxNOT_FOUND)
 						continue;
@@ -251,12 +253,22 @@ public:
 
 	virtual void PrepareNames() const { // this method is automatically called to initialize attribute and method names.
 
+		// Define the comparator struct
+		struct wxCompareStringFunc {
+			bool operator()(const wxString& lhs, const wxString& rhs) const {
+				// Sort based on the 'key' member in ascending order
+				return lhs.Upper() < rhs.Upper();
+			}
+		};
+
 		m_methodHelper->ClearHelper();
 
 		m_methodHelper->AppendFunc(wxT("Count"), wxT("Count"));
 		m_methodHelper->AppendProc(wxT("Fill"), 1, wxT("Fill(any : value)"));
 		m_methodHelper->AppendFunc(wxT("Get"), 1, wxT("Get(parameter: string)"));
 		m_methodHelper->AppendProc(wxT("Set"), 2, wxT("Set(parameter: string, any: value)"));
+
+		std::set<wxString, wxCompareStringFunc> arrParameter;
 
 		for (int idx = 0; idx < m_spreadsheetDoc->GetSpreadsheetDesc().GetCellCount(); idx++) {
 
@@ -265,12 +277,16 @@ public:
 				continue;
 
 			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
-				if (!cell->IsEmptyValue()) m_methodHelper->AppendProp(cell->m_value);
+				if (!cell->IsEmptyValue()) arrParameter.insert(cell->m_value);
 			}
 			else if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
-				if (!cell->IsEmptyValue()) for (auto s : ParseBrackets(cell->m_value)) if (!s.IsEmpty()) m_methodHelper->AppendProp(s);
+				if (!cell->IsEmptyValue()) for (auto s : ParseBrackets(cell->m_value)) if (!s.IsEmpty()) arrParameter.insert(s);
 			}
+
+			if (!cell->IsEmptyParameter()) arrParameter.insert(cell->m_detailsParameter);
 		}
+
+		for (auto p : arrParameter) m_methodHelper->AppendProp(p);
 	}
 
 private:
@@ -363,7 +379,7 @@ bool CValueSpreadsheetDocument::SetPropVal(const long lPropNum, const CValue& va
 	case eParameters:
 		return false;
 	case eReadOnly:
-		m_spreadsheetDoc->SetReadOnly(varPropVal.GetBoolean());
+		m_spreadsheetDoc->EnableEditing(!varPropVal.GetBoolean());
 		return true;
 	case ePrinterName:
 		m_spreadsheetDoc->SetPrinterName(varPropVal.GetString());
@@ -393,7 +409,7 @@ bool CValueSpreadsheetDocument::GetPropVal(const long lPropNum, CValue& pvarProp
 		pvarPropVal = CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocumentParameterCollection>(m_spreadsheetDoc);
 		return true;
 	case eReadOnly:
-		pvarPropVal = m_spreadsheetDoc->GetReadOnly();
+		pvarPropVal = !m_spreadsheetDoc->IsEditable();
 		return true;
 	case ePrinterName:
 		pvarPropVal = m_spreadsheetDoc->GetPrinterName();

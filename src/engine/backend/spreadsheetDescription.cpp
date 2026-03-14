@@ -46,8 +46,8 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 			CSpreadsheetCellDescription* cell =
 				spreadsheetDesc.GetOrCreateCell(row, col);
 
-			cell->m_value = cellReader.r_stringZ();	
-			
+			cell->m_value = cellReader.r_stringZ();
+
 			cell->m_alignHorz = cellReader.r_s32();
 			cell->m_alignVert = cellReader.r_s32();
 			cell->m_textOrient = cellReader.r_s32();
@@ -79,6 +79,8 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 			cell->m_isReadOnly = cellReader.r_u8();
 
 			cell->m_fillSetType = static_cast<enSpreadsheetFillType>(cellReader.r_s32());
+
+			cell->m_detailsParameter = cellReader.r_stringZ();
 		}
 	}
 
@@ -93,7 +95,7 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 		for (u64 c = 0; c < capacity; c++) {
 
 			wxString areaLabel = areaReader.r_stringZ();
-			
+
 			int start = areaReader.r_s32(),
 				end = areaReader.r_s32();
 
@@ -199,6 +201,8 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 		cellWriter.w_s8(cell->m_isReadOnly);
 
 		cellWriter.w_s32(cell->m_fillSetType);
+
+		cellWriter.w_stringZ(cell->m_detailsParameter);
 	}
 
 	mainWriter.w_chunk(cell_block, cellWriter.buffer());

@@ -23,6 +23,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		CGenericSpreadsheetNotifier(CGridEditor* view) : m_view(view) {}
 		virtual void ClearSpreadsheet() { m_view->ClearGrid(); }
+		virtual void EnableEditing(bool edit) { m_view->EnableEditing(edit); }
 
 		//size 
 		virtual void SetRowSize(int row, int height = 0) { m_view->SetRowSize(row, height); }
@@ -67,10 +68,14 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		// ------ area value accessors
 		//
 		virtual void PutArea(
-			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->PutDocument(doc); }
+			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) {
+			m_view->PutDocument(doc);
+		}
 
 		virtual void JoinArea(
-			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) { m_view->JoinDocument(doc); }
+			const wxObjectDataPtr<class CBackendSpreadsheetObject>& doc) {
+			m_view->JoinDocument(doc);
+		}
 
 	private:
 
@@ -396,6 +401,7 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
 		CPropertyEnum<CValueEnumSpreadsheetFillType>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("FillType"), _("Fill type"), enSpreadsheetFillType::enSpreadsheetFillType_StrText);
 		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
+		CPropertyUString* m_propertyDetailsParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("DetailsParameter"), _("Details parameter"), wxEmptyString);
 
 		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("Alignment"), _("Alignment"));
 		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("Git_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);
@@ -491,10 +497,22 @@ public:
 
 protected:
 
+	void GetCellDetailsParameter(int row, int col, wxString& s) const;
+	void SetCellDetailsParameter(int row, int col, const wxString& s);
+
+	wxString GetCellDetailsParameter(int row, int col) const {
+		wxString s;
+		GetCellDetailsParameter(row, col, s);
+		return s;
+	}
+
+	void SetCellDetailsParameter(const wxGridExtBlockCoords& coords, const wxString& s, bool sendUndoCommand = true);
+
 	bool LoadSpreadsheet(const CSpreadsheetDescription& spreadsheetDesc);
 	bool SaveSpreadsheet(CSpreadsheetDescription& spreadsheetDesc) const;
 
 	//events:
+	void OnMouseLeftDown(wxGridExtEvent& event);
 	void OnMouseRightDown(wxGridExtEvent& event);
 
 	// This seems to be required for wxMotif/wxGTK otherwise the mouse

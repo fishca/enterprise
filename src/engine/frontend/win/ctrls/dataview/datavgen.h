@@ -488,6 +488,7 @@ public:     // utility functions not part of the API
 #endif // wxUSE_ACCESSIBILITY
 
 private:
+
 	// Implement pure virtual method inherited from wxCompositeWindow.
 	virtual wxWindowList GetCompositeWindowParts() const wxOVERRIDE;
 
@@ -499,6 +500,8 @@ private:
 	void InvalidateColBestWidths();
 	void InvalidateColBestWidth(int idx);
 	void UpdateColWidths();
+
+	void CreateTableSizer();
 
 	void DoClearColumns();
 

@@ -6175,6 +6175,8 @@ bool wxDataViewExtCtrl::Create(wxWindow* parent,
 
 	SetTargetWindow(m_tableAreaWin);
 
+	CreateTableSizer();
+
 	EnableSystemThemeByDefault();
 
 #if wxUSE_ACCESSIBILITY
@@ -6203,6 +6205,23 @@ wxHeaderGenericCtrl* wxDataViewExtCtrl::GenericGetHeader() const
 	return m_headerAreaWin;
 }
 
+void wxDataViewExtCtrl::CreateTableSizer()
+{
+	SetSizer(NULL);
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+	if (m_headerAreaWin)
+		sizer->Add(m_headerAreaWin, 0, wxGROW);
+	
+	sizer->Add(m_tableAreaWin, 1, wxGROW);
+	
+	if (m_footerAreaWin)
+		sizer->Add(m_footerAreaWin, 0, wxGROW);
+	
+	SetSizer(sizer);
+}
+
 void wxDataViewExtCtrl::ShowHeaderWindow(bool e)
 {
 	int flags = GetWindowStyleFlag();
@@ -6218,13 +6237,16 @@ void wxDataViewExtCtrl::ShowHeaderWindow(bool e)
 	{
 		if (m_headerAreaWin)
 			m_headerAreaWin->Destroy();
-
+		
 		m_headerAreaWin = NULL;
+		CreateTableSizer();
 	}
 	else if (m_headerAreaWin == NULL && !HasFlag(wxDV_NO_HEADER))
 	{
 		m_headerAreaWin = new wxDataViewExtHeaderWindow(this);
 		m_headerAreaWin->SetColumnCount(GetColumnCount());
+
+		CreateTableSizer();
 	}
 }
 
@@ -6245,11 +6267,14 @@ void wxDataViewExtCtrl::ShowFooterWindow(bool e)
 			m_footerAreaWin->Destroy();
 
 		m_footerAreaWin = NULL;
+		CreateTableSizer();
 	}
 	else if (m_footerAreaWin == NULL && HasFlag(wxDV_FOOTER))
 	{
 		m_footerAreaWin = new wxDataViewExtFooterWindow(this);
 		m_footerAreaWin->SetColumnCount(GetColumnCount());
+
+		CreateTableSizer();
 	}
 }
 
@@ -6294,22 +6319,7 @@ void wxDataViewExtCtrl::OnSize(wxSizeEvent& event)
 	// the scrollable area as set that ourselves by
 	// calling SetScrollbar() further down.
 
-	int headerAreaHeight = 0, headerAreaFooter = 0;
-
-	if (m_headerAreaWin && m_headerAreaWin->IsShown())
-		headerAreaHeight = m_headerAreaWin->GetBestHeight(cw);
-
-	if (m_footerAreaWin && m_footerAreaWin->IsShown())
-		headerAreaFooter = m_footerAreaWin->GetBestHeight(cw);
-
-	if (m_headerAreaWin && m_headerAreaWin->IsShown())
-		m_headerAreaWin->SetSize(0, 0, cw, headerAreaHeight);
-
-	if (m_tableAreaWin && m_tableAreaWin->IsShown())
-		m_tableAreaWin->SetSize(0, headerAreaHeight, cw, ch - (headerAreaHeight + headerAreaFooter));
-
-	if (m_footerAreaWin && m_footerAreaWin->IsShown())
-		m_footerAreaWin->SetSize(0, ch - headerAreaFooter, cw, headerAreaFooter);
+	Layout();
 
 	// Update the last column size to take all the available space. Note that
 	// this must be done after calling Layout() to update m_tableAreaWin size.

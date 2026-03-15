@@ -387,8 +387,23 @@ unsigned int wxHeaderGenericCtrl::FindColumnAtPoint(int xPhysical, bool* onSepar
 		// line separating it from the next column
 		if (col.IsResizeable() && abs(xLogical - pos) < separatorClickMargin)
 		{
-			if (onSeparator)
-				*onSeparator = true;
+			if (onSeparator) 
+			{
+				bool last_visible_col = false;
+
+				for (unsigned num = n + 1; num < count; num++)
+				{
+					const wxHeaderColumn& col = GetColumn(m_colIndices[num]);
+					if (col.IsHidden())
+						continue;
+
+					last_visible_col = true;
+					break;
+				}
+
+				*onSeparator = last_visible_col;
+			}
+			
 			return idx;
 		}
 

@@ -225,9 +225,13 @@ private:
 
 #pragma region __property_define_h__
 
-	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));	
+	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
 	CPropertyBoolean* m_propertyHeader = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Header"), _("Header"), _(""), true);
+	CPropertyUInteger* m_propertyHeaderHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("HeaderHeight"), _("Header height"), _(""), 1);
 	CPropertyBoolean* m_propertyFooter = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), _(""), false);
+	CPropertyUInteger* m_propertyFooterHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FooterHeight"), _("Footer height"), _(""), 1);
+	CPropertyUInteger* m_propertyFreezeRow = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeRow"), _("Frezee row"), _(""), 0);
+	CPropertyUInteger* m_propertyFreezeCol = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeCol"), _("Frezee column"), _(""), 0);
 	CPropertyCategory* m_categoryData = IPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
 	CPropertySource* m_propertySource = IPropertyObject::CreateProperty<CPropertySource>(m_categoryData, wxT("Source"), _("Source"));
 	CPropertyEnum<CValueEnumTableBoxSelectionMode>* m_propertyRowSelectionMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumTableBoxSelectionMode>>(m_categoryData, wxT("RowSelectionMode"), _("Row selection mode"), wxDataViewExtSelectionMode::wxDataViewExtSelectCell);

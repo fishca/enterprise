@@ -394,7 +394,12 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 		}
 
 		dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+		dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
 		dataViewCtrl->ShowFooterWindow(m_propertyFooter->GetValueAsBoolean());
+		dataViewCtrl->SetFooterHeight(m_propertyFooterHeight->GetValueAsUInteger());
+
+		dataViewCtrl->FreezeTo(
+			m_propertyFreezeRow->GetValueAsUInteger(), m_propertyFreezeCol->GetValueAsUInteger());
 
 		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 		dataViewCtrl->SetViewMode(m_propertyViewMode->GetValueAsEnum());
@@ -430,7 +435,12 @@ bool CValueTableBox::LoadData(CMemoryReader& reader)
 		return false;
 
 	m_propertyHeader->LoadData(reader);
+	m_propertyHeaderHeight->LoadData(reader);
 	m_propertyFooter->LoadData(reader);
+	m_propertyFooterHeight->LoadData(reader);
+
+	m_propertyFreezeRow->LoadData(reader);
+	m_propertyFreezeCol->LoadData(reader);
 
 	m_propertyRowSelectionMode->LoadData(reader);
 
@@ -449,7 +459,12 @@ bool CValueTableBox::SaveData(CMemoryWriter& writer)
 		return false;
 
 	m_propertyHeader->SaveData(writer);
+	m_propertyHeaderHeight->SaveData(writer);
 	m_propertyFooter->SaveData(writer);
+	m_propertyFooterHeight->SaveData(writer);
+
+	m_propertyFreezeRow->SaveData(writer);
+	m_propertyFreezeCol->SaveData(writer);
 
 	m_propertyRowSelectionMode->SaveData(writer);
 

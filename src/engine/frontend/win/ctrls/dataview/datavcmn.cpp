@@ -379,7 +379,8 @@ bool wxDataViewExtRendererBase::StartEditing(const wxDataViewExtItem& item, wxRe
 	unsigned int col = GetOwner()->GetModelColumn();
 	const wxVariant& value = CheckedGetValue(dv_ctrl->GetModel(), item, col);
 
-	m_editorCtrl = CreateEditorCtrl(dv_ctrl->GetMainWindow(), labelRect, value);
+	m_editorCtrl = CreateEditorCtrl(
+		(wxWindow*)dv_ctrl->CellToDataViewWindow(item, column), labelRect, value);
 
 	// there might be no editor control for the given item
 	if (!m_editorCtrl)
@@ -2114,7 +2115,6 @@ wxDataViewExtListCtrl::wxDataViewExtListCtrl(wxWindow* parent, wxWindowID id,
 wxDataViewExtListCtrl::~wxDataViewExtListCtrl()
 {
 }
-
 
 bool wxDataViewExtListCtrl::Create(wxWindow* parent, wxWindowID id,
 	const wxPoint& pos, const wxSize& size, long style,

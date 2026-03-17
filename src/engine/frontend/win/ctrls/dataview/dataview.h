@@ -233,13 +233,6 @@ enum wxDataViewExtColumnFlags
 
 class wxDataViewExtColumnBase : public wxSettableHeaderColumn
 {
-	class wxDataViewExtFooterBase : public wxSettableHeaderColumn
-	{
-	public:
-
-
-	};
-
 public:
 	// ctor for the text columns: takes ownership of renderer
 	wxDataViewExtColumnBase(wxDataViewExtRenderer* renderer,
@@ -269,7 +262,6 @@ public:
 	unsigned int GetModelColumn() const { return static_cast<unsigned int>(m_model_column); }
 	wxDataViewExtCtrl* GetOwner() const { return m_owner; }
 	wxDataViewExtRenderer* GetRenderer() const { return m_renderer; }
-
 
 	// implement some of base class pure virtuals (the rest is port-dependent
 	// and done differently in generic and native versions)
@@ -535,7 +527,7 @@ public:
 	virtual void SetViewMode(wxDataViewExtViewMode viewMode) = 0;
 	virtual wxDataViewExtViewMode GetViewMode() const = 0;
 
-	virtual void SetTopParent(const wxDataViewExtItem& item) const = 0;
+	virtual void SetTopParent(const wxDataViewExtItem& item) = 0;
 
 	void Expand(const wxDataViewExtItem& item);
 	void ExpandChildren(const wxDataViewExtItem& item);
@@ -549,6 +541,8 @@ public:
 	virtual wxRect GetItemRect(const wxDataViewExtItem& item, const wxDataViewExtColumn* column = NULL) const = 0;
 
 	virtual bool SetRowHeight(int WXUNUSED(rowHeight)) { return false; }
+	virtual int GetRowHeight() const { return 0; }
+	virtual int GetDefaultRowHeight() const { return 0; }
 
 	virtual void EditItem(const wxDataViewExtItem& item, const wxDataViewExtColumn* column) = 0;
 

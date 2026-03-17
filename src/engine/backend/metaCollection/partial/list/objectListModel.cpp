@@ -75,8 +75,8 @@ bool CValueTreeDataObjectFolderRef::GetAttrByRow(const wxDataViewExtItem& item,
 	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 	if (node == nullptr)
 		return false;
-	CValue isFolder = false;
-	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
+	const CValue& isFolder =
+		node->GetTableValue(*m_metaObject->GetDataIsFolder());
 	if (isFolder.GetBoolean())
 		attr.SetBackgroundColour(wxColour(214, 239, 252));
 	return true;

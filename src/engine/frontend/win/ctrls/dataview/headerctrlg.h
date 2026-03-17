@@ -280,11 +280,20 @@ public:
 
 	virtual ~wxHeaderGenericCtrl();
 
+	void SetColumnHeight(int point) 
+	{ 
+		InvalidateBestSize();
+		m_numHeight = point; 
+	}
+
+	int GetColumnHeight() const { return m_numHeight; }
+
 protected:
+
 	virtual wxSize DoGetBestSize() const wxOVERRIDE;
 
-
 private:
+
 	// implement base class pure virtuals
 	virtual void DoSetCount(unsigned int count) wxOVERRIDE;
 	virtual unsigned int DoGetCount() const wxOVERRIDE;
@@ -382,6 +391,9 @@ private:
 
 	// pos physical
 	int m_xPhysical;
+
+	//number of column height point
+	unsigned int m_numHeight;
 
 	// number of columns in the control currently
 	unsigned int m_numColumns;

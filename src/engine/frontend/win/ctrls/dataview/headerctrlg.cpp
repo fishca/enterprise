@@ -198,14 +198,15 @@ void DrawHeaderButton(wxWindow* win,
 		wxDCTextColourChanger setTextFg(dc, clr);
 		wxDCTextBgModeChanger setBgMode(dc, wxBRUSHSTYLE_TRANSPARENT);
 
-		int tw, th, td;
-		dc.GetTextExtent(label, &tw, &th, &td);
+		int tw, th;
+		dc.GetMultiLineTextExtent(label, &tw, &th);
 
 		int x = rect.x + bmpWidth + margin;
-		const int y = rect.y + wxMax(0, (rect.height - (th + td)) / 2);
+		const int y = rect.y + wxMax(0, (rect.height - th) / 2);
 
 		// truncate and add an ellipsis (...) if the text is too wide.
 		const int availWidth = rect.width - labelWidth;
+
 #if wxUSE_CONTROLS
 		if (tw > availWidth)
 		{
@@ -254,6 +255,7 @@ void wxHeaderGenericCtrl::Init()
 	m_dragOffset = 0;
 	m_scrollOffset = 0;
 	m_xPhysical = -1;
+	m_numHeight = 1;
 	m_wasSeparatorDClick = false;
 }
 
@@ -333,7 +335,7 @@ void wxHeaderGenericCtrl::DoScrollHorz(int dx)
 wxSize wxHeaderGenericCtrl::DoGetBestSize() const
 {
 	wxWindow* win = GetParent();
-	int height = wxRendererNative::Get().GetHeaderButtonHeight(win);
+	int height = wxRendererNative::Get().GetHeaderButtonHeight(win) * wxMax(m_numHeight, 1);
 
 	// the vertical size is rather arbitrary but it looks better if we leave
 	// some space around the text

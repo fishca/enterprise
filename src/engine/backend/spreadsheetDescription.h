@@ -180,6 +180,13 @@ struct CSpreadsheetCellDescription {
 	wxString m_detailsParameter;
 };
 
+class BACKEND_API CSpreadsheetCellDescriptionMemory {
+public:
+	//load & save object in control 
+	static bool LoadData(class CMemoryReader& reader, CSpreadsheetCellDescription& spreadsheetDesc);
+	static bool SaveData(class CMemoryWriter& writer, const CSpreadsheetCellDescription& spreadsheetDesc);
+};
+
 struct CSpreadsheetAreaDescription {
 
 	CSpreadsheetAreaDescription(const wxString& label, unsigned int start, unsigned int end) : m_label(label), m_start(start), m_end(end) {}
@@ -785,7 +792,7 @@ class BACKEND_API CSpreadsheetDescriptionMemory {
 public:
 	//load & save object in control 
 	static bool LoadData(class CMemoryReader& reader, CSpreadsheetDescription& spreadsheetDesc);
-	static bool SaveData(class CMemoryWriter& writer, CSpreadsheetDescription& spreadsheetDesc);
+	static bool SaveData(class CMemoryWriter& writer, const CSpreadsheetDescription& spreadsheetDesc);
 };
 
 #endif  

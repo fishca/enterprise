@@ -12860,6 +12860,7 @@ bool wxGridExt::Undo()
 		m_redoStack.push_back(command);
 	}
 
+	ForceRefresh();
 	return true;
 }
 
@@ -12871,6 +12872,8 @@ bool wxGridExt::Redo()
 		command->Execute(this);
 		m_undoStack.push_back(command);
 	}
+	
+	ForceRefresh();
 	return true;
 }
 

@@ -2768,7 +2768,6 @@ public:
 	void SetSelectionBackground(const wxColour& c) { m_selectionBackground = c; }
 	void SetSelectionForeground(const wxColour& c) { m_selectionForeground = c; }
 
-
 	// Methods for a registry for mapping data types to Renderers/Editors
 	void RegisterDataType(const wxString& typeName,
 		wxGridExtCellRenderer* renderer,
@@ -3661,69 +3660,63 @@ private:
 // wxGridExtCommand helper commands
 // ----------------------------------------------------------------------------
 
-template <typename T1>
 class wxGridExtCommandComposite : public wxGridExtCommand
 {
 protected:
 
-	wxGridExtCommandComposite() {}
+	wxGridExtCommandComposite() : wxGridExtCommand() {}
 
 	virtual void DoExecute(wxGridExt* view) { for (auto& command : m_stackCommand) command->Execute(view); }
 	virtual void DoRestore(wxGridExt* view) { for (auto& command : m_stackCommand) command->Restore(view); }
+
+	template<typename T1, typename... Args>
+	void AppendCommand(Args&&... args)
+	{
+		m_stackCommand.push_back(
+			wxSharedPtr<wxGridExtCommand>(new T1(std::forward<Args>(args)...)));
+	}
 
 private:
 	wxVector<wxSharedPtr<wxGridExtCommand>> m_stackCommand;
 };
 
 template <typename T1>
-class wxGridExtCommandCompositeAttr : public wxGridExtCommandComposite<T1>
+class wxGridExtCommandCompositeAttr : public wxGridExtCommandComposite
 {
 public:
 
 	template <typename T2>
-	wxGridExtCommandCompositeAttr(wxGridExt* view, const wxGridExtBlockCoords& coords, const T2& newValue)
+	wxGridExtCommandCompositeAttr(wxGridExt* view, const wxGridExtBlockCoords& coords, const T2& newValue) :
+		wxGridExtCommandComposite()
 	{
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
 			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
 			{
-				wxGridExtCellAttrPtr attr = view->GetOrCreateCellAttrPtr(row, col);
-				wxSharedPtr<wxGridExtCommand> command(new T1(row, col, newValue, T1::GetAttrValue(attr)));
-				m_stackCommand.push_back(command);
+				AppendCommand<T1>(row, col, newValue,
+					T1::GetAttrValue(view->GetOrCreateCellAttrPtr(row, col)));
 			}
 		}
 	}
-
-	virtual void DoExecute(wxGridExt* view) { for (auto& command : m_stackCommand) command->Execute(view); }
-	virtual void DoRestore(wxGridExt* view) { for (auto& command : m_stackCommand) command->Restore(view); }
-
-private:
-	wxVector<wxSharedPtr<wxGridExtCommand>> m_stackCommand;
 };
 
 template <typename T1>
-class wxGridExtCommandCompositeCell : public wxGridExtCommandComposite<T1>
+class wxGridExtCommandCompositeCell : public wxGridExtCommandComposite
 {
 public:
 
 	template <typename T2>
-	wxGridExtCommandCompositeCell(wxGridExt* view, const wxGridExtBlockCoords& coords, const T2& newValue)
+	wxGridExtCommandCompositeCell(wxGridExt* view, const wxGridExtBlockCoords& coords, const T2& newValue) :
+		wxGridExtCommandComposite()
 	{
 		for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 		{
 			for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
 			{
-				wxSharedPtr<wxGridExtCommand> command(new T1(row, col, newValue, view->GetCellValue(row, col)));
-				m_stackCommand.push_back(command);
+				AppendCommand<T1>(row, col, newValue, view->GetCellValue(row, col));
 			}
 		}
 	}
-
-	virtual void DoExecute(wxGridExt* view) { for (auto& command : m_stackCommand) command->Execute(view); }
-	virtual void DoRestore(wxGridExt* view) { for (auto& command : m_stackCommand) command->Restore(view); }
-
-private:
-	wxVector<wxSharedPtr<wxGridExtCommand>> m_stackCommand;
 };
 
 class wxGridExtCommandRowSize : public wxGridExtCommand
@@ -4159,7 +4152,7 @@ class wxGridExtCommandAttrSize : public wxGridExtCommand
 public:
 
 	wxGridExtCommandAttrSize(int row, int col, const wxSize& newValue, const wxSize& oldValue) : m_coords(row, col), m_newValue(newValue), m_oldValue(oldValue) {}
-	static const wxSize& GetAttrValue(const wxGridExtCellAttrPtr& attr) { wxSize size; attr->GetSize(&size.x, &size.y); return size; }
+	static wxSize GetAttrValue(const wxGridExtCellAttrPtr& attr) { wxSize size; attr->GetSize(&size.x, &size.y); return size; }
 
 protected:
 

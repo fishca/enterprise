@@ -125,8 +125,10 @@ public:
 		return strLastError;
 	}
 
-	static void SetEvalMode(bool mode = true) { ms_evalMode = mode; }
-	static bool IsEvalMode() { return ms_evalMode; }
+	static bool IsErrorOutputProcessing();
+
+	static void SetEvalMode(bool mode = true);
+	static bool IsEvalMode();
 
 protected:
 
@@ -149,8 +151,6 @@ private:
 #if wxUSE_UNICODE_UTF8
 	static wxString DoFormatWchar(const wxChar* format, ...);
 #endif
-
-	static bool ms_evalMode;
 
 	mutable bool m_errorHandled;
 	wxString m_strErrorDescription;

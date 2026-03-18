@@ -85,7 +85,7 @@ static wxString gs_listErrorString[] =
 
 //////////////////////////////////////////////////////////////////////
 
-bool CBackendException::ms_evalMode = false;
+static bool gs_evalMode = false, gs_processBackendError = false;
 
 //////////////////////////////////////////////////////////////////////
 // Error handling
@@ -178,13 +178,13 @@ wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
 {
 	wxString strErrorMessage;
 
-	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (ms_evalMode ? wxT(" ") : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
+	strErrorMessage += wxT("{") + strModuleName + wxT("(") + (gs_evalMode ? wxT(" ") : wxString::Format(wxT("%i"), currLine)) + wxT(")}: ");
 	strErrorMessage += (codeError > 0 ? CBackendException::Format(codeError, strErrorDesc) : strErrorDesc) + wxT("\n");
-	strErrorMessage += (ms_evalMode ? wxEmptyString : strCodeError);
+	strErrorMessage += (gs_evalMode ? wxEmptyString : strCodeError);
 
-	if (ms_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
+	if (gs_evalMode) strErrorMessage.Replace(wxT('\n'), wxT(' '));
 
-	if (!ms_evalMode && backend_mainFrame != nullptr) {
+	if (!gs_evalMode && backend_mainFrame != nullptr) {
 
 		// set stack 
 		wxString strStackMessage;
@@ -201,6 +201,8 @@ wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
 			);
 		}
 
+		gs_processBackendError = true;
+
 		//show message
 		backend_mainFrame->BackendError(
 			strFileName,
@@ -208,6 +210,8 @@ wxString CBackendException::ProcessExceptionError(const wxString& strFileName,
 			currLine,
 			strErrorMessage + (strStackMessage.IsEmpty() ? wxT("") : wxT("\n\nCall stack:") + strStackMessage)
 		);
+
+		gs_processBackendError = false;
 	}
 
 	ms_strError = strErrorMessage;
@@ -226,6 +230,23 @@ const wxString& CBackendException::GetErrorDesc(int codeError)
 	if (0 <= codeError && codeError < LastError)
 		return gs_listErrorString[codeError];
 	return gs_listErrorString[ERROR_SYS1];
+}
+
+////////////////////////////////////////////////////////////////////
+
+bool CBackendException::IsErrorOutputProcessing()
+{
+	return gs_processBackendError;
+}
+
+void CBackendException::SetEvalMode(bool mode)
+{
+	gs_evalMode = mode;
+}
+
+bool CBackendException::IsEvalMode()
+{
+	return gs_evalMode;
 }
 
 ////////////////////////////////////////////////////////////////////

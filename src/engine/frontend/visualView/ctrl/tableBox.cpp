@@ -249,12 +249,12 @@ void CValueTableBox::CalculateColumnPos()
 	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
+		dataViewCtrl->SetExpanderColumn(nullptr);
+
 		wxHeaderGenericCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
 		if (headerCtrl != nullptr) {
 
 			bool need_reset_columns_order = false;
-
-			dataViewCtrl->SetExpanderColumn(nullptr);
 
 			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 
@@ -280,6 +280,28 @@ void CValueTableBox::CalculateColumnPos()
 			}
 
 			if (need_reset_columns_order) headerCtrl->ResetColumnsOrder();
+		}
+		else
+		{
+			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
+
+				const IValueFrame* valueFrame = GetChild(idx);
+				wxASSERT(valueFrame);
+
+				wxDataViewExtColumn* column = dynamic_cast<wxDataViewExtColumn*>(valueFrame->GetWxObject());
+
+				const unsigned int column_model_index = dataViewCtrl->GetColumnIndex(column);
+				const unsigned int real_column_index = valueFrame->GetParentPosition();
+
+				if (column_model_index != real_column_index) {
+					dataViewCtrl->DeleteColumn(column);
+					dataViewCtrl->InsertColumn(real_column_index, column);
+				}
+
+				if (column->IsShown() && dataViewCtrl->GetExpanderColumn() == nullptr) {
+					dataViewCtrl->SetExpanderColumn(column);
+				}
+			}
 		}
 	}
 }

@@ -235,6 +235,9 @@ void CGridEditor::Paste()
 							cells.push_back(cell);
 					}
 
+					if (m_numRows <= row) wxGridExt::AppendRows(row - m_numRows + 1);
+					if (m_numCols <= col) wxGridExt::AppendCols(col - m_numCols + 1);
+
 					prevReaderCellMemory = readerCellMemory;
 				}
 

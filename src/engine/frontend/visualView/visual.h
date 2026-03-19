@@ -19,7 +19,7 @@
 
 class FRONTEND_API IValueFrame;
 
-class FRONTEND_API IVisualHost : public wxScrolledWindow {
+class FRONTEND_API IVisualHost : public wxScrolledCanvas {
 	wxDECLARE_ABSTRACT_CLASS(IVisualHost);
 public:
 
@@ -27,10 +27,10 @@ public:
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
-		long style = wxScrolledWindowStyle) : wxScrolledWindow(parent, id, pos, size, style | wxBORDER_SUNKEN)
+		long style = wxScrolledWindowStyle) : wxScrolledCanvas(parent, id, pos, size, style | wxBORDER_SUNKEN)
 	{
-		wxScrolledWindow::SetDoubleBuffered(true);
-		wxScrolledWindow::SetScrollRate(5, 5);
+		wxScrolledCanvas::SetDoubleBuffered(true);
+		wxScrolledCanvas::SetScrollRate(5, 5);
 	}
 
 	virtual ~IVisualHost() {/* ClearVisualHost(); */ }

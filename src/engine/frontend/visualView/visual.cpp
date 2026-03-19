@@ -695,7 +695,7 @@ void IVisualHost::UpdateVirtualSize()
 		SetVirtualSize(panelW, panelH);
 
 	//Refresh frame window
-	wxScrolledWindow::Refresh();
+	wxScrolledCanvas::Refresh();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

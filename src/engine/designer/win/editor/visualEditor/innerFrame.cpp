@@ -402,7 +402,7 @@ void CInnerFrame::OnLeftUp(wxMouseEvent&)
 		dc.SetPen(wxNullPen);
 		dc.SetBrush(wxNullBrush);
 
-		wxScrolledWindow* VEditor = static_cast<wxScrolledWindow*>(GetParent());
+		wxScrolledCanvas* VEditor = static_cast<wxScrolledCanvas*>(GetParent());
 		int scrolledposX = 0;
 		int scrolledposY = 0;
 		VEditor->GetViewStart(&scrolledposX, &scrolledposY);

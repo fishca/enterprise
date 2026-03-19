@@ -360,9 +360,9 @@ void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::ScrollToObject(IVa
 				startx = (startx * stepx + diff) / stepx;
 			}
 
-			wxScrolledWindow::Freeze();
-			wxScrolledWindow::Scroll(startx, starty);
-			wxScrolledWindow::Thaw();
+			wxScrolledCanvas::Freeze();
+			wxScrolledCanvas::Scroll(startx, starty);
+			wxScrolledCanvas::Thaw();
 		}
 		else if (obj != nullptr) {
 			ScrollToObject(obj->GetParent()); 

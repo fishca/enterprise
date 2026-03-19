@@ -391,7 +391,7 @@ void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxTableViewCtrl* dataViewCtrl = 
+	wxTableViewCtrl* dataViewCtrl =
 		dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
@@ -415,8 +415,23 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			m_tableCurrentLine.Reset();
 		}
 
-		dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
-		dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
+		if (appData->DesignerMode()) {
+
+			if (m_propertyHeader->GetValueAsBoolean()) {
+				dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+				dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
+			}
+			else {
+				dataViewCtrl->ShowHeaderWindow(true);
+				dataViewCtrl->SetHeaderHeight(1);
+				dataViewCtrl->SetForegroundColour(*wxLIGHT_GREY);
+			}
+		}
+		else {
+			dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+			dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
+		}
+
 		dataViewCtrl->ShowFooterWindow(m_propertyFooter->GetValueAsBoolean());
 		dataViewCtrl->SetFooterHeight(m_propertyFooterHeight->GetValueAsUInteger());
 

@@ -416,8 +416,7 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 		}
 
 		if (appData->DesignerMode()) {
-
-			if (m_propertyHeader->GetValueAsBoolean()) {
+			if (!visualHost->IsDesignerHost() || m_propertyHeader->GetValueAsBoolean()) {
 				dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
 				dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
 			}

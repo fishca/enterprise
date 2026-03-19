@@ -2195,7 +2195,7 @@ void wxDataViewExtCtrl::RecalculateDisplay()
 		m_tableFrozenColAreaWin->Refresh();
 
 	if (m_tableFrozenCornerAreaWin)
-		m_tableFrozenColAreaWin->Refresh();
+		m_tableFrozenCornerAreaWin->Refresh();
 }
 
 void wxDataViewExtCtrl::ScrollTo(int rows, int column)
@@ -5531,6 +5531,7 @@ void wxDataViewExtCtrl::EnsureVisibleRowCol(int row, int column)
 
 	int first = GetFirstVisibleRow();
 	int last = GetLastFullyVisibleRow();
+	
 	if (row <= first)
 	{
 		ScrollTo(row, column);

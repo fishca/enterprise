@@ -2422,18 +2422,36 @@ void wxDataViewExtCtrl::RefreshRows(unsigned int from, unsigned int to)
 
 	if (!intersect_rect.IsEmpty())
 	{
-		m_tableAreaWin->Refresh(true, &intersect_rect);
+		// Copy rectangle can get scroll offsets..
+		int rect_x = intersect_rect.GetX();
+		int rect_y = intersect_rect.GetY();
+
+		int rectWidth = intersect_rect.GetWidth();
+		int rectHeight = intersect_rect.GetHeight();
+
+		if (m_tableAreaWin)
+		{
+			wxRect anotherrect(rect_x, rect_y, rectWidth, rectHeight);
+			anotherrect.Offset(GetDataViewWindowOffset(m_tableAreaWin));
+			m_tableAreaWin->Refresh(true, &anotherrect);
+		}
 
 		if (m_tableFrozenRowAreaWin) {
-			m_tableFrozenRowAreaWin->Refresh(true, &intersect_rect);
+			wxRect anotherrect(rect_x, rect_y, rectWidth, rectHeight);
+			anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenRowAreaWin));
+			m_tableFrozenRowAreaWin->Refresh(true, &anotherrect);
 		}
 
 		if (m_tableFrozenColAreaWin) {
-			m_tableFrozenColAreaWin->Refresh(true, &intersect_rect);
+			wxRect anotherrect(rect_x, rect_y, rectWidth, rectHeight);
+			anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenColAreaWin));
+			m_tableFrozenColAreaWin->Refresh(true, &anotherrect);
 		}
 
 		if (m_tableFrozenCornerAreaWin) {
-			m_tableFrozenCornerAreaWin->Refresh(true, &intersect_rect);
+			wxRect anotherrect(rect_x, rect_y, rectWidth, rectHeight);
+			anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenCornerAreaWin));
+			m_tableFrozenCornerAreaWin->Refresh(true, &anotherrect);
 		}
 	}
 }
@@ -2447,16 +2465,30 @@ void wxDataViewExtCtrl::RefreshRowsAfter(unsigned int firstRow)
 
 	wxRect rect(0, start, client_size.x, client_size.y - start);
 
-	m_tableAreaWin->Refresh(true, &rect);
+	if (m_tableAreaWin)
+	{
+		wxRect anotherrect(rect);
+		anotherrect.Offset(GetDataViewWindowOffset(m_tableAreaWin));
+		m_tableAreaWin->Refresh(true, &anotherrect);
+	}
 
-	if (m_tableFrozenRowAreaWin)
-		m_tableFrozenRowAreaWin->Refresh(true, &rect);
+	if (m_tableFrozenRowAreaWin) {
+		wxRect anotherrect(rect);
+		anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenRowAreaWin));
+		m_tableFrozenRowAreaWin->Refresh(true, &anotherrect);
+	}
 
-	if (m_tableFrozenColAreaWin)
-		m_tableFrozenColAreaWin->Refresh(true, &rect);
+	if (m_tableFrozenColAreaWin) {
+		wxRect anotherrect(rect);
+		anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenColAreaWin));
+		m_tableFrozenColAreaWin->Refresh(true, &anotherrect);
+	}
 
-	if (m_tableFrozenCornerAreaWin)
-		m_tableFrozenCornerAreaWin->Refresh(true, &rect);
+	if (m_tableFrozenCornerAreaWin) {
+		wxRect anotherrect(rect);
+		anotherrect.Offset(GetDataViewWindowOffset(m_tableFrozenCornerAreaWin));
+		m_tableFrozenCornerAreaWin->Refresh(true, &anotherrect);
+	}
 }
 
 wxRect wxDataViewExtCtrl::GetLinesRect(unsigned int rowFrom, unsigned int rowTo) const
@@ -5531,7 +5563,7 @@ void wxDataViewExtCtrl::EnsureVisibleRowCol(int row, int column)
 
 	int first = GetFirstVisibleRow();
 	int last = GetLastFullyVisibleRow();
-	
+
 	if (row <= first)
 	{
 		ScrollTo(row, column);
@@ -5909,6 +5941,8 @@ void wxDataViewExtCtrl::DrawTableContent(wxDC& dc, wxDataViewExtMainWindow* tabl
 		}
 	}
 
+	wxDataViewExtColumn* selectedCol = m_currentCol;
+
 	// redraw the background for the items which are selected/current
 	unsigned int cur_line_start = first_line_start;
 	for (unsigned int item = item_start; item < item_last; item++)
@@ -6061,6 +6095,7 @@ void wxDataViewExtCtrl::DrawTableContent(wxDC& dc, wxDataViewExtMainWindow* tabl
 								flags
 							);
 
+							selectedCol = col;
 							break;
 						}
 
@@ -6146,7 +6181,7 @@ void wxDataViewExtCtrl::DrawTableContent(wxDC& dc, wxDataViewExtMainWindow* tabl
 			cell_rect.height = line_height;
 
 			bool selected = m_selectionMode == wxDataViewExtSelectCell
-				? m_selection.IsSelected(item) && col == m_currentCol : m_selection.IsSelected(item);
+				? m_selection.IsSelected(item) && (col == selectedCol) : m_selection.IsSelected(item);
 
 			int state = 0;
 			if (selected)

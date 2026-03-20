@@ -1,7 +1,6 @@
 ﻿#ifndef __FORM_VALUE_H__
 #define __FORM_VALUE_H__
 
-#include "frontend/docView/docView.h"
 #include "frontend/visualView/ctrl/control.h"
 
 #define defaultFormId 1
@@ -14,7 +13,7 @@
 class BACKEND_API CValueType;
 class BACKEND_API CUniqueKey;
 
-class CVisualView;
+class FRONTEND_API CFormVisualEditView;
 
 class BACKEND_API IValueMetaObjectForm;
 class BACKEND_API IValueMetaObjectGenericData;
@@ -27,88 +26,12 @@ class BACKEND_API IValueMetaObjectGenericData;
 const class_identifier_t g_controlFormCLSID = string_to_clsid("CT_FRME");
 
 //********************************************************************************************
-//*                                  Visual Document & View                                  *
-//********************************************************************************************
-
-class FRONTEND_API CVisualCommandProcessor : public wxCommandProcessor {
-
-public:
-	virtual bool CanUndo() const { return false; }
-	virtual bool CanRedo() const { return false; }
-};
-
-class FRONTEND_API CVisualDocument : public IMetaDataDocument {
-public:
-
-	CVisualView* GetFirstView() const;
-
-	CValueForm* GetValueForm() const;
-	const CUniqueKey& GetFormKey() const;
-
-	bool CompareFormKey(const CUniqueKey& formKey) const;
-
-	CVisualDocument(CValueForm* valueForm);
-	virtual ~CVisualDocument();
-
-	virtual class IMetaData* GetMetaData() const;
-
-	virtual bool IsVisualDemonstrationDoc() const { return false; }
-
-	virtual bool OnCreate(const wxString& WXUNUSED(path), long flags) override;
-	virtual bool OnCloseDocument() override;
-
-	virtual bool IsCloseOnOwnerClose() const override;
-
-	virtual bool IsModified() const override { return m_documentModified; }
-	virtual void Modify(bool modify) override;
-	virtual bool Save() override;
-	virtual bool SaveAs() override { return true; }
-
-	virtual void SetDocParent(CMetaDocument* docParent) override;
-
-
-protected:
-	virtual CMetaView* DoCreateView();
-private:
-	CValuePtr<CValueForm> m_valueForm;
-};
-
-class FRONTEND_API CVisualDemoDocument : public CVisualDocument {
-public:
-
-	CVisualDemoDocument(CValueForm* valueForm) :
-		CVisualDocument(valueForm)
-	{
-	}
-
-	virtual bool IsVisualDemonstrationDoc() const { return true; }
-};
-
-class FRONTEND_API CVisualView : public CMetaView {
-public:
-
-	CVisualView() : m_visualHost(nullptr) {}
-	virtual ~CVisualView();
-
-	virtual wxPrintout* OnCreatePrintout() override;
-
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
-	virtual void OnUpdate(wxView* sender, wxObject* hint = nullptr) override;
-	virtual bool OnClose(bool deleteWindow = true) override;
-
-	virtual void OnClosingDocument() override;
-
-	CVisualHost* GetVisualHost() const { return m_visualHost; }
-
-private:
-	CVisualHost* m_visualHost;
-};
-
-//********************************************************************************************
 //*                                      Value Frame                                         *
 //********************************************************************************************
 
-class FRONTEND_API CValueForm : public IBackendValueForm, public IValueFrame, public IModuleDataObject {
+class FRONTEND_API CValueForm : 
+	public IBackendValueForm, public IValueFrame, public IModuleDataObject 
+{
 	wxDECLARE_DYNAMIC_CLASS(CValueForm);
 
 private:
@@ -304,18 +227,6 @@ public:
 	virtual wxMemoryBuffer SaveForm();
 	bool SaveChildForm(CMemoryWriter& writerData, IValueFrame* controlParent);
 
-	static CUniqueKey CreateFormUniqueKey(const IBackendControlFrame* ownerControl,
-		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
-
-	static CValueForm* FindFormByUniqueKey(const IBackendControlFrame* ownerControl,
-		const ISourceDataObject* sourceObject, const CUniqueKey& formGuid);
-
-	static CValueForm* FindFormByUniqueKey(const CUniqueKey& guid);
-	static CValueForm* FindFormByControlUniqueKey(const CUniqueKey& guid);
-	static CValueForm* FindFormBySourceUniqueKey(const CUniqueKey& guid);
-
-	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
-
 	//notify
 	virtual void NotifyCreate(const CValue& vCreated);
 	virtual void NotifyChange(const CValue& vChanged);
@@ -340,13 +251,7 @@ public:
 	virtual void ShowForm(IBackendMetaDocument* docParent = nullptr, bool createContext = true) override;
 
 	//set & get modify 
-	virtual void Modify(bool modify = true) {
-		if (IsShown()) {
-			GetVisualDocument()->Modify(modify);
-		}
-		m_formModified = modify;
-	}
-
+	virtual void Modify(bool modify = true);
 	virtual bool IsModified() const { return m_formModified; }
 
 	//shown form 
@@ -364,7 +269,7 @@ public:
 	void DetachIdleHandler(const wxString& procedureName);
 
 	//get visual document
-	virtual CVisualDocument* GetVisualDocument() const;
+	virtual CFormVisualDocument* GetVisualDocument() const;
 
 	//special proc
 	virtual void Update(wxObject* wxobject, IVisualHost* visualHost);
@@ -448,8 +353,8 @@ private:
 	friend class IValueControl;
 	friend class CValueFormCollectionControl;
 
-	friend class CVisualDocument;
-	friend class CVisualView;
+	friend class CFormVisualDocument;
+	friend class CFormVisualEditView;
 };
 
 #endif 

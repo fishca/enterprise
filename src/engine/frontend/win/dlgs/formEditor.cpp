@@ -169,6 +169,7 @@ EVT_PG_SELECTED(WXOES_PROPERTY_GRID, CDialogFormEditor::OnPropertyGridItemSelect
 wxEND_EVENT_TABLE()
 
 #include "frontend/win/theme/luna_toolbarart.h"
+#include "frontend/visualView/visualHostClient.h"
 
 CDialogFormEditor::CDialogFormEditor(CValueForm* valueForm) :
 	wxDialog(valueForm->GetVisualDocument()->GetDocumentWindow(), wxID_ANY, _("Form editor"), wxDefaultPosition, wxSize(600, 350), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), m_owner(valueForm), m_selectedControl(nullptr)

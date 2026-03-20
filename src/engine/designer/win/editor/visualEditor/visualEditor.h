@@ -117,7 +117,7 @@ private:
 	unsigned int m_savePoint;
 };
 
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

@@ -65,7 +65,7 @@ wxPrintout* CValueGridBox::CreatePrintout() const
 	if (gridWindow != nullptr)
 		return gridWindow->CreatePrintout();
 
-	return nullptr;
+	return false;
 }
 
 //**********************************************************************************

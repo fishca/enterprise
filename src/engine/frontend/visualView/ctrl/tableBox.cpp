@@ -3,7 +3,7 @@
 
 #include "form.h"
 
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 #include "backend/system/value/valueTable.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
@@ -80,13 +80,13 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 		dataViewCtrl : dynamic_cast<wxDataViewExtCtrl*>(GetWxObject());
 	wxASSERT(tc);
 
-	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
+	CFormVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
 	//clear all controls 
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 		IValueFrame* childColumn = GetChild(idx);
 		wxASSERT(childColumn);
 		if (visualDocument != nullptr) {
-			CVisualHost* visualView = visualDocument->GetFirstView() ?
+			CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 			wxASSERT(visualView);
 			visualView->RemoveControl(childColumn, this);
@@ -125,7 +125,7 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 
 		if (visualDocument != nullptr) {
 
-			CVisualHost* visualView = visualDocument->GetFirstView() ?
+			CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 			wxASSERT(visualView);
@@ -135,7 +135,7 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 
 	if (visualDocument != nullptr) {
 
-		CVisualHost* visualView = visualDocument->GetFirstView() ?
+		CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 			visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 		wxASSERT(visualView);
@@ -315,7 +315,7 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		wxDefaultSize,
 		wxDV_SINGLE | wxDV_HORIZ_RULES | wxDV_VERT_RULES | wxDV_ROW_LINES | wxDV_VARIABLE_LINE_HEIGHT | wxBORDER_SIMPLE);
 
-	const CVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
+	const CFormVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
 
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 

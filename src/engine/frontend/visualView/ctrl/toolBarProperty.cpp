@@ -1,5 +1,5 @@
 #include "toolBar.h"
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 
 void CValueToolbar::OnPropertyCreated(IProperty* property)
 {

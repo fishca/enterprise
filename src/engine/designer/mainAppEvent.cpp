@@ -19,7 +19,7 @@ void CDesignerApp::OnKeyEvent(wxKeyEvent& event)
 	event.Skip();
 }
 
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 void CDesignerApp::OnMouseEvent(wxMouseEvent& event)
 {

@@ -20,7 +20,7 @@ void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
 	event.Skip();
 }
 
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 void CEnterpriseApp::OnMouseEvent(wxMouseEvent& event)
 {

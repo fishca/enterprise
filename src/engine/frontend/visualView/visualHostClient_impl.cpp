@@ -3,24 +3,24 @@
 //	Description : visual view events 
 ////////////////////////////////////////////////////////////////////////////
 
-#include "visualHost.h"
+#include "visualHostClient.h"
 
-void CVisualHost::ShowForm()
+void CVisualClientHost::ShowForm()
 {
 	m_valueForm->ShowForm(nullptr); //has no parent
 }
 
-void CVisualHost::ActivateForm()
+void CVisualClientHost::ActivateForm()
 {
 	m_valueForm->ActivateForm();
 }
 
-void CVisualHost::UpdateForm()
+void CVisualClientHost::UpdateForm()
 {
 	m_valueForm->UpdateForm();
 }
 
-bool CVisualHost::CloseForm()
+bool CVisualClientHost::CloseForm()
 {
 	return m_valueForm->CloseForm();
 }

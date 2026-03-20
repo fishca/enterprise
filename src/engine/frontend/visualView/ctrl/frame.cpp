@@ -257,7 +257,7 @@ IBackendValueForm* IValueFrame::GetBackendForm() const
 
 //*******************************************************************
 
-CVisualDocument* IValueFrame::GetVisualDocument() const
+CFormVisualDocument* IValueFrame::GetVisualDocument() const
 {
 	CValueForm* const valueForm = GetOwnerForm();
 	if (valueForm == nullptr)
@@ -274,17 +274,17 @@ IVisualEditorNotebook* IValueFrame::FindVisualEditor() const
 //*                          Runtime                                *
 //*******************************************************************
 
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 
 wxObject* IValueFrame::GetWxObject() const
 {
 	CValueForm* const valueForm = GetOwnerForm();
 	if (valueForm != nullptr) {
 
-		CVisualDocument* const visualDoc = valueForm->GetVisualDocument();
+		CFormVisualDocument* const visualDoc = valueForm->GetVisualDocument();
 		if (visualDoc != nullptr) {
 
-			const CVisualView* visualView = visualDoc->GetFirstView();
+			const CFormVisualEditView* visualView = visualDoc->GetFirstView();
 			const IVisualHost* visualHost = visualView ?
 				visualView->GetVisualHost() : nullptr;
 
@@ -367,10 +367,10 @@ bool IValueFrame::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	if (ownerForm == nullptr)
 		return false;
 
-	CVisualDocument* visualDoc = ownerForm->GetVisualDocument();
+	CFormVisualDocument* visualDoc = ownerForm->GetVisualDocument();
 	if (visualDoc != nullptr) {
 
-		CVisualHost* visualView = visualDoc->GetFirstView() ?
+		CVisualClientHost* visualView = visualDoc->GetFirstView() ?
 			visualDoc->GetFirstView()->GetVisualHost() : nullptr;
 
 		if (visualView == nullptr)

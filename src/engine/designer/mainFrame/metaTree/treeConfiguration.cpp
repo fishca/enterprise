@@ -158,6 +158,389 @@ CMetadataTree::~CMetadataTree()
 wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
+
+#include <wx/dataview.h>
+
+#include "frontend/visualView/ctrl/frame.h"
+
+void CMetadataTree::EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+{
+	class CDialogPredefinedEditor : public wxDialog {
+
+		enum {
+			wxID_TOOL_ADD = wxID_HIGHEST + 1,
+			wxID_USERS_COPY,
+			wxID_USERS_EDIT,
+			wxID_USERS_DELETE,
+		};
+
+		enum
+		{
+			model_name,
+			model_code,
+			model_description
+		};
+
+		class wxDataViewPredefinedTreeStore : public wxDataViewModel
+		{
+		public:
+
+			wxDataViewPredefinedTreeStore(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+				: wxDataViewModel(), m_valueMetaObjectHierarchy(valueMetaObjectHierarchy)
+			{
+
+			}
+
+			// and implement some others by forwarding them to our own ones
+			virtual void GetValue(wxVariant& variant,
+				const wxDataViewItem& item, unsigned int col) const override
+			{
+				if (item.m_pItem == (void*)1)
+				{
+					if (col == model_name)
+						variant = _("Predefined items");
+
+					return;
+				}
+
+				IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject* predefined =
+					static_cast<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject*>(item.GetID());
+
+				if (predefined != nullptr) {
+					if (col == model_name)
+						variant = predefined->GetPredefinedName();
+					else if (col == model_code)
+						variant = predefined->GetPredefinedCode();
+					else if (col == model_description)
+						variant = predefined->GetPredefinedDescription();
+				}
+			}
+
+			// return true if the given item has a value to display in the given
+			// column: this is always true except for container items which by default
+			// only show their label in the first column (but see HasContainerColumns())
+			virtual bool HasValue(const wxDataViewItem& item, unsigned col) const override
+			{
+				if (HasContainerColumns(item))
+					return false;
+				return true;
+			}
+
+			virtual bool SetValue(const wxVariant& variant,
+				const wxDataViewItem& item, unsigned int col) override {
+				return false;
+			}
+
+			virtual bool GetAttr(const wxDataViewItem& item, unsigned int col,
+				wxDataViewItemAttr& attr) const override {
+
+				return false;
+			}
+
+			virtual bool IsEnabled(const wxDataViewItem& item, unsigned int col) const override
+			{
+				return false;
+			}
+
+			virtual wxDataViewItem GetParent(const wxDataViewItem& item) const override {
+				// the invisible root node has no parent
+				if (!item.IsOk())
+					return wxDataViewItem(nullptr);
+
+				return wxDataViewItem(nullptr);
+			}
+
+			virtual bool IsContainer(const wxDataViewItem& item) const override {				
+				
+				if (item.m_pItem == (void*)1)
+					return true; 
+
+				IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject* predefined =
+					static_cast<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject*>(item.GetID());
+
+				if (predefined != nullptr)
+					return predefined->IsPredefinedFolder();
+
+				return true;
+			}
+
+			// define current parent for hierarchical view 
+			virtual unsigned int GetChildren(const wxDataViewItem& parent,
+				wxDataViewItemArray& array) const override {
+
+				if (!parent.IsOk())
+				{
+					array.Add(wxDataViewItem((void *)1));
+					return 1;
+				}
+
+				for (auto object : m_valueMetaObjectHierarchy->GetPredefinedValueArray())
+				{
+					array.Add(wxDataViewItem(object.get()));
+				}
+
+				return array.Count();
+			}
+
+			// override sorting to always sort branches ascendingly
+			virtual bool HasDefaultCompare() const override { return true; }
+
+			virtual int Compare(const wxDataViewItem& item1, const wxDataViewItem& item2,
+				unsigned int col, bool ascending) const override {
+
+				// items must be different
+				wxUIntPtr id1 = wxPtrToUInt(item1.GetID()),
+					id2 = wxPtrToUInt(item2.GetID());
+				return ascending ? id1 - id2 : id2 - id1;
+			}
+
+			virtual bool IsListModel() const { return false; }
+			virtual bool IsVirtualListModel() const { return false; }
+
+		private:
+
+			IValueMetaObjectRecordDataHierarchyMutableRef* m_valueMetaObjectHierarchy;
+		};
+
+	public:
+
+		// full ctor
+		CDialogPredefinedEditor(wxWindow* parent, IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+			:
+			wxDialog(parent, wxID_ANY, _("Predefined values editor"),
+				wxDefaultPosition, wxSize(500, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+			m_valueMetaObjectHierarchy(valueMetaObjectHierarchy)
+		{
+			CreateDialogView(valueMetaObjectHierarchy);
+		}
+
+		void CreateDialogView(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+		{
+			wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
+
+			wxBoxSizer* sizerList = new wxBoxSizer(wxVERTICAL);
+
+			m_toolbarTableEditor = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT);
+			m_toolbarTableEditor->SetArtProvider(new wxAuiLunaToolBarArt());
+
+			m_toolAdd = m_toolbarTableEditor->AddTool(wxID_TOOL_ADD, _("Add"), CBackendPicture::GetPicture(g_picAddCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+			m_toolCopy = m_toolbarTableEditor->AddTool(wxID_USERS_COPY, _("Copy"), CBackendPicture::GetPicture(g_picCopyCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+			m_toolEdit = m_toolbarTableEditor->AddTool(wxID_USERS_EDIT, _("Edit"), CBackendPicture::GetPicture(g_picEditCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+			m_toolDelete = m_toolbarTableEditor->AddTool(wxID_USERS_DELETE, _("Delete"), CBackendPicture::GetPicture(g_picDeleteCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+
+			m_toolbarTableEditor->SetForegroundColour(wxDefaultStypeFGColour);
+			m_toolbarTableEditor->SetBackgroundColour(wxDefaultStypeBGColour);
+
+			m_toolbarTableEditor->Realize();
+			m_toolbarTableEditor->Connect(wxEVT_MENU, wxCommandEventHandler(CDialogPredefinedEditor::OnCommandMenu), nullptr, this);
+
+			sizerList->Add(m_toolbarTableEditor, 0, wxALL | wxEXPAND, 0);
+
+			wxDataViewColumn* columnName = new wxDataViewColumn(_("Name"), new wxDataViewTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), model_name, FromDIP(125), wxALIGN_LEFT,
+				wxDATAVIEW_COL_SORTABLE);
+
+			wxDataViewColumn* columnCode = new wxDataViewColumn(_("Code"), new wxDataViewTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), model_code, FromDIP(100), wxALIGN_LEFT,
+				wxDATAVIEW_COL_SORTABLE);
+
+			wxDataViewColumn* columnDescription = new wxDataViewColumn(_("Description"), new wxDataViewTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), model_description, FromDIP(175), wxALIGN_LEFT,
+				wxDATAVIEW_COL_SORTABLE);
+
+			m_tableEditor = new wxDataViewCtrl(this, wxID_ANY);
+
+			//m_tableEditor->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &CDialogPredefinedEditor::OnItemActivated, this);
+			//m_tableEditor->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CDialogPredefinedEditor::OnContextMenu, this);
+
+			//m_tableEditor->Bind(wxEVT_MENU, &CDialogPredefinedEditor::OnCommandMenu, this);
+
+			m_tableEditor->AppendColumn(columnName);
+			m_tableEditor->AppendColumn(columnCode);
+			m_tableEditor->AppendColumn(columnDescription);
+
+			m_tableEditor->SetForegroundColour(wxDefaultStypeFGColour);
+			//m_tableEditor->SetBackgroundColour(wxDefaultStypeBGColour);
+
+			m_tableEditor->AssociateModel(new wxDataViewPredefinedTreeStore(valueMetaObjectHierarchy));
+
+			sizerList->Add(m_tableEditor, 1, wxALL | wxEXPAND, 5);
+
+			wxDialog::SetSizer(sizerList);
+			wxDialog::Layout();
+			wxDialog::Centre(wxBOTH);
+
+			wxIcon dlg_icon;
+			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_metaAttributeCLSID));
+
+			wxDialog::SetIcon(dlg_icon);
+			wxDialog::SetFocus();
+		}
+
+		class CDialogPredefinedItem : public wxDialog {
+		public:
+
+			CDialogPredefinedItem(wxWindow* parent,
+				const CGuid& itemGuid = wxNullGuid,
+				const wxString& strPredefinedParentName = wxT(""),
+				const wxString& strPredefinedName = wxT(""), const wxString& strCode = wxT(""), const wxString& strDescription = wxT("")) :
+				wxDialog(parent, wxID_ANY, _("Predefined value")), m_itemGuid(itemGuid)
+			{
+				wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
+
+				wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+
+				wxBoxSizer* sizerParent = new wxBoxSizer(wxHORIZONTAL);
+				m_staticTextParent = new wxStaticText(this, wxID_ANY, _("Parent"), wxDefaultPosition, wxSize(75, -1), 0);
+				m_staticTextParent->Wrap(-1);
+				sizerParent->Add(m_staticTextParent, 0, wxALL, 5);
+
+				m_textParent = new wxTextCtrl(this, wxID_ANY, strPredefinedParentName, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+				sizerParent->Add(m_textParent, 1, wxALL, 5);
+
+				mainSizer->Add(sizerParent, 0, wxEXPAND, 5);
+
+				wxBoxSizer* sizerName = new wxBoxSizer(wxHORIZONTAL);
+				m_staticTextName = new wxStaticText(this, wxID_ANY, _("Name"), wxDefaultPosition, wxSize(75, -1), 0);
+				m_staticTextName->Wrap(-1);
+				sizerName->Add(m_staticTextName, 0, wxALL, 5);
+				m_textName = new wxTextCtrl(this, wxID_ANY, strPredefinedName, wxDefaultPosition, wxDefaultSize, 0);
+				sizerName->Add(m_textName, 1, wxALL, 5);
+				mainSizer->Add(sizerName, 0, wxEXPAND, 5);
+
+				wxBoxSizer* sizerCode = new wxBoxSizer(wxHORIZONTAL);
+				m_staticCode = new wxStaticText(this, wxID_ANY, _("Code"), wxDefaultPosition, wxSize(75, -1), 0);
+				m_staticCode->Wrap(-1);
+				sizerCode->Add(m_staticCode, 0, wxALL, 5);
+				m_textCode = new wxTextCtrl(this, wxID_ANY, strCode, wxDefaultPosition, wxDefaultSize, 0);
+				sizerCode->Add(m_textCode, 1, wxALL, 5);
+
+				mainSizer->Add(sizerCode, 0, wxEXPAND, 5);
+
+				wxBoxSizer* sizerDescription = new wxBoxSizer(wxHORIZONTAL);
+				m_staticTextDescription = new wxStaticText(this, wxID_ANY, _("Description"), wxDefaultPosition, wxSize(75, -1), 0);
+				m_staticTextDescription->Wrap(-1);
+				sizerDescription->Add(m_staticTextDescription, 0, wxALL, 5);
+
+				m_textDescription = new wxTextCtrl(this, wxID_ANY, strDescription, wxDefaultPosition, wxDefaultSize, 0);
+				sizerDescription->Add(m_textDescription, 1, wxALL, 5);
+
+				mainSizer->Add(sizerDescription, 0, wxEXPAND, 5);
+
+				m_sdbSizer = new wxStdDialogButtonSizer();
+				m_sdbSizerOK = new wxButton(this, wxID_OK);
+				m_sdbSizerOK->Bind(wxEVT_BUTTON, &CDialogPredefinedItem::OnCommandOK, this);
+				m_sdbSizer->AddButton(m_sdbSizerOK);
+				m_sdbSizerCancel = new wxButton(this, wxID_CANCEL);
+				m_sdbSizerCancel->Bind(wxEVT_BUTTON, &CDialogPredefinedItem::OnCommandCancel, this);
+				m_sdbSizer->AddButton(m_sdbSizerCancel);
+				m_sdbSizer->Realize();
+
+				mainSizer->Add(m_sdbSizer, 0, wxEXPAND, 5);
+
+				wxDialog::SetSizer(mainSizer);
+				wxDialog::Layout();
+				wxDialog::Centre(wxBOTH);
+
+				wxIcon dlg_icon;
+				dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_metaAttributeCLSID));
+
+				wxDialog::SetIcon(dlg_icon);
+				wxDialog::SetFocus();
+			}
+
+		protected:
+
+			void OnCommandOK(wxCommandEvent& event)
+			{
+				if (m_itemGuid.isValid()) {
+					GetOwner()->SetPredefinedValue(
+						m_itemGuid,
+						m_textName->GetValue(),
+						m_textCode->GetValue(),
+						m_textDescription->GetValue()
+					);
+				}
+				else {
+					GetOwner()->AppendPredefinedValue(
+						m_textName->GetValue(),
+						m_textCode->GetValue(),
+						m_textDescription->GetValue()
+					);
+				}
+
+				event.Skip();
+			}
+
+			void OnCommandCancel(wxCommandEvent& event) { event.Skip(); }
+
+		private:
+
+			CDialogPredefinedEditor* GetOwner() const { return static_cast<CDialogPredefinedEditor*>(m_parent); }
+
+			CGuid m_itemGuid;
+
+			wxStaticText* m_staticTextParent;
+			wxTextCtrl* m_textParent;
+			wxStaticText* m_staticTextName;
+			wxTextCtrl* m_textName;
+			wxStaticText* m_staticCode;
+			wxTextCtrl* m_textCode;
+			wxStaticText* m_staticTextDescription;
+			wxTextCtrl* m_textDescription;
+			wxStdDialogButtonSizer* m_sdbSizer;
+			wxButton* m_sdbSizerOK;
+			wxButton* m_sdbSizerCancel;
+		};
+
+		//append predefined value
+		void AppendPredefinedValue(const wxString& strPredefinedName,
+			const wxString& strCode, const wxString& strDescription,
+			bool valueIsFolder = false, const wxObjectDataPtr<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject>& valueParent = wxObjectDataPtr<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject>())
+		{
+			m_valueMetaObjectHierarchy->AppendPredefinedValue(strPredefinedName,
+				strCode, strDescription, valueIsFolder, valueParent);
+		}
+
+		void SetPredefinedValue(const CGuid& predefinedGuid, const wxString& strPredefinedName,
+			const wxString& strCode, const wxString& strDescription,
+			bool valueIsFolder = false, const wxObjectDataPtr<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject>& valueParent = wxObjectDataPtr<IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject>())
+		{
+			m_valueMetaObjectHierarchy->SetPredefinedValue(predefinedGuid,
+				strPredefinedName, strCode, strDescription,
+				valueIsFolder, valueParent);
+		}
+
+	protected:
+
+		void OnCommandMenu(wxCommandEvent& event)
+		{
+			if (event.GetId() == wxID_TOOL_ADD) {
+				CDialogPredefinedItem dlg(this);
+				dlg.ShowModal();
+			}
+
+
+			event.Skip();
+		}
+
+	private:
+
+		wxAuiToolBar* m_toolbarTableEditor;
+
+		wxAuiToolBarItem* m_toolAdd;
+		wxAuiToolBarItem* m_toolCopy;
+		wxAuiToolBarItem* m_toolEdit;
+		wxAuiToolBarItem* m_toolDelete;
+
+		wxDataViewCtrl* m_tableEditor;
+
+
+		IValueMetaObjectRecordDataHierarchyMutableRef* m_valueMetaObjectHierarchy;
+	};
+
+	CDialogPredefinedEditor dlg(this, valueMetaObjectHierarchy);
+	dlg.ShowModal();
+}
+
+//**********************************************************************************
 //*                                  metaTree window						       *
 //**********************************************************************************
 
@@ -224,7 +607,7 @@ CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl(CMetadataTree* parent)
 
 CMetadataTree::CMetaTreeCtrl::~CMetaTreeCtrl()
 {
-	if (docManager != nullptr && 
+	if (docManager != nullptr &&
 		m_metaView == docManager->GetAnyUsableView()) {
 		docManager->ActivateView(nullptr);
 	}

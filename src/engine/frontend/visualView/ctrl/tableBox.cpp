@@ -238,7 +238,7 @@ m_need_calculate_pos(false)
 	m_propertySource->SetValue(CTypeDescription(g_valueTableCLSID));
 
 	//set default params
-	m_propertyMinSize->SetValue(wxSize(300, 100));
+	m_propertyMinSize->SetValue(wxSize(150, 75));
 	m_propertyBG->SetValue(wxColour(255, 255, 255));
 }
 

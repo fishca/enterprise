@@ -500,8 +500,8 @@ void CValueForm::HelpForm()
 
 void CValueForm::ChangeForm()
 {
-	CDialogFormEditor* formEditor = new CDialogFormEditor(this);
-	formEditor->ShowModal();
+	CDialogFormEditor dlg(this);
+	dlg.ShowModal();
 }
 
 #include "frontend/win/dlgs/generation.h"

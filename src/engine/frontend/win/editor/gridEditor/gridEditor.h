@@ -434,6 +434,7 @@ public:
 		wxGridExt::SendEvent(wxEVT_GRID_EDITOR_HIDDEN, coords);
 	}
 
+	bool IsPropertyEnabled() const { return m_enableProperty; }
 	void EnableProperty(bool enable = true) { m_enableProperty = enable; }
 
 	////////////////////////////////////////////////////////////

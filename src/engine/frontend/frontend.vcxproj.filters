@@ -818,6 +818,12 @@
     <ClCompile Include="visualView\visualHostClientDocView.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
+    <ClCompile Include="visualView\ctrl\textBox_res.cpp">
+      <Filter>visualView\ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\ctrl\textBox.cpp">
+      <Filter>visualView\ctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -1442,6 +1448,9 @@
     </ClInclude>
     <ClInclude Include="win\ctrls\dataview\headerctrlg.h">
       <Filter>win\ctrl\dataview</Filter>
+    </ClInclude>
+    <ClInclude Include="visualView\ctrl\textBox.h">
+      <Filter>visualView\ctrl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

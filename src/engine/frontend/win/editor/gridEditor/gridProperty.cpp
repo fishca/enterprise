@@ -20,10 +20,13 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::ShowInspector()
 		m_selection.push_back(coords);
 	}
 
-	if (!objectInspector->IsShownInspector())
-		objectInspector->ShowInspector();
+	if (m_view->IsPropertyEnabled()) {
 
-	objectInspector->SelectObject(this, true);
+		if (!objectInspector->IsShownInspector())
+			objectInspector->ShowInspector();
+
+		objectInspector->SelectObject(this, true);
+	}
 }
 
 void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
@@ -247,8 +250,11 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCell(wxGridExtEvent& e
 		m_selection.clear();
 	}
 
-	objectInspector->SelectObject(this, true);
-	m_view->ForceRefresh();
+	if (m_view->IsPropertyEnabled()) {
+		objectInspector->SelectObject(this, true);
+		m_view->ForceRefresh();
+	}
+
 	event.Skip();
 }
 
@@ -263,8 +269,11 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCells(wxGridExtRangeSe
 		m_selection.clear();
 	}
 
-	objectInspector->SelectObject(this, true);
-	m_view->ForceRefresh();
+	if (m_view->IsPropertyEnabled()) {
+		objectInspector->SelectObject(this, true);
+		m_view->ForceRefresh();
+	}
+
 	event.Skip();
 }
 

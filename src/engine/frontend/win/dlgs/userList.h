@@ -13,22 +13,23 @@
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
-#include <wx/dataview.h>
 #include <wx/sizer.h>
 #include <wx/dialog.h>
+#include <wx/itemattr.h>
 
 #include "frontend/frontend.h"
+#include "frontend/win/ctrls/dataview/dataview.h"
 
 class FRONTEND_API CDialogUserList : public wxDialog
 {
-	wxAuiToolBar* m_auiToolBarUsers;
+	wxAuiToolBar* m_toolbarMain;
 
 	wxAuiToolBarItem* m_toolAdd;
 	wxAuiToolBarItem* m_toolCopy;
 	wxAuiToolBarItem* m_toolEdit;
 	wxAuiToolBarItem* m_toolDelete;
 
-	wxDataViewCtrl* m_dataViewUsers;
+	wxDataViewExtCtrl* m_dataEditor;
 
 public:
 
@@ -36,9 +37,9 @@ public:
 	virtual ~CDialogUserList();
 
 	void OnCommandMenu(wxCommandEvent &event);
-	void OnContextMenu(wxDataViewEvent &event);
+	void OnContextMenu(wxDataViewExtEvent &event);
 
-	void OnItemActivated(wxDataViewEvent &event);
+	void OnItemActivated(wxDataViewExtEvent &event);
 };
 
 #endif 

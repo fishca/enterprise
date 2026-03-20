@@ -14,7 +14,7 @@ CValueGridBox::CValueGridBox() : IValueWindow(),
 m_valueSpreadsheet(CValue::CreateAndPrepareValueRef<CValueSpreadsheetDocument>())
 {
 	//set default params
-	m_propertyMinSize->SetValue(wxSize(300, 100));
+	m_propertyMinSize->SetValue(wxSize(150, 50));
 }
 
 #include "frontend/visualView/ctrl/form.h"

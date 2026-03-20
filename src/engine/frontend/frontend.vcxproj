@@ -109,6 +109,8 @@
     <ClCompile Include="visualView\ctrl\tableBoxMenu.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxProperty.cpp" />
     <ClCompile Include="visualView\ctrl\tableBox_res.cpp" />
+    <ClCompile Include="visualView\ctrl\textBox.cpp" />
+    <ClCompile Include="visualView\ctrl\textBox_res.cpp" />
     <ClCompile Include="visualView\ctrl\textctrl.cpp" />
     <ClCompile Include="visualView\ctrl\textctrlEvent.cpp" />
     <ClCompile Include="visualView\ctrl\textctrlProperty.cpp" />
@@ -330,6 +332,7 @@
     <ClInclude Include="visualView\ctrl\sizer.h" />
     <ClInclude Include="visualView\ctrl\tableBox.h" />
     <ClInclude Include="visualView\ctrl\tableBoxColumnRenderer.h" />
+    <ClInclude Include="visualView\ctrl\textBox.h" />
     <ClInclude Include="visualView\ctrl\toolBar.h" />
     <ClInclude Include="visualView\ctrl\typeControl.h" />
     <ClInclude Include="visualView\ctrl\widgets.h" />

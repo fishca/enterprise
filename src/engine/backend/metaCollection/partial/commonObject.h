@@ -722,6 +722,17 @@ public:
 	class CPredefinedValueObject : public wxRefCounter {
 	public:
 
+		CPredefinedValueObject(bool valueIsFolder = false,
+			const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
+			:
+			m_predefinedItemGuid(wxNewUniqueGuid),
+			m_strPredefinedName(),
+			m_strCode(), m_strDescription(),
+			m_valueIsFolder(valueIsFolder),
+			m_valueParent(nullptr)
+		{
+		}
+
 		CPredefinedValueObject(
 			const CGuid& predefinedGuid, const wxString& strPredefinedName,
 			const wxString& strCode, const wxString& strDescription,
@@ -736,11 +747,21 @@ public:
 		}
 
 		CGuid GetPredefinedGuid() const { return m_predefinedItemGuid; }
+
+		wxString GetPredefinedParentName() const {
+			if (m_valueParent != nullptr)
+				return m_valueParent->GetPredefinedName();
+			return wxT("");
+		}
+
 		wxString GetPredefinedName() const { return m_strPredefinedName; }
 		wxString GetPredefinedCode() const { return m_strCode; }
 		wxString GetPredefinedDescription() const { return m_strDescription; }
+
 		bool IsPredefinedFolder() const { return m_valueIsFolder; }
 		wxObjectDataPtr<CPredefinedValueObject> GetPredefinedParent() const { return m_valueParent; }
+
+		friend class IValueMetaObjectRecordDataHierarchyMutableRef; 
 
 	private:
 
@@ -815,6 +836,37 @@ public:
 	virtual IBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 	virtual IBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 #pragma endregion 
+
+	//append predefined value
+	void AppendPredefinedValue(const wxString& strPredefinedName,
+		const wxString& strCode, const wxString& strDescription,
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
+	{
+		m_predefinedObjectVector.emplace_back(
+			new CPredefinedValueObject(wxNewUniqueGuid, strPredefinedName,
+				strCode, strDescription, valueIsFolder, valueParent));
+	}
+
+	void SetPredefinedValue(const CGuid& predefinedGuid,
+		const wxString& strPredefinedName,
+		const wxString& strCode, const wxString& strDescription,
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
+	{
+		wxObjectDataPtr<CPredefinedValueObject> foundedPredefinedValue = FindPredefinedValue(predefinedGuid);
+		
+		if (foundedPredefinedValue != nullptr) {
+			foundedPredefinedValue->m_strPredefinedName = strPredefinedName;
+			foundedPredefinedValue->m_strCode = strCode;
+			foundedPredefinedValue->m_strDescription = strDescription;
+			foundedPredefinedValue->m_valueIsFolder = valueIsFolder;
+			foundedPredefinedValue->m_valueParent = valueParent;
+			return;
+		}
+
+		m_predefinedObjectVector.emplace_back(
+			new CPredefinedValueObject(predefinedGuid, strPredefinedName,
+				strCode, strDescription, valueIsFolder, valueParent));
+	}
 
 	//find predefined value
 	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const {

@@ -204,7 +204,7 @@ class CDialogPredefinedEditor : public wxDialog {
 				return;
 			}
 
-			if (stringUtils::CheckCorrectName(strName)) {
+			if (stringUtils::CheckCorrectName(strName) >= 0) {
 				wxMessageBox(_("The \"name\" field is filled in incorrectly!"));
 				return;
 			}

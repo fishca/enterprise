@@ -1707,12 +1707,6 @@ wxDataViewExtCtrl::StartEditing(const wxDataViewExtItem& item,
 		return;
 
 	wxRect itemRect = GetItemRect(item, col);
-	wxDataViewExtMainWindow* tableWindow = CellToDataViewWindow(item, col);
-
-	itemRect.Offset(-GetDataViewWindowOffset(tableWindow));
-
-	// convert to scrolled coords
-	CalcDataViewWindowScrolledPosition(itemRect.x, itemRect.y, &itemRect.x, &itemRect.y, tableWindow);
 
 	if (renderer->StartEditing(item, itemRect))
 	{
@@ -3081,8 +3075,12 @@ wxRect wxDataViewExtCtrl::GetItemRect(const wxDataViewExtItem& item,
 		width - indent,
 		GetLineHeight(row));
 
-	CalcScrolledPosition(itemRect.x, itemRect.y,
-		&itemRect.x, &itemRect.y);
+	wxDataViewExtMainWindow* tableWindow = CellToDataViewWindow(item, column);
+	itemRect.Offset(-GetDataViewWindowOffset(tableWindow));
+
+	// convert to scrolled coords
+	CalcDataViewWindowScrolledPosition(itemRect.x, itemRect.y,
+		&itemRect.x, &itemRect.y, tableWindow);
 
 	// Check if the rectangle is completely outside of the currently visible
 	// area and, if so, return an empty rectangle to indicate that the item is

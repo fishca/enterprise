@@ -3,7 +3,7 @@
 
 #include "dataview/dataview.h"
 
-class wxTableViewCtrl :
+class FRONTEND_API wxTableViewCtrl :
 	public wxDataViewExtCtrl {
 public:
 

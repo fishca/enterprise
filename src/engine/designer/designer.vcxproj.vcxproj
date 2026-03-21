@@ -221,6 +221,7 @@
     <ClCompile Include="win\dlg\debugItem\debugItem.cpp" />
     <ClCompile Include="win\dlg\functionSearcher\functionSearcher.cpp" />
     <ClCompile Include="win\dlg\lineInput\lineInput.cpp" />
+    <ClCompile Include="win\dlg\predefinedEditor.cpp" />
     <ClCompile Include="win\editor\codeEditor\codeEditor.cpp" />
     <ClCompile Include="win\editor\codeEditor\codeEditorInterpreter.cpp" />
     <ClCompile Include="win\editor\codeEditor\codeEditorInterpreterContext.cpp" />
@@ -269,6 +270,7 @@
     <ClInclude Include="win\dlg\debugItem\debugItem.h" />
     <ClInclude Include="win\dlg\functionSearcher\functionSearcher.h" />
     <ClInclude Include="win\dlg\lineInput\lineInput.h" />
+    <ClInclude Include="win\dlg\predefinedEditor.h" />
     <ClInclude Include="win\editor\codeEditor\codeEditor.h" />
     <ClInclude Include="win\editor\codeEditor\codeEditorInterpreter.h" />
     <ClInclude Include="win\editor\codeEditor\codeEditorParser.h" />

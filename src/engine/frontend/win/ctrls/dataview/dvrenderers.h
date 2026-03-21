@@ -27,13 +27,13 @@
 	rest of the renderer classes.
  */
 
-class wxDataViewExtCustomRenderer;
+class FRONTEND_API wxDataViewExtCustomRenderer;
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtIconText: helper class used by wxDataViewExtIconTextRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtIconText : public wxObject
+class FRONTEND_API wxDataViewExtIconText : public wxObject
 {
 public:
 	wxDataViewExtIconText(const wxString& text = wxEmptyString,
@@ -75,13 +75,13 @@ private:
 	wxDECLARE_DYNAMIC_CLASS(wxDataViewExtIconText);
 };
 
-DECLARE_VARIANT_OBJECT(wxDataViewExtIconText)
+DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewExtIconText, FRONTEND_API)
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtCheckIconText: value class used by wxDataViewExtCheckIconTextRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtCheckIconText : public wxDataViewExtIconText
+class FRONTEND_API wxDataViewExtCheckIconText : public wxDataViewExtIconText
 {
 public:
 	wxDataViewExtCheckIconText(const wxString& text = wxString(),
@@ -101,7 +101,7 @@ private:
 	wxDECLARE_DYNAMIC_CLASS(wxDataViewExtCheckIconText);
 };
 
-DECLARE_VARIANT_OBJECT(wxDataViewExtCheckIconText)
+DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewExtCheckIconText, FRONTEND_API)
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtRendererBase
@@ -123,7 +123,7 @@ enum wxDataViewExtCellRenderState
 };
 
 // helper for fine-tuning rendering of values depending on row's state
-class wxDataViewExtValueAdjuster
+class FRONTEND_API wxDataViewExtValueAdjuster
 {
 public:
 	virtual ~wxDataViewExtValueAdjuster() {}
@@ -132,7 +132,7 @@ public:
 	virtual wxVariant MakeHighlighted(const wxVariant& value) const { return value; }
 };
 
-class wxDataViewExtRendererBase : public wxObject
+class FRONTEND_API wxDataViewExtRendererBase : public wxObject
 {
 public:
 	wxDataViewExtRendererBase(const wxString& varianttype,
@@ -306,7 +306,7 @@ private:
 // wxDataViewExtCustomRendererBase
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtCustomRendererBase
+class FRONTEND_API wxDataViewExtCustomRendererBase
 	: public wxDataViewExtCustomRendererRealBase
 {
 public:
@@ -395,7 +395,7 @@ private:
 // wxDataViewRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtRenderer : public wxDataViewExtCustomRendererBase
+class FRONTEND_API wxDataViewExtRenderer : public wxDataViewExtCustomRendererBase
 {
 public:
 	wxDataViewExtRenderer(const wxString& varianttype,
@@ -467,7 +467,7 @@ private:
 // wxDataViewExtCustomRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtCustomRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtCustomRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("string"); }
@@ -501,7 +501,7 @@ private:
 // wxDataViewExtTextRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtTextRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtTextRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("string"); }
@@ -545,7 +545,7 @@ private:
 // wxDataViewExtBitmapRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtBitmapRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtBitmapRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("wxBitmapBundle"); }
@@ -578,7 +578,7 @@ protected:
 // wxDataViewExtToggleRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtToggleRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtToggleRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("bool"); }
@@ -616,7 +616,7 @@ protected:
 // wxDataViewExtProgressRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtProgressRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtProgressRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("long"); }
@@ -647,7 +647,7 @@ protected:
 // wxDataViewExtIconTextRenderer
 // ---------------------------------------------------------
 
-class wxDataViewExtIconTextRenderer : public wxDataViewExtRenderer
+class FRONTEND_API wxDataViewExtIconTextRenderer : public wxDataViewExtRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("wxDataViewExtIconText"); }
@@ -683,7 +683,7 @@ protected:
 // wxDataViewExtSpinRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtSpinRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API wxDataViewExtSpinRenderer : public wxDataViewExtCustomRenderer
 {
 public:
 	wxDataViewExtSpinRenderer(int min, int max,
@@ -711,7 +711,7 @@ private:
 // wxDataViewExtChoiceRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtChoiceRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API wxDataViewExtChoiceRenderer : public wxDataViewExtCustomRenderer
 {
 public:
 	wxDataViewExtChoiceRenderer(const wxArrayString& choices,
@@ -740,7 +740,7 @@ private:
 // wxDataViewExtChoiceByIndexRenderer
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtChoiceByIndexRenderer : public wxDataViewExtChoiceRenderer
+class FRONTEND_API wxDataViewExtChoiceByIndexRenderer : public wxDataViewExtChoiceRenderer
 {
 public:
 	wxDataViewExtChoiceByIndexRenderer(const wxArrayString& choices,
@@ -762,7 +762,7 @@ public:
 // ----------------------------------------------------------------------------
 
 #if wxUSE_DATEPICKCTRL
-class wxDataViewExtDateRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API wxDataViewExtDateRenderer : public wxDataViewExtCustomRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("datetime"); }
@@ -795,7 +795,7 @@ typedef wxDataViewExtTextRenderer wxDataViewExtDateRenderer;
 // wxDataViewExtCheckIconTextRenderer: 3-state checkbox + text + optional icon
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtCheckIconTextRenderer
+class FRONTEND_API wxDataViewExtCheckIconTextRenderer
 	: public wxDataViewExtCustomRenderer
 {
 public:

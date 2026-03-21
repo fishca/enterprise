@@ -761,7 +761,7 @@ public:
 		bool IsPredefinedFolder() const { return m_valueIsFolder; }
 		wxObjectDataPtr<CPredefinedValueObject> GetPredefinedParent() const { return m_valueParent; }
 
-		friend class IValueMetaObjectRecordDataHierarchyMutableRef; 
+		friend class IValueMetaObjectRecordDataHierarchyMutableRef;
 
 	private:
 
@@ -840,33 +840,14 @@ public:
 	//append predefined value
 	void AppendPredefinedValue(const wxString& strPredefinedName,
 		const wxString& strCode, const wxString& strDescription,
-		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
-	{
-		m_predefinedObjectVector.emplace_back(
-			new CPredefinedValueObject(wxNewUniqueGuid, strPredefinedName,
-				strCode, strDescription, valueIsFolder, valueParent));
-	}
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>());
 
 	void SetPredefinedValue(const CGuid& predefinedGuid,
 		const wxString& strPredefinedName,
 		const wxString& strCode, const wxString& strDescription,
-		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
-	{
-		wxObjectDataPtr<CPredefinedValueObject> foundedPredefinedValue = FindPredefinedValue(predefinedGuid);
-		
-		if (foundedPredefinedValue != nullptr) {
-			foundedPredefinedValue->m_strPredefinedName = strPredefinedName;
-			foundedPredefinedValue->m_strCode = strCode;
-			foundedPredefinedValue->m_strDescription = strDescription;
-			foundedPredefinedValue->m_valueIsFolder = valueIsFolder;
-			foundedPredefinedValue->m_valueParent = valueParent;
-			return;
-		}
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>());
 
-		m_predefinedObjectVector.emplace_back(
-			new CPredefinedValueObject(predefinedGuid, strPredefinedName,
-				strCode, strDescription, valueIsFolder, valueParent));
-	}
+	void DeletePredefinedValue(const CGuid& predefinedGuid);
 
 	//find predefined value
 	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const {

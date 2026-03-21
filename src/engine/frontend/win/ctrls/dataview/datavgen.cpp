@@ -2735,7 +2735,7 @@ wxDataViewExtCtrl::SendExpanderEvent(wxEventType type,
 	return !ProcessWindowEvent(le) || le.IsAllowed();
 }
 
-bool wxDataViewExtCtrl::IsExpanded(unsigned int row) const
+bool wxDataViewExtCtrl::IsExpandedRow(unsigned int row) const
 {
 	if (IsList())
 		return false;
@@ -2750,7 +2750,7 @@ bool wxDataViewExtCtrl::IsExpanded(unsigned int row) const
 	return node->IsOpen();
 }
 
-bool wxDataViewExtCtrl::HasChildren(unsigned int row) const
+bool wxDataViewExtCtrl::HasChildrenRow(unsigned int row) const
 {
 	if (IsList())
 		return false;
@@ -2765,7 +2765,7 @@ bool wxDataViewExtCtrl::HasChildren(unsigned int row) const
 	return true;
 }
 
-void wxDataViewExtCtrl::Expand(unsigned int row, bool expandChildren)
+void wxDataViewExtCtrl::ExpandRow(unsigned int row, bool expandChildren)
 {
 	if (IsList())
 		return;
@@ -2852,7 +2852,7 @@ wxDataViewExtCtrl::DoExpand(wxDataViewExtTreeNode* node,
 	}
 }
 
-void wxDataViewExtCtrl::Collapse(unsigned int row)
+void wxDataViewExtCtrl::CollapseRow(unsigned int row)
 {
 	if (IsList())
 		return;
@@ -4361,7 +4361,7 @@ void wxDataViewExtCtrl::ScrollWindow(int dx, int dy, const wxRect* rect)
 void wxDataViewExtCtrl::Refresh(bool eraseb, const wxRect* rect)
 {
 	// Refresh to get correct scrolled position:
-	wxScrolled::Refresh(eraseb, rect);
+	BaseType::Refresh(eraseb, rect);
 
 	if (rect)
 	{
@@ -5634,21 +5634,21 @@ void wxDataViewExtCtrl::DoExpand(const wxDataViewExtItem& item, bool expandChild
 {
 	int row = GetRowByItem(item);
 	if (row != -1)
-		Expand(row, expandChildren);
+		ExpandRow(row, expandChildren);
 }
 
 void wxDataViewExtCtrl::Collapse(const wxDataViewExtItem& item)
 {
 	int row = GetRowByItem(item);
 	if (row != -1)
-		Collapse(row);
+		CollapseRow(row);
 }
 
 bool wxDataViewExtCtrl::IsExpanded(const wxDataViewExtItem& item) const
 {
 	int row = GetRowByItem(item);
 	if (row != -1)
-		return IsExpanded(row);
+		return IsExpandedRow(row);
 	return false;
 }
 
@@ -6408,14 +6408,14 @@ void wxDataViewExtCtrl::ProcessTableCharEvent(wxKeyEvent& event, wxDataViewExtMa
 
 	case '+':
 	case WXK_ADD:
-		Expand(m_currentRow);
+		ExpandRow(m_currentRow);
 		break;
 
 	case '*':
 	case WXK_MULTIPLY:
-		if (!IsExpanded(m_currentRow))
+		if (!IsExpandedRow(m_currentRow))
 		{
-			Expand(m_currentRow, true /* recursively */);
+			ExpandRow(m_currentRow, true /* recursively */);
 			break;
 		}
 		//else: fall through to Collapse()
@@ -6423,7 +6423,7 @@ void wxDataViewExtCtrl::ProcessTableCharEvent(wxKeyEvent& event, wxDataViewExtMa
 
 	case '-':
 	case WXK_SUBTRACT:
-		Collapse(m_currentRow);
+		CollapseRow(m_currentRow);
 		break;
 
 	case WXK_LEFT:
@@ -6527,7 +6527,7 @@ void wxDataViewExtCtrl::ProcessTableCharLeftKeyEvent(wxKeyEvent& event)
 		// the standard TreeView handling of the left key.
 		if (node->HasChildren() && node->IsOpen())
 		{
-			Collapse(m_currentRow);
+			CollapseRow(m_currentRow);
 		}
 		else
 		{
@@ -6562,7 +6562,7 @@ void wxDataViewExtCtrl::ProcessTableCharRightKeyEvent(wxKeyEvent& event)
 		{
 			if (!node->IsOpen())
 			{
-				Expand(m_currentRow);
+				ExpandRow(m_currentRow);
 			}
 			else
 			{
@@ -6876,9 +6876,9 @@ void wxDataViewExtCtrl::ProcessTableMouseEvent(wxMouseEvent& event, wxDataViewEx
 		// valid and have children.
 		// So we don't need any extra checks.
 		if (node->IsOpen())
-			Collapse(current);
+			CollapseRow(current);
 		else
-			Expand(current);
+			ExpandRow(current);
 
 	}
 	else if (((event.LeftDown() || event.RightDown()) || simulateClick) && !hoverOverExpander)
@@ -7315,20 +7315,20 @@ wxAccStatus wxDataViewExtCtrlAccessible::DoDefaultAction(int childId)
 
 	if (childId != wxACC_SELF)
 	{
-		wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
-		if (!dvWnd->IsList())
+		if (!dvCtrl->IsList())
 		{
 			const unsigned int row = childId - 1;
-			wxDataViewExtTreeNode* node = dvWnd->GetTreeNodeByRow(row);
+			wxDataViewExtTreeNode* node = dvCtrl->GetTreeNodeByRow(row);
 			if (node)
 			{
 				if (node->HasChildren())
 				{
 					// Expand or collapse the node.
 					if (node->IsOpen())
-						dvWnd->Collapse(row);
+						dvCtrl->CollapseRow(row);
 					else
-						dvWnd->Expand(row);
+						dvCtrl->ExpandRow(row);
+					
 					return wxACC_OK;
 				}
 			}
@@ -7352,10 +7352,9 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetDefaultAction(int childId, wxString*
 	wxString action;
 	if (childId != wxACC_SELF)
 	{
-		wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
-		if (!dvWnd->IsList())
+		if (!dvCtrl->IsList())
 		{
-			wxDataViewExtTreeNode* node = dvWnd->GetTreeNodeByRow(childId - 1);
+			wxDataViewExtTreeNode* node = dvCtrl->GetTreeNodeByRow(childId - 1);
 			if (node)
 			{
 				if (node->HasChildren())
@@ -7383,9 +7382,8 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetDescription(int childId, wxString* d
 
 	if (childId == wxACC_SELF)
 	{
-		wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
 		*description = wxString::Format(_("%s (%d items)"),
-			dvCtrl->GetName().c_str(), dvWnd->GetRowCount());
+			dvCtrl->GetName().c_str(), dvCtrl->GetRowCount());
 	}
 	else
 	{
@@ -7468,9 +7466,8 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetHelpText(int childId, wxString* help
 		wxDataViewExtItem item = dvCtrl->GetItemByRow(childId - 1);
 		if (item.IsOk())
 		{
-			wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
-			wxRect rect = dvWnd->GetItemRect(item, NULL);
-			*helpText = dvWnd->GetHelpTextAtPoint(rect.GetPosition(), wxHelpEvent::Origin_Keyboard);
+			wxRect rect = dvCtrl->GetItemRect(item, NULL);
+			*helpText = dvCtrl->GetHelpTextAtPoint(rect.GetPosition(), wxHelpEvent::Origin_Keyboard);
 		}
 		else
 		{
@@ -7494,10 +7491,9 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetKeyboardShortcut(int childId, wxStri
 
 	if (childId != wxACC_SELF)
 	{
-		wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
-		if (!dvWnd->IsList())
+		if (!dvCtrl->IsList())
 		{
-			wxDataViewExtTreeNode* node = dvWnd->GetTreeNodeByRow(childId - 1);
+			wxDataViewExtTreeNode* node = dvCtrl->GetTreeNodeByRow(childId - 1);
 			if (node)
 			{
 				if (node->HasChildren())
@@ -7523,12 +7519,11 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetRole(int childId, wxAccRole* role)
 {
 	wxDataViewExtCtrl* dvCtrl = wxDynamicCast(GetWindow(), wxDataViewExtCtrl);
 	wxCHECK(dvCtrl, wxACC_FAIL);
-	wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
 
 	if (childId == wxACC_SELF)
-		*role = dvWnd->IsList() ? wxROLE_SYSTEM_LIST : wxROLE_SYSTEM_OUTLINE;
+		*role = dvCtrl->IsList() ? wxROLE_SYSTEM_LIST : wxROLE_SYSTEM_OUTLINE;
 	else
-		*role = dvWnd->IsList() ? wxROLE_SYSTEM_LISTITEM : wxROLE_SYSTEM_OUTLINEITEM;
+		*role = dvCtrl->IsList() ? wxROLE_SYSTEM_LISTITEM : wxROLE_SYSTEM_OUTLINEITEM;
 
 	return wxACC_OK;
 }
@@ -7600,13 +7595,12 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetValue(int childId, wxString* strValu
 
 	if (childId != wxACC_SELF)
 	{
-		wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
-		if (!dvWnd->IsList())
+		if (!dvCtrl->IsList())
 		{
 			// In the tree view each item within the control has a zero-based value
 			// that represents its level within the hierarchy and this value
 			// is returned as a Value property.
-			wxDataViewExtTreeNode* node = dvWnd->GetTreeNodeByRow(childId - 1);
+			wxDataViewExtTreeNode* node = dvCtrl->GetTreeNodeByRow(childId - 1);
 			if (node)
 			{
 				val = wxString::Format(wxS("%i"), node->GetIndentLevel());
@@ -7623,13 +7617,12 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 {
 	wxDataViewExtCtrl* dvCtrl = wxDynamicCast(GetWindow(), wxDataViewExtCtrl);
 	wxCHECK(dvCtrl, wxACC_FAIL);
-	wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
 
 	if (childId == wxACC_SELF)
 	{
 		if (selectFlags == wxACC_SEL_TAKEFOCUS)
 		{
-			dvWnd->SetFocus();
+			dvCtrl->SetFocus();
 		}
 		else if (selectFlags != wxACC_SEL_NONE)
 		{
@@ -7640,7 +7633,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 	else
 	{
 		// These flags are not allowed in the single-selection mode:
-		if (dvWnd->IsSingleSel() &&
+		if (dvCtrl->IsSingleSel() &&
 			selectFlags & (wxACC_SEL_EXTENDSELECTION | wxACC_SEL_ADDSELECTION | wxACC_SEL_REMOVESELECTION))
 		{
 			wxFAIL_MSG(wxS("Invalid selection flag"));
@@ -7651,7 +7644,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 
 		if (selectFlags == wxACC_SEL_TAKEFOCUS)
 		{
-			dvWnd->ChangeCurrentRow(row);
+			dvCtrl->ChangeCurrentRow(row);
 		}
 		else if (selectFlags & wxACC_SEL_TAKESELECTION)
 		{
@@ -7662,11 +7655,11 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 				return wxACC_INVALID_ARG;
 			}
 
-			dvWnd->UnselectAllRows();
-			dvWnd->SelectRow(row, true);
-			if (selectFlags & wxACC_SEL_TAKEFOCUS || dvWnd->IsSingleSel())
+			dvCtrl->UnselectAllRows();
+			dvCtrl->SelectRow(row, true);
+			if (selectFlags & wxACC_SEL_TAKEFOCUS || dvCtrl->IsSingleSel())
 			{
-				dvWnd->ChangeCurrentRow(row);
+				dvCtrl->ChangeCurrentRow(row);
 			}
 		}
 		else if (selectFlags & wxACC_SEL_EXTENDSELECTION)
@@ -7686,7 +7679,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 			}
 
 			// We have to have a focused object as a selection anchor.
-			unsigned int focusedRow = dvWnd->GetCurrentRow();
+			unsigned int focusedRow = dvCtrl->GetCurrentRow();
 			if (focusedRow == (unsigned int)-1)
 			{
 				wxFAIL_MSG(wxS("No selection anchor"));
@@ -7701,21 +7694,21 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 			else
 				// If the anchor object is selected, the selection is extended.
 				// If the anchor object is not selected, all objects are unselected.
-				doSelect = dvWnd->IsRowSelected(focusedRow);
+				doSelect = dvCtrl->IsRowSelected(focusedRow);
 
 			if (doSelect)
 			{
-				dvWnd->SelectRows(focusedRow, row);
+				dvCtrl->SelectRows(focusedRow, row);
 			}
 			else
 			{
 				for (int r = focusedRow; r <= row; r++)
-					dvWnd->SelectRow(r, false);
+					dvCtrl->SelectRow(r, false);
 			}
 
 			if (selectFlags & wxACC_SEL_TAKEFOCUS)
 			{
-				dvWnd->ChangeCurrentRow(row);
+				dvCtrl->ChangeCurrentRow(row);
 			}
 		}
 		else if (selectFlags & wxACC_SEL_ADDSELECTION)
@@ -7729,10 +7722,10 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 
 			// Combination with wxACC_SEL_EXTENDSELECTION is already handled
 			// (see wxACC_SEL_EXTENDSELECTION block).
-			dvWnd->SelectRow(row, true);
+			dvCtrl->SelectRow(row, true);
 			if (selectFlags & wxACC_SEL_TAKEFOCUS)
 			{
-				dvWnd->ChangeCurrentRow(row);
+				dvCtrl->ChangeCurrentRow(row);
 			}
 		}
 		else if (selectFlags & wxACC_SEL_REMOVESELECTION)
@@ -7746,10 +7739,10 @@ wxAccStatus wxDataViewExtCtrlAccessible::Select(int childId, wxAccSelectionFlags
 
 			// Combination with wxACC_SEL_EXTENDSELECTION is already handled
 			// (see wxACC_SEL_EXTENDSELECTION block).
-			dvWnd->SelectRow(row, false);
+			dvCtrl->SelectRow(row, false);
 			if (selectFlags & wxACC_SEL_TAKEFOCUS)
 			{
-				dvWnd->ChangeCurrentRow(row);
+				dvCtrl->ChangeCurrentRow(row);
 			}
 		}
 	}
@@ -7765,9 +7758,8 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetFocus(int* childId, wxAccessible** c
 {
 	wxDataViewExtCtrl* dvCtrl = wxDynamicCast(GetWindow(), wxDataViewExtCtrl);
 	wxCHECK(dvCtrl, wxACC_FAIL);
-	wxDataViewExtCtrl* dvWnd = wxDynamicCast(dvCtrl->GetMainWindow(), wxDataViewExtCtrl);
 
-	const unsigned int row = dvWnd->GetCurrentRow();
+	const unsigned int row = dvCtrl->GetCurrentRow();
 	if (row != (unsigned int)*childId - 1)
 	{
 		*childId = row + 1;
@@ -7788,7 +7780,7 @@ wxAccStatus wxDataViewExtCtrlAccessible::GetFocus(int* childId, wxAccessible** c
 			}
 		}
 
-		if (dvWnd->HasFocus())
+		if (dvCtrl->HasFocus())
 		{
 			*childId = wxACC_SELF;
 			*child = this;

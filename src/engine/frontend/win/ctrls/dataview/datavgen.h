@@ -25,15 +25,16 @@
 class wxDataViewExtMainWindow;
 class wxDataViewExtHeaderWindow;
 class wxDataViewExtFooterWindow;
+
 #if wxUSE_ACCESSIBILITY
-class wxDataViewExtCtrlAccessible;
+class FRONTEND_API wxDataViewExtCtrlAccessible;
 #endif // wxUSE_ACCESSIBILITY
 
 // ---------------------------------------------------------
 // wxDataViewExtColumn
 // ---------------------------------------------------------
 
-class wxDataViewExtColumn : public wxDataViewExtColumnBase
+class FRONTEND_API wxDataViewExtColumn : public wxDataViewExtColumnBase
 {
 	class wxDataViewExtFooterColumn : public wxSettableHeaderColumn
 	{
@@ -332,7 +333,7 @@ enum wxDataViewExtTreeNodeViewMode
 // wxDataViewExtTreeNode
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtCtrl;
+class FRONTEND_API wxDataViewExtCtrl;
 class wxDataViewExtTreeNode;
 
 typedef wxVector<wxDataViewExtTreeNode*> wxDataViewExtTreeNodes;
@@ -600,8 +601,11 @@ private:
 // wxDataViewExtCtrl
 // ---------------------------------------------------------
 
-class wxDataViewExtCtrl
-	: public wxCompositeWindow<wxScrolled<wxDataViewExtCtrlBase>>
+class FRONTEND_API wxDataViewExtCtrl
+	: 
+	public wxCompositeWindow<wxDataViewExtCtrlBase>,
+	public wxScrollHelper
+
 {
 	friend class wxDataViewExtMainWindow;
 	friend class wxDataViewExtHeaderWindowBase;
@@ -615,10 +619,10 @@ class wxDataViewExtCtrl
 	friend class wxDataViewExtCtrlAccessible;
 #endif // wxUSE_ACCESSIBILITY
 
-	typedef wxCompositeWindow<wxScrolled<wxDataViewExtCtrlBase>> BaseType;
+	typedef wxCompositeWindow<wxDataViewExtCtrlBase> BaseType;
 
 public:
-	wxDataViewExtCtrl()
+	wxDataViewExtCtrl() : wxScrollHelper(this)
 	{
 		Init();
 	}
@@ -628,6 +632,7 @@ public:
 		const wxSize& size = wxDefaultSize, long style = 0,
 		const wxValidator& validator = wxDefaultValidator,
 		const wxString& name = wxASCII_STR(wxDataViewExtCtrlNameStr))
+		: wxScrollHelper(this)
 	{
 		Create(parent, id, pos, size, style, validator, name);
 	}
@@ -996,12 +1001,13 @@ public:
 	void BuildTree(wxDataViewExtModel* model);
 	void DestroyTree();
 	void HitTest(const wxPoint& point, wxDataViewExtItem& item, wxDataViewExtColumn*& column);
+	
 	wxRect GetItemRect(const wxDataViewExtItem& item, const wxDataViewExtColumn* column);
 
-	void Expand(unsigned int row, bool expandChildren = false);
-	void Collapse(unsigned int row);
-	bool IsExpanded(unsigned int row) const;
-	bool HasChildren(unsigned int row) const;
+	void ExpandRow(unsigned int row, bool expandChildren = false);
+	void CollapseRow(unsigned int row);
+	bool IsExpandedRow(unsigned int row) const;
+	bool HasChildrenRow(unsigned int row) const;
 
 #if wxUSE_DRAG_AND_DROP
 	enum DropHint
@@ -1240,7 +1246,7 @@ private:
 // wxDataViewExtCtrlAccessible
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtCtrlAccessible : public wxWindowAccessible
+class FRONTEND_API wxDataViewExtCtrlAccessible : public wxWindowAccessible
 {
 public:
 	wxDataViewExtCtrlAccessible(wxDataViewExtCtrl* win);

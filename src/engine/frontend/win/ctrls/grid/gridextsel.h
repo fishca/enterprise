@@ -11,19 +11,19 @@
 #ifndef _WX_GENERIC_GRIDSEL_H_
 #define _WX_GENERIC_GRIDSEL_H_
 
-#include "wx/defs.h"
+#include <wx/defs.h>
 
 #if wxUSE_GRID
 
 #include "gridext.h"
 
-#include "wx/vector.h"
+#include <wx/vector.h>
 
 typedef wxVector<wxGridExtBlockCoords> wxVectorGridBlockCoords;
 
 // Note: for all eventType arguments of the methods of this class wxEVT_NULL
 //       may be passed to forbid events generation completely.
-class wxGridExtSelection
+class FRONTEND_API wxGridExtSelection
 {
 public:
 	wxGridExtSelection(wxGridExt* grid,

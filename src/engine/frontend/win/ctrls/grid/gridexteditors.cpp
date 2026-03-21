@@ -8,8 +8,8 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
+// For compilers that support precompilation, includes "wx/wx.h>.
+#include <wx/wxprec.h>
 
 
 #if wxUSE_GRID
@@ -17,26 +17,26 @@
 #include "gridext.h"
 
 #ifndef WX_PRECOMP
-#include "wx/utils.h"
-#include "wx/dcclient.h"
-#include "wx/settings.h"
-#include "wx/log.h"
-#include "wx/textctrl.h"
-#include "wx/checkbox.h"
-#include "wx/combobox.h"
-#include "wx/intl.h"
-#include "wx/math.h"
-#include "wx/listbox.h"
+#include <wx/utils.h>
+#include <wx/dcclient.h>
+#include <wx/settings.h>
+#include <wx/log.h>
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/combobox.h>
+#include <wx/intl.h>
+#include <wx/math.h>
+#include <wx/listbox.h>
 #endif
 
-#include "wx/numformatter.h"
-#include "wx/valnum.h"
-#include "wx/textfile.h"
-#include "wx/spinctrl.h"
-#include "wx/tokenzr.h"
-#include "wx/renderer.h"
-#include "wx/datectrl.h"
-#include "wx/uilocale.h"
+#include <wx/numformatter.h>
+#include <wx/valnum.h>
+#include <wx/textfile.h>
+#include <wx/spinctrl.h>
+#include <wx/tokenzr.h>
+#include <wx/renderer.h>
+#include <wx/datectrl.h>
+#include <wx/uilocale.h>
 
 #include "gridextsel.h"
 #include "gridexteditors.h"
@@ -55,7 +55,7 @@
 #endif
 
 #ifdef __WXOSX__
-#include "wx/osx/private.h"
+#include <wx/osx/private.h>
 #endif
 
 // Required for wxIs... functions

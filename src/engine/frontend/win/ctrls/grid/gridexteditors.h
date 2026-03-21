@@ -11,11 +11,11 @@
 #ifndef _WX_GENERIC_GRID_EDITORS_H_
 #define _WX_GENERIC_GRID_EDITORS_H_
 
-#include "wx/defs.h"
+#include <wx/defs.h>
 
 #if wxUSE_GRID
 
-#include "wx/scopedptr.h"
+#include <wx/scopedptr.h>
 
 class wxGridExtCellEditorEvtHandler : public wxEvtHandler
 {
@@ -52,7 +52,7 @@ private:
 #if wxUSE_TEXTCTRL
 
 // the editor for string/text data
-class wxGridExtCellTextEditor : public wxGridExtCellEditor
+class FRONTEND_API wxGridExtCellTextEditor : public wxGridExtCellEditor
 {
 public:
 	explicit wxGridExtCellTextEditor(size_t maxChars = 0)
@@ -110,7 +110,7 @@ private:
 };
 
 // the editor for numeric (long) data
-class wxGridExtCellNumberEditor : public wxGridExtCellTextEditor
+class FRONTEND_API wxGridExtCellNumberEditor : public wxGridExtCellTextEditor
 {
 public:
 	// allows to specify the range - if min == max == -1, no range checking is
@@ -211,7 +211,7 @@ enum wxGridExtCellFloatFormat
 };
 
 // the editor for floating point numbers (double) data
-class wxGridExtCellFloatEditor : public wxGridExtCellTextEditor
+class FRONTEND_API wxGridExtCellFloatEditor : public wxGridExtCellTextEditor
 {
 public:
 	explicit wxGridExtCellFloatEditor(int width = -1,
@@ -275,7 +275,7 @@ private:
 #if wxUSE_CHECKBOX
 
 // the editor for boolean data
-class wxGridExtCellBoolEditor : public wxGridExtCellEditor
+class FRONTEND_API wxGridExtCellBoolEditor : public wxGridExtCellEditor
 {
 public:
 	wxGridExtCellBoolEditor()
@@ -413,7 +413,7 @@ protected:
 
 #if wxUSE_COMBOBOX
 
-class wxGridExtCellEnumEditor : public wxGridExtCellChoiceEditor
+class FRONTEND_API wxGridExtCellEnumEditor : public wxGridExtCellChoiceEditor
 {
 public:
 	explicit wxGridExtCellEnumEditor(const wxString& choices = wxString());
@@ -442,7 +442,7 @@ private:
 
 #endif // wxUSE_COMBOBOX
 
-class wxGridExtCellAutoWrapStringEditor : public wxGridExtCellTextEditor
+class FRONTEND_API wxGridExtCellAutoWrapStringEditor : public wxGridExtCellTextEditor
 {
 public:
 	wxGridExtCellAutoWrapStringEditor()
@@ -467,7 +467,7 @@ public:
 
 #if wxUSE_DATEPICKCTRL
 
-class wxGridExtCellDateEditor : public wxGridExtCellEditor
+class FRONTEND_API wxGridExtCellDateEditor : public wxGridExtCellEditor
 {
 public:
 	explicit wxGridExtCellDateEditor(const wxString& format = wxString());

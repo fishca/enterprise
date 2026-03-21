@@ -5,6 +5,8 @@
 
 #include "objectList.h"
 #include "backend/srcExplorer.h"
+#include "backend/system/systemManager.h"
+
 #include "backend/appData.h"
 
 wxIMPLEMENT_ABSTRACT_CLASS(IValueListDataObject, IValueTable);
@@ -444,8 +446,10 @@ void CValueListDataObjectRef::AddValue(unsigned int before)
 			if (dataValueObject != nullptr)
 				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -463,8 +467,10 @@ void CValueListDataObjectRef::CopyValue()
 			CValuePtr<IValueRecordDataObjectRef> dataValueObject(metaObject->CopyObjectValue(node->GetGuid()));
 			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -482,8 +488,10 @@ void CValueListDataObjectRef::EditValue()
 			IValueRecordDataObjectRef* dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
 			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -505,8 +513,10 @@ void CValueListDataObjectRef::DeleteValue()
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -528,8 +538,10 @@ void CValueListDataObjectRef::MarkAsDeleteValue()
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -547,8 +559,10 @@ void CValueListDataObjectRef::ChooseValue(IBackendValueForm* srcForm)
 		if (dataValueRef != nullptr)
 			srcForm->NotifyChoice(dataValueRef->GetValue());
 	}
-	catch (...)
-	{
+	catch (const CBackendCoreException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
 	}
 }
 
@@ -734,9 +748,10 @@ void CValueTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
 	}
-	catch (...)
-	{
-
+	catch (const CBackendCoreException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
 	}
 }
 
@@ -754,8 +769,10 @@ void CValueTreeDataObjectFolderRef::CopyValue()
 		if (dataValueFolderObject != nullptr)
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
-	catch (...)
-	{
+	catch (const CBackendCoreException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
 	}
 }
 
@@ -772,8 +789,10 @@ void CValueTreeDataObjectFolderRef::EditValue()
 		CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
 		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
-	catch (...)
-	{
+	catch (const CBackendCoreException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
 	}
 }
 
@@ -793,10 +812,11 @@ void CValueTreeDataObjectFolderRef::DeleteValue()
 		IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 		if (valueListForm != nullptr) valueListForm->UpdateForm();
 	}
-	catch (...)
-	{
+	catch (const CBackendCoreException *err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
 	}
-
+	catch (...) {
+	}
 }
 
 void CValueTreeDataObjectFolderRef::MarkAsDeleteValue()
@@ -818,8 +838,10 @@ void CValueTreeDataObjectFolderRef::MarkAsDeleteValue()
 			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 			if (valueListForm != nullptr) valueListForm->UpdateForm();
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -844,8 +866,10 @@ void CValueTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
 		else if (m_listMode == LIST_ITEM_FOLDER)
 			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
 	}
-	catch (...)
-	{
+	catch (const CBackendCoreException* err) {
+		CSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
 	}
 }
 
@@ -959,8 +983,10 @@ void CValueListRegisterObject::AddValue(unsigned int before)
 			if (dataValueObject != nullptr)
 				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (...)
-		{
+		catch (const CBackendCoreException* err) {
+			CSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
 		}
 	}
 }
@@ -976,8 +1002,10 @@ void CValueListRegisterObject::CopyValue()
 				if (dataValueObject != nullptr)
 					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (...)
-			{
+			catch (const CBackendCoreException* err) {
+				CSystemFunction::Alert(err->GetErrorDescription());
+			}
+			catch (...) {
 			}
 		}
 	}
@@ -994,8 +1022,10 @@ void CValueListRegisterObject::EditValue()
 				if (dataValueObject != nullptr)
 					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (...)
-			{
+			catch (const CBackendCoreException* err) {
+				CSystemFunction::Alert(err->GetErrorDescription());
+			}
+			catch (...) {
 			}
 		}
 		else {
@@ -1006,8 +1036,10 @@ void CValueListRegisterObject::EditValue()
 					recorderVal.ShowValue();
 				}
 			}
-			catch (...)
-			{
+			catch (const CBackendCoreException* err) {
+				CSystemFunction::Alert(err->GetErrorDescription());
+			}
+			catch (...) {
 			}
 		}
 	}
@@ -1026,8 +1058,10 @@ void CValueListRegisterObject::DeleteValue()
 				IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 				if (valueListForm != nullptr) valueListForm->UpdateForm();
 			}
-			catch (...)
-			{
+			catch (const CBackendCoreException* err) {
+				CSystemFunction::Alert(err->GetErrorDescription());
+			}
+			catch (...) {
 			}
 		}
 	}

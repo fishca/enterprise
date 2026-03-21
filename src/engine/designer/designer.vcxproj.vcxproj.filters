@@ -162,6 +162,9 @@
     <ClCompile Include="mainFrame\metatree\treeDataReportEvent.cpp">
       <Filter>mainFrame\metaTree</Filter>
     </ClCompile>
+    <ClCompile Include="win\dlg\predefinedEditor.cpp">
+      <Filter>win\dlg</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainApp.h" />
@@ -287,6 +290,9 @@
     </ClInclude>
     <ClInclude Include="mainFrame\metatree\treeDataReport.h">
       <Filter>mainFrame\metaTree</Filter>
+    </ClInclude>
+    <ClInclude Include="win\dlg\predefinedEditor.h">
+      <Filter>win\dlg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

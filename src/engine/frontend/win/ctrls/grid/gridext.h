@@ -11,23 +11,25 @@
 #ifndef _WX_GENERIC_GRID_H_
 #define _WX_GENERIC_GRID_H_
 
-#include "wx/defs.h"
+#include <wx/defs.h>
 
 #if wxUSE_GRID
 
-#include "wx/hashmap.h"
+#include <wx/hashmap.h>
 
-#include "wx/scrolwin.h"
+#include <wx/scrolwin.h>
 
 #if wxUSE_STD_CONTAINERS_COMPATIBLY
 #include <iterator>
 #endif
 
+#include "frontend/frontend.h"
+
 // ----------------------------------------------------------------------------
 // constants
 // ----------------------------------------------------------------------------
 
-extern const char wxGridExtNameStr[];
+extern const char FRONTEND_API wxGridExtNameStr[];
 
 // Obsolete constants not used by wxWidgets itself any longer, preserved only
 // for compatibility.
@@ -92,18 +94,18 @@ enum wxGridExtRenderStyle
 // forward declarations
 // ----------------------------------------------------------------------------
 
-class wxGridExt;
-class wxGridExtCellAttr;
-class wxGridExtCellAttrProviderData;
-class wxGridExtColLabelWindow;
-class wxGridExtCornerLabelWindow;
-class wxGridExtEvent;
-class wxGridExtRowAreaWindow;
-class wxGridExtRowLabelWindow;
-class wxGridExtWindow;
-class wxGridExtSubwindow;
-class wxGridExtTypeRegistry;
-class wxGridExtSelection;
+class FRONTEND_API wxGridExt;
+class FRONTEND_API wxGridExtCellAttr;
+class FRONTEND_API wxGridExtCellAttrProviderData;
+class FRONTEND_API wxGridExtColLabelWindow;
+class FRONTEND_API wxGridExtCornerLabelWindow;
+class FRONTEND_API wxGridExtEvent;
+class FRONTEND_API wxGridExtRowAreaWindow;
+class FRONTEND_API wxGridExtRowLabelWindow;
+class FRONTEND_API wxGridExtWindow;
+class FRONTEND_API wxGridExtSubwindow;
+class FRONTEND_API wxGridExtTypeRegistry;
+class FRONTEND_API wxGridExtSelection;
 
 class WXDLLIMPEXP_FWD_CORE wxHeaderCtrl;
 class WXDLLIMPEXP_FWD_CORE wxCheckBox;
@@ -156,7 +158,7 @@ inline int wxRestoreGridScale(const int& v, const float& s)
 //     class is not documented and is not public at all
 // ----------------------------------------------------------------------------
 
-class wxGridExtCellWorker : public wxSharedClientDataContainer,
+class FRONTEND_API wxGridExtCellWorker : public wxSharedClientDataContainer,
 	public wxRefCounter
 {
 public:
@@ -187,7 +189,7 @@ private:
 // predefined derived classes or derive your own class from it.
 // ----------------------------------------------------------------------------
 
-class wxGridExtCellRenderer : public wxGridExtCellWorker
+class FRONTEND_API wxGridExtCellRenderer : public wxGridExtCellWorker
 {
 public:
 	wxGridExtCellRenderer()
@@ -403,7 +405,7 @@ private:
 // even for the entire grid.
 // ----------------------------------------------------------------------------
 
-class wxGridExtCellEditor : public wxGridExtCellWorker
+class FRONTEND_API wxGridExtCellEditor : public wxGridExtCellWorker
 {
 public:
 	wxGridExtCellEditor()
@@ -621,7 +623,7 @@ public:
 // ----------------------------------------------------------------------------
 
 // Base class for header cells renderers.
-class wxGridExtHeaderLabelsRenderer
+class FRONTEND_API wxGridExtHeaderLabelsRenderer
 {
 public:
 	virtual ~wxGridExtHeaderLabelsRenderer() {}
@@ -645,24 +647,24 @@ public:
 // those already in wxGridExtHeaderLabelsRenderer but still define separate classes
 // for them for future extensions and also for better type safety (i.e. to
 // avoid inadvertently using a column header renderer for the row headers)
-class wxGridExtRowHeaderRenderer
+class FRONTEND_API wxGridExtRowHeaderRenderer
 	: public wxGridExtHeaderLabelsRenderer
 {
 };
 
-class wxGridExtColumnHeaderRenderer
+class FRONTEND_API wxGridExtColumnHeaderRenderer
 	: public wxGridExtHeaderLabelsRenderer
 {
 };
 
-class wxGridExtCornerHeaderRenderer
+class FRONTEND_API wxGridExtCornerHeaderRenderer
 	: public wxGridExtHeaderLabelsRenderer
 {
 };
 
 // Also define the default renderers which are used by wxGridExtCellAttrProvider
 // by default
-class wxGridExtRowHeaderRendererDefault
+class FRONTEND_API wxGridExtRowHeaderRendererDefault
 	: public wxGridExtRowHeaderRenderer
 {
 public:
@@ -672,7 +674,7 @@ public:
 };
 
 // Column header cells renderers
-class wxGridExtColumnHeaderRendererDefault
+class FRONTEND_API wxGridExtColumnHeaderRendererDefault
 	: public wxGridExtColumnHeaderRenderer
 {
 public:
@@ -682,7 +684,7 @@ public:
 };
 
 // Header corner renderer
-class wxGridExtCornerHeaderRendererDefault
+class FRONTEND_API wxGridExtCornerHeaderRendererDefault
 	: public wxGridExtCornerHeaderRenderer
 {
 public:
@@ -774,7 +776,7 @@ private:
 // class may be returned by wxGridExtTable::GetAttr().
 // ----------------------------------------------------------------------------
 
-class wxGridExtCellAttr : public wxSharedClientDataContainer,
+class FRONTEND_API wxGridExtCellAttr : public wxSharedClientDataContainer,
 	public wxRefCounter
 {
 public:
@@ -989,7 +991,7 @@ typedef wxObjectDataPtr<wxGridExtCellAttr> wxGridExtCellAttrPtr;
 // the default implementation is reasonably efficient for the generic case,
 // but you might still wish to implement your own for some specific situations
 // if you have performance problems with the stock one
-class wxGridExtCellAttrProvider : public wxClientDataContainer
+class FRONTEND_API wxGridExtCellAttrProvider : public wxClientDataContainer
 {
 public:
 	wxGridExtCellAttrProvider();
@@ -1037,7 +1039,7 @@ private:
 // wxGridExtCellCoords: location of a cell in the grid
 // ----------------------------------------------------------------------------
 
-class wxGridExtCellCoords
+class FRONTEND_API wxGridExtCellCoords
 {
 public:
 	wxGridExtCellCoords() { m_row = m_col = -1; }
@@ -1088,7 +1090,7 @@ struct wxGridExtCellCache
 
 struct wxGridExtBlockDiffResult;
 
-class wxGridExtBlockCoords
+class FRONTEND_API wxGridExtBlockCoords
 {
 public:
 	wxGridExtBlockCoords() :
@@ -1222,7 +1224,7 @@ struct wxGridExtCellArea {
 // wxGridExtDialogInputArea: dialog area of a cell in the grid
 // ----------------------------------------------------------------------------
 
-class wxGridExtDialogInputArea : public wxDialog {
+class FRONTEND_API wxGridExtDialogInputArea : public wxDialog {
 public:
 
 	wxGridExtDialogInputArea(wxWindow* parent, wxWindowID id = wxID_ANY)
@@ -1372,7 +1374,7 @@ WX_DECLARE_OBJARRAY_WITH_DECL(wxGridExtCellCache, wxGridExtCellCacheArray,
 // ----------------------------------------------------------------------------
 
 // the abstract base class
-class wxGridExtTableBase : public wxObject,
+class FRONTEND_API wxGridExtTableBase : public wxObject,
 	public wxClientDataContainer
 {
 public:
@@ -1531,7 +1533,7 @@ enum wxGridExtTableRequest
 	wxGRIDTABLE_NOTIFY_COLS_DELETED
 };
 
-class wxGridExtTableMessage
+class FRONTEND_API wxGridExtTableMessage
 {
 public:
 	wxGridExtTableMessage();
@@ -1570,7 +1572,7 @@ WX_DECLARE_OBJARRAY_WITH_DECL(wxArrayString, wxGridExtStringArray,
 // that are stored in memory
 //
 
-class wxGridExtStringTable : public wxGridExtTableBase
+class FRONTEND_API wxGridExtStringTable : public wxGridExtTableBase
 {
 public:
 	wxGridExtStringTable();
@@ -1638,7 +1640,7 @@ private:
 // wxGridExtCommand 
 // ----------------------------------------------------------------------------
 
-class wxGridExtCommand {
+class FRONTEND_API wxGridExtCommand {
 public:
 
 	wxGridExtCommand() : m_executed(true) {}
@@ -1717,7 +1719,7 @@ struct wxGridExtSizesInfo
 // wxGridExt
 // ----------------------------------------------------------------------------
 
-class wxGridExt : public wxScrolledCanvas
+class FRONTEND_API wxGridExt : public wxScrolledCanvas
 {
 public:
 	// possible selection modes
@@ -3596,7 +3598,7 @@ private:
 // wxGridExtCommandProcessor prevents updates command processor
 // ----------------------------------------------------------------------------
 
-class wxGridExtCommandProcessor : public wxCommandProcessor
+class FRONTEND_API wxGridExtCommandProcessor : public wxCommandProcessor
 {
 public:
 
@@ -3619,7 +3621,7 @@ private:
 // wxGridExtUpdateLocker prevents updates to a grid during its lifetime
 // ----------------------------------------------------------------------------
 
-class wxGridExtUpdateLocker
+class FRONTEND_API wxGridExtUpdateLocker
 {
 public:
 	// if the pointer is NULL, Create() can be called later
@@ -4187,7 +4189,7 @@ private:
 // Grid event class and event types
 // ----------------------------------------------------------------------------
 
-class wxGridExtEvent : public wxNotifyEvent,
+class FRONTEND_API wxGridExtEvent : public wxNotifyEvent,
 	public wxKeyboardState
 {
 public:
@@ -4250,7 +4252,7 @@ private:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtEvent);
 };
 
-class wxGridExtSizeEvent : public wxNotifyEvent,
+class FRONTEND_API wxGridExtSizeEvent : public wxNotifyEvent,
 	public wxKeyboardState
 {
 public:
@@ -4307,7 +4309,7 @@ private:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtSizeEvent);
 };
 
-class wxGridExtRangeSelectEvent : public wxNotifyEvent,
+class FRONTEND_API wxGridExtRangeSelectEvent : public wxNotifyEvent,
 	public wxKeyboardState
 {
 public:
@@ -4371,7 +4373,7 @@ protected:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtRangeSelectEvent);
 };
 
-class wxGridExtEditorCreatedEvent : public wxCommandEvent
+class FRONTEND_API wxGridExtEditorCreatedEvent : public wxCommandEvent
 {
 public:
 	wxGridExtEditorCreatedEvent()
@@ -4407,7 +4409,7 @@ private:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtEditorCreatedEvent);
 };
 
-class wxGridExtAreaEvent : public wxNotifyEvent
+class FRONTEND_API wxGridExtAreaEvent : public wxNotifyEvent
 {
 public:
 
@@ -4446,52 +4448,52 @@ private:
 	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN_DEF_COPY(wxGridExtAreaEvent);
 };
 
-wxDECLARE_EVENT(wxEVT_GRID_CELL_LEFT_CLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_RIGHT_CLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_LEFT_DCLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_RIGHT_DCLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_LABEL_LEFT_CLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_LABEL_RIGHT_CLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_LABEL_LEFT_DCLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_LABEL_RIGHT_DCLICK, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_SIZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_AUTO_SIZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_MODIFIED, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_SIZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_AUTO_SIZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_MODIFIED, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_RANGE_SELECTING, wxGridExtRangeSelectEvent);
-wxDECLARE_EVENT(wxEVT_GRID_RANGE_SELECTED, wxGridExtRangeSelectEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_CHANGING, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_CHANGED, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_TABLE_MODIFIED, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_TABLE_ATTR_MODIFIED, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_SELECT_CELL, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_EDITOR_SHOWN, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
-wxDECLARE_EVENT(wxEVT_GRID_CELL_BEGIN_DRAG, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_MOVE, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_SORT, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_BRAKE_DELETE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_BRAKE_DELETE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_AREA_NAME, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ROW_FREEZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_COL_FREEZE, wxGridExtSizeEvent);
-wxDECLARE_EVENT(wxEVT_GRID_ZOOM, wxGridExtEvent);
-wxDECLARE_EVENT(wxEVT_GRID_TABBING, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_LEFT_CLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_RIGHT_CLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_LEFT_DCLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_RIGHT_DCLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_LABEL_LEFT_CLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_LABEL_RIGHT_CLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_LABEL_LEFT_DCLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_LABEL_RIGHT_DCLICK, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_SIZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_AUTO_SIZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_MODIFIED, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_SIZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_AUTO_SIZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_MODIFIED, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_RANGE_SELECTING, wxGridExtRangeSelectEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_RANGE_SELECTED, wxGridExtRangeSelectEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_CHANGING, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_CHANGED, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_TABLE_MODIFIED, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_TABLE_ATTR_MODIFIED, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_SELECT_CELL, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_EDITOR_SHOWN, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_EDITOR_HIDDEN, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_EDITOR_CREATED, wxGridExtEditorCreatedEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_CELL_BEGIN_DRAG, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_MOVE, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_MOVE, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_SORT, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_BRAKE_ADD, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_BRAKE_SET, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_BRAKE_DELETE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_BRAKE_ADD, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_BRAKE_SET, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_BRAKE_DELETE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_AREA_CREATE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_AREA_DELETE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_AREA_SIZE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_AREA_NAME, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_AREA_CREATE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_AREA_DELETE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_AREA_SIZE, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_AREA_NAME, wxGridExtAreaEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ROW_FREEZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_COL_FREEZE, wxGridExtSizeEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_ZOOM, wxGridExtEvent);
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_GRID_TABBING, wxGridExtEvent);
 
 typedef void (wxEvtHandler::* wxGridExtEventFunction)(wxGridExtEvent&);
 typedef void (wxEvtHandler::* wxGridExtSizeEventFunction)(wxGridExtSizeEvent&);

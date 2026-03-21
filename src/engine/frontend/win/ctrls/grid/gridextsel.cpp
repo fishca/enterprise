@@ -9,8 +9,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 // For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
-
+#include <wx/wxprec.h>
 
 // ============================================================================
 // declarations
@@ -23,7 +22,8 @@
 #if wxUSE_GRID
 
 #include "gridextsel.h"
-#include "wx/dynarray.h"
+
+#include <wx/dynarray.h>
 
 namespace
 {

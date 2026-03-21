@@ -15,37 +15,37 @@
 	- Review the column reordering code, it's a mess.
  */
 
- // For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
+ // For compilers that support precompilation, includes "wx/wx.h>.
+#include <wx/wxprec.h>
 
 #if wxUSE_GRID
 
 #include "gridext.h"
 
 #ifndef WX_PRECOMP
-#include "wx/utils.h"
-#include "wx/dcclient.h"
-#include "wx/settings.h"
-#include "wx/log.h"
-#include "wx/textctrl.h"
-#include "wx/checkbox.h"
-#include "wx/combobox.h"
-#include "wx/valtext.h"
-#include "wx/intl.h"
-#include "wx/math.h"
-#include "wx/listbox.h"
+#include <wx/utils.h>
+#include <wx/dcclient.h>
+#include <wx/settings.h>
+#include <wx/log.h>
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/combobox.h>
+#include <wx/valtext.h>
+#include <wx/intl.h>
+#include <wx/math.h>
+#include <wx/listbox.h>
 #endif
 
-#include "wx/dcbuffer.h"
-#include "wx/textfile.h"
-#include "wx/spinctrl.h"
-#include "wx/tokenzr.h"
-#include "wx/renderer.h"
-#include "wx/headerctrl.h"
-#include "wx/hashset.h"
+#include <wx/dcbuffer.h>
+#include <wx/textfile.h>
+#include <wx/spinctrl.h>
+#include <wx/tokenzr.h>
+#include <wx/renderer.h>
+#include <wx/headerctrl.h>
+#include <wx/hashset.h>
 
 #if wxUSE_CLIPBOARD
-#include "wx/clipbrd.h"
+#include <wx/clipbrd.h>
 #endif // wxUSE_CLIPBOARD
 
 #include "gridextsel.h"
@@ -53,7 +53,7 @@
 #include "gridexteditors.h"
 #include "gridextprivate.h"
 
-#include "wx/arrimpl.cpp"
+#include <wx/arrimpl.cpp>
 
 // Required for wxIs... functions
 #include <ctype.h>

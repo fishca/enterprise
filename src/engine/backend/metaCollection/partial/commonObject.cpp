@@ -697,7 +697,58 @@ IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::
 	return createdValue;
 }
 
+//***************************************************************************
+//*                       Predefined values                                 *
+//***************************************************************************
+
 #define predefinedBlock 0x1234532
+
+//append predefined value
+void IValueMetaObjectRecordDataHierarchyMutableRef::AppendPredefinedValue(const wxString& strPredefinedName,
+	const wxString& strCode, const wxString& strDescription,
+	bool valueIsFolder, const wxObjectDataPtr<CPredefinedValueObject>& valueParent)
+{
+	m_predefinedObjectVector.emplace_back(
+		new CPredefinedValueObject(wxNewUniqueGuid, strPredefinedName,
+			strCode, strDescription, valueIsFolder, valueParent));
+
+	m_metaData->Modify(true);
+}
+
+void IValueMetaObjectRecordDataHierarchyMutableRef::SetPredefinedValue(const CGuid& predefinedGuid,
+	const wxString& strPredefinedName,
+	const wxString& strCode, const wxString& strDescription,
+	bool valueIsFolder, const wxObjectDataPtr<CPredefinedValueObject>& valueParent)
+{
+	wxObjectDataPtr<CPredefinedValueObject> foundedPredefinedValue = FindPredefinedValue(predefinedGuid);
+
+	if (foundedPredefinedValue != nullptr) {
+		
+		foundedPredefinedValue->m_strPredefinedName = strPredefinedName;
+		foundedPredefinedValue->m_strCode = strCode;
+		foundedPredefinedValue->m_strDescription = strDescription;
+		foundedPredefinedValue->m_valueIsFolder = valueIsFolder;
+		foundedPredefinedValue->m_valueParent = valueParent;
+		
+		m_metaData->Modify(true);
+		return;
+	}
+
+	m_predefinedObjectVector.emplace_back(
+		new CPredefinedValueObject(predefinedGuid, strPredefinedName,
+			strCode, strDescription, valueIsFolder, valueParent));
+
+	m_metaData->Modify(true);
+}
+
+void IValueMetaObjectRecordDataHierarchyMutableRef::DeletePredefinedValue(const CGuid& predefinedGuid) {
+	
+	m_predefinedObjectVector.erase(
+		std::remove_if(m_predefinedObjectVector.begin(), m_predefinedObjectVector.end(),
+			[predefinedGuid](const auto value) { return predefinedGuid == value->GetPredefinedGuid(); }), m_predefinedObjectVector.end());
+
+	m_metaData->Modify(true);
+}
 
 //***************************************************************************
 //*                       Save & load metaData                              *

@@ -35,21 +35,22 @@ class wxHeaderGenericCtrl;
 
 #include "backend/tableView.h"
 #include "headerctrlg.h"
+#include "frontend/frontend.h"
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtCtrl globals
 // ----------------------------------------------------------------------------
 
 class BACKEND_API wxDataViewExtModel;
-class wxDataViewExtCtrl;
-class wxDataViewExtColumn;
-class wxDataViewExtRenderer;
+class FRONTEND_API wxDataViewExtCtrl;
+class FRONTEND_API wxDataViewExtColumn;
+class FRONTEND_API wxDataViewExtRenderer;
 class wxDataViewExtModelNotifier;
 #if wxUSE_ACCESSIBILITY
-class wxDataViewExtCtrlAccessible;
+class FRONTEND_API wxDataViewExtCtrlAccessible;
 #endif // wxUSE_ACCESSIBILITY
 
-extern const char wxDataViewExtCtrlNameStr[];
+extern const char FRONTEND_API wxDataViewExtCtrlNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtListModel: a model of a list, i.e. flat data structure without any
@@ -57,7 +58,7 @@ extern const char wxDataViewExtCtrlNameStr[];
 //      wxDataViewExtVirtualListModel
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtListModel : public wxDataViewExtModel
+class FRONTEND_API wxDataViewExtListModel : public wxDataViewExtModel
 {
 public:
 	// derived classes should override these methods instead of
@@ -135,7 +136,7 @@ public:
 // wxDataViewExtIndexListModel
 // ---------------------------------------------------------
 
-class wxDataViewExtIndexListModel : public wxDataViewExtListModel
+class FRONTEND_API wxDataViewExtIndexListModel : public wxDataViewExtListModel
 {
 public:
 	wxDataViewExtIndexListModel(unsigned int initial_size = 0);
@@ -174,7 +175,7 @@ private:
 typedef wxDataViewExtIndexListModel wxDataViewExtVirtualListModel;
 #else
 
-class wxDataViewExtVirtualListModel : public wxDataViewExtListModel
+class FRONTEND_API wxDataViewExtVirtualListModel : public wxDataViewExtListModel
 {
 public:
 	wxDataViewExtVirtualListModel(unsigned int initial_size = 0);
@@ -231,7 +232,7 @@ enum wxDataViewExtColumnFlags
 	wxDATAVIEW_COL_HIDDEN = wxCOL_HIDDEN
 };
 
-class wxDataViewExtColumnBase : public wxSettableHeaderColumn
+class FRONTEND_API wxDataViewExtColumnBase : public wxSettableHeaderColumn
 {
 public:
 	// ctor for the text columns: takes ownership of renderer
@@ -318,7 +319,7 @@ enum wxDataViewExtViewMode
 	wxDataViewExtList
 };
 
-class wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
+class FRONTEND_API wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
 {
 public:
 
@@ -532,6 +533,7 @@ public:
 	void Expand(const wxDataViewExtItem& item);
 	void ExpandChildren(const wxDataViewExtItem& item);
 	void ExpandAncestors(const wxDataViewExtItem& item);
+	
 	virtual void Collapse(const wxDataViewExtItem& item) = 0;
 	virtual bool IsExpanded(const wxDataViewExtItem& item) const = 0;
 
@@ -642,8 +644,6 @@ protected:
 // ----------------------------------------------------------------------------
 // wxDataViewExtEvent - the event class for the wxDataViewExtCtrl notifications
 // ----------------------------------------------------------------------------
-
-#include "frontend/frontend.h"
 
 class FRONTEND_API wxDataViewExtEvent : public wxNotifyEvent
 {
@@ -875,7 +875,7 @@ typedef void (wxEvtHandler::* wxDataViewExtEventFunction)(wxDataViewExtEvent&);
 // wxDataViewExtListStore
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtListStoreLine
+class FRONTEND_API wxDataViewExtListStoreLine
 {
 public:
 	wxDataViewExtListStoreLine(wxUIntPtr data = 0)
@@ -898,8 +898,7 @@ private:
 	wxUIntPtr m_data;
 };
 
-
-class wxDataViewExtListStore : public wxDataViewExtIndexListModel
+class FRONTEND_API wxDataViewExtListStore : public wxDataViewExtIndexListModel
 {
 public:
 	wxDataViewExtListStore();
@@ -937,7 +936,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtListCtrl : public wxDataViewExtCtrl
+class FRONTEND_API wxDataViewExtListCtrl : public wxDataViewExtCtrl
 {
 public:
 	wxDataViewExtListCtrl();
@@ -1083,7 +1082,7 @@ private:
 // wxDataViewExtTreeStore
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreNode
 {
 public:
 	wxDataViewExtTreeStoreNode(wxDataViewExtTreeStoreNode* parent,
@@ -1145,7 +1144,7 @@ private:
 
 typedef wxVector<wxDataViewExtTreeStoreNode*> wxDataViewExtTreeStoreNodes;
 
-class wxDataViewExtTreeStoreContainerNode : public wxDataViewExtTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreContainerNode : public wxDataViewExtTreeStoreNode
 {
 public:
 	wxDataViewExtTreeStoreContainerNode(wxDataViewExtTreeStoreNode* parent,
@@ -1203,7 +1202,7 @@ private:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeStore : public wxDataViewExtModel
+class FRONTEND_API wxDataViewExtTreeStore : public wxDataViewExtModel
 {
 public:
 	wxDataViewExtTreeStore();
@@ -1284,7 +1283,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeCtrl : public wxDataViewExtCtrl,
+class FRONTEND_API wxDataViewExtTreeCtrl : public wxDataViewExtCtrl,
 	public wxWithImages
 {
 public:

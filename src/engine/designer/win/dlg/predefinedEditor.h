@@ -86,6 +86,10 @@ class CDialogPredefinedEditor : public wxDialog {
 		virtual bool IsListModel() const { return false; }
 		virtual bool IsVirtualListModel() const { return false; }
 
+		//is predefined value? 
+		bool HasPredefinedValue(const CGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->HasPredefinedValue(predefinedGuid); }
+		bool HasPredefinedValue(const wxString& strPredefinedName) const { return m_valueMetaObjectHierarchy->HasPredefinedValue(strPredefinedName); }
+
 		//append predefined value
 		void AppendPredefinedValue(const wxString& strPredefinedName,
 			const wxString& strCode, const wxString& strDescription) {
@@ -100,6 +104,10 @@ class CDialogPredefinedEditor : public wxDialog {
 		}
 
 		void DeletePredefinedValue(const CGuid& predefinedGuid) { m_valueMetaObjectHierarchy->DeletePredefinedValue(predefinedGuid); }
+
+		//find predefined value
+		wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedGuid); }
+		wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedName); }
 
 	private:
 
@@ -210,6 +218,15 @@ class CDialogPredefinedEditor : public wxDialog {
 			}
 
 			if (m_itemGuid.isValid()) {
+
+				const wxObjectDataPtr<CPredefinedValueObject>& predefinedValue =
+					GetOwner()->FindPredefinedValue(strName);
+
+				if (predefinedValue != nullptr && predefinedValue->GetPredefinedGuid() != m_itemGuid) {
+					wxMessageBox(_("The \"name\" field has not unique!"));
+					return;
+				}
+
 				GetOwner()->SetPredefinedValue(
 					m_itemGuid,
 					strName,
@@ -218,6 +235,12 @@ class CDialogPredefinedEditor : public wxDialog {
 				);
 			}
 			else {
+
+				if (GetOwner()->HasPredefinedValue(strName)) {
+					wxMessageBox(_("The \"name\" field has not unique!"));
+					return;
+				}
+
 				GetOwner()->AppendPredefinedValue(
 					strName,
 					strCode,
@@ -279,6 +302,10 @@ public:
 
 	void CreateDialogView();
 
+	//is predefined value? 
+	bool HasPredefinedValue(const CGuid& predefinedGuid) const { return m_tableModelStore->HasPredefinedValue(predefinedGuid); }
+	bool HasPredefinedValue(const wxString& strPredefinedName) const { return m_tableModelStore->HasPredefinedValue(strPredefinedName); }
+
 	//append predefined value
 	void AppendPredefinedValue(const wxString& strPredefinedName,
 		const wxString& strCode, const wxString& strDescription) {
@@ -291,9 +318,11 @@ public:
 			strPredefinedName, strCode, strDescription);
 	}
 
-	void DeletePredefinedValue(const CGuid& predefinedGuid) {
-		m_tableModelStore->DeletePredefinedValue(predefinedGuid);
-	}
+	void DeletePredefinedValue(const CGuid& predefinedGuid) { m_tableModelStore->DeletePredefinedValue(predefinedGuid); }
+
+	//find predefined value
+	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const { return m_tableModelStore->FindPredefinedValue(predefinedGuid); }
+	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_tableModelStore->FindPredefinedValue(predefinedName); }
 
 protected:
 

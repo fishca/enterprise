@@ -148,7 +148,7 @@ protected:
 	virtual IValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create empty object
-	virtual IValueRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
+	virtual IValueRecordDataObjectHierarchyRef* CreateObjectRefValue(eObjectMode mode, const CGuid& guid = wxNullGuid);
 
 	//create object data with meta form
 	virtual ISourceDataObject* CreateSourceObject(IValueMetaObjectForm* metaObject);
@@ -258,7 +258,7 @@ private:
 //*                                      Object                                              *
 //********************************************************************************************
 
-class CValueRecordDataObjectCatalog : public IValueRecordDataObjectFolderRef {
+class CValueRecordDataObjectCatalog : public IValueRecordDataObjectHierarchyRef {
 	CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid = wxNullGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
 	CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source);
 public:

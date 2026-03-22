@@ -657,9 +657,9 @@ IValueMetaObjectRecordDataHierarchyMutableRef::~IValueMetaObjectRecordDataHierar
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode)
+IValueRecordDataObjectHierarchyRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode)
 {
-	IValueRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
+	IValueRecordDataObjectHierarchyRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject()) {
 		wxDELETE(createdValue);
 		return nullptr;
@@ -667,9 +667,9 @@ IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::
 	return createdValue;
 }
 
-IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, const CGuid& guid)
+IValueRecordDataObjectHierarchyRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, const CGuid& guid)
 {
-	IValueRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode, guid);
+	IValueRecordDataObjectHierarchyRef* createdValue = CreateObjectRefValue(mode, guid);
 	if (createdValue && !createdValue->InitializeObject()) {
 		wxDELETE(createdValue);
 		return nullptr;
@@ -677,9 +677,9 @@ IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::
 	return createdValue;
 }
 
-IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, IValueRecordDataObjectRef* objSrc, bool generate)
+IValueRecordDataObjectHierarchyRef* IValueMetaObjectRecordDataHierarchyMutableRef::CreateObjectValue(eObjectMode mode, IValueRecordDataObjectRef* objSrc, bool generate)
 {
-	IValueRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
+	IValueRecordDataObjectHierarchyRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject(objSrc, generate)) {
 		wxDELETE(createdValue);
 		return nullptr;
@@ -687,9 +687,9 @@ IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::
 	return createdValue;
 }
 
-IValueRecordDataObjectFolderRef* IValueMetaObjectRecordDataHierarchyMutableRef::CopyObjectValue(eObjectMode mode, const CGuid& srcGuid)
+IValueRecordDataObjectHierarchyRef* IValueMetaObjectRecordDataHierarchyMutableRef::CopyObjectValue(eObjectMode mode, const CGuid& srcGuid)
 {
-	IValueRecordDataObjectFolderRef* createdValue = CreateObjectRefValue(mode);
+	IValueRecordDataObjectHierarchyRef* createdValue = CreateObjectRefValue(mode);
 	if (createdValue && !createdValue->InitializeObject(srcGuid)) {
 		wxDELETE(createdValue);
 		return nullptr;
@@ -2153,26 +2153,26 @@ CValueReferenceDataObject* IValueRecordDataObjectRef::GetReference() const
 }
 
 //***********************************************************************
-//*                        IValueRecordDataObjectFolderRef					*           
+//*                        IValueRecordDataObjectHierarchyRef					*           
 //***********************************************************************
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueRecordDataObjectFolderRef, IValueRecordDataObjectRef);
+wxIMPLEMENT_ABSTRACT_CLASS(IValueRecordDataObjectHierarchyRef, IValueRecordDataObjectRef);
 
-IValueRecordDataObjectFolderRef::IValueRecordDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode)
+IValueRecordDataObjectHierarchyRef::IValueRecordDataObjectHierarchyRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode)
 	: IValueRecordDataObjectRef(metaObject, objGuid), m_objMode(objMode)
 {
 }
 
-IValueRecordDataObjectFolderRef::IValueRecordDataObjectFolderRef(const IValueRecordDataObjectFolderRef& source)
+IValueRecordDataObjectHierarchyRef::IValueRecordDataObjectHierarchyRef(const IValueRecordDataObjectHierarchyRef& source)
 	: IValueRecordDataObjectRef(source), m_objMode(source.m_objMode)
 {
 }
 
-IValueRecordDataObjectFolderRef::~IValueRecordDataObjectFolderRef()
+IValueRecordDataObjectHierarchyRef::~IValueRecordDataObjectHierarchyRef()
 {
 }
 
-CSourceExplorer IValueRecordDataObjectFolderRef::GetSourceExplorer() const
+CSourceExplorer IValueRecordDataObjectHierarchyRef::GetSourceExplorer() const
 {
 	CSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
@@ -2218,7 +2218,7 @@ CSourceExplorer IValueRecordDataObjectFolderRef::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool IValueRecordDataObjectFolderRef::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool IValueRecordDataObjectHierarchyRef::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
 {
 	auto& it = m_listObjectValue.find(id);
 	if (it != m_listObjectValue.end()) {
@@ -2230,12 +2230,12 @@ bool IValueRecordDataObjectFolderRef::GetModel(IValueModel*& tableValue, const m
 	return false;
 }
 
-IValueRecordDataObjectRef* IValueRecordDataObjectFolderRef::CopyObjectValue()
+IValueRecordDataObjectRef* IValueRecordDataObjectHierarchyRef::CopyObjectValue()
 {
 	return GetMetaObject()->CreateObjectValue(m_objMode, this);
 }
 
-bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
+bool IValueRecordDataObjectHierarchyRef::SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal)
 {
 	const CValue& cOldValue = IValueRecordDataObjectRef::GetValueByMetaID(id);
 	if (cOldValue.GetType() == TYPE_NULL)
@@ -2257,12 +2257,12 @@ bool IValueRecordDataObjectFolderRef::SetValueByMetaID(const meta_identifier_t& 
 	return IValueRecordDataObjectRef::SetValueByMetaID(id, varMetaVal);
 }
 
-bool IValueRecordDataObjectFolderRef::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool IValueRecordDataObjectHierarchyRef::GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const
 {
 	return IValueRecordDataObjectRef::GetValueByMetaID(id, pvarMetaVal);
 }
 
-void IValueRecordDataObjectFolderRef::PrepareEmptyObject()
+void IValueRecordDataObjectHierarchyRef::PrepareEmptyObject()
 {
 	m_listObjectValue.clear();
 	//attrbutes can refValue 
@@ -2324,7 +2324,7 @@ void IValueRecordDataObjectFolderRef::PrepareEmptyObject()
 	m_objModified = true;
 }
 
-void IValueRecordDataObjectFolderRef::PrepareEmptyObject(const IValueRecordDataObjectRef* source)
+void IValueRecordDataObjectHierarchyRef::PrepareEmptyObject(const IValueRecordDataObjectRef* source)
 {
 	m_listObjectValue.clear();
 	IValueMetaObjectAttribute* codeAttribute = m_metaObject->GetAttributeForCode();

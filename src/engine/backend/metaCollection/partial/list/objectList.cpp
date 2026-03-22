@@ -715,7 +715,7 @@ void CValueTreeDataObjectFolderRef::AddValue(unsigned int before)
 		}
 	}
 
-	CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
+	CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
 
 	if (dataValueFolderObject != nullptr) {
 		dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
@@ -742,7 +742,7 @@ void CValueTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 	}
 
 	try {
-		CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER));
+		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER));
 		if (dataValueFolderObject != nullptr) {
 			dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
@@ -765,7 +765,7 @@ void CValueTreeDataObjectFolderRef::CopyValue()
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 	try {
-		CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject = m_metaObject->CopyObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid());
+		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject = m_metaObject->CopyObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid());
 		if (dataValueFolderObject != nullptr)
 			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
@@ -786,7 +786,7 @@ void CValueTreeDataObjectFolderRef::EditValue()
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 	try {
-		CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
 		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
 	catch (const CBackendCoreException* err) {
@@ -806,7 +806,7 @@ void CValueTreeDataObjectFolderRef::DeleteValue()
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 	try {
-		CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
 		if (dataValueFolderObject != nullptr)
 			dataValueFolderObject->DeleteObject();
 		IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
@@ -832,7 +832,7 @@ void CValueTreeDataObjectFolderRef::MarkAsDeleteValue()
 		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 		try {
-			CValuePtr<IValueRecordDataObjectFolderRef> dataValueFolderObject(metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+			CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
 			if (dataValueFolderObject != nullptr)
 				dataValueFolderObject->SetDeletionMark(true);
 			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);

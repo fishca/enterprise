@@ -1432,12 +1432,12 @@ bool IValueRecordDataObjectRef::ResetUniqueIdentifier()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueRecordDataObjectFolderRef::ReadData()
+bool IValueRecordDataObjectHierarchyRef::ReadData()
 {
 	if (IValueRecordDataObjectRef::ReadData()) {
 		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IValueRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		CValue isFolder; IValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
 			m_objMode = eObjectMode::OBJECT_FOLDER;
 		else
@@ -1447,12 +1447,12 @@ bool IValueRecordDataObjectFolderRef::ReadData()
 	return false;
 }
 
-bool IValueRecordDataObjectFolderRef::ReadData(const CGuid& srcGuid)
+bool IValueRecordDataObjectHierarchyRef::ReadData(const CGuid& srcGuid)
 {
 	if (IValueRecordDataObjectRef::ReadData(srcGuid)) {
 		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IValueRecordDataObjectFolderRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		CValue isFolder; IValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
 			m_objMode = eObjectMode::OBJECT_FOLDER;
 		else

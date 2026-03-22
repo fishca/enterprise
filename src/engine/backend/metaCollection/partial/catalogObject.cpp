@@ -17,12 +17,12 @@
 //*********************************************************************************************
 
 CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(CValueMetaObjectCatalog* metaObject, const CGuid& objGuid, eObjectMode objMode) :
-	IValueRecordDataObjectFolderRef(metaObject, objGuid, objMode)
+	IValueRecordDataObjectHierarchyRef(metaObject, objGuid, objMode)
 {
 }
 
 CValueRecordDataObjectCatalog::CValueRecordDataObjectCatalog(const CValueRecordDataObjectCatalog& source) :
-	IValueRecordDataObjectFolderRef(source)
+	IValueRecordDataObjectHierarchyRef(source)
 {
 }
 

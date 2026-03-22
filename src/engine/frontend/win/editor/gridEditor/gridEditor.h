@@ -400,8 +400,8 @@ class FRONTEND_API CGridEditor : public wxGridExt {
 
 		CPropertyCategory* m_categoryTemplate = IPropertyObject::CreatePropertyCategory(wxT("Template"), _("Template"));
 		CPropertyEnum<CValueEnumSpreadsheetFillType>* m_propertyFillType = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFillType>>(m_categoryTemplate, wxT("FillType"), _("Fill type"), enSpreadsheetFillType::enSpreadsheetFillType_StrText);
-		CPropertyUString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
-		CPropertyUString* m_propertyDetailsParameter = IPropertyObject::CreateProperty<CPropertyUString>(m_categoryTemplate, wxT("DetailsParameter"), _("Details parameter"), wxEmptyString);
+		CPropertyUEString* m_propertyParameter = IPropertyObject::CreateProperty<CPropertyUEString>(m_categoryTemplate, wxT("Parameter"), _("Parameter"), wxEmptyString);
+		CPropertyUEString* m_propertyDetailsParameter = IPropertyObject::CreateProperty<CPropertyUEString>(m_categoryTemplate, wxT("DetailsParameter"), _("Details parameter"), wxEmptyString);
 
 		CPropertyCategory* m_categoryAlignment = IPropertyObject::CreatePropertyCategory(wxT("Alignment"), _("Alignment"));
 		CPropertyEnum<CValueEnumSpreadsheetFitMode>* m_propertyFitMode = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumSpreadsheetFitMode>>(m_categoryAlignment, wxT("Git_mode"), _("Fit mode"), enSpreadsheetFitMode::enFitMode_Overflow);

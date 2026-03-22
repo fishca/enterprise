@@ -456,6 +456,8 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 		static CValue cVal;
 		if (!strValue.IsEmpty() && GetParameter(strValue, cVal))
 			return CBackendLocalization::CreateLocalizationRawLocText(cVal.GetString());
+
+		return wxT("");
 	}
 
 	return strValue;

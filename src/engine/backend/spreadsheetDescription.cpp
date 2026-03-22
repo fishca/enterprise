@@ -213,8 +213,8 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, const CSprea
 
 		const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
 
-		writer.w_s32(cell->m_row);
-		writer.w_s32(cell->m_col);
+		cellWriter.w_s32(cell->m_row);
+		cellWriter.w_s32(cell->m_col);
 
 		CSpreadsheetCellDescriptionMemory::SaveData(cellWriter,
 			*spreadsheetDesc.GetCellByIdx(idx));

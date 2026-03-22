@@ -228,7 +228,7 @@ private:
 	CPropertyCategory* m_categoryInfo = IPropertyObject::CreatePropertyCategory(wxT("Info"), _("Info"));
 	CPropertyBoolean* m_propertyHeader = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Header"), _("Header"), wxT(""), true);
 	CPropertyUInteger* m_propertyHeaderHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("HeaderHeight"), _("Header height"), wxT(""), 1);
-	CPropertyBoolean* m_propertyFooter = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), _(""), false);
+	CPropertyBoolean* m_propertyFooter = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categoryInfo, wxT("Footer"), _("Footer"), wxT(""), false);
 	CPropertyUInteger* m_propertyFooterHeight = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FooterHeight"), _("Footer height"), wxT(""), 1);
 	CPropertyUInteger* m_propertyFreezeRow = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeRow"), _("Frezee row"), wxT(""), 0);
 	CPropertyUInteger* m_propertyFreezeCol = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categoryInfo, wxT("FrezeeCol"), _("Frezee column"), wxT(""), 0);

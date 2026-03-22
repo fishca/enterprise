@@ -170,8 +170,14 @@ void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadshee
 			const wxString& detailsParameter =
 				cell->m_detailsParameter;
 
-			if (!detailsParameter.IsEmpty())
-				SetParameter(cell->m_detailsParameter, doc->GetParameter(cell->m_detailsParameter));
+			if (!detailsParameter.IsEmpty()) {
+	
+				wxString detailsComputeParameter;	
+				detailsComputeParameter << detailsParameter << maxRowBrake + row << col;
+				
+				SetParameter(detailsComputeParameter, doc->GetParameter(detailsParameter));	
+				cell->m_detailsParameter = detailsComputeParameter;
+			}
 		}
 	}
 
@@ -210,8 +216,14 @@ void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadshe
 			const wxString& detailsParameter =
 				cell->m_detailsParameter;
 
-			if (!detailsParameter.IsEmpty())
-				SetParameter(cell->m_detailsParameter, doc->GetParameter(cell->m_detailsParameter));
+			if (!detailsParameter.IsEmpty()) {
+
+				wxString detailsComputeParameter;
+				detailsComputeParameter << detailsParameter << row << maxColBrake + col;
+
+				SetParameter(detailsComputeParameter, doc->GetParameter(detailsParameter));
+				cell->m_detailsParameter = detailsComputeParameter;
+			}
 		}
 	}
 

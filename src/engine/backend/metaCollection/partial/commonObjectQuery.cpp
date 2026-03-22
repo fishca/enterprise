@@ -255,8 +255,13 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 	if (reader.r_chunk(1, objectBuffer)) {
 
 		const wxString& tableName = GetTableNameDB();
-		wxString queryText = "INSERT INTO " + tableName + " (";
-		queryText += "uuid";
+		
+		wxString queryText;
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
+		else
+			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
 		std::map<meta_identifier_t, int> assoc; int position = 2;
 
@@ -278,7 +283,12 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 			}
 		}
 
-		queryText += ");";
+		queryText += ") ";
+
+		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+			queryText += wxT("ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;");
+		else
+			queryText += wxT("MATCHING(uuid);");
 
 		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
 		if (statement == nullptr)
@@ -635,27 +645,27 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 	//is null - create
 	if (dstPredefined == nullptr) {
 
-		wxString strQueryText;
+		wxString queryText;
 
-		strQueryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
+		queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
 
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeCode->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDescription->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeIsFolder->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeCode->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDescription->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeIsFolder->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
 
-		strQueryText += wxT(") VALUES (?");
+		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeCode->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDescription->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeIsFolder->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) strQueryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeCode->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDescription->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeIsFolder->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
 
-		strQueryText += wxT(");");
+		queryText += wxT(");");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(strQueryText);
+		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;
@@ -682,29 +692,29 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 	// update 
 	else if (srcPredefined != nullptr) {
 
-		wxString strQueryText;
+		wxString queryText;
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			strQueryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
+			queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
 		else
-			strQueryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
+			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
 
-		strQueryText += wxT(") VALUES (?");
+		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) strQueryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
 
-		strQueryText += wxT(") ");
+		queryText += wxT(") ");
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			strQueryText += wxT("ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;");
+			queryText += wxT("ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;");
 		else
-			strQueryText += wxT("MATCHING(uuid);");
+			queryText += wxT("MATCHING(uuid);");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(strQueryText);
+		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;
@@ -728,29 +738,29 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 	//delete 
 	else if (srcPredefined == nullptr) {
 
-		wxString strQueryText;
+		wxString queryText;
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			strQueryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
+			queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
 		else
-			strQueryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
+			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		strQueryText = strQueryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDeletionMark->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDeletionMark->GetMetaObject());
 
-		strQueryText += wxT(") VALUES (?");
+		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) strQueryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDeletionMark->GetMetaObject()); i++) strQueryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDeletionMark->GetMetaObject()); i++) queryText += wxT(", ?");
 
-		strQueryText += wxT(") ");
+		queryText += wxT(") ");
 
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
-			strQueryText += wxT("ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;");
+			queryText += wxT("ON CONFLICT(uuid) DO UPDATE SET uuid = excluded.uuid;");
 		else
-			strQueryText += wxT("MATCHING(uuid);");
+			queryText += wxT("MATCHING(uuid);");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(strQueryText);
+		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;

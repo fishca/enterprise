@@ -16,9 +16,6 @@
 
 bool CSpreadsheetCellDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetCellDescription& spreadsheetCellDesc)
 {
-	int row = reader.r_s32();
-	int col = reader.r_s32();
-
 	spreadsheetCellDesc.m_value = reader.r_stringZ();
 
 	spreadsheetCellDesc.m_alignHorz = reader.r_s32();
@@ -59,9 +56,6 @@ bool CSpreadsheetCellDescriptionMemory::LoadData(CMemoryReader& reader, CSpreads
 
 bool CSpreadsheetCellDescriptionMemory::SaveData(CMemoryWriter& writer, const CSpreadsheetCellDescription& spreadsheetCellDesc)
 {
-	writer.w_s32(spreadsheetCellDesc.m_row);
-	writer.w_s32(spreadsheetCellDesc.m_col);
-
 	writer.w_stringZ(spreadsheetCellDesc.m_value);
 
 	writer.w_s32(spreadsheetCellDesc.m_alignHorz);
@@ -216,6 +210,12 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, const CSprea
 	cellWriter.w_u64(spreadsheetDesc.GetCellCount());
 
 	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++) {
+
+		const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
+
+		writer.w_s32(cell->m_row);
+		writer.w_s32(cell->m_col);
+
 		CSpreadsheetCellDescriptionMemory::SaveData(cellWriter,
 			*spreadsheetDesc.GetCellByIdx(idx));
 	}

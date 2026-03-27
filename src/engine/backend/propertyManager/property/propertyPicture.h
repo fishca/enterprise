@@ -5,28 +5,28 @@
 #include "backend/propertyManager/property/advprop/advpropPicture.h"
 
 //base property for "picture"
-class BACKEND_API CPropertyPicture : public IProperty {
-	wxVariantData* CreateVariantData(IPropertyObject* property, const CPictureDescription& id) const;
+class BACKEND_API ibPropertyPicture : public ibProperty {
+	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibPictureDescription& id) const;
 public:
 
 #pragma region _value_
 	wxBitmap GetValueAsBitmap() const;
-	CPictureDescription& GetValueAsPictureDesc() const;
-	void SetValue(const CPictureDescription& val);
+	ibPictureDescription& GetValueAsPictureDesc() const;
+	void SetValue(const ibPictureDescription& val);
 #pragma endregion 
 
-	CPropertyPicture(CPropertyCategory* cat, const wxString& name, const CPictureDescription& id = CPictureDescription())
-		: IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), id))
+	ibPropertyPicture(ibPropertyCategory* cat, const wxString& name, const ibPictureDescription& id = ibPictureDescription())
+		: ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), id))
 	{
 	}
 
-	CPropertyPicture(CPropertyCategory* cat, const wxString& name, const wxString& label, const CPictureDescription& id = CPictureDescription())
-		: IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), id))
+	ibPropertyPicture(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibPictureDescription& id = ibPictureDescription())
+		: ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), id))
 	{
 	}
 
-	CPropertyPicture(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const CPictureDescription& id = CPictureDescription())
-		: IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), id))
+	ibPropertyPicture(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibPictureDescription& id = ibPictureDescription())
+		: ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), id))
 	{
 	}
 
@@ -38,37 +38,37 @@ public:
 	}
 
 	//set/Get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 //base property for "external picture"
-class BACKEND_API CPropertyExternalPicture : public IProperty {
-	wxVariantData* CreateVariantData(const CExternalPictureDescription& pictureDesc) const;
+class BACKEND_API ibPropertyExternalPicture : public ibProperty {
+	wxVariantData* CreateVariantData(const ibExternalPictureDescription& pictureDesc) const;
 public:
 
 #pragma region _value_
 	wxBitmap GetValueAsBitmap() const;
-	CExternalPictureDescription& GetValueAsPictureDesc() const;
-	void SetValue(const CExternalPictureDescription& val);
+	ibExternalPictureDescription& GetValueAsPictureDesc() const;
+	void SetValue(const ibExternalPictureDescription& val);
 #pragma endregion 
 
-	CPropertyExternalPicture(CPropertyCategory* cat, const wxString& name, const CExternalPictureDescription& pictureDesc = CExternalPictureDescription())
-		: IProperty(cat, name, CreateVariantData(pictureDesc))
+	ibPropertyExternalPicture(ibPropertyCategory* cat, const wxString& name, const ibExternalPictureDescription& pictureDesc = ibExternalPictureDescription())
+		: ibProperty(cat, name, CreateVariantData(pictureDesc))
 	{
 	}
 
-	CPropertyExternalPicture(CPropertyCategory* cat, const wxString& name, const wxString& label, const CExternalPictureDescription& pictureDesc = CExternalPictureDescription())
-		: IProperty(cat, name, label, CreateVariantData(pictureDesc))
+	ibPropertyExternalPicture(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibExternalPictureDescription& pictureDesc = ibExternalPictureDescription())
+		: ibProperty(cat, name, label, CreateVariantData(pictureDesc))
 	{
 	}
 
-	CPropertyExternalPicture(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const CExternalPictureDescription& pictureDesc = CExternalPictureDescription())
-		: IProperty(cat, name, label, helpString, CreateVariantData(pictureDesc))
+	ibPropertyExternalPicture(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibExternalPictureDescription& pictureDesc = ibExternalPictureDescription())
+		: ibProperty(cat, name, label, helpString, CreateVariantData(pictureDesc))
 	{
 	}
 
@@ -80,12 +80,12 @@ public:
 	}
 
 	//set/Get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

@@ -69,20 +69,20 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxTranslateStringProperty, wxLongStringProperty, T
 
 wxString wxTranslateStringProperty::ValueToString(wxVariant& value, int argFlags) const
 {
-	return CBackendLocalization::GetTranslateGetRawLocText(value.GetString());
+	return ibBackendLocalization::GetTranslateGetRawLocText(value.GetString());
 }
 
 bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
 {
-	CBackendLocalizationEntryArray array;
+	ibBackendLocalizationEntryArray array;
 
-	if (CBackendLocalization::CreateLocalizationArray(variant.GetString(), array)) {
-		const wxString& strLangCode = CBackendLocalization::GetUserLanguage();
+	if (ibBackendLocalization::CreateLocalizationArray(variant.GetString(), array)) {
+		const wxString& strLangCode = ibBackendLocalization::GetUserLanguage();
 		const auto iterator = std::find_if(array.begin(), array.end(),
-			[strLangCode](const CBackendLocalizationEntry& entry) {
+			[strLangCode](const ibBackendLocalizationEntry& entry) {
 				return stringUtils::CompareString(entry.m_code, strLangCode); });
 		if (iterator == array.end()) {
-			CBackendLocalizationEntry entry;
+			ibBackendLocalizationEntry entry;
 			entry.m_code = strLangCode;
 			entry.m_data = text;
 			array.emplace_back(entry);
@@ -90,16 +90,16 @@ bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString
 		else {
 			iterator->m_data = text;
 		}
-		variant = CBackendLocalization::GetRawLocText(array);
+		variant = ibBackendLocalization::GetRawLocText(array);
 		return true;
 	}
 
-	CBackendLocalizationEntry entry;
-	entry.m_code = CBackendLocalization::GetUserLanguage();
+	ibBackendLocalizationEntry entry;
+	entry.m_code = ibBackendLocalization::GetUserLanguage();
 	entry.m_data = text;
 	array.emplace_back(entry);
 
-	variant = CBackendLocalization::GetRawLocText(array);
+	variant = ibBackendLocalization::GetRawLocText(array);
 	return true;
 }
 
@@ -136,7 +136,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 
 	if (m_ownerProperty != nullptr) {
 
-		std::map<CValueMetaObjectLanguage*, wxTextCtrl*> locArray;
+		std::map<ibValueMetaObjectLanguage*, wxTextCtrl*> locArray;
 
 		// launch editor dialog
 		wxDialog* dlg = new wxDialog(pg->GetPanel(), wxID_ANY,
@@ -152,24 +152,24 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 		if (HasFlag(wxPG_PROP_READONLY))
 			edStyle |= wxTE_READONLY;
 
-		IMetaData* metaData = m_ownerProperty->GetMetaData();
+		ibMetaData* metaData = m_ownerProperty->GetMetaData();
 		if (metaData != nullptr) {
 
 			wxBoxSizer* rowsizer = new wxBoxSizer(wxVERTICAL);
 
-			CBackendLocalizationEntryArray array;
-			CBackendLocalization::CreateLocalizationArray(
+			ibBackendLocalizationEntryArray array;
+			ibBackendLocalization::CreateLocalizationArray(
 				m_value.GetString(), array);
 
-			IMetaData* owner = nullptr;
+			ibMetaData* owner = nullptr;
 			metaData->GetOwner(owner);
 			if (owner == nullptr) { owner = metaData; }
 
-			auto arrayLanguage = owner->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID);
+			auto arrayLanguage = owner->GetAnyArrayObject<ibValueMetaObjectLanguage>(g_metaLanguageCLSID);
 			for (const auto language : arrayLanguage) {
 
 				auto iterator = std::find_if(array.begin(), array.end(),
-					[language](const CBackendLocalizationEntry& entry) {
+					[language](const ibBackendLocalizationEntry& entry) {
 						return stringUtils::CompareString(entry.m_code, language->GetLangCode()); });
 
 				const wxString& strTranslate =

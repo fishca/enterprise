@@ -5,24 +5,24 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueNotebookPage, IValueFrame);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueNotebookPage, ibValueFrame);
 
 //***********************************************************************************
-//*                              CValueNotebookPage                                 *
+//*                              ibValueNotebookPage                                 *
 //***********************************************************************************
 
-CValueNotebookPage::CValueNotebookPage() : IValueControl()
+ibValueNotebookPage::ibValueNotebookPage() : ibValueControl()
 {
 }
 
-wxObject* CValueNotebookPage::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueNotebookPage::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-    return new CPanelPage(wxparent, wxID_ANY);
+    return new ibPanelPage(wxparent, wxID_ANY);
 }
 
-void CValueNotebookPage::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueNotebookPage::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
-    CPanelPage* page = dynamic_cast<CPanelPage*>(wxobject);
+    ibPanelPage* page = dynamic_cast<ibPanelPage*>(wxobject);
     wxASSERT(page);
 
     wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(wxparent);
@@ -37,12 +37,12 @@ void CValueNotebookPage::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisu
     }
 }
 
-void CValueNotebookPage::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
+void ibValueNotebookPage::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
 {
-    IValueFrame* parentControl = GetParent(); int pos = wxNOT_FOUND;
+    ibValueFrame* parentControl = GetParent(); int pos = wxNOT_FOUND;
     if (m_propertyVisible->GetValueAsBoolean()) {
         for (unsigned int i = 0; i < parentControl->GetChildCount(); i++) {
-            CValueNotebookPage* child = dynamic_cast<CValueNotebookPage*>(parentControl->GetChild(i));
+            ibValueNotebookPage* child = dynamic_cast<ibValueNotebookPage*>(parentControl->GetChild(i));
             wxASSERT(child);
             if (m_controlId == child->m_controlId) {
                 pos = i; break;
@@ -60,30 +60,30 @@ void CValueNotebookPage::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisu
         if (pos != pos_old)
             notebook->InsertPage(pos, (wxWindow*)wxobject, m_propertyTitle->GetValueAsTranslateString(), pos_old == wxNOT_FOUND, m_propertyPicture->GetValueAsBitmap());
         
-        if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+        if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Auto) {
             notebook->SetPageText(pos, m_propertyTitle->GetValueAsTranslateString());
             notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
         }
-        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+        else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_PictureAndText) {
             notebook->SetPageText(pos, m_propertyTitle->GetValueAsTranslateString());
             notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
         }
-        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+        else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Picture) {
             notebook->SetPageText(pos, wxEmptyString);
             notebook->SetPageBitmap(pos, m_propertyPicture->GetValueAsBitmap());
         }
-        else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+        else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Text) {
             notebook->SetPageText(pos, m_propertyTitle->GetValueAsTranslateString());
             notebook->SetPageBitmap(pos, wxNullBitmap);
         }
        
-        CPanelPage* page = dynamic_cast<CPanelPage*>(wxobject);
+        ibPanelPage* page = dynamic_cast<ibPanelPage*>(wxobject);
         wxASSERT(page);
         page->SetOrientation(m_propertyOrient->GetValueAsInteger());
     }
 }
 
-void CValueNotebookPage::OnSelected(wxObject* wxobject)
+void ibValueNotebookPage::OnSelected(wxObject* wxobject)
 {
     wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(GetParent()->GetWxObject());
     wxASSERT(notebook);
@@ -94,7 +94,7 @@ void CValueNotebookPage::OnSelected(wxObject* wxobject)
     }
 }
 
-void CValueNotebookPage::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueNotebookPage::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 {
     wxAuiNotebook* notebook = dynamic_cast<wxAuiNotebook*>(visualHost->GetWxObject(GetParent()));
     wxASSERT(notebook);
@@ -104,13 +104,13 @@ void CValueNotebookPage::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
     }
 
     if (visualHost->IsDesignerHost()) {
-        CPanelPage* page = dynamic_cast<CPanelPage*>(wxobject);
+        ibPanelPage* page = dynamic_cast<ibPanelPage*>(wxobject);
         wxASSERT(page);
         page->PopEventHandler(true);
     }
 }
 
-bool CValueNotebookPage::CanDeleteControl() const
+bool ibValueNotebookPage::CanDeleteControl() const
 {
     return m_parent->GetChildCount() > 1;
 }
@@ -119,7 +119,7 @@ bool CValueNotebookPage::CanDeleteControl() const
 //*                              Read & save property                               *
 //***********************************************************************************
 
-bool CValueNotebookPage::LoadData(CMemoryReader& reader)
+bool ibValueNotebookPage::LoadData(ibReaderMemory& reader)
 {
     m_propertyTitle->LoadData(reader);
     m_propertyRepresentation->LoadData(reader);
@@ -127,10 +127,10 @@ bool CValueNotebookPage::LoadData(CMemoryReader& reader)
     m_propertyVisible->LoadData(reader);
     m_propertyOrient->LoadData(reader);
 
-    return IValueControl::LoadData(reader);
+    return ibValueControl::LoadData(reader);
 }
 
-bool CValueNotebookPage::SaveData(CMemoryWriter& writer)
+bool ibValueNotebookPage::SaveData(ibWriterMemory& writer)
 {
     m_propertyTitle->SaveData(writer);
     m_propertyRepresentation->SaveData(writer);
@@ -138,11 +138,11 @@ bool CValueNotebookPage::SaveData(CMemoryWriter& writer)
     m_propertyVisible->SaveData(writer);
     m_propertyOrient->SaveData(writer);
 
-    return IValueControl::SaveData(writer);
+    return ibValueControl::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueNotebookPage, "NotebookPage", "NotebookPage", g_controlNotebookPageCLSID);
+S_CONTROL_TYPE_REGISTER(ibValueNotebookPage, "NotebookPage", "NotebookPage", g_controlNotebookPageCLSID);

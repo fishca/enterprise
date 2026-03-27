@@ -7,27 +7,27 @@
 #include "backend/spreadsheetDescription.h"
 
 //base property for "spreadsheet"
-class BACKEND_API CPropertySpreadsheet : public IProperty {
-	wxVariantData* CreateVariantData(const CSpreadsheetDescription& val = CSpreadsheetDescription());
+class BACKEND_API ibPropertySpreadsheet : public ibProperty {
+	wxVariantData* CreateVariantData(const ibSpreadsheetDescription& val = ibSpreadsheetDescription());
 public:
 
 #pragma region _value_
-	CSpreadsheetDescription& GetValueAsSpreadsheetDesc() const;
-	void SetValue(const CSpreadsheetDescription& val);
+	ibSpreadsheetDescription& GetValueAsSpreadsheetDesc() const;
+	void SetValue(const ibSpreadsheetDescription& val);
 #pragma endregion 
 
-	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name)
-		: IProperty(cat, name, CreateVariantData())
+	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name)
+		: ibProperty(cat, name, CreateVariantData())
 	{
 	}
 
-	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name, const wxString& label)
-		: IProperty(cat, name, label, CreateVariantData())
+	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name, const wxString& label)
+		: ibProperty(cat, name, label, CreateVariantData())
 	{
 	}
 
-	CPropertySpreadsheet(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
-		: IProperty(cat, name, label, helpString, CreateVariantData())
+	ibPropertySpreadsheet(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
+		: ibProperty(cat, name, label, helpString, CreateVariantData())
 	{
 	}
 
@@ -39,12 +39,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

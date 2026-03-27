@@ -6,7 +6,7 @@
 #include "dataReport.h"
 #include "backend/metaData.h"
 
-bool CValueMetaObjectReport::PrepareContextMenu(wxMenu *defaultMenu)
+bool ibValueMetaObjectReport::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_OPEN_MODULE, _("Open object module"));
 	menuItem->SetBitmap((*m_propertyModuleObject)->GetIcon());
@@ -16,9 +16,9 @@ bool CValueMetaObjectReport::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void CValueMetaObjectReport::ProcessCommand(unsigned int id)
+void ibValueMetaObjectReport::ProcessCommand(unsigned int id)
 {
-	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
+	ibBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_MODULE)

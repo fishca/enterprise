@@ -4,7 +4,7 @@
 #include <wx/wx.h>
 
 // Used to identify wxObject* that must be manually deleted
-class wxNoObject : public wxObject {};
+class ibNoObject : public wxObject {};
 
 #define COMPONENT_TYPE_FRAME		 1
 #define COMPONENT_TYPE_WINDOW		 2

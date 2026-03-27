@@ -5,12 +5,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API IValueMetaObjectRegisterData;
+class BACKEND_API ibValueMetaObjectRegisterData;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //class keys 
-class BACKEND_API CUniqueKey {
+class BACKEND_API ibUniqueKey {
 protected:
 
 	enum class enUniqueData {
@@ -23,73 +23,73 @@ public:
 	bool isValid() const;
 	void reset();
 
-	CGuid GetGuid() const { return m_objGuid; }
+	ibGuid GetGuid() const { return m_objGuid; }
 
-	CUniqueKey();
-	CUniqueKey(const CGuid& guid);
+	ibUniqueKey();
+	ibUniqueKey(const ibGuid& guid);
 
 	virtual bool IsOk() const {
 		return m_metaObject != nullptr;
 	}
 
-	bool operator > (const CUniqueKey& other) const;
-	bool operator >= (const CUniqueKey& other) const;
-	bool operator < (const CUniqueKey& other) const;
-	bool operator <= (const CUniqueKey& other) const;
+	bool operator > (const ibUniqueKey& other) const;
+	bool operator >= (const ibUniqueKey& other) const;
+	bool operator < (const ibUniqueKey& other) const;
+	bool operator <= (const ibUniqueKey& other) const;
 
 	// overload equality and inequality operator
-	virtual bool operator==(const CUniqueKey& other) const;
-	virtual bool operator!=(const CUniqueKey& other) const;
+	virtual bool operator==(const ibUniqueKey& other) const;
+	virtual bool operator!=(const ibUniqueKey& other) const;
 
-	virtual bool operator==(const CGuid& other) const;
-	virtual bool operator!=(const CGuid& other) const;
+	virtual bool operator==(const ibGuid& other) const;
+	virtual bool operator!=(const ibGuid& other) const;
 
 	operator wxString() const { return GetGuid().str(); }
-	operator CGuid() const { return GetGuid(); }
+	operator ibGuid() const { return GetGuid(); }
 	operator guid_t() const { return GetGuid(); }
 
 protected:
 
-	CUniqueKey(enUniqueData uniqueData) : m_uniqueData(uniqueData) {}
+	ibUniqueKey(enUniqueData uniqueData) : m_uniqueData(uniqueData) {}
 
 protected:
 
-	CGuid m_objGuid;
-	const IValueMetaObjectRegisterData* m_metaObject;
-	valueArray_t m_keyValues;
+	ibGuid m_objGuid;
+	const ibValueMetaObjectRegisterData* m_metaObject;
+	ibMetaValueArray m_keyValues;
 };
 
-class BACKEND_API CUniquePairKey : public CUniqueKey {
+class BACKEND_API CUniquePairKey : public ibUniqueKey {
 public:
 
-	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject = nullptr);
-	CUniquePairKey(const IValueMetaObjectRegisterData* metaObject, const valueArray_t& keyValues);
+	CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject = nullptr);
+	CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject, const ibMetaValueArray& keyValues);
 
 	bool IsOk() const {
 		return m_metaObject != nullptr && m_keyValues.size() > 0;
 	}
 
-	void SetKeyPair(const IValueMetaObjectRegisterData* metaObject,
-		valueArray_t& keys) {
+	void SetKeyPair(const ibValueMetaObjectRegisterData* metaObject,
+		ibMetaValueArray& keys) {
 		m_metaObject = metaObject; m_keyValues = keys;
 	}
 
-	bool FindKey(const meta_identifier_t& id) const {
+	bool FindKey(const ibMetaID& id) const {
 		auto& it = m_keyValues.find(id);
 		return it != m_keyValues.end();
 	}
 
-	CValue GetKey(const meta_identifier_t& id) const {
+	ibValue GetKey(const ibMetaID& id) const {
 		auto& it = m_keyValues.find(id);
 		if (it != m_keyValues.end())
 			return it->second;
-		return CValue();
+		return ibValue();
 	}
 
-	operator valueArray_t() const { return m_keyValues; }
+	operator ibMetaValueArray() const { return m_keyValues; }
 };
 
-#define wxNullUniqueKey CUniqueKey()
+#define wxNullUniqueKey ibUniqueKey()
 #define wxNullUniquePairKey CUniquePairKey()
 
 #endif // !_UNIQUE_KEY_H__

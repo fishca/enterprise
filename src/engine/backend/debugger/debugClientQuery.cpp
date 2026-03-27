@@ -15,12 +15,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-bool CDebuggerClient::TableAlreadyCreated()
+bool ibDebuggerClient::TableAlreadyCreated()
 {
 	return db_query->TableExists(dbg_table);
 }
 
-bool CDebuggerClient::CreateBreakpointDatabase()
+bool ibDebuggerClient::CreateBreakpointDatabase()
 {
 	if (!db_query->TableExists(dbg_table)) {
 		int retCode = db_query->RunQuery("create table %s("
@@ -38,11 +38,11 @@ bool CDebuggerClient::CreateBreakpointDatabase()
 ///////////////////////////////////////////////////////////////////////////////////////
 
 //db support 
-void CDebuggerClient::LoadBreakpointCollection(const wxString& strModuleName)
+void ibDebuggerClient::LoadBreakpointCollection(const wxString& strModuleName)
 {
 	m_listBreakpoint[strModuleName].clear();
 
-	IDatabaseResultSet* databaseResultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE moduleName = '%s'", dbg_table, strModuleName);
+	ibDatabaseResultSet* databaseResultSet = db_query->RunQueryWithResults("SELECT * FROM %s WHERE moduleName = '%s'", dbg_table, strModuleName);
 	wxASSERT(databaseResultSet);
 	while (databaseResultSet->Next()) {
 		m_listBreakpoint[strModuleName][databaseResultSet->GetResultInt("moduleLine")] = 0;
@@ -51,10 +51,10 @@ void CDebuggerClient::LoadBreakpointCollection(const wxString& strModuleName)
 	db_query->CloseResultSet(databaseResultSet);
 }
 
-bool CDebuggerClient::ToggleBreakpointInDB(const wxString& strModuleName, unsigned int line)
+bool ibDebuggerClient::ToggleBreakpointInDB(const wxString& strModuleName, unsigned int line)
 {
 	bool successful = true;
-	IPreparedStatement* preparedStatement = nullptr;	
+	ibPreparedStatement* preparedStatement = nullptr;	
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 		preparedStatement = db_query->PrepareStatement("INSERT INTO %s(moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(line) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table);
 	else
@@ -67,10 +67,10 @@ bool CDebuggerClient::ToggleBreakpointInDB(const wxString& strModuleName, unsign
 	return successful;
 }
 
-bool CDebuggerClient::RemoveBreakpointInDB(const wxString& strModuleName, unsigned int line)
+bool ibDebuggerClient::RemoveBreakpointInDB(const wxString& strModuleName, unsigned int line)
 {
 	bool successful = true;
-	IPreparedStatement* preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i;", dbg_table, strModuleName, line);
+	ibPreparedStatement* preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '%s' AND moduleLine = %i;", dbg_table, strModuleName, line);
 	wxASSERT(preparedStatement);
 	if (preparedStatement->RunQuery() == DATABASE_LAYER_QUERY_RESULT_ERROR) {
 		wxASSERT_MSG(false, "error in RemoveBreakpointInDB"); successful = false;
@@ -82,10 +82,10 @@ bool CDebuggerClient::RemoveBreakpointInDB(const wxString& strModuleName, unsign
 	return successful;
 }
 
-bool CDebuggerClient::OffsetBreakpointInDB(const wxString& strModuleName, unsigned int lineFrom, int offset)
+bool ibDebuggerClient::OffsetBreakpointInDB(const wxString& strModuleName, unsigned int lineFrom, int offset)
 {
 	bool successful = true;
-	IPreparedStatement* preparedStatement = nullptr;
+	ibPreparedStatement* preparedStatement = nullptr;
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 		preparedStatement = db_query->PrepareStatement("DELETE FROM %s WHERE moduleName = '" + strModuleName + "' AND moduleLine = " + stringUtils::IntToStr(lineFrom) + ";"
 			"INSERT INTO %s(moduleName, moduleLine) VALUES('" + strModuleName + "', " + stringUtils::IntToStr(lineFrom + offset) + ") ON CONFLICT (moduleName, moduleLine) DO UPDATE SET moduleName = excluded.moduleName, moduleLine = excluded.moduleLine; ", dbg_table, dbg_table);
@@ -101,7 +101,7 @@ bool CDebuggerClient::OffsetBreakpointInDB(const wxString& strModuleName, unsign
 	return successful;
 }
 
-bool CDebuggerClient::RemoveAllBreakpointInDB()
+bool ibDebuggerClient::RemoveAllBreakpointInDB()
 {
 	db_query->RunQuery("DELETE FROM %s;", dbg_table);
 	return true;

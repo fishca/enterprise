@@ -1,6 +1,6 @@
 #include "variantNumber.h"
 
-wxString wxVariantDataNumber::MakeString() const
+wxString ibVariantDataNumber::MakeString() const
 {
 	return m_number.ToString();
 }

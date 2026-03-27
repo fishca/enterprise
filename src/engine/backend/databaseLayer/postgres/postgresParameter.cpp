@@ -2,91 +2,91 @@
 #include "backend/databaseLayer/databaseLayer.h"
 
 // ctor
-CPostgresParameter::CPostgresParameter() : m_nParameterType(CPostgresParameter::PARAM_NULL)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres() : m_nParameterType(ibDatabaseParameterPostgres::PARAM_NULL)
 {
 }
 
-CPostgresParameter::CPostgresParameter(const wxString& strValue) : m_nParameterType(CPostgresParameter::PARAM_STRING), m_strValue(strValue), m_nBufferLength(strValue.Length())
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(const wxString& strValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_STRING), m_strValue(strValue), m_nBufferLength(strValue.Length())
 {
 }
 
-CPostgresParameter::CPostgresParameter(int nValue) : m_nParameterType(CPostgresParameter::PARAM_INT)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(int nValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_INT)
 {
 	m_strValue = wxString::Format(wxT("%d"), nValue);
 }
 
-CPostgresParameter::CPostgresParameter(double dblValue) : m_nParameterType(CPostgresParameter::PARAM_DOUBLE)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(double dblValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_DOUBLE)
 {
 	m_strValue = wxString::Format(wxT("%f"), dblValue);
 }
 
-CPostgresParameter::CPostgresParameter(const number_t &dblValue) : m_nParameterType(CPostgresParameter::PARAM_NUMBER)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(const ibNumber &dblValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_NUMBER)
 {
 	m_strValue = dblValue.ToWString();
 }
 
-CPostgresParameter::CPostgresParameter(bool bValue) : m_nParameterType(CPostgresParameter::PARAM_BOOL)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(bool bValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_BOOL)
 {
 	m_strValue = wxString::Format(wxT("%d"), bValue);
 }
 
-CPostgresParameter::CPostgresParameter(const wxDateTime& dateValue) : m_nParameterType(CPostgresParameter::PARAM_DATETIME)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(const wxDateTime& dateValue) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_DATETIME)
 {
 	m_strDateValue = dateValue.Format(wxT("%Y-%m-%d %H:%M:%S"));
 	m_nBufferLength = m_strDateValue.Length();
 }
 
-CPostgresParameter::CPostgresParameter(const void* pData, long nDataLength) : m_nParameterType(CPostgresParameter::PARAM_BLOB)
+ibDatabaseParameterPostgres::ibDatabaseParameterPostgres(const void* pData, long nDataLength) : m_nParameterType(ibDatabaseParameterPostgres::PARAM_BLOB)
 {
 	void* pBuffer = m_BufferValue.GetWriteBuf(nDataLength);
 	memcpy(pBuffer, pData, nDataLength);
 	m_nBufferLength = nDataLength;
 }
 
-long CPostgresParameter::GetDataLength()
+long ibDatabaseParameterPostgres::GetDataLength()
 {
 	return m_nBufferLength;
 }
 
-long* CPostgresParameter::GetDataLengthPointer()
+long* ibDatabaseParameterPostgres::GetDataLengthPointer()
 {
 	return &m_nBufferLength;
 }
 
-const void* CPostgresParameter::GetDataPtr()
+const void* ibDatabaseParameterPostgres::GetDataPtr()
 {
 	const void *pReturn = nullptr;
 
 	switch (m_nParameterType)
 	{
-	case CPostgresParameter::PARAM_STRING:
+	case ibDatabaseParameterPostgres::PARAM_STRING:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_INT:
+	case ibDatabaseParameterPostgres::PARAM_INT:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_DOUBLE:
+	case ibDatabaseParameterPostgres::PARAM_DOUBLE:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_NUMBER:
+	case ibDatabaseParameterPostgres::PARAM_NUMBER:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_DATETIME:
+	case ibDatabaseParameterPostgres::PARAM_DATETIME:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strDateValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_BOOL:
+	case ibDatabaseParameterPostgres::PARAM_BOOL:
 		m_CharBufferValue = ConvertToUnicodeStream(m_strValue);
 		pReturn = m_CharBufferValue;
 		break;
-	case CPostgresParameter::PARAM_BLOB:
+	case ibDatabaseParameterPostgres::PARAM_BLOB:
 		pReturn = m_BufferValue.GetData();
 		break;
-	case CPostgresParameter::PARAM_NULL:
+	case ibDatabaseParameterPostgres::PARAM_NULL:
 		pReturn = nullptr;
 		break;
 	default:
@@ -97,13 +97,13 @@ const void* CPostgresParameter::GetDataPtr()
 	return pReturn;
 }
 
-int CPostgresParameter::GetParameterType()
+int ibDatabaseParameterPostgres::GetParameterType()
 {
 	return m_nParameterType;
 }
 
-bool CPostgresParameter::IsBinary()
+bool ibDatabaseParameterPostgres::IsBinary()
 {
-	return (CPostgresParameter::PARAM_BLOB == m_nParameterType);
+	return (ibDatabaseParameterPostgres::PARAM_BLOB == m_nParameterType);
 }
 

@@ -4,7 +4,7 @@
 #include <wx/propgrid/propgrid.h>
 #include "backend/backend_type.h"
 
-class BACKEND_API IPropertyObject;
+class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
 // wxPGTypeProperty
@@ -14,12 +14,12 @@ class BACKEND_API wxPGTypeProperty : public wxPGProperty {
 	WX_PG_DECLARE_PROPERTY_CLASS(wxPGTypeProperty);
 private:
 	wxPGChoices GetDateTime();
-	void FillByClsid(const eSelectorDataType &selectorDataType, const class_identifier_t& clsid);
+	void FillByClsid(const ibSelectorDataType &selectorDataType, const ibClassID& clsid);
 public:
 
-	const IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
+	const ibPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGTypeProperty(const IPropertyObject* property = nullptr, const eSelectorDataType& selectorDataType = eSelectorDataType::eSelectorDataType_any, const wxString& label = wxPG_LABEL,
+	wxPGTypeProperty(const ibPropertyObject* property = nullptr, const ibSelectorDataType& selectorDataType = ibSelectorDataType::ibSelectorDataType_any, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
@@ -45,14 +45,14 @@ public:
 
 protected:
 
-	const IPropertyObject* m_ownerProperty = nullptr;
+	const ibPropertyObject* m_ownerProperty = nullptr;
 
 	wxUIntProperty* m_precision;
 	wxUIntProperty* m_scale;
 	wxEnumProperty* m_date_time;
 	wxUIntProperty* m_length;
 
-	std::map<int, class_identifier_t> m_valChoices;
+	std::map<int, ibClassID> m_valChoices;
 };
 
 #endif

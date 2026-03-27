@@ -9,7 +9,7 @@
 #define DEF_LINENUMBER_ID 0
 #define DEF_IMAGE_ID 1
 
-CDialogError::CDialogError(CFrontendDocMDIFrame* parent, wxWindowID id,
+ibDialogError::ibDialogError(ibFrontendDocMDIFrame* parent, wxWindowID id,
 	const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
@@ -61,12 +61,12 @@ CDialogError::CDialogError(CFrontendDocMDIFrame* parent, wxWindowID id,
 	wxDialog::Centre(wxBOTH);
 
 	// Connect Events
-	m_buttonCloseProgram->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseProgramClick), nullptr, this);
-	m_buttonGotoDesigner->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonGotoDesignerClick), nullptr, this);
-	m_buttonCloseWindow->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogError::OnButtonCloseWindowClick), nullptr, this);
+	m_buttonCloseProgram->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogError::OnButtonCloseProgramClick), nullptr, this);
+	m_buttonGotoDesigner->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogError::OnButtonGotoDesignerClick), nullptr, this);
+	m_buttonCloseWindow->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogError::OnButtonCloseWindowClick), nullptr, this);
 
-	CDialogError::SetEditorSettings(parent->GetEditorSettings());
-	CDialogError::SetFontColorSettings(parent->GetFontColorSettings());
+	ibDialogError::SetEditorSettings(parent->GetEditorSettings());
+	ibDialogError::SetFontColorSettings(parent->GetFontColorSettings());
 
 	/** Enumeration of commands and child windows. */
 	enum
@@ -88,13 +88,13 @@ CDialogError::CDialogError(CFrontendDocMDIFrame* parent, wxWindowID id,
 	m_errorOutput->SetAcceleratorTable(accel);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picErrorCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picErrorCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
 }
 
-void CDialogError::SetEditorSettings(const CEditorSettings& settings)
+void ibDialogError::SetEditorSettings(const CEditorSettings& settings)
 {
 	unsigned int m_bIndentationSize = settings.GetIndentSize();
 
@@ -122,7 +122,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-void CDialogError::SetFontColorSettings(const CFontColorSettings& settings)
+void ibDialogError::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -200,22 +200,22 @@ void CDialogError::SetFontColorSettings(const CFontColorSettings& settings)
 	m_errorOutput->SetCaretForeground(GetInverse(settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor));
 }
 
-void CDialogError::OnButtonCloseProgramClick(wxCommandEvent& event)
+void ibDialogError::OnButtonCloseProgramClick(wxCommandEvent& event)
 {
 	EndModal(3); Destroy(); event.Skip();
 }
 
-void CDialogError::OnButtonGotoDesignerClick(wxCommandEvent& event)
+void ibDialogError::OnButtonGotoDesignerClick(wxCommandEvent& event)
 {
 	EndModal(2); Destroy(); event.Skip();
 }
 
-void CDialogError::OnButtonCloseWindowClick(wxCommandEvent& event)
+void ibDialogError::OnButtonCloseWindowClick(wxCommandEvent& event)
 {
 	EndModal(1); Destroy(); event.Skip();
 }
 
-CDialogError::~CDialogError()
+ibDialogError::~ibDialogError()
 {
 	m_errorOutput->Destroy();
 

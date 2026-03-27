@@ -1,48 +1,48 @@
 #include "propertyNumber.h"
 #include "backend/propertyManager/property/variant/variantNumber.h"
 
-wxVariantData* CPropertyNumber::CreateVariantData(const number_t& val)
+wxVariantData* ibPropertyNumber::CreateVariantData(const ibNumber& val)
 {
-	return new wxVariantDataNumber(val);
+	return new ibVariantDataNumber(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-number_t& CPropertyNumber::GetValueAsNumber() const
+ibNumber& ibPropertyNumber::GetValueAsNumber() const
 {
-	return get_cell_variant<wxVariantDataNumber>()->GetNumber();
+	return get_cell_variant<ibVariantDataNumber>()->GetNumber();
 }
 
-void CPropertyNumber::SetValue(const number_t& val)
+void ibPropertyNumber::SetValue(const ibNumber& val)
 {
 	m_propValue = CreateVariantData(val);
 }
 
 //base property for "number"
-bool CPropertyNumber::SetDataValue(const CValue& varPropVal)
+bool ibPropertyNumber::SetDataValue(const ibValue& varPropVal)
 {
 	SetValue(varPropVal.GetNumber());
 	return true;
 }
 
-bool CPropertyNumber::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyNumber::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CPropertyNumber::GetValueAsNumber();
+	pvarPropVal = ibPropertyNumber::GetValueAsNumber();
 	return true;
 }
 
-bool CPropertyNumber::LoadData(CMemoryReader& reader)
+bool ibPropertyNumber::LoadData(ibReaderMemory& reader)
 {
-	number_t& value = GetValueAsNumber();
+	ibNumber& value = GetValueAsNumber();
 	reader.r(&value.exponent, sizeof(value.exponent));
 	reader.r(&value.mantissa, sizeof(value.mantissa));
 	reader.r(&value.info, sizeof(value.info));
 	return true;
 }
 
-bool CPropertyNumber::SaveData(CMemoryWriter& writer)
+bool ibPropertyNumber::SaveData(ibWriterMemory& writer)
 {
-	const number_t& value = GetValueAsNumber();
+	const ibNumber& value = GetValueAsNumber();
 	writer.w(&value.exponent, sizeof(value.exponent));
 	writer.w(&value.mantissa, sizeof(value.mantissa));
 	writer.w(&value.info, sizeof(value.info));

@@ -14,8 +14,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API CValueMetaObjectConfiguration : public IValueMetaObject {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectConfiguration);
+class BACKEND_API ibValueMetaObjectConfiguration : public ibValueMetaObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectConfiguration);
 
 	enum
 	{
@@ -25,15 +25,15 @@ class BACKEND_API CValueMetaObjectConfiguration : public IValueMetaObject {
 public:
 
 #pragma region access
-	bool AccessRight_Administration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
-	bool AccessRight_DataAdministration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleDataAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
-	bool AccessRight_UpdateDatabaseConfiguration(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleUpdateDatabaseConfiguration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
-	bool AccessRight_ActiveUsers(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleActiveUsers, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
-	bool AccessRight_ExclusiveMode(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleExclusiveMode, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
-	bool AccessRight_ModeAllFunction(const CUserRoleInfo& roleInfo = CUserRoleInfo()) const { return AccessRight(m_roleModeAllFunction, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_Administration(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_DataAdministration(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleDataAdministration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_UpdateDatabaseConfiguration(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleUpdateDatabaseConfiguration, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ActiveUsers(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleActiveUsers, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ExclusiveMode(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleExclusiveMode, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
+	bool AccessRight_ModeAllFunction(const ibRoleUserInfo& roleInfo = ibRoleUserInfo()) const { return AccessRight(m_roleModeAllFunction, roleInfo.IsSetRole() ? roleInfo : GetUserRoleInfo()); }
 #pragma endregion
 
-	virtual bool FilterChild(const class_identifier_t& clsid) const {
+	virtual bool FilterChild(const ibClassID& clsid) const {
 
 		if (
 			clsid == g_metaCommonModuleCLSID ||
@@ -57,11 +57,11 @@ public:
 		return false;
 	}
 
-	void SetVersion(const version_identifier_t& version) { m_propertyVersion->SetValue(static_cast<eProgramVersion>(version)); }
-	version_identifier_t GetVersion() const { return m_propertyVersion->GetValueAsInteger(); }
+	void SetVersion(const ibVersionID& version) { m_propertyVersion->SetValue(static_cast<ibProgramVersion>(version)); }
+	ibVersionID GetVersion() const { return m_propertyVersion->GetValueAsInteger(); }
 
-	void SetLanguage(const meta_identifier_t& id) { m_propertyDefLanguage->SetValue(id); }
-	meta_identifier_t GetLanguage() const { return m_propertyDefLanguage->GetValueAsInteger(); }
+	void SetLanguage(const ibMetaID& id) { m_propertyDefLanguage->SetValue(id); }
+	ibMetaID GetLanguage() const { return m_propertyDefLanguage->GetValueAsInteger(); }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,8 +69,8 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	CValueMetaObjectConfiguration();
-	virtual ~CValueMetaObjectConfiguration();
+	ibValueMetaObjectConfiguration();
+	virtual ~ibValueMetaObjectConfiguration();
 
 	virtual wxString GetFullName() const { return configurationDefaultName; }
 	virtual wxString GetModuleName() const { return configurationDefaultName; }
@@ -80,8 +80,8 @@ public:
 	static wxIcon GetIconGroup();
 
 	//events
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(IMetaData* metaData);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(ibMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -92,7 +92,7 @@ public:
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -103,18 +103,18 @@ public:
 
 public:
 
-	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleConfiguration->GetMetaObject(); }
+	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModuleConfiguration->GetMetaObject(); }
 
 protected:
 
 	//load & save metaData from DB 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 
-	bool FillRoleList(CPropertyList* prop) {
-		std::vector<IValueMetaObject*> array;
+	bool FillRoleList(ibPropertyList* prop) {
+		std::vector<ibValueMetaObject*> array;
 		if (FillArrayObjectByFilter(array, { g_metaRoleCLSID })) {
 			for (const auto child : array) {
 				prop->AppendItem(
@@ -128,8 +128,8 @@ private:
 		return false;
 	}
 
-	bool FillLanguageList(CPropertyList* prop) {
-		std::vector<IValueMetaObject*> array;
+	bool FillLanguageList(ibPropertyList* prop) {
+		std::vector<ibValueMetaObject*> array;
 		if (FillArrayObjectByFilter(array, { g_metaLanguageCLSID })) {
 			for (const auto child : array) {
 				prop->AppendItem(
@@ -143,22 +143,22 @@ private:
 		return false;
 	}
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModuleConfiguration = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("ConfigurationModule"), _("Configuration module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModuleConfiguration = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("ConfigurationModule"), _("Configuration module"));
 
-	CPropertyCategory* m_propertyPresetValues = IPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
-	CPropertyList* m_propertyDefRole = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("DefaultRole"), _("Default role"), _("Default configuration role"), &CValueMetaObjectConfiguration::FillRoleList);
-	CPropertyList* m_propertyDefLanguage = IPropertyObject::CreateProperty<CPropertyList>(m_propertyPresetValues, wxT("DefaultLanguage"), _("Default language"), _("Default configuration language"), &CValueMetaObjectConfiguration::FillLanguageList);
+	ibPropertyCategory* m_propertyPresetValues = ibPropertyObject::CreatePropertyCategory(wxT("PresetValues"), _("Preset values"));
+	ibPropertyList* m_propertyDefRole = ibPropertyObject::CreateProperty<ibPropertyList>(m_propertyPresetValues, wxT("DefaultRole"), _("Default role"), _("Default configuration role"), &ibValueMetaObjectConfiguration::FillRoleList);
+	ibPropertyList* m_propertyDefLanguage = ibPropertyObject::CreateProperty<ibPropertyList>(m_propertyPresetValues, wxT("DefaultLanguage"), _("Default language"), _("Default configuration language"), &ibValueMetaObjectConfiguration::FillLanguageList);
 
-	CPropertyCategory* m_compatibilityCategory = IPropertyObject::CreatePropertyCategory(wxT("Compatibility"), _("Compatibility"));
-	CPropertyEnum<CValueEnumVersion>* m_propertyVersion = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumVersion>>(m_compatibilityCategory, wxT("Version"), _("Version"), version_oes_last);
+	ibPropertyCategory* m_compatibilityCategory = ibPropertyObject::CreatePropertyCategory(wxT("Compatibility"), _("Compatibility"));
+	ibPropertyEnum<ibValueEnumVersion>* m_propertyVersion = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumVersion>>(m_compatibilityCategory, wxT("Version"), _("Version"), version_oes_last);
 
 #pragma region role 
-	CRole* m_roleAdministration = IValueMetaObject::CreateRole(wxT("Administration"), _("Administration"));
-	CRole* m_roleDataAdministration = IValueMetaObject::CreateRole(wxT("DataAdministration"), _("Data administration"));
-	CRole* m_roleUpdateDatabaseConfiguration = IValueMetaObject::CreateRole(wxT("UpdateDatabaseConfiguration"), _("Update database configuration"));
-	CRole* m_roleActiveUsers = IValueMetaObject::CreateRole(wxT("ActiveUsers"), _("Active users"));
-	CRole* m_roleExclusiveMode = IValueMetaObject::CreateRole(wxT("ExclusiveMode"), _("Exclusive mode"));
-	CRole* m_roleModeAllFunction = IValueMetaObject::CreateRole(wxT("ModeAllFunctions"), _("Mode \"All functions\""));
+	ibRole* m_roleAdministration = ibValueMetaObject::CreateRole(wxT("Administration"), _("Administration"));
+	ibRole* m_roleDataAdministration = ibValueMetaObject::CreateRole(wxT("DataAdministration"), _("Data administration"));
+	ibRole* m_roleUpdateDatabaseConfiguration = ibValueMetaObject::CreateRole(wxT("UpdateDatabaseConfiguration"), _("Update database configuration"));
+	ibRole* m_roleActiveUsers = ibValueMetaObject::CreateRole(wxT("ActiveUsers"), _("Active users"));
+	ibRole* m_roleExclusiveMode = ibValueMetaObject::CreateRole(wxT("ExclusiveMode"), _("Exclusive mode"));
+	ibRole* m_roleModeAllFunction = ibValueMetaObject::CreateRole(wxT("ModeAllFunctions"), _("Mode \"All functions\""));
 #pragma endregion
 };
 

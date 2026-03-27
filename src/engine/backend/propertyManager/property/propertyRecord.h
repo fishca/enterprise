@@ -5,17 +5,17 @@
 #include "backend/propertyManager/property/advprop/advpropRecord.h"
 
 //base property for "record"
-class BACKEND_API CPropertyRecord : public IProperty {
-	wxVariantData* CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc = CMetaDescription()) const;
+class BACKEND_API ibPropertyRecord : public ibProperty {
+	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc = ibMetaDescription()) const;
 public:
 
-	CMetaDescription& GetValueAsMetaDesc() const;
-	CMetaDescription& GetValueAsMetaDesc(const wxVariant& val) const;
-	void SetValue(const CMetaDescription& val);
+	ibMetaDescription& GetValueAsMetaDesc() const;
+	ibMetaDescription& GetValueAsMetaDesc(const wxVariant& val) const;
+	void SetValue(const ibMetaDescription& val);
 
-	CPropertyRecord(CPropertyCategory* cat, const wxString& name) : IProperty(cat, name, CreateVariantData(cat->GetPropertyObject())) {}
-	CPropertyRecord(CPropertyCategory* cat, const wxString& name, const wxString& label) : IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject())) {}
-	CPropertyRecord(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString) : IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject())) {}
+	ibPropertyRecord(ibPropertyCategory* cat, const wxString& name) : ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject())) {}
+	ibPropertyRecord(ibPropertyCategory* cat, const wxString& name, const wxString& label) : ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject())) {}
+	ibPropertyRecord(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString) : ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject())) {}
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
@@ -23,12 +23,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

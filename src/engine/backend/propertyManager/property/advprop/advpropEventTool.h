@@ -4,7 +4,7 @@
 #include <wx/propgrid/propgrid.h>
 #include "backend/backend_core.h"
 
-class BACKEND_API IPropertyObject;
+class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
 // wxEventToolProperty

@@ -33,12 +33,12 @@ static char* s_slider_xpm[] = {
 	"                "
 };
 
-wxIcon CValueSlider::GetIcon() const
+wxIcon ibValueSlider::GetIcon() const
 {
 	return wxIcon(s_slider_xpm);
 }
 
-wxIcon CValueSlider::GetIconGroup()
+wxIcon ibValueSlider::GetIconGroup()
 {
 	return wxIcon(s_slider_xpm);
 }

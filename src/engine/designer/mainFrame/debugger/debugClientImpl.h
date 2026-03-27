@@ -3,26 +3,26 @@
 
 #include "backend/debugger/debugClientBridge.h"
 
-class CDebuggerClientBridge : public IDebuggerClientBridge {
+class ibDebuggerClientBridgeDesigner : public ibDebuggerClientBridge {
 public:
 
 	//commands 
 	virtual void OnSessionStart(wxSocketClient* sock);
 	virtual void OnSessionEnd(wxSocketClient* sock);
 
-	virtual void OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data);
-	virtual void OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data);
+	virtual void OnEnterLoop(wxSocketClient* sock, const ibDebugLineData& data);
+	virtual void OnLeaveLoop(wxSocketClient* sock, const ibDebugLineData& data);
 
-	virtual void OnAutoComplete(const CDebugAutoCompleteData& data);
-	virtual void OnMessageFromServer(const CDebugLineData& data, const wxString& message);
-	virtual void OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr);
+	virtual void OnAutoComplete(const ibDebugAutoCompleteData& data);
+	virtual void OnMessageFromServer(const ibDebugLineData& data, const wxString& message);
+	virtual void OnSetToolTip(const ibDebugExpressionData& data, const wxString& resultStr);
 
-	virtual void OnSetStack(const CStackData& stackData);
+	virtual void OnSetStack(const ibStackData& stackData);
 
-	virtual void OnSetLocalVariable(const CLocalWindowData& data);
+	virtual void OnSetLocalVariable(const ibLocalWindowData& data);
 
-	virtual void OnSetVariable(const CWatchWindowData& watchData);
-	virtual void OnSetExpanded(const CWatchWindowData& watchData);
+	virtual void OnSetVariable(const ibWatchWindowData& watchData);
+	virtual void OnSetExpanded(const ibWatchWindowData& watchData);
 };
 
 #endif

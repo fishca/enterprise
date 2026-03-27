@@ -27,12 +27,12 @@ static char* s_gridSizer_xpm[] = {
 	"                "
 };
 
-wxIcon CValueGridSizer::GetIcon() const
+wxIcon ibValueGridSizer::GetIcon() const
 {
 	return wxIcon(s_gridSizer_xpm);
 }
 
-wxIcon CValueGridSizer::GetIconGroup()
+wxIcon ibValueGridSizer::GetIconGroup()
 {
 	return wxIcon(s_gridSizer_xpm);
 }

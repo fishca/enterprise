@@ -6,21 +6,21 @@
 #include "valueSize.h"
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueSize, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueSize, ibValue);
 
-CValue::CMethodHelper CValueSize::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueSize::m_methodHelper;
 
-CValueSize::CValueSize() : CValue(eValueTypes::TYPE_VALUE), m_size(wxDefaultSize)
+ibValueSize::ibValueSize() : ibValue(ibValueTypes::TYPE_VALUE), m_size(wxDefaultSize)
 {
 }
 
-CValueSize::CValueSize(const wxSize& size) : CValue(eValueTypes::TYPE_VALUE), m_size(size)
+ibValueSize::ibValueSize(const wxSize& size) : ibValue(ibValueTypes::TYPE_VALUE), m_size(size)
 {
 }
 
-bool CValueSize::Init(CValue** paParams, const long lSizeArray)
+bool ibValueSize::Init(ibValue** paParams, const long lSizeArray)
 {
-	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray == 1 && paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
 		m_size = typeConv::StringToSize(paParams[0]->GetString());
 		return true;
 	}
@@ -37,7 +37,7 @@ enum
 	eY
 };
 
-void CValueSize::PrepareNames() const
+void ibValueSize::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -45,7 +45,7 @@ void CValueSize::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("Y"));
 }
 
-bool CValueSize::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueSize::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
@@ -59,7 +59,7 @@ bool CValueSize::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	return false;
 }
 
-bool CValueSize::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueSize::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -77,4 +77,4 @@ bool CValueSize::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueSize, "Size", string_to_clsid("VL_SIZE"));
+VALUE_TYPE_REGISTER(ibValueSize, "Size", string_to_clsid("VL_SIZE"));

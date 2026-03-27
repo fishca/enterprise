@@ -6,27 +6,27 @@
 
 #pragma region __notifier_h__
 
-void CBackendSpreadsheetObject::ClearSpreadsheet(int count)
+void ibBackendSpreadsheetObject::ClearSpreadsheet(int count)
 {
 	spreadsheetNotify->ClearSpreadsheet();
 	m_spreadsheetDesc.ClearSpreadsheet(count);
 }
 
-void CBackendSpreadsheetObject::EnableEditing(bool edit)
+void ibBackendSpreadsheetObject::EnableEditing(bool edit)
 {
 	spreadsheetNotify->EnableEditing(edit);
 	m_editable = edit;
 }
 
 //area 
-CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowRight, int colTop, int colBottom)
+ibSpreadsheetDescription ibBackendSpreadsheetObject::GetArea(int rowLeft, int rowRight, int colTop, int colBottom)
 {
-	CSpreadsheetDescription spreadsheetDesc;
+	ibSpreadsheetDescription spreadsheetDesc;
 
 	if (rowLeft >= 0 && colTop >= 0 && rowRight > 0 && colBottom > 0) {
 		for (int row = rowLeft; row < rowRight; row++) {
 			for (int col = colTop; col < colBottom; col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -45,7 +45,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	{
 		for (int row = rowLeft; row < rowRight; row++) {
 			for (int col = 0; col < GetMaxColBrake(); col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -63,7 +63,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	else if (rowLeft < 0 && colTop >= 0 && rowRight < 0 && colBottom > 0) {
 		for (int row = 0; row < GetMaxRowBrake(); row++) {
 			for (int col = colTop; col < colBottom; col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - rowLeft, col - colTop);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -82,17 +82,17 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetArea(int rowLeft, int rowR
 	return spreadsheetDesc;
 }
 
-CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName)
+ibSpreadsheetDescription ibBackendSpreadsheetObject::GetAreaByName(const wxString& strAreaLeftName, const wxString& strAreaTopName)
 {
-	const CSpreadsheetAreaDescription* r = m_spreadsheetDesc.GetRowAreaByName(strAreaLeftName);
-	const CSpreadsheetAreaDescription* c = m_spreadsheetDesc.GetColAreaByName(strAreaTopName);
+	const ibSpreadsheetAreaDescription* r = m_spreadsheetDesc.GetRowAreaByName(strAreaLeftName);
+	const ibSpreadsheetAreaDescription* c = m_spreadsheetDesc.GetColAreaByName(strAreaTopName);
 
-	CSpreadsheetDescription spreadsheetDesc;
+	ibSpreadsheetDescription spreadsheetDesc;
 
 	if (r != nullptr && c != nullptr) {
 		for (int row = r->m_start; row <= (int)r->m_end; row++) {
 			for (int col = c->m_start; col <= (int)c->m_end; col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col - c->m_start);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -110,7 +110,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	else if (r != nullptr) {
 		for (int row = r->m_start; row <= (int)r->m_end; row++) {
 			for (int col = 0; col <= GetMaxColBrake(); col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row - r->m_start, col);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -128,7 +128,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	else if (c != nullptr) {
 		for (int row = 0; row <= GetMaxRowBrake(); row++) {
 			for (int col = c->m_start; col <= (int)c->m_end; col++) {
-				CSpreadsheetCellDescription* cell =
+				ibSpreadsheetCellDescription* cell =
 					spreadsheetDesc.GetOrCreateCell(row, col - c->m_start);
 				cell->SetCell(m_spreadsheetDesc.GetCell(row, col));
 			}
@@ -147,7 +147,7 @@ CSpreadsheetDescription CBackendSpreadsheetObject::GetAreaByName(const wxString&
 	return spreadsheetDesc;
 }
 
-void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
+void ibBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	const int maxRowBrake = GetNumberRows();
 	const int maxColBrake = GetNumberCols();
@@ -157,14 +157,14 @@ void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadshee
 	for (int row = 0; row < doc->GetNumberRows(); row++) {
 		for (int col = 0; col < doc->GetNumberCols(); col++) {
 
-			CSpreadsheetCellDescription* cell =
+			ibSpreadsheetCellDescription* cell =
 				m_spreadsheetDesc.GetOrCreateCell(maxRowBrake + row, col);
 
 			cell->SetCell(doc->GetSpreadsheetDesc().GetCell(row, col));
 
-			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate || cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+			if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate || cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
 				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
-				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+				cell->m_fillSetType = ibSpreadsheetFillType::ibSpreadsheetFillType_StrText;
 			}
 
 			const wxString& detailsParameter =
@@ -193,7 +193,7 @@ void CBackendSpreadsheetObject::PutArea(const wxObjectDataPtr<CBackendSpreadshee
 		SetColBrake(maxColBrake + doc->GetNumberCols() - 1);
 }
 
-void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc)
+void ibBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	const int maxRowBrake = GetNumberRows();
 	const int maxColBrake = GetNumberCols();
@@ -203,14 +203,14 @@ void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadshe
 	for (int col = 0; col < doc->GetNumberCols(); col++) {
 		for (int row = 0; row < doc->GetNumberRows(); row++) {
 
-			CSpreadsheetCellDescription* cell =
+			ibSpreadsheetCellDescription* cell =
 				m_spreadsheetDesc.GetOrCreateCell(row, maxColBrake + col);
 
 			cell->SetCell(doc->GetSpreadsheetDesc().GetCell(row, col));
 
-			if (cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate || cell->m_fillSetType == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+			if (cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate || cell->m_fillSetType == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
 				cell->m_value = doc->ComputeStringValueFromParameters(cell->m_value, cell->m_fillSetType);
-				cell->m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+				cell->m_fillSetType = ibSpreadsheetFillType::ibSpreadsheetFillType_StrText;
 			}
 
 			const wxString& detailsParameter =
@@ -240,26 +240,26 @@ void CBackendSpreadsheetObject::JoinArea(const wxObjectDataPtr<CBackendSpreadshe
 }
 
 //size 
-void CBackendSpreadsheetObject::SetRowSize(int row, int height)
+void ibBackendSpreadsheetObject::SetRowSize(int row, int height)
 {
 	spreadsheetNotify->SetRowSize(row, height);
 	m_spreadsheetDesc.SetRowSize(row, height);
 }
 
-void CBackendSpreadsheetObject::SetColSize(int col, int width)
+void ibBackendSpreadsheetObject::SetColSize(int col, int width)
 {
 	spreadsheetNotify->SetColSize(col, width);
 	m_spreadsheetDesc.SetColSize(col, width);
 }
 
 //freeze 
-void CBackendSpreadsheetObject::SetRowFreeze(int row)
+void ibBackendSpreadsheetObject::SetRowFreeze(int row)
 {
 	spreadsheetNotify->SetRowFreeze(row);
 	m_spreadsheetDesc.SetRowFreeze(row);
 }
 
-void CBackendSpreadsheetObject::SetColFreeze(int col)
+void ibBackendSpreadsheetObject::SetColFreeze(int col)
 {
 	spreadsheetNotify->SetColFreeze(col);
 	m_spreadsheetDesc.SetColFreeze(col);
@@ -268,73 +268,73 @@ void CBackendSpreadsheetObject::SetColFreeze(int col)
 // ------ row and col formatting
 //
 
-void CBackendSpreadsheetObject::SetCellBackgroundColour(int row, int col, const wxColour& colour)
+void ibBackendSpreadsheetObject::SetCellBackgroundColour(int row, int col, const wxColour& colour)
 {
 	spreadsheetNotify->SetCellBackgroundColour(row, col, colour);
 	m_spreadsheetDesc.SetCellBackgroundColour(row, col, colour);
 }
 
-void CBackendSpreadsheetObject::SetCellTextColour(int row, int col, const wxColour& colour)
+void ibBackendSpreadsheetObject::SetCellTextColour(int row, int col, const wxColour& colour)
 {
 	spreadsheetNotify->SetCellTextColour(row, col, colour);
 	m_spreadsheetDesc.SetCellTextColour(row, col, colour);
 }
 
-void CBackendSpreadsheetObject::SetCellTextOrient(int row, int col, const int orient)
+void ibBackendSpreadsheetObject::SetCellTextOrient(int row, int col, const int orient)
 {
 	spreadsheetNotify->SetCellTextOrient(row, col, orient);
 	m_spreadsheetDesc.SetCellTextOrient(row, col, orient);
 }
 
-void CBackendSpreadsheetObject::SetCellFont(int row, int col, const wxFont& font)
+void ibBackendSpreadsheetObject::SetCellFont(int row, int col, const wxFont& font)
 {
 	spreadsheetNotify->SetCellFont(row, col, font);
 	m_spreadsheetDesc.SetCellFont(row, col, font);
 }
 
-void CBackendSpreadsheetObject::SetCellAlignment(int row, int col, const int horiz, const int vert)
+void ibBackendSpreadsheetObject::SetCellAlignment(int row, int col, const int horiz, const int vert)
 {
 	spreadsheetNotify->SetCellAlignment(row, col, horiz, vert);
 	m_spreadsheetDesc.SetCellAlignment(row, col, horiz, vert);
 }
 
-void CBackendSpreadsheetObject::SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc)
+void ibBackendSpreadsheetObject::SetCellBorderLeft(int row, int col, const ibSpreadsheetBorderDescription& desc)
 {
 	spreadsheetNotify->SetCellBorderLeft(row, col, desc);
 	m_spreadsheetDesc.SetCellBorderLeft(row, col, desc);
 }
 
-void CBackendSpreadsheetObject::SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc)
+void ibBackendSpreadsheetObject::SetCellBorderRight(int row, int col, const ibSpreadsheetBorderDescription& desc)
 {
 	spreadsheetNotify->SetCellBorderRight(row, col, desc);
 	m_spreadsheetDesc.SetCellBorderRight(row, col, desc);
 }
 
-void CBackendSpreadsheetObject::SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc)
+void ibBackendSpreadsheetObject::SetCellBorderTop(int row, int col, const ibSpreadsheetBorderDescription& desc)
 {
 	spreadsheetNotify->SetCellBorderTop(row, col, desc);
 	m_spreadsheetDesc.SetCellBorderTop(row, col, desc);
 }
 
-void CBackendSpreadsheetObject::SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc)
+void ibBackendSpreadsheetObject::SetCellBorderBottom(int row, int col, const ibSpreadsheetBorderDescription& desc)
 {
 	spreadsheetNotify->SetCellBorderBottom(row, col, desc);
 	m_spreadsheetDesc.SetCellBorderBottom(row, col, desc);
 }
 
-void CBackendSpreadsheetObject::SetCellSize(int row, int col, int num_rows, int num_cols)
+void ibBackendSpreadsheetObject::SetCellSize(int row, int col, int num_rows, int num_cols)
 {
 	spreadsheetNotify->SetCellSize(row, col, num_rows, num_cols);
 	m_spreadsheetDesc.SetCellSize(row, col, num_rows, num_cols);
 }
 
-void CBackendSpreadsheetObject::SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode)
+void ibBackendSpreadsheetObject::SetCellFitMode(int row, int col, ibSpreadsheetCellDescription::ibFitMode fitMode)
 {
 	spreadsheetNotify->SetCellFitMode(row, col, fitMode);
 	m_spreadsheetDesc.SetCellFitMode(row, col, fitMode);
 }
 
-void CBackendSpreadsheetObject::SetCellReadOnly(int row, int col, bool isReadOnly)
+void ibBackendSpreadsheetObject::SetCellReadOnly(int row, int col, bool isReadOnly)
 {
 	spreadsheetNotify->SetCellReadOnly(row, col, isReadOnly);
 	m_spreadsheetDesc.SetCellReadOnly(row, col, isReadOnly);
@@ -343,37 +343,37 @@ void CBackendSpreadsheetObject::SetCellReadOnly(int row, int col, bool isReadOnl
 // ------ cell brake accessors
 //
 //support printing 
-void CBackendSpreadsheetObject::AddRowBrake(int row)
+void ibBackendSpreadsheetObject::AddRowBrake(int row)
 {
 	spreadsheetNotify->AddRowBrake(row);
 	m_spreadsheetDesc.AddRowBrake(row);
 }
 
-void CBackendSpreadsheetObject::AddColBrake(int col)
+void ibBackendSpreadsheetObject::AddColBrake(int col)
 {
 	spreadsheetNotify->AddColBrake(col);
 	m_spreadsheetDesc.AddColBrake(col);
 }
 
-void CBackendSpreadsheetObject::DeleteRowBrake(int row)
+void ibBackendSpreadsheetObject::DeleteRowBrake(int row)
 {
 	spreadsheetNotify->DeleteRowBrake(row);
 	m_spreadsheetDesc.DeleteRowBrake(row);
 }
 
-void CBackendSpreadsheetObject::DeleteColBrake(int col)
+void ibBackendSpreadsheetObject::DeleteColBrake(int col)
 {
 	spreadsheetNotify->DeleteColBrake(col);
 	m_spreadsheetDesc.DeleteColBrake(col);
 }
 
-void CBackendSpreadsheetObject::SetRowBrake(int row)
+void ibBackendSpreadsheetObject::SetRowBrake(int row)
 {
 	spreadsheetNotify->SetRowBrake(row);
 	m_spreadsheetDesc.SetRowBrake(row);
 }
 
-void CBackendSpreadsheetObject::SetColBrake(int col)
+void ibBackendSpreadsheetObject::SetColBrake(int col)
 {
 	spreadsheetNotify->SetColBrake(col);
 	m_spreadsheetDesc.SetColBrake(col);
@@ -382,18 +382,18 @@ void CBackendSpreadsheetObject::SetColBrake(int col)
 // ------ cell value accessors
 //
 
-void CBackendSpreadsheetObject::SetCellFillType(int row, int col, enSpreadsheetFillType type)
+void ibBackendSpreadsheetObject::SetCellFillType(int row, int col, ibSpreadsheetFillType type)
 {
 	m_spreadsheetDesc.SetCellFillType(row, col, type);
 }
 
-void CBackendSpreadsheetObject::SetCellValue(int row, int col, const wxString& s)
+void ibBackendSpreadsheetObject::SetCellValue(int row, int col, const wxString& s)
 {
 	spreadsheetNotify->SetCellValue(row, col, s);
 	m_spreadsheetDesc.SetCellValue(row, col, s);
 }
 
-bool CBackendSpreadsheetObject::GetParameter(const wxString& strParameter, CValue& valueParam) const
+bool ibBackendSpreadsheetObject::GetParameter(const wxString& strParameter, ibValue& valueParam) const
 {
 	auto iterator = std::find_if(m_paramVector.begin(), m_paramVector.end(),
 		[strParameter](const auto& pair) { return stringUtils::CompareString(strParameter, pair.first); });
@@ -405,21 +405,21 @@ bool CBackendSpreadsheetObject::GetParameter(const wxString& strParameter, CValu
 	return true;
 }
 
-void CBackendSpreadsheetObject::SetParameter(const wxString& strParameter, const CValue& valueParam)
+void ibBackendSpreadsheetObject::SetParameter(const wxString& strParameter, const ibValue& valueParam)
 {
 	m_paramVector.insert_or_assign(strParameter, valueParam);
 }
 
 #include "backend_localization.h"
 
-wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxString& strValue, enSpreadsheetFillType type) const
+wxString ibBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxString& strValue, ibSpreadsheetFillType type) const
 {
-	if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrTemplate) {
+	if (type == ibSpreadsheetFillType::ibSpreadsheetFillType_StrTemplate) {
 
 		if (!strValue.IsEmpty()) {
 
 			wxString strTemplateValue;
-			CBackendLocalization::GetTranslateGetRawLocText(m_docLangCode, strValue, strTemplateValue);
+			ibBackendLocalization::GetTranslateGetRawLocText(m_docLangCode, strValue, strTemplateValue);
 
 			size_t start_pos = 0, end_pos = 0;
 
@@ -438,7 +438,7 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 						strTemplateValue.substr(start_pos + 1, end_pos - start_pos - 1);
 					if (!token.empty()) {
 
-						static CValue cVal;
+						static ibValue cVal;
 						if (GetParameter(token, cVal))
 							strTemplateValue.replace(start_pos, end_pos - start_pos + 1, cVal.GetString());
 						else
@@ -460,14 +460,14 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 				start_pos = strTemplateValue.find_first_of(wxT("[]"), start_pos);
 			}
 
-			return CBackendLocalization::CreateLocalizationRawLocText(strTemplateValue);
+			return ibBackendLocalization::CreateLocalizationRawLocText(strTemplateValue);
 		}
 	}
-	else if (type == enSpreadsheetFillType::enSpreadsheetFillType_StrParameter) {
+	else if (type == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter) {
 
-		static CValue cVal;
+		static ibValue cVal;
 		if (!strValue.IsEmpty() && GetParameter(strValue, cVal))
-			return CBackendLocalization::CreateLocalizationRawLocText(cVal.GetString());
+			return ibBackendLocalization::CreateLocalizationRawLocText(cVal.GetString());
 
 		return wxT("");
 	}
@@ -477,21 +477,21 @@ wxString CBackendSpreadsheetObject::ComputeStringValueFromParameters(const wxStr
 
 #pragma endregion 
 
-void CBackendSpreadsheetObject::SetCellDetailsParameter(int row, int col, const wxString& s)
+void ibBackendSpreadsheetObject::SetCellDetailsParameter(int row, int col, const wxString& s)
 {
 	//spreadsheetNotify->SetCellValue(row, col, s);
 	m_spreadsheetDesc.SetCellDetailsParameter(row, col, s);
 }
 
-bool CBackendSpreadsheetObject::OpenCellDetailsParameter(int row, int col) const
+bool ibBackendSpreadsheetObject::OpenCellDetailsParameter(int row, int col) const
 {
-	const CSpreadsheetCellDescription* cellDesc = m_spreadsheetDesc.GetCell(row, col);
+	const ibSpreadsheetCellDescription* cellDesc = m_spreadsheetDesc.GetCell(row, col);
 	if (cellDesc == nullptr)
 		return false;
 
 	const wxString& detailsParameter = cellDesc->m_detailsParameter;
 
-	CValue valueParam;
+	ibValue valueParam;
 	if (!detailsParameter.IsEmpty() && GetParameter(detailsParameter, valueParam)) {
 		valueParam.ShowValue();
 		return true;
@@ -504,7 +504,7 @@ bool CBackendSpreadsheetObject::OpenCellDetailsParameter(int row, int col) const
 
 #include <fstream>
 
-bool CBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)
+bool ibBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)
 {
 	std::ifstream in(strFileName.ToStdWstring(), std::ios::in | std::ios::binary);
 
@@ -521,22 +521,22 @@ bool CBackendSpreadsheetObject::LoadFromFile(const wxString& strFileName)
 	wxMemoryBuffer tempBuffer(fsize);
 	in.read((char*)tempBuffer.GetWriteBuf(fsize), fsize);
 
-	CMemoryReader readerData(tempBuffer.GetData(), tempBuffer.GetBufSize());
+	ibReaderMemory readerData(tempBuffer.GetData(), tempBuffer.GetBufSize());
 
 	if (readerData.eof())
 		return false;
 
 	in.close();
 
-	return CSpreadsheetDescriptionMemory::LoadData(readerData, m_spreadsheetDesc);
+	return ibSpreadsheetDescriptionMemory::LoadData(readerData, m_spreadsheetDesc);
 }
 
-bool CBackendSpreadsheetObject::SaveToFile(const wxString& strFileName)
+bool ibBackendSpreadsheetObject::SaveToFile(const wxString& strFileName)
 {
 	//common data
-	CMemoryWriter writerData;
+	ibWriterMemory writerData;
 
-	if (!CSpreadsheetDescriptionMemory::SaveData(writerData, m_spreadsheetDesc))
+	if (!ibSpreadsheetDescriptionMemory::SaveData(writerData, m_spreadsheetDesc))
 		return false;
 
 	std::ofstream datafile;

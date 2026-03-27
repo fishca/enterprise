@@ -10,16 +10,16 @@
 #include "backend/backend.h"
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtCtrl globals
+// ibDataViewCtrl globals
 // ----------------------------------------------------------------------------
 
-class BACKEND_API wxDataViewExtModel;
+class BACKEND_API ibDataViewModel;
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtCtrl flags
+// ibDataViewCtrl flags
 // ----------------------------------------------------------------------------
 
-// size of a wxDataViewExtRenderer without contents:
+// size of a ibDataViewRenderer without contents:
 #define wxDVC_DEFAULT_RENDERER_SIZE     20
 
 // the default width of new (text) columns:
@@ -31,56 +31,56 @@ class BACKEND_API wxDataViewExtModel;
 // the default minimal width of the columns:
 #define wxDVC_DEFAULT_MINWIDTH          30
 
-// The default alignment of wxDataViewExtRenderers is to take
+// The default alignment of ibDataViewRenderers is to take
 // the alignment from the column it owns.
 #define wxDVR_DEFAULT_ALIGNMENT         -1
 
 // ---------------------------------------------------------
-// wxDataViewExtItem
+// ibDataViewItem
 // ---------------------------------------------------------
 
 // Make it a class and not a typedef to allow forward declaring it.
-class wxDataViewExtItem : public wxItemId<void*>
+class ibDataViewItem : public wxItemId<void*>
 {
 public:
-	wxDataViewExtItem() : wxItemId<void*>() {}
-	explicit wxDataViewExtItem(void* pItem) : wxItemId<void*>(pItem) {}
+	ibDataViewItem() : wxItemId<void*>() {}
+	explicit ibDataViewItem(void* pItem) : wxItemId<void*>(pItem) {}
 };
 
-WX_DEFINE_USER_EXPORTED_ARRAY(wxDataViewExtItem, wxDataViewExtItemArray, BACKEND_API);
+WX_DEFINE_USER_EXPORTED_ARRAY(ibDataViewItem, ibDataViewItemArray, BACKEND_API);
 
 // ---------------------------------------------------------
-// wxDataViewExtModelNotifier
+// ibDataViewModelNotifier
 // ---------------------------------------------------------
 
-class BACKEND_API wxDataViewExtModelNotifier
+class BACKEND_API ibDataViewModelNotifier
 {
 public:
-	wxDataViewExtModelNotifier() { m_owner = NULL; }
-	virtual ~wxDataViewExtModelNotifier() { m_owner = NULL; }
+	ibDataViewModelNotifier() { m_owner = NULL; }
+	virtual ~ibDataViewModelNotifier() { m_owner = NULL; }
 
-	virtual bool ItemAdded(const wxDataViewExtItem& parent, const wxDataViewExtItem& item) = 0;
-	virtual bool ItemDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItem& item) = 0;
-	virtual bool ItemChanged(const wxDataViewExtItem& item) = 0;
-	virtual bool ItemsAdded(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items);
-	virtual bool ItemsDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items);
-	virtual bool ItemsChanged(const wxDataViewExtItemArray& items);
-	virtual bool ValueChanged(const wxDataViewExtItem& item, unsigned int col) = 0;
+	virtual bool ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item) = 0;
+	virtual bool ItemDeleted(const ibDataViewItem& parent, const ibDataViewItem& item) = 0;
+	virtual bool ItemChanged(const ibDataViewItem& item) = 0;
+	virtual bool ItemsAdded(const ibDataViewItem& parent, const ibDataViewItemArray& items);
+	virtual bool ItemsDeleted(const ibDataViewItem& parent, const ibDataViewItemArray& items);
+	virtual bool ItemsChanged(const ibDataViewItemArray& items);
+	virtual bool ValueChanged(const ibDataViewItem& item, unsigned int col) = 0;
 	virtual bool Cleared() = 0;
 
 #pragma region __table_notifier__h__
 
 	virtual unsigned int GetCurrentModelColumn() const = 0;
-	virtual void StartEditing(const wxDataViewExtItem& item, unsigned int col) const = 0;
-	
+	virtual void StartEditing(const ibDataViewItem& item, unsigned int col) const = 0;
+
 	virtual bool ShowFilter(struct CFilterRow& filter) = 0;
 	virtual bool ShowViewMode() = 0;
 
-	virtual void Select(const wxDataViewExtItem& item) const = 0;
+	virtual void Select(const ibDataViewItem& item) const = 0;
 	virtual int GetCountPerPage() const = 0;
 
-	virtual wxDataViewExtItem GetSelection() const = 0;
-	virtual int GetSelections(wxDataViewExtItemArray& sel) const = 0;
+	virtual ibDataViewItem GetSelection() const = 0;
+	virtual int GetSelections(ibDataViewItemArray& sel) const = 0;
 
 #pragma endregion 
 
@@ -90,24 +90,24 @@ public:
 
 	virtual void Resort() = 0;
 
-	void SetOwner(wxDataViewExtModel* owner) { m_owner = owner; }
-	wxDataViewExtModel* GetOwner() const { return m_owner; }
+	void SetOwner(ibDataViewModel* owner) { m_owner = owner; }
+	ibDataViewModel* GetOwner() const { return m_owner; }
 
 private:
-	wxDataViewExtModel* m_owner;
+	ibDataViewModel* m_owner;
 };
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtItemAttr: a structure containing the visual attributes of an item
+// ibDataViewItemAttr: a structure containing the visual attributes of an item
 // ----------------------------------------------------------------------------
 
 // TODO: Merge with wxItemAttr somehow.
 
-class BACKEND_API wxDataViewExtItemAttr
+class BACKEND_API ibDataViewItemAttr
 {
 public:
 	// ctors
-	wxDataViewExtItemAttr()
+	ibDataViewItemAttr()
 	{
 		m_bold = false;
 		m_italic = false;
@@ -147,24 +147,24 @@ private:
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtModel
+// ibDataViewModel
 // ---------------------------------------------------------
 
-typedef wxVector<wxDataViewExtModelNotifier*> wxDataViewExtModelNotifiers;
+typedef wxVector<ibDataViewModelNotifier*> ibDataViewModelNotifiers;
 
-class BACKEND_API wxDataViewExtModel : public wxRefCounter
+class BACKEND_API ibDataViewModel : public wxRefCounter
 {
 public:
-	wxDataViewExtModel();
+	ibDataViewModel();
 
 	// get value into a wxVariant
 	virtual void GetValue(wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) const = 0;
+		const ibDataViewItem& item, unsigned int col) const = 0;
 
 	// return true if the given item has a value to display in the given
 	// column: this is always true except for container items which by default
 	// only show their label in the first column (but see HasContainerColumns())
-	virtual bool HasValue(const wxDataViewExtItem& item, unsigned col) const
+	virtual bool HasValue(const ibDataViewItem& item, unsigned col) const
 	{
 		return col == 0 || !IsContainer(item) || HasContainerColumns(item);
 	}
@@ -174,72 +174,72 @@ public:
 	// SetValue() does not -- so while you will override SetValue(), you should
 	// be usually calling ChangeValue()
 	virtual bool SetValue(const wxVariant& variant,
-		const wxDataViewExtItem& item,
+		const ibDataViewItem& item,
 		unsigned int col) = 0;
 
 	bool ChangeValue(const wxVariant& variant,
-		const wxDataViewExtItem& item,
+		const ibDataViewItem& item,
 		unsigned int col)
 	{
 		return SetValue(variant, item, col) && ValueChanged(item, col);
 	}
 
 	// Get text attribute, return false of default attributes should be used
-	virtual bool GetAttr(const wxDataViewExtItem& WXUNUSED(item),
+	virtual bool GetAttr(const ibDataViewItem& WXUNUSED(item),
 		unsigned int WXUNUSED(col),
-		wxDataViewExtItemAttr& WXUNUSED(attr)) const
+		ibDataViewItemAttr& WXUNUSED(attr)) const
 	{
 		return false;
 	}
 
 	// Override this if you want to disable specific items
-	virtual bool IsEnabled(const wxDataViewExtItem& WXUNUSED(item),
+	virtual bool IsEnabled(const ibDataViewItem& WXUNUSED(item),
 		unsigned int WXUNUSED(col)) const
 	{
 		return true;
 	}
 
 	// define hierarchy
-	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const = 0;
-	virtual bool IsContainer(const wxDataViewExtItem& item) const = 0;
+	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const = 0;
+	virtual bool IsContainer(const ibDataViewItem& item) const = 0;
 
 	// define current parent for hierarchical view 
 	virtual bool HasParentTopItem() const { return false; }
 
-	virtual bool SetParentTopItem(const wxDataViewExtItem& item) { return false; }
-	virtual wxDataViewExtItem GetParentTopItem() const { return wxDataViewExtItem(NULL); }
+	virtual bool SetParentTopItem(const ibDataViewItem& item) { return false; }
+	virtual ibDataViewItem GetParentTopItem() const { return ibDataViewItem(NULL); }
 
 	// Is the container just a header or an item with all columns
-	virtual bool HasContainerColumns(const wxDataViewExtItem& WXUNUSED(item)) const
+	virtual bool HasContainerColumns(const ibDataViewItem& WXUNUSED(item)) const
 	{
 		return false;
 	}
 
-	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const = 0;
+	virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const = 0;
 
 	// delegated notifiers
-	bool ItemAdded(const wxDataViewExtItem& parent, const wxDataViewExtItem& item);
-	bool ItemsAdded(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items);
-	bool ItemDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItem& item);
-	bool ItemsDeleted(const wxDataViewExtItem& parent, const wxDataViewExtItemArray& items);
-	bool ItemChanged(const wxDataViewExtItem& item);
-	bool ItemsChanged(const wxDataViewExtItemArray& items);
-	bool ValueChanged(const wxDataViewExtItem& item, unsigned int col);
+	bool ItemAdded(const ibDataViewItem& parent, const ibDataViewItem& item);
+	bool ItemsAdded(const ibDataViewItem& parent, const ibDataViewItemArray& items);
+	bool ItemDeleted(const ibDataViewItem& parent, const ibDataViewItem& item);
+	bool ItemsDeleted(const ibDataViewItem& parent, const ibDataViewItemArray& items);
+	bool ItemChanged(const ibDataViewItem& item);
+	bool ItemsChanged(const ibDataViewItemArray& items);
+	bool ValueChanged(const ibDataViewItem& item, unsigned int col);
 	bool Cleared();
 
 #pragma region __table_notifier__h__
 
 	unsigned int GetCurrentModelColumn(int view_id = 0) const;
-	void StartEditing(const wxDataViewExtItem& item, unsigned int col, int view_id = 0) const;
-	
+	void StartEditing(const ibDataViewItem& item, unsigned int col, int view_id = 0) const;
+
 	bool ShowFilter(struct CFilterRow& filterm, int view_id = 0);
 	bool ShowViewMode(int view_id = 0);
 
-	void Select(const wxDataViewExtItem& item, int view_id = 0) const;
+	void Select(const ibDataViewItem& item, int view_id = 0) const;
 	int GetCountPerPage(int view_id = 0) const;
 
-	wxDataViewExtItem GetSelection(int view_id = 0) const;
-	int GetSelections(wxDataViewExtItemArray& sel, int view_id = 0) const;
+	ibDataViewItem GetSelection(int view_id = 0) const;
+	int GetSelections(ibDataViewItemArray& sel, int view_id = 0) const;
 
 #pragma endregion 
 
@@ -250,13 +250,13 @@ public:
 	// delegated action
 	virtual void Resort();
 
-	void AddNotifier(wxDataViewExtModelNotifier* notifier);
-	void RemoveNotifier(wxDataViewExtModelNotifier* notifier);
+	void AddNotifier(ibDataViewModelNotifier* notifier);
+	void RemoveNotifier(ibDataViewModelNotifier* notifier);
 
 	int GetViewCount() const { return m_notifiers.size(); }
 
 	// default compare function
-	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 		unsigned int column, bool ascending) const;
 	virtual bool HasDefaultCompare() const { return false; }
 
@@ -267,7 +267,7 @@ public:
 protected:
 	// Dtor is protected because the objects of this class must not be deleted,
 	// DecRef() must be used instead.
-	virtual ~wxDataViewExtModel();
+	virtual ~ibDataViewModel();
 
 	// Helper function used by the default Compare() implementation to compare
 	// values of types it is not aware about. Can be overridden in the derived
@@ -279,7 +279,7 @@ protected:
 	}
 
 private:
-	wxDataViewExtModelNotifiers  m_notifiers;
+	ibDataViewModelNotifiers  m_notifiers;
 };
 
 #endif

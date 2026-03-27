@@ -10,13 +10,13 @@
 #include "frontend/frontend.h"
 
 /**
- * Class CDialogAbout
+ * Class ibDialogAbout
  */
-class FRONTEND_API CDialogAbout :
+class FRONTEND_API ibDialogAbout :
 	public wxDialog {
 public:
 
-	CDialogAbout(wxWindow* parent, int id = wxID_ANY);
+	ibDialogAbout(wxWindow* parent, int id = wxID_ANY);
 
 private:
 

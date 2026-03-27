@@ -3,7 +3,7 @@
 
 #include "backend/propertyManager/property/advprop/advpropType.h"
 
-class BACKEND_API IPropertyObject;
+class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
 // wxPGSourceDataProperty
@@ -12,9 +12,9 @@ class BACKEND_API IPropertyObject;
 class BACKEND_API wxPGSourceDataProperty : public wxPGProperty {
 public:
 
-	const IPropertyObject* GetPropertyObject() const { return m_typeSelector->GetPropertyObject(); }
+	const ibPropertyObject* GetPropertyObject() const { return m_typeSelector->GetPropertyObject(); }
 
-	wxPGSourceDataProperty(const IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxPGSourceDataProperty(const ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxVariant& value = wxNullVariant);
 

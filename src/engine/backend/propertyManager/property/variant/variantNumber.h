@@ -3,17 +3,17 @@
 
 #include "backend/backend_core.h"
 
-class BACKEND_API wxVariantDataNumber : public wxVariantData {
+class BACKEND_API ibVariantDataNumber : public wxVariantData {
 	wxString MakeString() const;
 public:
 
-	void SetNumber(const number_t& number) { m_number = number; }
-	number_t& GetNumber() { return m_number; }
+	void SetNumber(const ibNumber& number) { m_number = number; }
+	ibNumber& GetNumber() { return m_number; }
 
-	wxVariantDataNumber(const number_t& number = 0.0f) : m_number(number) {}
+	ibVariantDataNumber(const ibNumber& number = 0.0f) : m_number(number) {}
 
 	virtual bool Eq(wxVariantData& data) const {
-		wxVariantDataNumber* srcData = dynamic_cast<wxVariantDataNumber*>(&data);
+		ibVariantDataNumber* srcData = dynamic_cast<ibVariantDataNumber*>(&data);
 		if (srcData != nullptr) {
 			return m_number == srcData->GetNumber();
 		}
@@ -32,10 +32,10 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("wxVariantDataNumber"); }
+	virtual wxString GetType() const { return wxT("ibVariantDataNumber"); }
 
 private:
-	number_t m_number;
+	ibNumber m_number;
 };
 
 #endif

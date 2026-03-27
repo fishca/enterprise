@@ -3,32 +3,32 @@
 
 #include "informationRegister.h"
 
-class CValueManagerDataObjectInformationRegister :
-	public IValueManagerDataObject {
+class ibValueManagerDataObjectInformationRegister :
+	public ibValueManagerDataObject {
 public:
 
-	CValue Get(const CValue& cFilter = CValue());
-	CValue Get(const CValue& cPeriod, const CValue& cFilter);
+	ibValue Get(const ibValue& cFilter = ibValue());
+	ibValue Get(const ibValue& cPeriod, const ibValue& cFilter);
 
-	CValue GetFirst(const CValue& cPeriod, const CValue& cFilter = CValue());
-	CValue GetLast(const CValue& cPeriod, const CValue& cFilter = CValue());
+	ibValue GetFirst(const ibValue& cPeriod, const ibValue& cFilter = ibValue());
+	ibValue GetLast(const ibValue& cPeriod, const ibValue& cFilter = ibValue());
 
-	CValue SliceFirst(const CValue& cPeriod, const CValue& cFilter = CValue());
-	CValue SliceLast(const CValue& cPeriod, const CValue& cFilter = CValue());
+	ibValue SliceFirst(const ibValue& cPeriod, const ibValue& cFilter = ibValue());
+	ibValue SliceLast(const ibValue& cPeriod, const ibValue& cFilter = ibValue());
 
-	CValueManagerDataObjectInformationRegister(CValueMetaObjectInformationRegister* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~CValueManagerDataObjectInformationRegister() {}
+	ibValueManagerDataObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~ibValueManagerDataObjectInformationRegister() {}
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual CValueMetaObjectInformationRegister* GetMetaObject() const { return m_metaObject; }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual ibValueMetaObjectInformationRegister* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray); //method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray); //method call
 
 protected:
-	CValueMetaObjectInformationRegister* m_metaObject;
+	ibValueMetaObjectInformationRegister* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectInformationRegister);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectInformationRegister);
 };
 
 #endif 

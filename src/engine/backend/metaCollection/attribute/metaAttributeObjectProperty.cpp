@@ -8,28 +8,28 @@
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-void CValueMetaObjectAttribute::OnPropertyCreated(IProperty* property)
+void ibValueMetaObjectAttribute::OnPropertyCreated(ibProperty* property)
 {
 	//if (m_propertyType == property) {
-	/////	CValueMetaObjectAttribute::SaveToVariant(m_propertyType->GetValue(), m_metaData);
+	/////	ibValueMetaObjectAttribute::SaveToVariant(m_propertyType->GetValue(), m_metaData);
 	//}
 }
 
 #include <wx/propgrid/manager.h>
 
-void CValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, IProperty* property)
+void ibValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
 {
 	if (m_propertySelectMode == property) {
 		if (GetClsidCount() > 1) {
 			pg->HideProperty(pgProperty, true);
 		}
 		else {
-			const IMetaValueTypeCtor* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
+			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
+				ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)
 					pg->HideProperty(pgProperty, true);
-				else if (so->GetMetaTypeCtor() != eCtorMetaType::eCtorMetaType_Reference)
+				else if (so->GetMetaTypeCtor() != ibCtorMetaType::ibCtorMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else 
 					pg->HideProperty(pgProperty, false);
@@ -40,24 +40,24 @@ void CValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wxP
 		}
 	}
 	else if (m_propertyItemMode == property) {
-		IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<IValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
+		ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(m_parent);
 		pg->HideProperty(pgProperty, metaObject == nullptr);
 	}
 }
 
-bool CValueMetaObjectAttribute::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueMetaObjectAttribute::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
-	//if (m_propertyType == property && !CValueMetaObjectAttribute::LoadFromVariant(newValue))
+	//if (m_propertyType == property && !ibValueMetaObjectAttribute::LoadFromVariant(newValue))
 	//	return false;
-	return IValueMetaObjectAttribute::OnPropertyChanging(property, newValue);
+	return ibValueMetaObjectAttributeBase::OnPropertyChanging(property, newValue);
 }
 
-void CValueMetaObjectAttribute::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectAttribute::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	IValueMetaObject* metaObject = GetParent();
+	ibValueMetaObject* metaObject = GetParent();
 	wxASSERT(metaObject);
 
 	if (metaObject->OnReloadMetaObject()) {
-		IValueMetaObject::OnPropertyChanged(property, oldValue, newValue);
+		ibValueMetaObject::OnPropertyChanged(property, oldValue, newValue);
 	}
 }

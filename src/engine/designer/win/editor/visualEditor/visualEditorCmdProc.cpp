@@ -16,33 +16,33 @@
 // Comandos
 ///////////////////////////////////////////////////////////////////////////////
 
-class BaseVisualCmd : public CVisualEditorCmd
+class BaseVisualCmd : public ibVisualEditorCmd
 {
 public:
-	BaseVisualCmd(CVisualEditorNotebook::CVisualEditor* visualData = nullptr) :
+	BaseVisualCmd(ibVisualEditorNotebook::ibVisualEditor* visualData = nullptr) :
 		m_visualData(visualData) {
 	}
 
 	virtual void Execute() {
-		CVisualEditorCmd::Execute();
+		ibVisualEditorCmd::Execute();
 	}
 	virtual void Restore() {
-		CVisualEditorCmd::Restore();
+		ibVisualEditorCmd::Restore();
 	}
 protected:
-	CVisualEditorNotebook::CVisualEditor* m_visualData;
+	ibVisualEditorNotebook::ibVisualEditor* m_visualData;
 };
 
 /** Command for expanding an object in the object tree */
 
 class ExpandObjectCmd : public BaseVisualCmd
 {
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_object = nullptr;
 	bool m_expand;
 
 public:
 
-	ExpandObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, bool expand);
+	ExpandObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, bool expand);
 
 protected:
 
@@ -56,15 +56,15 @@ protected:
 
 class InsertObjectCmd : public BaseVisualCmd
 {
-	IValueFrame* m_parent = nullptr;
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_parent = nullptr;
+	ibValueFrame* m_object = nullptr;
 	int m_pos;
-	IValueFrame* m_oldSelected;
+	ibValueFrame* m_oldSelected;
 	bool m_firstCreated;
 
 public:
 
-	InsertObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, IValueFrame* parent, int pos = -1, bool firstCreated = true);
+	InsertObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, ibValueFrame* parent, int pos = -1, bool firstCreated = true);
 
 protected:
 
@@ -82,14 +82,14 @@ protected:
 class RemoveObjectCmd : public BaseVisualCmd,
 	public wxEvtHandler
 {
-	IValueFrame* m_parent = nullptr;
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_parent = nullptr;
+	ibValueFrame* m_object = nullptr;
 	int m_oldPos;
-	IValueFrame* m_oldSelected = nullptr;
+	ibValueFrame* m_oldSelected = nullptr;
 
 public:
 
-	RemoveObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object);
+	RemoveObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object);
 	~RemoveObjectCmd();
 
 protected:
@@ -109,12 +109,12 @@ protected:
 
 class ModifyPropertyCmd : public BaseVisualCmd
 {
-	IProperty* m_property;
+	ibProperty* m_property;
 	wxVariant m_oldValue, m_newValue;
 
 public:
 
-	ModifyPropertyCmd(CVisualEditorNotebook::CVisualEditor* data, IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue);
+	ModifyPropertyCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
 	virtual void DoExecute() override;
@@ -131,7 +131,7 @@ class ModifyEventCmd : public BaseVisualCmd
 	wxVariant m_oldValue, m_newValue;
 
 public:
-	ModifyEventCmd(CVisualEditorNotebook::CVisualEditor* data, IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
+	ModifyEventCmd(ibVisualEditorNotebook::ibVisualEditor* data, IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
 
 protected:
 	virtual void DoExecute() override;
@@ -144,11 +144,11 @@ protected:
 
 class ShiftChildCmd : public BaseVisualCmd
 {
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_object = nullptr;
 	int m_oldPos, m_newPos;
 
 public:
-	ShiftChildCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, int pos);
+	ShiftChildCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, int pos);
 
 protected:
 	virtual void DoExecute() override;
@@ -165,16 +165,16 @@ class CutObjectCmd : public BaseVisualCmd,
 
 {
 	// necesario para consultar/modificar el objeto "clipboard"
-	IValueFrame* m_parent = nullptr;
-	IValueFrame* m_object = nullptr;
+	ibValueFrame* m_parent = nullptr;
+	ibValueFrame* m_object = nullptr;
 	int m_oldPos;
-	IValueFrame* m_oldSelected = nullptr;
+	ibValueFrame* m_oldSelected = nullptr;
 
 	bool m_needEvent;
 
 public:
 
-	CutObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, bool force);
+	CutObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, bool force);
 	~CutObjectCmd();
 
 protected:
@@ -192,7 +192,7 @@ protected:
 // Implementacion de los Comandos
 ///////////////////////////////////////////////////////////////////////////////
 
-ExpandObjectCmd::ExpandObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, bool expand) : BaseVisualCmd(data),
+ExpandObjectCmd::ExpandObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, bool expand) : BaseVisualCmd(data),
 m_object(object), m_expand(expand)
 {
 }
@@ -207,7 +207,7 @@ void ExpandObjectCmd::DoRestore()
 	m_object->SetExpanded(!m_expand);
 }
 
-InsertObjectCmd::InsertObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, IValueFrame* parent, int pos, bool firstCreated) : BaseVisualCmd(data),
+InsertObjectCmd::InsertObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, ibValueFrame* parent, int pos, bool firstCreated) : BaseVisualCmd(data),
 m_parent(parent), m_object(object), m_pos(pos), m_firstCreated(firstCreated)
 {
 	m_oldSelected = data->GetSelectedObject();
@@ -222,7 +222,7 @@ m_parent(parent), m_object(object), m_pos(pos), m_firstCreated(firstCreated)
 
 void InsertObjectCmd::GenerateId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -236,7 +236,7 @@ void InsertObjectCmd::GenerateId()
 
 void InsertObjectCmd::ResetId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -263,7 +263,7 @@ void InsertObjectCmd::DoExecute()
 		m_parent->ChangeChildPosition(m_object, m_pos);
 	}
 
-	IValueFrame* obj = m_object;
+	ibValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
 			obj = obj->GetChild(0);
@@ -272,13 +272,13 @@ void InsertObjectCmd::DoExecute()
 	}
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 	
 	wxASSERT(visualEditor);
 	visualEditor->CreateControl(m_object, nullptr, m_firstCreated);
 
-	CValueForm *valueForm = visualEditor->GetValueForm();
+	ibValueForm *valueForm = visualEditor->GetValueForm();
 	if (valueForm != nullptr) valueForm->PrepareNames();
 
 	//select object
@@ -290,7 +290,7 @@ void InsertObjectCmd::DoRestore()
 	m_visualData->Modify(true);
 
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	visualEditor->RemoveControl(m_object);
@@ -300,7 +300,7 @@ void InsertObjectCmd::DoRestore()
 
 	ResetId();
 
-	CValueForm* valueForm = visualEditor->GetValueForm();
+	ibValueForm* valueForm = visualEditor->GetValueForm();
 	if (valueForm != nullptr) valueForm->PrepareNames();
 
 	m_visualData->SelectObject(m_oldSelected);
@@ -308,7 +308,7 @@ void InsertObjectCmd::DoRestore()
 
 //-----------------------------------------------------------------------------
 
-RemoveObjectCmd::RemoveObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object) : BaseVisualCmd(data)
+RemoveObjectCmd::RemoveObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object) : BaseVisualCmd(data)
 {
 	m_object = object;
 	m_parent = object->GetParent();
@@ -322,7 +322,7 @@ RemoveObjectCmd::~RemoveObjectCmd()
 
 void RemoveObjectCmd::GenerateId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -336,7 +336,7 @@ void RemoveObjectCmd::GenerateId()
 
 void RemoveObjectCmd::ResetId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -351,7 +351,7 @@ void RemoveObjectCmd::ResetId()
 void RemoveObjectCmd::RemoveObject()
 {
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 
 	m_parent->AddChild(m_object);
 	m_object->SetParent(m_parent);
@@ -363,7 +363,7 @@ void RemoveObjectCmd::RemoveObject()
 
 	ResetId();
 
-	CValueForm* valueForm = visualEditor->GetValueForm();
+	ibValueForm* valueForm = visualEditor->GetValueForm();
 	if (valueForm != nullptr) valueForm->PrepareNames();
 }
 
@@ -371,7 +371,7 @@ void RemoveObjectCmd::DoExecute()
 {
 	m_visualData->Modify(true);
 
-	IValueFrame* obj = m_object;
+	ibValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
 			obj = obj->GetChild(0);
@@ -398,7 +398,7 @@ void RemoveObjectCmd::DoRestore()
 		m_object->SetParent(m_parent);
 	}
 
-	IValueFrame* obj = m_object;
+	ibValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
 			obj = obj->GetChild(0);
@@ -413,28 +413,28 @@ void RemoveObjectCmd::DoRestore()
 	m_visualData->SelectObject(m_oldSelected, true, false);
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	visualEditor->CreateControl(m_object);
 
-	CValueForm* valueForm = visualEditor->GetValueForm();
+	ibValueForm* valueForm = visualEditor->GetValueForm();
 	if (valueForm != nullptr) valueForm->PrepareNames();
 }
 
 //-----------------------------------------------------------------------------
 
-ModifyPropertyCmd::ModifyPropertyCmd(CVisualEditorNotebook::CVisualEditor* data, IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) : BaseVisualCmd(data),
+ModifyPropertyCmd::ModifyPropertyCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) : BaseVisualCmd(data),
 m_property(prop), m_oldValue(prop), m_newValue(newValue)
 {
 }
 
 void ModifyPropertyCmd::DoExecute()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 
-	// Get the IValueFrame from the event
-	IValueFrame* control = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
+	// Get the ibValueFrame from the event
+	ibValueFrame* control = dynamic_cast<ibValueFrame*>(m_property->GetPropertyObject());
 	wxASSERT(control);
 
 	m_property->SetValue(m_newValue);
@@ -450,10 +450,10 @@ void ModifyPropertyCmd::DoExecute()
 
 void ModifyPropertyCmd::DoRestore()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 	
-	// Get the IValueFrame from the event
-	IValueFrame* control = dynamic_cast<IValueFrame*>(m_property->GetPropertyObject());
+	// Get the ibValueFrame from the event
+	ibValueFrame* control = dynamic_cast<ibValueFrame*>(m_property->GetPropertyObject());
 	wxASSERT(control);
 	
 	m_property->SetValue(m_oldValue);
@@ -472,17 +472,17 @@ void ModifyPropertyCmd::DoRestore()
 
 //-----------------------------------------------------------------------------
 
-ModifyEventCmd::ModifyEventCmd(CVisualEditorNotebook::CVisualEditor* data, IEvent* event, const wxVariant& oldValue, const wxVariant& newValue) : BaseVisualCmd(data),
+ModifyEventCmd::ModifyEventCmd(ibVisualEditorNotebook::ibVisualEditor* data, IEvent* event, const wxVariant& oldValue, const wxVariant& newValue) : BaseVisualCmd(data),
 m_event(event), m_oldValue(oldValue), m_newValue(newValue)
 {
 }
 
 void ModifyEventCmd::DoExecute()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 
-	// Get the IValueFrame from the event
-	IValueFrame* control = dynamic_cast<IValueFrame*>(m_event->GetPropertyObject());
+	// Get the ibValueFrame from the event
+	ibValueFrame* control = dynamic_cast<ibValueFrame*>(m_event->GetPropertyObject());
 	wxASSERT(control);
 
 	m_event->SetValue(m_newValue);
@@ -498,10 +498,10 @@ void ModifyEventCmd::DoExecute()
 
 void ModifyEventCmd::DoRestore()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor = m_visualData->GetVisualEditor();
 
-	// Get the IValueFrame from the event
-	IValueFrame* control = dynamic_cast<IValueFrame*>(m_event->GetPropertyObject());
+	// Get the ibValueFrame from the event
+	ibValueFrame* control = dynamic_cast<ibValueFrame*>(m_event->GetPropertyObject());
 	wxASSERT(control);
 
 	m_event->SetValue(m_oldValue);
@@ -517,10 +517,10 @@ void ModifyEventCmd::DoRestore()
 
 //-----------------------------------------------------------------------------
 
-ShiftChildCmd::ShiftChildCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, int pos) : BaseVisualCmd(data)
+ShiftChildCmd::ShiftChildCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, int pos) : BaseVisualCmd(data)
 {
 	m_object = object;
-	IValueFrame* parent = object->GetParent();
+	ibValueFrame* parent = object->GetParent();
 
 	assert(parent);
 
@@ -530,11 +530,11 @@ ShiftChildCmd::ShiftChildCmd(CVisualEditorNotebook::CVisualEditor* data, IValueF
 
 void ShiftChildCmd::DoExecute()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	if (m_oldPos != m_newPos) {
-		IValueFrame* parent(m_object->GetParent());
+		ibValueFrame* parent(m_object->GetParent());
 		parent->ChangeChildPosition(m_object, m_newPos);
 
 		visualEditor->UpdateControl(m_object);
@@ -545,11 +545,11 @@ void ShiftChildCmd::DoExecute()
 
 void ShiftChildCmd::DoRestore()
 {
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	if (m_oldPos != m_newPos) {
-		IValueFrame* parent(m_object->GetParent());
+		ibValueFrame* parent(m_object->GetParent());
 		parent->ChangeChildPosition(m_object, m_oldPos);
 
 		visualEditor->UpdateControl(m_object);
@@ -560,7 +560,7 @@ void ShiftChildCmd::DoRestore()
 
 //-----------------------------------------------------------------------------
 
-CutObjectCmd::CutObjectCmd(CVisualEditorNotebook::CVisualEditor* data, IValueFrame* object, bool force) : BaseVisualCmd(data), m_needEvent(!force)
+CutObjectCmd::CutObjectCmd(ibVisualEditorNotebook::ibVisualEditor* data, ibValueFrame* object, bool force) : BaseVisualCmd(data), m_needEvent(!force)
 {
 	m_object = object;
 	m_parent = object->GetParent();
@@ -574,7 +574,7 @@ CutObjectCmd::~CutObjectCmd()
 
 void CutObjectCmd::GenerateId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -588,7 +588,7 @@ void CutObjectCmd::GenerateId()
 
 void CutObjectCmd::ResetId()
 {
-	std::function<void(IValueFrame*)> reset = [&reset](IValueFrame* object) {
+	std::function<void(ibValueFrame*)> reset = [&reset](ibValueFrame* object) {
 		wxASSERT(object);
 		for (unsigned int idx = 0; idx < object->GetChildCount(); idx++) {
 			reset(object->GetChild(idx));
@@ -603,7 +603,7 @@ void CutObjectCmd::ResetId()
 void CutObjectCmd::RemoveObject()
 {
 	//remove control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	m_parent->AddChild(m_object);
@@ -622,12 +622,12 @@ void CutObjectCmd::DoExecute()
 
 	if (!m_needEvent) {
 		//remove control in visual editor
-		CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+		ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 			m_visualData->GetVisualEditor();
 		visualEditor->RemoveControl(m_object);
 	}
 
-	IValueFrame* obj = m_object;
+	ibValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
 			obj = obj->GetChild(0);
@@ -658,7 +658,7 @@ void CutObjectCmd::DoRestore()
 	m_parent->AddChild(m_object);
 	m_object->SetParent(m_parent);
 
-	IValueFrame* obj = m_object;
+	ibValueFrame* obj = m_object;
 	while (obj && obj->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 		if (obj->GetChildCount() > 0) {
 			obj = obj->GetChild(0);
@@ -677,7 +677,7 @@ void CutObjectCmd::DoRestore()
 	m_visualData->SelectObject(m_oldSelected, true, false);
 
 	//create control in visual editor
-	CVisualEditorNotebook::CVisualEditor::CVisualEditorHost* visualEditor =
+	ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost* visualEditor =
 		m_visualData->GetVisualEditor();
 
 	visualEditor->CreateControl(m_object, m_parent);
@@ -685,15 +685,15 @@ void CutObjectCmd::DoRestore()
 
 //-----------------------------------------------------------------------------
 
-IValueFrame* CVisualEditorNotebook::CVisualEditor::CreateObject(const wxString& name)
+ibValueFrame* ibVisualEditorNotebook::ibVisualEditor::CreateObject(const wxString& name)
 {
-	IValueFrame* obj = nullptr;
+	ibValueFrame* obj = nullptr;
 	wxASSERT(m_valueForm);
 	try
 	{
-		//LogDebug("[CApplicationData::CreateObject] New " + name );
-		IValueFrame* old_selected = GetSelectedObject();
-		IValueFrame* parent = old_selected;
+		//LogDebug("[ibApplicationData::CreateObject] New " + name );
+		ibValueFrame* old_selected = GetSelectedObject();
+		ibValueFrame* parent = old_selected;
 
 		if (parent)
 		{
@@ -751,20 +751,20 @@ IValueFrame* CVisualEditorNotebook::CVisualEditor::CreateObject(const wxString& 
 	return obj;
 }
 
-void CVisualEditorNotebook::CVisualEditor::InsertObject(IValueFrame* obj, IValueFrame* parent)
+void ibVisualEditorNotebook::ibVisualEditor::InsertObject(ibValueFrame* obj, ibValueFrame* parent)
 {
 	Execute(new InsertObjectCmd(this, obj, parent));
 	NotifyObjectCreated(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CopyObject(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::CopyObject(ibValueFrame* obj)
 {
 	// Make a copy of the object on the clipboard, otherwise
 	// modifications to the object after the copy will also
 	// be made on the clipboard.
-	IValueFrame* objParent = obj->GetParent();
+	ibValueFrame* objParent = obj->GetParent();
 	wxASSERT(m_valueForm);
-	CValueForm::CopyObject(
+	ibValueForm::CopyObject(
 		objParent != nullptr && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM ?
 		objParent : obj
 	);
@@ -772,7 +772,7 @@ void CVisualEditorNotebook::CVisualEditor::CopyObject(IValueFrame* obj)
 
 #include <wx/clipbrd.h>
 
-bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
+bool ibVisualEditorNotebook::ibVisualEditor::PasteObject(ibValueFrame* dstObject)
 {
 	wxASSERT(m_valueForm);
 
@@ -784,15 +784,15 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 		// si no se ha podido crear el objeto vamos a intentar crearlo colgado
 		// del padre de "parent" y ademas vamos a insertarlo en la posicion
 		// siguiente a "parent"
-		IValueFrame* objParent =
+		ibValueFrame* objParent =
 			dstObject != nullptr && dstObject->GetComponentType() == COMPONENT_TYPE_SIZERITEM ? dstObject->GetParent() : dstObject;
 
-		IValueFrame* clipboard = CValueForm::PasteObject(m_valueForm, objParent);
+		ibValueFrame* clipboard = ibValueForm::PasteObject(m_valueForm, objParent);
 		if (clipboard == nullptr)
 			return false;
 
 		// Remove parent/child relationship from clipboard object
-		IValueFrame* clipParent = clipboard->GetParent();
+		ibValueFrame* clipParent = clipboard->GetParent();
 		if (clipParent) {
 			clipParent->RemoveChild(clipboard);
 			clipboard->SetParent(nullptr);
@@ -801,7 +801,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 		// si no se ha podido crear el objeto vamos a intentar crearlo colgado
 		// del padre de "parent" y ademas vamos a insertarlo en la posicion
 		// siguiente a "parent"
-		IValueFrame* parentObject = dstObject;
+		ibValueFrame* parentObject = dstObject;
 		if (parentObject->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 			parentObject = parentObject->GetParent();
 		}
@@ -810,7 +810,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 			clipboard = clipboard->GetChild(0);
 		}
 
-		IValueFrame* obj = nullptr;
+		ibValueFrame* obj = nullptr;
 		while (obj == nullptr) {
 			obj = m_valueForm->CreateObject(_STDSTR(clipboard->GetClassName()), parentObject);
 			if (obj != nullptr) {
@@ -818,7 +818,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 					obj->SetParent(nullptr);
 					parentObject->RemoveChild(obj);
 				}
-				IValueFrame* clipParent = clipboard->GetParent();
+				ibValueFrame* clipParent = clipboard->GetParent();
 				if (clipParent && clipParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
 					clipboard = clipParent;
 				}
@@ -837,7 +837,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 			return false;
 		}
 
-		IValueFrame* aux = obj;
+		ibValueFrame* aux = obj;
 
 		while (aux && aux != clipboard)
 			aux = (aux->GetChildCount() > 0 ? aux->GetChild(0) : nullptr);
@@ -846,7 +846,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 
 		if (aux && aux != obj) {
 			// sustituimos aux por clipboard
-			IValueFrame* auxParent = aux->GetParent();
+			ibValueFrame* auxParent = aux->GetParent();
 			auxParent->RemoveChild(aux);
 			aux->SetParent(nullptr);
 
@@ -880,7 +880,7 @@ bool CVisualEditorNotebook::CVisualEditor::PasteObject(IValueFrame* dstObject)
 	return true;
 }
 
-void CVisualEditorNotebook::CVisualEditor::ExpandObject(IValueFrame* obj, bool expand)
+void ibVisualEditorNotebook::ibVisualEditor::ExpandObject(ibValueFrame* obj, bool expand)
 {
 	Execute(new ExpandObjectCmd(this, obj, expand));
 
@@ -889,16 +889,16 @@ void CVisualEditorNotebook::CVisualEditor::ExpandObject(IValueFrame* obj, bool e
 	NotifyObjectExpanded(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::RemoveObject(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::RemoveObject(ibValueFrame* obj)
 {
 	DoRemoveObject(obj, false);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CutObject(IValueFrame* obj, bool force)
+void ibVisualEditorNotebook::ibVisualEditor::CutObject(ibValueFrame* obj, bool force)
 {
-	IValueFrame* objParent = obj->GetParent();
+	ibValueFrame* objParent = obj->GetParent();
 	wxASSERT(m_valueForm);
-	CValueForm::CopyObject(
+	ibValueForm::CopyObject(
 		objParent != nullptr && objParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM ?
 		objParent : obj, false
 	);
@@ -906,7 +906,7 @@ void CVisualEditorNotebook::CVisualEditor::CutObject(IValueFrame* obj, bool forc
 	DoRemoveObject(obj, true, force);
 }
 
-bool CVisualEditorNotebook::CVisualEditor::SelectObject(IValueFrame* obj, bool force, bool notify)
+bool ibVisualEditorNotebook::ibVisualEditor::SelectObject(ibValueFrame* obj, bool force, bool notify)
 {
 	if ((obj == objectInspector->GetSelectedObject()) && !force)
 		return false;
@@ -923,17 +923,17 @@ bool CVisualEditorNotebook::CVisualEditor::SelectObject(IValueFrame* obj, bool f
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, unsigned int toPos)
+void ibVisualEditorNotebook::ibVisualEditor::MovePosition(ibValueFrame* obj, unsigned int toPos)
 {
 	Execute(new ShiftChildCmd(this, obj, toPos));
 	NotifyEditorRefresh();
 	SelectObject(obj, true);
 }
 
-void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, bool right, unsigned int num)
+void ibVisualEditorNotebook::ibVisualEditor::MovePosition(ibValueFrame* obj, bool right, unsigned int num)
 {
-	IValueFrame* noItemObj = obj;
-	IValueFrame* parent = obj->GetParent();
+	ibValueFrame* noItemObj = obj;
+	ibValueFrame* parent = obj->GetParent();
 
 	if (parent != nullptr) {
 		// Si el objeto está incluido dentro de un item hay que desplazar
@@ -959,25 +959,25 @@ void CVisualEditorNotebook::CVisualEditor::MovePosition(IValueFrame* obj, bool r
 	}
 }
 
-void CVisualEditorNotebook::CVisualEditor::ScrollToObject(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::ScrollToObject(ibValueFrame* obj)
 {
 	m_visualEditor->ScrollToObject(obj);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::ModifyProperty(IProperty* prop, const wxVariant& oldValue, const wxVariant& newValue)
+void ibVisualEditorNotebook::ibVisualEditor::ModifyProperty(ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	IPropertyObject* object = prop->GetPropertyObject();
+	ibPropertyObject* object = prop->GetPropertyObject();
 	if (oldValue != newValue) {
 		Execute(new ModifyPropertyCmd(this, prop, oldValue, newValue));
 		NotifyPropertyModified(prop);
 	}
 }
 
-void CVisualEditorNotebook::CVisualEditor::ModifyEvent(IEvent* evt, const wxVariant& oldValue, const wxVariant& newValue)
+void ibVisualEditorNotebook::ibVisualEditor::ModifyEvent(IEvent* evt, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	IPropertyObject* object = evt->GetPropertyObject();
+	ibPropertyObject* object = evt->GetPropertyObject();
 	if (oldValue != newValue) {
 		Execute(new ModifyEventCmd(this, evt, oldValue, newValue));
 		NotifyEventModified(evt);
@@ -986,11 +986,11 @@ void CVisualEditorNotebook::CVisualEditor::ModifyEvent(IEvent* evt, const wxVari
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::PropagateExpansion(IValueFrame* obj, bool expand, bool up)
+void ibVisualEditorNotebook::ibVisualEditor::PropagateExpansion(ibValueFrame* obj, bool expand, bool up)
 {
 	if (obj != nullptr) {
 		if (up) {
-			IValueFrame* child = nullptr;
+			ibValueFrame* child = nullptr;
 			for (unsigned int i = 0; i < obj->GetChildCount(); i++) {
 				child = obj->GetChild(i);
 				Execute(new ExpandObjectCmd(this, child, expand));
@@ -1007,13 +1007,13 @@ void CVisualEditorNotebook::CVisualEditor::PropagateExpansion(IValueFrame* obj, 
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::DoRemoveObject(IValueFrame* obj, bool cutObject, bool force)
+void ibVisualEditorNotebook::ibVisualEditor::DoRemoveObject(ibValueFrame* obj, bool cutObject, bool force)
 {
 	// Note:
 	//  When removing an object it is important that the "item" objects
 	// are not left behind
-	IValueFrame* parent = obj->GetParent();
-	IValueFrame* deleted_obj = obj;
+	ibValueFrame* parent = obj->GetParent();
+	ibValueFrame* deleted_obj = obj;
 
 	if (parent) {
 		// Get the top item
@@ -1046,10 +1046,10 @@ void CVisualEditorNotebook::CVisualEditor::DoRemoveObject(IValueFrame* obj, bool
 	}
 }
 
-void CVisualEditorNotebook::CVisualEditor::DetermineObjectToSelect(IValueFrame* parent, unsigned int pos)
+void ibVisualEditorNotebook::ibVisualEditor::DetermineObjectToSelect(ibValueFrame* parent, unsigned int pos)
 {
 	// get position of next control or last control
-	IValueFrame* objToSelect = nullptr;
+	ibValueFrame* objToSelect = nullptr;
 	unsigned int count = parent->GetChildCount();
 	if (0 == count) {
 		objToSelect = parent;
@@ -1068,7 +1068,7 @@ void CVisualEditorNotebook::CVisualEditor::DetermineObjectToSelect(IValueFrame* 
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::Undo()
+void ibVisualEditorNotebook::ibVisualEditor::Undo()
 {
 	m_cmdProc->Undo();
 	m_document->Modify(!m_cmdProc->IsAtSavePoint());
@@ -1076,7 +1076,7 @@ void CVisualEditorNotebook::CVisualEditor::Undo()
 	NotifyObjectSelected(GetSelectedObject());
 }
 
-void CVisualEditorNotebook::CVisualEditor::Redo()
+void ibVisualEditorNotebook::ibVisualEditor::Redo()
 {
 	m_cmdProc->Redo();
 	m_document->Modify(!m_cmdProc->IsAtSavePoint());
@@ -1086,9 +1086,9 @@ void CVisualEditorNotebook::CVisualEditor::Redo()
 
 #include <wx/clipbrd.h>
 
-bool CVisualEditorNotebook::CVisualEditor::CanPasteObject() const
+bool ibVisualEditorNotebook::ibVisualEditor::CanPasteObject() const
 {
-	IValueFrame* obj = GetSelectedObject();
+	ibValueFrame* obj = GetSelectedObject();
 	if (obj != nullptr) {
 		bool canPasteObject = wxTheClipboard->Open() &&
 			wxTheClipboard->IsSupported(oes_clipboard_frame);
@@ -1098,19 +1098,19 @@ bool CVisualEditorNotebook::CVisualEditor::CanPasteObject() const
 	return false;
 }
 
-bool CVisualEditorNotebook::CVisualEditor::CanCopyObject() const
+bool ibVisualEditorNotebook::ibVisualEditor::CanCopyObject() const
 {
-	IValueFrame* obj = GetSelectedObject();
+	ibValueFrame* obj = GetSelectedObject();
 	if (obj && obj->GetClassType() != g_controlFormCLSID)
 		return true;
 	return false;
 }
 
-int CVisualEditorNotebook::CVisualEditor::CalcPositionOfInsertion(IValueFrame* selected, IValueFrame* parent)
+int ibVisualEditorNotebook::ibVisualEditor::CalcPositionOfInsertion(ibValueFrame* selected, ibValueFrame* parent)
 {
 	int pos = wxNOT_FOUND;
 	if (parent && selected) {
-		IValueFrame* parentSelected = selected->GetParent();
+		ibValueFrame* parentSelected = selected->GetParent();
 		while (parentSelected && parentSelected != parent) {
 			selected = parentSelected;
 			parentSelected = selected->GetParent();

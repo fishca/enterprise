@@ -19,21 +19,21 @@
 
 
 
-class COdbcParameter : public CDatabaseStringConverter
+class ibDatabaseParameterODBC : public ibDatabaseStringConverter
 {
 public:
 	// ctor
-	COdbcParameter();
-	COdbcParameter(const wxString& strValue);
-	COdbcParameter(const number_t& dblValue);
-	COdbcParameter(int nValue);
-	COdbcParameter(double dblValue);
-	COdbcParameter(bool bValue);
-	COdbcParameter(const wxDateTime& dateValue);
-	COdbcParameter(const void* pData, long nDataLength);
+	ibDatabaseParameterODBC();
+	ibDatabaseParameterODBC(const wxString& strValue);
+	ibDatabaseParameterODBC(const ibNumber& dblValue);
+	ibDatabaseParameterODBC(int nValue);
+	ibDatabaseParameterODBC(double dblValue);
+	ibDatabaseParameterODBC(bool bValue);
+	ibDatabaseParameterODBC(const wxDateTime& dateValue);
+	ibDatabaseParameterODBC(const void* pData, long nDataLength);
 
 	// dtor
-	virtual ~COdbcParameter() { }
+	virtual ~ibDatabaseParameterODBC() { }
 
 	enum {
 		PARAM_STRING = 0,
@@ -76,7 +76,7 @@ private:
 	wxString m_strValue;
 	long m_nValue;
 	double m_dblValue;
-	number_t m_numValue;
+	ibNumber m_numValue;
 	wxString m_strDateValue;
 	bool m_bValue;
 	wxMemoryBuffer m_BufferValue;

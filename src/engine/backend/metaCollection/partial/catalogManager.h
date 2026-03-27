@@ -3,28 +3,28 @@
 
 #include "catalog.h"
 
-class CValueManagerDataObjectCatalog :
-	public IValueManagerDataObjectPredefined {
+class ibValueManagerDataObjectCatalog :
+	public ibValueManagerDataObjectPredefined {
 public:
 
-	CValueReferenceDataObject* FindByCode(const CValue& vCode) const;
-	CValueReferenceDataObject* FindByDescription(const CValue& cParam) const;
+	ibValueReferenceDataObject* FindByCode(const ibValue& vCode) const;
+	ibValueReferenceDataObject* FindByDescription(const ibValue& cParam) const;
 
-	CValueReferenceDataObject* EmptyRef() const;
+	ibValueReferenceDataObject* EmptyRef() const;
 
-	CValueManagerDataObjectCatalog(CValueMetaObjectCatalog* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~CValueManagerDataObjectCatalog() {}
+	ibValueManagerDataObjectCatalog(ibValueMetaObjectCatalog* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~ibValueManagerDataObjectCatalog() {}
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual CValueMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual ibValueMetaObjectCatalog* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	CValueMetaObjectCatalog* m_metaObject;
+	ibValueMetaObjectCatalog* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectCatalog);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectCatalog);
 };
 
 #endif 

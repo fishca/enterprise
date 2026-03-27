@@ -4,20 +4,20 @@
 #include "frontend/win/ctrls/dataview/dataview.h"
 
 // ----------------------------------------------------------------------------
-// CDataViewValueRenderer
+// ibDataViewValueRenderer
 // ----------------------------------------------------------------------------
 
 #include "frontend/visualView/ctrl/form.h"
 #include "frontend/visualView/ctrl/tableBox.h"
 
-class CDataViewValueRenderer :
-	public wxDataViewExtCustomRenderer {
+class ibDataViewValueRenderer :
+	public ibDataViewCustomRenderer {
 public:
 
 	virtual void FinishSelecting() {
 
 		if (m_tableBoxColumn != nullptr) {
-			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
+			ibValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
@@ -44,29 +44,29 @@ public:
 	virtual void CancelEditing() {
 
 		if (m_tableBoxColumn != nullptr) {
-			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
+			ibValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
-		wxDataViewExtCustomRenderer::CancelEditing();
+		ibDataViewCustomRenderer::CancelEditing();
 	}
 
 	virtual bool FinishEditing() {
 
 		if (m_tableBoxColumn != nullptr) {
-			CValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
+			ibValueForm* valueForm = m_tableBoxColumn->GetOwnerForm();
 			if (valueForm != nullptr) valueForm->RefreshForm();
 		}
 
-		return wxDataViewExtCustomRenderer::FinishEditing();
+		return ibDataViewCustomRenderer::FinishEditing();
 	}
 
 	// This renderer can be either activatable or editable, for demonstration
 	// purposes. In real programs, you should select whether the user should be
 	// able to activate or edit the cell and it doesn't make sense to switch
 	// between the two -- but this is just an example, so it doesn't stop us.
-	explicit CDataViewValueRenderer(CValueTableBoxColumn* tableBoxColumn)
-		: wxDataViewExtCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_tableBoxColumn(tableBoxColumn)
+	explicit ibDataViewValueRenderer(ibValueModelTableBoxColumn* tableBoxColumn)
+		: ibDataViewCustomRenderer(wxT("string"), wxDATAVIEW_CELL_EDITABLE, wxALIGN_LEFT), m_tableBoxColumn(tableBoxColumn)
 	{
 	}
 
@@ -84,8 +84,8 @@ public:
 	}
 
 	virtual bool ActivateCell(const wxRect& cell,
-		wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+		ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent) override
 	{
@@ -134,50 +134,50 @@ public:
 
 private:
 
-	CValueTableBoxColumn* m_tableBoxColumn;
+	ibValueModelTableBoxColumn* m_tableBoxColumn;
 	wxVariant m_valueVariant;
 };
 
 // ----------------------------------------------------------------------------
-// CDataViewColumnObject
+// ibDataViewColumnObject
 // ----------------------------------------------------------------------------
 
-class CDataViewColumnObject :
-	public wxDataViewExtColumn, public wxObject {
+class ibDataViewColumnObject :
+	public ibDataViewColumn, public wxObject {
 public:
 
-	CDataViewColumnObject(CValueTableBoxColumn* col,
+	ibDataViewColumnObject(ibValueModelTableBoxColumn* col,
 		const wxString& title,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
 		:
-		wxDataViewExtColumn(title, new CDataViewValueRenderer(col), model_column, width, align, flags)
+		ibDataViewColumn(title, new ibDataViewValueRenderer(col), model_column, width, align, flags)
 	{
 	}
 
-	CDataViewColumnObject(CValueTableBoxColumn* col,
+	ibDataViewColumnObject(ibValueModelTableBoxColumn* col,
 		const wxBitmap& bitmap,
 		unsigned int model_column,
 		int width = wxDVC_DEFAULT_WIDTH,
 		wxAlignment align = wxALIGN_CENTER,
 		int flags = wxDATAVIEW_COL_RESIZABLE)
 		:
-		wxDataViewExtColumn(bitmap, new CDataViewValueRenderer(col), model_column, width, align, flags)
+		ibDataViewColumn(bitmap, new ibDataViewValueRenderer(col), model_column, width, align, flags)
 	{
 	}
 
-	CDataViewValueRenderer* GetRenderer() const { return static_cast<CDataViewValueRenderer*>(m_renderer); }
+	ibDataViewValueRenderer* GetRenderer() const { return static_cast<ibDataViewValueRenderer*>(m_renderer); }
 
-	void SetControl(CValueTableBoxColumn* control) { m_tableBoxColumn = control; }
-	CValueTableBoxColumn* GetControl() const { return m_tableBoxColumn; }
+	void SetControl(ibValueModelTableBoxColumn* control) { m_tableBoxColumn = control; }
+	ibValueModelTableBoxColumn* GetControl() const { return m_tableBoxColumn; }
 
 	void SetColumnModel(unsigned int col_model) { m_model_column = col_model; }
 
 private:
 
-	CValueTableBoxColumn* m_tableBoxColumn;
+	ibValueModelTableBoxColumn* m_tableBoxColumn;
 };
 
 #endif // !_DVC_H__

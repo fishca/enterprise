@@ -3,13 +3,13 @@
 
 #include "frontend/docView/docManager.h"
 
-class CEnterpriseDocManager : public CMetaDocManager {
+class ibMetaDocManagerEnterprise : public ibMetaDocManager {
 public:
-	CEnterpriseDocManager();
+	ibMetaDocManagerEnterprise();
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS(CEnterpriseDocManager);
-	wxDECLARE_NO_COPY_CLASS(CEnterpriseDocManager);
+	wxDECLARE_DYNAMIC_CLASS(ibMetaDocManagerEnterprise);
+	wxDECLARE_NO_COPY_CLASS(ibMetaDocManagerEnterprise);
 };
 
 #endif

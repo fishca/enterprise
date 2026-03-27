@@ -11,31 +11,31 @@
 // Forward declarations.
 //
 
-#define watchWindow	CWatchWindow::GetWatchWindow()
+#define watchWindow	ibWatchWindow::GetWatchWindow()
 
 /**
  * Window window class.
  */
-class CWatchWindow : public CWatchCtrl
+class ibWatchWindow : public ibWatchCtrl
 {
 	/**
 	* Constructor.
 	*/
-	CWatchWindow(wxWindow* window, wxWindowID winid);
+	ibWatchWindow(wxWindow* window, wxWindowID winid);
 
 public:
 
-	static CWatchWindow* GetWatchWindow();
+	static ibWatchWindow* GetWatchWindow();
 
 	/**
 	* Called when the debugger receive an item.
 	*/
-	void SetVariable(const CWatchWindowData& watchData);
+	void SetVariable(const ibWatchWindowData& watchData);
 
 	/**
 	* Called when the debugger receive expanded item.
 	*/
-	void SetExpanded(const CWatchWindowData& watchData);
+	void SetExpanded(const ibWatchWindowData& watchData);
 
 	/**
 	* Updates the value for the express in the index spot in the list.
@@ -84,7 +84,7 @@ public:
 
 private:
 
-	friend class CFrontendDocMDIFrameDesigner;
+	friend class ibFrontendDocMDIFrameDesigner;
 
 	/**
 	 * Creates a blank entry at the end of the list (for easily adding new items)

@@ -1,22 +1,22 @@
 #include "docViewDataProcessorFile.h"
 
 // ----------------------------------------------------------------------------
-// CTextEditView implementation
+// ibTextEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorEditView, ibMetaView);
 
-bool CDataProcessorEditView::OnCreate(CMetaDocument *doc, long flags)
+bool ibDataProcessorEditView::OnCreate(ibMetaDocument *doc, long flags)
 {
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CDataProcessorEditView::OnDraw(wxDC *WXUNUSED(dc))
+void ibDataProcessorEditView::OnDraw(wxDC *WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CDataProcessorEditView::OnClose(bool deleteWindow)
+bool ibDataProcessorEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -25,26 +25,26 @@ bool CDataProcessorEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	return CMetaView::OnClose(deleteWindow);
+	return ibMetaView::OnClose(deleteWindow);
 }
 
 // ----------------------------------------------------------------------------
-// ITextDocument: CDataProcessorFileDocument and wxTextCtrl married
+// ITextDocument: ibDataProcessorFilibDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CDataProcessorFileDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibDataProcessorFilibDocument, ibMetaDocument);
 \
-bool CDataProcessorFileDocument::OnCreate(const wxString& path, long flags)
+bool ibDataProcessorFilibDocument::OnCreate(const wxString& path, long flags)
 {
-	/*if (!CMetaDocument::OnCreate(path, flags))
+	/*if (!ibMetaDocument::OnCreate(path, flags))
 		return false;*/
-	m_metaData = new CMetaDataDataProcessor();
+	m_metaData = new ibMetaDataDataProcessor();
 	return true;
 }
 
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
-bool CDataProcessorFileDocument::OnCloseDocument()
+bool ibDataProcessorFilibDocument::OnCloseDocument()
 {
 	if (!m_metaData->CloseDatabase(forceCloseFlag)) {
 		return false;
@@ -55,7 +55,7 @@ bool CDataProcessorFileDocument::OnCloseDocument()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CDataProcessorFileDocument::DoOpenDocument(const wxString& filename)
+bool ibDataProcessorFilibDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!m_metaData->LoadFromFile(filename))
 		return false;
@@ -64,7 +64,7 @@ bool CDataProcessorFileDocument::DoOpenDocument(const wxString& filename)
 	return false;
 }
 
-bool CDataProcessorFileDocument::DoSaveDocument(const wxString& filename)
+bool ibDataProcessorFilibDocument::DoSaveDocument(const wxString& filename)
 {
 	/*if (!m_metaData->SaveToFile(filename))
 		return false;*/
@@ -72,12 +72,12 @@ bool CDataProcessorFileDocument::DoSaveDocument(const wxString& filename)
 	return true;
 }
 
-bool CDataProcessorFileDocument::IsModified() const
+bool ibDataProcessorFilibDocument::IsModified() const
 {
-	return CMetaDocument::IsModified();
+	return ibMetaDocument::IsModified();
 }
 
-void CDataProcessorFileDocument::Modify(bool modified)
+void ibDataProcessorFilibDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }

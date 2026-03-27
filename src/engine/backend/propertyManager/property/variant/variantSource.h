@@ -3,46 +3,46 @@
 
 #include "variantType.h"
 
-class BACKEND_API wxVariantDataAttributeSource : public wxVariantDataAttribute {
+class BACKEND_API ibVariantDataAttributeSource : public ibVariantDataAttribute {
 protected:
-	virtual void DoSetFromMetaId(const meta_identifier_t& id);
+	virtual void DoSetFromMetaId(const ibMetaID& id);
 	virtual void DoRefreshTypeDesc();
 public:
 
-	wxVariantDataAttributeSource(const IBackendTypeSourceFactory* prop, const meta_identifier_t& id)
-		: wxVariantDataAttribute(prop), m_ownerSrcProperty(prop)
+	ibVariantDataAttributeSource(const ibBackendTypeSourceFactory* prop, const ibMetaID& id)
+		: ibVariantDataAttribute(prop), m_ownerSrcProperty(prop)
 	{
 		SetFromMetaDesc(id);
 	}
 
-	wxVariantDataAttributeSource(const IBackendTypeSourceFactory* prop, const CTypeDescription& typeDesc)
-		: wxVariantDataAttribute(prop, typeDesc), m_ownerSrcProperty(prop)
+	ibVariantDataAttributeSource(const ibBackendTypeSourceFactory* prop, const ibTypeDescription& typeDesc)
+		: ibVariantDataAttribute(prop, typeDesc), m_ownerSrcProperty(prop)
 	{
 	}
 
-	wxVariantDataAttributeSource(const wxVariantDataAttributeSource& srcData)
-		: wxVariantDataAttribute(srcData), m_ownerSrcProperty(srcData.m_ownerSrcProperty)
+	ibVariantDataAttributeSource(const ibVariantDataAttributeSource& srcData)
+		: ibVariantDataAttribute(srcData), m_ownerSrcProperty(srcData.m_ownerSrcProperty)
 	{
 		RefreshTypeDesc();
 	}
 
-	virtual wxVariantDataAttributeSource* Clone() const {
-		return new wxVariantDataAttributeSource(*this);
+	virtual ibVariantDataAttributeSource* Clone() const {
+		return new ibVariantDataAttributeSource(*this);
 	}
 
 	virtual wxString GetType() const {
-		return wxT("wxVariantDataAttributeSource");
+		return wxT("ibVariantDataAttributeSource");
 	}
 
-	friend class wxVariantDataSource;
+	friend class ibVariantDataSource;
 
 protected:
-	const IBackendTypeSourceFactory* m_ownerSrcProperty = nullptr;
+	const ibBackendTypeSourceFactory* m_ownerSrcProperty = nullptr;
 };
 
 ///////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API wxVariantDataSource : public wxVariantData {
+class BACKEND_API ibVariantDataSource : public wxVariantData {
 	wxString MakeString() const;
 public:
 
@@ -52,36 +52,36 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	wxVariantDataAttributeSource* CloneSourceAttribute(const meta_identifier_t& id) const { return new wxVariantDataAttributeSource(m_ownerProperty, id); }
-	wxVariantDataAttributeSource* CloneSourceAttribute() const { return new wxVariantDataAttributeSource(*m_attributeSource); }
+	ibVariantDataAttributeSource* CloneSourceAttribute(const ibMetaID& id) const { return new ibVariantDataAttributeSource(m_ownerProperty, id); }
+	ibVariantDataAttributeSource* CloneSourceAttribute() const { return new ibVariantDataAttributeSource(*m_attributeSource); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetSourceAttribute(wxVariantDataAttributeSource* data) {
+	void SetSourceAttribute(ibVariantDataAttributeSource* data) {
 		m_attributeSource->SetFromMetaDesc(wxNOT_FOUND);
 		m_attributeSource->SetFromTypeDesc(data->GetTypeDesc());
 	}
 
-	wxVariantDataAttributeSource* GetSourceAttribute() const { return m_attributeSource; }
+	ibVariantDataAttributeSource* GetSourceAttribute() const { return m_attributeSource; }
 
 	//////////////////////////////////////////////////
 
-	IValueMetaObjectAttribute* GetSourceAttributeObject() const;
+	ibValueMetaObjectAttributeBase* GetSourceAttributeObject() const;
 
 	//////////////////////////////////////////////////
 
-	void SetSource(const meta_identifier_t& id, bool fillTypeDesc = true);
-	meta_identifier_t GetSource() const;
+	void SetSource(const ibMetaID& id, bool fillTypeDesc = true);
+	ibMetaID GetSource() const;
 
 	//////////////////////////////////////////////////
 
-	void SetSourceGuid(const CGuid& guid, bool fillTypeDesc = true);
-	CGuid GetSourceGuid() const;
+	void SetSourceGuid(const ibGuid& guid, bool fillTypeDesc = true);
+	ibGuid GetSourceGuid() const;
 
 	//////////////////////////////////////////////////
 
-	void SetSourceTypeDesc(const CTypeDescription& td);
-	CTypeDescription& GetSourceTypeDesc(bool fillTypeDesc = true) const;
+	void SetSourceTypeDesc(const ibTypeDescription& td);
+	ibTypeDescription& GetSourceTypeDesc(bool fillTypeDesc = true) const;
 
 	//////////////////////////////////////////////////
 
@@ -89,8 +89,8 @@ public:
 
 	//////////////////////////////////////////////////
 
-	meta_identifier_t GetIdByGuid(const CGuid& guid) const;
-	CGuid GetGuidByID(const meta_identifier_t& id) const;
+	ibMetaID GetIdByGuid(const ibGuid& guid) const;
+	ibGuid GetGuidByID(const ibMetaID& id) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -98,48 +98,48 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const meta_identifier_t& id) : wxVariantData(),
+	ibVariantDataSource(const ibBackendTypeSourceFactory* prop, const ibMetaID& id) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(wxNullGuid) {
 
-		m_attributeSource = new wxVariantDataAttributeSource(prop, id);
+		m_attributeSource = new ibVariantDataAttributeSource(prop, id);
 		//m_attributeSource->IncRef(); // always one 
 
 		m_dataSource = GetGuidByID(id);
 	}
 
-	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const CGuid& id, bool fillTypeDesc = true) : wxVariantData(),
+	ibVariantDataSource(const ibBackendTypeSourceFactory* prop, const ibGuid& id, bool fillTypeDesc = true) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(id) {
 
-		m_attributeSource = new wxVariantDataAttributeSource(prop, fillTypeDesc ? GetIdByGuid(id) : wxNOT_FOUND);
+		m_attributeSource = new ibVariantDataAttributeSource(prop, fillTypeDesc ? GetIdByGuid(id) : wxNOT_FOUND);
 		//m_attributeSource->IncRef(); // always one 
 
 		//m_dataSource = GetSourceGuid();
 	}
 
-	wxVariantDataSource(const IBackendTypeSourceFactory* prop, const CTypeDescription& typeDesc) : wxVariantData(),
+	ibVariantDataSource(const ibBackendTypeSourceFactory* prop, const ibTypeDescription& typeDesc) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(prop), m_dataSource(wxNullGuid) {
 
-		m_attributeSource = new wxVariantDataAttributeSource(prop, typeDesc);
+		m_attributeSource = new ibVariantDataAttributeSource(prop, typeDesc);
 		//m_attributeSource->IncRef(); // always one 
 	}
 
-	wxVariantDataSource(const wxVariantDataSource& srcData) : wxVariantData(),
+	ibVariantDataSource(const ibVariantDataSource& srcData) : wxVariantData(),
 		m_attributeSource(nullptr), m_ownerProperty(srcData.m_ownerProperty), m_dataSource(srcData.m_dataSource) {
 
-		m_attributeSource = new wxVariantDataAttributeSource(*srcData.m_attributeSource);
+		m_attributeSource = new ibVariantDataAttributeSource(*srcData.m_attributeSource);
 		//m_attributeSource->IncRef(); // always one 
 	}
 
-	virtual ~wxVariantDataSource() { m_attributeSource->DecRef(); }
+	virtual ~ibVariantDataSource() { m_attributeSource->DecRef(); }
 
-	virtual wxVariantDataSource* Clone() const { return new wxVariantDataSource(*this); }
+	virtual ibVariantDataSource* Clone() const { return new ibVariantDataSource(*this); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	virtual bool Eq(wxVariantData& data) const {
-		wxVariantDataSource* srcData = dynamic_cast<wxVariantDataSource*>(&data);
+		ibVariantDataSource* srcData = dynamic_cast<ibVariantDataSource*>(&data);
 		if (srcData != nullptr) {
-			wxVariantDataAttribute* srcAttr = srcData->m_attributeSource;
+			ibVariantDataAttribute* srcAttr = srcData->m_attributeSource;
 			wxASSERT(srcAttr);
 			return m_dataSource == srcData->m_dataSource && srcAttr->Eq(*m_attributeSource);
 		}
@@ -159,15 +159,15 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("wxVariantDataSource"); }
+	virtual wxString GetType() const { return wxT("ibVariantDataSource"); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
 
-	CGuid m_dataSource;
-	const IBackendTypeSourceFactory* m_ownerProperty = nullptr;
-	wxVariantDataAttributeSource* m_attributeSource = nullptr;
+	ibGuid m_dataSource;
+	const ibBackendTypeSourceFactory* m_ownerProperty = nullptr;
+	ibVariantDataAttributeSource* m_attributeSource = nullptr;
 };
 
 #endif // !__TYPE_VARIANT_H__

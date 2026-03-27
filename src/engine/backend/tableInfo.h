@@ -12,28 +12,28 @@
 #define defaultCountPerPage 100
 ///////////////////////////////////////////////////////////////////////////////////
 
-enum eComparisonType {
-	eComparisonType_Equal, // ==
-	eComparisonType_NotEqual, // !=
+enum ibComparisonType {
+	ibComparisonType_Equal, // ==
+	ibComparisonType_NotEqual, // !=
 };
 
 struct CFilterRow {
 
 	struct CFilterData {
 		unsigned int m_filterModel;
-		CGuid m_filterGuid;
+		ibGuid m_filterGuid;
 		wxString m_filterName;
 		wxString m_filterPresentation;
-		eComparisonType m_filterComparison;
-		CTypeDescription m_filterTypeDescription;
-		CValue m_filterValue;
+		ibComparisonType m_filterComparison;
+		ibTypeDescription m_filterTypeDescription;
+		ibValue m_filterValue;
 		bool m_filterUse;
 	public:
 		CFilterData(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-			eComparisonType comparisonType, const CTypeDescription& filterTypeDescription, const CValue& filterValue,
+			ibComparisonType comparisonType, const ibTypeDescription& filterTypeDescription, const ibValue& filterValue,
 			bool filterUse = false) :
 			m_filterModel(filterModel),
-			m_filterGuid(CGuid::newGuid()),
+			m_filterGuid(ibGuid::newGuid()),
 			m_filterName(filterName),
 			m_filterPresentation(filterPresentation),
 			m_filterComparison(comparisonType),
@@ -48,21 +48,21 @@ struct CFilterRow {
 public:
 
 	void AppendFilter(unsigned int filterModel, const wxString& filterName,
-		const CTypeDescription& filterTypeDescription, const CValue& filterValue) {
+		const ibTypeDescription& filterTypeDescription, const ibValue& filterValue) {
 		m_filters.emplace_back(filterModel, filterName, filterName,
-			eComparisonType::eComparisonType_Equal, filterTypeDescription, filterValue, false
+			ibComparisonType::ibComparisonType_Equal, filterTypeDescription, filterValue, false
 		);
 	}
 
 	void AppendFilter(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-		const CTypeDescription& filterTypeDescription, const CValue& filterValue) {
+		const ibTypeDescription& filterTypeDescription, const ibValue& filterValue) {
 		m_filters.emplace_back(filterModel, filterName, filterPresentation,
-			eComparisonType::eComparisonType_Equal, filterTypeDescription, filterValue, false
+			ibComparisonType::ibComparisonType_Equal, filterTypeDescription, filterValue, false
 		);
 	}
 
 	void AppendFilter(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
-		eComparisonType comparisonType, const CTypeDescription& filterTypeDescription, const CValue& filterValue,
+		ibComparisonType comparisonType, const ibTypeDescription& filterTypeDescription, const ibValue& filterValue,
 		bool filterUse = false) {
 		m_filters.emplace_back(filterModel, filterName, filterPresentation,
 			comparisonType, filterTypeDescription, filterValue, filterUse
@@ -85,7 +85,7 @@ public:
 		return nullptr;
 	}
 
-	void SetFilterByID(unsigned int filterModel, const CValue& filterValue) {
+	void SetFilterByID(unsigned int filterModel, const ibValue& filterValue) {
 		CFilterData* data = GetFilterByID(filterModel);
 		if (data != nullptr) {
 			data->m_filterValue = filterValue;
@@ -93,7 +93,7 @@ public:
 		}
 	}
 
-	void SetFilterByName(const wxString& filterName, const CValue& filterValue) {
+	void SetFilterByName(const wxString& filterName, const ibValue& filterValue) {
 		CFilterData* data = GetFilterByName(filterName);
 		if (data != nullptr) {
 			data->m_filterValue = filterValue;
@@ -160,39 +160,39 @@ struct CSortModel {
 };
 
 #pragma region _data_model_h_
-class BACKEND_API IDataViewModelProvider : public wxDataViewExtModel {
+class BACKEND_API ibDataViewModelProviderBase : public ibDataViewModel {
 public:
-	virtual ~IDataViewModelProvider() {}
-	virtual class IValueModel* GetOwnerValueModel() const = 0;
+	virtual ~ibDataViewModelProviderBase() {}
+	virtual class ibValueModel* GetOwnerValueModel() const = 0;
 };
 #pragma endregion 
 
-class wxVariantDataValue :
+class ibVariantDataValue :
 	public wxVariantData {
 public:
 protected:
-	wxVariantDataValue() : wxVariantData() {}
+	ibVariantDataValue() : wxVariantData() {}
 };
 
 //Common entity for tables, list, table trees 
-class BACKEND_API IValueModel : public CValue,
-	public IActionDataObject, public ITabularObject {
-	wxDECLARE_ABSTRACT_CLASS(IValueModel);
+class BACKEND_API ibValueModel : public ibValue,
+	public ibActionDataObject, public ibTabularObject {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModel);
 
 	template <typename T>
-	class wxVariantDataValueImpl :
-		public wxVariantDataValue {
+	class ibVariantDataValueImpl :
+		public ibVariantDataValue {
 
 	public:
 
-		wxVariantDataValueImpl(T&& cValue)
+		ibVariantDataValueImpl(T&& cValue)
 			:
 			m_cValue(cValue)
 		{
 		}
 
 		virtual bool Eq(wxVariantData& data) const {
-			wxVariantDataValueImpl* srcData = dynamic_cast<wxVariantDataValueImpl*>(&data);
+			ibVariantDataValueImpl* srcData = dynamic_cast<ibVariantDataValueImpl*>(&data);
 			if (srcData != nullptr)
 				return m_cValue == srcData->m_cValue;
 			return false;
@@ -210,19 +210,19 @@ class BACKEND_API IValueModel : public CValue,
 		}
 
 		virtual wxString GetType() const {
-			if (m_cValue.GetType() == eValueTypes::TYPE_BOOLEAN)
+			if (m_cValue.GetType() == ibValueTypes::TYPE_BOOLEAN)
 				return wxT("bool");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_NUMBER)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_NUMBER)
 				return wxT("number");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_DATE)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_DATE)
 				return wxT("date");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_STRING)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_STRING)
 				return wxT("string");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_VALUE)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_VALUE)
 				return wxT("value");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_ENUM)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_ENUM)
 				return wxT("enum");
-			else if (m_cValue.GetType() == eValueTypes::TYPE_OLE)
+			else if (m_cValue.GetType() == ibValueTypes::TYPE_OLE)
 				return wxT("ole");
 			return wxT("string");
 		}
@@ -248,24 +248,24 @@ protected:
 
 #pragma region _data_model_h_
 
-	class BACKEND_API CDataViewModelProvider : public IDataViewModelProvider {
-		IValueModel* m_ownerModel;
+	class BACKEND_API ibDataViewModelProvider :
+		public ibDataViewModelProviderBase {
 	public:
 
-		CDataViewModelProvider(IValueModel* owner) : IDataViewModelProvider(), m_ownerModel(owner) {}
+		ibDataViewModelProvider(ibValueModel* owner) : ibDataViewModelProviderBase(), m_ownerModel(owner) {}
 
-		virtual IValueModel* GetOwnerValueModel() const { return m_ownerModel; }
+		virtual ibValueModel* GetOwnerValueModel() const { return m_ownerModel; }
 
 		// get value into a wxVariant
 		virtual void GetValue(wxVariant& variant,
-			const wxDataViewExtItem& item, unsigned int col) const {
+			const ibDataViewItem& item, unsigned int col) const {
 			return m_ownerModel->GetValue(variant, item, col);
 		}
 
 		// return true if the given item has a value to display in the given
 		// column: this is always true except for container items which by default
 		// only show their label in the first column (but see HasContainerColumns())
-		virtual bool HasValue(const wxDataViewExtItem& item, unsigned col) const {
+		virtual bool HasValue(const ibDataViewItem& item, unsigned col) const {
 			return m_ownerModel->HasValue(item, col);
 		}
 
@@ -274,30 +274,30 @@ protected:
 		// SetValue() does not -- so while you will override SetValue(), you should
 		// be usually calling ChangeValue()
 		virtual bool SetValue(const wxVariant& variant,
-			const wxDataViewExtItem& item,
+			const ibDataViewItem& item,
 			unsigned int col) {
 			return m_ownerModel->SetValue(variant, item, col);
 		}
 
 		// Get text attribute, return false of default attributes should be used
-		virtual bool GetAttr(const wxDataViewExtItem& item,
+		virtual bool GetAttr(const ibDataViewItem& item,
 			unsigned int col,
-			wxDataViewExtItemAttr& attr) const {
+			ibDataViewItemAttr& attr) const {
 			return m_ownerModel->GetAttr(item, col, attr);
 		}
 
 		// Override this if you want to disable specific items
-		virtual bool IsEnabled(const wxDataViewExtItem& item,
+		virtual bool IsEnabled(const ibDataViewItem& item,
 			unsigned int col) const {
 			return m_ownerModel->IsEnabled(item, col);
 		}
 
 		// define hierarchy
-		virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const {
+		virtual ibDataViewItem GetParent(const ibDataViewItem& item) const {
 			return m_ownerModel->GetParent(item);
 		}
 
-		virtual bool IsContainer(const wxDataViewExtItem& item) const {
+		virtual bool IsContainer(const ibDataViewItem& item) const {
 			return m_ownerModel->IsContainer(item);
 		}
 
@@ -306,25 +306,25 @@ protected:
 			return m_ownerModel->HasParentTopItem();
 		}
 
-		virtual bool SetParentTopItem(const wxDataViewExtItem& item) {
+		virtual bool SetParentTopItem(const ibDataViewItem& item) {
 			return m_ownerModel->SetParentTopItem(item);
 		}
 
-		virtual wxDataViewExtItem GetParentTopItem() const {
+		virtual ibDataViewItem GetParentTopItem() const {
 			return m_ownerModel->GetParentTopItem();
 		}
 
 		// Is the container just a header or an item with all columns
-		virtual bool HasContainerColumns(const wxDataViewExtItem& item) const {
+		virtual bool HasContainerColumns(const ibDataViewItem& item) const {
 			return m_ownerModel->HasContainerColumns(item);
 		}
 
-		virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const {
+		virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const {
 			return m_ownerModel->GetChildren(item, children);
 		}
 
 		// default compare function
-		virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+		virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 			unsigned int column, bool ascending) const {
 			return m_ownerModel->Compare(item1, item2, column, ascending);
 		}
@@ -339,28 +339,32 @@ protected:
 		virtual bool IsVirtualListModel() const {
 			return m_ownerModel->IsVirtualListModel();
 		}
+
+	private:
+
+		ibValueModel* m_ownerModel;
 	};
 
-	CDataViewModelProvider* m_modelProvider;
+	ibDataViewModelProvider* m_modelProvider;
 
 #pragma endregion 
 
-	class wxVariantDataValueModel :
-		public wxVariantDataValueImpl<const CValue&> {
+	class ibVariantDataValueModel :
+		public ibVariantDataValueImpl<const ibValue&> {
 	public:
-		wxVariantDataValueModel(const CValue& v) :
-			wxVariantDataValueImpl(v)
+		ibVariantDataValueModel(const ibValue& v) :
+			ibVariantDataValueImpl(v)
 		{
 		}
 	};
 
 public:
 
-	class BACKEND_API IValueModelColumnCollection : public CValue {
-		wxDECLARE_ABSTRACT_CLASS(IValueModelColumnCollection);
+	class BACKEND_API ibValueModelColumnCollection : public ibValue {
+		wxDECLARE_ABSTRACT_CLASS(ibValueModelColumnCollection);
 	public:
-		class IValueModelColumnInfo : public CValue {
-			wxDECLARE_ABSTRACT_CLASS(IValueModelColumnInfo);
+		class ibValueModelColumnInfo : public ibValue {
+			wxDECLARE_ABSTRACT_CLASS(ibValueModelColumnInfo);
 		public:
 
 			virtual unsigned int GetColumnID() const = 0;
@@ -372,31 +376,31 @@ public:
 			virtual wxString GetColumnCaption() const = 0;
 			virtual void SetColumnCaption(const wxString& caption) {}
 
-			virtual const CTypeDescription GetColumnType() const = 0;
-			virtual void SetColumnType(const CTypeDescription& typeData) {}
+			virtual const ibTypeDescription GetColumnType() const = 0;
+			virtual void SetColumnType(const ibTypeDescription& typeData) {}
 
 			virtual int GetColumnWidth() const { return wxDVC_DEFAULT_WIDTH; }
 
 			virtual void SetColumnWidth(int width) {};
 
-			IValueModelColumnInfo();
-			virtual ~IValueModelColumnInfo();
+			ibValueModelColumnInfo();
+			virtual ~ibValueModelColumnInfo();
 
-			virtual CMethodHelper* GetPMethods() const {
+			virtual ibValueMethodHelper* GetPMethods() const {
 				//PrepareNames();
 				return m_methodHelper;
 			}
 
 			virtual void PrepareNames() const;
-			virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+			virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
 
 		protected:
-			CMethodHelper* m_methodHelper;
+			ibValueMethodHelper* m_methodHelper;
 		};
 	public:
 
-		virtual IValueModelColumnInfo* AddColumn(const wxString& colName,
-			const CTypeDescription& typeData,
+		virtual ibValueModelColumnInfo* AddColumn(const wxString& colName,
+			const ibTypeDescription& typeData,
 			const wxString& caption,
 			int width = wxDVC_DEFAULT_WIDTH) {
 			return nullptr;
@@ -407,23 +411,23 @@ public:
 			return GetColumnByID(col) != nullptr;
 		}
 
-		virtual IValueModelColumnInfo* GetColumnByID(unsigned int col) const;
-		virtual IValueModelColumnInfo* GetColumnByName(const wxString& colName) const;
+		virtual ibValueModelColumnInfo* GetColumnByID(unsigned int col) const;
+		virtual ibValueModelColumnInfo* GetColumnByName(const wxString& colName) const;
 
-		virtual IValueModelColumnInfo* GetColumnInfo(unsigned int idx) const = 0;
+		virtual ibValueModelColumnInfo* GetColumnInfo(unsigned int idx) const = 0;
 		virtual unsigned int GetColumnCount() const = 0;
 
-		IValueModelColumnCollection() : CValue(eValueTypes::TYPE_VALUE, true) {}
-		virtual ~IValueModelColumnCollection() {}
+		ibValueModelColumnCollection() : ibValue(ibValueTypes::TYPE_VALUE, true) {}
+		virtual ~ibValueModelColumnCollection() {}
 
 		//Working with iterators
 		virtual bool HasIterator() const {
 			return true;
 		}
 
-		virtual CValue GetIteratorAt(unsigned int idx) {
+		virtual ibValue GetIteratorAt(unsigned int idx) {
 			if (idx > GetColumnCount())
-				return CValue();
+				return ibValue();
 			return GetColumnInfo(idx);
 		}
 
@@ -432,18 +436,18 @@ public:
 		}
 	};
 
-	class BACKEND_API IValueModelReturnLine : public CValue {
-		wxDECLARE_ABSTRACT_CLASS(IValueModelReturnLine);
+	class BACKEND_API ibValueModelReturnLine : public ibValue {
+		wxDECLARE_ABSTRACT_CLASS(ibValueModelReturnLine);
 	public:
 
-		wxDataViewExtItem GetLineItem() const { return m_lineItem; };
+		ibDataViewItem GetLineItem() const { return m_lineItem; };
 
-		IValueModelReturnLine(const wxDataViewExtItem& lineItem) : CValue(eValueTypes::TYPE_VALUE, true), m_lineItem(lineItem) {
+		ibValueModelReturnLine(const ibDataViewItem& lineItem) : ibValue(ibValueTypes::TYPE_VALUE, true), m_lineItem(lineItem) {
 			wxRefCounter* refCounter = static_cast<wxRefCounter*>(m_lineItem.GetID());
 			if (refCounter != nullptr)
 				refCounter->IncRef();
 		}
-		virtual ~IValueModelReturnLine() {
+		virtual ~ibValueModelReturnLine() {
 			wxRefCounter* refCounter = static_cast<wxRefCounter*>(m_lineItem.GetID());
 			if (refCounter != nullptr)
 				refCounter->DecRef();
@@ -451,32 +455,32 @@ public:
 
 		virtual bool IsPropReadable(const long lPropNum) const {
 			return GetOwnerModel()->ValidateReturnLine(
-				const_cast<IValueModelReturnLine*>(this)
+				const_cast<ibValueModelReturnLine*>(this)
 			);
 		}
 
 		virtual bool IsPropWritable(const long lPropNum) const {
 			return GetOwnerModel()->ValidateReturnLine(
-				const_cast<IValueModelReturnLine*>(this)
+				const_cast<ibValueModelReturnLine*>(this)
 			);
 		}
 
-		virtual IValueModel* GetOwnerModel() const = 0;
+		virtual ibValueModel* GetOwnerModel() const = 0;
 
 		//set meta/get meta
-		virtual bool SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal) {
-			if (GetOwnerModel()->ValidateReturnLine(const_cast<IValueModelReturnLine*>(this)))
+		virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal) {
+			if (GetOwnerModel()->ValidateReturnLine(const_cast<ibValueModelReturnLine*>(this)))
 				return GetOwnerModel()->SetValueByMetaID(m_lineItem, id, varMetaVal);
 			return false;
 		}
 
-		virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const {
+		virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const {
 			return GetOwnerModel()->GetValueByMetaID(m_lineItem, id, pvarMetaVal);
 		}
 
 		//operator '=='
-		virtual bool CompareValueEQ(const CValue& cParam) const override {
-			IValueModelReturnLine* tableReturnLine = nullptr;
+		virtual bool CompareValueEQ(const ibValue& cParam) const override {
+			ibValueModelReturnLine* tableReturnLine = nullptr;
 			if (cParam.ConvertToValue(tableReturnLine)) {
 				if (GetOwnerModel() == tableReturnLine->GetOwnerModel()
 					&& m_lineItem == tableReturnLine->GetLineItem()) {
@@ -487,8 +491,8 @@ public:
 		}
 
 		//operator '!='
-		virtual bool CompareValueNE(const CValue& cParam) const override {
-			IValueModelReturnLine* tableReturnLine = nullptr;
+		virtual bool CompareValueNE(const ibValue& cParam) const override {
+			ibValueModelReturnLine* tableReturnLine = nullptr;
 			if (cParam.ConvertToValue(tableReturnLine)) {
 				if (GetOwnerModel() != tableReturnLine->GetOwnerModel()
 					|| m_lineItem != tableReturnLine->GetLineItem()) {
@@ -500,13 +504,13 @@ public:
 		}
 
 	protected:
-		wxDataViewExtItem m_lineItem;
+		ibDataViewItem m_lineItem;
 	};
 
 public:
 
 	template <class retType>
-	inline retType* GetViewData(const wxDataViewExtItem& item) const {
+	inline retType* GetViewData(const ibDataViewItem& item) const {
 		if (!item.IsOk())
 			return nullptr;
 		try {
@@ -528,23 +532,23 @@ public:
 		return m_sortOrder.GetSortByID(col);
 	}
 
-	IValueModel();
-	virtual ~IValueModel();
+	ibValueModel();
+	virtual ~ibValueModel();
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool IsCallRefreshModel() const { return m_refreshModel; }
 
 	//Update model 
-	void CallRefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage) {
+	void CallRefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr), const int countPerPage = defaultCountPerPage) {
 		m_refreshModel = true;
 		RefreshModel(topItem, countPerPage);
 		m_refreshModel = false;
 	};
 
 	void CallRefreshItemModel(
-		const wxDataViewExtItem& topItem,
-		const wxDataViewExtItem& currentItem,
+		const ibDataViewItem& topItem,
+		const ibDataViewItem& currentItem,
 		const int countPerPage,
 		const short scroll = 0
 	) {
@@ -552,22 +556,22 @@ public:
 	};
 
 #pragma region _data_model_h_
-	IDataViewModelProvider* GetDataViewModel() const { return m_modelProvider; }
+	ibDataViewModelProvider* GetDataViewModel() const { return m_modelProvider; }
 #pragma endregion 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	virtual wxDataViewExtItem GetSelection() const;
-	virtual void RowValueStartEdit(const wxDataViewExtItem& item, unsigned int col = 0);
+	virtual ibDataViewItem GetSelection() const;
+	virtual void RowValueStartEdit(const ibDataViewItem& item, unsigned int col = 0);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	virtual bool ValidateReturnLine(IValueModelReturnLine* retLine) const { return true; }
+	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const { return true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	virtual wxDataViewExtItem FindRowValue(const CValue& varValue, const wxString& colName = wxEmptyString) const { return wxDataViewExtItem(nullptr); }
-	virtual wxDataViewExtItem FindRowValue(IValueModelReturnLine* retLine) const { return wxDataViewExtItem(nullptr); }
+	virtual ibDataViewItem FindRowValue(const ibValue& varValue, const wxString& colName = wxEmptyString) const { return ibDataViewItem(nullptr); }
+	virtual ibDataViewItem FindRowValue(ibValueModelReturnLine* retLine) const { return ibDataViewItem(nullptr); }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -577,11 +581,11 @@ public:
 	virtual bool UseFilter() const { return m_filterRow.UseFilter(); }
 	virtual bool UseViewMode() const { return !IsListModel(); }
 
-	virtual bool EditableLine(const wxDataViewExtItem& item, unsigned int col) const { return true; }
+	virtual bool EditableLine(const ibDataViewItem& item, unsigned int col) const { return true; }
 
-	virtual void ActivateItem(IBackendValueForm* formOwner,
-		const wxDataViewExtItem& item, unsigned int col) {
-		IValueModel::RowValueStartEdit(item, col);
+	virtual void ActivateItem(ibBackendValueForm* formOwner,
+		const ibDataViewItem& item, unsigned int col) {
+		ibValueModel::RowValueStartEdit(item, col);
 	}
 
 	virtual bool IsSortable(unsigned int col) const {
@@ -596,22 +600,22 @@ public:
 	virtual void EditValue() {}
 	virtual void DeleteValue() {}
 
-	virtual IValueModelReturnLine* GetRowAt(const wxDataViewExtItem& line) = 0;
-	virtual IValueModelColumnCollection* GetColumnCollection() const = 0;
+	virtual ibValueModelReturnLine* GetRowAt(const ibDataViewItem& line) = 0;
+	virtual ibValueModelColumnCollection* GetColumnCollection() const = 0;
 
 	//set meta/get meta
-	virtual meta_identifier_t GetColumnIDByName(const wxString colName) const {
-		IValueModelColumnCollection* colCollection = GetColumnCollection();
+	virtual ibMetaID GetColumnIDByName(const wxString colName) const {
+		ibValueModelColumnCollection* colCollection = GetColumnCollection();
 		if (colCollection == nullptr)
 			return wxNOT_FOUND;
-		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colCollection->GetColumnByName(colName);
+		ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = colCollection->GetColumnByName(colName);
 		if (colInfo == nullptr)
 			return wxNOT_FOUND;
 		return colInfo->GetColumnID();
 	};
 
-	virtual bool SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal) = 0;
-	virtual bool GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& cVa) const = 0;
+	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal) = 0;
+	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& cVa) const = 0;
 
 	//show filter 
 	virtual bool ShowFilter();
@@ -621,19 +625,19 @@ public:
 	* Override actionData
 	*/
 
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& lNumAction, class IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& lNumAction, class ibBackendValueForm* srcForm);
 
 #pragma region _data_model_h_
 
 	// get value into a wxVariant
 	virtual void GetValue(wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) const = 0;
+		const ibDataViewItem& item, unsigned int col) const = 0;
 
 	// return true if the given item has a value to display in the given
 	// column: this is always true except for container items which by default
 	// only show their label in the first column (but see HasContainerColumns())
-	virtual bool HasValue(const wxDataViewExtItem& item, unsigned col) const {
+	virtual bool HasValue(const ibDataViewItem& item, unsigned col) const {
 		return col == 0 || !IsContainer(item) || HasContainerColumns(item);
 	}
 
@@ -642,34 +646,34 @@ public:
 	// SetValue() does not -- so while you will override SetValue(), you should
 	// be usually calling ChangeValue()
 	virtual bool SetValue(const wxVariant& variant,
-		const wxDataViewExtItem& item,
+		const ibDataViewItem& item,
 		unsigned int col) = 0;
 
 	// Get text attribute, return false of default attributes should be used
-	virtual bool GetAttr(const wxDataViewExtItem& item,
+	virtual bool GetAttr(const ibDataViewItem& item,
 		unsigned int col,
-		wxDataViewExtItemAttr& attr) const = 0;
+		ibDataViewItemAttr& attr) const = 0;
 
 	// Override this if you want to disable specific items
-	virtual bool IsEnabled(const wxDataViewExtItem& item,
+	virtual bool IsEnabled(const ibDataViewItem& item,
 		unsigned int col) const = 0;
 
 	// define hierarchy
-	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const = 0;
-	virtual bool IsContainer(const wxDataViewExtItem& item) const = 0;
+	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const = 0;
+	virtual bool IsContainer(const ibDataViewItem& item) const = 0;
 
 	// define current parent for hierarchical view 
 	virtual bool HasParentTopItem() const { return false; };
 
-	virtual bool SetParentTopItem(const wxDataViewExtItem& item) { return false; }
-	virtual wxDataViewExtItem GetParentTopItem() const { return wxDataViewExtItem(nullptr); }
+	virtual bool SetParentTopItem(const ibDataViewItem& item) { return false; }
+	virtual ibDataViewItem GetParentTopItem() const { return ibDataViewItem(nullptr); }
 
 	// Is the container just a header or an item with all columns
-	virtual bool HasContainerColumns(const wxDataViewExtItem& item) const { return false; }
-	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const = 0;
+	virtual bool HasContainerColumns(const ibDataViewItem& item) const { return false; }
+	virtual unsigned int GetChildren(const ibDataViewItem& item, ibDataViewItemArray& children) const = 0;
 
 	// default compare function
-	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 		unsigned int column, bool ascending) const = 0;
 
 	virtual bool HasDefaultCompare() const { return false; };
@@ -683,10 +687,10 @@ public:
 protected:
 
 	//Update model 
-	virtual void RefreshModel(const wxDataViewExtItem& topItem = wxDataViewExtItem(nullptr), const int countPerPage = defaultCountPerPage) {};
+	virtual void RefreshModel(const ibDataViewItem& topItem = ibDataViewItem(nullptr), const int countPerPage = defaultCountPerPage) {};
 	virtual void RefreshItemModel(
-		const wxDataViewExtItem& topItem,
-		const wxDataViewExtItem& currentItem,
+		const ibDataViewItem& topItem,
+		const ibDataViewItem& currentItem,
 		const int countPerPage,
 		const short scroll = 0
 	) {
@@ -701,8 +705,8 @@ protected:
 };
 
 //Table support
-class BACKEND_API IValueTable : public IValueModel {
-	wxDECLARE_ABSTRACT_CLASS(IValueTable);
+class BACKEND_API ibValueModelTable : public ibValueModel {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelTable);
 public:
 
 	enum
@@ -723,20 +727,20 @@ public:
 		/////////////////////////////////////////////////////////////////////////////
 
 		template <class varType>
-		inline void AppendTableValue(const meta_identifier_t& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
-		inline CValue& AppendTableValue(const meta_identifier_t& id) { return m_nodeValues[id]; }
+		inline void AppendTableValue(const ibMetaID& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
+		inline ibValue& AppendTableValue(const ibMetaID& id) { return m_nodeValues[id]; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		const valueArray_t& GetTableValues() const { return m_nodeValues; }
+		const ibMetaValueArray& GetTableValues() const { return m_nodeValues; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		bool SetValue(const meta_identifier_t& id, const CValue& variant, bool notify = false) {
+		bool SetValue(const ibMetaID& id, const ibValue& variant, bool notify = false) {
 			try {
 				auto iterator = m_nodeValues.find(id);
 				if (iterator != m_nodeValues.end()) {
-					CValue& cValue = m_nodeValues.at(id);
+					ibValue& cValue = m_nodeValues.at(id);
 					wxASSERT(m_valueTable);
 					if (notify && cValue != variant)
 						m_valueTable->RowValueChanged(this, id);
@@ -751,10 +755,10 @@ public:
 
 		bool SetValue(unsigned int col, const wxVariant& variant, bool notify = false) {
 			try {
-				CValue& cValue = m_nodeValues.at(col);
-				std::vector<CValue> listValue;
+				ibValue& cValue = m_nodeValues.at(col);
+				std::vector<ibValue> listValue;
 				if (cValue.FindValue(variant.GetString(), listValue)) {
-					const CValue& cFoundedValue = listValue.at(0);
+					const ibValue& cFoundedValue = listValue.at(0);
 					if (notify && cValue != cFoundedValue)
 						m_valueTable->RowValueChanged(this, col);
 					cValue.SetValue(cFoundedValue);
@@ -766,11 +770,11 @@ public:
 			return false;
 		}
 
-		bool IsEmptyValue(const meta_identifier_t& col) const {
+		bool IsEmptyValue(const ibMetaID& col) const {
 			auto iterator = m_nodeValues.find(col);
 			if (iterator == m_nodeValues.end())
 				return true;
-			const CValue& cValue = m_nodeValues.at(col);
+			const ibValue& cValue = m_nodeValues.at(col);
 			return cValue.IsEmpty();
 		}
 
@@ -778,11 +782,11 @@ public:
 			auto iterator = m_nodeValues.find(col);
 			if (iterator == m_nodeValues.end())
 				return true;
-			const CValue& cValue = m_nodeValues.at(col);
+			const ibValue& cValue = m_nodeValues.at(col);
 			return cValue.IsEmpty();
 		}
 
-		bool HasColumnValue(const meta_identifier_t& id) const {
+		bool HasColumnValue(const ibMetaID& id) const {
 			return m_nodeValues.find(id) != m_nodeValues.end();
 		}
 
@@ -790,7 +794,7 @@ public:
 			return m_nodeValues.find(col) != m_nodeValues.end();
 		}
 
-		void EraseValue(const meta_identifier_t& id) {
+		void EraseValue(const ibMetaID& id) {
 			auto iterator = m_nodeValues.find(id);
 			if (iterator != m_nodeValues.end())
 				m_nodeValues.erase(id);
@@ -805,7 +809,7 @@ public:
 		bool CompareRow(const wxValueTableRow* tableRow, std::vector<CSortModel>& paSort) const {
 			try {
 				for (unsigned long p = 0; p < paSort.size(); p++) {
-					const CValue& lhs = tableRow->m_nodeValues.at(paSort[p].m_sortModel);
+					const ibValue& lhs = tableRow->m_nodeValues.at(paSort[p].m_sortModel);
 					if (paSort[p].m_sortAscending) {
 						if (lhs > m_nodeValues.at(paSort[p].m_sortModel))
 							return true;
@@ -828,13 +832,13 @@ public:
 
 		////////////////////////////////////////////////////////////////////////
 
-		const CValue& GetTableValue(const meta_identifier_t& id) const {
+		const ibValue& GetTableValue(const ibMetaID& id) const {
 			return m_nodeValues.at(id);
 		}
 
 		////////////////////////////////////////////////////////////////////////
 
-		bool GetValue(const meta_identifier_t& id, CValue& variant) const {
+		bool GetValue(const ibMetaID& id, ibValue& variant) const {
 			try {
 				variant = GetTableValue(id);
 				return true;
@@ -848,7 +852,7 @@ public:
 		bool GetValue(unsigned int col, wxVariant& variant) const {
 
 			try {
-				variant = new wxVariantDataValueModel(GetTableValue(col));
+				variant = new ibVariantDataValueModel(GetTableValue(col));
 				return true;
 			}
 			catch (std::out_of_range&) {
@@ -874,17 +878,17 @@ public:
 		void ClearFlag(long flag) { m_nodeFlags &= ~(flag); }
 
 	private:
-		friend class IValueTable;
+		friend class ibValueModelTable;
 	protected:
-		IValueTable* m_valueTable;
-		valueArray_t m_nodeValues;
+		ibValueModelTable* m_valueTable;
+		ibMetaValueArray m_nodeValues;
 		long m_nodeFlags;
 	};
 
 public:
 
-	IValueTable() : IValueModel() {}
-	virtual ~IValueTable() { Clear(false); }
+	ibValueModelTable() : ibValueModel() {}
+	virtual ~ibValueModelTable() { Clear(false); }
 
 	/////////////////////////////////////////////////////////
 
@@ -892,7 +896,7 @@ public:
 
 	/////////////////////////////////////////////////////////
 
-	virtual bool ValidateReturnLine(IValueModelReturnLine* retLine) const {
+	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
 		wxASSERT(node);
 		return node ? node->m_valueTable != nullptr : false;
@@ -913,7 +917,7 @@ public:
 		if (from > m_nodeValues.size() || to > m_nodeValues.size()) return;
 		for (auto iterator = m_nodeValues.begin() + from; iterator != m_nodeValues.begin() + to; iterator++) {
 			/* wxDataViewModel:: */
-			if (notify && !m_modelProvider->ItemDeleted(wxDataViewExtItem(nullptr), wxDataViewExtItem(*iterator)))
+			if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(*iterator)))
 				return;
 			(*iterator)->m_valueTable = nullptr;
 			(*iterator)->DecRef();
@@ -924,11 +928,11 @@ public:
 	/////////////////////////////////////////////////////////
 
 	void RowChanged(wxValueTableRow* item) {
-		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(wxDataViewExtItem(item));
+		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
 	}
 
 	void RowValueChanged(wxValueTableRow* item, unsigned int col) {
-		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(wxDataViewExtItem(item), col);
+		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
 	}
 
 	/////////////////////////////////////////////////////////
@@ -944,7 +948,7 @@ public:
 		m_nodeValues.emplace_back(child);
 
 		/* wxDataViewModel:: */
-		if (notify && !m_modelProvider->ItemAdded(wxDataViewExtItem(nullptr), wxDataViewExtItem(child))) {
+		if (notify && !m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child))) {
 			child->m_valueTable = this;
 			m_nodeValues.pop_back();
 			return false;
@@ -963,7 +967,7 @@ public:
 		auto iterator = m_nodeValues.insert(m_nodeValues.begin() + row, child);
 
 		/* wxDataViewModel:: */
-		if (notify && !m_modelProvider->ItemAdded(wxDataViewExtItem(nullptr), wxDataViewExtItem(child))) {
+		if (notify && !m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child))) {
 			child->m_valueTable = this;
 			m_nodeValues.erase(iterator);
 			return false;
@@ -982,7 +986,7 @@ public:
 			m_nodeValues.end(), child
 		);
 
-		if (notify && !m_modelProvider->ItemDeleted(wxDataViewExtItem(nullptr), wxDataViewExtItem(child)))
+		if (notify && !m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(child)))
 			return false;
 
 		if (iterator != m_nodeValues.end()) {
@@ -1014,13 +1018,13 @@ public:
 
 	/////////////////////////////////////////////////////////
 
-	void Show(const wxDataViewExtItem& item, bool show = true) {
+	void Show(const ibDataViewItem& item, bool show = true) {
 
 		wxValueTableRow* child = GetViewData<wxValueTableRow>(item);
 		if (child != nullptr && show && child->HasFlag(TABLE_NODE_HIDDEN)) {
 
 			/* wxDataViewModel:: */
-			if (!m_modelProvider->ItemAdded(wxDataViewExtItem(nullptr), wxDataViewExtItem(child)))
+			if (!m_modelProvider->ItemAdded(ibDataViewItem(nullptr), ibDataViewItem(child)))
 				return;
 
 			child->ClearFlag(TABLE_NODE_HIDDEN);
@@ -1028,7 +1032,7 @@ public:
 		else if (child != nullptr && !show && !child->HasFlag(TABLE_NODE_HIDDEN)) {
 
 			/*wxDataViewModel::*/
-			if (!m_modelProvider->ItemDeleted(wxDataViewExtItem(nullptr), wxDataViewExtItem(child)))
+			if (!m_modelProvider->ItemDeleted(ibDataViewItem(nullptr), ibDataViewItem(child)))
 				return;
 
 			child->SetFlag(TABLE_NODE_HIDDEN);
@@ -1040,23 +1044,23 @@ public:
 		// derived classes should override these methods instead of
 	// {Get,Set}Value() and GetAttr() inherited from the base class
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewExtItem& row, unsigned int col) const = 0;
+		const ibDataViewItem& row, unsigned int col) const = 0;
 
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewExtItem& row, unsigned int col) = 0;
+		const ibDataViewItem& row, unsigned int col) = 0;
 
-	virtual bool GetAttrByRow(const wxDataViewExtItem& WXUNUSED(row), unsigned int WXUNUSED(col),
-		wxDataViewExtItemAttr& WXUNUSED(attr)) const {
+	virtual bool GetAttrByRow(const ibDataViewItem& WXUNUSED(row), unsigned int WXUNUSED(col),
+		ibDataViewItemAttr& WXUNUSED(attr)) const {
 		return false;
 	}
 
-	virtual bool IsEnabledByRow(const wxDataViewExtItem& WXUNUSED(row),
+	virtual bool IsEnabledByRow(const ibDataViewItem& WXUNUSED(row),
 		unsigned int WXUNUSED(col)) const {
 		return true;
 	}
 
 	// helper methods provided by list models only
-	virtual long GetRow(const wxDataViewExtItem& item) const {
+	virtual long GetRow(const ibDataViewItem& item) const {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node == nullptr)
 			return wxNOT_FOUND;
@@ -1066,38 +1070,38 @@ public:
 		return wxNOT_FOUND;
 	}
 
-	virtual wxDataViewExtItem GetItem(long row) const {
+	virtual ibDataViewItem GetItem(long row) const {
 		wxASSERT(row < (long)m_nodeValues.size());
 		if (row >= 0 && row < (long)m_nodeValues.size()) {
-			return wxDataViewExtItem(m_nodeValues[row]);
+			return ibDataViewItem(m_nodeValues[row]);
 		}
-		return wxDataViewExtItem(nullptr);
+		return ibDataViewItem(nullptr);
 	}
 
 #pragma region _data_model_h_
 
 	// and implement some others by forwarding them to our own ones
 	virtual void GetValue(wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) const override {
+		const ibDataViewItem& item, unsigned int col) const override {
 		GetValueByRow(variant, item, col);
 	}
 
 	virtual bool SetValue(const wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) override {
+		const ibDataViewItem& item, unsigned int col) override {
 		return SetValueByRow(variant, item, col);
 	}
 
-	virtual bool GetAttr(const wxDataViewExtItem& item, unsigned int col,
-		wxDataViewExtItemAttr& attr) const override {
+	virtual bool GetAttr(const ibDataViewItem& item, unsigned int col,
+		ibDataViewItemAttr& attr) const override {
 		return GetAttrByRow(item, col, attr);
 	}
 
-	virtual bool IsEnabled(const wxDataViewExtItem& item, unsigned int col) const override {
+	virtual bool IsEnabled(const ibDataViewItem& item, unsigned int col) const override {
 		return IsEnabledByRow(item, col);
 	}
 
 	// implement base methods
-	virtual unsigned int GetChildren(const wxDataViewExtItem& parent, wxDataViewExtItemArray& array) const override {
+	virtual unsigned int GetChildren(const ibDataViewItem& parent, ibDataViewItemArray& array) const override {
 		if (parent.IsOk())
 			return 0;
 		unsigned int count = m_nodeValues.size();
@@ -1105,24 +1109,24 @@ public:
 			return 0;
 		array.Alloc(count);
 		for (auto& node : m_nodeValues) {
-			array.Add(wxDataViewExtItem((void*)node));
+			array.Add(ibDataViewItem((void*)node));
 		}
 		return count;
 	}
 
 	// implement some base class pure virtual directly
-	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& WXUNUSED(item)) const override {
+	virtual ibDataViewItem GetParent(const ibDataViewItem& WXUNUSED(item)) const override {
 		// items never have valid parent in this model
-		return wxDataViewExtItem(nullptr);
+		return ibDataViewItem(nullptr);
 	}
 
-	virtual bool IsContainer(const wxDataViewExtItem& item) const override {
+	virtual bool IsContainer(const ibDataViewItem& item) const override {
 		// only the invisible (and invalid) root item has children
 		return !item.IsOk();
 	}
 
 	// override sorting to always sort branches ascendingly
-	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 		unsigned int col, bool ascending) const override {
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
@@ -1142,8 +1146,8 @@ public:
 		for (auto sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				try {
-					const CValue& currValue1 = node1->GetTableValue(sort.m_sortModel);
-					const CValue& currValue2 = node2->GetTableValue(sort.m_sortModel);
+					const ibValue& currValue1 = node1->GetTableValue(sort.m_sortModel);
+					const ibValue& currValue2 = node2->GetTableValue(sort.m_sortModel);
 					if (sort.m_sortAscending) {
 						if (currValue1 < currValue2)
 							return -1;
@@ -1182,13 +1186,13 @@ protected:
 };
 
 //Tree support 
-class BACKEND_API IValueTree : public IValueModel {
-	wxDECLARE_ABSTRACT_CLASS(IValueTable);
+class BACKEND_API ibValueModelTree : public ibValueModel {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelTable);
 public:
 
 	struct wxValueTreeNode : public wxRefCounter {
 
-		wxValueTreeNode(IValueTree* valueTree) :
+		wxValueTreeNode(ibValueModelTree* valueTree) :
 			m_valueTree(valueTree), m_parent(nullptr) {
 		}
 
@@ -1213,12 +1217,12 @@ public:
 		/////////////////////////////////////////////////////////////////////////////
 
 		template <class varType>
-		inline void AppendTableValue(const meta_identifier_t& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
-		inline CValue& AppendTableValue(const meta_identifier_t& id) { return m_nodeValues[id]; }
+		inline void AppendTableValue(const ibMetaID& id, varType&& variant) { m_nodeValues.insert_or_assign(id, variant); }
+		inline ibValue& AppendTableValue(const ibMetaID& id) { return m_nodeValues[id]; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		const valueArray_t& GetTableValues() const { return m_nodeValues; }
+		const ibMetaValueArray& GetTableValues() const { return m_nodeValues; }
 
 		/////////////////////////////////////////////////////////////////////////////
 
@@ -1237,7 +1241,7 @@ public:
 		bool Append(wxValueTreeNode* child, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			auto iterator = m_children.emplace_back(child);
-			if (notify && !m_valueTree->m_modelProvider->ItemAdded(wxDataViewExtItem(this), wxDataViewExtItem(child))) {
+			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
 				child->m_valueTree = nullptr;
 				m_children.pop_back();
 				return false;
@@ -1248,7 +1252,7 @@ public:
 		bool Insert(wxValueTreeNode* child, unsigned int n, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			auto iterator = m_children.insert(m_children.begin() + n, child);
-			if (notify && !m_valueTree->m_modelProvider->ItemAdded(wxDataViewExtItem(this), wxDataViewExtItem(child))) {
+			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
 				child->m_valueTree = nullptr;
 				m_children.erase(iterator);
 				return false;
@@ -1258,7 +1262,7 @@ public:
 
 		bool Remove(wxValueTreeNode* child, bool notify = true) {
 			auto iterator = std::find(m_children.begin(), m_children.end(), child);
-			if (notify && !m_valueTree->m_modelProvider->ItemDeleted(wxDataViewExtItem(this), wxDataViewExtItem(child)))
+			if (notify && !m_valueTree->m_modelProvider->ItemDeleted(ibDataViewItem(this), ibDataViewItem(child)))
 				return false;
 			if (iterator != m_children.end())
 				m_children.erase(iterator);
@@ -1286,7 +1290,7 @@ public:
 		bool CompareNode(const wxValueTreeNode* node, std::vector<CSortModel>& paSort) const {
 			try {
 				for (unsigned long p = 0; p < paSort.size(); p++) {
-					const CValue& lhs = node->m_nodeValues.at(paSort[p].m_sortModel);
+					const ibValue& lhs = node->m_nodeValues.at(paSort[p].m_sortModel);
 					if (paSort[p].m_sortAscending) {
 						if (lhs > m_nodeValues.at(paSort[p].m_sortModel))
 							return true;
@@ -1309,9 +1313,9 @@ public:
 
 	public:     // public to avoid getters/setters
 
-		bool SetValue(const meta_identifier_t& id, const CValue& variant, bool notify = false) {
+		bool SetValue(const ibMetaID& id, const ibValue& variant, bool notify = false) {
 			try {
-				CValue& cValue = m_nodeValues.at(id);
+				ibValue& cValue = m_nodeValues.at(id);
 				if (notify && cValue != variant)
 					m_valueTree->RowValueChanged(this, id);
 				cValue.SetValue(variant);
@@ -1324,10 +1328,10 @@ public:
 
 		bool SetValue(unsigned int col, const wxVariant& variant, bool notify = false) {
 			try {
-				CValue& cValue = m_nodeValues.at(col);
-				std::vector<CValue> listValue;
+				ibValue& cValue = m_nodeValues.at(col);
+				std::vector<ibValue> listValue;
 				if (cValue.FindValue(variant.GetString(), listValue)) {
-					const CValue& cFoundedValue = listValue.at(0);
+					const ibValue& cFoundedValue = listValue.at(0);
 					if (notify && cValue != cFoundedValue)
 						m_valueTree->RowValueChanged(this, col);
 					cValue.SetValue(cFoundedValue);
@@ -1341,14 +1345,14 @@ public:
 
 		////////////////////////////////////////////////////////////////////////
 
-		const CValue& GetTableValue(const meta_identifier_t& id) const {
+		const ibValue& GetTableValue(const ibMetaID& id) const {
 			return m_nodeValues.at(id);
 		}
 
 		////////////////////////////////////////////////////////////////////////
 
 
-		bool GetValue(const meta_identifier_t& id, CValue& variant) const {
+		bool GetValue(const ibMetaID& id, ibValue& variant) const {
 			try {
 				variant = GetTableValue(id);
 				return true;
@@ -1360,7 +1364,7 @@ public:
 
 		bool GetValue(unsigned int col, wxVariant& variant) const {
 			try {
-				variant = new wxVariantDataValueModel(GetTableValue(col));
+				variant = new ibVariantDataValueModel(GetTableValue(col));
 				return true;
 			}
 			catch (std::out_of_range&) {
@@ -1369,22 +1373,22 @@ public:
 		}
 
 	private:
-		friend class IValueTree;
+		friend class ibValueModelTree;
 	private:
 		wxValueTreeNode* m_parent;
 		std::vector<wxValueTreeNode*> m_children;
 	protected:
-		IValueTree* m_valueTree;
-		valueArray_t m_nodeValues;
+		ibValueModelTree* m_valueTree;
+		ibMetaValueArray m_nodeValues;
 	};
 
 public:
 
-	IValueTree() : IValueModel() {
+	ibValueModelTree() : ibValueModel() {
 		m_root = new wxValueTreeNode(this);
 	}
 
-	virtual ~IValueTree() {
+	virtual ~ibValueModelTree() {
 		wxDELETE(m_root);
 	}
 
@@ -1396,7 +1400,7 @@ public:
 
 	/////////////////////////////////////////////////////////
 
-	virtual bool ValidateReturnLine(IValueModelReturnLine* retLine) const {
+	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const {
 		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(retLine->GetLineItem());
 		wxASSERT(node);
 		return node ? node->m_valueTree != nullptr : false;
@@ -1408,19 +1412,19 @@ public:
 	wxValueTreeNode* GetRoot() const { return m_root; }
 
 	void RowChanged(wxValueTreeNode* item) {
-		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(wxDataViewExtItem(item));
+		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
 	}
 
 	void RowValueChanged(wxValueTreeNode* item, unsigned int col) {
-		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(wxDataViewExtItem(item), col);
+		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
 	}
 
 	// helper methods to change the model
-	bool Delete(const wxDataViewExtItem& item, bool notify = true) {
+	bool Delete(const ibDataViewItem& item, bool notify = true) {
 		wxValueTreeNode* node = (wxValueTreeNode*)item.GetID();
 		if (node == nullptr)
 			return false;
-		wxDataViewExtItem parent(node->GetParent());
+		ibDataViewItem parent(node->GetParent());
 		if (!parent.IsOk()) {
 			wxASSERT(node == m_root);
 			// don't make the control completely empty:
@@ -1475,17 +1479,17 @@ public:
 	// derived classes should override these methods instead of
 	// {Get,Set}Value() and GetAttr() inherited from the base class
 	virtual void GetValueByRow(wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned col) const = 0;
+		const ibDataViewItem& item, unsigned col) const = 0;
 
 	virtual bool SetValueByRow(const wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned col) = 0;
+		const ibDataViewItem& item, unsigned col) = 0;
 
-	virtual bool GetAttrByRow(const wxDataViewExtItem& WXUNUSED(item),
-		unsigned WXUNUSED(col), wxDataViewExtItemAttr& WXUNUSED(attr)) const {
+	virtual bool GetAttrByRow(const ibDataViewItem& WXUNUSED(item),
+		unsigned WXUNUSED(col), ibDataViewItemAttr& WXUNUSED(attr)) const {
 		return false;
 	}
 
-	virtual bool IsEnabledByRow(const wxDataViewExtItem& WXUNUSED(item),
+	virtual bool IsEnabledByRow(const ibDataViewItem& WXUNUSED(item),
 		unsigned int WXUNUSED(col)) const {
 		return true;
 	}
@@ -1494,46 +1498,46 @@ public:
 
 	// and implement some others by forwarding them to our own ones
 	virtual void GetValue(wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) const override {
+		const ibDataViewItem& item, unsigned int col) const override {
 		GetValueByRow(variant, item, col);
 	}
 
 	// return true if the given item has a value to display in the given
 	// column: this is always true except for container items which by default
 	// only show their label in the first column (but see HasContainerColumns())
-	virtual bool HasValue(const wxDataViewExtItem& item, unsigned col) const override {
+	virtual bool HasValue(const ibDataViewItem& item, unsigned col) const override {
 		if (HasContainerColumns(item))
 			return false;
 		return true;
 	}
 
 	virtual bool SetValue(const wxVariant& variant,
-		const wxDataViewExtItem& item, unsigned int col) override {
+		const ibDataViewItem& item, unsigned int col) override {
 		return SetValueByRow(variant, item, col);
 	}
 
-	virtual bool GetAttr(const wxDataViewExtItem& item, unsigned int col,
-		wxDataViewExtItemAttr& attr) const override {
+	virtual bool GetAttr(const ibDataViewItem& item, unsigned int col,
+		ibDataViewItemAttr& attr) const override {
 		return GetAttrByRow(item, col, attr);
 	}
 
-	virtual bool IsEnabled(const wxDataViewExtItem& item, unsigned int col) const override {
+	virtual bool IsEnabled(const ibDataViewItem& item, unsigned int col) const override {
 		return IsEnabledByRow(item, col);
 	}
 
-	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const override {
+	virtual ibDataViewItem GetParent(const ibDataViewItem& item) const override {
 		// the invisible root node has no parent
 		if (!item.IsOk())
-			return wxDataViewExtItem(nullptr);
+			return ibDataViewItem(nullptr);
 		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
 		// "root" also has no parent
 		if (m_root == node ||
 			m_root == node->GetParent())
-			return wxDataViewExtItem(nullptr);
-		return wxDataViewExtItem((void*)node->GetParent());
+			return ibDataViewItem(nullptr);
+		return ibDataViewItem((void*)node->GetParent());
 	}
 
-	virtual bool IsContainer(const wxDataViewExtItem& item) const override {
+	virtual bool IsContainer(const ibDataViewItem& item) const override {
 		// the invisible root node can have children
 		// (in our model always "root")
 		if (!item.IsOk())
@@ -1545,17 +1549,17 @@ public:
 	}
 
 	// define current parent for hierarchical view 
-	virtual unsigned int GetChildren(const wxDataViewExtItem& parent,
-		wxDataViewExtItemArray& array) const override {
+	virtual unsigned int GetChildren(const ibDataViewItem& parent,
+		ibDataViewItemArray& array) const override {
 		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(parent);
 		if (node == nullptr)
-			return GetChildren(wxDataViewExtItem(m_root), array);
+			return GetChildren(ibDataViewItem(m_root), array);
 		unsigned int count = node->GetChildCount();
 		if (count == 0)
 			return 0;
 		array.Alloc(count);
 		for (unsigned int pos = 0; pos < count; pos++) {
-			array.Add(wxDataViewExtItem((void*)node->GetChild(pos)));
+			array.Add(ibDataViewItem((void*)node->GetChild(pos)));
 		}
 		return count;
 	}
@@ -1563,7 +1567,7 @@ public:
 	// override sorting to always sort branches ascendingly
 	virtual bool HasDefaultCompare() const override { return true; }
 
-	virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+	virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 		unsigned int col, bool ascending) const override {
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
@@ -1582,8 +1586,8 @@ public:
 		for (auto sort : m_sortOrder.m_sorts) {
 			if (sort.m_sortEnable) {
 				try {
-					const CValue& currValue1 = node1->GetTableValue(sort.m_sortModel);
-					const CValue& currValue2 = node2->GetTableValue(sort.m_sortModel);
+					const ibValue& currValue1 = node1->GetTableValue(sort.m_sortModel);
+					const ibValue& currValue2 = node2->GetTableValue(sort.m_sortModel);
 					if (sort.m_sortAscending) {
 						if (currValue1 < currValue2)
 							return -1;

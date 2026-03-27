@@ -3,16 +3,16 @@
 
 #include "dataview/dataview.h"
 
-class FRONTEND_API wxTableViewCtrl :
-	public wxDataViewExtCtrl {
+class FRONTEND_API ibTableViewCtrl :
+	public ibDataViewCtrl {
 public:
 
-	wxTableViewCtrl() : wxDataViewExtCtrl() {}
-	wxTableViewCtrl(wxWindow* parent, wxWindowID id,
+	ibTableViewCtrl() : ibDataViewCtrl() {}
+	ibTableViewCtrl(wxWindow* parent, wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = 0,
 		const wxValidator& validator = wxDefaultValidator,
-		const wxString& name = wxASCII_STR(wxDataViewExtCtrlNameStr)) : wxDataViewExtCtrl(parent, id, pos, size, style, validator, name)
+		const wxString& name = wxASCII_STR(ibDataViewCtrlNameStr)) : ibDataViewCtrl(parent, id, pos, size, style, validator, name)
 	{
 	}
 
@@ -22,8 +22,8 @@ public:
 
 private:
 
-	wxDECLARE_DYNAMIC_CLASS(wxTableViewCtrl);
-	wxDECLARE_NO_COPY_CLASS(wxTableViewCtrl);
+	wxDECLARE_DYNAMIC_CLASS(ibTableViewCtrl);
+	wxDECLARE_NO_COPY_CLASS(ibTableViewCtrl);
 };
 
 #endif 

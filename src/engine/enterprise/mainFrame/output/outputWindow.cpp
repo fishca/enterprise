@@ -22,17 +22,17 @@ enum
 	idcmdClear = 17,
 };
 
-wxBEGIN_EVENT_TABLE(COutputWindow, wxStyledTextCtrl)
-EVT_LEFT_DCLICK(COutputWindow::OnDoubleClick)
-EVT_KEY_DOWN(COutputWindow::OnKeyDown)
-EVT_CONTEXT_MENU(COutputWindow::OnContextMenu)
-EVT_MENU(idcmdClear, COutputWindow::OnClearOutput)
+wxBEGIN_EVENT_TABLE(ibOutputWindow, wxStyledTextCtrl)
+EVT_LEFT_DCLICK(ibOutputWindow::OnDoubleClick)
+EVT_KEY_DOWN(ibOutputWindow::OnKeyDown)
+EVT_CONTEXT_MENU(ibOutputWindow::OnContextMenu)
+EVT_MENU(idcmdClear, ibOutputWindow::OnClearOutput)
 wxEND_EVENT_TABLE()
 
 #define DEF_LINENUMBER_ID 0
 #define DEF_IMAGE_ID 1
 
-COutputWindow::COutputWindow(class CFrontendDocMDIFrame* parent, wxWindowID winid)
+ibOutputWindow::ibOutputWindow(class ibFrontendDocMDIFrame* parent, wxWindowID winid)
 	: wxStyledTextCtrl(parent, winid, wxDefaultPosition, wxDefaultSize)
 {
 	// initialize styles
@@ -45,9 +45,9 @@ COutputWindow::COutputWindow(class CFrontendDocMDIFrame* parent, wxWindowID wini
 	for (int margin = 0; margin < GetMarginCount(); margin++)
 		SetMarginCursor(margin, wxSTC_CURSORARROW);
 
-	MarkerDefine(eStatusMessage_Information, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxBLACK);
-	MarkerDefine(eStatusMessage_Warning, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxYELLOW);
-	MarkerDefine(eStatusMessage_Error, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxRED);
+	MarkerDefine(ibStatusMessage_Information, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxBLACK);
+	MarkerDefine(ibStatusMessage_Warning, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxYELLOW);
+	MarkerDefine(ibStatusMessage_Error, wxSTC_MARK_SHORTARROW, *wxWHITE, *wxRED);
 
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'A', idcmdSelectAll);
@@ -62,16 +62,16 @@ COutputWindow::COutputWindow(class CFrontendDocMDIFrame* parent, wxWindowID wini
 
 ///////////////////////////////////////////////////////////////////////////////
 
-COutputWindow* COutputWindow::GetOutputWindow()
+ibOutputWindow* ibOutputWindow::GetOutputWindow()
 {
-	if (CFrontendDocMDIFrameEnterprise::GetFrame())
+	if (ibFrontendDocMDIFrameEnterprise::GetFrame())
 		return mainFrame->GetOutputWindow();
 	return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void COutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
+void ibOutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -102,33 +102,33 @@ void COutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
 	SetEditable(false);
 }
 
-void COutputWindow::OutputMessage(const wxString& message,
+void ibOutputWindow::OutputMessage(const wxString& message,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Information,
+	SharedOutput(message, ibStatusMessage::ibStatusMessage_Information,
 		strFileName, strDocPath, currLine);
 }
 
-void COutputWindow::OutputWarning(const wxString& message,
+void ibOutputWindow::OutputWarning(const wxString& message,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Warning,
+	SharedOutput(message, ibStatusMessage::ibStatusMessage_Warning,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void COutputWindow::OutputError(const wxString& message,
+void ibOutputWindow::OutputError(const wxString& message,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
-	SharedOutput(message, eStatusMessage::eStatusMessage_Error,
+	SharedOutput(message, ibStatusMessage::ibStatusMessage_Error,
 		strFileName, strDocPath,
 		currLine);
 }
 
-void COutputWindow::SharedOutput(const wxString& message, eStatusMessage status,
+void ibOutputWindow::SharedOutput(const wxString& message, ibStatusMessage status,
 	const wxString& strFileName, const wxString& strDocPath,
 	int currLine)
 {
@@ -165,7 +165,7 @@ void COutputWindow::SharedOutput(const wxString& message, eStatusMessage status,
 	mainFrame->Update();
 }
 
-int COutputWindow::GetCurrentLine() const
+int ibOutputWindow::GetCurrentLine() const
 {
 	long pos = GetInsertionPoint();
 
@@ -175,14 +175,14 @@ int COutputWindow::GetCurrentLine() const
 	return y;
 }
 
-void COutputWindow::OnDoubleClick(wxMouseEvent& event)
+void ibOutputWindow::OnDoubleClick(wxMouseEvent& event)
 {
 	wxTextCoord col, row;
 	HitTest(event.GetPosition(), &col, &row);
 	event.Skip();
 }
 
-void COutputWindow::OnContextMenu(wxContextMenuEvent& event)
+void ibOutputWindow::OnContextMenu(wxContextMenuEvent& event)
 {
 	wxPoint pt = event.GetPosition();
 	ScreenToClient(&pt.x, &pt.y);
@@ -206,7 +206,7 @@ void COutputWindow::OnContextMenu(wxContextMenuEvent& event)
 	//event.Skip();
 }
 
-void COutputWindow::OnClearOutput(wxCommandEvent& event)
+void ibOutputWindow::OnClearOutput(wxCommandEvent& event)
 {
 	SetEditable(true);
 	wxStyledTextCtrl::ClearAll();
@@ -215,7 +215,7 @@ void COutputWindow::OnClearOutput(wxCommandEvent& event)
 	event.Skip();
 }
 
-void COutputWindow::OnKeyDown(wxKeyEvent& event)
+void ibOutputWindow::OnKeyDown(wxKeyEvent& event)
 {
 	event.Skip();
 }

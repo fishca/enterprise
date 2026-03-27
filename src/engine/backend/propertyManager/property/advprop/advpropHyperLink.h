@@ -6,7 +6,7 @@
 
 #include "backend/backend_core.h"
 
-class BACKEND_API IPropertyObject;
+class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
 // wxPGHyperLinkProperty
@@ -15,7 +15,7 @@ class BACKEND_API IPropertyObject;
 class BACKEND_API wxPGHyperLinkProperty : public wxPGProperty {
 public:
 
-	wxPGHyperLinkProperty(IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxPGHyperLinkProperty(ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 	virtual ~wxPGHyperLinkProperty();
 
@@ -31,7 +31,7 @@ public:
 	virtual void RefreshChildren();
 
 protected:
-	IPropertyObject* m_ownerProperty = nullptr;
+	ibPropertyObject* m_ownerProperty = nullptr;
 private:
 	WX_PG_DECLARE_PROPERTY_CLASS(wxPGHyperLinkProperty);
 };

@@ -10,74 +10,74 @@ wxDEFINE_EVENT(wxEVT_CONTROL_BUTTON_OPEN, wxCommandEvent);
 wxDEFINE_EVENT(wxEVT_CONTROL_BUTTON_SELECT, wxCommandEvent);
 wxDEFINE_EVENT(wxEVT_CONTROL_BUTTON_CLEAR, wxCommandEvent);
 
-wxBEGIN_EVENT_TABLE(wxControlTextEditor, wxWindow)
-EVT_SIZE(wxControlTextEditor::OnSize)
-EVT_DPI_CHANGED(wxControlTextEditor::OnDPIChanged)
+wxBEGIN_EVENT_TABLE(ibControlTextEditor, wxWindow)
+EVT_SIZE(ibControlTextEditor::OnSize)
+EVT_DPI_CHANGED(ibControlTextEditor::OnDPIChanged)
 wxEND_EVENT_TABLE()
 
-wxBEGIN_EVENT_TABLE(wxControlTextEditor::wxControlCustomTextEditor, wxTextCtrl)
-EVT_TEXT(wxID_ANY, wxControlTextEditor::wxControlCustomTextEditor::OnText)
-EVT_TEXT_ENTER(wxID_ANY, wxControlTextEditor::wxControlCustomTextEditor::OnTextEnter)
-EVT_TEXT_MAXLEN(wxID_ANY, wxControlTextEditor::wxControlCustomTextEditor::OnText)
+wxBEGIN_EVENT_TABLE(ibControlTextEditor::ibControlCustomTextEditor, wxTextCtrl)
+EVT_TEXT(wxID_ANY, ibControlTextEditor::ibControlCustomTextEditor::OnText)
+EVT_TEXT_ENTER(wxID_ANY, ibControlTextEditor::ibControlCustomTextEditor::OnTextEnter)
+EVT_TEXT_MAXLEN(wxID_ANY, ibControlTextEditor::ibControlCustomTextEditor::OnText)
 wxEND_EVENT_TABLE()
 
-wxBEGIN_EVENT_TABLE(wxControlTextEditor::wxControlCompositeEditor::wxControlEditorButtonCtrl, wxButton)
-EVT_LEFT_UP(wxControlTextEditor::wxControlCompositeEditor::wxControlEditorButtonCtrl::OnLeftUp)
+wxBEGIN_EVENT_TABLE(ibControlTextEditor::ibControlCompositeEditor::ibControlEditorButtonCtrl, wxButton)
+EVT_LEFT_UP(ibControlTextEditor::ibControlCompositeEditor::ibControlEditorButtonCtrl::OnLeftUp)
 wxEND_EVENT_TABLE()
 
-wxIMPLEMENT_DYNAMIC_CLASS(wxControlTextEditor, wxWindow);
+wxIMPLEMENT_DYNAMIC_CLASS(ibControlTextEditor, wxWindow);
 
 // accessors
 // ---------
 
-wxString wxControlTextEditor::DoGetValue() const
+wxString ibControlTextEditor::DoGetValue() const
 {
 	return m_text->GetValue();
 }
-wxString wxControlTextEditor::GetRange(long from, long to) const
+wxString ibControlTextEditor::GetRange(long from, long to) const
 {
 	return m_text->GetRange(from, to);
 }
 
-int wxControlTextEditor::GetLineLength(long lineNo) const
+int ibControlTextEditor::GetLineLength(long lineNo) const
 {
 	return m_text->GetLineLength(lineNo);
 }
-wxString wxControlTextEditor::GetLineText(long lineNo) const
+wxString ibControlTextEditor::GetLineText(long lineNo) const
 {
 	return m_text->GetLineText(lineNo);
 }
-int wxControlTextEditor::GetNumberOfLines() const
+int ibControlTextEditor::GetNumberOfLines() const
 {
 	return m_text->GetNumberOfLines();
 }
 
-bool wxControlTextEditor::IsModified() const
+bool ibControlTextEditor::IsModified() const
 {
 	return m_text->IsModified();
 }
-bool wxControlTextEditor::IsEditable() const
+bool ibControlTextEditor::IsEditable() const
 {
 	return m_text->IsEditable();
 }
 
 // more readable flag testing methods
-bool wxControlTextEditor::IsSingleLine() const
+bool ibControlTextEditor::IsSingleLine() const
 {
 	return m_text->IsSingleLine();
 }
-bool wxControlTextEditor::IsMultiLine() const
+bool ibControlTextEditor::IsMultiLine() const
 {
 	return m_text->IsMultiLine();
 }
 
 // If the return values from and to are the same, there is no selection.
-void wxControlTextEditor::GetSelection(long* from, long* to) const
+void ibControlTextEditor::GetSelection(long* from, long* to) const
 {
 	m_text->GetSelection(from, to);
 }
 
-wxString wxControlTextEditor::GetStringSelection() const
+wxString ibControlTextEditor::GetStringSelection() const
 {
 	return m_text->GetStringSelection();
 }
@@ -86,60 +86,60 @@ wxString wxControlTextEditor::GetStringSelection() const
 // ----------
 
 // editing
-void wxControlTextEditor::Clear()
+void ibControlTextEditor::Clear()
 {
 	m_text->Clear();
 }
-void wxControlTextEditor::Replace(long from, long to, const wxString& value)
+void ibControlTextEditor::Replace(long from, long to, const wxString& value)
 {
 	m_text->Replace(from, to, value);
 }
-void wxControlTextEditor::Remove(long from, long to)
+void ibControlTextEditor::Remove(long from, long to)
 {
 	m_text->Remove(from, to);
 }
 
 // load/save the controls contents from/to the file
-bool wxControlTextEditor::LoadFile(const wxString& file)
+bool ibControlTextEditor::LoadFile(const wxString& file)
 {
 	return m_text->LoadFile(file);
 }
-bool wxControlTextEditor::SaveFile(const wxString& file)
+bool ibControlTextEditor::SaveFile(const wxString& file)
 {
 	return m_text->SaveFile(file);
 }
 
 // sets/clears the dirty flag
-void wxControlTextEditor::MarkDirty()
+void ibControlTextEditor::MarkDirty()
 {
 	m_text->MarkDirty();
 }
-void wxControlTextEditor::DiscardEdits()
+void ibControlTextEditor::DiscardEdits()
 {
 	m_text->DiscardEdits();
 }
 
 // set the max number of characters which may be entered in a single line
 // text control
-void wxControlTextEditor::SetMaxLength(unsigned long len)
+void ibControlTextEditor::SetMaxLength(unsigned long len)
 {
 	m_text->SetMaxLength(len);
 }
 
 // writing text inserts it at the current position, appending always
 // inserts it at the end
-void wxControlTextEditor::WriteText(const wxString& text)
+void ibControlTextEditor::WriteText(const wxString& text)
 {
 	m_text->WriteText(text);
 }
-void wxControlTextEditor::AppendText(const wxString& text)
+void ibControlTextEditor::AppendText(const wxString& text)
 {
 	m_text->AppendText(text);
 }
 
 // insert the character which would have resulted from this key event,
 // return true if anything has been inserted
-bool wxControlTextEditor::EmulateKeyPress(const wxKeyEvent& event)
+bool ibControlTextEditor::EmulateKeyPress(const wxKeyEvent& event)
 {
 	return m_text->EmulateKeyPress(event);
 }
@@ -147,19 +147,19 @@ bool wxControlTextEditor::EmulateKeyPress(const wxKeyEvent& event)
 // text control under some platforms supports the text styles: these
 // methods allow to apply the given text style to the given selection or to
 // set/get the style which will be used for all appended text
-bool wxControlTextEditor::SetStyle(long start, long end, const wxTextAttr& style)
+bool ibControlTextEditor::SetStyle(long start, long end, const wxTextAttr& style)
 {
 	return m_text->SetStyle(start, end, style);
 }
-bool wxControlTextEditor::GetStyle(long position, wxTextAttr& style)
+bool ibControlTextEditor::GetStyle(long position, wxTextAttr& style)
 {
 	return m_text->GetStyle(position, style);
 }
-bool wxControlTextEditor::SetDefaultStyle(const wxTextAttr& style)
+bool ibControlTextEditor::SetDefaultStyle(const wxTextAttr& style)
 {
 	return m_text->SetDefaultStyle(style);
 }
-const wxTextAttr& wxControlTextEditor::GetDefaultStyle() const
+const wxTextAttr& ibControlTextEditor::GetDefaultStyle() const
 {
 	return m_text->GetDefaultStyle();
 }
@@ -167,16 +167,16 @@ const wxTextAttr& wxControlTextEditor::GetDefaultStyle() const
 // translate between the position (which is just an index in the text ctrl
 // considering all its contents as a single strings) and (x, y) coordinates
 // which represent column and line.
-long wxControlTextEditor::XYToPosition(long x, long y) const
+long ibControlTextEditor::XYToPosition(long x, long y) const
 {
 	return m_text->XYToPosition(x, y);
 }
-bool wxControlTextEditor::PositionToXY(long pos, long* x, long* y) const
+bool ibControlTextEditor::PositionToXY(long pos, long* x, long* y) const
 {
 	return m_text->PositionToXY(pos, x, y);
 }
 
-void wxControlTextEditor::ShowPosition(long pos)
+void ibControlTextEditor::ShowPosition(long pos)
 {
 	m_text->ShowPosition(pos);
 }
@@ -185,11 +185,11 @@ void wxControlTextEditor::ShowPosition(long pos)
 //
 // NB: pt is in device coords (not adjusted for the client area origin nor
 //     scrolling)
-wxTextCtrlHitTestResult wxControlTextEditor::HitTest(const wxPoint& pt, long* pos) const
+wxTextCtrlHitTestResult ibControlTextEditor::HitTest(const wxPoint& pt, long* pos) const
 {
 	return m_text->HitTest(pt, pos);
 }
-wxTextCtrlHitTestResult wxControlTextEditor::HitTest(const wxPoint& pt,
+wxTextCtrlHitTestResult ibControlTextEditor::HitTest(const wxPoint& pt,
 	wxTextCoord* col,
 	wxTextCoord* row) const
 {
@@ -197,95 +197,95 @@ wxTextCtrlHitTestResult wxControlTextEditor::HitTest(const wxPoint& pt,
 }
 
 // Clipboard operations
-void wxControlTextEditor::Copy()
+void ibControlTextEditor::Copy()
 {
 	m_text->Copy();
 }
-void wxControlTextEditor::Cut()
+void ibControlTextEditor::Cut()
 {
 	m_text->Cut();
 }
-void wxControlTextEditor::Paste()
+void ibControlTextEditor::Paste()
 {
 	m_text->Paste();
 }
 
-bool wxControlTextEditor::CanCopy() const
+bool ibControlTextEditor::CanCopy() const
 {
 	return m_text->CanCopy();
 }
-bool wxControlTextEditor::CanCut() const
+bool ibControlTextEditor::CanCut() const
 {
 	return m_text->CanCut();
 }
-bool wxControlTextEditor::CanPaste() const
+bool ibControlTextEditor::CanPaste() const
 {
 	return m_text->CanPaste();
 }
 
 // Undo/redo
-void wxControlTextEditor::Undo()
+void ibControlTextEditor::Undo()
 {
 	m_text->Undo();
 }
-void wxControlTextEditor::Redo()
+void ibControlTextEditor::Redo()
 {
 	m_text->Redo();
 }
 
-bool wxControlTextEditor::CanUndo() const
+bool ibControlTextEditor::CanUndo() const
 {
 	return m_text->CanUndo();
 }
-bool wxControlTextEditor::CanRedo() const
+bool ibControlTextEditor::CanRedo() const
 {
 	return m_text->CanRedo();
 }
 
 // Insertion point
-void wxControlTextEditor::SetInsertionPoint(long pos)
+void ibControlTextEditor::SetInsertionPoint(long pos)
 {
 	m_text->SetInsertionPoint(pos);
 }
-void wxControlTextEditor::SetInsertionPointEnd()
+void ibControlTextEditor::SetInsertionPointEnd()
 {
 	m_text->SetInsertionPointEnd();
 }
-long wxControlTextEditor::GetInsertionPoint() const
+long ibControlTextEditor::GetInsertionPoint() const
 {
 	return m_text->GetInsertionPoint();
 }
-long wxControlTextEditor::GetLastPosition() const
+long ibControlTextEditor::GetLastPosition() const
 {
 	return m_text->GetLastPosition();
 }
 
-void wxControlTextEditor::SetSelection(long from, long to)
+void ibControlTextEditor::SetSelection(long from, long to)
 {
 	m_text->SetSelection(from, to);
 }
-void wxControlTextEditor::SelectAll()
+void ibControlTextEditor::SelectAll()
 {
 	m_text->SelectAll();
 }
 
-void wxControlTextEditor::SetEditable(bool editable)
+void ibControlTextEditor::SetEditable(bool editable)
 {
 	m_text->SetEditable(editable);
 }
 
 // Autocomplete
-bool wxControlTextEditor::DoAutoCompleteStrings(const wxArrayString& choices)
+bool ibControlTextEditor::DoAutoCompleteStrings(const wxArrayString& choices)
 {
 	return m_text->AutoComplete(choices);
 }
 
-bool wxControlTextEditor::DoAutoCompleteFileNames(int flags)
+bool ibControlTextEditor::DoAutoCompleteFileNames(int flags)
 {
 	return flags == wxFILE ? m_text->AutoCompleteFileNames() : m_text->AutoCompleteDirectories();
 }
 
-bool wxControlTextEditor::DoAutoCompleteCustom(wxTextCompleter* completer)
+bool ibControlTextEditor::DoAutoCompleteCustom(wxTextCompleter* completer)
 {
 	return m_text->AutoComplete(completer);
 }
@@ -293,22 +293,22 @@ bool wxControlTextEditor::DoAutoCompleteCustom(wxTextCompleter* completer)
 // Note that overriding DoSetValue() is currently insufficient because the base
 // class ChangeValue() only updates m_hintData of this object (which is null
 // anyhow), instead of updating m_text->m_hintData, see #16998.
-void wxControlTextEditor::ChangeValue(const wxString& value)
+void ibControlTextEditor::ChangeValue(const wxString& value)
 {
 	m_text->ChangeValue(value);
 }
 
-void wxControlTextEditor::DoSetValue(const wxString& value, int flags)
+void ibControlTextEditor::DoSetValue(const wxString& value, int flags)
 {
 	m_text->DoSetValue(value, flags);
 }
 
-bool wxControlTextEditor::DoLoadFile(const wxString& file, int fileType)
+bool ibControlTextEditor::DoLoadFile(const wxString& file, int fileType)
 {
 	return m_text->DoLoadFile(file, fileType);
 }
 
-bool wxControlTextEditor::DoSaveFile(const wxString& file, int fileType)
+bool ibControlTextEditor::DoSaveFile(const wxString& file, int fileType)
 {
 	return m_text->DoSaveFile(file, fileType);
 }
@@ -317,7 +317,7 @@ bool wxControlTextEditor::DoSaveFile(const wxString& file, int fileType)
 // geometry
 // ----------------------------------------------------------------------------
 
-wxSize wxControlTextEditor::DoGetBestClientSize() const
+wxSize ibControlTextEditor::DoGetBestClientSize() const
 {
 	wxSize size = m_text->GetBestSize();
 	wxSize labelSize = m_label->GetBestSize();
@@ -329,7 +329,7 @@ wxSize wxControlTextEditor::DoGetBestClientSize() const
 	return size;
 }
 
-wxWindowList wxControlTextEditor::GetCompositeWindowParts() const
+wxWindowList ibControlTextEditor::GetCompositeWindowParts() const
 {
 	wxWindowList parts;
 	parts.push_back(m_label);
@@ -338,7 +338,7 @@ wxWindowList wxControlTextEditor::GetCompositeWindowParts() const
 	return parts;
 }
 
-bool wxControlTextEditor::ShouldInheritColours() const
+bool ibControlTextEditor::ShouldInheritColours() const
 {
 	return true;
 }
@@ -347,13 +347,13 @@ bool wxControlTextEditor::ShouldInheritColours() const
 // label
 // ----------------------------------------------------------------------------
 
-void wxControlTextEditor::CalculateLabelSize(wxCoord* w, wxCoord* h) const
+void ibControlTextEditor::CalculateLabelSize(wxCoord* w, wxCoord* h) const
 {
 	m_label->SetMinSize(wxDefaultSize);
 	m_label->GetBestSize(w, h);
 }
 
-void wxControlTextEditor::ApplyLabelSize(const wxSize& s)
+void ibControlTextEditor::ApplyLabelSize(const wxSize& s)
 {
 	m_label->SetMinSize(s);
 }

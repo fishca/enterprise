@@ -7,34 +7,34 @@
 //////////////////////////////////////////////////////////////////////////////////
 #define thisObject wxT("ThisObject")
 //////////////////////////////////////////////////////////////////////////////////
-//  CValueModuleManagerExternalDataProcessor
+//  ibValueModuleManagerExternalDataProcessor
 //////////////////////////////////////////////////////////////////////////////////
 
-CCompileModule* CValueModuleManagerExternalDataProcessor::GetCompileModule() const
+ibCompileModule* ibValueModuleManagerExternalDataProcessor::GetCompileModule() const
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
-CProcUnit* CValueModuleManagerExternalDataProcessor::GetProcUnit() const
+ibProcUnit* ibValueModuleManagerExternalDataProcessor::GetProcUnit() const
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
-std::map<wxString, CValue*>& CValueModuleManagerExternalDataProcessor::GetContextVariables()
+std::map<wxString, ibValue*>& ibValueModuleManagerExternalDataProcessor::GetContextVariables()
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
-CValueModuleManagerExternalDataProcessor::CValueModuleManagerExternalDataProcessor(IMetaData* metadata, CValueMetaObjectDataProcessor* metaObject)
-	: IValueModuleManager(CMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+ibValueModuleManagerExternalDataProcessor::ibValueModuleManagerExternalDataProcessor(ibMetaData* metadata, ibValueMetaObjectDataProcessor* metaObject)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
 {
-	m_objectValue = new CValueRecordDataObjectDataProcessor(metaObject);
+	m_objectValue = new ibValueRecordDataObjectDataProcessor(metaObject);
 	//set complile module 
 	//set proc unit 
 	m_objectValue->m_compileModule = m_compileModule;
@@ -46,7 +46,7 @@ CValueModuleManagerExternalDataProcessor::CValueModuleManagerExternalDataProcess
 	}
 }
 
-CValueModuleManagerExternalDataProcessor::~CValueModuleManagerExternalDataProcessor()
+ibValueModuleManagerExternalDataProcessor::~ibValueModuleManagerExternalDataProcessor()
 {
 	if (appData->DesignerMode()) {
 		//decrRef
@@ -54,12 +54,12 @@ CValueModuleManagerExternalDataProcessor::~CValueModuleManagerExternalDataProces
 	}
 }
 
-bool CValueModuleManagerExternalDataProcessor::CreateMainModule()
+bool ibValueModuleManagerExternalDataProcessor::CreateMainModule()
 {
 	if (m_initialized)
 		return true;
 
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_compileModule->SetParent(moduleManager->GetCompileModule());
@@ -76,7 +76,7 @@ bool CValueModuleManagerExternalDataProcessor::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = new CProcUnit();
+		m_procUnit = new ibProcUnit();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 
 		//set proc unit 
@@ -87,7 +87,7 @@ bool CValueModuleManagerExternalDataProcessor::CreateMainModule()
 			//and run... 
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const CBackendException*) {
+		catch (const ibBackendException*) {
 			return false;
 		};
 	}
@@ -104,7 +104,7 @@ bool CValueModuleManagerExternalDataProcessor::CreateMainModule()
 	return true;
 }
 
-bool CValueModuleManagerExternalDataProcessor::DestroyMainModule()
+bool ibValueModuleManagerExternalDataProcessor::DestroyMainModule()
 {
 	if (!m_initialized)
 		return true;
@@ -129,7 +129,7 @@ bool CValueModuleManagerExternalDataProcessor::DestroyMainModule()
 }
 
 //main module - initialize
-bool CValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
+bool ibValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 {
 	if (!m_initialized)
 		return false;
@@ -137,18 +137,18 @@ bool CValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 	//incrRef - for control delete 
 	m_objectValue->IncrRef();
 
-	IValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
-	IValueMetaObjectForm* defFormObject = commonObject->GetDefaultFormByID
+	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(
-		CValueMetaObjectDataProcessor::eFormDataProcessor
+		ibValueMetaObjectDataProcessor::eFormDataProcessor
 	);
 
 	if (defFormObject != nullptr) {
 
-		IBackendValueForm* result = nullptr;
+		ibBackendValueForm* result = nullptr;
 
-		if (!IValueModuleManager::FindCompileModule(defFormObject, result)) {
+		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
 
 			//valueForm = defFormObject->CreateForm(
 			//	nullptr, m_objectValue
@@ -167,7 +167,7 @@ bool CValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 			//	}
 			//}
 
-			result = IValueMetaObjectForm::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
+			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
 			if (result != nullptr) {
 				result->ShowForm();
@@ -181,8 +181,8 @@ bool CValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 		}
 	}
 	//else {
-	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, CGuid::newGuid());
-	//	valueForm->BuildForm(CValueMetaObjectDataProcessor::eFormDataProcessor);
+	//	ibBackendValueForm* valueForm = ibBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, ibGuid::newGuid());
+	//	valueForm->BuildForm(ibValueMetaObjectDataProcessor::eFormDataProcessor);
 	//	try {
 	//		valueForm->ShowForm();
 	//	}
@@ -204,7 +204,7 @@ bool CValueModuleManagerExternalDataProcessor::StartMainModule(bool force)
 }
 
 //main module - destroy
-bool CValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
+bool ibValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 {
 	if (force)
 		return true;
@@ -216,34 +216,34 @@ bool CValueModuleManagerExternalDataProcessor::ExitMainModule(bool force)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-//  CValueModuleManagerExternalReport
+//  ibValueModuleManagerExternalReport
 //////////////////////////////////////////////////////////////////////////////////
 
-CCompileModule* CValueModuleManagerExternalReport::GetCompileModule() const
+ibCompileModule* ibValueModuleManagerExternalReport::GetCompileModule() const
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetCompileModule();
 }
 
-CProcUnit* CValueModuleManagerExternalReport::GetProcUnit() const
+ibProcUnit* ibValueModuleManagerExternalReport::GetProcUnit() const
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetProcUnit();
 }
 
-std::map<wxString, CValue*>& CValueModuleManagerExternalReport::GetContextVariables()
+std::map<wxString, ibValue*>& ibValueModuleManagerExternalReport::GetContextVariables()
 {
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 	return moduleManager->GetContextVariables();
 }
 
-CValueModuleManagerExternalReport::CValueModuleManagerExternalReport(IMetaData* metadata, CValueMetaObjectReport* metaObject)
-	: IValueModuleManager(CMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
+ibValueModuleManagerExternalReport::ibValueModuleManagerExternalReport(ibMetaData* metadata, ibValueMetaObjectReport* metaObject)
+	: ibValueModuleManager(ibMetaDataConfiguration::Get(), metaObject ? metaObject->GetModuleObject() : nullptr)
 {
-	m_objectValue = new CValueRecordDataObjectReport(metaObject);
+	m_objectValue = new ibValueRecordDataObjectReport(metaObject);
 	//set complile module 
 	//set proc unit 
 	m_objectValue->m_compileModule = m_compileModule;
@@ -255,7 +255,7 @@ CValueModuleManagerExternalReport::CValueModuleManagerExternalReport(IMetaData* 
 	}
 }
 
-CValueModuleManagerExternalReport::~CValueModuleManagerExternalReport()
+ibValueModuleManagerExternalReport::~ibValueModuleManagerExternalReport()
 {
 	if (appData->DesignerMode()) {
 		//decrRef
@@ -263,12 +263,12 @@ CValueModuleManagerExternalReport::~CValueModuleManagerExternalReport()
 	}
 }
 
-bool CValueModuleManagerExternalReport::CreateMainModule()
+bool ibValueModuleManagerExternalReport::CreateMainModule()
 {
 	if (m_initialized)
 		return true;
 
-	IValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = activeMetaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	m_compileModule->SetParent(moduleManager->GetCompileModule());
@@ -285,7 +285,7 @@ bool CValueModuleManagerExternalReport::CreateMainModule()
 
 	if (!appData->DesignerMode()) {
 
-		m_procUnit = new CProcUnit();
+		m_procUnit = new ibProcUnit();
 		m_procUnit->SetParent(moduleManager->GetProcUnit());
 		//set proc unit 
 		m_objectValue->m_procUnit = m_procUnit;
@@ -294,7 +294,7 @@ bool CValueModuleManagerExternalReport::CreateMainModule()
 			m_compileModule->Compile();
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const CBackendException*) {
+		catch (const ibBackendException*) {
 			return false;
 		};
 	}
@@ -311,7 +311,7 @@ bool CValueModuleManagerExternalReport::CreateMainModule()
 	return true;
 }
 
-bool CValueModuleManagerExternalReport::DestroyMainModule()
+bool ibValueModuleManagerExternalReport::DestroyMainModule()
 {
 	if (!m_initialized)
 		return true;
@@ -337,7 +337,7 @@ bool CValueModuleManagerExternalReport::DestroyMainModule()
 }
 
 //main module - initialize
-bool CValueModuleManagerExternalReport::StartMainModule(bool force)
+bool ibValueModuleManagerExternalReport::StartMainModule(bool force)
 {
 	if (!m_initialized)
 		return false;
@@ -345,16 +345,16 @@ bool CValueModuleManagerExternalReport::StartMainModule(bool force)
 	//incrRef - for control delete 
 	m_objectValue->IncrRef();
 
-	IValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
+	ibValueMetaObjectRecordData* commonObject = m_objectValue->GetMetaObject();
 	wxASSERT(commonObject);
-	IValueMetaObjectForm* defFormObject = commonObject->GetDefaultFormByID
+	ibValueMetaObjectFormBase* defFormObject = commonObject->GetDefaultFormByID
 	(
-		CValueMetaObjectReport::eFormReport
+		ibValueMetaObjectReport::eFormReport
 	);
 
 	if (defFormObject != nullptr) {
-		IBackendValueForm* result = nullptr;
-		if (!IValueModuleManager::FindCompileModule(defFormObject, result)) {
+		ibBackendValueForm* result = nullptr;
+		if (!ibValueModuleManager::FindCompileModule(defFormObject, result)) {
 
 			//valueForm = defFormObject->CreateForm(
 			//	nullptr, m_objectValue
@@ -373,7 +373,7 @@ bool CValueModuleManagerExternalReport::StartMainModule(bool force)
 			//	}
 			//}
 
-			result = IValueMetaObjectForm::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
+			result = ibValueMetaObjectFormBase::CreateAndBuildForm(defFormObject, nullptr, m_objectValue);
 
 			if (result != nullptr) {
 				result->ShowForm();
@@ -386,8 +386,8 @@ bool CValueModuleManagerExternalReport::StartMainModule(bool force)
 		}
 	}
 	//else {
-	//	IBackendValueForm* valueForm = IBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, CGuid::newGuid());
-	//	valueForm->BuildForm(CValueMetaObjectReport::eFormReport);
+	//	ibBackendValueForm* valueForm = ibBackendValueForm::CreateNewForm(nullptr, nullptr, m_objectValue, ibGuid::newGuid());
+	//	valueForm->BuildForm(ibValueMetaObjectReport::eFormReport);
 	//	try {
 	//		valueForm->ShowForm();
 	//	}
@@ -409,7 +409,7 @@ bool CValueModuleManagerExternalReport::StartMainModule(bool force)
 }
 
 //main module - destroy
-bool CValueModuleManagerExternalReport::ExitMainModule(bool force)
+bool ibValueModuleManagerExternalReport::ExitMainModule(bool force)
 {
 	if (force)
 		return true;
@@ -421,15 +421,15 @@ bool CValueModuleManagerExternalReport::ExitMainModule(bool force)
 }
 
 //****************************************************************************
-//*                      CValueModuleManagerExternalDataProcessor                 *
+//*                      ibValueModuleManagerExternalDataProcessor                 *
 //****************************************************************************
 
-void CValueModuleManagerExternalDataProcessor::PrepareNames() const
+void ibValueModuleManagerExternalDataProcessor::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	if (m_objectValue != nullptr) {
 		m_objectValue->PrepareNames();
-		CMethodHelper* methodHelper = m_objectValue->GetPMethods();
+		ibValueMethodHelper* methodHelper = m_objectValue->GetPMethods();
 		wxASSERT(methodHelper);
 		for (long idx = 0; idx < methodHelper->GetNMethods(); idx++) {
 			m_methodHelper->CopyMethod(methodHelper, idx);
@@ -440,7 +440,7 @@ void CValueModuleManagerExternalDataProcessor::PrepareNames() const
 	}
 
 	if (m_procUnit != nullptr) {
-		CByteCode* byteCode = m_procUnit->GetByteCode();
+		ibByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -462,19 +462,19 @@ void CValueModuleManagerExternalDataProcessor::PrepareNames() const
 	}
 }
 
-bool CValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManagerExternalDataProcessor::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	if (m_objectValue &&
 		m_objectValue->FindMethod(GetMethodName(lMethodNum)) != wxNOT_FOUND) {
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return IModuleDataObject::ExecuteFunc(
+	return ibModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
 
-bool CValueModuleManagerExternalDataProcessor::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueModuleManagerExternalDataProcessor::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(GetPropName(lPropNum)) != wxNOT_FOUND) {
@@ -488,7 +488,7 @@ bool CValueModuleManagerExternalDataProcessor::SetPropVal(const long lPropNum, c
 	return false;
 }
 
-bool CValueModuleManagerExternalDataProcessor::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueModuleManagerExternalDataProcessor::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(GetPropName(lPropNum)) != wxNOT_FOUND) {
@@ -502,7 +502,7 @@ bool CValueModuleManagerExternalDataProcessor::GetPropVal(const long lPropNum, C
 	return false;
 }
 
-long CValueModuleManagerExternalDataProcessor::FindProp(const wxString& strName) const
+long ibValueModuleManagerExternalDataProcessor::FindProp(const wxString& strName) const
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(strName) != wxNOT_FOUND) {
@@ -513,19 +513,19 @@ long CValueModuleManagerExternalDataProcessor::FindProp(const wxString& strName)
 		return m_procUnit->FindProp(strName);
 	}
 
-	return CValue::FindProp(strName);
+	return ibValue::FindProp(strName);
 }
 
 //****************************************************************************
-//*                      CValueModuleManagerExternalReport		                 *
+//*                      ibValueModuleManagerExternalReport		                 *
 //****************************************************************************
 
-void CValueModuleManagerExternalReport::PrepareNames() const
+void ibValueModuleManagerExternalReport::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	if (m_objectValue != nullptr) {
 		m_objectValue->PrepareNames();
-		CMethodHelper* methodHelper = m_objectValue->GetPMethods();
+		ibValueMethodHelper* methodHelper = m_objectValue->GetPMethods();
 		wxASSERT(methodHelper);
 		for (long idx = 0; idx < methodHelper->GetNMethods(); idx++) {
 			m_methodHelper->CopyMethod(methodHelper, idx);
@@ -535,7 +535,7 @@ void CValueModuleManagerExternalReport::PrepareNames() const
 		}
 	}
 	if (m_procUnit != nullptr) {
-		CByteCode* byteCode = m_procUnit->GetByteCode();
+		ibByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -557,19 +557,19 @@ void CValueModuleManagerExternalReport::PrepareNames() const
 	}
 }
 
-bool CValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManagerExternalReport::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	if (m_objectValue &&
 		m_objectValue->FindMethod(GetMethodName(lMethodNum)) != wxNOT_FOUND) {
 		return m_objectValue->CallAsFunc(lMethodNum, pvarRetValue, paParams, lSizeArray);
 	}
 
-	return IModuleDataObject::ExecuteFunc(
+	return ibModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
 
-bool CValueModuleManagerExternalReport::SetPropVal(const long lPropNum, const CValue& varPropVal)        //setting attribute
+bool ibValueModuleManagerExternalReport::SetPropVal(const long lPropNum, const ibValue& varPropVal)        //setting attribute
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(GetPropName(lPropNum)) != wxNOT_FOUND) {
@@ -583,7 +583,7 @@ bool CValueModuleManagerExternalReport::SetPropVal(const long lPropNum, const CV
 	return false;
 }
 
-bool CValueModuleManagerExternalReport::GetPropVal(const long lPropNum, CValue& pvarPropVal)                   //attribute value
+bool ibValueModuleManagerExternalReport::GetPropVal(const long lPropNum, ibValue& pvarPropVal)                   //attribute value
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(GetPropName(lPropNum)) != wxNOT_FOUND) {
@@ -597,7 +597,7 @@ bool CValueModuleManagerExternalReport::GetPropVal(const long lPropNum, CValue& 
 	return false;
 }
 
-long CValueModuleManagerExternalReport::FindProp(const wxString& strName) const
+long ibValueModuleManagerExternalReport::FindProp(const wxString& strName) const
 {
 	if (m_objectValue &&
 		m_objectValue->FindProp(strName) != wxNOT_FOUND) {
@@ -608,12 +608,12 @@ long CValueModuleManagerExternalReport::FindProp(const wxString& strName) const
 		return m_procUnit->FindProp(strName);
 	}
 
-	return CValue::FindProp(strName);
+	return ibValue::FindProp(strName);
 }
 
 //**********************************************************************
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalDataProcessor, "ExternalDataProcessorModuleManager", string_to_clsid("SO_EDMM"));
-SYSTEM_TYPE_REGISTER(CValueModuleManagerExternalReport, "ExternalReportModuleManager", string_to_clsid("SO_ERMM"));
+SYSTEM_TYPE_REGISTER(ibValueModuleManagerExternalDataProcessor, "ExternalDataProcessorModuleManager", string_to_clsid("SO_EDMM"));
+SYSTEM_TYPE_REGISTER(ibValueModuleManagerExternalReport, "ExternalReportModuleManager", string_to_clsid("SO_ERMM"));

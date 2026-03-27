@@ -15,25 +15,25 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGTypeProperty, wxStringProperty, ComboBoxAndBut
 wxPGChoices wxPGTypeProperty::GetDateTime()
 {
 	wxPGChoices choices;
-	choices.Add(_("Date"), eDateFractions::eDateFractions_Date);
-	choices.Add(_("Date and time"), eDateFractions::eDateFractions_DateTime);
-	choices.Add(_("Time"), eDateFractions::eDateFractions_Time);
+	choices.Add(_("Date"), ibDateFractions::ibDateFractions_Date);
+	choices.Add(_("Date and time"), ibDateFractions::ibDateFractions_DateTime);
+	choices.Add(_("Time"), ibDateFractions::ibDateFractions_Time);
 	return choices;
 }
 
 #include "backend/metadata.h"
 #include "backend/objCtor.h"
 
-void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, const class_identifier_t& clsid)
+void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, const ibClassID& clsid)
 {
-	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
+	const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
 	wxASSERT(so);
-	if (so->GetObjectTypeCtor() == eCtorObjectType::eCtorObjectType_object_metadata) {
-		const IMetaData* metaData = dynamic_cast<const IBackendTypeConfigFactory*>(m_ownerProperty)->GetMetaData();
+	if (so->GetObjectTypeCtor() == ibCtorObjectType::ibCtorObjectType_object_metadata) {
+		const ibMetaData* metaData = dynamic_cast<const ibBackendTypeConfigFactory*>(m_ownerProperty)->GetMetaData();
 		wxASSERT(metaData);
 		if (metaData != nullptr) {
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
-				for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -41,8 +41,8 @@ void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, co
 					);
 				}
 			}
-			else if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
-				for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_List)) {
+			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_List)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -50,22 +50,22 @@ void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, co
 					);
 				}
 			}
-			else if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-				for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Object)) {
+			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Object)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
 						choice.GetValue(), so->GetClassType()
 					);
 				}
-				for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
 						choice.GetValue(), so->GetClassType()
 					);
 				}
-				for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_RecordManager)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_RecordManager)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -85,45 +85,45 @@ void wxPGTypeProperty::FillByClsid(const eSelectorDataType& selectorDataType, co
 
 #include "backend/system/value/valueTable.h"
 
-wxPGTypeProperty::wxPGTypeProperty(const IPropertyObject* property, const eSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
+wxPGTypeProperty::wxPGTypeProperty(const ibPropertyObject* property, const ibSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
 	wxPGProperty(label, strName), m_ownerProperty(property)
 {
 	m_precision = new wxUIntProperty(_("Precision"), wxT("precision"), 0);
 	AddPrivateChild(m_precision);
 	m_scale = new wxUIntProperty(_("Scale"), wxT("scale"), 0);
 	AddPrivateChild(m_scale);
-	m_date_time = new wxEnumProperty(_("Date time"), wxT("date_time"), GetDateTime(), eDateFractions::eDateFractions_Date);
+	m_date_time = new wxEnumProperty(_("Date time"), wxT("date_time"), GetDateTime(), ibDateFractions::ibDateFractions_Date);
 	AddPrivateChild(m_date_time);
 	m_length = new wxUIntProperty(_("Length"), wxT("length"), 0);
 	AddPrivateChild(m_length);
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-		FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_EMPTY));
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+		FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_EMPTY));
 	}
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_any || selectorDataType == eSelectorDataType::eSelectorDataType_boolean || selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
-		if (selectorDataType == eSelectorDataType::eSelectorDataType_boolean) {
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN));
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any || selectorDataType == ibSelectorDataType::ibSelectorDataType_boolean || selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
+		if (selectorDataType == ibSelectorDataType::ibSelectorDataType_boolean) {
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN));
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER));
 		}
 		else {
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN));
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_DATE));
-			FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_STRING));
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN));
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER));
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_DATE));
+			FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_STRING));
 		}
 	}
-	else if (selectorDataType == eSelectorDataType::eSelectorDataType_resource) {
-		FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_NUMBER));
+	else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_resource) {
+		FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER));
 	}
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-		FillByClsid(selectorDataType, CValue::GetIDByVT(eValueTypes::TYPE_NULL));
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+		FillByClsid(selectorDataType, ibValue::GetIDByVT(ibValueTypes::TYPE_NULL));
 	}
 
 	/////////////////////////////////////////////////
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 		FillByClsid(selectorDataType, g_valueTableCLSID);
 	}
 
@@ -133,12 +133,12 @@ wxPGTypeProperty::wxPGTypeProperty(const IPropertyObject* property, const eSelec
 	FillByClsid(selectorDataType, g_metaDocumentCLSID);
 	FillByClsid(selectorDataType, g_metaEnumerationCLSID);
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
 		FillByClsid(selectorDataType, g_metaDataProcessorCLSID);
 		FillByClsid(selectorDataType, g_metaReportCLSID);
 	}
 
-	if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
+	if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 		FillByClsid(selectorDataType, g_metaInformationRegisterCLSID);
 		FillByClsid(selectorDataType, g_metaAccumulationRegisterCLSID);
 	}
@@ -151,11 +151,11 @@ wxPGTypeProperty::wxPGTypeProperty(const IPropertyObject* property, const eSelec
 
 bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, int argFlags) const
 {
-	wxVariantDataAttribute* dataType = property_cast(value, wxVariantDataAttribute);
+	ibVariantDataAttribute* dataType = property_cast(value, ibVariantDataAttribute);
 	if (dataType != nullptr) {
-		wxVariantDataAttribute* newType = dataType->Clone();
+		ibVariantDataAttribute* newType = dataType->Clone();
 		wxASSERT(newType);
-		CTypeDescription& td = newType->GetTypeDesc();
+		ibTypeDescription& td = newType->GetTypeDesc();
 		td.SetDefaultMetaType(m_valChoices.at(number));
 		value = newType;
 		return true;
@@ -165,11 +165,11 @@ bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, int argFlags) co
 
 wxVariant wxPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, wxVariant& childValue) const
 {
-	wxVariantDataAttribute* dataType = property_cast(thisValue, wxVariantDataAttribute);
+	ibVariantDataAttribute* dataType = property_cast(thisValue, ibVariantDataAttribute);
 	if (dataType != nullptr) {
-		wxVariantDataAttribute* newType = dataType->Clone();
+		ibVariantDataAttribute* newType = dataType->Clone();
 		wxASSERT(newType);
-		CTypeDescription& td = newType->GetTypeDesc();
+		ibTypeDescription& td = newType->GetTypeDesc();
 		if (childIndex == 0 || childIndex == 1) {
 			long precision = (childIndex == 0)
 				? childValue : m_precision->GetValue(),
@@ -187,7 +187,7 @@ wxVariant wxPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, w
 		}
 		else if (childIndex == 2) {
 			long dateTime = childValue;
-			td.SetDate((eDateFractions)dateTime);
+			td.SetDate((ibDateFractions)dateTime);
 		}
 		else if (childIndex == 3) {
 			long length = childValue;
@@ -204,13 +204,13 @@ wxVariant wxPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, w
 
 void wxPGTypeProperty::RefreshChildren()
 {
-	wxVariantDataAttribute* varData = property_cast(m_value, wxVariantDataAttribute);
+	ibVariantDataAttribute* varData = property_cast(m_value, ibVariantDataAttribute);
 
 	if (varData != nullptr) {
-		const CTypeDescription& td = varData->GetTypeDesc();
+		const ibTypeDescription& td = varData->GetTypeDesc();
 		if (td.GetClsidCount() < 2) {
-			eValueTypes id = CValue::GetVTByID(td.GetFirstClsid());
-			if (id == eValueTypes::TYPE_NUMBER) {
+			ibValueTypes id = ibValue::GetVTByID(td.GetFirstClsid());
+			if (id == ibValueTypes::TYPE_NUMBER) {
 				m_precision->Hide(false);
 				m_precision->SetExpanded(true);
 				m_scale->Hide(false);
@@ -220,7 +220,7 @@ void wxPGTypeProperty::RefreshChildren()
 				m_length->Hide(true);
 				m_length->SetExpanded(false);
 			}
-			else if (id == eValueTypes::TYPE_DATE) {
+			else if (id == ibValueTypes::TYPE_DATE) {
 				m_precision->Hide(true);
 				m_precision->SetExpanded(false);
 				m_scale->Hide(true);
@@ -230,7 +230,7 @@ void wxPGTypeProperty::RefreshChildren()
 				m_length->Hide(true);
 				m_length->SetExpanded(false);
 			}
-			else if (id == eValueTypes::TYPE_STRING) {
+			else if (id == ibValueTypes::TYPE_STRING) {
 				m_precision->Hide(true);
 				m_precision->SetExpanded(false);
 				m_scale->Hide(true);
@@ -263,15 +263,15 @@ void wxPGTypeProperty::RefreshChildren()
 		}
 
 		for (unsigned int idx = 0; idx < td.GetClsidCount(); idx++) {
-			eValueTypes id = CValue::GetVTByID(td.GetByIdx(idx));
-			if (id == eValueTypes::TYPE_NUMBER) {
+			ibValueTypes id = ibValue::GetVTByID(td.GetByIdx(idx));
+			if (id == ibValueTypes::TYPE_NUMBER) {
 				m_precision->SetValue(td.GetPrecision());
 				m_scale->SetValue(td.GetScale());
 			}
-			else if (id == eValueTypes::TYPE_DATE) {
+			else if (id == ibValueTypes::TYPE_DATE) {
 				m_date_time->SetValue(td.GetDateFraction());
 			}
-			else if (id == eValueTypes::TYPE_STRING) {
+			else if (id == ibValueTypes::TYPE_STRING) {
 				m_length->SetValue(td.GetLength());
 			}
 		}
@@ -299,19 +299,19 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 	class wxPGEditorTypeDialogAdapter : public wxPGEditorDialogAdapter {
 
 		class wxTreeItemOptionData : public wxTreeItemData {
-			const IAbstractTypeCtor* m_typeCtor;
+			const ibCtorAbstractType* m_typeCtor;
 		public:
-			wxTreeItemOptionData(const IAbstractTypeCtor* typeCtor) : wxTreeItemData(), m_typeCtor(typeCtor) {}
-			class_identifier_t GetClassType() const { return m_typeCtor->GetClassType(); }
-			const IAbstractTypeCtor* GetTypeCtor() const { return m_typeCtor; }
+			wxTreeItemOptionData(const ibCtorAbstractType* typeCtor) : wxTreeItemData(), m_typeCtor(typeCtor) {}
+			ibClassID GetClassType() const { return m_typeCtor->GetClassType(); }
+			const ibCtorAbstractType* GetTypeCtor() const { return m_typeCtor; }
 		};
 
-		void FillByClsid(const class_identifier_t& clsid,
-			wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
+		void FillByClsid(const ibClassID& clsid,
+			wxPropertyCheckTree* tc, ibVariantDataAttribute* data, bool allowEdit) {
 
 			wxImageList* imageList = tc->GetImageList();
 			wxASSERT(imageList);
-			const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
+			const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
 			const int groupIcon = imageList->Add(so->GetClassIcon());
 
 			wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -320,7 +320,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				itemData);
 
 			if (data != nullptr) {
-				const CTypeDescription& td = data->GetTypeDesc();
+				const ibTypeDescription& td = data->GetTypeDesc();
 				tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 				tc->Check(newItem, td.ContainType(so->GetClassType()));
 			}
@@ -330,13 +330,13 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			}
 		}
 
-		void FillByClsid(IMetaData* metaData, const class_identifier_t& clsid,
-			wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
+		void FillByClsid(ibMetaData* metaData, const ibClassID& clsid,
+			wxPropertyCheckTree* tc, ibVariantDataAttribute* data, bool allowEdit) {
 
 			wxImageList* imageList = tc->GetImageList();
 			wxASSERT(imageList);
 			if (metaData != nullptr && metaData->IsRegisterCtor(clsid)) {
-				const IAbstractTypeCtor* so = metaData ? metaData->GetAvailableCtor(clsid) : CValue::GetAvailableCtor(clsid);
+				const ibCtorAbstractType* so = metaData ? metaData->GetAvailableCtor(clsid) : ibValue::GetAvailableCtor(clsid);
 				const int groupIcon = imageList->Add(so->GetClassIcon());
 
 				wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -345,7 +345,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 					itemData);
 
 				if (data != nullptr) {
-					const CTypeDescription& td = data->GetTypeDesc();
+					const ibTypeDescription& td = data->GetTypeDesc();
 					tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 					tc->Check(newItem, td.ContainType(so->GetClassType()));
 				}
@@ -356,21 +356,21 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			}
 		}
 
-		void FillByClsid(eSelectorDataType selectorDataType, IMetaData* metaData, const class_identifier_t& clsid,
-			wxPropertyCheckTree* tc, wxVariantDataAttribute* data, bool allowEdit) {
+		void FillByClsid(ibSelectorDataType selectorDataType, ibMetaData* metaData, const ibClassID& clsid,
+			wxPropertyCheckTree* tc, ibVariantDataAttribute* data, bool allowEdit) {
 
 			wxImageList* imageList = tc->GetImageList();
 			wxASSERT(imageList);
 			if (metaData != nullptr && metaData->IsRegisterCtor(clsid)) {
-				const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
-				if (selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
+				const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
+				if (selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
 
 					const int groupIcon = imageList->Add(so->GetClassIcon());
 					const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Ref"),
 						groupIcon, groupIcon);
 
-					for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
-						IValueMetaObjectRecordDataRef* registerData = dynamic_cast<IValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+						ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -379,7 +379,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 								itemData);
 
 							if (data != nullptr) {
-								const CTypeDescription& td = data->GetTypeDesc();
+								const ibTypeDescription& td = data->GetTypeDesc();
 								tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 								tc->Check(newItem, td.ContainType(so->GetClassType()));
 							}
@@ -390,14 +390,14 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						}
 					}
 				}
-				else if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
+				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 
 					const int groupIcon = imageList->Add(so->GetClassIcon());
 					const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("List"),
 						groupIcon, groupIcon);
 
-					for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_List)) {
-						IValueMetaObjectGenericData* registerData = dynamic_cast<IValueMetaObjectGenericData*>(so->GetMetaObject());
+					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_List)) {
+						ibValueMetaObjectGenericData* registerData = dynamic_cast<ibValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
 							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -406,7 +406,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 								itemData);
 
 							if (data != nullptr) {
-								const CTypeDescription& td = data->GetTypeDesc();
+								const ibTypeDescription& td = data->GetTypeDesc();
 								tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 								tc->Check(newItem, td.ContainType(so->GetClassType()));
 							}
@@ -417,15 +417,15 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						}
 					}
 				}
-				else if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
+				else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
 					if (so->GetClassType() != g_metaEnumerationCLSID) {
 
 						int groupIcon = imageList->Add(so->GetClassIcon());
 						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Object"),
 							groupIcon, groupIcon);
 
-						for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Object)) {
-							IValueMetaObjectRecordData* registerData = dynamic_cast<IValueMetaObjectRecordData*>(so->GetMetaObject());
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Object)) {
+							ibValueMetaObjectRecordData* registerData = dynamic_cast<ibValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -434,7 +434,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 									itemData);
 
 								if (data != nullptr) {
-									const CTypeDescription& td = data->GetTypeDesc();
+									const ibTypeDescription& td = data->GetTypeDesc();
 									tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 									tc->Check(newItem, td.ContainType(so->GetClassType()));
 								}
@@ -451,8 +451,8 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Ref"),
 							groupIcon, groupIcon);
 
-						for (auto so : metaData->GetListCtorsByType(clsid, eCtorMetaType::eCtorMetaType_Reference)) {
-							IValueMetaObjectRecordDataRef* registerData = dynamic_cast<IValueMetaObjectRecordDataRef*>(so->GetMetaObject());
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
 								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
@@ -461,7 +461,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 									itemData);
 
 								if (data != nullptr) {
-									const CTypeDescription& td = data->GetTypeDesc();
+									const ibTypeDescription& td = data->GetTypeDesc();
 									tc->SetItemState(newItem, td.ContainType(so->GetClassType()) ? allowEdit ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::CHECKED_DISABLED : allowEdit ? wxPropertyCheckTree::UNCHECKED : wxPropertyCheckTree::UNCHECKED_DISABLED);
 									tc->Check(newItem, td.ContainType(so->GetClassType()));
 								}
@@ -483,13 +483,13 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			wxPGTypeProperty* dlgProp = wxDynamicCast(prop, wxPGTypeProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
-			const IBackendTypeConfigFactory* typeFactory = dynamic_cast<const IBackendTypeConfigFactory*>(dlgProp->GetPropertyObject());
+			const ibBackendTypeConfigFactory* typeFactory = dynamic_cast<const ibBackendTypeConfigFactory*>(dlgProp->GetPropertyObject());
 			if (typeFactory == nullptr) return false;
 
-			wxVariantDataAttribute* data = property_cast(dlgProp->GetValue(), wxVariantDataAttribute);
+			ibVariantDataAttribute* data = property_cast(dlgProp->GetValue(), ibVariantDataAttribute);
 			if (data == nullptr) return false;
 
-			const CTypeDescription& typeDesc = data->GetTypeDesc();
+			const ibTypeDescription& typeDesc = data->GetTypeDesc();
 
 			// launch editor dialog
 			wxDialog* dlg = new wxDialog(pg, wxID_ANY, _("Choice type"), wxDefaultPosition, wxDefaultSize,
@@ -502,7 +502,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 			wxBoxSizer* rowsizer = new wxBoxSizer(wxHORIZONTAL);
 
-			const eSelectorDataType& selectorDataType = typeFactory->GetFilterDataType();
+			const ibSelectorDataType& selectorDataType = typeFactory->GetFilterDataType();
 
 			wxCheckBox* compositeDataType = new wxCheckBox(dlg, wxID_ANY,
 				_("Composite data type"), wxDefaultPosition, wxDefaultSize);
@@ -511,13 +511,13 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
 			int style = wxPR_SINGLE_CHECK;
 
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_any ||
-				selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any ||
+				selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
 				style = wxPR_MULTIPLE_CHECK;
 			}
 
 			if (data != nullptr) {
-				const CTypeDescription& typeDesc = data->GetTypeDesc();
+				const ibTypeDescription& typeDesc = data->GetTypeDesc();
 				style = typeDesc.GetClsidCount() > 1 ?
 					wxPR_MULTIPLE_CHECK : wxPR_SINGLE_CHECK;
 				compositeDataType->SetValue(
@@ -527,7 +527,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				compositeDataType->SetValue(style != wxPR_SINGLE_CHECK);
 			}
 
-			compositeDataType->Show(selectorDataType != eSelectorDataType::eSelectorDataType_table);
+			compositeDataType->Show(selectorDataType != ibSelectorDataType::ibSelectorDataType_table);
 
 			wxPropertyCheckTree* tc = new wxPropertyCheckTree(dlg, wxID_ANY,
 				wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | style | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
@@ -548,7 +548,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			tcSLength->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,
 				[data](wxSpinEvent& event)
 				{
-					CTypeDescription& typeDesc = data->GetTypeDesc();
+					ibTypeDescription& typeDesc = data->GetTypeDesc();
 					typeDesc.SetString(event.GetValue());
 					event.Skip();
 				}
@@ -573,8 +573,8 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			cDDateFormat->Bind(wxEVT_COMMAND_CHOICE_SELECTED,
 				[data](wxCommandEvent& event)
 				{
-					CTypeDescription& typeDesc = data->GetTypeDesc();
-					typeDesc.SetDate((eDateFractions)event.GetSelection());
+					ibTypeDescription& typeDesc = data->GetTypeDesc();
+					typeDesc.SetDate((ibDateFractions)event.GetSelection());
 					event.Skip();
 				}
 			);
@@ -594,7 +594,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			tcNLength->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,
 				[data](wxSpinEvent& event)
 				{
-					CTypeDescription& typeDesc = data->GetTypeDesc();
+					ibTypeDescription& typeDesc = data->GetTypeDesc();
 					typeDesc.SetNumber(event.GetValue(), typeDesc.GetScale());
 					event.Skip();
 				}
@@ -613,7 +613,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			tcNScale->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,
 				[data](wxSpinEvent& event)
 				{
-					CTypeDescription& typeDesc = data->GetTypeDesc();
+					ibTypeDescription& typeDesc = data->GetTypeDesc();
 					unsigned short scale = typeDesc.GetPrecision() > event.GetValue() ?
 						event.GetValue() : typeDesc.GetPrecision();
 
@@ -651,15 +651,15 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				{
 					wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(tc->GetItemData(event.GetItem()));
 					if (item != nullptr) {
-						const class_identifier_t& clsid = item->GetClassType();
+						const ibClassID& clsid = item->GetClassType();
 						for (unsigned int i = 0; i < numberSizer->GetItemCount(); i++) {
-							numberSizer->Show(i, CValue::GetVTByID(clsid) == eValueTypes::TYPE_NUMBER);
+							numberSizer->Show(i, ibValue::GetVTByID(clsid) == ibValueTypes::TYPE_NUMBER);
 						}
 						for (unsigned int i = 0; i < dateSizer->GetItemCount(); i++) {
-							dateSizer->Show(i, CValue::GetVTByID(clsid) == eValueTypes::TYPE_DATE);
+							dateSizer->Show(i, ibValue::GetVTByID(clsid) == ibValueTypes::TYPE_DATE);
 						}
 						for (unsigned int i = 0; i < stringSizer->GetItemCount(); i++) {
-							stringSizer->Show(i, CValue::GetVTByID(clsid) == eValueTypes::TYPE_STRING);
+							stringSizer->Show(i, ibValue::GetVTByID(clsid) == ibValueTypes::TYPE_STRING);
 						}
 						topsizer->Layout();
 						tc->Layout();
@@ -685,46 +685,46 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				new wxImageList(icon_size, icon_size)
 			);
 
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_EMPTY), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_EMPTY), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
 
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_any
-				|| selectorDataType == eSelectorDataType::eSelectorDataType_reference) {
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_DATE), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_STRING), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any
+				|| selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_DATE), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_STRING), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
-			else if (selectorDataType == eSelectorDataType::eSelectorDataType_boolean) {
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_boolean) {
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
-			else if (selectorDataType == eSelectorDataType::eSelectorDataType_resource) {
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_resource) {
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
 
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
-				FillByClsid(CValue::GetIDByVT(eValueTypes::TYPE_NULL), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NULL), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
 
 			/////////////////////////////////////////////////
-			if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
+			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 				FillByClsid(g_valueTableCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 			}
 			/////////////////////////////////////////////////
 
-			IMetaData* metaData = typeFactory->GetMetaData();
+			ibMetaData* metaData = typeFactory->GetMetaData();
 			wxASSERT(metaData);
 			if (metaData != nullptr) {
 				FillByClsid(selectorDataType, metaData, g_metaCatalogCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 				FillByClsid(selectorDataType, metaData, g_metaDocumentCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 				FillByClsid(selectorDataType, metaData, g_metaEnumerationCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				if (selectorDataType == eSelectorDataType::eSelectorDataType_any) {
+				if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
 					FillByClsid(selectorDataType, metaData, g_metaDataProcessorCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 					FillByClsid(selectorDataType, metaData, g_metaReportCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 				}
-				if (selectorDataType == eSelectorDataType::eSelectorDataType_table) {
+				if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
 					FillByClsid(selectorDataType, metaData, g_metaInformationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 					FillByClsid(selectorDataType, metaData, g_metaAccumulationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
 				}
@@ -745,8 +745,8 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			}
 			tc->ExpandAll(); int res = dlg->ShowModal();
 			if (res == wxID_OK) {
-				wxVariantDataAttribute* clone = data->Clone();
-				CTypeDescription& createdDesc = clone->GetTypeDesc();
+				ibVariantDataAttribute* clone = data->Clone();
+				ibTypeDescription& createdDesc = clone->GetTypeDesc();
 				createdDesc.ClearMetaType();
 				unsigned int selCount = tc->GetSelections(ids);
 				for (const wxTreeItemId& selItem : ids) {

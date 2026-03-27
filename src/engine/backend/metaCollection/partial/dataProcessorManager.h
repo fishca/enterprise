@@ -3,45 +3,45 @@
 
 #include "dataProcessor.h"
 
-class CValueManagerDataObjectDataProcessor :
-	public IValueManagerDataObject {
+class ibValueManagerDataObjectDataProcessor :
+	public ibValueManagerDataObject {
 public:
 
-	CValueManagerDataObjectDataProcessor(CValueMetaObjectDataProcessor* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~CValueManagerDataObjectDataProcessor() {}
+	ibValueManagerDataObjectDataProcessor(ibValueMetaObjectDataProcessor* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~ibValueManagerDataObjectDataProcessor() {}
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual ibValueMetaObjectDataProcessor* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	CValueMetaObjectDataProcessor* m_metaObject;
+	ibValueMetaObjectDataProcessor* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDataProcessor);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectDataProcessor);
 };
 
-class CValueManagerDataObjectExternalDataProcessor :
-	public IValueManagerObject {
+class ibValueManagerDataObjectExternalDataProcessor :
+	public ibValueManagerObject {
 public:
 
-	CValueManagerDataObjectExternalDataProcessor() {}
-	virtual ~CValueManagerDataObjectExternalDataProcessor() {}
+	ibValueManagerDataObjectExternalDataProcessor() {}
+	virtual ~ibValueManagerDataObjectExternalDataProcessor() {}
 
-	virtual CValueMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
+	virtual ibValueMetaObjectDataProcessor* GetMetaObject() const { return nullptr; }
 
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
 		return &m_methodHelper;
 	}
 	virtual void PrepareNames() const;                         // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	static CMethodHelper m_methodHelper;
+	static ibValueMethodHelper m_methodHelper;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectExternalDataProcessor);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectExternalDataProcessor);
 };
 
 #endif 

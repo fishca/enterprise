@@ -14,13 +14,13 @@ wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& 
 	const wxPGChoices& choices,
 	const wxVariant& value) : wxPGProperty(label, strName)
 {
-	wxVariantDataAction* dataAction = property_cast(value, wxVariantDataAction);
+	ibVariantDataAction* dataAction = property_cast(value, ibVariantDataAction);
 	wxASSERT(dataAction);
 
 	m_choices.Assign(choices);
 	m_value = wxPGVariant_Zero;
 	
-	const CActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
+	const ibActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
 	if (actionDesc.GetSystemAction() != wxNOT_FOUND) {
 		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
 			const int val = m_choices.GetValue(i);
@@ -49,9 +49,9 @@ wxEventToolProperty::~wxEventToolProperty()
 
 wxString wxEventToolProperty::ValueToString(wxVariant& value, int argFlags) const
 {
-	wxVariantDataAction* dataAction = property_cast(value, wxVariantDataAction);
+	ibVariantDataAction* dataAction = property_cast(value, ibVariantDataAction);
 	wxASSERT(dataAction);
-	const CActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
+	const ibActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
 
 	for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
 		const int sel_val = m_choices.GetValue(i);
@@ -76,7 +76,7 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 		if (text.IsEmpty()) {
 			m_actionData.SetString(text);
 		}
-		variant = new wxVariantDataAction(text);
+		variant = new ibVariantDataAction(text);
 		return true;
 	}
 
@@ -85,7 +85,7 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 
 bool wxEventToolProperty::IntToValue(wxVariant& value, int number, int argFlags) const
 {
-	value = new wxVariantDataAction(m_choices.GetValue(number));
+	value = new ibVariantDataAction(m_choices.GetValue(number));
 	
 	m_actionData.SetNumber(
 		m_choices.GetValue(number)
@@ -129,11 +129,11 @@ wxPGEditorDialogAdapter* wxEventToolProperty::GetEditorDialog() const
 				wxPGProperty* pgProp = pg->GetPropertyByName(wxT("Name"));
 				const wxString& strActionEvent =
 					(pgProp ? pgProp->GetDisplayedString() : wxEmptyString) + prop->GetName();
-				SetValue(new wxVariantDataAction(strActionEvent));
+				SetValue(new ibVariantDataAction(strActionEvent));
 				return true;
 			}
 
-			SetValue(new wxVariantDataAction(strActionEvent));
+			SetValue(new ibVariantDataAction(strActionEvent));
 			return true;
 		}
 	};

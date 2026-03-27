@@ -3,20 +3,20 @@
 #include "databaseLayerException.h"
 
 // ctor()
-IDatabaseLayer::IDatabaseLayer()
-	: CDatabaseErrorReporter()
+ibDatabaseLayer::ibDatabaseLayer()
+	: ibDatabaseErrorReporter()
 {
 }
 
 // dtor()
-IDatabaseLayer::~IDatabaseLayer()
+ibDatabaseLayer::~ibDatabaseLayer()
 {
 	CloseResultSets();
 	CloseStatements();
 }
 
 #if !wxUSE_UTF8_LOCALE_ONLY
-int IDatabaseLayer::DoRunQueryWchar(const wxChar* format, ...)
+int ibDatabaseLayer::DoRunQueryWchar(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -28,7 +28,7 @@ int IDatabaseLayer::DoRunQueryWchar(const wxChar* format, ...)
 	return DoRunQuery(strQuery, true);
 }
 
-IDatabaseResultSet* IDatabaseLayer::DoRunQueryWithResultsWchar(const wxChar* format, ...)
+ibDatabaseResultSet* ibDatabaseLayer::DoRunQueryWithResultsWchar(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -40,7 +40,7 @@ IDatabaseResultSet* IDatabaseLayer::DoRunQueryWithResultsWchar(const wxChar* for
 	return DoRunQueryWithResults(strQuery);
 }
 
-IPreparedStatement* IDatabaseLayer::DoPrepareStatementWchar(const wxChar* format, ...)
+ibPreparedStatement* ibDatabaseLayer::DoPrepareStatementWchar(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -54,7 +54,7 @@ IPreparedStatement* IDatabaseLayer::DoPrepareStatementWchar(const wxChar* format
 #endif
 
 #if wxUSE_UNICODE_UTF8
-int IDatabaseLayer::DoRunQueryUtf8(const wxChar* format, ...)
+int ibDatabaseLayer::DoRunQueryUtf8(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -66,7 +66,7 @@ int IDatabaseLayer::DoRunQueryUtf8(const wxChar* format, ...)
 	return DoRunQuery(strQuery, true);
 }
 
-IDatabaseResultSet* IDatabaseLayer::DoRunQueryWithResultsUtf8(const wxChar* format, ...)
+ibDatabaseResultSet* ibDatabaseLayer::DoRunQueryWithResultsUtf8(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -78,7 +78,7 @@ IDatabaseResultSet* IDatabaseLayer::DoRunQueryWithResultsUtf8(const wxChar* form
 	return DoRunQueryWithResults(strQuery);
 }
 
-IPreparedStatement* IDatabaseLayer::DoPrepareStatementUtf8(const wxChar* format, ...)
+ibPreparedStatement* ibDatabaseLayer::DoPrepareStatementUtf8(const wxChar* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -91,20 +91,20 @@ IPreparedStatement* IDatabaseLayer::DoPrepareStatementUtf8(const wxChar* format,
 }
 #endif
 
-void IDatabaseLayer::CloseResultSets()
+void ibDatabaseLayer::CloseResultSets()
 {
 	// Iterate through all of the result sets and close them all
 	DatabaseResultSetHashSet::iterator start = m_ResultSets.begin();
 	DatabaseResultSetHashSet::iterator stop = m_ResultSets.end();
 	while (start != stop)
 	{
-		wxLogDebug(wxT("ResultSet NOT closed and cleaned up by the IDatabaseLayer dtor"));
+		wxLogDebug(wxT("ResultSet NOT closed and cleaned up by the ibDatabaseLayer dtor"));
 		delete(*start++);
 	}
 	m_ResultSets.clear();
 }
 
-void IDatabaseLayer::CloseStatements()
+void ibDatabaseLayer::CloseStatements()
 {
 	// Iterate through all of the statements and close them all
 	DatabaseStatementHashSet::iterator start = m_Statements.begin();
@@ -118,7 +118,7 @@ void IDatabaseLayer::CloseStatements()
 	m_Statements.clear();
 }
 
-bool IDatabaseLayer::CloseResultSet(IDatabaseResultSet*& pResultSet)
+bool ibDatabaseLayer::CloseResultSet(ibDatabaseResultSet*& pResultSet)
 {
 	if (pResultSet != nullptr)
 	{
@@ -137,7 +137,7 @@ bool IDatabaseLayer::CloseResultSet(IDatabaseResultSet*& pResultSet)
 		{
 			// If the statement knows about the result set then it will close the 
 			//  result set and return true, otherwise it will return false
-			IPreparedStatement* pStatement = *it;
+			ibPreparedStatement* pStatement = *it;
 			if (pStatement != nullptr)
 			{
 				if (pStatement->CloseResultSet(pResultSet))
@@ -160,7 +160,7 @@ bool IDatabaseLayer::CloseResultSet(IDatabaseResultSet*& pResultSet)
 
 }
 
-bool IDatabaseLayer::CloseStatement(IPreparedStatement*& pStatement)
+bool ibDatabaseLayer::CloseStatement(ibPreparedStatement*& pStatement)
 {
 	if (pStatement != nullptr)
 	{
@@ -183,24 +183,24 @@ bool IDatabaseLayer::CloseStatement(IPreparedStatement*& pStatement)
 }
 
 
-int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+int ibDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultInt(strSQL, &variant, bRequireUniqueResult);
 }
 
-int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+int ibDatabaseLayer::GetSingleResultInt(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultInt(strSQL, &variant, bRequireUniqueResult);
 }
 
-int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+int ibDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	int value = -1;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -236,7 +236,7 @@ int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxVariant* 
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -267,24 +267,24 @@ int IDatabaseLayer::GetSingleResultInt(const wxString& strSQL, const wxVariant* 
 	return value;
 }
 
-wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+wxString ibDatabaseLayer::GetSingleResultString(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultString(strSQL, &variant, bRequireUniqueResult);
 }
 
-wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+wxString ibDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultString(strSQL, &variant, bRequireUniqueResult);
 }
 
-wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+wxString ibDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	wxString value = wxEmptyString;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -320,7 +320,7 @@ wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxV
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -351,24 +351,24 @@ wxString IDatabaseLayer::GetSingleResultString(const wxString& strSQL, const wxV
 	return value;
 }
 
-long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+long ibDatabaseLayer::GetSingleResultLong(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultLong(strSQL, &variant, bRequireUniqueResult);
 }
 
-long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+long ibDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultLong(strSQL, &variant, bRequireUniqueResult);
 }
 
-long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+long ibDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	long value = -1;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -404,7 +404,7 @@ long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxVariant
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -435,24 +435,24 @@ long IDatabaseLayer::GetSingleResultLong(const wxString& strSQL, const wxVariant
 	return value;
 }
 
-bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+bool ibDatabaseLayer::GetSingleResultBool(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultBool(strSQL, &variant, bRequireUniqueResult);
 }
 
-bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+bool ibDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultBool(strSQL, &variant, bRequireUniqueResult);
 }
 
-bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+bool ibDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	bool value = false;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -488,7 +488,7 @@ bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxVariant
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -519,24 +519,24 @@ bool IDatabaseLayer::GetSingleResultBool(const wxString& strSQL, const wxVariant
 	return value;
 }
 
-wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+wxDateTime ibDatabaseLayer::GetSingleResultDate(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultDate(strSQL, &variant, bRequireUniqueResult);
 }
 
-wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+wxDateTime ibDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultDate(strSQL, &variant, bRequireUniqueResult);
 }
 
-wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+wxDateTime ibDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	wxDateTime value = wxDefaultDateTime;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -572,7 +572,7 @@ wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxV
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -603,24 +603,24 @@ wxDateTime IDatabaseLayer::GetSingleResultDate(const wxString& strSQL, const wxV
 	return value;
 }
 
-void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, int nField, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
+void* ibDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, int nField, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultBlob(strSQL, &variant, buffer, bRequireUniqueResult);
 }
 
-void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxString& strField, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
+void* ibDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxString& strField, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultBlob(strSQL, &variant, buffer, bRequireUniqueResult);
 }
 
-void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxVariant* field, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
+void* ibDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxVariant* field, wxMemoryBuffer& buffer, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	void* value = nullptr;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -656,7 +656,7 @@ void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxVarian
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -687,24 +687,24 @@ void* IDatabaseLayer::GetSingleResultBlob(const wxString& strSQL, const wxVarian
 	return value;
 }
 
-double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+double ibDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultDouble(strSQL, &variant, bRequireUniqueResult);
 }
 
-double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+double ibDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultDouble(strSQL, &variant, bRequireUniqueResult);
 }
 
-double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+double ibDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
 	double value = -1;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -740,7 +740,7 @@ double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxVar
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -771,24 +771,24 @@ double IDatabaseLayer::GetSingleResultDouble(const wxString& strSQL, const wxVar
 	return value;
 }
 
-number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
+ibNumber ibDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, int nField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant((long)nField);
 	return GetSingleResultNumber(strSQL, &variant, bRequireUniqueResult);
 }
 
-number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
+ibNumber ibDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxString& strField, bool bRequireUniqueResult /*= true*/)
 {
 	wxVariant variant(strField);
 	return GetSingleResultNumber(strSQL, &variant, bRequireUniqueResult);
 }
 
-number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
+ibNumber ibDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxVariant* field, bool bRequireUniqueResult /*= true*/)
 {
 	bool valueRetrievedFlag = false;
-	number_t value = -1;
+	ibNumber value = -1;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -825,7 +825,7 @@ number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxV
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -856,23 +856,23 @@ number_t IDatabaseLayer::GetSingleResultNumber(const wxString& strSQL, const wxV
 	return value;
 }
 
-wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, int nField)
+wxArrayInt ibDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, int nField)
 {
 	wxVariant variant((long)nField);
 	return GetResultsArrayInt(strSQL, &variant);
 }
 
-wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxString& strField)
+wxArrayInt ibDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxString& strField)
 {
 	wxVariant variant(strField);
 	return GetResultsArrayInt(strSQL, &variant);
 }
 
-wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxVariant* field)
+wxArrayInt ibDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxVariant* field)
 {
 	wxArrayInt returnArray;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -888,7 +888,7 @@ wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxVa
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -909,23 +909,23 @@ wxArrayInt IDatabaseLayer::GetResultsArrayInt(const wxString& strSQL, const wxVa
 	return returnArray;
 }
 
-wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, int nField)
+wxArrayString ibDatabaseLayer::GetResultsArrayString(const wxString& strSQL, int nField)
 {
 	wxVariant variant((long)nField);
 	return GetResultsArrayString(strSQL, &variant);
 }
 
-wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, const wxString& strField)
+wxArrayString ibDatabaseLayer::GetResultsArrayString(const wxString& strSQL, const wxString& strField)
 {
 	wxVariant variant(strField);
 	return GetResultsArrayString(strSQL, &variant);
 }
 
-wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, const wxVariant* field)
+wxArrayString ibDatabaseLayer::GetResultsArrayString(const wxString& strSQL, const wxVariant* field)
 {
 	wxArrayString returnArray;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -941,7 +941,7 @@ wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, cons
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -962,23 +962,23 @@ wxArrayString IDatabaseLayer::GetResultsArrayString(const wxString& strSQL, cons
 	return returnArray;
 }
 
-wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, int nField)
+wxArrayLong ibDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, int nField)
 {
 	wxVariant variant((long)nField);
 	return GetResultsArrayLong(strSQL, &variant);
 }
 
-wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wxString& strField)
+wxArrayLong ibDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wxString& strField)
 {
 	wxVariant variant(strField);
 	return GetResultsArrayLong(strSQL, &variant);
 }
 
-wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wxVariant* field)
+wxArrayLong ibDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wxVariant* field)
 {
 	wxArrayLong returnArray;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -994,7 +994,7 @@ wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wx
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{
@@ -1016,23 +1016,23 @@ wxArrayLong IDatabaseLayer::GetResultsArrayLong(const wxString& strSQL, const wx
 }
 
 #if wxCHECK_VERSION(2, 7, 0)
-wxArrayDouble IDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, int nField)
+wxArrayDouble ibDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, int nField)
 {
 	wxVariant variant((long)nField);
 	return GetResultsArrayDouble(strSQL, &variant);
 }
 
-wxArrayDouble IDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, const wxString& strField)
+wxArrayDouble ibDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, const wxString& strField)
 {
 	wxVariant variant(strField);
 	return GetResultsArrayDouble(strSQL, &variant);
 }
 
-wxArrayDouble IDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, const wxVariant* field)
+wxArrayDouble ibDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, const wxVariant* field)
 {
 	wxArrayDouble returnArray;
 
-	IDatabaseResultSet* pResult = nullptr;
+	ibDatabaseResultSet* pResult = nullptr;
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try
 	{
@@ -1048,7 +1048,7 @@ wxArrayDouble IDatabaseLayer::GetResultsArrayDouble(const wxString& strSQL, cons
 		}
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	}
-	catch (DatabaseLayerException& e)
+	catch (ibDatabaseLayerException& e)
 	{
 		if (pResult != nullptr)
 		{

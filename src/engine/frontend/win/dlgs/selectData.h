@@ -18,15 +18,15 @@
 
 #include "backend/metaData.h"
 
-class CDialogSelectDataType : public wxDialog {
+class ibDialogSelectDataType : public wxDialog {
 	wxListCtrl* m_listData;
 	wxButton* m_buttonOk;
 	wxButton* m_buttonCancel;
-	std::map<long, class_identifier_t> m_listTypeClass;
+	std::map<long, ibClassID> m_listTypeClass;
 public:
-	bool ShowModal(class_identifier_t& clsid);
-	CDialogSelectDataType(IMetaData* metaData, const std::vector<class_identifier_t>& array);
-	virtual ~CDialogSelectDataType();
+	bool ShowModal(ibClassID& clsid);
+	ibDialogSelectDataType(ibMetaData* metaData, const std::vector<ibClassID>& array);
+	virtual ~ibDialogSelectDataType();
 
 protected:
 

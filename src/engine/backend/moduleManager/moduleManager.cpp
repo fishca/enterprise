@@ -15,25 +15,25 @@
 //*                                   Singleton class "moduleManager"                                     *
 //*********************************************************************************************************
 
-IValueModuleManager::IValueModuleManager(IMetaData* metadata, CValueMetaObjectModule* obj) :
-	CValue(eValueTypes::TYPE_VALUE), IModuleDataObject(new CCompileModule(obj)),
-	m_objectManager(new CValueGlobalContextManager(metadata)),
-	m_metaManager(new CValueMetadataUnit(metadata)),
-	m_methodHelper(new CMethodHelper()),
+ibValueModuleManager::ibValueModuleManager(ibMetaData* metadata, ibValueMetaObjectModule* obj) :
+	ibValue(ibValueTypes::TYPE_VALUE), ibModuleDataObject(new ibCompileModule(obj)),
+	m_objectManager(new ibValueGlobalContextManager(metadata)),
+	m_metaManager(new ibValueMetadataUnit(metadata)),
+	m_methodHelper(new ibValueMethodHelper()),
 	m_initialized(false)
 {
 	//add global variables 
 	m_listGlConstValue.insert_or_assign(objectMetadataManager, m_metaManager);
 }
 
-void IValueModuleManager::Clear()
+void ibValueModuleManager::Clear()
 {
 	//clear compile table 
 	m_listCommonModuleValue.clear();
 	m_listCommonModuleManager.clear();
 }
 
-IValueModuleManager::~IValueModuleManager()
+ibValueModuleManager::~ibValueModuleManager()
 {
 	Clear();
 	wxDELETE(m_methodHelper);
@@ -43,7 +43,7 @@ IValueModuleManager::~IValueModuleManager()
 //************************************************  support compile module ************************************************
 //*************************************************************************************************************************
 
-bool IValueModuleManager::AddCompileModule(const IValueMetaObject* mobj, CValue* object)
+bool ibValueModuleManager::AddCompileModule(const ibValueMetaObject* mobj, ibValue* object)
 {
 	if (!appData->DesignerMode() || !object)
 		return true;
@@ -55,7 +55,7 @@ bool IValueModuleManager::AddCompileModule(const IValueMetaObject* mobj, CValue*
 	return false;
 }
 
-bool IValueModuleManager::RemoveCompileModule(const IValueMetaObject* obj)
+bool ibValueModuleManager::RemoveCompileModule(const ibValueMetaObject* obj)
 {
 	if (!appData->DesignerMode())
 		return true;
@@ -67,11 +67,11 @@ bool IValueModuleManager::RemoveCompileModule(const IValueMetaObject* obj)
 	return false;
 }
 
-bool IValueModuleManager::AddCommonModule(CValueMetaObjectCommonModule* commonModule, bool managerModule, bool runModule)
+bool ibValueModuleManager::AddCommonModule(ibValueMetaObjectCommonModule* commonModule, bool managerModule, bool runModule)
 {
-	CValuePtr<CValueModuleUnit> moduleValue(new CValueModuleUnit(this, commonModule, managerModule));
+	ibValuePtr<ibValueModuleUnit> moduleValue(new ibValueModuleUnit(this, commonModule, managerModule));
 
-	if (!IValueModuleManager::AddCompileModule(commonModule, moduleValue))
+	if (!ibValueModuleManager::AddCompileModule(commonModule, moduleValue))
 		return false;
 
 	m_listCommonModuleManager.emplace_back(moduleValue);
@@ -92,7 +92,7 @@ bool IValueModuleManager::AddCommonModule(CValueMetaObjectCommonModule* commonMo
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const CBackendException*) {
+			catch (const ibBackendException*) {
 			};
 		}
 		return moduleValue->CreateCommonModule();
@@ -101,10 +101,10 @@ bool IValueModuleManager::AddCommonModule(CValueMetaObjectCommonModule* commonMo
 	return true;
 }
 
-IValueModuleManager::CValueModuleUnit* IValueModuleManager::FindCommonModule(CValueMetaObjectCommonModule* commonModule) const
+ibValueModuleManager::ibValueModuleUnit* ibValueModuleManager::FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const
 {
 	auto moduleObjectIt = std::find_if(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(),
-		[commonModule](CValueModuleUnit* valueModule) {
+		[commonModule](ibValueModuleUnit* valueModule) {
 			return commonModule == valueModule->GetModuleObject();
 		}
 	);
@@ -115,9 +115,9 @@ IValueModuleManager::CValueModuleUnit* IValueModuleManager::FindCommonModule(CVa
 	return nullptr;
 }
 
-bool IValueModuleManager::RenameCommonModule(CValueMetaObjectCommonModule* commonModule, const wxString& newName)
+bool ibValueModuleManager::RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName)
 {
-	CValue* moduleValue = FindCommonModule(commonModule);
+	ibValue* moduleValue = FindCommonModule(commonModule);
 	wxASSERT(moduleValue);
 
 	if (!commonModule->IsGlobalModule()) {
@@ -126,7 +126,7 @@ bool IValueModuleManager::RenameCommonModule(CValueMetaObjectCommonModule* commo
 			m_compileModule->RemoveVariable(commonModule->GetName());
 			m_compileModule->Compile();
 		}
-		catch (const CBackendException*) {
+		catch (const ibBackendException*) {
 		};
 
 		m_listGlConstValue.insert_or_assign(newName, moduleValue);
@@ -136,12 +136,12 @@ bool IValueModuleManager::RenameCommonModule(CValueMetaObjectCommonModule* commo
 	return true;
 }
 
-bool IValueModuleManager::RemoveCommonModule(CValueMetaObjectCommonModule* commonModule)
+bool ibValueModuleManager::RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule)
 {
-	CValuePtr<IValueModuleManager::CValueModuleUnit> moduleValue(FindCommonModule(commonModule));
+	ibValuePtr<ibValueModuleManager::ibValueModuleUnit> moduleValue(FindCommonModule(commonModule));
 	wxASSERT(moduleValue);
 
-	if (!IValueModuleManager::RemoveCompileModule(commonModule))
+	if (!ibValueModuleManager::RemoveCompileModule(commonModule))
 		return false;
 
 	auto iterator = std::find(m_listCommonModuleManager.begin(), m_listCommonModuleManager.end(), moduleValue);
@@ -162,11 +162,11 @@ bool IValueModuleManager::RemoveCommonModule(CValueMetaObjectCommonModule* commo
 	return true;
 }
 
-void IValueModuleManager::PrepareNames() const
+void ibValueModuleManager::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	if (m_procUnit != nullptr) {
-		CByteCode* byteCode = m_procUnit->GetByteCode();
+		ibByteCode* byteCode = m_procUnit->GetByteCode();
 		if (byteCode != nullptr) {
 			for (auto exportFunction : byteCode->m_listExportFunc) {
 				m_methodHelper->AppendMethod(
@@ -195,54 +195,54 @@ void IValueModuleManager::PrepareNames() const
 	}
 }
 
-bool IValueModuleManager::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManager::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
-	return IModuleDataObject::ExecuteProc(
+	return ibModuleDataObject::ExecuteProc(
 		GetMethodName(lMethodNum), paParams, lSizeArray
 	);
 }
 
-bool IValueModuleManager::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueModuleManager::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	return IModuleDataObject::ExecuteFunc(
+	return ibModuleDataObject::ExecuteFunc(
 		GetMethodName(lMethodNum), pvarRetValue, paParams, lSizeArray
 	);
 }
 
-bool IValueModuleManager::SetPropVal(const long lPropNum, const CValue& varPropVal)        //setting attribute
+bool ibValueModuleManager::SetPropVal(const long lPropNum, const ibValue& varPropVal)        //setting attribute
 {
 	if (m_procUnit != nullptr)
 		return m_procUnit->SetPropVal(lPropNum, varPropVal);
 	return false;
 }
 
-bool IValueModuleManager::GetPropVal(const long lPropNum, CValue& pvarPropVal)                   //attribute value
+bool ibValueModuleManager::GetPropVal(const long lPropNum, ibValue& pvarPropVal)                   //attribute value
 {
 	if (m_procUnit != nullptr)
 		return m_procUnit->GetPropVal(lPropNum, pvarPropVal);
 	return false;
 }
 
-long IValueModuleManager::FindProp(const wxString& strName) const
+long ibValueModuleManager::FindProp(const wxString& strName) const
 {
 	if (m_procUnit != nullptr) {
 		return m_procUnit->FindProp(strName);
 	}
 
-	return CValue::FindProp(strName);
+	return ibValue::FindProp(strName);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-//  CValueModuleManagerConfiguration
+//  ibValueModuleManagerConfiguration
 //////////////////////////////////////////////////////////////////////////////////
 
-CValueModuleManagerConfiguration::CValueModuleManagerConfiguration(IMetaData* metadata, CValueMetaObjectConfiguration* metaObject)
-	: IValueModuleManager(metadata, metaObject ? metaObject->GetModuleObject() : nullptr)
+ibValueModuleManagerConfiguration::ibValueModuleManagerConfiguration(ibMetaData* metadata, ibValueMetaObjectConfiguration* metaObject)
+	: ibValueModuleManager(metadata, metaObject ? metaObject->GetModuleObject() : nullptr)
 {
 }
 
 //main module - initialize
-bool CValueModuleManagerConfiguration::CreateMainModule()
+bool ibValueModuleManagerConfiguration::CreateMainModule()
 {
 	if (m_initialized)
 		return true;
@@ -255,7 +255,7 @@ bool CValueModuleManagerConfiguration::CreateMainModule()
 	//create singleton "manager"
 	m_compileModule->AddContextVariable(objectManager, m_objectManager);
 
-	for (auto ctor : CValue::GetListCtorsByType(eCtorObjectType_object_context)) {
+	for (auto ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_context)) {
 		m_compileModule->AddContextVariable(ctor->GetClassName(), ctor->CreateObject());
 	}
 
@@ -266,10 +266,10 @@ bool CValueModuleManagerConfiguration::CreateMainModule()
 		try {
 			m_compileModule->Compile();
 
-			m_procUnit = new CProcUnit;
+			m_procUnit = new ibProcUnit;
 			m_procUnit->Execute(m_compileModule->m_cByteCode);
 		}
-		catch (const CBackendException*) {
+		catch (const ibBackendException*) {
 			return false;
 		};
 	}
@@ -285,7 +285,7 @@ bool CValueModuleManagerConfiguration::CreateMainModule()
 	return true;
 }
 
-bool CValueModuleManagerConfiguration::DestroyMainModule()
+bool ibValueModuleManagerConfiguration::DestroyMainModule()
 {
 	if (!m_initialized)
 		return true;
@@ -298,7 +298,7 @@ bool CValueModuleManagerConfiguration::DestroyMainModule()
 	//create singleton "manager"
 	m_compileModule->RemoveVariable(objectManager);
 
-	for (auto ctor : CValue::GetListCtorsByType(eCtorObjectType_object_context)) {
+	for (auto ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_context)) {
 		m_compileModule->RemoveVariable(ctor->GetClassName());
 	}
 
@@ -319,7 +319,7 @@ bool CValueModuleManagerConfiguration::DestroyMainModule()
 }
 
 //main module - initialize
-bool CValueModuleManagerConfiguration::StartMainModule(bool force)
+bool ibValueModuleManagerConfiguration::StartMainModule(bool force)
 {
 	if (force)
 		return true;
@@ -333,14 +333,14 @@ bool CValueModuleManagerConfiguration::StartMainModule(bool force)
 		result = true;
 	}
 
-	if (CApplicationData::IsForceExit())
+	if (ibApplicationData::IsForceExit())
 		return false;
 
 	return result;
 }
 
 //main module - destroy
-bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
+bool ibValueModuleManagerConfiguration::ExitMainModule(bool force)
 {
 	if (force)
 		return true;
@@ -353,7 +353,7 @@ bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
 		OnExit(); /*m_initialized = false;*/ result = true;
 	}
 
-	if (CApplicationData::IsForceExit())
+	if (ibApplicationData::IsForceExit())
 		return true;
 
 	return result;
@@ -363,7 +363,7 @@ bool CValueModuleManagerConfiguration::ExitMainModule(bool force)
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueModuleManagerConfiguration, "ConfigModuleManager", string_to_clsid("SO_COMM"));
+SYSTEM_TYPE_REGISTER(ibValueModuleManagerConfiguration, "ConfigModuleManager", string_to_clsid("SO_COMM"));
 
-SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueModuleUnit, "ModuleManager", string_to_clsid("SO_MODL"));
-SYSTEM_TYPE_REGISTER(IValueModuleManager::CValueMetadataUnit, "Metadata", string_to_clsid("SO_METD"));
+SYSTEM_TYPE_REGISTER(ibValueModuleManager::ibValueModuleUnit, "ModuleManager", string_to_clsid("SO_MODL"));
+SYSTEM_TYPE_REGISTER(ibValueModuleManager::ibValueMetadataUnit, "Metadata", string_to_clsid("SO_METD"));

@@ -1,12 +1,12 @@
 #ifndef _INFORMATION_REGISTER_ENUM_H__
 #define _INFORMATION_REGISTER_ENUM_H__
 
-enum eWriteRegisterMode {
+enum ibWriteRegisterMode {
 	eIndependent,
 	eSubordinateRecorder
 };
 
-enum ePeriodicity {
+enum ibPeriodicity {
 	eNonPeriodic,
 	eWithinSecond,
 	eWithinDay,
@@ -14,27 +14,27 @@ enum ePeriodicity {
 
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
-class CValueEnumPeriodicity : public IEnumeration<ePeriodicity> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumPeriodicity);
+class ibValueEnumPeriodicity : public ibValueEnumeration<ibPeriodicity> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumPeriodicity);
 public:
-	CValueEnumPeriodicity() : IEnumeration() {}
-	//CValueEnumPeriodicity(ePeriodicity periodicity) : IEnumeration(periodicity) {}
+	ibValueEnumPeriodicity() : ibValueEnumeration() {}
+	//ibValueEnumPeriodicity(ibPeriodicity periodicity) : ibValueEnumeration(periodicity) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(ePeriodicity::eNonPeriodic, wxT("NonPeriodic"), _("Non periodic"));
-		AddEnumeration(ePeriodicity::eWithinSecond, wxT("WithinSecond"), _("Within second"));
-		AddEnumeration(ePeriodicity::eWithinDay, wxT("WithinDay"), _("Within day"));
+		AddEnumeration(ibPeriodicity::eNonPeriodic, wxT("NonPeriodic"), _("Non periodic"));
+		AddEnumeration(ibPeriodicity::eWithinSecond, wxT("WithinSecond"), _("Within second"));
+		AddEnumeration(ibPeriodicity::eWithinDay, wxT("WithinDay"), _("Within day"));
 	}
 };
-class CValueEnumWriteRegisterMode : public IEnumeration<eWriteRegisterMode> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumWriteRegisterMode);
+class ibValueEnumWriteRegisterMode : public ibValueEnumeration<ibWriteRegisterMode> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumWriteRegisterMode);
 public:
-	CValueEnumWriteRegisterMode() : IEnumeration() {}
-	//CValueEnumWriteRegisterMode(eWriteRegisterMode mode) : IEnumeration(mode) {}
+	ibValueEnumWriteRegisterMode() : ibValueEnumeration() {}
+	//ibValueEnumWriteRegisterMode(ibWriteRegisterMode mode) : ibValueEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eWriteRegisterMode::eIndependent, wxT("Independent"), _("Independent"));
-		AddEnumeration(eWriteRegisterMode::eSubordinateRecorder, wxT("SubordinateRecorder"), _("Subordinate recorder"));
+		AddEnumeration(ibWriteRegisterMode::eIndependent, wxT("Independent"), _("Independent"));
+		AddEnumeration(ibWriteRegisterMode::eSubordinateRecorder, wxT("SubordinateRecorder"), _("Subordinate recorder"));
 	}
 };
 #pragma endregion 

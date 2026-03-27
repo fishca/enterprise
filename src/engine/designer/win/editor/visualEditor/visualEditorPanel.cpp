@@ -7,21 +7,21 @@
 #include "titleFrame.h"
 #include "frontend/visualView/ctrl/form.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CVisualEditorNotebook::CVisualEditor, wxPanel);
+wxIMPLEMENT_DYNAMIC_CLASS(ibVisualEditorNotebook::ibVisualEditor, wxPanel);
 
-CVisualEditorNotebook::CVisualEditor::CVisualEditor() :
+ibVisualEditorNotebook::ibVisualEditor::ibVisualEditor() :
 	wxPanel(), m_visualEditor(nullptr)
 {
 }
 
-CVisualEditorNotebook::CVisualEditor::CVisualEditor(CMetaDocument* document, wxWindow* parent, int id) :
+ibVisualEditorNotebook::ibVisualEditor::ibVisualEditor(ibMetaDocument* document, wxWindow* parent, int id) :
 	wxPanel(parent, id),
-	m_document(document), m_visualEditor(nullptr), m_cmdProc(new CCommandProcessor()), m_valueForm(nullptr)
+	m_document(document), m_visualEditor(nullptr), m_cmdProc(new ibCommandProcessor()), m_valueForm(nullptr)
 {
 	CreateWideGui();
 }
 
-void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
+void ibVisualEditorNotebook::ibVisualEditor::CreateWideGui()
 {
 	wxWindow::Freeze();
 
@@ -34,11 +34,11 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 
 	wxASSERT(m_visualEditor == nullptr);
 
-	m_visualEditor = new CVisualEditorHost(this, m_splitter);
-	m_objectTree = new CVisualEditorObjectTree(this, m_splitter);
+	m_visualEditor = new ibVisualEditorHost(this, m_splitter);
+	m_objectTree = new ibVisualEditorObjectTree(this, m_splitter);
 
 	m_splitter->SplitHorizontally(m_visualEditor, 
-		CPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 200);
+		ibPanelTitle::CreateTitle(m_objectTree, _("Tree elements")), 200);
 
 	SetSizer(sizerMain);
 
@@ -55,7 +55,7 @@ void CVisualEditorNotebook::CVisualEditor::CreateWideGui()
 #include "frontend/docView/docView.h" 
 #include "frontend/mainFrame/mainFrame.h"
 
-void CVisualEditorNotebook::CVisualEditor::ActivateEditor()
+void ibVisualEditorNotebook::ibVisualEditor::ActivateEditor()
 {
 	objectInspector->SelectObject(GetSelectedObject());
 	SetFocus();
@@ -64,24 +64,24 @@ void CVisualEditorNotebook::CVisualEditor::ActivateEditor()
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/metadataConfiguration.h"
 
-bool CVisualEditorNotebook::CVisualEditor::LoadForm()
+bool ibVisualEditorNotebook::ibVisualEditor::LoadForm()
 {
 	if (m_document == nullptr)
 		return false;
 
-	const IValueMetaObjectForm* creator = m_document->GetMetaObject()->ConvertToType<IValueMetaObjectForm>();
+	const ibValueMetaObjectFormBase* creator = m_document->GetMetaObject()->ConvertToType<ibValueMetaObjectFormBase>();
 
 	if (creator == nullptr)
 		return false;
 
-	IMetaData* metaData = creator->GetMetaData();
+	ibMetaData* metaData = creator->GetMetaData();
 	wxASSERT(metaData);
 
-	IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
 	if (!moduleManager->FindCompileModule(creator, m_valueForm)) {
-		m_valueForm = new CValueForm(creator, nullptr);
+		m_valueForm = new ibValueForm(creator, nullptr);
 		if (!creator->LoadFormData(m_valueForm)) {
 			wxDELETE(m_valueForm);
 			return false;
@@ -103,9 +103,9 @@ bool CVisualEditorNotebook::CVisualEditor::LoadForm()
 	return true;
 }
 
-bool CVisualEditorNotebook::CVisualEditor::SaveForm()
+bool ibVisualEditorNotebook::ibVisualEditor::SaveForm()
 {
-	IValueMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectForm>();
+	ibValueMetaObjectFormBase* creator = m_document->ConvertMetaObjectToType<ibValueMetaObjectFormBase>();
 
 	// Create a std::string and copy your document data in to the string    
 	if (creator != nullptr) {
@@ -116,12 +116,12 @@ bool CVisualEditorNotebook::CVisualEditor::SaveForm()
 	return true;
 }
 
-void CVisualEditorNotebook::CVisualEditor::TestForm()
+void ibVisualEditorNotebook::ibVisualEditor::TestForm()
 {
 	m_valueForm->ShowForm(m_document, false);
 }
 
-CVisualEditorNotebook::CVisualEditor::~CVisualEditor()
+ibVisualEditorNotebook::ibVisualEditor::~ibVisualEditor()
 {
 	m_visualEditor->Destroy();
 	m_objectTree->Destroy();

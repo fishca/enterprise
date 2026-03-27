@@ -2,7 +2,7 @@
 
 #include <wx/xml/xml.h>
 
-void CDialogConnection::InitConnection(const wxString& strName, const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
+void ibDialogConnection::InitConnection(const wxString& strName, const wxString& strServer, const wxString& strPort, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword)
 {
 	m_textCtrlName->SetValue(strName);
 	m_textCtrlServer->SetValue(strServer);
@@ -12,7 +12,7 @@ void CDialogConnection::InitConnection(const wxString& strName, const wxString& 
 	m_textCtrlPassword->SetValue(strPassword);
 }
 
-CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+ibDialogConnection::ibDialogConnection(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -97,15 +97,15 @@ CDialogConnection::CDialogConnection(wxWindow* parent, wxWindowID id, const wxSt
 	this->Centre(wxBOTH);
 
 	// Connect Events
-	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::TestConnectionOnButtonClick), NULL, this);
-	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CDialogConnection::SaveConnectionOnButtonClick), NULL, this);
+	m_buttonTestConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::TestConnectionOnButtonClick), NULL, this);
+	m_buttonSaveConnection->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ibDialogConnection::SaveConnectionOnButtonClick), NULL, this);
 }
 
 #include "backend/databaseLayer/postgres/postgresDatabaseLayer.h"
 
-void CDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
+void ibDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 {
-	std::shared_ptr<CPostgresDatabaseLayer>postgresDatabaseLayer(new CPostgresDatabaseLayer);
+	std::shared_ptr<ibDatabaseLayerPostgres>postgresDatabaseLayer(new ibDatabaseLayerPostgres);
 	bool sucess = postgresDatabaseLayer->Open(
 		m_textCtrlServer->GetValue(),
 		m_textCtrlPort->GetValue(),
@@ -122,7 +122,7 @@ void CDialogConnection::TestConnectionOnButtonClick(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
+void ibDialogConnection::SaveConnectionOnButtonClick(wxCommandEvent& event)
 {
 	if (!m_textCtrlName->IsEmpty()) { EndModal(wxID_OK); }
 	event.Skip();

@@ -9,7 +9,7 @@
 //base event for "list"
 class BACKEND_API CEventAction : public IEvent {
 
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const CActionDescription& act) const;
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const;
 	wxPGChoices GetEventList() const {
 		wxPGChoices constants;
 		for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
@@ -31,8 +31,8 @@ class BACKEND_API CEventAction : public IEvent {
 			wxString m_strLabel;
 			wxString m_strHelp;
 			wxBitmap m_bmp;
-			action_identifier_t m_id;
-			CValue m_value;
+			ibActionID m_id;
+			ibValue m_value;
 		public:
 
 			CEventOptionItem() :
@@ -40,17 +40,17 @@ class BACKEND_API CEventAction : public IEvent {
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+			CEventOptionItem(const wxString& name, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(name), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+			CEventOptionItem(const wxString& name, const wxString& label, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(label), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) :
+			CEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(label), m_bmp(b), m_strHelp(help), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
@@ -70,7 +70,7 @@ class BACKEND_API CEventAction : public IEvent {
 				return *this;
 			}
 
-			operator const action_identifier_t() const { return m_id; }
+			operator const ibActionID() const { return m_id; }
 		};
 
 		CEventOptionItem GetItemAt(const unsigned int idx) const {
@@ -81,7 +81,7 @@ class BACKEND_API CEventAction : public IEvent {
 			return *it;
 		};
 
-		CEventOptionItem GetItemById(const action_identifier_t& id) const {
+		CEventOptionItem GetItemById(const ibActionID& id) const {
 			auto it = std::find_if(m_listValue.begin(), m_listValue.end(),
 				[id](const CEventOptionItem& p) { return id == p.m_id; }
 			);
@@ -94,18 +94,18 @@ class BACKEND_API CEventAction : public IEvent {
 
 		void ResetListItem() { m_listValue.clear(); }
 
-		void AppendItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(name, l, b, v); }
-		void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(name, label, l, b, v); }
-		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listValue.emplace_back(label, help, l, b, v); }
+		void AppendItem(const wxString& name, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listValue.emplace_back(name, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listValue.emplace_back(name, label, l, b, v); }
+		void AppendItem(const wxString& name, const wxString& label, const wxString& help, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listValue.emplace_back(label, help, l, b, v); }
 
-		bool HasValue(const action_identifier_t& l) const { return GetItemById(l); }
+		bool HasValue(const ibActionID& l) const { return GetItemById(l); }
 
 		wxString GetItemName(const unsigned int idx) const { return GetItemAt(idx).m_strName; }
 		wxString GetItemLabel(const unsigned int idx) const { return GetItemAt(idx).m_strLabel; }
 		wxString GetItemHelp(const unsigned int idx) const { return GetItemAt(idx).m_strHelp; }
 		wxBitmap GetItemBitmap(const unsigned int idx) const { return GetItemAt(idx).m_bmp; }
-		action_identifier_t GetItemId(const unsigned int idx) const { return GetItemAt(idx).m_id; }
-		CValue GetItemValue(const unsigned int idx) const { return GetItemAt(idx).m_value; }
+		ibActionID GetItemId(const unsigned int idx) const { return GetItemAt(idx).m_id; }
+		ibValue GetItemValue(const unsigned int idx) const { return GetItemAt(idx).m_value; }
 
 		unsigned int GetItemCount() const { return (unsigned int)m_listValue.size(); }
 
@@ -141,35 +141,35 @@ class BACKEND_API CEventAction : public IEvent {
 public:
 
 #pragma region value
-	action_identifier_t GetValueAsInteger() const;
+	ibActionID GetValueAsInteger() const;
 	wxString GetValueAsString() const;
-	CActionDescription& GetValueAsActionDesc() const;
-	void SetValue(const CActionDescription& val);
+	ibActionDescription& GetValueAsActionDesc() const;
+	void SetValue(const ibActionDescription& val);
 #pragma endregion 
 
 #pragma region item
-	void AppendItem(const wxString& name, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, l, b, v); }
-	void AppendItem(const wxString& name, const wxString& label, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
-	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const action_identifier_t& l, const wxBitmap& b, const CValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
+	void AppendItem(const wxString& name, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listPropValue.AppendItem(name, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listPropValue.AppendItem(name, label, l, b, v); }
+	void AppendItem(const wxString& name, const wxString& label, const wxString& help, const ibActionID& l, const wxBitmap& b, const ibValue& v) { (void)m_listPropValue.AppendItem(name, label, help, l, b, v); }
 #pragma endregion
 
 	template <typename optClass>
-	CEventAction(CPropertyCategory* cat, const wxString& name, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const action_identifier_t& value) : IEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
+	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args,
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
-	CEventAction(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const action_identifier_t& value) : IEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
+	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
-	CEventAction(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const action_identifier_t& value) : IEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
+	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
@@ -186,12 +186,12 @@ public:
 	}
 
 	// Set/Get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 private:
 	CEventOptionList m_listPropValue;

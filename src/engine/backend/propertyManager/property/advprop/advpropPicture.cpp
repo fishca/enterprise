@@ -24,7 +24,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 	m_propertySource(nullptr),
 	m_propertyBackend(nullptr), m_propertyConfiguration(nullptr), m_propertyFile(nullptr)
 {
-	wxVariantDataPicture* pictureVariant = property_cast(value, wxVariantDataPicture);
+	ibVariantDataPicture* pictureVariant = property_cast(value, ibVariantDataPicture);
 	wxASSERT(pictureVariant);
 
 	wxPGChoices sourceChoices, systemChoices, configurationChoices;
@@ -40,7 +40,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 
 	m_valChoices.insert_or_assign(entry.GetValue(), 0);
 
-	for (auto so : CBackendPicture::GetArrayPicture()) {
+	for (auto so : ibBackendPicture::GetArrayPicture()) {
 		wxPGChoiceEntry& entry = systemChoices.AddAsSorted(so.m_name, system_value++);
 		entry.SetBitmap(so.m_data);
 		m_valChoices.insert_or_assign(
@@ -48,18 +48,18 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 		);
 	}
 
-	const IPropertyObject* ownerValue = pictureVariant->GetOwner();
+	const ibPropertyObject* ownerValue = pictureVariant->GetOwner();
 	if (ownerValue != nullptr) {
 
-		const IMetaData* metaData = ownerValue->GetMetaData();
+		const ibMetaData* metaData = ownerValue->GetMetaData();
 
 		wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(wxEmptyString, system_config++);
 		m_confChoices.insert_or_assign(entry.GetValue(), wxNullGuid);
 
-		IMetaData* metaDataOwner = nullptr;
+		ibMetaData* metaDataOwner = nullptr;
 		if (metaData != nullptr && metaData->GetOwner(metaDataOwner)) {
 			for (const auto object : metaDataOwner->GetAnyArrayObject(g_metaPictureCLSID)) {
-				CValueMetaObjectPicture* picture = nullptr;
+				ibValueMetaObjectPicture* picture = nullptr;
 				if (object->ConvertToValue(picture)) {
 					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
 						object->GetName(), system_config++);
@@ -72,7 +72,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 		}
 		else if (metaData != nullptr) {
 			for (const auto object : metaData->GetAnyArrayObject(g_metaPictureCLSID)) {
-				CValueMetaObjectPicture* picture = nullptr;
+				ibValueMetaObjectPicture* picture = nullptr;
 				if (object->ConvertToValue(picture)) {
 					wxPGChoiceEntry& entry = configurationChoices.AddAsSorted(
 						object->GetName(), system_config++);
@@ -116,17 +116,17 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 wxVariant wxPGPictureProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
 	wxVariant& childValue) const
 {
-	wxVariantDataPicture* pictureVariant = property_cast(thisValue, wxVariantDataPicture);
+	ibVariantDataPicture* pictureVariant = property_cast(thisValue, ibVariantDataPicture);
 
 	if (pictureVariant != nullptr) {
 
-		wxVariantDataPicture* clonedPictureVariant = pictureVariant->Clone();
+		ibVariantDataPicture* clonedPictureVariant = pictureVariant->Clone();
 		wxASSERT(clonedPictureVariant);
 
 		switch (childIndex)
 		{
 		case 0:
-			clonedPictureVariant->SetPictureType(static_cast<EPictureType>(childValue.GetLong()));
+			clonedPictureVariant->SetPictureType(static_cast<ibPictureType>(childValue.GetLong()));
 			break;
 		case 1:
 			clonedPictureVariant->SetFromBackendPicture(m_valChoices.at(childValue.GetLong()));
@@ -135,7 +135,7 @@ wxVariant wxPGPictureProperty::ChildChanged(wxVariant& thisValue, const int chil
 			clonedPictureVariant->SetFromConfiguraion(m_confChoices.at(childValue.GetLong()));
 			break;
 		case 3:
-			wxVariantDataExternalPicture * externalPicture = property_cast(childValue, wxVariantDataExternalPicture);
+			ibVariantDataExternalPicture * externalPicture = property_cast(childValue, ibVariantDataExternalPicture);
 			wxASSERT(externalPicture);
 			clonedPictureVariant->SetFromExternalFile(externalPicture->GetExternalPictureDesc());
 			break;
@@ -149,16 +149,16 @@ wxVariant wxPGPictureProperty::ChildChanged(wxVariant& thisValue, const int chil
 
 void wxPGPictureProperty::RefreshChildren()
 {
-	wxVariantDataPicture* pictureVariant = property_cast(m_value, wxVariantDataPicture);
+	ibVariantDataPicture* pictureVariant = property_cast(m_value, ibVariantDataPicture);
 
 	if (pictureVariant != nullptr) {
 
 		m_propertySource->Hide(false);
 		m_propertySource->SetExpanded(true);
 
-		const CPictureDescription& pd = pictureVariant->GetPictureDesc();
+		const ibPictureDescription& pd = pictureVariant->GetPictureDesc();
 
-		if (pd.m_type == EPictureType::eFromBackend) {
+		if (pd.m_type == ibPictureType::eFromBackend) {
 			m_propertyBackend->Hide(false);
 			m_propertyBackend->SetExpanded(true);
 			m_propertyConfiguration->Hide(true);
@@ -166,7 +166,7 @@ void wxPGPictureProperty::RefreshChildren()
 			m_propertyFile->Hide(true);
 			m_propertyFile->SetExpanded(false);
 		}
-		else if (pd.m_type == EPictureType::eFromConfiguration) {
+		else if (pd.m_type == ibPictureType::eFromConfiguration) {
 			m_propertyBackend->Hide(true);
 			m_propertyBackend->SetExpanded(false);
 			m_propertyConfiguration->Hide(false);
@@ -174,7 +174,7 @@ void wxPGPictureProperty::RefreshChildren()
 			m_propertyFile->Hide(true);
 			m_propertyFile->SetExpanded(false);
 		}
-		else if (pd.m_type == EPictureType::eFromFile) {
+		else if (pd.m_type == ibPictureType::eFromFile) {
 			m_propertyBackend->Hide(true);
 			m_propertyBackend->SetExpanded(false);
 			m_propertyConfiguration->Hide(true);
@@ -185,7 +185,7 @@ void wxPGPictureProperty::RefreshChildren()
 
 		m_propertySource->SetValue(pd.m_type);
 
-		if (pd.m_type == EPictureType::eFromBackend) {
+		if (pd.m_type == ibPictureType::eFromBackend) {
 			auto iterator = std::find_if(m_valChoices.begin(), m_valChoices.end(),
 				[pd](const auto pair) { return pair.second == pd.m_class_identifier; });
 			if (iterator != m_valChoices.end())
@@ -193,7 +193,7 @@ void wxPGPictureProperty::RefreshChildren()
 			else
 				m_propertyBackend->SetValue(wxNOT_FOUND);
 		}
-		else if (pd.m_type == EPictureType::eFromConfiguration) {
+		else if (pd.m_type == ibPictureType::eFromConfiguration) {
 			auto iterator = std::find_if(m_confChoices.begin(), m_confChoices.end(),
 				[pd](const auto pair) { return pair.second == pd.m_meta_guid; });
 			if (iterator != m_confChoices.end())
@@ -201,8 +201,8 @@ void wxPGPictureProperty::RefreshChildren()
 			else
 				m_propertyConfiguration->SetValue(wxNOT_FOUND);
 		}
-		else if (pd.m_type == EPictureType::eFromFile) {
-			m_propertyFile->SetValue(new wxVariantDataExternalPicture(pd.m_img_data));
+		else if (pd.m_type == ibPictureType::eFromFile) {
+			m_propertyFile->SetValue(new ibVariantDataExternalPicture(pd.m_img_data));
 		}
 	}
 	else {
@@ -288,7 +288,7 @@ void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	const wxRect& rect,
 	wxPGPaintData& d)
 {
-	wxVariantDataExternalPicture* pictureVariant = property_cast(GetValue(), wxVariantDataExternalPicture);
+	ibVariantDataExternalPicture* pictureVariant = property_cast(GetValue(), ibVariantDataExternalPicture);
 
 	if (!pictureVariant->IsEmptyPicture()) {
 
@@ -319,7 +319,7 @@ void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
 {
 	if (text.IsEmpty()) {
-		variant = new wxVariantDataExternalPicture();
+		variant = new ibVariantDataExternalPicture();
 		return true;
 	}
 
@@ -328,7 +328,7 @@ bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString
 
 bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
 {
-	wxVariantDataExternalPicture* externalPicture = property_cast(value, wxVariantDataExternalPicture);
+	ibVariantDataExternalPicture* externalPicture = property_cast(value, ibVariantDataExternalPicture);
 	wxASSERT_MSG(externalPicture != nullptr, "Function called for incompatible property");
 
 	wxFileName filename(externalPicture->GetPictureFileName());
@@ -352,10 +352,10 @@ bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 	if (dlg.ShowModal() == wxID_OK) {
 
 		// Get from FS
-		CExternalPictureDescription container;
+		ibExternalPictureDescription container;
 
-		if (CBackendPicture::LoadFromFile(dlg.GetPath(), container)) {
-			value = new wxVariantDataExternalPicture(container);
+		if (ibBackendPicture::LoadFromFile(dlg.GetPath(), container)) {
+			value = new ibVariantDataExternalPicture(container);
 			return true;
 		}
 	}

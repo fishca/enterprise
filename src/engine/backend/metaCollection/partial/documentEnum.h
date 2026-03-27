@@ -1,41 +1,41 @@
 #ifndef __DOCUMENT_ENUM_H__
 #define __DOCUMENT_ENUM_H__
 
-enum eDocumentWriteMode {
-	eDocumentWriteMode_Posting,
-	eDocumentWriteMode_UndoPosting,
-	eDocumentWriteMode_Write
+enum ibDocumentWriteMode {
+	ibDocumentWriteMode_Posting,
+	ibDocumentWriteMode_UndoPosting,
+	ibDocumentWriteMode_Write
 };
 
-enum eDocumentPostingMode {
-	eDocumentPostingMode_RealTime,
-	eDocumentPostingMode_Regular
+enum ibDocumentPostingMode {
+	ibDocumentPostingMode_RealTime,
+	ibDocumentPostingMode_Regular
 };
 
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
 
-class CValueEnumDocumentWriteMode : public IEnumeration<eDocumentWriteMode> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumPostingMode);
+class ibValueEnumDocumentWriteMode : public ibValueEnumeration<ibDocumentWriteMode> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumPostingMode);
 public:
-	CValueEnumDocumentWriteMode() : IEnumeration() {}
-	//CValueEnumDocumentWriteMode(eDocumentWriteMode mode) : IEnumeration(mode) {}
+	ibValueEnumDocumentWriteMode() : ibValueEnumeration() {}
+	//ibValueEnumDocumentWriteMode(ibDocumentWriteMode mode) : ibValueEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Posting, wxT("Posting"), _("Posting"));
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_UndoPosting, wxT("UndoPosting"), _("Undo posting"));
-		AddEnumeration(eDocumentWriteMode::eDocumentWriteMode_Write, wxT("Write"), _("Write"));
+		AddEnumeration(ibDocumentWriteMode::ibDocumentWriteMode_Posting, wxT("Posting"), _("Posting"));
+		AddEnumeration(ibDocumentWriteMode::ibDocumentWriteMode_UndoPosting, wxT("UndoPosting"), _("Undo posting"));
+		AddEnumeration(ibDocumentWriteMode::ibDocumentWriteMode_Write, wxT("Write"), _("Write"));
 	}
 };
-class CValueEnumDocumentPostingMode : public IEnumeration<eDocumentPostingMode> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumDocumentPostingMode);
+class ibValueEnumDocumentPostingMode : public ibValueEnumeration<ibDocumentPostingMode> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumDocumentPostingMode);
 public:
-	CValueEnumDocumentPostingMode() : IEnumeration() {}
-	//CValueEnumDocumentPostingMode(eDocumentPostingMode mode) : IEnumeration(mode) {}
+	ibValueEnumDocumentPostingMode() : ibValueEnumeration() {}
+	//ibValueEnumDocumentPostingMode(ibDocumentPostingMode mode) : ibValueEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_RealTime, wxT("RealTime"), _("Real time"));
-		AddEnumeration(eDocumentPostingMode::eDocumentPostingMode_Regular, wxT("Regular"), _("Regular"));
+		AddEnumeration(ibDocumentPostingMode::ibDocumentPostingMode_RealTime, wxT("RealTime"), _("Real time"));
+		AddEnumeration(ibDocumentPostingMode::ibDocumentPostingMode_Regular, wxT("Regular"), _("Regular"));
 	}
 };
 #pragma endregion 

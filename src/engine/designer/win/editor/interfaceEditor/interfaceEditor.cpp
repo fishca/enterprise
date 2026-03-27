@@ -2,13 +2,13 @@
 
 #define ICON_SIZE 16
 
-CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
-	wxWindowID winid, IValueMetaObject* metaObject) :
+ibInterfaceEditor::ibInterfaceEditor(wxWindow* parent,
+	wxWindowID winid, ibValueMetaObject* metaObject) :
 	wxWindow(parent, winid, wxDefaultPosition, wxDefaultSize), m_metaInterface(metaObject)
 {
-	m_interfaceCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
+	m_interfaceCtrl = new ibCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxCR_EMPTY_CHECK | wxTR_TWIST_BUTTONS);
 	m_interfaceCtrl->SetDoubleBuffered(true);
-	m_interfaceCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CInterfaceEditor::OnCheckItem, this);
+	m_interfaceCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &ibInterfaceEditor::OnCheckItem, this);
 
 	//set image list
 	m_interfaceCtrl->AssignImageList(
@@ -26,13 +26,13 @@ CInterfaceEditor::CInterfaceEditor(wxWindow* parent,
 	wxWindow::Layout();
 }
 
-void CInterfaceEditor::OnCheckItem(wxTreeEvent& event)
+void ibInterfaceEditor::OnCheckItem(wxTreeEvent& event)
 {
 	wxTreeItemMetaData* data = dynamic_cast<wxTreeItemMetaData*>(
 		m_interfaceCtrl->GetItemData(event.GetItem())
 		);
 	if (data != nullptr) {
-		IInterfaceObject* metaObject = data->GetMetaObject();
+		ibInterfaceObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
 		metaObject->SetInterface(m_metaInterface->GetMetaID(), event.GetExtraLong());
 	}
@@ -54,9 +54,9 @@ void CInterfaceEditor::OnCheckItem(wxTreeEvent& event)
 #define informationRegisterName _("Information Registers")
 #define accumulationRegisterName _("Accumulation Registers")
 
-void CInterfaceEditor::InitInterface()
+void ibInterfaceEditor::InitInterface()
 {
-	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
+	const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
 	wxASSERT(typeCtor);
 
 	wxImageList* imageList = m_interfaceCtrl->GetImageList();
@@ -95,7 +95,7 @@ void CInterfaceEditor::InitInterface()
 	m_interfaceCtrl->ExpandAll();
 }
 
-void CInterfaceEditor::ClearInterface() {
+void ibInterfaceEditor::ClearInterface() {
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -124,11 +124,11 @@ void CInterfaceEditor::ClearInterface() {
 	InitInterface();
 }
 
-void CInterfaceEditor::FillData()
+void ibInterfaceEditor::FillData()
 {
-	const IMetaData* metaData = m_metaInterface->GetMetaData();
+	const ibMetaData* metaData = m_metaInterface->GetMetaData();
 	wxASSERT(metaData);
-	const IValueMetaObject* commonObject = metaData->GetCommonMetaObject();
+	const ibValueMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_interfaceCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());

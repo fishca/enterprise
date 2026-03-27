@@ -67,9 +67,9 @@ class CSubSystemWindow : public wxWindow {
 				m_popupWindow->Dismiss();
 		}
 
-		const CValueMetaObjectInterface* GetMetaObject() const { return m_metaObject; }
+		const ibValueMetaObjectInterface* GetMetaObject() const { return m_metaObject; }
 
-		CSubSystemButton(CSubSystemWindow* mainWindow, wxWindowID id, const CValueMetaObjectInterface* object)
+		CSubSystemButton(CSubSystemWindow* mainWindow, wxWindowID id, const ibValueMetaObjectInterface* object)
 			: wxControl(mainWindow, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER),
 			m_mainWindow(mainWindow), m_bitmap(object->GetPictureAsBitmap()), m_metaObject(object), m_popupWindow(nullptr),
 			m_eventType(wxEVT_BUTTON) {
@@ -363,7 +363,7 @@ class CSubSystemWindow : public wxWindow {
 
 		unsigned int m_flags = wxAUI_TB_TEXT | wxAUI_NB_LEFT;
 
-		const CValueMetaObjectInterface* m_metaObject;
+		const ibValueMetaObjectInterface* m_metaObject;
 		wxPopupTransientWindow* m_popupWindow;
 
 		wxAuiToolBarItem item;
@@ -393,10 +393,10 @@ class CSubSystemWindow : public wxWindow {
 
 			class CScrolledSubWindowSectionRefData : public wxRefCounter {
 			public:
-				EInterfaceCommandSection GetArea() const { return m_section; }
-				CScrolledSubWindowSectionRefData(EInterfaceCommandSection s) : m_section(s) {}
+				ibInterfaceCommandSection GetArea() const { return m_section; }
+				CScrolledSubWindowSectionRefData(ibInterfaceCommandSection s) : m_section(s) {}
 			private:
-				EInterfaceCommandSection m_section;
+				ibInterfaceCommandSection m_section;
 			};
 
 		public:
@@ -408,10 +408,10 @@ class CSubSystemWindow : public wxWindow {
 				wxBoxSizer* sizerMain = new wxBoxSizer(wxHORIZONTAL);
 				wxBoxSizer* sizerLeft = new wxBoxSizer(wxVERTICAL);
 
-				const CValueMetaObjectInterface* metaObject = m_popupWindow->GetMetaObject();
+				const ibValueMetaObjectInterface* metaObject = m_popupWindow->GetMetaObject();
 				if (metaObject != nullptr) {
-					std::vector<IValueMetaObject*> array;
-					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array)) {
+					std::vector<ibValueMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Default, array)) {
 
 						wxBoxSizer* sizerSubCommonSpacer = new wxBoxSizer(wxHORIZONTAL);
 						sizerSubCommonSpacer->Add(20, 0, 0, wxEXPAND, 5);
@@ -428,7 +428,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetForegroundColour(wxDefaultStypeFGColour);
 
 							df->SetCursor(wxCURSOR_HAND);
-							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+							df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
 							sizerSubCommonItem->Add(df, 0, wxEXPAND, 5);
@@ -441,13 +441,13 @@ class CSubSystemWindow : public wxWindow {
 
 				for (const auto child : metaObject->GetInterfaceArrayObject()) {
 
-					std::vector<IValueMetaObject*> array;
+					std::vector<ibValueMetaObject*> array;
 
-					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, array);
+					child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Default, array);
 
-					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, array);
-					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, array);
-					child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, array);
+					child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Create, array);
+					child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Report, array);
+					child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Service, array);
 
 					if (array.size() > 0) {
 
@@ -467,16 +467,16 @@ class CSubSystemWindow : public wxWindow {
 
 						struct CSubWindowConstructor {
 
-							static void NextChildConstruct(wxBoxSizer* sizerSubSystemItem, const CValueMetaObjectInterface* parent, CScrolledSubWindow* wnd) {
+							static void NextChildConstruct(wxBoxSizer* sizerSubSystemItem, const ibValueMetaObjectInterface* parent, CScrolledSubWindow* wnd) {
 
 								for (const auto child : parent->GetInterfaceArrayObject()) {
 
-									std::vector<IValueMetaObject*> subArray;
+									std::vector<ibValueMetaObject*> subArray;
 
-									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Default, subArray);
-									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, subArray);
-									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, subArray);
-									child->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, subArray);
+									child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Default, subArray);
+									child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Create, subArray);
+									child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Report, subArray);
+									child->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Service, subArray);
 
 									if (subArray.size() > 0) {
 
@@ -491,7 +491,7 @@ class CSubSystemWindow : public wxWindow {
 											df->SetBackgroundColour(*wxWHITE);
 											df->SetForegroundColour(wxDefaultStypeFGColour);
 											df->SetCursor(wxCURSOR_HAND);
-											df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+											df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 											df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, wnd);
 
 											sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
@@ -514,7 +514,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetBackgroundColour(*wxWHITE);
 							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
-							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Default));
+							df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Default));
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
 							sizerSubSystemItem->Add(df, 0, wxEXPAND, 5);
@@ -536,8 +536,8 @@ class CSubSystemWindow : public wxWindow {
 
 				if (metaObject != nullptr) {
 
-					std::vector<IValueMetaObject*> array;
-					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Create, array)) {
+					std::vector<ibValueMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Create, array)) {
 
 						wxBoxSizer* sizerCreate = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_create = new wxStaticText(this, wxID_ANY, _("Create"), wxDefaultPosition, wxDefaultSize, 0);
@@ -565,7 +565,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetBackgroundColour(*wxWHITE);
 							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
-							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Create));
+							df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Create));
 
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
@@ -580,8 +580,8 @@ class CSubSystemWindow : public wxWindow {
 
 				if (metaObject != nullptr) {
 
-					std::vector<IValueMetaObject*> array;
-					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Report, array)) {
+					std::vector<ibValueMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Report, array)) {
 
 						wxBoxSizer* sizerReport = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_report = new wxStaticText(this, wxID_ANY, _("Report"), wxDefaultPosition, wxDefaultSize, 0);
@@ -609,7 +609,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetBackgroundColour(*wxWHITE);
 							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
-							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Report));
+							df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Report));
 
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
@@ -624,8 +624,8 @@ class CSubSystemWindow : public wxWindow {
 				}
 
 				if (metaObject != nullptr) {
-					std::vector<IValueMetaObject*> array;
-					if (metaObject->GetInterfaceItemArrayObject(EInterfaceCommandSection_Service, array)) {
+					std::vector<ibValueMetaObject*> array;
+					if (metaObject->GetInterfaceItemArrayObject(ibInterfaceCommandSection_Service, array)) {
 
 						wxBoxSizer* sizerService = new wxBoxSizer(wxVERTICAL);
 						wxStaticText* st_service = new wxStaticText(this, wxID_ANY, _("Service"), wxDefaultPosition, wxDefaultSize, 0);
@@ -652,7 +652,7 @@ class CSubSystemWindow : public wxWindow {
 							df->SetBackgroundColour(*wxWHITE);
 							df->SetForegroundColour(wxDefaultStypeFGColour);
 							df->SetCursor(wxCURSOR_HAND);
-							df->SetRefData(new CScrolledSubWindowSectionRefData(EInterfaceCommandSection_Service));
+							df->SetRefData(new CScrolledSubWindowSectionRefData(ibInterfaceCommandSection_Service));
 
 							df->Bind(wxEVT_BUTTON, &CScrolledSubWindow::OnMenuItemClicked, this);
 
@@ -676,16 +676,16 @@ class CSubSystemWindow : public wxWindow {
 
 		private:
 
-			EInterfaceCommandType GetCommandType(const EInterfaceCommandSection section) const {
+			ibInterfaceCommandType GetCommandType(const ibInterfaceCommandSection section) const {
 
-				if (section == EInterfaceCommandSection::EInterfaceCommandSection_Create)
-					return EInterfaceCommandType::EInterfaceCommandType_Create;
-				else if (section == EInterfaceCommandSection::EInterfaceCommandSection_Service)
-					return EInterfaceCommandType::EInterfaceCommandType_Create;
-				else if (section == EInterfaceCommandSection::EInterfaceCommandSection_Report)
-					return EInterfaceCommandType::EInterfaceCommandType_Create;
+				if (section == ibInterfaceCommandSection::ibInterfaceCommandSection_Create)
+					return ibInterfaceCommandType::ibInterfaceCommandType_Create;
+				else if (section == ibInterfaceCommandSection::ibInterfaceCommandSection_Service)
+					return ibInterfaceCommandType::ibInterfaceCommandType_Create;
+				else if (section == ibInterfaceCommandSection::ibInterfaceCommandSection_Report)
+					return ibInterfaceCommandType::ibInterfaceCommandType_Create;
 
-				return EInterfaceCommandType::EInterfaceCommandType_Default;
+				return ibInterfaceCommandType::ibInterfaceCommandType_Default;
 			}
 
 			void OnMenuItemClicked(wxCommandEvent& event) {
@@ -693,11 +693,11 @@ class CSubSystemWindow : public wxWindow {
 				CScrolledSubWindowSectionRefData* refData =
 					dynamic_cast<CScrolledSubWindowSectionRefData*>(event.GetEventObject()->GetRefData());
 
-				const EInterfaceCommandSection section = refData != nullptr ?
-					refData->GetArea() : EInterfaceCommandSection::EInterfaceCommandSection_Default;
+				const ibInterfaceCommandSection section = refData != nullptr ?
+					refData->GetArea() : ibInterfaceCommandSection::ibInterfaceCommandSection_Default;
 
-				IBackendCommandItem* cmdItem =
-					dynamic_cast<IBackendCommandItem*>(activeMetaData->FindAnyObjectByFilter(event.GetId()));
+				ibBackendCommandItem* cmdItem =
+					dynamic_cast<ibBackendCommandItem*>(activeMetaData->FindAnyObjectByFilter(event.GetId()));
 
 				if (cmdItem != nullptr &&
 					cmdItem->ShowFormByCommandType(GetCommandType(section)))
@@ -709,7 +709,7 @@ class CSubSystemWindow : public wxWindow {
 
 	public:
 
-		const CValueMetaObjectInterface* GetMetaObject() const { return m_currentButton->GetMetaObject(); }
+		const ibValueMetaObjectInterface* GetMetaObject() const { return m_currentButton->GetMetaObject(); }
 
 		// ctors
 		CPopupSubWindow() : m_currentButton(nullptr) {}
@@ -759,7 +759,7 @@ class CSubSystemWindow : public wxWindow {
 		wxScrolledWindow* m_mainWindow;
 	};
 
-	CSubSystemButton* CreateSubMenu(const CValueMetaObjectInterface* object) {
+	CSubSystemButton* CreateSubMenu(const ibValueMetaObjectInterface* object) {
 		return m_arrayPageButton.emplace_back(
 			new CSubSystemButton(this, wxID_ANY, object));
 	}
@@ -774,7 +774,7 @@ public:
 		long style = 0,
 		const wxString& name = wxASCII_STR(wxPanelNameStr)) : wxWindow(parent, id, pos, size, style, name), m_activeButton(nullptr)
 	{
-		for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectInterface>(g_metaInterfaceCLSID)) {
+		for (const auto object : activeMetaData->GetAnyArrayObject<ibValueMetaObjectInterface>(g_metaInterfaceCLSID)) {
 			if (object->AccessRight_Use()) CreateSubMenu(object);
 		}
 
@@ -845,11 +845,11 @@ wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////////////
 
-void CFrontendDocMDIFrameEnterprise::CreateSubSystem()
+void ibFrontendDocMDIFrameEnterprise::CreateSubSystem()
 {
 	bool hasInterface = false;
 
-	for (const auto object : activeMetaData->GetAnyArrayObject<CValueMetaObjectInterface>(g_metaInterfaceCLSID)) {
+	for (const auto object : activeMetaData->GetAnyArrayObject<ibValueMetaObjectInterface>(g_metaInterfaceCLSID)) {
 		if (object->AccessRight_Use()) {
 			hasInterface = true;
 			break;

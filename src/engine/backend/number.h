@@ -19,6 +19,6 @@
 
 #define TTMATH_NUMBER TTMATH_BITS(128)
 
-typedef ttmath::Big<TTMATH_NUMBER, TTMATH_NUMBER> number_t;
+typedef ttmath::Big<TTMATH_NUMBER, TTMATH_NUMBER> ibNumber;
 
 #endif

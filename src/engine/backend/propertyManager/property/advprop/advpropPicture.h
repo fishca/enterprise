@@ -72,8 +72,8 @@ protected:
 	wxEditEnumProperty* m_propertyConfiguration;
 	wxPGExternalImageProperty* m_propertyFile;
 
-	std::map<int, class_identifier_t> m_valChoices;
-	std::map<int, CGuid> m_confChoices;
+	std::map<int, ibClassID> m_valChoices;
+	std::map<int, ibGuid> m_confChoices;
 
 private:
 	WX_PG_DECLARE_PROPERTY_CLASS(wxPGPictureProperty);

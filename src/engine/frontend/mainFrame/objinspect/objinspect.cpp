@@ -51,12 +51,12 @@ void CObjectInspector::SavePosition()
 
 CObjectInspector* CObjectInspector::GetObjectInspector()
 {
-	return CFrontendDocMDIFrame::GetObjectInspector();
+	return ibFrontendDocMDIFrame::GetObjectInspector();
 }
 
 #include "frontend/visualView/formdefs.h"
 
-void CObjectInspector::Create(IPropertyObject* object, bool force)
+void CObjectInspector::Create(ibPropertyObject* object, bool force)
 {
 	if (force || object != m_currentSel) {
 		m_pg->Freeze();
@@ -77,13 +77,13 @@ void CObjectInspector::Create(IPropertyObject* object, bool force)
 
 		if (object != nullptr) {
 
-			std::map<wxString, IProperty*> propMap, dummyPropMap;
+			std::map<wxString, ibProperty*> propMap, dummyPropMap;
 			std::map<wxString, IEvent*> eventMap, dummyEventMap;
 
 			// We create the categories with the properties of the object organized by "classes"
 			CreateCategory(object->GetClassName(), object, propMap, false);
 
-			IPropertyObject* owner = object->GetOwner();
+			ibPropertyObject* owner = object->GetOwner();
 
 			if (owner != nullptr) {
 				if (owner->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
@@ -210,7 +210,7 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	return pg;
 }
 
-wxPGProperty* CObjectInspector::GetProperty(IProperty* prop) const 
+wxPGProperty* CObjectInspector::GetProperty(ibProperty* prop) const 
 {
 	wxPGProperty* result = prop->GetPGProperty();
 	if (result != nullptr) {
@@ -230,7 +230,7 @@ wxPGProperty* CObjectInspector::GetEvent(IEvent* event) const
 	return result;
 }
 
-bool CObjectInspector::ModifyProperty(IProperty* prop, const wxVariant& newValue)
+bool CObjectInspector::ModifyProperty(ibProperty* prop, const wxVariant& newValue)
 {
 	const wxVariant oldValue = prop->GetValue();
 	if (m_currentSel->OnPropertyChanging(prop, newValue)) {
@@ -257,9 +257,9 @@ bool CObjectInspector::ModifyEvent(IEvent* event, const wxVariant& newValue)
 void CObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
 {
 	wxPGProperty* propPtr = event.GetProperty();
-	std::map< wxPGProperty*, IProperty*>::iterator itProperty = m_propMap.find(propPtr);
+	std::map< wxPGProperty*, ibProperty*>::iterator itProperty = m_propMap.find(propPtr);
 	if (itProperty != m_propMap.end()) {
-		IProperty* prop_ptr = itProperty->second;
+		ibProperty* prop_ptr = itProperty->second;
 		// Update displayed description for the new selection
 		const wxString& helpString = prop_ptr->GetHelp();
 		if (!ModifyProperty(prop_ptr, event.GetPropertyValue()))
@@ -308,7 +308,7 @@ void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
 					if (parentProperty->IsVisible() != visible) parentProperty->Hide(!visible);
 				}
 			}
-			IProperty* prop_ptr = prop.second;
+			ibProperty* prop_ptr = prop.second;
 			wxASSERT(prop_ptr);
 			prop_ptr->RefreshPGProperty(property);
 		}
@@ -344,7 +344,7 @@ void CObjectInspector::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
 	wxPGProperty* propPtr = event.GetProperty();
 	if (propPtr != nullptr) {
 		m_strSelPropItem = m_pg->GetPropertyName(propPtr);
-		std::map< wxPGProperty*, IProperty*>::iterator it = m_propMap.find(propPtr);
+		std::map< wxPGProperty*, ibProperty*>::iterator it = m_propMap.find(propPtr);
 		if (m_propMap.end() == it) {
 			// Could be a child property
 			propPtr = propPtr->GetParent();

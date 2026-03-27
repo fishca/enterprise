@@ -14,14 +14,14 @@
 
 #include "databaseLayerDef.h"
 
-class BACKEND_API CDatabaseErrorReporter
+class BACKEND_API ibDatabaseErrorReporter
 {
 public:
 	// ctor
-	CDatabaseErrorReporter();
+	ibDatabaseErrorReporter();
 
 	// dtor
-	virtual ~CDatabaseErrorReporter();
+	virtual ~ibDatabaseErrorReporter();
 
 	const wxString& GetErrorMessage();
 	int GetErrorCode();

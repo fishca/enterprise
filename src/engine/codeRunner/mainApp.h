@@ -4,7 +4,7 @@
 #include <wx/app.h>
 #include "codeRunner.h"
 
-class CCodeRunnerApp :
+class ibAppCodeRunner :
 	public wxApp {
 public:
 
@@ -14,9 +14,9 @@ public:
 	void AppendOutput(const wxString& str);
 
 private:
-	CFrameCodeRunner* m_codeRunner = nullptr;
+	ibFrameCodeRunner* m_codeRunner = nullptr;
 };
 
-wxDECLARE_APP(CCodeRunnerApp);
+wxDECLARE_APP(ibAppCodeRunner);
 
 #endif 

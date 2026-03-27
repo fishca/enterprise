@@ -7,7 +7,7 @@
 #define colUserName 1
 #define colUserFullName 2
 
-class CUserListModel : public wxDataViewExtIndexListModel {
+class CUserListModel : public ibDataViewIndexListModel {
 	wxDECLARE_NO_COPY_CLASS(CUserListModel);
 public:
 
@@ -15,7 +15,7 @@ public:
 
 	void PrepareData() {
 		m_aUsersData.clear();
-		IDatabaseResultSet* resultSet =
+		ibDatabaseResultSet* resultSet =
 			db_query->RunQueryWithResults("SELECT guid FROM %s;", user_table);
 		while (resultSet->Next()) {
 			m_aUsersData.push_back(
@@ -26,13 +26,13 @@ public:
 		Reset(m_aUsersData.size());
 	}
 
-	void DeleteRow(const wxDataViewExtItem& item) {
+	void DeleteRow(const ibDataViewItem& item) {
 		unsigned int row = GetRow(item);
 		db_query->RunQuery("DELETE FROM %s WHERE guid = '%s';", user_table, m_aUsersData[row].str());
 		m_aUsersData.erase(m_aUsersData.begin() + row);
 	}
 
-	CGuid GetGuidByRow(const wxDataViewExtItem& item) const {
+	ibGuid GetGuidByRow(const ibDataViewItem& item) const {
 		return m_aUsersData.at(GetRow(item));
 	}
 
@@ -40,7 +40,7 @@ public:
 	unsigned GetCount() const override { return m_aUsersData.size(); }
 
 	void GetValueByRow(wxVariant& val, unsigned row, unsigned col) const override {
-		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT name, fullName FROM %s WHERE guid = '%s';", user_table, m_aUsersData[row].str());
+		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults("SELECT name, fullName FROM %s WHERE guid = '%s';", user_table, m_aUsersData[row].str());
 		if (resultSet->Next()) {
 			if (col == colUserName) {
 				val = resultSet->GetResultString("name");
@@ -57,7 +57,7 @@ public:
 	}
 
 private:
-	std::vector<CGuid> m_aUsersData;
+	std::vector<ibGuid> m_aUsersData;
 };
 
 enum {
@@ -69,7 +69,7 @@ enum {
 
 #include "frontend/visualView/ctrl/frame.h"
 
-CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
+ibDialogUserList::ibDialogUserList(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
 
@@ -78,29 +78,29 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	m_toolbarMain = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT);
 	m_toolbarMain->SetArtProvider(new wxAuiLunaToolBarArt());
 
-	m_toolAdd = m_toolbarMain->AddTool(wxID_USERS_TOOL_ADD, _("Add"), CBackendPicture::GetPicture(g_picAddCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolCopy = m_toolbarMain->AddTool(wxID_USERS_TOOL_COPY, _("Copy"), CBackendPicture::GetPicture(g_picCopyCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolEdit = m_toolbarMain->AddTool(wxID_USERS_TOOL_EDIT, _("Edit"), CBackendPicture::GetPicture(g_picEditCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
-	m_toolDelete = m_toolbarMain->AddTool(wxID_USERS_TOOL_DELETE, _("Delete"), CBackendPicture::GetPicture(g_picDeleteCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolAdd = m_toolbarMain->AddTool(wxID_USERS_TOOL_ADD, _("Add"), ibBackendPicture::GetPicture(g_picAddCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolCopy = m_toolbarMain->AddTool(wxID_USERS_TOOL_COPY, _("Copy"), ibBackendPicture::GetPicture(g_picCopyCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolEdit = m_toolbarMain->AddTool(wxID_USERS_TOOL_EDIT, _("Edit"), ibBackendPicture::GetPicture(g_picEditCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
+	m_toolDelete = m_toolbarMain->AddTool(wxID_USERS_TOOL_DELETE, _("Delete"), ibBackendPicture::GetPicture(g_picDeleteCLSID), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, nullptr);
 
 	m_toolbarMain->SetForegroundColour(wxDefaultStypeFGColour);
 	m_toolbarMain->SetBackgroundColour(wxDefaultStypeBGColour);
 
 	m_toolbarMain->Realize();
-	m_toolbarMain->Connect(wxEVT_MENU, wxCommandEventHandler(CDialogUserList::OnCommandMenu), nullptr, this);
+	m_toolbarMain->Connect(wxEVT_MENU, wxCommandEventHandler(ibDialogUserList::OnCommandMenu), nullptr, this);
 
 	sizerList->Add(m_toolbarMain, 0, wxALL | wxEXPAND, 0);
 
-	wxDataViewExtColumn* columnName = new wxDataViewExtColumn(_("Name"), new wxDataViewExtTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), colUserName, FromDIP(200), wxALIGN_LEFT,
+	ibDataViewColumn* columnName = new ibDataViewColumn(_("Name"), new ibDataViewTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), colUserName, FromDIP(200), wxALIGN_LEFT,
 		wxDATAVIEW_COL_SORTABLE);
-	wxDataViewExtColumn* columnFullName = new wxDataViewExtColumn(_("Full name"), new wxDataViewExtTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), colUserFullName, FromDIP(200), wxALIGN_LEFT,
+	ibDataViewColumn* columnFullName = new ibDataViewColumn(_("Full name"), new ibDataViewTextRenderer(wxT("string"), wxDATAVIEW_CELL_INERT), colUserFullName, FromDIP(200), wxALIGN_LEFT,
 		wxDATAVIEW_COL_SORTABLE);
 
-	m_dataEditor = new wxDataViewExtCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
-	m_dataEditor->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &CDialogUserList::OnItemActivated, this);
-	m_dataEditor->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CDialogUserList::OnContextMenu, this);
+	m_dataEditor = new ibDataViewCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
+	m_dataEditor->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &ibDialogUserList::OnItemActivated, this);
+	m_dataEditor->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &ibDialogUserList::OnContextMenu, this);
 
-	m_dataEditor->Bind(wxEVT_MENU, &CDialogUserList::OnCommandMenu, this);
+	m_dataEditor->Bind(wxEVT_MENU, &ibDialogUserList::OnCommandMenu, this);
 
 	m_dataEditor->AppendColumn(columnName);
 	m_dataEditor->AppendColumn(columnFullName);
@@ -125,19 +125,19 @@ CDialogUserList::CDialogUserList(wxWindow* parent, wxWindowID id, const wxString
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserListCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picUserListCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
 }
 
-CDialogUserList::~CDialogUserList()
+ibDialogUserList::~ibDialogUserList()
 {
 }
 
 #include "userItem.h"
 
-void CDialogUserList::OnContextMenu(wxDataViewExtEvent& event)
+void ibDialogUserList::OnContextMenu(ibDataViewEvent& event)
 {
 	wxMenu menu;
 
@@ -148,17 +148,17 @@ void CDialogUserList::OnContextMenu(wxDataViewExtEvent& event)
 		}
 	}
 
-	wxDataViewExtCtrl* wnd = wxDynamicCast(
-		event.GetEventObject(), wxDataViewExtCtrl
+	ibDataViewCtrl* wnd = wxDynamicCast(
+		event.GetEventObject(), ibDataViewCtrl
 	);
 
 	wxASSERT(wnd);
 	wnd->PopupMenu(&menu);
 }
 
-void CDialogUserList::OnItemActivated(wxDataViewExtEvent& event)
+void ibDialogUserList::OnItemActivated(ibDataViewEvent& event)
 {
-	CDialogUserItem dlg(this, wxID_ANY);
+	ibDialogUserItem dlg(this, wxID_ANY);
 
 	CUserListModel* model =
 		static_cast<CUserListModel*>(m_dataEditor->GetModel());
@@ -169,12 +169,12 @@ void CDialogUserList::OnItemActivated(wxDataViewExtEvent& event)
 	event.Skip();
 }
 
-void CDialogUserList::OnCommandMenu(wxCommandEvent& event)
+void ibDialogUserList::OnCommandMenu(wxCommandEvent& event)
 {
-	wxDataViewExtItem sel = m_dataEditor->GetSelection();
+	ibDataViewItem sel = m_dataEditor->GetSelection();
 
 	if (event.GetId() == wxID_USERS_TOOL_ADD) {
-		CDialogUserItem dlg(this, wxID_ANY);
+		ibDialogUserItem dlg(this, wxID_ANY);
 		dlg.ShowModal();
 	}
 
@@ -183,13 +183,13 @@ void CDialogUserList::OnCommandMenu(wxCommandEvent& event)
 
 	if (sel.IsOk()) {
 		if (event.GetId() == wxID_USERS_TOOL_EDIT) {
-			CDialogUserItem dlg(this, wxID_ANY);
+			ibDialogUserItem dlg(this, wxID_ANY);
 			dlg.ReadUserData(model->GetGuidByRow(sel));
 			dlg.ShowModal();
 		}
 
 		if (event.GetId() == wxID_USERS_TOOL_COPY) {
-			CDialogUserItem dlg(this, wxID_ANY);
+			ibDialogUserItem dlg(this, wxID_ANY);
 			dlg.ReadUserData(model->GetGuidByRow(sel), true);
 			dlg.ShowModal();
 		}

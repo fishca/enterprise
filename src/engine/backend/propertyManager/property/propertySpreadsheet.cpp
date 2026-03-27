@@ -3,28 +3,28 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* CPropertySpreadsheet::CreateVariantData(const CSpreadsheetDescription& val)
+wxVariantData* ibPropertySpreadsheet::CreateVariantData(const ibSpreadsheetDescription& val)
 {
-	return new wxVariantDataSpreadsheet(val);
+	return new ibVariantDataSpreadsheet(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-CSpreadsheetDescription& CPropertySpreadsheet::GetValueAsSpreadsheetDesc() const
+ibSpreadsheetDescription& ibPropertySpreadsheet::GetValueAsSpreadsheetDesc() const
 {
-	return get_cell_variant<wxVariantDataSpreadsheet>()->GetSpreadsheetDesc();
+	return get_cell_variant<ibVariantDataSpreadsheet>()->GetSpreadsheetDesc();
 }
 
-void CPropertySpreadsheet::SetValue(const CSpreadsheetDescription& val)
+void ibPropertySpreadsheet::SetValue(const ibSpreadsheetDescription& val)
 {
 	m_propValue = CreateVariantData(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool CPropertySpreadsheet::IsEmptyProperty() const
+bool ibPropertySpreadsheet::IsEmptyProperty() const
 {
-	return get_cell_variant<wxVariantDataSpreadsheet>()->IsEmptySpreadsheet();
+	return get_cell_variant<ibVariantDataSpreadsheet>()->IsEmptySpreadsheet();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -32,9 +32,9 @@ bool CPropertySpreadsheet::IsEmptyProperty() const
 #include "backend/system/value/valueSpreadsheet.h"
 
 //base property for "template"
-bool CPropertySpreadsheet::SetDataValue(const CValue& varPropVal)
+bool ibPropertySpreadsheet::SetDataValue(const ibValue& varPropVal)
 {
-	CValueSpreadsheetDocument* valueType = varPropVal.ConvertToType<CValueSpreadsheetDocument>();
+	ibValueSpreadsheetDocument* valueType = varPropVal.ConvertToType<ibValueSpreadsheetDocument>();
 	if (valueType != nullptr) {
 		SetValue(valueType->GetSpreadsheetDesc());
 		return true;
@@ -42,18 +42,18 @@ bool CPropertySpreadsheet::SetDataValue(const CValue& varPropVal)
 	return false;
 }
 
-bool CPropertySpreadsheet::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertySpreadsheet::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValueSpreadsheetDocument>(GetValueAsSpreadsheetDesc());
+	pvarPropVal = ibValue::CreateObjectValue<ibValueSpreadsheetDocument>(GetValueAsSpreadsheetDesc());
 	return true;
 }
 
-bool CPropertySpreadsheet::LoadData(CMemoryReader& reader)
+bool ibPropertySpreadsheet::LoadData(ibReaderMemory& reader)
 {
-	return CSpreadsheetDescriptionMemory::LoadData(reader, GetValueAsSpreadsheetDesc());
+	return ibSpreadsheetDescriptionMemory::LoadData(reader, GetValueAsSpreadsheetDesc());
 }
 
-bool CPropertySpreadsheet::SaveData(CMemoryWriter& writer)
+bool ibPropertySpreadsheet::SaveData(ibWriterMemory& writer)
 {
-	return CSpreadsheetDescriptionMemory::SaveData(writer, GetValueAsSpreadsheetDesc());
+	return ibSpreadsheetDescriptionMemory::SaveData(writer, GetValueAsSpreadsheetDesc());
 }

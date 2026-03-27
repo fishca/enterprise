@@ -2,18 +2,18 @@
 
 /*
    SPECIAL NOTE:
-	The sqlite3_column_* functions are 0-based, but the JDBC IResultSetMetaData
+	The sqlite3_column_* functions are 0-based, but the JDBC ibResultSetMetaData
 	functions are 1-based.  To be consistent with the 1-based JDBC (and also
-	IPreparedStatement paramters, we are using a 1-based system here.)
+	ibPreparedStatement paramters, we are using a 1-based system here.)
  */
 
  // ctor
-CSqliteResultSetMetaData::CSqliteResultSetMetaData(sqlite3_stmt* pStmt)
+ibResultSetMetaDataSQLite::ibResultSetMetaDataSQLite(sqlite3_stmt* pStmt)
 {
 	m_pSqliteStatement = pStmt;
 }
 
-int CSqliteResultSetMetaData::GetColumnType(int i)
+int ibResultSetMetaDataSQLite::GetColumnType(int i)
 {
 	int returnType = COLUMN_UNKNOWN;
 	wxString columnTypeString = ConvertFromUnicodeStream(sqlite3_column_decltype(m_pSqliteStatement, i - 1));
@@ -63,18 +63,18 @@ int CSqliteResultSetMetaData::GetColumnType(int i)
 	return returnType;
 }
 
-int CSqliteResultSetMetaData::GetColumnSize(int i)
+int ibResultSetMetaDataSQLite::GetColumnSize(int i)
 {
 	return -1;
 }
 
-wxString CSqliteResultSetMetaData::GetColumnName(int i)
+wxString ibResultSetMetaDataSQLite::GetColumnName(int i)
 {
 	wxString columnName = ConvertFromUnicodeStream(sqlite3_column_name(m_pSqliteStatement, i - 1));
 	return columnName;
 }
 
-int CSqliteResultSetMetaData::GetColumnCount()
+int ibResultSetMetaDataSQLite::GetColumnCount()
 {
 	return sqlite3_column_count(m_pSqliteStatement);
 }

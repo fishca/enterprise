@@ -1,15 +1,15 @@
 #include "widgets.h"
 
-void CValueCheckbox::OnPropertyCreated(IProperty* property)
+void ibValueCheckbox::OnPropertyCreated(ibProperty* property)
 {
 	//if (m_propertySource == property) {
-	//	CValueCheckbox::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
+	//	ibValueCheckbox::SaveToVariant(m_propertySource->GetValue(), GetMetaData());
 	//}
 }
 
-bool CValueCheckbox::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueCheckbox::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
-	//if (m_propertySource == property && !CValueCheckbox::LoadFromVariant(newValue))
+	//if (m_propertySource == property && !ibValueCheckbox::LoadFromVariant(newValue))
 	//	return false;
-	return IValueControl::OnPropertyChanging(property, newValue);
+	return ibValueControl::OnPropertyChanging(property, newValue);
 }

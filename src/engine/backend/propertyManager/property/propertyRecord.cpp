@@ -1,47 +1,47 @@
 #include "propertyRecord.h"
 #include "backend/propertyManager/property/variant/variantRecord.h"
 
-wxVariantData* CPropertyRecord::CreateVariantData(IPropertyObject* property, const CMetaDescription& typeDesc) const
+wxVariantData* ibPropertyRecord::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
 {
-	const IValueMetaObjectGenericData* propFactory = dynamic_cast<const IValueMetaObjectGenericData*>(property);
+	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);
 	if (propFactory == nullptr)
 		return nullptr;
-	return new wxVariantDataRecord(propFactory, typeDesc);
+	return new ibVariantDataRecord(propFactory, typeDesc);
 }
 
-CMetaDescription& CPropertyRecord::GetValueAsMetaDesc() const {
-	return get_cell_variant<wxVariantDataRecord>()->GetMetaDesc();
+ibMetaDescription& ibPropertyRecord::GetValueAsMetaDesc() const {
+	return get_cell_variant<ibVariantDataRecord>()->GetMetaDesc();
 }
 
-CMetaDescription& CPropertyRecord::GetValueAsMetaDesc(const wxVariant& val) const {
-	return get_cell_variant<wxVariantDataRecord>(val)->GetMetaDesc();
+ibMetaDescription& ibPropertyRecord::GetValueAsMetaDesc(const wxVariant& val) const {
+	return get_cell_variant<ibVariantDataRecord>(val)->GetMetaDesc();
 }
 
-void CPropertyRecord::SetValue(const CMetaDescription& val)
+void ibPropertyRecord::SetValue(const ibMetaDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
 
 //base property for "record"
-bool CPropertyRecord::SetDataValue(const CValue& varPropVal)
+bool ibPropertyRecord::SetDataValue(const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CPropertyRecord::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyRecord::GetDataValue(ibValue& pvarPropVal) const
 {
-	const wxVariantDataRecord* gen = get_cell_variant<wxVariantDataRecord>();
+	const ibVariantDataRecord* gen = get_cell_variant<ibVariantDataRecord>();
 	wxASSERT(gen);
 	pvarPropVal = gen->GetDataValue();
 	return true;
 }
 
-bool CPropertyRecord::LoadData(CMemoryReader& reader)
+bool ibPropertyRecord::LoadData(ibReaderMemory& reader)
 {
-	return CMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
+	return ibMetaDescriptionMemory::LoadData(reader, GetValueAsMetaDesc());
 }
 
-bool CPropertyRecord::SaveData(CMemoryWriter& writer)
+bool ibPropertyRecord::SaveData(ibWriterMemory& writer)
 {
-	return CMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
+	return ibMetaDescriptionMemory::SaveData(writer, GetValueAsMetaDesc());
 }

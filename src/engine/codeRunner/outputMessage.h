@@ -3,15 +3,15 @@
 
 #include "backend/compiler/value.h"
 
-class CValueOutput : public CValue
+class ibValueOutput : public ibValue
 {
 public:
 
-	CValueOutput() :
-		CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper) {
+	ibValueOutput() :
+		ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper) {
 	}
 
-	virtual ~CValueOutput() {
+	virtual ~ibValueOutput() {
 		wxDELETE(m_methodHelper);
 	}
 
@@ -19,13 +19,13 @@ public:
 	//*                              Support methods                             *
 	//****************************************************************************
 
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 
 	virtual void PrepareNames() const;
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
 	//check is empty
 	virtual bool IsEmpty() const {
@@ -34,7 +34,7 @@ public:
 
 protected:
 
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 };
 
 #endif 

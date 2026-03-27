@@ -4,24 +4,24 @@
 #include "backend/propertyManager/propertyObject.h"
 
 //base property for "bool"
-class BACKEND_API CPropertyBoolean : public IProperty {
+class BACKEND_API ibPropertyBoolean : public ibProperty {
 public:
 
 	bool GetValueAsBoolean() const { return m_propValue; }
 	void SetValue(const bool boolean) { m_propValue = boolean; }
 
-	CPropertyBoolean(CPropertyCategory* cat, const wxString& name,
-		const bool& value = false) : IProperty(cat, name, value)
+	ibPropertyBoolean(ibPropertyCategory* cat, const wxString& name,
+		const bool& value = false) : ibProperty(cat, name, value)
 	{
 	}
 
-	CPropertyBoolean(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const bool& value = false) : IProperty(cat, name, label, value)
+	ibPropertyBoolean(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const bool& value = false) : ibProperty(cat, name, label, value)
 	{
 	}
 
-	CPropertyBoolean(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const bool& value = false) : IProperty(cat, name, label, helpString, value)
+	ibPropertyBoolean(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const bool& value = false) : ibProperty(cat, name, label, helpString, value)
 	{
 	}
 
@@ -31,12 +31,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

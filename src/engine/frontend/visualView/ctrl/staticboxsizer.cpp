@@ -1,23 +1,23 @@
 
 #include "sizer.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueStaticBoxSizer, IValueSizer)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueStaticBoxSizer, ibValueSizer)
 
 //****************************************************************************
 //*                             StaticBoxSizer                               *
 //****************************************************************************
 
-CValueStaticBoxSizer::CValueStaticBoxSizer() : IValueSizer()
+ibValueStaticBoxSizer::ibValueStaticBoxSizer() : ibValueSizer()
 {
 }
 
-wxObject* CValueStaticBoxSizer::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueStaticBoxSizer::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
 	wxStaticBox* staticBox = new wxStaticBox(wxparent, wxID_ANY, m_propertyTitle->GetValueAsTranslateString());
 	return new wxStaticBoxSizer(staticBox, m_propertyOrient->GetValueAsInteger());
 }
 
-void CValueStaticBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueStaticBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
 	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
@@ -28,7 +28,7 @@ void CValueStaticBoxSizer::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVi
 	}
 }
 
-void CValueStaticBoxSizer::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueStaticBoxSizer::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
 	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
@@ -56,7 +56,7 @@ void CValueStaticBoxSizer::Update(wxObject* wxobject, IVisualHost* visualHost)
 	UpdateSizer(staticboxsizer);
 }
 
-void CValueStaticBoxSizer::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueStaticBoxSizer::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 {
 	wxStaticBoxSizer* staticboxsizer = dynamic_cast<wxStaticBoxSizer*>(wxobject);
 	wxStaticBox* staticBox = staticboxsizer->GetStaticBox();
@@ -72,7 +72,7 @@ void CValueStaticBoxSizer::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 
 
 
-bool CValueStaticBoxSizer::LoadData(CMemoryReader& reader)
+bool ibValueStaticBoxSizer::LoadData(ibReaderMemory& reader)
 {
 	m_propertyOrient->SetValue(reader.r_u16());	
 	wxString propValue = wxEmptyString;
@@ -94,10 +94,10 @@ bool CValueStaticBoxSizer::LoadData(CMemoryReader& reader)
 	m_propertyEnabled->SetValue(reader.r_u8());
 	m_propertyVisible->SetValue(reader.r_u8());
 
-	return IValueSizer::LoadData(reader);
+	return ibValueSizer::LoadData(reader);
 }
 
-bool CValueStaticBoxSizer::SaveData(CMemoryWriter& writer)
+bool ibValueStaticBoxSizer::SaveData(ibWriterMemory& writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
@@ -110,11 +110,11 @@ bool CValueStaticBoxSizer::SaveData(CMemoryWriter& writer)
 	writer.w_u8(m_propertyEnabled->GetValueAsBoolean());
 	writer.w_u8(m_propertyVisible->GetValueAsBoolean());
 
-	return IValueSizer::SaveData(writer);
+	return ibValueSizer::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueStaticBoxSizer, "Staticboxsizer", "Sizer", string_to_clsid("CT_SSZER"));
+CONTROL_TYPE_REGISTER(ibValueStaticBoxSizer, "Staticboxsizer", "Sizer", string_to_clsid("CT_SSZER"));

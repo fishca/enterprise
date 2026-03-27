@@ -2,35 +2,35 @@
 #include "frontend/mainFrame/mainFrame.h"
 
 // ----------------------------------------------------------------------------
-// CHelpEditView implementation
+// ibHelpEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CHelpEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibHelpEditView, ibMetaView);
 
-wxBEGIN_EVENT_TABLE(CHelpEditView, CMetaView)
-EVT_MENU(wxID_COPY, CHelpEditView::OnCopy)
-EVT_MENU(wxID_PASTE, CHelpEditView::OnPaste)
-EVT_MENU(wxID_SELECTALL, CHelpEditView::OnSelectAll)
+wxBEGIN_EVENT_TABLE(ibHelpEditView, ibMetaView)
+EVT_MENU(wxID_COPY, ibHelpEditView::OnCopy)
+EVT_MENU(wxID_PASTE, ibHelpEditView::OnPaste)
+EVT_MENU(wxID_SELECTALL, ibHelpEditView::OnSelectAll)
 wxEND_EVENT_TABLE()
 
-bool CHelpEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibHelpEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_textEditor = new CTextEditor(doc, m_viewFrame, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
+	m_textEditor = new ibTextEditor(doc, m_viewFrame, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_textEditor->SetEditorSettings(mainFrame->GetEditorSettings());
 	m_textEditor->SetFontColorSettings(mainFrame->GetFontColorSettings());
 
 	m_textEditor->SetReadOnly(flags == wxDOC_READONLY);
 
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CHelpEditView::OnDraw(wxDC* WXUNUSED(dc))
+void ibHelpEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-bool CHelpEditView::OnClose(bool deleteWindow)
+bool ibHelpEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -39,7 +39,7 @@ bool CHelpEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
+	if (ibMetaView::OnClose(deleteWindow)) {
 		
 		m_textEditor->Freeze();
 		
@@ -54,12 +54,12 @@ bool CHelpEditView::OnClose(bool deleteWindow)
 
 #include "frontend/win/editor/textEditor/textEditorPrintOut.h"
 
-wxPrintout* CHelpEditView::OnCreatePrintout()
+wxPrintout* ibHelpEditView::OnCreatePrintout()
 {
-	return new CTextEditorPrintout(m_textEditor, m_viewDocument->GetTitle());
+	return new ibTextEditorPrintout(m_textEditor, m_viewDocument->GetTitle());
 }
 
-void CHelpEditView::OnFind(wxFindDialogEvent& event)
+void ibHelpEditView::OnFind(wxFindDialogEvent& event)
 {
 	int wxflags = event.GetFlags();
 	int sciflags = 0;
@@ -95,34 +95,34 @@ void CHelpEditView::OnFind(wxFindDialogEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-// IHelpDocument: wxDocument and wxTextCtrl married
+// ibHelpDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(IHelpDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(ibHelpDocument, ibMetaDocument);
 
-wxCommandProcessor* IHelpDocument::OnCreateCommandProcessor()
+wxCommandProcessor* ibHelpDocument::OnCreateCommandProcessor()
 {
-	CTextCommandProcessor* commandProcessor = new CTextCommandProcessor(GetTextCtrl());
+	ibTextCommandProcessor* commandProcessor = new ibTextCommandProcessor(GetTextCtrl());
 	commandProcessor->SetEditMenu(mainFrame->GetDefaultMenu(wxID_EDIT));
 	commandProcessor->Initialize();
 	return commandProcessor;
 }
 
-CTextEditor* IHelpDocument::GetTextCtrl() const
+ibTextEditor* ibHelpDocument::GetTextCtrl() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CHelpEditView)->GetText() : nullptr;
+	return view ? wxDynamicCast(view, ibHelpEditView)->GetText() : nullptr;
 }
 
 // ----------------------------------------------------------------------------
-// CHelpFileDocument implementation
+// ibHelpFilibDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CHelpFileDocument, IHelpDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibHelpFilibDocument, ibHelpDocument);
 
-bool CHelpFileDocument::OnCreate(const wxString& path, long flags)
+bool ibHelpFilibDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!CMetaDocument::OnCreate(path, flags))
+	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
 
 	return true;
@@ -130,12 +130,12 @@ bool CHelpFileDocument::OnCreate(const wxString& path, long flags)
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CHelpFileDocument::DoSaveDocument(const wxString& filename)
+bool ibHelpFilibDocument::DoSaveDocument(const wxString& filename)
 {
 	return GetTextCtrl()->SaveFile(filename);
 }
 
-bool CHelpFileDocument::DoOpenDocument(const wxString& filename)
+bool ibHelpFilibDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!GetTextCtrl()->LoadFile(filename))
 		return false;

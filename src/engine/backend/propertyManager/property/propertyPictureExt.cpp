@@ -3,54 +3,54 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* CPropertyExternalPicture::CreateVariantData(const CExternalPictureDescription& id) const
+wxVariantData* ibPropertyExternalPicture::CreateVariantData(const ibExternalPictureDescription& id) const
 {
-	return new wxVariantDataExternalPicture(id);
+	return new ibVariantDataExternalPicture(id);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-wxBitmap CPropertyExternalPicture::GetValueAsBitmap() const
+wxBitmap ibPropertyExternalPicture::GetValueAsBitmap() const
 {
-	return get_cell_variant<wxVariantDataExternalPicture>()->GetPictureBitmap();
+	return get_cell_variant<ibVariantDataExternalPicture>()->GetPictureBitmap();
 }
 
-CExternalPictureDescription& CPropertyExternalPicture::GetValueAsPictureDesc() const
+ibExternalPictureDescription& ibPropertyExternalPicture::GetValueAsPictureDesc() const
 {
-	return get_cell_variant<wxVariantDataExternalPicture>()->GetExternalPictureDesc();
+	return get_cell_variant<ibVariantDataExternalPicture>()->GetExternalPictureDesc();
 }
 
-void CPropertyExternalPicture::SetValue(const CExternalPictureDescription& val)
+void ibPropertyExternalPicture::SetValue(const ibExternalPictureDescription& val)
 {
 	m_propValue = CreateVariantData(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-bool CPropertyExternalPicture::IsEmptyProperty() const {
-	return get_cell_variant<wxVariantDataExternalPicture>()->IsEmptyPicture();
+bool ibPropertyExternalPicture::IsEmptyProperty() const {
+	return get_cell_variant<ibVariantDataExternalPicture>()->IsEmptyPicture();
 }
 
 #include "backend/system/value/valuePicture.h"
 
 //base property for "external picture"
-bool CPropertyExternalPicture::SetDataValue(const CValue& varPropVal)
+bool ibPropertyExternalPicture::SetDataValue(const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CPropertyExternalPicture::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyExternalPicture::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValuePicture>(GetValueAsPictureDesc());
+	pvarPropVal = ibValue::CreateObjectValue<ibValuePicture>(GetValueAsPictureDesc());
 	return true;
 }
 
-bool CPropertyExternalPicture::LoadData(CMemoryReader& reader)
+bool ibPropertyExternalPicture::LoadData(ibReaderMemory& reader)
 {
-	return CExternalPictureDescriptionMemory::LoadData(reader, GetValueAsPictureDesc());
+	return ibExternalPictureDescriptionMemory::LoadData(reader, GetValueAsPictureDesc());
 }
 
-bool CPropertyExternalPicture::SaveData(CMemoryWriter& writer)
+bool ibPropertyExternalPicture::SaveData(ibWriterMemory& writer)
 {
-	return CExternalPictureDescriptionMemory::SaveData(writer, GetValueAsPictureDesc());
+	return ibExternalPictureDescriptionMemory::SaveData(writer, GetValueAsPictureDesc());
 }

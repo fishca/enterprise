@@ -12,7 +12,7 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API wxCheckTree : public wxTreeCtrl {
+class FRONTEND_API ibCheckTree : public wxTreeCtrl {
 	bool m_singleCheck;
 	bool m_allowEmpty;
 	std::map<wxTreeItemId, bool> m_checkedItems;
@@ -35,8 +35,8 @@ protected:
 			image, selImage,
 			data
 		);
-		//wxCheckTree::SetItemState(id, wxCheckTree::UNCHECKED);
-		//wxCheckTree::Check(id, false);
+		//ibCheckTree::SetItemState(id, ibCheckTree::UNCHECKED);
+		//ibCheckTree::Check(id, false);
 		m_checkedItems.insert_or_assign(id, false);
 		return id;
 	}
@@ -57,8 +57,8 @@ protected:
 			image, selImage,
 			data
 		);
-		//wxCheckTree::SetItemState(id, wxCheckTree::UNCHECKED);
-		//wxCheckTree::Check(id, false);
+		//ibCheckTree::SetItemState(id, ibCheckTree::UNCHECKED);
+		//ibCheckTree::Check(id, false);
 		m_checkedItems.insert_or_assign(id, false);
 		return id;
 	}
@@ -73,11 +73,11 @@ public:
 		return array.Count();
 	}
 
-	wxCheckTree(wxWindow* parent, const wxWindowID id,
+	ibCheckTree(wxWindow* parent, const wxWindowID id,
 		const wxPoint& pos, const wxSize& size,
 		long style);
-	wxCheckTree();
-	virtual ~wxCheckTree();
+	ibCheckTree();
+	virtual ~ibCheckTree();
 
 	void Init();
 
@@ -94,11 +94,11 @@ public:
 			for (auto& sel : m_checkedItems) {
 				if (sel.second) {
 					if (!firstSel) {
-						wxCheckTree::SetItemState(sel.first, wxCheckTree::UNCHECKED);
+						ibCheckTree::SetItemState(sel.first, ibCheckTree::UNCHECKED);
 						sel.second = false;
 					}
 					else {
-						wxCheckTree::SelectItem(sel.first);
+						ibCheckTree::SelectItem(sel.first);
 					}
 					firstSel = false;
 				}
@@ -187,7 +187,7 @@ private:
 	//     if you want your overloaded OnCompareItems() to be called.
 	//     OTOH, if you don't want it you may omit the next line - this will
 	//     make default (alphabetical) sorting much faster under wxMSW.
-	wxDECLARE_DYNAMIC_CLASS(wxCheckTree);
+	wxDECLARE_DYNAMIC_CLASS(ibCheckTree);
 };
 
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_CHECKTREE_CHOICE, wxTreeEvent);

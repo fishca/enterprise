@@ -394,7 +394,7 @@ void hmac_md5(
 	MD5Final(digest, &context);          /* finish up 2nd pass */
 }
 
-wxString wxMD5::ComputeMd5(const wxString& content)
+wxString ibMD5::ComputeMd5(const wxString& content)
 {
 	struct MD5Context md5c;
 	unsigned char signature[16];
@@ -413,7 +413,7 @@ wxString wxMD5::ComputeMd5(const wxString& content)
 	return result;
 }
 
-wxString wxMD5::ComputeKeyedMd5(const wxString& content, const wxString& key)
+wxString ibMD5::ComputeKeyedMd5(const wxString& content, const wxString& key)
 {
 	unsigned char  digest[16];
 	hmac_md5((const unsigned char*)content.c_str(),                /* pointer to data stream */

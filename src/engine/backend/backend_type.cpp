@@ -5,24 +5,24 @@
 //*                         Type factory                                * 
 //***********************************************************************
 
-CValue IBackendTypeFactory::CreateValue() const
+ibValue ibBackendTypeFactory::CreateValue() const
 {
-	CValue* refData = CreateValueRef();
+	ibValue* refData = CreateValueRef();
 	return refData ?
-		refData : CValue();
+		refData : ibValue();
 }
 
-CValue* IBackendTypeFactory::CreateValueRef() const
+ibValue* ibBackendTypeFactory::CreateValueRef() const
 {
-	const CTypeDescription& typeDesc = GetTypeDesc();
+	const ibTypeDescription& typeDesc = GetTypeDesc();
 	if (typeDesc.GetClsidCount() == 1) {
-		const class_identifier_t& clsid = typeDesc.GetFirstClsid();
-		if (CValue::IsRegisterCtor(clsid)) {
-			const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
-			if (so->GetObjectTypeCtor() == eCtorObjectType::eCtorObjectType_object_enum) {
+		const ibClassID& clsid = typeDesc.GetFirstClsid();
+		if (ibValue::IsRegisterCtor(clsid)) {
+			const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
+			if (so->GetObjectTypeCtor() == ibCtorObjectType::ibCtorObjectType_object_enum) {
 				try {
-					std::shared_ptr<IEnumerationWrapper> enumVal(
-						CValue::CreateAndConvertObjectRef<IEnumerationWrapper>(so->GetClassName())
+					std::shared_ptr<ibValueEnumerationWrapper> enumVal(
+						ibValue::CreateAndConvertObjectRef<ibValueEnumerationWrapper>(so->GetClassName())
 					);
 					return enumVal->GetEnumVariantValue();
 				}
@@ -31,7 +31,7 @@ CValue* IBackendTypeFactory::CreateValueRef() const
 				return nullptr;
 			}
 			try {
-				return CValue::CreateObjectRef(so->GetClassType());
+				return ibValue::CreateObjectRef(so->GetClassType());
 			}
 			catch (...) {
 				return nullptr;
@@ -43,36 +43,36 @@ CValue* IBackendTypeFactory::CreateValueRef() const
 
 #include "backend/system/value/valueType.h"
 
-CValue IBackendTypeFactory::AdjustValue() const
+ibValue ibBackendTypeFactory::AdjustValue() const
 {
-	return CValueTypeDescription::AdjustValue(GetTypeDesc());
+	return ibValueTypeDescription::AdjustValue(GetTypeDesc());
 }
 
-CValue IBackendTypeFactory::AdjustValue(const CValue& varValue) const
+ibValue ibBackendTypeFactory::AdjustValue(const ibValue& varValue) const
 {
-	return CValueTypeDescription::AdjustValue(GetTypeDesc(), varValue);
+	return ibValueTypeDescription::AdjustValue(GetTypeDesc(), varValue);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-CValue IBackendTypeConfigFactory::CreateValue() const
+ibValue ibBackendTypeConfigFactory::CreateValue() const
 {
-	CValue* refData = CreateValueRef();
+	ibValue* refData = CreateValueRef();
 	if (refData == nullptr)
-		return CValue();
+		return ibValue();
 	return refData;
 }
 
 #include "backend/metadata.h"
 #include "backend/objCtor.h"
 
-CValue* IBackendTypeConfigFactory::CreateValueRef() const
+ibValue* ibBackendTypeConfigFactory::CreateValueRef() const
 {
-	IMetaData const* metaData = GetMetaData();
+	ibMetaData const* metaData = GetMetaData();
 	wxASSERT(metaData);
-	const CTypeDescription& typeDesc = GetTypeDesc();
+	const ibTypeDescription& typeDesc = GetTypeDesc();
 	if (typeDesc.GetClsidCount() == 1) {
-		const IMetaValueTypeCtor* so = metaData->GetTypeCtor(typeDesc.GetFirstClsid());
+		const ibCtorMetaValueType* so = metaData->GetTypeCtor(typeDesc.GetFirstClsid());
 		if (so != nullptr) {
 			try {
 				return metaData->CreateObjectRef(so->GetClassType());
@@ -82,20 +82,20 @@ CValue* IBackendTypeConfigFactory::CreateValueRef() const
 			}
 		}
 	}
-	return IBackendTypeFactory::CreateValueRef();
+	return ibBackendTypeFactory::CreateValueRef();
 }
 
-CValue IBackendTypeConfigFactory::AdjustValue() const
+ibValue ibBackendTypeConfigFactory::AdjustValue() const
 {
-	return CValueTypeDescription::AdjustValue(
+	return ibValueTypeDescription::AdjustValue(
 		GetTypeDesc(),
 		GetMetaData()
 	);
 }
 
-CValue IBackendTypeConfigFactory::AdjustValue(const CValue& varValue) const
+ibValue ibBackendTypeConfigFactory::AdjustValue(const ibValue& varValue) const
 {
-	return CValueTypeDescription::AdjustValue(
+	return ibValueTypeDescription::AdjustValue(
 		GetTypeDesc(),
 		varValue,
 		GetMetaData()
@@ -104,7 +104,7 @@ CValue IBackendTypeConfigFactory::AdjustValue(const CValue& varValue) const
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool IBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const
+bool ibBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const ibMetaID& id) const
 {
 	return !src.IsTableSection();
 }

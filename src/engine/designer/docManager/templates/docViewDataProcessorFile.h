@@ -5,54 +5,54 @@
 #include "mainFrame/metaTree/treeDataProcessor.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CDataProcessorEditView : public CMetaView
+class ibDataProcessorEditView : public ibMetaView
 {
-	CDataProcessorTree* m_metaTree;
+	ibDataProcessorTree* m_metaTree;
 
 public:
 
-	CDataProcessorEditView() : CMetaView() {}
+	ibDataProcessorEditView() : ibMetaView() {}
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	CDataProcessorTree* GetMetaTree() const { return m_metaTree; }
+	ibDataProcessorTree* GetMetaTree() const { return m_metaTree; }
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibDataProcessorEditView);
 };
 
 static int s_defaultDataProcessorNameCounter = 1;
 
-class CDataProcessorFileDocument : public IMetaDataDocument {
-	CMetaDataDataProcessor* m_metaData;
+class ibDataProcessorFilibDocument : public ibMetaDataDocument {
+	ibMetaDataDataProcessor* m_metaData;
 public:
 
 	virtual wxIcon GetIcon() const {
 		if (m_metaData != nullptr) {
-			IValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
+			ibValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
 			wxASSERT(metaObject);
 			return metaObject->GetIcon();
 		}
 		return wxNullIcon;
 	}
 
-	CDataProcessorFileDocument() : IMetaDataDocument() { m_childDoc = false; }
-	virtual ~CDataProcessorFileDocument() {
+	ibDataProcessorFilibDocument() : ibMetaDataDocument() { m_childDoc = false; }
+	virtual ~ibDataProcessorFilibDocument() {
 		wxDELETE(m_metaData);
 	}
 
-	virtual CMetaDataDataProcessor* GetMetaData() const {
+	virtual ibMetaDataDataProcessor* GetMetaData() const {
 		return m_metaData;
 	}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override
 	{
-		IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+		ibValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
 		// notice that there is no need to neither reset nor even check the
@@ -88,15 +88,15 @@ public:
 	virtual bool IsModified() const override;
 	virtual void Modify(bool mod) override;
 
-	virtual CDataProcessorTree* GetMetaTree() const;
+	virtual ibDataProcessorTree* GetMetaTree() const;
 
 protected:
 
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CDataProcessorFileDocument);
-	wxDECLARE_DYNAMIC_CLASS(CDataProcessorFileDocument);
+	wxDECLARE_NO_COPY_CLASS(ibDataProcessorFilibDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibDataProcessorFilibDocument);
 };
 
 #endif 

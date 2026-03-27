@@ -3,7 +3,7 @@
 
 #include <wx/aui/auibook.h>
 
-class wxFloatingNotebook : public wxAuiNotebook {
+class ibFloatingNotebook : public wxAuiNotebook {
 	wxAuiManager* m_frameManager;
 	wxString m_paneName;
 public:
@@ -24,7 +24,7 @@ public:
 		wnd->Show(!wnd->IsShown());
 	}
 
-	wxFloatingNotebook(wxAuiManager* frameManager, const wxString& paneName,
+	ibFloatingNotebook(wxAuiManager* frameManager, const wxString& paneName,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,

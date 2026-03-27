@@ -3,13 +3,13 @@
 
 #include <wx/aui/auibar.h>
 
-class CAuiToolBar : public wxAuiToolBar
+class ibOESToolBar : public wxAuiToolBar
 {
 public:
 
-	CAuiToolBar() : wxAuiToolBar() {}
+	ibOESToolBar() : wxAuiToolBar() {}
 
-	CAuiToolBar(wxWindow* parent,
+	ibOESToolBar(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,

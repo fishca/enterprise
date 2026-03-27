@@ -15,14 +15,14 @@
 #include "backend/databaseLayer/resultSetMetaData.h"
 #include "engine/ibase.h"
 
-class CFirebirdResultSetMetaData : public IResultSetMetaData
+class ibDatabaseResultSetMetaDataFirebird : public ibResultSetMetaData
 {
 public:
 	// ctor
-	CFirebirdResultSetMetaData(XSQLDA* pFields);
+	ibDatabaseResultSetMetaDataFirebird(XSQLDA* pFields);
 
 	// dtor
-	virtual ~CFirebirdResultSetMetaData() { }
+	virtual ~ibDatabaseResultSetMetaDataFirebird() { }
 
 	virtual int GetColumnType(int i);
 	virtual int GetColumnSize(int i);

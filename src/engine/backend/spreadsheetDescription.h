@@ -6,41 +6,41 @@
 ////////////////////////////////////////
 // spreadsheet defines 
 
-enum enSpreadsheetOrientation {
-	enOrient_Horizontal = wxHORIZONTAL,
-	enOrient_Vertical = wxVERTICAL
+enum ibSpreadsheetOrientation {
+	ibOrient_Horizontal = wxHORIZONTAL,
+	ibOrient_Vertical = wxVERTICAL
 };
 
-enum enSpreadsheetAlignmentHorz {
-	enAlignmentHorz_Left = wxAlignment::wxALIGN_LEFT,
-	enAlignmentHorz_Center = wxAlignment::wxALIGN_CENTER,
-	enAlignmentHorz_Right = wxAlignment::wxALIGN_RIGHT
+enum ibSpreadsheetAlignmentHorz {
+	ibAlignmentHorz_Left = wxAlignment::wxALIGN_LEFT,
+	ibAlignmentHorz_Center = wxAlignment::wxALIGN_CENTER,
+	ibAlignmentHorz_Right = wxAlignment::wxALIGN_RIGHT
 };
 
-enum enSpreadsheetAlignmentVert {
-	enAlignmentVert_Top = wxAlignment::wxALIGN_TOP,
-	enAlignmentVert_Center = wxAlignment::wxALIGN_CENTER,
-	enAlignmentVert_Bottom = wxAlignment::wxALIGN_BOTTOM
+enum ibSpreadsheetAlignmentVert {
+	ibAlignmentVert_Top = wxAlignment::wxALIGN_TOP,
+	ibAlignmentVert_Center = wxAlignment::wxALIGN_CENTER,
+	ibAlignmentVert_Bottom = wxAlignment::wxALIGN_BOTTOM
 };
 
-enum enSpreadsheetFitMode {
-	enFitMode_Overflow = 4,
-	enFitMode_Clip = 5
+enum ibSpreadsheetFitMode {
+	ibFitMode_Overflow = 4,
+	ibFitMode_Clip = 5
 };
 
-enum enSpreadsheetPenStyle {
-	enPenStyle_Transparent = wxPenStyle::wxPENSTYLE_TRANSPARENT,
-	enPenStyle_Solid = wxPenStyle::wxPENSTYLE_SOLID,
-	enPenStyle_Dot = wxPenStyle::wxPENSTYLE_DOT,
-	enPenStyle_ShortDash = wxPenStyle::wxPENSTYLE_SHORT_DASH,
-	enPenStyle_DotDash = wxPenStyle::wxPENSTYLE_DOT_DASH,
-	enPenStyle_LongDash = wxPenStyle::wxPENSTYLE_LONG_DASH,
+enum ibSpreadsheetPenStyle {
+	ibPenStyle_Transparent = wxPenStyle::wxPENSTYLE_TRANSPARENT,
+	ibPenStyle_Solid = wxPenStyle::wxPENSTYLE_SOLID,
+	ibPenStyle_Dot = wxPenStyle::wxPENSTYLE_DOT,
+	ibPenStyle_ShortDash = wxPenStyle::wxPENSTYLE_SHORT_DASH,
+	ibPenStyle_DotDash = wxPenStyle::wxPENSTYLE_DOT_DASH,
+	ibPenStyle_LongDash = wxPenStyle::wxPENSTYLE_LONG_DASH,
 };
 
-enum enSpreadsheetFillType {
-	enSpreadsheetFillType_StrText = 1, //default
-	enSpreadsheetFillType_StrParameter,
-	enSpreadsheetFillType_StrTemplate
+enum ibSpreadsheetFillType {
+	ibSpreadsheetFillType_StrText = 1, //default
+	ibSpreadsheetFillType_StrParameter,
+	ibSpreadsheetFillType_StrTemplate
 };
 
 ///////////////////////////////////////
@@ -55,9 +55,9 @@ static const wxFont s_defaultSpreadsheetFont = wxFont(8, wxFontFamily::wxFONTFAM
 
 ///////////////////////////////////////
 
-struct CSpreadsheetBorderDescription {
+struct ibSpreadsheetBorderDescription {
 
-	bool operator == (const CSpreadsheetBorderDescription& rhs) const {
+	bool operator == (const ibSpreadsheetBorderDescription& rhs) const {
 		return m_style == rhs.m_style &&
 			m_width == rhs.m_width && m_colour == rhs.m_colour;
 	}
@@ -67,9 +67,9 @@ struct CSpreadsheetBorderDescription {
 	int m_width = 1;
 };
 
-struct CSpreadsheetCellDescription {
+struct ibSpreadsheetCellDescription {
 
-	enum EFitMode
+	enum ibFitMode
 	{
 		// This is a hack to save space: the first 4 elements of this enum are
 		// the same as those of wxEllipsizeMode.
@@ -81,7 +81,7 @@ struct CSpreadsheetCellDescription {
 		Mode_Clip
 	};
 
-	CSpreadsheetCellDescription(int row, int col) : m_row(row), m_col(col) {}
+	ibSpreadsheetCellDescription(int row, int col) : m_row(row), m_col(col) {}
 
 	bool IsEmptyValue() const { return m_value.IsEmpty(); }
 
@@ -121,7 +121,7 @@ struct CSpreadsheetCellDescription {
 		m_col_size = num_cols;
 	}
 
-	void SetCell(const CSpreadsheetCellDescription* rhs) {
+	void SetCell(const ibSpreadsheetCellDescription* rhs) {
 		if (rhs == nullptr)
 			return;
 		//m_row = rhs->m_row;
@@ -145,12 +145,12 @@ struct CSpreadsheetCellDescription {
 		m_detailsParameter = rhs->m_detailsParameter;
 	}
 
-	CSpreadsheetCellDescription& operator =(const CSpreadsheetCellDescription& rhs) {
+	ibSpreadsheetCellDescription& operator =(const ibSpreadsheetCellDescription& rhs) {
 		SetCell(&rhs);
 		return *this;
 	}
 
-	bool operator == (const CSpreadsheetCellDescription& rhs) const {
+	bool operator == (const ibSpreadsheetCellDescription& rhs) const {
 		return m_row == rhs.m_row && m_col == rhs.m_col
 			&& m_alignHorz == rhs.m_alignHorz
 			&& m_alignVert == rhs.m_alignVert
@@ -172,26 +172,26 @@ struct CSpreadsheetCellDescription {
 	wxFont m_font = s_defaultSpreadsheetFont;
 	wxColour m_backgroundColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	wxColour m_textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
-	CSpreadsheetBorderDescription m_borderAt[4]; //left, right, top, bottom
+	ibSpreadsheetBorderDescription m_borderAt[4]; //left, right, top, bottom
 	int m_row_size = 1, m_col_size = 1;
-	EFitMode m_fitMode = EFitMode::Mode_Overflow;
+	ibFitMode m_fitMode = ibFitMode::Mode_Overflow;
 	bool m_isReadOnly = false;
-	enSpreadsheetFillType m_fillSetType = enSpreadsheetFillType::enSpreadsheetFillType_StrText;	
+	ibSpreadsheetFillType m_fillSetType = ibSpreadsheetFillType::ibSpreadsheetFillType_StrText;	
 	wxString m_detailsParameter;
 };
 
-class BACKEND_API CSpreadsheetCellDescriptionMemory {
+class BACKEND_API ibSpreadsheetCellDescriptionMemory {
 public:
 	//load & save object in control 
-	static bool LoadData(class CMemoryReader& reader, CSpreadsheetCellDescription& spreadsheetDesc);
-	static bool SaveData(class CMemoryWriter& writer, const CSpreadsheetCellDescription& spreadsheetDesc);
+	static bool LoadData(class ibReaderMemory& reader, ibSpreadsheetCellDescription& spreadsheetDesc);
+	static bool SaveData(class ibWriterMemory& writer, const ibSpreadsheetCellDescription& spreadsheetDesc);
 };
 
-struct CSpreadsheetAreaDescription {
+struct ibSpreadsheetAreaDescription {
 
-	CSpreadsheetAreaDescription(const wxString& label, unsigned int start, unsigned int end) : m_label(label), m_start(start), m_end(end) {}
+	ibSpreadsheetAreaDescription(const wxString& label, unsigned int start, unsigned int end) : m_label(label), m_start(start), m_end(end) {}
 
-	bool operator == (const CSpreadsheetAreaDescription& rhs) const {
+	bool operator == (const ibSpreadsheetAreaDescription& rhs) const {
 		return m_label == rhs.m_label &&
 			m_start == rhs.m_start && m_end == rhs.m_end;
 	}
@@ -200,23 +200,23 @@ struct CSpreadsheetAreaDescription {
 	unsigned int m_start, m_end;
 };
 
-struct CSpreadsheetRowSizeDescription
+struct ibSpreadsheetRowSizeDescription
 {
-	CSpreadsheetRowSizeDescription(unsigned int row, unsigned int height = 0) : m_row(row), m_height(height) {}
+	ibSpreadsheetRowSizeDescription(unsigned int row, unsigned int height = 0) : m_row(row), m_height(height) {}
 
 	unsigned int m_row;
 	unsigned int m_height = 0;
 };
 
-struct CSpreadsheetColSizeDescription
+struct ibSpreadsheetColSizeDescription
 {
-	CSpreadsheetColSizeDescription(unsigned int col, unsigned int width = 0) : m_col(col), m_width(width) {}
+	ibSpreadsheetColSizeDescription(unsigned int col, unsigned int width = 0) : m_col(col), m_width(width) {}
 
 	unsigned int m_col;
 	unsigned int m_width = 0;
 };
 
-struct CSpreadsheetDescription {
+struct ibSpreadsheetDescription {
 
 	void ClearSpreadsheet(int count = 0) {
 
@@ -239,7 +239,7 @@ struct CSpreadsheetDescription {
 			GetAreaNumberRows() == 0 && GetAreaNumberCols() == 0;
 	}
 
-	const CSpreadsheetCellDescription* GetCell(int row, int col) const {
+	const ibSpreadsheetCellDescription* GetCell(int row, int col) const {
 
 		if (row < 0 || col < 0)
 			return nullptr;
@@ -253,7 +253,7 @@ struct CSpreadsheetDescription {
 		return nullptr;
 	}
 
-	CSpreadsheetCellDescription* GetOrCreateCell(int row, int col) {
+	ibSpreadsheetCellDescription* GetOrCreateCell(int row, int col) {
 
 		if (row < 0 || col < 0)
 			return nullptr;
@@ -264,13 +264,13 @@ struct CSpreadsheetDescription {
 		if (iterator != m_cellAt.end())
 			return &*iterator;
 
-		CSpreadsheetCellDescription& entry =
+		ibSpreadsheetCellDescription& entry =
 			m_cellAt.emplace_back(row, col);
 
 		return &entry;
 	}
 
-	const CSpreadsheetCellDescription* GetCellByIdx(size_t idx) const {
+	const ibSpreadsheetCellDescription* GetCellByIdx(size_t idx) const {
 		if (idx > m_cellAt.size())
 			return nullptr;
 		return &m_cellAt[idx];
@@ -318,13 +318,13 @@ struct CSpreadsheetDescription {
 			m_colAreaAt.erase(iterator);
 	}
 
-	const CSpreadsheetAreaDescription* GetRowAreaByIdx(size_t idx) const {
+	const ibSpreadsheetAreaDescription* GetRowAreaByIdx(size_t idx) const {
 		if (idx > m_rowAreaAt.size())
 			return nullptr;
 		return &m_rowAreaAt[idx];
 	}
 
-	const CSpreadsheetAreaDescription* GetRowAreaByName(const wxString& strAreaName) const {
+	const ibSpreadsheetAreaDescription* GetRowAreaByName(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_rowAreaAt.begin(), m_rowAreaAt.end(),
 			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_rowAreaAt.end())
@@ -347,13 +347,13 @@ struct CSpreadsheetDescription {
 		m_rowAreaAt[idx].m_label = strAreaName;
 	}
 
-	const CSpreadsheetAreaDescription* GetColAreaByIdx(size_t idx) const {
+	const ibSpreadsheetAreaDescription* GetColAreaByIdx(size_t idx) const {
 		if (idx > m_colAreaAt.size())
 			return nullptr;
 		return &m_colAreaAt[idx];
 	}
 
-	const CSpreadsheetAreaDescription* GetColAreaByName(const wxString& strAreaName) const {
+	const ibSpreadsheetAreaDescription* GetColAreaByName(const wxString& strAreaName) const {
 		auto iterator = std::find_if(m_colAreaAt.begin(), m_colAreaAt.end(),
 			[strAreaName](const auto& v) { return stringUtils::CompareString(v.m_label, strAreaName); });
 		if (iterator != m_colAreaAt.end())
@@ -412,7 +412,7 @@ struct CSpreadsheetDescription {
 		m_rowHeightAt.emplace_back(row, height);
 	}
 
-	const CSpreadsheetRowSizeDescription* GetRowSizeByIdx(size_t idx) const {
+	const ibSpreadsheetRowSizeDescription* GetRowSizeByIdx(size_t idx) const {
 		if (idx > m_rowHeightAt.size())
 			return nullptr;
 		return &m_rowHeightAt[idx];
@@ -431,7 +431,7 @@ struct CSpreadsheetDescription {
 		m_colWidthAt.emplace_back(col, width);
 	}
 
-	const CSpreadsheetColSizeDescription* GetColSizeByIdx(size_t idx) const {
+	const ibSpreadsheetColSizeDescription* GetColSizeByIdx(size_t idx) const {
 		if (idx > m_colWidthAt.size())
 			return nullptr;
 		return &m_colWidthAt[idx];
@@ -466,59 +466,59 @@ struct CSpreadsheetDescription {
 
 	//cell
 	wxColour GetCellBackgroundColour(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_backgroundColour;
 		return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	}
 
 	void SetCellBackgroundColour(int row, int col, const wxColour& colour) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_backgroundColour = colour;
 	}
 
 	wxColour GetCellTextColour(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_textColour;
 		return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 	}
 
 	void SetCellTextColour(int row, int col, const wxColour& colour) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_textColour = colour;
 	}
 
 	int GetCellTextOrient(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_textOrient;
 		return wxHORIZONTAL;
 	}
 
 	void SetCellTextOrient(int row, int col, const int orient) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_textOrient = orient;
 	}
 
 	wxFont GetCellFont(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_font;
 		return s_defaultSpreadsheetFont;
 	}
 
 	void SetCellFont(int row, int col, const wxFont& font) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_font = font;
 	}
 
 	void GetCellAlignment(int row, int col, int* horiz, int* vert) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) {
 			if (horiz) *horiz = cell->m_alignHorz;
 			if (vert) *vert = cell->m_alignVert;
@@ -526,63 +526,63 @@ struct CSpreadsheetDescription {
 	}
 
 	void SetCellAlignment(int row, int col, const int horiz, const int vert) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) {
 			cell->m_alignHorz = horiz;
 			cell->m_alignVert = vert;
 		}
 	}
 
-	CSpreadsheetBorderDescription GetCellBorderLeft(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+	ibSpreadsheetBorderDescription GetCellBorderLeft(int row, int col) const {
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[0];
-		return CSpreadsheetBorderDescription();
+		return ibSpreadsheetBorderDescription();
 	}
 
-	void SetCellBorderLeft(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellBorderLeft(int row, int col, const ibSpreadsheetBorderDescription& desc) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[0] = desc;
 	}
 
-	CSpreadsheetBorderDescription GetCellBorderRight(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+	ibSpreadsheetBorderDescription GetCellBorderRight(int row, int col) const {
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[1];
-		return CSpreadsheetBorderDescription();
+		return ibSpreadsheetBorderDescription();
 	}
 
-	void SetCellBorderRight(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellBorderRight(int row, int col, const ibSpreadsheetBorderDescription& desc) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[1] = desc;
 	}
 
-	CSpreadsheetBorderDescription GetCellBorderTop(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+	ibSpreadsheetBorderDescription GetCellBorderTop(int row, int col) const {
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[2];
-		return CSpreadsheetBorderDescription();
+		return ibSpreadsheetBorderDescription();
 	}
 
-	void SetCellBorderTop(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellBorderTop(int row, int col, const ibSpreadsheetBorderDescription& desc) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[2] = desc;
 	}
 
-	CSpreadsheetBorderDescription GetCellBorderBottom(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+	ibSpreadsheetBorderDescription GetCellBorderBottom(int row, int col) const {
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->m_borderAt[3];
-		return CSpreadsheetBorderDescription();
+		return ibSpreadsheetBorderDescription();
 	}
 
-	void SetCellBorderBottom(int row, int col, const CSpreadsheetBorderDescription& desc) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellBorderBottom(int row, int col, const ibSpreadsheetBorderDescription& desc) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_borderAt[3] = desc;
 	}
 
 	int GetCellSize(int row, int col, int* num_rows, int* num_cols) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr) return cell->GetSize(num_rows, num_cols);
 		if (num_rows != nullptr) *num_rows = 1;
 		if (num_cols != nullptr) *num_cols = 1;
@@ -590,29 +590,29 @@ struct CSpreadsheetDescription {
 	}
 
 	void SetCellSize(int row, int col, int num_rows, int num_cols) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) cell->SetSize(num_rows, num_cols);
 	}
 
-	CSpreadsheetCellDescription::EFitMode GetCellFitMode(int row, int col) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	ibSpreadsheetCellDescription::ibFitMode GetCellFitMode(int row, int col) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) return cell->m_fitMode;
-		return CSpreadsheetCellDescription::EFitMode::Mode_Overflow;
+		return ibSpreadsheetCellDescription::ibFitMode::Mode_Overflow;
 	}
 
-	void SetCellFitMode(int row, int col, CSpreadsheetCellDescription::EFitMode fitMode) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellFitMode(int row, int col, ibSpreadsheetCellDescription::ibFitMode fitMode) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) cell->m_fitMode = fitMode;
 	}
 
 	bool IsCellReadOnly(int row, int col, bool isReadOnly = true) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) return cell->m_isReadOnly;
 		return false;
 	}
 
 	void SetCellReadOnly(int row, int col, bool isReadOnly = true) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr) cell->m_isReadOnly = isReadOnly;
 	}
 
@@ -688,66 +688,66 @@ struct CSpreadsheetDescription {
 	// ------ cell value accessors
 	//
 	bool IsEmptyCell(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->IsEmptyValue();
 		return true;
 	}
 
-	enSpreadsheetFillType GetFillType(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+	ibSpreadsheetFillType GetFillType(int row, int col) const {
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_fillSetType;
-		return enSpreadsheetFillType::enSpreadsheetFillType_StrText;
+		return ibSpreadsheetFillType::ibSpreadsheetFillType_StrText;
 	}
 
-	void SetCellFillType(int row, int col, enSpreadsheetFillType type) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+	void SetCellFillType(int row, int col, ibSpreadsheetFillType type) {
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_fillSetType = type;
 	}
 
 	void GetCellValue(int row, int col, wxString& s) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			s = cell->m_value;
 	}
 
 	void SetCellValue(int row, int col, const wxString& s) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_value = s;
 	}
 
 	//special string return 
 	wxString GetCellValue(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_value;
 		return wxT("");
 	}
 
 	void GetCellDetailsParameter(int row, int col, wxString& s) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			s = cell->m_detailsParameter;
 	}
 
 	void SetCellDetailsParameter(int row, int col, const wxString& s) {
-		CSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
+		ibSpreadsheetCellDescription* cell = GetOrCreateCell(row, col);
 		if (cell != nullptr)
 			cell->m_detailsParameter = s;
 	}
 
 	//special string return 
 	wxString GetCellDetailsParameter(int row, int col) const {
-		const CSpreadsheetCellDescription* cell = GetCell(row, col);
+		const ibSpreadsheetCellDescription* cell = GetCell(row, col);
 		if (cell != nullptr)
 			return cell->m_detailsParameter;
 		return wxT("");
 	}
 
-	bool operator == (const CSpreadsheetDescription& rhs) const {
+	bool operator == (const ibSpreadsheetDescription& rhs) const {
 
 		if (m_cellAt != rhs.m_cellAt)
 			return false;
@@ -768,13 +768,13 @@ private:
 	wxFont m_labelFont;
 
 	//size row 
-	std::vector <CSpreadsheetRowSizeDescription> m_rowHeightAt;
+	std::vector <ibSpreadsheetRowSizeDescription> m_rowHeightAt;
 
 	//size col 
-	std::vector <CSpreadsheetColSizeDescription> m_colWidthAt;
+	std::vector <ibSpreadsheetColSizeDescription> m_colWidthAt;
 
 	//cell
-	std::vector<CSpreadsheetCellDescription> m_cellAt;
+	std::vector<ibSpreadsheetCellDescription> m_cellAt;
 
 	//print brake 
 	std::vector <unsigned int> m_rowBrakeAt;
@@ -784,15 +784,15 @@ private:
 	int m_freezeRow = 0, m_freezeCol = 0;
 
 	//area 
-	std::vector<CSpreadsheetAreaDescription> m_rowAreaAt;
-	std::vector<CSpreadsheetAreaDescription> m_colAreaAt;
+	std::vector<ibSpreadsheetAreaDescription> m_rowAreaAt;
+	std::vector<ibSpreadsheetAreaDescription> m_colAreaAt;
 };
 
-class BACKEND_API CSpreadsheetDescriptionMemory {
+class BACKEND_API ibSpreadsheetDescriptionMemory {
 public:
 	//load & save object in control 
-	static bool LoadData(class CMemoryReader& reader, CSpreadsheetDescription& spreadsheetDesc);
-	static bool SaveData(class CMemoryWriter& writer, const CSpreadsheetDescription& spreadsheetDesc);
+	static bool LoadData(class ibReaderMemory& reader, ibSpreadsheetDescription& spreadsheetDesc);
+	static bool SaveData(class ibWriterMemory& writer, const ibSpreadsheetDescription& spreadsheetDesc);
 };
 
 #endif  

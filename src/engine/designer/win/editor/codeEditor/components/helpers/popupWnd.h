@@ -108,16 +108,16 @@ private:
 	wxWindow* m_tlw;
 };
 
-// A popup window to place the COESListBox upon
+// A popup window to place the ibListBox upon
 class COESListBoxWin : public COESPopupWindow
 {
-	COESListBox *m_listBox;
+	ibListBox *m_listBox;
 
 
 public:
 
 	COESListBoxWin(wxWindow*, CListBoxVisualData *, int);
-	COESListBox *GetListBox() const {
+	ibListBox *GetListBox() const {
 		return m_listBox; 
 	}
 

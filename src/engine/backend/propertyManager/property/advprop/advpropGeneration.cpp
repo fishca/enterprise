@@ -10,11 +10,11 @@
 
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGGenerationProperty, wxPGProperty, ComboBoxAndButton)
 
-void wxPGGenerationProperty::FillByClsid(const class_identifier_t& clsid)
+void wxPGGenerationProperty::FillByClsid(const ibClassID& clsid)
 {
-    const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(m_ownerProperty);
+    const ibValueMetaObjectGenericData* metaGenericData = dynamic_cast<const ibValueMetaObjectGenericData*>(m_ownerProperty);
     if (metaGenericData != nullptr) {
-        IMetaData* metaData = metaGenericData->GetMetaData();
+        ibMetaData* metaData = metaGenericData->GetMetaData();
         wxASSERT(metaData);
         for (auto metaOwner : metaData->GetAnyArrayObject(clsid)) {
             m_choices.Add(metaOwner->GetName(), metaOwner->GetIcon(), metaOwner->GetMetaID());
@@ -22,7 +22,7 @@ void wxPGGenerationProperty::FillByClsid(const class_identifier_t& clsid)
     }
 }
 
-wxPGGenerationProperty::wxPGGenerationProperty(const IPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
+wxPGGenerationProperty::wxPGGenerationProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
     : wxPGProperty(label, strName), m_ownerProperty(property)
 {
     FillByClsid(g_metaCatalogCLSID);
@@ -48,11 +48,11 @@ bool wxPGGenerationProperty::StringToValue(wxVariant& variant,
 
 bool wxPGGenerationProperty::IntToValue(wxVariant& value, int number, int argFlags) const
 {
-    wxVariantDataGeneration* dataGen = property_cast(value, wxVariantDataGeneration);
+    ibVariantDataGeneration* dataGen = property_cast(value, ibVariantDataGeneration);
     if (dataGen != nullptr) {
-        wxVariantDataGeneration* newDataGen = dataGen->Clone();
+        ibVariantDataGeneration* newDataGen = dataGen->Clone();
         wxASSERT(newDataGen);
-        CMetaDescription& md = newDataGen->GetMetaDesc();
+        ibMetaDescription& md = newDataGen->GetMetaDesc();
         md.SetDefaultMetaType(m_choices.GetValue(number));
         value = newDataGen;
         return true;
@@ -66,23 +66,23 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 {
     class wxPGGenerationEventAdapter : public wxPGEditorDialogAdapter {
         class wxTreeItemOptionData : public wxTreeItemData {
-            IValueMetaObject* m_metaObject;
+            ibValueMetaObject* m_metaObject;
         public:
-            wxTreeItemOptionData(IValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
-            meta_identifier_t GetMetaID() const { return m_metaObject->GetMetaID(); }
+            wxTreeItemOptionData(ibValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
+            ibMetaID GetMetaID() const { return m_metaObject->GetMetaID(); }
         };
 
-        void FillByClsid(IMetaData* metaData, const class_identifier_t& clsid,
-            wxPropertyCheckTree* tc, wxVariantDataGeneration* data) {
+        void FillByClsid(ibMetaData* metaData, const ibClassID& clsid,
+            wxPropertyCheckTree* tc, ibVariantDataGeneration* data) {
 
             wxImageList* imageList = tc->GetImageList();
             wxASSERT(imageList);
-            const IAbstractTypeCtor* so = CValue::GetAvailableCtor(clsid);
+            const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
             int groupIcon = imageList->Add(so->GetClassIcon());
             const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
                 groupIcon, groupIcon);
             for (auto metaObject : metaData->GetAnyArrayObject(clsid)) {
-                IValueMetaObjectRecordDataMutableRef* registerData = dynamic_cast<IValueMetaObjectRecordDataMutableRef*>(metaObject);
+                ibValueMetaObjectRecordDataMutableRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataMutableRef*>(metaObject);
                 if (registerData != nullptr) {
                     {
                         const int icon = imageList->Add(registerData->GetIcon());
@@ -92,7 +92,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
                             itemData);
 
                         if (data != nullptr) {
-                            const CMetaDescription& md = data->GetMetaDesc();
+                            const ibMetaDescription& md = data->GetMetaDesc();
                             tc->SetItemState(newItem, md.ContainMetaType(registerData->GetMetaID()) ? wxPropertyCheckTree::CHECKED : wxPropertyCheckTree::UNCHECKED);
                             tc->Check(newItem, md.ContainMetaType(registerData->GetMetaID()));
                         }
@@ -112,9 +112,9 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
             wxPGGenerationProperty* dlgProp = wxDynamicCast(prop, wxPGGenerationProperty);
             wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
-            wxVariantDataGeneration* data = property_cast(dlgProp->GetValue(), wxVariantDataGeneration);
+            ibVariantDataGeneration* data = property_cast(dlgProp->GetValue(), ibVariantDataGeneration);
             if (data == nullptr) return false;
-            const IValueMetaObjectGenericData* metaGenericData = dynamic_cast<const IValueMetaObjectGenericData*>(dlgProp->GetPropertyObject());
+            const ibValueMetaObjectGenericData* metaGenericData = dynamic_cast<const ibValueMetaObjectGenericData*>(dlgProp->GetPropertyObject());
             if (metaGenericData == nullptr) return false;
 
             // launch editor dialog
@@ -157,7 +157,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
                 new wxImageList(icon_size, icon_size)
             );
 
-            IMetaData* metaData = metaGenericData->GetMetaData();
+            ibMetaData* metaData = metaGenericData->GetMetaData();
             wxASSERT(metaData);
             if (metaData != nullptr) {
                 FillByClsid(metaData, g_metaCatalogCLSID, tc, data);
@@ -166,9 +166,9 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 
             tc->ExpandAll(); int res = dlg->ShowModal();
 
-            wxVariantDataGeneration* clone = data->Clone();
+            ibVariantDataGeneration* clone = data->Clone();
             {
-                CMetaDescription& metaDesc = clone->GetMetaDesc(); metaDesc.ClearMetaType(); 
+                ibMetaDescription& metaDesc = clone->GetMetaDesc(); metaDesc.ClearMetaType(); 
                 wxArrayTreeItemIds ids;
                 unsigned int selCount = tc->GetSelections(ids);
                 for (const wxTreeItemId& selItem : ids) {

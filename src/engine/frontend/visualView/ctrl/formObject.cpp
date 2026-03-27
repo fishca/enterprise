@@ -18,38 +18,38 @@
 #include "toolBar.h"
 #include "tableBox.h"
 
-void CValueForm::BuildForm(const form_identifier_t& formType)
+void ibValueForm::BuildForm(const ibFormID& formType)
 {
 	m_formType = formType;
 
 	if (m_sourceObject != nullptr) {
 
-		CValue* prevSrcData = nullptr;
+		ibValue* prevSrcData = nullptr;
 
-		CValueToolbar* mainToolBar =
+		ibValueToolbar* mainToolBar =
 			wxDynamicCast(
-				CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
+				ibValueForm::CreateControl(wxT("Toolbar")), ibValueToolbar
 			);
 
 		mainToolBar->SetControlName(wxT("MainToolbar"));
 		mainToolBar->SetActionSrc(FORM_ACTION);
 
-		const IValueMetaObjectGenericData* metaObjectValue = m_sourceObject->GetSourceMetaObject();
+		const ibValueMetaObjectGenericData* metaObjectValue = m_sourceObject->GetSourceMetaObject();
 
-		CValueTableBox* mainTableBox = nullptr;
+		ibValueModelTableBox* mainTableBox = nullptr;
 
-		const CActionCollection& actionData = CValueForm::GetActionCollection(formType);
+		const ibActionCollection& actionData = ibValueForm::GetActionCollection(formType);
 		for (unsigned int idx = 0; idx < actionData.GetCount(); idx++) {
-			const action_identifier_t& action_id = actionData.GetID(idx);
+			const ibActionID& action_id = actionData.GetID(idx);
 			if (action_id != wxNOT_FOUND) {
-				CValue* currSrcData = actionData.GetSourceDataByID(action_id);
+				ibValue* currSrcData = actionData.GetSourceDataByID(action_id);
 				if (currSrcData != prevSrcData
 					&& prevSrcData != nullptr) {
-					CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
+					ibValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 				}
-				CValueToolBarItem* toolBarItem =
+				ibValueToolBarItem* toolBarItem =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("Tool"), mainToolBar), CValueToolBarItem
+						ibValueForm::CreateControl(wxT("Tool"), mainToolBar), ibValueToolBarItem
 					);
 				toolBarItem->SetControlName(mainToolBar->GetControlName() + actionData.GetNameByID(action_id));
 				//toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
@@ -58,7 +58,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				prevSrcData = currSrcData;
 			}
 			else {
-				CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
+				ibValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 			}
 		}
 
@@ -67,7 +67,7 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 			mainTableBox =
 				wxDynamicCast(
-					CValueForm::CreateControl(wxT("Tablebox")), CValueTableBox
+					ibValueForm::CreateControl(wxT("Tablebox")), ibValueModelTableBox
 				);
 
 			mainTableBox->SetControlName(sourceExplorer.GetSourceName());
@@ -79,9 +79,9 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 			const CSourceExplorer& nextSourceExplorer = sourceExplorer.GetHelper(idx);
 
 			if (sourceExplorer.IsTableSection()) {
-				CValueTableBoxColumn* tableBoxColumn =
+				ibValueModelTableBoxColumn* tableBoxColumn =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("TableboxColumn"), mainTableBox), CValueTableBoxColumn
+						ibValueForm::CreateControl(wxT("TableboxColumn"), mainTableBox), ibValueModelTableBoxColumn
 					);
 				tableBoxColumn->SetControlName(mainTableBox->GetControlName() + nextSourceExplorer.GetSourceName());
 				tableBoxColumn->SetVisibleColumn(nextSourceExplorer.IsVisible() || sourceExplorer.GetHelperCount() == 1);
@@ -93,16 +93,16 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 				if (nextSourceExplorer.IsTableSection()) {
 
-					CValueToolbar* toolBar =
+					ibValueToolbar* toolBar =
 						wxDynamicCast(
-							CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
+							ibValueForm::CreateControl(wxT("Toolbar")), ibValueToolbar
 						);
 
 					toolBar->SetControlName(wxT("Toolbar") + nextSourceExplorer.GetSourceName());
 
-					CValueTableBox* tableBox =
+					ibValueModelTableBox* tableBox =
 						wxDynamicCast(
-							CValueForm::CreateControl(wxT("Tablebox")), CValueTableBox
+							ibValueForm::CreateControl(wxT("Tablebox")), ibValueModelTableBox
 						);
 
 					tableBox->SetControlName(nextSourceExplorer.GetSourceName());
@@ -110,18 +110,18 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 
 					toolBar->SetActionSrc(tableBox->GetControlID());
 
-					CActionCollection actionData = tableBox->GetActionCollection(formType);
+					ibActionCollection actionData = tableBox->GetActionCollection(formType);
 					for (unsigned int idx = 0; idx < actionData.GetCount(); idx++) {
-						const action_identifier_t& action_id = actionData.GetID(idx);
+						const ibActionID& action_id = actionData.GetID(idx);
 						if (action_id != wxNOT_FOUND) {
-							CValue* currSrcData = actionData.GetSourceDataByID(action_id);
+							ibValue* currSrcData = actionData.GetSourceDataByID(action_id);
 							if (currSrcData != prevSrcData
 								&& prevSrcData != nullptr) {
-								CValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
+								ibValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
 							}
-							CValueToolBarItem* toolBarItem =
+							ibValueToolBarItem* toolBarItem =
 								wxDynamicCast(
-									CValueForm::CreateControl(wxT("Tool"), toolBar), CValueToolBarItem
+									ibValueForm::CreateControl(wxT("Tool"), toolBar), ibValueToolBarItem
 								);
 							toolBarItem->SetControlName(toolBar->GetControlName() + actionData.GetNameByID(action_id));
 							//toolBarItem->SetCaption(actionData.GetCaptionByID(action_id));
@@ -130,16 +130,16 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 							prevSrcData = currSrcData;
 						}
 						else {
-							CValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
+							ibValueForm::CreateControl(wxT("ToolSeparator"), toolBar);
 						}
 					}
 
 					for (unsigned int col = 0; col < nextSourceExplorer.GetHelperCount(); col++) {
 						const CSourceExplorer& colSourceExplorer = nextSourceExplorer.GetHelper(col);
 
-						CValueTableBoxColumn* tableBoxColumn =
+						ibValueModelTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("TableboxColumn"), tableBox), CValueTableBoxColumn
+								ibValueForm::CreateControl(wxT("TableboxColumn"), tableBox), ibValueModelTableBoxColumn
 							);
 						tableBoxColumn->SetControlName(tableBox->GetControlName() + colSourceExplorer.GetSourceName());
 						//tableBoxColumn->SetCaption(colSourceExplorer.GetSourceSynonym());
@@ -149,11 +149,11 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 					}
 				}
 				else {
-					if (nextSourceExplorer.ContainType(eValueTypes::TYPE_BOOLEAN)
+					if (nextSourceExplorer.ContainType(ibValueTypes::TYPE_BOOLEAN)
 						&& nextSourceExplorer.GetClsidList().size() == 1) {
-						CValueCheckbox* checkbox =
+						ibValueCheckbox* checkbox =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("Checkbox")), CValueCheckbox
+								ibValueForm::CreateControl(wxT("Checkbox")), ibValueCheckbox
 							);
 						checkbox->SetControlName(nextSourceExplorer.GetSourceName());
 						//checkbox->SetCaption(nextSourceExplorer.GetSourceSynonym());
@@ -163,17 +163,17 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 					}
 					else {
 
-						bool selButton = !nextSourceExplorer.ContainType(eValueTypes::TYPE_BOOLEAN) &&
-							!nextSourceExplorer.ContainType(eValueTypes::TYPE_NUMBER) &&
-							//!nextSourceExplorer.ContainType(eValueTypes::TYPE_DATE) &&
-							!nextSourceExplorer.ContainType(eValueTypes::TYPE_STRING);
+						bool selButton = !nextSourceExplorer.ContainType(ibValueTypes::TYPE_BOOLEAN) &&
+							!nextSourceExplorer.ContainType(ibValueTypes::TYPE_NUMBER) &&
+							//!nextSourceExplorer.ContainType(ibValueTypes::TYPE_DATE) &&
+							!nextSourceExplorer.ContainType(ibValueTypes::TYPE_STRING);
 
 						if (nextSourceExplorer.GetClsidList().size() != 1)
 							selButton = true;
 
-						CValueTextCtrl* textCtrl =
+						ibValueTextCtrl* textCtrl =
 							wxDynamicCast(
-								CValueForm::CreateControl(wxT("Textctrl")), CValueTextCtrl
+								ibValueForm::CreateControl(wxT("Textctrl")), ibValueTextCtrl
 							);
 						textCtrl->SetControlName(nextSourceExplorer.GetSourceName());
 						//textCtrl->SetCaption(nextSourceExplorer.GetSourceSynonym());
@@ -191,25 +191,25 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 	}
 	else {
 
-		CValueToolbar* mainToolBar =
+		ibValueToolbar* mainToolBar =
 			wxDynamicCast(
-				CValueForm::CreateControl(wxT("Toolbar")), CValueToolbar
+				ibValueForm::CreateControl(wxT("Toolbar")), ibValueToolbar
 			);
 
 		mainToolBar->SetControlName(wxT("MainToolbar"));
 		mainToolBar->SetActionSrc(FORM_ACTION);
 
-		CValueTableBox* mainTableBox = nullptr;
+		ibValueModelTableBox* mainTableBox = nullptr;
 
-		const CActionCollection& actionData = CValueForm::GetActionCollection(formType);
+		const ibActionCollection& actionData = ibValueForm::GetActionCollection(formType);
 		for (unsigned int idx = 0; idx < actionData.GetCount(); idx++) {
 
-			const action_identifier_t& id = actionData.GetID(idx);
+			const ibActionID& id = actionData.GetID(idx);
 
 			if (id != wxNOT_FOUND) {
-				CValueToolBarItem* toolBarItem =
+				ibValueToolBarItem* toolBarItem =
 					wxDynamicCast(
-						CValueForm::CreateControl(wxT("Tool"), mainToolBar), CValueToolBarItem
+						ibValueForm::CreateControl(wxT("Tool"), mainToolBar), ibValueToolBarItem
 					);
 				toolBarItem->SetControlName(mainToolBar->GetControlName() + actionData.GetNameByID(id));
 				//toolBarItem->SetCaption(actionData.GetCaptionByID(id));
@@ -217,14 +217,14 @@ void CValueForm::BuildForm(const form_identifier_t& formType)
 				toolBarItem->SetAction(id);
 			}
 			else {
-				CValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
+				ibValueForm::CreateControl(wxT("ToolSeparator"), mainToolBar);
 			}
 		}
 	}
 }
 
-void CValueForm::InitializeForm(const IValueMetaObjectForm* creator,
-	IControlFrame* ownerControl, ISourceDataObject* srcObject, const CUniqueKey& formGuid)
+void ibValueForm::InitializeForm(const ibValueMetaObjectFormBase* creator,
+	ibControlFrame* ownerControl, ibSourceDataObject* srcObject, const ibUniqueKey& formGuid)
 {
 	if (ownerControl != nullptr) ownerControl->ControlIncrRef();
 	if (m_controlOwner != nullptr) m_controlOwner->ControlDecrRef();
@@ -246,25 +246,25 @@ void CValueForm::InitializeForm(const IValueMetaObjectForm* creator,
 
 #include "backend/system/systemManager.h"
 
-bool CValueForm::InitializeFormModule()
+bool ibValueForm::InitializeFormModule()
 {
 	if (m_metaFormObject != nullptr) {
 
 		if (!m_metaFormObject->AccessRight_Show()) {
-			CBackendAccessException::Error();
+			ibBackendAccessException::Error();
 			return false;
 		}
 
-		const IMetaData* metaData = m_metaFormObject->GetMetaData();
+		const ibMetaData* metaData = m_metaFormObject->GetMetaData();
 		wxASSERT(metaData);
-		const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+		const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 
-		IModuleDataObject* sourceObjectValue =
-			dynamic_cast<IModuleDataObject*>(m_sourceObject);
+		ibModuleDataObject* sourceObjectValue =
+			dynamic_cast<ibModuleDataObject*>(m_sourceObject);
 
 		if (m_compileModule == nullptr) {
-			m_compileModule = new CCompileModule(m_metaFormObject);
+			m_compileModule = new ibCompileModule(m_metaFormObject);
 			m_compileModule->SetParent(
 				sourceObjectValue != nullptr ? sourceObjectValue->GetCompileModule() :
 				moduleManager->GetCompileModule()
@@ -277,14 +277,14 @@ bool CValueForm::InitializeFormModule()
 			try {
 				m_compileModule->Compile();
 			}
-			catch (const CBackendException* err) {
+			catch (const ibBackendException* err) {
 				if (!appData->DesignerMode())
 					throw(err);
 				return false;
 			};
 
 			if (m_procUnit == nullptr) {
-				m_procUnit = new CProcUnit();
+				m_procUnit = new ibProcUnit();
 				m_procUnit->SetParent(
 					sourceObjectValue != nullptr ? sourceObjectValue->GetProcUnit() :
 					moduleManager->GetProcUnit()
@@ -301,7 +301,7 @@ bool CValueForm::InitializeFormModule()
 
 	struct CControlGuard {
 
-		static bool Initialize(IValueFrame* controlParent) {
+		static bool Initialize(ibValueFrame* controlParent) {
 			for (unsigned int idx = controlParent->GetChildCount(); idx > 0; idx--) {
 				if (!Initialize(controlParent->GetChild(idx - 1)))
 					return false;
@@ -317,9 +317,9 @@ bool CValueForm::InitializeFormModule()
 
 #include "backend/system/value/valueType.h"
 
-void CValueForm::NotifyCreate(const CValue& vCreated)
+void ibValueForm::NotifyCreate(const ibValue& vCreated)
 {
-	CValueForm* ownerForm = m_controlOwner != nullptr ?
+	ibValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
@@ -330,13 +330,13 @@ void CValueForm::NotifyCreate(const CValue& vCreated)
 		ownerForm->UpdateForm();
 	}
 
-	CValueForm::UpdateForm();
-	CValueForm::Modify(false);
+	ibValueForm::UpdateForm();
+	ibValueForm::Modify(false);
 }
 
-void CValueForm::NotifyChange(const CValue& vChanged)
+void ibValueForm::NotifyChange(const ibValue& vChanged)
 {
-	CValueForm* ownerForm = m_controlOwner != nullptr ?
+	ibValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
@@ -347,13 +347,13 @@ void CValueForm::NotifyChange(const CValue& vChanged)
 		ownerForm->UpdateForm();
 	}
 
-	CValueForm::UpdateForm();
-	CValueForm::Modify(false);
+	ibValueForm::UpdateForm();
+	ibValueForm::Modify(false);
 }
 
-void CValueForm::NotifyDelete(const CValue& vChanged)
+void ibValueForm::NotifyDelete(const ibValue& vChanged)
 {
-	CValueForm* ownerForm = m_controlOwner != nullptr ?
+	ibValueForm* ownerForm = m_controlOwner != nullptr ?
 		m_controlOwner->GetOwnerForm() : nullptr;
 
 	if (ownerForm != nullptr) {
@@ -364,58 +364,58 @@ void CValueForm::NotifyDelete(const CValue& vChanged)
 		ownerForm->UpdateForm();
 	}
 
-	CValueForm::CloseForm(true);
+	ibValueForm::CloseForm(true);
 }
 
-void CValueForm::NotifyChoice(CValue& vSelected)
+void ibValueForm::NotifyChoice(ibValue& vSelected)
 {
 	ChoiceDocForm(vSelected);
 
 	if (m_closeOnChoice)
-		CValueForm::CloseForm();
+		ibValueForm::CloseForm();
 }
 
 #include "backend/system/systemManager.h"
 
-CValue CValueForm::CreateControl(const CValueType* clsControl, const CValue& vControl)
+ibValue ibValueForm::CreateControl(const ibValueType* clsControl, const ibValue& vControl)
 {
 	if (appData->DesignerMode())
-		return CValue();
+		return ibValue();
 
-	if (!CValue::IsRegisterCtor(clsControl->GetString(), eCtorObjectType::eCtorObjectType_object_control)) {
-		CBackendCoreException::Error(_("Error occurred while trying to create a form element!"));
+	if (!ibValue::IsRegisterCtor(clsControl->GetString(), ibCtorObjectType::ibCtorObjectType_object_control)) {
+		ibBackendCoreException::Error(_("Error occurred while trying to create a form element!"));
 	}
 
 	//get parent obj
-	IValueFrame* parentControl = nullptr;
+	ibValueFrame* parentControl = nullptr;
 
 	if (!vControl.IsEmpty())
-		parentControl = CastValue<IValueFrame>(vControl);
+		parentControl = CastValue<ibValueFrame>(vControl);
 	else
 		parentControl = this;
 
-	return CValueForm::CreateControl(
+	return ibValueForm::CreateControl(
 		clsControl->GetString(),
 		parentControl
 	);
 }
 
-CValue CValueForm::FindControl(const CValue& vControl)
+ibValue ibValueForm::FindControl(const ibValue& vControl)
 {
-	IValueFrame* foundedControl = FindControlByName(vControl.GetString());
+	ibValueFrame* foundedControl = FindControlByName(vControl.GetString());
 	if (foundedControl != nullptr)
 		return foundedControl;
-	return CValue();
+	return ibValue();
 }
 
-void CValueForm::RemoveControl(const CValue& vControl)
+void ibValueForm::RemoveControl(const ibValue& vControl)
 {
 	if (appData->DesignerMode())
 		return;
 
 	//get parent obj
-	IValueControl* currentControl =
-		CastValue<IValueControl>(vControl);
+	ibValueControl* currentControl =
+		CastValue<ibValueControl>(vControl);
 
 	wxASSERT(currentControl);
 	RemoveControl(currentControl);
@@ -425,14 +425,14 @@ void CValueForm::RemoveControl(const CValue& vControl)
 //*                                              Events                                           *
 //*************************************************************************************************
 
-void CValueForm::ShowForm(IBackendMetaDocument* doc, bool createContext)
+void ibValueForm::ShowForm(ibBackendMetaDocument* doc, bool createContext)
 {
-	CMetaDocument* docParent = wxDynamicCast(doc, CMetaDocument);
+	ibMetaDocument* docParent = wxDynamicCast(doc, ibMetaDocument);
 
-	if (CBackendException::IsEvalMode())
+	if (ibBackendException::IsEvalMode())
 		return;
 
-	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 		ActivateForm();
@@ -449,16 +449,16 @@ void CValueForm::ShowForm(IBackendMetaDocument* doc, bool createContext)
 	}
 }
 
-void CValueForm::UpdateForm()
+void ibValueForm::UpdateForm()
 {
-	if (CBackendException::IsEvalMode())
+	if (ibBackendException::IsEvalMode())
 		return;
 
-	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 
-		CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
+		ibVisualHostClient* visualView = ownerDocForm->GetFirstView() ?
 			ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 
 		if (visualView != nullptr) {
@@ -469,9 +469,9 @@ void CValueForm::UpdateForm()
 	}
 }
 
-bool CValueForm::CloseForm(bool force)
+bool ibValueForm::CloseForm(bool force)
 {
-	if (CBackendException::IsEvalMode())
+	if (ibBackendException::IsEvalMode())
 		return false;
 
 	if (!appData->DesignerMode()) {
@@ -480,7 +480,7 @@ bool CValueForm::CloseForm(bool force)
 		}
 	}
 
-	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 		return ownerDocForm->DeleteAllViews();
@@ -489,7 +489,7 @@ bool CValueForm::CloseForm(bool force)
 	return true;
 }
 
-void CValueForm::HelpForm()
+void ibValueForm::HelpForm()
 {
 	wxMessageBox(
 		_("Help will appear here sometime, but not today.")
@@ -498,28 +498,28 @@ void CValueForm::HelpForm()
 
 #include "frontend/win/dlgs/formEditor.h"
 
-void CValueForm::ChangeForm()
+void ibValueForm::ChangeForm()
 {
-	CDialogFormEditor dlg(this);
+	ibDialogFormEditor dlg(this);
 	dlg.ShowModal();
 }
 
 #include "frontend/win/dlgs/generation.h"
 
-bool CValueForm::GenerateForm(IValueRecordDataObjectRef* obj) const
+bool ibValueForm::GenerateForm(ibValueRecordDataObjectRef* obj) const
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
+	ibValueMetaObjectRecordDataMutableRef* metaObject = obj->GetMetaObject();
 	wxASSERT(metaObject);
-	IMetaData* metaData = metaObject->GetMetaData();
+	ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
 
-	CDialogGeneration* selectDataType = new CDialogGeneration(metaData, metaObject->GetGenerationDescription());
+	ibDialogGeneration* selectDataType = new ibDialogGeneration(metaData, metaObject->GetGenerationDescription());
 
-	meta_identifier_t sel_id = 0;
+	ibMetaID sel_id = 0;
 	if (selectDataType->ShowModal(sel_id)) {
-		IValueMetaObjectRecordDataMutableRef* meta = metaData->FindAnyObjectByFilter<IValueMetaObjectRecordDataMutableRef>(sel_id);
+		ibValueMetaObjectRecordDataMutableRef* meta = metaData->FindAnyObjectByFilter<ibValueMetaObjectRecordDataMutableRef>(sel_id);
 		if (meta != nullptr) {
-			IValueRecordDataObjectRef* genObj = meta->CreateObjectValue(obj, true);
+			ibValueRecordDataObjectRef* genObj = meta->CreateObjectValue(obj, true);
 			if (genObj != nullptr) {
 				genObj->ShowFormValue();
 				selectDataType->Destroy();
@@ -538,10 +538,10 @@ bool CValueForm::GenerateForm(IValueRecordDataObjectRef* obj) const
 //*                                   Other                                        *
 //**********************************************************************************
 
-IValueFrame* CValueForm::CreateControl(const wxString& clsControl, IValueFrame* control)
+ibValueFrame* ibValueForm::CreateControl(const wxString& clsControl, ibValueFrame* control)
 {
 	//get parent obj
-	IValueFrame* parentControl = nullptr;
+	ibValueFrame* parentControl = nullptr;
 
 	if (control != nullptr)
 		parentControl = control;
@@ -549,12 +549,12 @@ IValueFrame* CValueForm::CreateControl(const wxString& clsControl, IValueFrame* 
 		parentControl = this;
 
 	// ademas, el objeto se insertara a continuacion del objeto seleccionado
-	IValueFrame* newControl = CValueForm::CreateObject(clsControl, parentControl);
+	ibValueFrame* newControl = ibValueForm::CreateObject(clsControl, parentControl);
 	wxASSERT(newControl);
-	if (!CBackendException::IsEvalMode()) {
-		CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	if (!ibBackendException::IsEvalMode()) {
+		ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
-			CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
+			ibVisualHostClient* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 			visualView->CreateControl(newControl);
 		}
@@ -569,24 +569,24 @@ IValueFrame* CValueForm::CreateControl(const wxString& clsControl, IValueFrame* 
 	return newControl;
 }
 
-void CValueForm::RemoveControl(IValueFrame* control)
+void ibValueForm::RemoveControl(ibValueFrame* control)
 {
 	//get parent obj
-	IValueFrame* currentControl = control;
+	ibValueFrame* currentControl = control;
 	wxASSERT(currentControl);
-	if (!CBackendException::IsEvalMode()) {
-		CFormVisualDocument* const ownerDocForm = GetVisualDocument();
+	if (!ibBackendException::IsEvalMode()) {
+		ibFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
-			CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
+			ibVisualHostClient* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 			visualView->RemoveControl(currentControl);
 		}
 	}
 
-	IValueFrame* parentControl = currentControl->GetParent();
+	ibValueFrame* parentControl = currentControl->GetParent();
 
 	if (parentControl->GetComponentType() == COMPONENT_TYPE_SIZERITEM) {
-		IValueFrame* parentOwner = parentControl->GetParent();
+		ibValueFrame* parentOwner = parentControl->GetParent();
 		if (parentOwner != nullptr) {
 			parentOwner->RemoveChild(parentControl);
 		}
@@ -598,7 +598,7 @@ void CValueForm::RemoveControl(IValueFrame* control)
 		currentControl->DecrRef();
 	}
 	else {
-		IValueFrame* parentOwner = currentControl->GetParent();
+		ibValueFrame* parentOwner = currentControl->GetParent();
 		if (parentOwner != nullptr) {
 			parentOwner->RemoveChild(currentControl);
 		}
@@ -609,7 +609,7 @@ void CValueForm::RemoveControl(IValueFrame* control)
 	m_formCollectionControl->PrepareNames();
 }
 
-void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, bool single)
+void ibValueForm::AttachIdleHandler(const wxString& procedureName, int interval, bool single)
 {
 	if (appData->DesignerMode())
 		return;
@@ -619,7 +619,7 @@ void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, 
 			(procedureName[i] >= 'À' && procedureName[i] <= 'ß') || (procedureName[i] >= 'à' && procedureName[i] <= 'ÿ') ||
 			(procedureName[i] >= '0' && procedureName[i] <= '9')))
 		{
-			CBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
+			ibBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
 			return;
 		}
 	}
@@ -628,7 +628,7 @@ void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, 
 		auto& it = m_idleHandlerArray.find(procedureName);
 		if (it == m_idleHandlerArray.end()) {
 			wxTimer* timer = new wxTimer();
-			timer->Bind(wxEVT_TIMER, &CValueForm::OnIdleHandler, this);
+			timer->Bind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
 			if (timer->Start(interval * 1000, single)) {
 				m_idleHandlerArray.insert_or_assign(procedureName, timer);
 			}
@@ -636,7 +636,7 @@ void CValueForm::AttachIdleHandler(const wxString& procedureName, int interval, 
 	}
 }
 
-void CValueForm::DetachIdleHandler(const wxString& procedureName)
+void ibValueForm::DetachIdleHandler(const wxString& procedureName)
 {
 	if (appData->DesignerMode())
 		return;
@@ -646,7 +646,7 @@ void CValueForm::DetachIdleHandler(const wxString& procedureName)
 			(procedureName[i] >= 'À' && procedureName[i] <= 'ß') || (procedureName[i] >= 'à' && procedureName[i] <= 'ÿ') ||
 			(procedureName[i] >= '0' && procedureName[i] <= '9')))
 		{
-			CBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
+			ibBackendCoreException::Error(_("Procedure can enter only numbers, letters and the symbol \"_\""));
 			return;
 		}
 	}
@@ -659,16 +659,16 @@ void CValueForm::DetachIdleHandler(const wxString& procedureName)
 			if (timer != nullptr && timer->IsRunning()) {
 				timer->Stop();
 			}
-			timer->Unbind(wxEVT_TIMER, &CValueForm::OnIdleHandler, this);
+			timer->Unbind(wxEVT_TIMER, &ibValueForm::OnIdleHandler, this);
 			delete timer;
 		}
 	}
 }
 
-void CValueForm::ClearRecursive(IValueFrame* control)
+void ibValueForm::ClearRecursive(ibValueFrame* control)
 {
 	for (unsigned int idx = control->GetChildCount(); idx > 0; idx--) {
-		IValueFrame* controlChild = control->GetChild(idx - 1);
+		ibValueFrame* controlChild = control->GetChild(idx - 1);
 		ClearRecursive(controlChild);
 		if (controlChild != nullptr) {
 			controlChild->DecrRef();

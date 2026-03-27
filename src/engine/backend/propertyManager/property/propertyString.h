@@ -4,7 +4,7 @@
 #include "backend/propertyManager/propertyObject.h"
 #include "backend/propertyManager/property/advprop/advpropString.h"
 
-class BACKEND_API IPropertyString : public IProperty {
+class BACKEND_API ibPropertyStringBase : public ibProperty {
 public:
 
 	wxString GetValueAsString() const {
@@ -21,48 +21,48 @@ public:
 
 	void SetValue(const wxString& strValue) { m_propValue = strValue; }
 
-	IPropertyString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IProperty(cat, name, value)
+	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibProperty(cat, name, value)
 	{
 	}
 
-	IPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IProperty(cat, name, label, value)
+	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibProperty(cat, name, label, value)
 	{
 	}
 
-	IPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IProperty(cat, name, label, helpString, value)
+	ibPropertyStringBase(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibProperty(cat, name, label, helpString, value)
 	{
 	}
 
 	virtual bool IsEmptyProperty() const { return GetValueAsString().IsEmpty(); }
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 //base property for "string"
-class BACKEND_API CPropertyString : public IPropertyString {
+class BACKEND_API ibPropertyString : public ibPropertyStringBase {
 public:
 
-	CPropertyString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IPropertyString(cat, name, value)
+	ibPropertyString(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibPropertyStringBase(cat, name, value)
 	{
 	}
 
-	CPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IPropertyString(cat, name, label, value)
+	ibPropertyString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
 	{
 	}
 
-	CPropertyString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
+	ibPropertyString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
 	{
 	}
 
@@ -73,21 +73,21 @@ public:
 };
 
 //base property for "general" - unique name 
-class BACKEND_API CPropertyUString : public IPropertyString {
+class BACKEND_API ibPropertyUString : public ibPropertyStringBase {
 public:
 
-	CPropertyUString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IPropertyString(cat, name, value)
+	ibPropertyUString(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibPropertyStringBase(cat, name, value)
 	{
 	}
 
-	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IPropertyString(cat, name, label, value)
+	ibPropertyUString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
 	{
 	}
 
-	CPropertyUString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
+	ibPropertyUString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
 	{
 	}
 
@@ -98,21 +98,21 @@ public:
 };
 
 //base property for "general" - unique name or empty value 
-class BACKEND_API CPropertyUEString : public CPropertyUString {
+class BACKEND_API ibPropertyUEString : public ibPropertyUString {
 public:
 
-	CPropertyUEString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : CPropertyUString(cat, name, value)
+	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibPropertyUString(cat, name, value)
 	{
 	}
 
-	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : CPropertyUString(cat, name, label, value)
+	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibPropertyUString(cat, name, label, value)
 	{
 	}
 
-	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : CPropertyUString(cat, name, label, helpString, value)
+	ibPropertyUEString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibPropertyUString(cat, name, label, helpString, value)
 	{
 	}
 
@@ -125,7 +125,7 @@ public:
 
 
 //base property for "caption" - for translate 
-class BACKEND_API CPropertyTString : public IPropertyString {
+class BACKEND_API ibPropertyTString : public ibPropertyStringBase {
 public:
 
 	wxString GetValueAsTranslateString() const {
@@ -134,24 +134,24 @@ public:
 		return std::move(result);
 	}
 
-	bool CPropertyTString::GetValueAsTranslateString(wxString& result) const {
+	bool ibPropertyTString::GetValueAsTranslateString(wxString& result) const {
 		if (GetValueAsString(result))
-			return CBackendLocalization::GetTranslateGetRawLocText(result, result);
+			return ibBackendLocalization::GetTranslateGetRawLocText(result, result);
 		return false;
 	}
 
-	CPropertyTString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IPropertyString(cat, name, CBackendLocalization::CreateLocalizationRawLocText(value))
+	ibPropertyTString(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibPropertyStringBase(cat, name, ibBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IPropertyString(cat, name, label, CBackendLocalization::CreateLocalizationRawLocText(value))
+	ibPropertyTString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, ibBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
-	CPropertyTString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IPropertyString(cat, name, label, helpString, CBackendLocalization::CreateLocalizationRawLocText(value))
+	ibPropertyTString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, ibBackendLocalization::CreateLocalizationRawLocText(value))
 	{
 	}
 
@@ -163,26 +163,26 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 };
 
 //base property for "text"
-class BACKEND_API CPropertyMString : public IPropertyString {
+class BACKEND_API ibPropertyMString : public ibPropertyStringBase {
 public:
 
-	CPropertyMString(CPropertyCategory* cat, const wxString& name,
-		const wxString& value) : IPropertyString(cat, name, value)
+	ibPropertyMString(ibPropertyCategory* cat, const wxString& name,
+		const wxString& value) : ibPropertyStringBase(cat, name, value)
 	{
 	}
 
-	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label,
-		const wxString& value) : IPropertyString(cat, name, label, value)
+	ibPropertyMString(ibPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, value)
 	{
 	}
 
-	CPropertyMString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
-		const wxString& value) : IPropertyString(cat, name, label, helpString, value)
+	ibPropertyMString(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : ibPropertyStringBase(cat, name, label, helpString, value)
 	{
 	}
 

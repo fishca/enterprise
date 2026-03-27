@@ -2,29 +2,29 @@
 #include "backend/system/value/valueSize.h"
 
 //base property for "size"
-bool CPropertySize::SetDataValue(const CValue& varPropVal)
+bool ibPropertySize::SetDataValue(const ibValue& varPropVal)
 {
-	CValueSize* valueSize = varPropVal.ConvertToType<CValueSize>();
+	ibValueSize* valueSize = varPropVal.ConvertToType<ibValueSize>();
 	if (valueSize == nullptr)
 		return false;
 	SetValue(valueSize->m_size);
 	return true;
 }
 
-bool CPropertySize::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertySize::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue <CValueSize>(GetValueAsSize());
+	pvarPropVal = ibValue::CreateObjectValue <ibValueSize>(GetValueAsSize());
 	return true;
 }
 
-bool CPropertySize::LoadData(CMemoryReader& reader)
+bool ibPropertySize::LoadData(ibReaderMemory& reader)
 {
-	CPropertySize::SetValue(reader.r_stringZ());
+	ibPropertySize::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool CPropertySize::SaveData(CMemoryWriter& writer)
+bool ibPropertySize::SaveData(ibWriterMemory& writer)
 {
-	writer.w_stringZ(CPropertySize::GetValueAsString());
+	writer.w_stringZ(ibPropertySize::GetValueAsString());
 	return true;
 }

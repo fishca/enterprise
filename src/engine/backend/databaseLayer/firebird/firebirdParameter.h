@@ -21,21 +21,21 @@
 
 #include "engine/ibase.h"
 
-class CFirebirdParameter : public CDatabaseStringConverter
+class ibDatatabaseParameterFirebird : public ibDatabaseStringConverter
 {
 public:
 	// ctor
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, const wxString& strValue, const wxCSConv* conv);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, const number_t& dblValue);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, int nValue);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, double dblValue);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, bool bValue);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, const wxDateTime& dateValue);
-	CFirebirdParameter(CFirebirdInterface* pInterface, XSQLVAR* pVar, const void* pData, long nDataLength);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, const wxString& strValue, const wxCSConv* conv);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, const ibNumber& dblValue);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, int nValue);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, double dblValue);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, bool bValue);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, const wxDateTime& dateValue);
+	ibDatatabaseParameterFirebird(ibInterfaceFirebird* pInterface, XSQLVAR* pVar, const void* pData, long nDataLength);
 
 	// dtor
-	virtual ~CFirebirdParameter();
+	virtual ~ibDatatabaseParameterFirebird();
 
 	enum {
 		PARAM_STRING = 0,
@@ -70,7 +70,7 @@ private:
 	float m_fValue;
 	double m_dblValue;
 
-	number_t m_numValue;
+	ibNumber m_numValue;
 
 	ISC_TIMESTAMP m_Date;
 	bool m_bValue;
@@ -81,7 +81,7 @@ private:
 	isc_blob_handle m_pBlob;
 
 	XSQLVAR* m_pParameter;
-	CFirebirdInterface* m_pInterface;
+	ibInterfaceFirebird* m_pInterface;
 };
 
 #endif // __FIREBIRD_PARAMETER_H__

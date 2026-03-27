@@ -5,25 +5,25 @@
 #include "backend/propertyManager/property/advprop/advpropHyperLink.h"
 
 //base property for "module"
-class BACKEND_API CPropertyModule : public IProperty {
+class BACKEND_API ibPropertyModule : public ibProperty {
 	wxVariantData* CreateVariantData();
 public:
 
 	wxString GetValueAsString() const;
 	void SetValue(const wxString& val);
 
-	CPropertyModule(CPropertyCategory* cat, const wxString& name)
-		: IProperty(cat, name, CreateVariantData())
+	ibPropertyModule(ibPropertyCategory* cat, const wxString& name)
+		: ibProperty(cat, name, CreateVariantData())
 	{
 	}
 
-	CPropertyModule(CPropertyCategory* cat, const wxString& name, const wxString& label)
-		: IProperty(cat, name, label, CreateVariantData())
+	ibPropertyModule(ibPropertyCategory* cat, const wxString& name, const wxString& label)
+		: ibProperty(cat, name, label, CreateVariantData())
 	{
 	}
 
-	CPropertyModule(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
-		: IProperty(cat, name, label, helpString, CreateVariantData())
+	ibPropertyModule(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
+		: ibProperty(cat, name, label, helpString, CreateVariantData())
 	{
 	}
 
@@ -33,12 +33,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

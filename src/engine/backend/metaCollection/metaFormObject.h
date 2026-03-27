@@ -8,29 +8,29 @@
 #define formDefaultName wxT("Form")
 
 // -----------------------------------------------------------------------
-// IBackendCommandItem
+// ibBackendCommandItem
 // -----------------------------------------------------------------------
 
-class BACKEND_API IBackendCommandItem {
+class BACKEND_API ibBackendCommandItem {
 public:
 
-	virtual ~IBackendCommandItem() {}
-	virtual bool ShowFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default);
+	virtual ~ibBackendCommandItem() {}
+	virtual bool ShowFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default);
 
 protected:
 
 	//get default form 
-	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) = 0;
+	virtual ibBackendValueForm* GetFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default) = 0;
 };
 
 // -----------------------------------------------------------------------
-// IValueMetaObjectForm
+// ibValueMetaObjectFormBase
 // -----------------------------------------------------------------------
 
-class BACKEND_API ISourceDataObject;
+class BACKEND_API ibSourceDataObject;
 
-class BACKEND_API IValueMetaObjectForm : public IValueMetaObjectModule {
-	wxDECLARE_ABSTRACT_CLASS(IValueMetaObjectForm);
+class BACKEND_API ibValueMetaObjectFormBase : public ibValueMetaObjectModuleBase {
+	wxDECLARE_ABSTRACT_CLASS(ibValueMetaObjectFormBase);
 private:
 
 	enum
@@ -44,20 +44,20 @@ public:
 	virtual bool AccessRight_Show() const { return true; }
 #pragma endregion
 
-	IValueMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectFormBase(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
-	bool LoadFormData(IBackendValueForm* value) const;
-	bool SaveFormData(IBackendValueForm* value);
+	bool LoadFormData(ibBackendValueForm* value) const;
+	bool SaveFormData(ibBackendValueForm* value);
 
 #pragma region _form_creator_h_
 
-	static IBackendValueForm* CreateAndBuildForm(const IValueMetaObjectForm* creator,
-		IBackendControlFrame* ownerControl = nullptr,
-		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	static ibBackendValueForm* CreateAndBuildForm(const ibValueMetaObjectFormBase* creator,
+		ibBackendControlFrame* ownerControl = nullptr,
+		ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
 
-	static IBackendValueForm* CreateAndBuildForm(const IValueMetaObjectForm* creator, const form_identifier_t& form_id = defaultFormType,
-		IBackendControlFrame* ownerControl = nullptr,
-		ISourceDataObject* srcObject = nullptr, const CUniqueKey& formGuid = wxNullGuid);
+	static ibBackendValueForm* CreateAndBuildForm(const ibValueMetaObjectFormBase* creator, const ibFormID& form_id = defaultFormType,
+		ibBackendControlFrame* ownerControl = nullptr,
+		ibSourceDataObject* srcObject = nullptr, const ibUniqueKey& formGuid = wxNullGuid);
 
 #pragma endregion 
 
@@ -76,7 +76,7 @@ public:
 	/**
 	* Get type form
 	*/
-	virtual form_identifier_t GetTypeForm() const = 0;
+	virtual ibFormID GetTypeForm() const = 0;
 
 	//prepare menu for item
 	virtual bool PrepareContextMenu(wxMenu* defaultMenu);
@@ -84,20 +84,20 @@ public:
 
 protected:
 
-	virtual bool LoadData(CMemoryReader& reader) = 0;
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter()) = 0;
+	virtual bool LoadData(ibReaderMemory& reader) = 0;
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory()) = 0;
 };
 
 // -----------------------------------------------------------------------
-// CValueMetaObjectForm
+// ibValueMetaObjectForm
 // -----------------------------------------------------------------------
 
-class BACKEND_API CValueMetaObjectForm : public IValueMetaObjectForm {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectForm);
+class BACKEND_API ibValueMetaObjectForm : public ibValueMetaObjectFormBase {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectForm);
 
 public:
 
-	CValueMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
@@ -106,13 +106,13 @@ public:
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyCreated(IProperty* property);
-	virtual void OnPropertySelected(IProperty* property);
-	virtual void OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyCreated(ibProperty* property);
+	virtual void OnPropertySelected(ibProperty* property);
+	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
 	//events:
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(IMetaData* metaData);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(ibMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -124,7 +124,7 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//get property
-	virtual IProperty* GetModuleProperty() const { return m_propertyForm; }
+	virtual ibProperty* GetModuleProperty() const { return m_propertyForm; }
 
 	//set module code 
 	virtual void SetModuleText(const wxString& moduleText) { m_propertyForm->SetValue(moduleText); }
@@ -137,35 +137,35 @@ public:
 	/**
 	* Get type form
 	*/
-	virtual form_identifier_t GetTypeForm() const {
+	virtual ibFormID GetTypeForm() const {
 		return m_properyFormType->GetValueAsInteger();
 	}
 
 protected:
 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 
-	bool FillGenericFormType(CPropertyList* prop);
-	bool FillFormType(CPropertyList* prop) {
+	bool FillGenericFormType(ibPropertyList* prop);
+	bool FillFormType(ibPropertyList* prop) {
 		prop->AppendItem(formDefaultName, defaultFormType, GetIcon());
 		return FillGenericFormType(prop);
 	}
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categoryContext, wxT("FormData"), _("Form"));
-	CPropertyCategory* m_categoryForm = IPropertyObject::CreatePropertyCategory(wxT("Form"), _("Form"));
-	CPropertyList* m_properyFormType = IPropertyObject::CreateProperty<CPropertyList>(m_categoryForm, wxT("FormType"), _("Type"), &CValueMetaObjectForm::FillFormType);
+	ibPropertyForm* m_propertyForm = ibPropertyObject::CreateProperty<ibPropertyForm>(m_categoryContext, wxT("FormData"), _("Form"));
+	ibPropertyCategory* m_categoryForm = ibPropertyObject::CreatePropertyCategory(wxT("Form"), _("Form"));
+	ibPropertyList* m_properyFormType = ibPropertyObject::CreateProperty<ibPropertyList>(m_categoryForm, wxT("FormType"), _("Type"), &ibValueMetaObjectForm::FillFormType);
 };
 
 // -----------------------------------------------------------------------
-// CValueMetaObjectCommonForm
+// ibValueMetaObjectCommonForm
 // -----------------------------------------------------------------------
 
-class BACKEND_API CValueMetaObjectCommonForm :
-	public IValueMetaObjectForm, public IBackendCommandItem {
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectCommonForm);
+class BACKEND_API ibValueMetaObjectCommonForm :
+	public ibValueMetaObjectFormBase, public ibBackendCommandItem {
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectCommonForm);
 public:
 
 #pragma region access_generic
@@ -176,14 +176,14 @@ public:
 	bool AccessRight_Use() const { return IsFullAccess() || AccessRight(m_roleUse); }
 #pragma endregion
 
-	CValueMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
+	ibValueMetaObjectCommonForm(const wxString& strName = wxEmptyString, const wxString& synonym = wxEmptyString, const wxString& comment = wxEmptyString);
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//events:
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
 
 	//module manager is started or exit 
 	virtual bool OnBeforeRunMetaObject(int flags);
@@ -193,7 +193,7 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//get property
-	virtual IProperty* GetModuleProperty() const { return m_propertyForm; }
+	virtual ibProperty* GetModuleProperty() const { return m_propertyForm; }
 
 	//set module code 
 	virtual void SetModuleText(const wxString& moduleText) { m_propertyForm->SetValue(moduleText); }
@@ -206,22 +206,22 @@ public:
 	/**
 	* Get type form
 	*/
-	virtual form_identifier_t GetTypeForm() const { return defaultFormType; }
+	virtual ibFormID GetTypeForm() const { return defaultFormType; }
 
 #pragma region _form_builder_h_
 	//support form 
-	IBackendValueForm* GetObjectForm(IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) const;
+	ibBackendValueForm* GetObjectForm(ibBackendControlFrame* ownerControl = nullptr, const ibUniqueKey& formGuid = wxNullGuid) const;
 #pragma endregion 
 
 protected:
 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	//get default form 
-	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+	virtual ibBackendValueForm* GetFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default) {
 
-		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Default)
+		if (cmdType == ibInterfaceCommandType::ibInterfaceCommandType_Default)
 			return GetObjectForm();
 
 		return GetObjectForm();
@@ -229,10 +229,10 @@ protected:
 
 private:
 
-	CPropertyForm* m_propertyForm = IPropertyObject::CreateProperty<CPropertyForm>(m_categoryContext, wxT("FormData"), _("Form"));
+	ibPropertyForm* m_propertyForm = ibPropertyObject::CreateProperty<ibPropertyForm>(m_categoryContext, wxT("FormData"), _("Form"));
 
 #pragma region role
-	CRole* m_roleUse = IValueMetaObject::CreateRole(wxT("Use"), _("Use"));
+	ibRole* m_roleUse = ibValueMetaObject::CreateRole(wxT("Use"), _("Use"));
 #pragma endregion
 };
 

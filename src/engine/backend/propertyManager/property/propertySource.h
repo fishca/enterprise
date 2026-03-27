@@ -5,57 +5,57 @@
 #include "backend/propertyManager/property/advprop/advpropSource.h"
 
 //////////////////////////////////////////////////////////////////
-struct CTypeDescription;
+struct ibTypeDescription;
 //////////////////////////////////////////////////////////////////
 
 //base property for "source"
-class BACKEND_API CPropertySource : public IProperty {
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const eValueTypes& type) const;
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const class_identifier_t& id) const;
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const CTypeDescription& typeDesc) const;
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const meta_identifier_t& id) const;
-	wxVariantData* CreateVariantData(const IPropertyObject* property, const CGuid& id, bool fillTypeDesc = true) const;
+class BACKEND_API ibPropertySource : public ibProperty {
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibValueTypes& type) const;
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibClassID& id) const;
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibTypeDescription& typeDesc) const;
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibMetaID& id) const;
+	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibGuid& id, bool fillTypeDesc = true) const;
 public:
 
 #pragma region _value_
-	meta_identifier_t GetValueAsSource() const;
-	CGuid GetValueAsSourceGuid() const;
-	CTypeDescription& GetValueAsTypeDesc(bool fillTypeDesc = true) const;
+	ibMetaID GetValueAsSource() const;
+	ibGuid GetValueAsSourceGuid() const;
+	ibTypeDescription& GetValueAsTypeDesc(bool fillTypeDesc = true) const;
 
-	void SetValue(const meta_identifier_t& val);
-	void SetValue(const CGuid& val, bool fillTypeDesc = true);
-	void SetValue(const CTypeDescription& val);
+	void SetValue(const ibMetaID& val);
+	void SetValue(const ibGuid& val, bool fillTypeDesc = true);
+	void SetValue(const ibTypeDescription& val);
 #pragma endregion 
 
-	class IValueMetaObjectAttribute* GetSourceAttributeObject() const;
+	class ibValueMetaObjectAttributeBase* GetSourceAttributeObject() const;
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const eValueTypes& type = eValueTypes::TYPE_STRING)
-		: IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), type))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const ibValueTypes& type = ibValueTypes::TYPE_STRING)
+		: ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), type))
 	{
 	}
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const class_identifier_t& clsid)
-		: IProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), clsid))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const ibClassID& clsid)
+		: ibProperty(cat, name, CreateVariantData(cat->GetPropertyObject(), clsid))
 	{
 	}
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const wxString& label, const eValueTypes& type = eValueTypes::TYPE_STRING)
-		: IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), type))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibValueTypes& type = ibValueTypes::TYPE_STRING)
+		: ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), type))
 	{
 	}
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const wxString& label, const class_identifier_t& clsid)
-		: IProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), clsid))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const wxString& label, const ibClassID& clsid)
+		: ibProperty(cat, name, label, CreateVariantData(cat->GetPropertyObject(), clsid))
 	{
 	}
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const eValueTypes& type = eValueTypes::TYPE_STRING)
-		: IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), type))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibValueTypes& type = ibValueTypes::TYPE_STRING)
+		: ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), type))
 	{
 	}
 
-	CPropertySource(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const class_identifier_t& clsid)
-		: IProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), clsid))
+	ibPropertySource(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const ibClassID& clsid)
+		: ibProperty(cat, name, label, helpString, CreateVariantData(cat->GetPropertyObject(), clsid))
 	{
 	}
 
@@ -67,12 +67,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

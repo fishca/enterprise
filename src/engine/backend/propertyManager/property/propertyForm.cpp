@@ -5,55 +5,55 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-wxVariantData* CPropertyForm::CreateVariantData()
+wxVariantData* ibPropertyForm::CreateVariantData()
 {
-	return new wxVariantDataForm();
+	return new ibVariantDataForm();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-wxString CPropertyForm::GetValueAsString() const
+wxString ibPropertyForm::GetValueAsString() const
 {
-	return get_cell_variant<wxVariantDataForm>()->GetModuleText();
+	return get_cell_variant<ibVariantDataForm>()->GetModuleText();
 }
 
-wxMemoryBuffer& CPropertyForm::GetValueAsMemoryBuffer() const
+wxMemoryBuffer& ibPropertyForm::GetValueAsMemoryBuffer() const
 {
-	return get_cell_variant<wxVariantDataForm>()->GetFormData();
+	return get_cell_variant<ibVariantDataForm>()->GetFormData();
 }
 
-void CPropertyForm::SetValue(const wxString& val)
+void ibPropertyForm::SetValue(const wxString& val)
 {
-	get_cell_variant<wxVariantDataForm>()->SetModuleText(val);
+	get_cell_variant<ibVariantDataForm>()->SetModuleText(val);
 }
 
-void CPropertyForm::SetValue(const wxMemoryBuffer& val)
+void ibPropertyForm::SetValue(const wxMemoryBuffer& val)
 {
-	get_cell_variant<wxVariantDataForm>()->SetFormData(val);
+	get_cell_variant<ibVariantDataForm>()->SetFormData(val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 //base property for "form"
-bool CPropertyForm::SetDataValue(const CValue& varPropVal)
+bool ibPropertyForm::SetDataValue(const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool CPropertyForm::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyForm::GetDataValue(ibValue& pvarPropVal) const
 {
 	pvarPropVal = GetName();
 	return true;
 }
 
-bool CPropertyForm::LoadData(CMemoryReader& reader)
+bool ibPropertyForm::LoadData(ibReaderMemory& reader)
 {
 	reader.r_chunk(chunkForm, GetValueAsMemoryBuffer());
-	CPropertyForm::SetValue(reader.r_stringZ());
+	ibPropertyForm::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool CPropertyForm::SaveData(CMemoryWriter& writer)
+bool ibPropertyForm::SaveData(ibWriterMemory& writer)
 {
 	writer.w_chunk(chunkForm, GetValueAsMemoryBuffer());
 	writer.w_stringZ(GetValueAsString());
@@ -64,18 +64,18 @@ bool CPropertyForm::SaveData(CMemoryWriter& writer)
 
 #include "backend/metaCollection/metaFormObject.h"
 
-bool CPropertyForm::PasteData(CMemoryReader& reader)
+bool ibPropertyForm::PasteData(ibReaderMemory& reader)
 {
-	IValueMetaObjectForm* metaForm = dynamic_cast<IValueMetaObjectForm*>(m_owner);
+	ibValueMetaObjectFormBase* metaForm = dynamic_cast<ibValueMetaObjectFormBase*>(m_owner);
 	if (metaForm == nullptr) return false;
 	reader.r_chunk(chunkForm, GetValueAsMemoryBuffer());
-	CPropertyForm::SetValue(reader.r_stringZ());	
+	ibPropertyForm::SetValue(reader.r_stringZ());	
 	return metaForm->PasteFormData();
 }
 
-bool CPropertyForm::CopyData(CMemoryWriter& writer)
+bool ibPropertyForm::CopyData(ibWriterMemory& writer)
 {
-	IValueMetaObjectForm* metaForm = dynamic_cast<IValueMetaObjectForm*>(m_owner);
+	ibValueMetaObjectFormBase* metaForm = dynamic_cast<ibValueMetaObjectFormBase*>(m_owner);
 	if (metaForm == nullptr) return false; 
 	writer.w_chunk(chunkForm, metaForm->CopyFormData());
 	writer.w_stringZ(GetValueAsString());

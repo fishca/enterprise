@@ -21,7 +21,7 @@
 #include <wx/xrc/xh_aui.h>
 #endif
 
-wxIMPLEMENT_APP(CEnterpriseApp);
+wxIMPLEMENT_APP(ibAppEnterprise);
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ wxIMPLEMENT_APP(CEnterpriseApp);
 #if wxUSE_CMDLINE_PARSER
 #include <wx/cmdline.h>
 
-void CEnterpriseApp::OnInitCmdLine(wxCmdLineParser& parser)
+void ibAppEnterprise::OnInitCmdLine(wxCmdLineParser& parser)
 {
 	// FILE ENTRY 
 	parser.AddOption(wxT("file"), wxT("pwd"), "Start from current dir", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL);
@@ -57,7 +57,7 @@ void CEnterpriseApp::OnInitCmdLine(wxCmdLineParser& parser)
 	return wxApp::OnInitCmdLine(parser);
 }
 
-bool CEnterpriseApp::OnCmdLineParsed(wxCmdLineParser& parser)
+bool ibAppEnterprise::OnCmdLineParsed(wxCmdLineParser& parser)
 {
 	// FILE ENTRY 
 	parser.Found(wxT("file"), &m_strFile);
@@ -87,13 +87,13 @@ bool CEnterpriseApp::OnCmdLineParsed(wxCmdLineParser& parser)
 
 #include "backend/backend_exception.h"
 
-bool CEnterpriseApp::OnInit()
+bool ibAppEnterprise::OnInit()
 {
 	wxSocketBase::Initialize();
 	return wxApp::OnInit();
 }
 
-int CEnterpriseApp::OnRun()
+int ibAppEnterprise::OnRun()
 {
 	// Abnormal Termination Handling
 #if wxUSE_ON_FATAL_EXCEPTION && wxUSE_STACKWALKER
@@ -104,18 +104,18 @@ int CEnterpriseApp::OnRun()
 	bool ret = false;
 
 	if (m_strFile.IsEmpty()) {
-		ret = appDataCreateServer(eRunMode::eENTERPRISE_MODE,
+		ret = appDataCreateServer(ibRunMode::eENTERPRISE_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
 		);
 	}
 	else {
-		ret = appDataCreateFile(eRunMode::eENTERPRISE_MODE,
+		ret = appDataCreateFile(ibRunMode::eENTERPRISE_MODE,
 			m_strFile, m_strLocale
 		);
 	}
 
 	if (!ret) {
-		const wxString &strLastError = CBackendException::GetLastError(); 
+		const wxString &strLastError = ibBackendException::GetLastError(); 
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		return 1;
 	}
@@ -174,9 +174,9 @@ int CEnterpriseApp::OnRun()
 #if wxUSE_LIBPNG
 	wxImage::AddHandler(new wxPNGHandler);
 #endif
-	mainFrameCreate(CFrontendDocMDIFrameEnterprise);
+	mainFrameCreate(ibFrontendDocMDIFrameEnterprise);
 	if (!appData->Connect(m_strIBUser, m_strIBPassword, m_debugEnable ? _app_start_create_debug_server_flag : _app_start_default_flag)) {
-		const wxString& strLastError = CBackendException::GetLastError();
+		const wxString& strLastError = ibBackendException::GetLastError();
 		if (!strLastError.IsEmpty()) wxMessageBox(strLastError);
 		mainFrameDestroy();
 		if (splashScreenLoader != nullptr) splashScreenLoader->Destroy();
@@ -188,13 +188,13 @@ int CEnterpriseApp::OnRun()
 	return wxApp::OnRun();
 }
 
-void CEnterpriseApp::OnUnhandledException()
+void ibAppEnterprise::OnUnhandledException()
 {
 }
 
 #include "backend/system/value/valueOLE.h"
 
-void CEnterpriseApp::OnFatalException()
+void ibAppEnterprise::OnFatalException()
 {
 	//generate dump
 	wxDebugReport report;
@@ -203,7 +203,7 @@ void CEnterpriseApp::OnFatalException()
 	report.AddExceptionDump();
 
 	//release all created com-objects
-	CValueOLE::ReleaseComObjects();
+	ibValueOLE::ReleaseComObjects();
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
@@ -215,10 +215,10 @@ void CEnterpriseApp::OnFatalException()
 	if (preview.Show(report)) report.Process();
 }
 
-int CEnterpriseApp::OnExit()
+int ibAppEnterprise::OnExit()
 {
 	//release all created com-objects
-	CValueOLE::ReleaseComObjects();
+	ibValueOLE::ReleaseComObjects();
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();

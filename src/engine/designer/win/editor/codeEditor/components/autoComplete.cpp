@@ -55,7 +55,7 @@ void CAutoComplete::Start(const wxString& strCurWord,
 
 	strCurrentWord = strCurWord;
 
-	COESListBox* m_listBox = lb->GetListBox();
+	ibListBox* m_listBox = lb->GetListBox();
 	m_listBox->SetListBoxFont(m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT));
 
 	m_listBox->Bind(wxEVT_LISTBOX, &CAutoComplete::OnSelection, this);
@@ -122,7 +122,7 @@ void CAutoComplete::Show(const wxPoint& position)
 		Cancel(); return;
 	}
 
-	COESListBox* m_listBox = lb->GetListBox();
+	ibListBox* m_listBox = lb->GetListBox();
 
 	std::sort(m_aKeywords.begin(), m_aKeywords.end(),
 		[](keywordElement_t a, keywordElement_t b) {
@@ -218,7 +218,7 @@ void CAutoComplete::Select(int index)
 
 	if (m_bNeedCallTip)
 	{
-		CCodeEditor* m_autoComplete = dynamic_cast<CCodeEditor*>(m_owner);
+		ibCodeEditor* m_autoComplete = dynamic_cast<ibCodeEditor*>(m_owner);
 		if (m_autoComplete) m_autoComplete->ShowCallTip(sDescription);
 	}
 }
@@ -258,7 +258,7 @@ void CAutoComplete::OnSelection(wxCommandEvent& event)
 
 void CAutoComplete::OnKeyDown(wxKeyEvent& event)
 {
-	COESListBox* m_listBox = lb->GetListBox();
+	ibListBox* m_listBox = lb->GetListBox();
 
 	switch (event.GetKeyCode())
 	{
@@ -274,7 +274,7 @@ void CAutoComplete::OnKeyDown(wxKeyEvent& event)
 
 void CAutoComplete::OnMouseMotion(wxMouseEvent& event)
 {
-	COESListBox* listBox = lb->GetListBox();
+	ibListBox* listBox = lb->GetListBox();
 	int currentRow = listBox->VirtualHitTest(event.GetY());
 	if (currentRow != wxNOT_FOUND) {
 		std::vector< keywordElement_t>::iterator selectedKeyword = m_aKeywords.begin() + currentRow;

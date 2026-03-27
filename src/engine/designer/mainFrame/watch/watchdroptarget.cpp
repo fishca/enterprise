@@ -6,7 +6,7 @@
 #include "watchdroptarget.h"    
 #include "watchwindow.h"
 
-CWatchDropTarget::CWatchDropTarget(CWatchWindow* watch)
+CWatchDropTarget::CWatchDropTarget(ibWatchWindow* watch)
 {
     m_watch = watch;
 }

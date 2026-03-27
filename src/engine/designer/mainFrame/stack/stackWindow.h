@@ -8,21 +8,21 @@
 #include "frontend/frontend.h"
 #include "backend/debugger/debugDefs.h"
 
-#define stackWindow CStackWindow::GetStackWindow()
+#define stackWindow ibStackWindow::GetStackWindow()
 
-class CStackWindow : public wxPanel {
+class ibStackWindow : public wxPanel {
 	wxListCtrl* m_treeCtrl;
 private:
-	CStackWindow(wxWindow* parent, int id = wxID_ANY);
-	friend class CFrontendDocMDIFrameDesigner;
+	ibStackWindow(wxWindow* parent, int id = wxID_ANY);
+	friend class ibFrontendDocMDIFrameDesigner;
 public:
 
-	virtual ~CStackWindow();
+	virtual ~ibStackWindow();
 
-	static CStackWindow* GetStackWindow();
+	static ibStackWindow* GetStackWindow();
 
 	void ClearAndCreate();
-	void SetStack(const CStackData& stackData);
+	void SetStack(const ibStackData& stackData);
 
 protected:
 

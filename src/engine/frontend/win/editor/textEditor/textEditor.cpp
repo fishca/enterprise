@@ -9,7 +9,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-CTextEditor::CTextEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+ibTextEditor::ibTextEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document)
 {
 	//Set margin cursor
@@ -21,13 +21,13 @@ CTextEditor::CTextEditor(CMetaDocument* document, wxWindow* parent, wxWindowID i
 	wxStyledTextCtrl::Connect
 	(
 		wxEVT_STC_CHANGE,
-		wxCommandEventHandler(CTextEditor::OnTextChange),
+		wxCommandEventHandler(ibTextEditor::OnTextChange),
 		nullptr,
 		this
 	);
 }
 
-void CTextEditor::SetEditorSettings(const CEditorSettings& settings)
+void ibTextEditor::SetEditorSettings(const CEditorSettings& settings)
 {
 	unsigned int m_bIndentationSize = settings.GetIndentSize();
 
@@ -43,7 +43,7 @@ void CTextEditor::SetEditorSettings(const CEditorSettings& settings)
 	wxStyledTextCtrl::SetViewWhiteSpace(showWhiteSpace);
 }
 
-void CTextEditor::SetFontColorSettings(const CFontColorSettings& settings)
+void ibTextEditor::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -123,7 +123,7 @@ void CTextEditor::SetFontColorSettings(const CFontColorSettings& settings)
 
 #include "frontend/docView/docView.h"
 
-void CTextEditor::OnTextChange(wxCommandEvent& event)
+void ibTextEditor::OnTextChange(wxCommandEvent& event)
 {
 	if (m_document != nullptr)
 		m_document->Modify(true);

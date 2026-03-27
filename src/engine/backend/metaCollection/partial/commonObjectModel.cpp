@@ -9,8 +9,8 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void IValueRecordSetObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col) const
+void ibValueRecordSetObject::GetValueByRow(wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col) const
 {
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
@@ -20,21 +20,21 @@ void IValueRecordSetObject::GetValueByRow(wxVariant& variant,
 
 #include "backend/metaData.h"
 
-bool IValueRecordSetObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col)
+bool ibValueRecordSetObject::SetValueByRow(const wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col)
 {
 	const wxString &strData = variant.GetString();
 	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
 	if (node == nullptr)
 		return false;
 
-	IValueMetaObjectRegisterData* metaObject = GetMetaObject();
+	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
-	IValueMetaObjectAttribute* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
+	ibValueMetaObjectAttributeBase* metaObjectAttribute = metaObject->FindAnyAttributeObjectByFilter(col);
 	wxASSERT(metaObject);
-	CValue newValue = metaObjectAttribute->CreateValue();
+	ibValue newValue = metaObjectAttribute->CreateValue();
 	if (strData.Length() > 0) {
-		std::vector<CValue> listValue;
+		std::vector<ibValue> listValue;
 		if (newValue.FindValue(strData, listValue)) {
 			return node->SetValue(col, listValue.at(0));
 		}

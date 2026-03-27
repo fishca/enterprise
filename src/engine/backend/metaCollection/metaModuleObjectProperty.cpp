@@ -1,21 +1,21 @@
 #include "metaModuleObject.h"
 
-bool CValueMetaObjectCommonModule::OnPropertyChanging(IProperty* property, const wxVariant& newValue)
+bool ibValueMetaObjectCommonModule::OnPropertyChanging(ibProperty* property, const wxVariant& newValue)
 {
 	if (m_propertyGlobalModule == property) {
-		return CValueMetaObjectCommonModule::OnBeforeCloseMetaObject() &&
-			CValueMetaObjectCommonModule::OnAfterCloseMetaObject();
+		return ibValueMetaObjectCommonModule::OnBeforeCloseMetaObject() &&
+			ibValueMetaObjectCommonModule::OnAfterCloseMetaObject();
 	}
 
-	return IValueMetaObjectModule::OnPropertyChanging(property, newValue);
+	return ibValueMetaObjectModuleBase::OnPropertyChanging(property, newValue);
 }
 
-void CValueMetaObjectCommonModule::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectCommonModule::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyGlobalModule == property) {
-		CValueMetaObjectCommonModule::OnBeforeRunMetaObject(newObjectFlag);
-		CValueMetaObjectCommonModule::OnAfterRunMetaObject(newObjectFlag);
+		ibValueMetaObjectCommonModule::OnBeforeRunMetaObject(newObjectFlag);
+		ibValueMetaObjectCommonModule::OnAfterRunMetaObject(newObjectFlag);
 	}
 
-	IValueMetaObjectModule::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObjectModuleBase::OnPropertyChanged(property, oldValue, newValue);
 }

@@ -3,15 +3,15 @@
 
 inline wxString GetClassType(const wxString& className)
 {
-	const IControlTypeCtor* objectSingle =
-		dynamic_cast<const IControlTypeCtor*>(CValue::GetAvailableCtor(className));
+	const ibCtorControlTypeBase* objectSingle =
+		dynamic_cast<const ibCtorControlTypeBase*>(ibValue::GetAvailableCtor(className));
 	wxASSERT(objectSingle);
 	return objectSingle->GetTypeControlName();
 }
 
-inline void SetDefaultLayoutProperties(CValueSizerItem* sizerItem)
+inline void SetDefaultLayoutProperties(ibValueSizerItem* sizerItem)
 {
-	IValueFrame* child = sizerItem->GetChild(0);
+	ibValueFrame* child = sizerItem->GetChild(0);
 	const wxString& obj_type = child->GetObjectTypeName();
 
 	if (obj_type == wxT("Sizer")) {
@@ -51,13 +51,13 @@ inline void SetDefaultLayoutProperties(CValueSizerItem* sizerItem)
 	}
 }
 
-IValueFrame* CValueForm::NewObject(const class_identifier_t& clsid, IValueFrame* controlParent, const CValue& generateId)
+ibValueFrame* ibValueForm::NewObject(const ibClassID& clsid, ibValueFrame* controlParent, const ibValue& generateId)
 {
-	if (CValue::IsRegisterCtor(clsid)) {
-		IValueFrame* newControl = nullptr;
-		CValue* ppParams[] = { this, controlParent, const_cast<CValue*>(&generateId) };
+	if (ibValue::IsRegisterCtor(clsid)) {
+		ibValueFrame* newControl = nullptr;
+		ibValue* ppParams[] = { this, controlParent, const_cast<ibValue*>(&generateId) };
 		try {
-			newControl = CValue::CreateAndConvertObjectRef< IValueFrame>(clsid, ppParams, 3);
+			newControl = ibValue::CreateAndConvertObjectRef< ibValueFrame>(clsid, ppParams, 3);
 			newControl->IncrRef();
 		}
 		catch (...) {
@@ -70,13 +70,13 @@ IValueFrame* CValueForm::NewObject(const class_identifier_t& clsid, IValueFrame*
 
 #include "frontend/visualView/ctrl/toolBar.h"
 
-void CValueForm::ResolveNameConflict(IValueFrame* control)
+void ibValueForm::ResolveNameConflict(ibValueFrame* control)
 {
 	class CResolveNameConflict {
 
 	public:
 
-		static void BuildNameSet(IValueFrame* control, CValueForm* top) {
+		static void BuildNameSet(ibValueFrame* control, ibValueForm* top) {
 
 			if (control->GetComponentType() != COMPONENT_TYPE_SIZERITEM) {
 
@@ -91,7 +91,7 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 						strOriginalName = strOriginalName.Left(length + 1);
 					}
 					else {
-						const IValueFrame* parentControl = control->GetParent();
+						const ibValueFrame* parentControl = control->GetParent();
 						if (parentControl != nullptr && g_controlToolBarItemCLSID == control->GetClassType()) {
 							strOriginalName = parentControl->GetControlName() + control->GetClassName();
 						}
@@ -143,9 +143,9 @@ void CValueForm::ResolveNameConflict(IValueFrame* control)
 	CResolveNameConflict::BuildNameSet(control, control->GetOwnerForm());
 }
 
-IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* controlParent)
+ibValueFrame* ibValueForm::CreateObject(const wxString& className, ibValueFrame* controlParent)
 {
-	IValueFrame* object = nullptr;
+	ibValueFrame* object = nullptr;
 	wxString classType = ::GetClassType(className);
 
 	if (controlParent) {
@@ -171,7 +171,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 		// No menu dropdown for wxToolBar until wx 2.9 :(
 		if (controlParent->GetObjectTypeName() == wxT("Tool"))
 		{
-			IValueFrame* gParent = controlParent->GetParent();
+			ibValueFrame* gParent = controlParent->GetParent();
 
 			if (
 				(gParent->GetClassName() == wxT("Toolbar")) &&
@@ -209,8 +209,8 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 		}
 		else if (controlParent->GetObjectTypeName() == wxT("NotebookPage"))
 		{
-			CValueSizerItem* sizerItem = NewObject<CValueSizerItem>("SizerItem", controlParent);
-			IValueFrame* obj = NewObject(className, sizerItem);
+			ibValueSizerItem* sizerItem = NewObject<ibValueSizerItem>("SizerItem", controlParent);
+			ibValueFrame* obj = NewObject(className, sizerItem);
 
 			if (controlParent) {
 				//sizerItem->SetReadOnly(controlParent->IsEditable());
@@ -236,8 +236,8 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 			controlParent->GetComponentType() == COMPONENT_TYPE_SIZER ||
 			controlParent->GetComponentType() == COMPONENT_TYPE_SIZERITEM)
 		{
-			CValueSizerItem* sizerItem = NewObject< CValueSizerItem>("SizerItem", controlParent);
-			IValueFrame* obj = NewObject(className, sizerItem);
+			ibValueSizerItem* sizerItem = NewObject< ibValueSizerItem>("SizerItem", controlParent);
+			ibValueFrame* obj = NewObject(className, sizerItem);
 
 			//if (controlParent) {
 			//	sizerItem->SetReadOnly(controlParent->IsEditable());
@@ -271,7 +271,7 @@ IValueFrame* CValueForm::CreateObject(const wxString& className, IValueFrame* co
 
 #define	copyBlock 0x022290
 
-bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
+bool ibValueForm::CopyObject(ibValueFrame* srcControl, bool copyOnPaste)
 {
 	if (srcControl->GetComponentType() == COMPONENT_TYPE_FRAME)
 		return false;
@@ -279,9 +279,9 @@ bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 	// Write some control to clipboard
 	if (wxTheClipboard->Open()) {
 
-		CMemoryWriter writerMemory;
+		ibWriterMemory writerMemory;
 
-		CMemoryWriter writerCopyMemory;
+		ibWriterMemory writerCopyMemory;
 		writerCopyMemory.w_u8(copyOnPaste);
 
 		writerMemory.w_chunk(copyBlock, writerCopyMemory.pointer(), writerCopyMemory.size());
@@ -305,20 +305,20 @@ bool CValueForm::CopyObject(IValueFrame* srcControl, bool copyOnPaste)
 	return false;
 }
 
-IValueFrame* CValueForm::PasteObject(CValueForm* dstForm, IValueFrame* dstParent)
+ibValueFrame* ibValueForm::PasteObject(ibValueForm* dstForm, ibValueFrame* dstParent)
 {
-	IValueFrame* clipboard = nullptr;
+	ibValueFrame* clipboard = nullptr;
 
 	if (wxTheClipboard->Open() && wxTheClipboard->IsSupported(oes_clipboard_frame)) {
 		wxCustomDataObject data(oes_clipboard_frame);
 		if (wxTheClipboard->GetData(data)) {
 
-			CMemoryReader readerMemory(data.GetData(), data.GetDataSize());
+			ibReaderMemory readerMemory(data.GetData(), data.GetDataSize());
 
-			std::shared_ptr <CMemoryReader>readerCopyMemory(readerMemory.open_chunk(copyBlock));
+			std::shared_ptr <ibReaderMemory>readerCopyMemory(readerMemory.open_chunk(copyBlock));
 			const bool copyOnPaste = readerCopyMemory->r_u8();
 
-			clipboard = IValueFrame::CreatePasteObject(readerMemory, dstForm, dstParent);
+			clipboard = ibValueFrame::CreatePasteObject(readerMemory, dstForm, dstParent);
 
 			if (clipboard == nullptr)
 				return nullptr;

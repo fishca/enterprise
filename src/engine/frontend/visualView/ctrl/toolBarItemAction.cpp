@@ -3,23 +3,23 @@
 
 #include "backend/system/value/valueEvent.h"
 
-bool CValueToolBarItem::GetToolAction(CEventAction* evtList)
+bool ibValueToolBarItem::GetToolAction(CEventAction* evtList)
 {
-	CValueToolbar* toolbar = dynamic_cast<CValueToolbar*> (m_parent);
+	ibValueToolbar* toolbar = dynamic_cast<ibValueToolbar*> (m_parent);
 	if (toolbar == nullptr) return false;
-	IValueFrame* sourceElement = toolbar->GetActionSrc() != wxNOT_FOUND ? FindControlByID(toolbar->GetActionSrc()) : nullptr;
+	ibValueFrame* sourceElement = toolbar->GetActionSrc() != wxNOT_FOUND ? FindControlByID(toolbar->GetActionSrc()) : nullptr;
 	if (sourceElement != nullptr) {
-		const CActionCollection& data = sourceElement->GetActionCollection(sourceElement->GetTypeForm());
+		const ibActionCollection& data = sourceElement->GetActionCollection(sourceElement->GetTypeForm());
 		for (unsigned int i = 0; i < data.GetCount(); i++) {
-			const action_identifier_t& id = data.GetID(i);
+			const ibActionID& id = data.GetID(i);
 			if (id == wxNOT_FOUND) continue;
-			const CPictureDescription& pictureDesc = data.GetPictureByID(id);
+			const ibPictureDescription& pictureDesc = data.GetPictureByID(id);
 			evtList->AppendItem(
 				data.GetNameByID(id),
 				data.GetCaptionByID(id),
 				id,
-				pictureDesc.IsEmptyPicture() ? wxNullBitmap : CBackendPicture::CreatePicture(pictureDesc, GetMetaData()),
-				CValue::CreateObjectValue<CValueActionEvent>(data.GetNameByID(id), id)
+				pictureDesc.IsEmptyPicture() ? wxNullBitmap : ibBackendPicture::CreatePicture(pictureDesc, GetMetaData()),
+				ibValue::CreateObjectValue<ibValueActionEvent>(data.GetNameByID(id), id)
 			);
 		}
 	}

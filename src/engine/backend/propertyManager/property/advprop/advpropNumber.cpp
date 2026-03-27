@@ -9,12 +9,12 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxNumberProperty, wxNumericProperty, TextCtrl)
 
 wxNumberProperty::wxNumberProperty(const wxString& label,
 	const wxString& strName,
-	const number_t& value)
+	const ibNumber& value)
 	: wxNumericProperty(label, strName)
 {
 	m_precision = -1;
 	SetValue(
-		new wxVariantDataNumber(value)
+		new ibVariantDataNumber(value)
 	);
 }
 
@@ -25,9 +25,9 @@ wxString wxNumberProperty::ValueToString(wxVariant& variant,
 {
 	wxString text;
 	if (!variant.IsNull()) {
-		wxVariantDataNumber* numberVariant =
-			dynamic_cast<wxVariantDataNumber*>(variant.GetData());
-		const number_t& value = numberVariant->GetNumber();
+		ibVariantDataNumber* numberVariant =
+			dynamic_cast<ibVariantDataNumber*>(variant.GetData());
+		const ibNumber& value = numberVariant->GetNumber();
 		text = value.ToString();
 	}
 	return text;
@@ -35,9 +35,9 @@ wxString wxNumberProperty::ValueToString(wxVariant& variant,
 
 bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
 {
-	number_t value;
-	wxVariantDataNumber* numberVariant =
-		dynamic_cast<wxVariantDataNumber*>(variant.GetData());
+	ibNumber value;
+	ibVariantDataNumber* numberVariant =
+		dynamic_cast<ibVariantDataNumber*>(variant.GetData());
 	wxASSERT(numberVariant);
 	if (text.empty()) {
 		numberVariant->SetNumber(0.0f);
@@ -60,8 +60,8 @@ bool
 wxNumberProperty::ValidateValue(wxVariant& variant,
 	wxPGValidationInfo& validationInfo) const
 {
-	number_t fpv = 0.0f;
-	wxVariantDataNumber* numberVariant = dynamic_cast<wxVariantDataNumber*>(variant.GetData());
+	ibNumber fpv = 0.0f;
+	ibVariantDataNumber* numberVariant = dynamic_cast<ibVariantDataNumber*>(variant.GetData());
 	if (numberVariant != nullptr) {
 		fpv = numberVariant->GetNumber();
 	}
@@ -102,8 +102,8 @@ wxVariant wxNumberProperty::AddSpinStepValue(long stepScale) const
 	int mode = m_spinWrap ? wxPG_PROPERTY_VALIDATION_WRAP
 		: wxPG_PROPERTY_VALIDATION_SATURATE;
 	wxVariant value = GetValue();
-	number_t v = 0.0f;
-	wxVariantDataNumber* numberVariant = dynamic_cast<wxVariantDataNumber*>(value.GetData());
+	ibNumber v = 0.0f;
+	ibVariantDataNumber* numberVariant = dynamic_cast<ibVariantDataNumber*>(value.GetData());
 	if (numberVariant != nullptr) {
 		v = numberVariant->GetNumber();
 	}

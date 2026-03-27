@@ -5,25 +5,25 @@
 
 #include "valueGuid.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueGuid, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueGuid, ibValue);
 
-CValueGuid::CValueGuid() : CValue(eValueTypes::TYPE_VALUE, true), m_guid() {}
+ibValueGuid::ibValueGuid() : ibValue(ibValueTypes::TYPE_VALUE, true), m_guid() {}
 
-CValueGuid::CValueGuid(const CGuid& guid) : CValue(eValueTypes::TYPE_VALUE, true), m_guid(guid) {}
+ibValueGuid::ibValueGuid(const ibGuid& guid) : ibValue(ibValueTypes::TYPE_VALUE, true), m_guid(guid) {}
 
-bool CValueGuid::Init()
+bool ibValueGuid::Init()
 {
 	m_guid = wxNewUniqueGuid;
 	return true;
 }
 
-bool CValueGuid::Init(CValue** paParams, const long lSizeArray)
+bool ibValueGuid::Init(ibValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
 
-	if (paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
-		const CGuid& newGuid = paParams[0]->GetString();
+	if (paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
+		const ibGuid& newGuid = paParams[0]->GetString();
 		if (newGuid.isValid())
 			m_guid = newGuid;
 		return newGuid.isValid();
@@ -35,4 +35,4 @@ bool CValueGuid::Init(CValue** paParams, const long lSizeArray)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueGuid, "Guid", string_to_clsid("VL_GUID"));
+VALUE_TYPE_REGISTER(ibValueGuid, "Guid", string_to_clsid("VL_GUID"));

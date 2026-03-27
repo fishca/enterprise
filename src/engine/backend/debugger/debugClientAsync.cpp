@@ -1,76 +1,76 @@
 #include "debugClient.h"
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSessionStart(wxSocketClient* sock)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSessionStart(wxSocketClient* sock)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSessionStart(sock);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSessionEnd(wxSocketClient* sock)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSessionEnd(wxSocketClient* sock)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSessionEnd(sock);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnEnterLoop(wxSocketClient* sock, const ibDebugLineData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnEnterLoop(sock, data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnLeaveLoop(wxSocketClient* sock, const ibDebugLineData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnLeaveLoop(sock, data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnAutoComplete(const CDebugAutoCompleteData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnAutoComplete(const ibDebugAutoCompleteData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnAutoComplete(data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnMessageFromServer(const CDebugLineData& data, const wxString& message)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnMessageFromServer(const ibDebugLineData& data, const wxString& message)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnMessageFromServer(data, message);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSetToolTip(const CDebugExpressionData& data, const wxString& strResult)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSetToolTip(const ibDebugExpressionData& data, const wxString& strResult)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSetToolTip(data, strResult);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSetStack(const CStackData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSetStack(const ibStackData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSetStack(data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSetLocalVariable(const CLocalWindowData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSetLocalVariable(const ibLocalWindowData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSetLocalVariable(data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSetVariable(const CWatchWindowData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSetVariable(const ibWatchWindowData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSetVariable(data);
 	}
 }
 
-void CDebuggerClient::CDebuggerClientAdapter::OnSetExpanded(const CWatchWindowData& data)
+void ibDebuggerClient::ibDebuggerClientAdapter::OnSetExpanded(const ibWatchWindowData& data)
 {
 	if (m_debugBridge != nullptr) {
 		m_debugBridge->OnSetExpanded(data);

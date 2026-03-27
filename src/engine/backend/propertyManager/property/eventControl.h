@@ -8,17 +8,17 @@
 class BACKEND_API CEventControl : public IEvent {
 public:
 
-	CEventControl(CPropertyCategory* cat, const wxString& name, const wxArrayString& args)
+	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args)
 		: IEvent(cat, name, args, wxEmptyString)
 	{
 	}
 
-	CEventControl(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args)
+	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args)
 		: IEvent(cat, name, label, args, wxEmptyString)
 	{
 	}
 
-	CEventControl(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args)
+	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args)
 		: IEvent(cat, name, label, helpString, args, wxEmptyString)
 	{
 	}
@@ -31,12 +31,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

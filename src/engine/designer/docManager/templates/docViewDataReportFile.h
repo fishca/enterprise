@@ -5,54 +5,54 @@
 #include "mainFrame/metaTree/treeDataReport.h"
 
 // The view using a standard wxTextCtrl to show its contents
-class CReportEditView : public CMetaView
+class ibReportEditView : public ibMetaView
 {
-	CDataReportTree* m_metaTree;
+	ibDataReportTree* m_metaTree;
 
 public:
 
-	CReportEditView() : CMetaView() {}
+	ibReportEditView() : ibMetaView() {}
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	CDataReportTree* GetMetaTree() const { return m_metaTree; }
+	ibDataReportTree* GetMetaTree() const { return m_metaTree; }
 
 protected:
 
-	wxDECLARE_DYNAMIC_CLASS(CReportEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibReportEditView);
 };
 
 static int s_defaultReportNameCounter = 1;
 
-class CReportFileDocument : public IMetaDataDocument {
-	CMetaDataReport* m_metaData;
+class ibReportFilibDocument : public ibMetaDataDocument {
+	ibMetaDataReport* m_metaData;
 public:
 
 	virtual wxIcon GetIcon() const {
 		if (m_metaData != nullptr) {
-			IValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
+			ibValueMetaObject* metaObject = m_metaData->GetCommonMetaObject();
 			wxASSERT(metaObject);
 			return metaObject->GetIcon();
 		}
 		return wxNullIcon;
 	}
 
-	CReportFileDocument() : IMetaDataDocument() { m_childDoc = false; }
-	virtual ~CReportFileDocument() { 
+	ibReportFilibDocument() : ibMetaDataDocument() { m_childDoc = false; }
+	virtual ~ibReportFilibDocument() { 
 		wxDELETE(m_metaData); 
 	}
 
-	virtual CMetaDataReport* GetMetaData() const {
+	virtual ibMetaDataReport* GetMetaData() const {
 		return m_metaData;
 	}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override
 	{
-		IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+		ibValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 		wxASSERT(commonObject);
 
 		// notice that there is no need to neither reset nor even check the
@@ -88,15 +88,15 @@ public:
 	virtual bool IsModified() const override;
 	virtual void Modify(bool mod) override;
 
-	virtual CDataReportTree* GetMetaTree() const;
+	virtual ibDataReportTree* GetMetaTree() const;
 
 protected:
 
 	virtual bool DoOpenDocument(const wxString& filename) override;
 	virtual bool DoSaveDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CReportFileDocument);
-	wxDECLARE_DYNAMIC_CLASS(CReportFileDocument);
+	wxDECLARE_NO_COPY_CLASS(ibReportFilibDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibReportFilibDocument);
 };
 
 #endif 

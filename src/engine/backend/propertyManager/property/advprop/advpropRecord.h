@@ -4,19 +4,19 @@
 #include <wx/propgrid/propgrid.h>
 #include "backend/backend_type.h"
 
-class BACKEND_API IPropertyObject;
+class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
 // wxPGRecordProperty
 // -----------------------------------------------------------------------
 
 class BACKEND_API wxPGRecordProperty : public wxPGProperty {
-	void FillByClsid(const class_identifier_t& clsid);
+	void FillByClsid(const ibClassID& clsid);
 public:
 
-	const IPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
+	const ibPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGRecordProperty(const IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxPGRecordProperty(const ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
@@ -31,7 +31,7 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 protected:
-	const IPropertyObject* m_ownerProperty = nullptr;
+	const ibPropertyObject* m_ownerProperty = nullptr;
 private:
 	WX_PG_DECLARE_PROPERTY_CLASS(wxPGRecordProperty);
 };

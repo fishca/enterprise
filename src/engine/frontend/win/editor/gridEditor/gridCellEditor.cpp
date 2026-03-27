@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------------
 
 CGridEditor::CGridEditorCellTextEditor::CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other)
-	: wxGridExtCellEditor(other),
+	: ibGridCellEditor(other),
 	m_maxChars(other.m_maxChars),
 	m_value(other.m_value)
 {
@@ -107,7 +107,7 @@ void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 	}
 #endif
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 }
 
 void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
@@ -138,12 +138,12 @@ void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
 	rect.SetBottom(rect.GetBottom() + 2 * extra_y);
 #endif
 
-	wxGridExtCellEditor::SetSize(rect);
+	ibGridCellEditor::SetSize(rect);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void CGridEditor::CGridEditorCellTextEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
-	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
+	wxASSERT_MSG(m_control, wxT("The ibGridCellEditor must be created first!"));
 
 	m_value = grid->GetTable()->GetValue(row, col);
 
@@ -160,7 +160,7 @@ void CGridEditor::CGridEditorCellTextEditor::DoBeginEdit(const wxString& startVa
 
 bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
@@ -179,7 +179,7 @@ bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	if (!m_value.IsEmpty()) {
 
@@ -233,7 +233,7 @@ bool CGridEditor::CGridEditorCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 		return true;
 
 	default:
-		return wxGridExtCellEditor::IsAcceptedKey(event);
+		return ibGridCellEditor::IsAcceptedKey(event);
 	}
 }
 

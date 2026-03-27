@@ -12,9 +12,9 @@ enum
 	eCopy,
 };
 
-CValueRecordManagerObjectInformationRegister::CActionCollection CValueRecordManagerObjectInformationRegister::GetActionCollection(const form_identifier_t &formType)
+ibValueRecordManagerObjectInformationRegister::ibActionCollection ibValueRecordManagerObjectInformationRegister::GetActionCollection(const ibFormID &formType)
 {
-	CActionCollection registerActions(this);
+	ibActionCollection registerActions(this);
 
 	registerActions.AddAction(wxT("SaveAndClose"), _("Save and close"), g_picSaveCLSID, true, eDefActionAndClose);
 	registerActions.AddAction(wxT("Save"), _("Save"), g_picSaveCLSID, true, eSave);
@@ -23,7 +23,7 @@ CValueRecordManagerObjectInformationRegister::CActionCollection CValueRecordMana
 	return registerActions;
 }
 
-void CValueRecordManagerObjectInformationRegister::ExecuteAction(const action_identifier_t &action, IBackendValueForm* srcForm)
+void ibValueRecordManagerObjectInformationRegister::ExecuteAction(const ibActionID &action, ibBackendValueForm* srcForm)
 {
 	switch (action)
 	{

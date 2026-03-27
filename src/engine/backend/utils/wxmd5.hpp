@@ -13,7 +13,7 @@
 
 #include "backend/backend.h"
 
-class BACKEND_API wxMD5 {
+class BACKEND_API ibMD5 {
 public:
 	static wxString ComputeMd5(const wxString& content);
 	static wxString ComputeKeyedMd5(const wxString& content, const wxString& key);

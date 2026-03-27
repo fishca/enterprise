@@ -5,7 +5,7 @@
 #include "backend/propertyManager/property/advprop/advpropFont.h"
 
 //base property for "font"
-class BACKEND_API CPropertyFont : public IProperty {
+class BACKEND_API ibPropertyFont : public ibProperty {
 public:
 
 	wxFont GetValueAsFont() const { return typeConv::StringToFont(m_propValue); }
@@ -13,18 +13,18 @@ public:
 	void SetValue(const wxFont& val) { m_propValue = typeConv::FontToString(val); }
 	void SetValue(const wxString& val) { m_propValue = val; }
 
-	CPropertyFont(CPropertyCategory* cat, const wxString& name, const wxFont &f = wxNullFont)
-		: IProperty(cat, name, typeConv::FontToString(f))
+	ibPropertyFont(ibPropertyCategory* cat, const wxString& name, const wxFont &f = wxNullFont)
+		: ibProperty(cat, name, typeConv::FontToString(f))
 	{
 	}
 
-	CPropertyFont(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxFont& f = wxNullFont)
-		: IProperty(cat, name, label, typeConv::FontToString(f))
+	ibPropertyFont(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxFont& f = wxNullFont)
+		: ibProperty(cat, name, label, typeConv::FontToString(f))
 	{
 	}
 
-	CPropertyFont(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxFont& f = wxNullFont)
-		: IProperty(cat, name, label, helpString, typeConv::FontToString(f))
+	ibPropertyFont(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxFont& f = wxNullFont)
+		: ibProperty(cat, name, label, helpString, typeConv::FontToString(f))
 	{
 	}
 
@@ -34,12 +34,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

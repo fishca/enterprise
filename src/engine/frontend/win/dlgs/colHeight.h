@@ -17,7 +17,7 @@
 
 class CGridEditor;
 
-class CDialogColWidth : public wxDialog {
+class ibDialogColWidth : public wxDialog {
 	wxCheckBox* m_maximumCol;
 	wxSpinCtrlDouble* m_spinCtrlWidth;
 	wxStdDialogButtonSizer* m_sdbSizerBottom;
@@ -29,8 +29,8 @@ public:
 		return m_spinCtrlWidth->GetValue();
 	}
 
-	CDialogColWidth(CGridEditor* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Column width"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
-	virtual ~CDialogColWidth();
+	ibDialogColWidth(CGridEditor* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Column width"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE);
+	virtual ~ibDialogColWidth();
 };
 
 #endif

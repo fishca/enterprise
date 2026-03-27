@@ -4,7 +4,7 @@
 //*                            MetaObjectLanguage                       *
 //***********************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectLanguage, IValueMetaObject);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectLanguage, ibValueMetaObject);
 
 //***********************************************************************
 //*                           Metamodule                                *
@@ -12,12 +12,12 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectLanguage, IValueMetaObject);
 
 #include "backend/metadata.h"
 
-bool CValueMetaObjectLanguage::IsValidCode(const wxString& strLangCode)
+bool ibValueMetaObjectLanguage::IsValidCode(const wxString& strLangCode)
 {
 	if (m_metaData == nullptr)
 		return false;
 
-	for (const auto language : m_metaData->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID)) {
+	for (const auto language : m_metaData->GetAnyArrayObject<ibValueMetaObjectLanguage>(g_metaLanguageCLSID)) {
 		if (language != this && stringUtils::CompareString(strLangCode, language->GetLangCode()))
 			return false;
 	}
@@ -25,29 +25,29 @@ bool CValueMetaObjectLanguage::IsValidCode(const wxString& strLangCode)
 	return true;
 }
 
-CValueMetaObjectLanguage::CValueMetaObjectLanguage(const wxString& name, const wxString& synonym, const wxString& comment) :
-	IValueMetaObject(name, synonym, comment)
+ibValueMetaObjectLanguage::ibValueMetaObjectLanguage(const wxString& name, const wxString& synonym, const wxString& comment) :
+	ibValueMetaObject(name, synonym, comment)
 {
 }
 
-bool CValueMetaObjectLanguage::OnDeleteMetaObject()
+bool ibValueMetaObjectLanguage::OnDeleteMetaObject()
 {
-	const IValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
+	const ibValueMetaObject* commonObject = m_metaData->GetCommonMetaObject();
 
 	return true;
 }
 
-bool CValueMetaObjectLanguage::OnBeforeRunMetaObject(int flags)
+bool ibValueMetaObjectLanguage::OnBeforeRunMetaObject(int flags)
 {
-	return IValueMetaObject::OnBeforeRunMetaObject(flags);
+	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 
-bool CValueMetaObjectLanguage::OnAfterRunMetaObject(int flags)
+bool ibValueMetaObjectLanguage::OnAfterRunMetaObject(int flags)
 {
 	if ((flags & newObjectFlag) != 0 || (flags & pasteObjectFlag) != 0) {
 
 		const wxString& strLangCode = m_propertyCode->GetValueAsString(); bool foundedName = false;
-		const auto languageArray = m_metaData->GetAnyArrayObject<CValueMetaObjectLanguage>(g_metaLanguageCLSID);
+		const auto languageArray = m_metaData->GetAnyArrayObject<ibValueMetaObjectLanguage>(g_metaLanguageCLSID);
 
 		for (const auto object : languageArray) {
 			if (object != this &&
@@ -80,15 +80,15 @@ bool CValueMetaObjectLanguage::OnAfterRunMetaObject(int flags)
 		}
 	}
 
-	return IValueMetaObject::OnAfterRunMetaObject(flags);
+	return ibValueMetaObject::OnAfterRunMetaObject(flags);
 }
 
-bool CValueMetaObjectLanguage::LoadData(CMemoryReader& reader)
+bool ibValueMetaObjectLanguage::LoadData(ibReaderMemory& reader)
 {
 	return m_propertyCode->LoadData(reader);
 }
 
-bool CValueMetaObjectLanguage::SaveData(CMemoryWriter& writer)
+bool ibValueMetaObjectLanguage::SaveData(ibWriterMemory& writer)
 {
 	return m_propertyCode->SaveData(writer);
 }
@@ -97,4 +97,4 @@ bool CValueMetaObjectLanguage::SaveData(CMemoryWriter& writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectLanguage, "Language", g_metaLanguageCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectLanguage, "Language", g_metaLanguageCLSID);

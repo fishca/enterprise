@@ -7,24 +7,24 @@
 #include "backend/backend_exception.h"
 
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueArray, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueArray, ibValue);
 
 //////////////////////////////////////////////////////////////////////
 
-CValue::CMethodHelper CValueArray::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueArray::m_methodHelper;
 
-bool CValueArray::Init()
+bool ibValueArray::Init()
 {
 	return true;
 }
 
-bool CValueArray::Init(CValue** paParams, const long lSizeArray)
+bool ibValueArray::Init(ibValue** paParams, const long lSizeArray)
 {
 	if (lSizeArray < 1)
 		return false;
 
-	if (paParams[0]->GetType() == eValueTypes::TYPE_NUMBER) {
-		const number_t& number = paParams[0]->GetNumber();
+	if (paParams[0]->GetType() == ibValueTypes::TYPE_NUMBER) {
+		const ibNumber& number = paParams[0]->GetNumber();
 		if (number > 0) {
 			m_listValue.resize(number.ToUInt());
 			return true;
@@ -35,15 +35,15 @@ bool CValueArray::Init(CValue** paParams, const long lSizeArray)
 
 #include "appdata.h"
 
-void CValueArray::CheckIndex(unsigned int index) const //array index must start from 1
+void ibValueArray::CheckIndex(unsigned int index) const //array index must start from 1
 {
 	if ((index < 0 || index >= m_listValue.size() && !appData->DesignerMode()))
-		CBackendCoreException::Error(_("Index goes beyond array"));
+		ibBackendCoreException::Error(_("Index goes beyond array"));
 }
 
 //working with an array as an aggregate object
 //listing string keys
-void CValueArray::PrepareNames() const
+void ibValueArray::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendConstructor(1, wxT("Array(num : number)"));
@@ -59,7 +59,7 @@ void CValueArray::PrepareNames() const
 	m_methodHelper.AppendFunc(wxT("Remove"), 1, wxT("Remove(index : number)"));
 }
 
-bool CValueArray::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueArray::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -90,14 +90,14 @@ bool CValueArray::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue
 	return false;
 }
 
-bool CValueArray::GetAt(const CValue& varKeyValue, CValue& pvarValue) //array index must start from 0
+bool ibValueArray::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //array index must start from 0
 {
 	CheckIndex(varKeyValue.GetUInteger());
 	pvarValue = m_listValue[varKeyValue.GetUInteger()];
 	return true;
 }
 
-bool CValueArray::SetAt(const CValue& varKeyValue, const CValue& varValue)//array index must start from 0
+bool ibValueArray::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//array index must start from 0
 {
 	CheckIndex(varKeyValue.GetUInteger());
 	m_listValue[varKeyValue.GetUInteger()] = varValue;
@@ -108,4 +108,4 @@ bool CValueArray::SetAt(const CValue& varKeyValue, const CValue& varValue)//arra
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueArray, "Array", string_to_clsid("VL_ARR"));
+VALUE_TYPE_REGISTER(ibValueArray, "Array", string_to_clsid("VL_ARR"));

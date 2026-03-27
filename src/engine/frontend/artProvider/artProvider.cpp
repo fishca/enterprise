@@ -130,23 +130,23 @@ protected:
 		if (client == wxART_FRONTEND) {
 
 			if (id == wxART_DATABASE)
-				return CBackendPicture::GetImageFromBase64(s_db_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_32_png, size);
 			else if (id == wxART_DATABASE_ROOLBACK)
-				return CBackendPicture::GetImageFromBase64(s_db_rollback_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_rollback_32_png, size);
 			else if (id == wxART_DATABASE_APPLY)
-				return CBackendPicture::GetImageFromBase64(s_db_apply_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_db_apply_32_png, size);
 			else if (id == wxART_ADD)
-				return CBackendPicture::GetImageFromBase64(s_add_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_add_32_png, size);
 			else if (id == wxART_EDIT)
-				return CBackendPicture::GetImageFromBase64(s_edit_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_edit_32_png, size);
 			else if (id == wxART_DELETE)
-				return CBackendPicture::GetImageFromBase64(s_delete_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_delete_32_png, size);
 			else if (id == wxART_UP)
-				return CBackendPicture::GetImageFromBase64(s_up_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_up_32_png, size);
 			else if (id == wxART_DOWN)
-				return CBackendPicture::GetImageFromBase64(s_down_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_down_32_png, size);
 			else if (id == wxART_SORT)
-				return CBackendPicture::GetImageFromBase64(s_sort_32_png, size);
+				return ibBackendPicture::GetImageFromBase64(s_sort_32_png, size);
 
 			return wxNullBitmap;
 		}

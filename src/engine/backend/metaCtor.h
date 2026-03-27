@@ -3,29 +3,29 @@
 
 //metaobject register document, form, etc ... 
 template <class T>
-class CMetaTypeCtor : public IValueTypeCtor {
+class CMetaTypeCtor : public ibCtorValueTypeBase {
 
 public:
 
-	CMetaTypeCtor(const wxString& className, const class_identifier_t& clsid) :
-		IValueTypeCtor(className, CLASSINFO(T), clsid) {}
+	CMetaTypeCtor(const wxString& className, const ibClassID& clsid) :
+		ibCtorValueTypeBase(className, CLASSINFO(T), clsid) {}
 
 	virtual wxIcon GetClassIcon() const {
 		return T::GetIconGroup();
 	}
 
-	virtual eCtorObjectType GetObjectTypeCtor() const {
-		return eCtorObjectType::eCtorObjectType_object_metadata;
+	virtual ibCtorObjectType GetObjectTypeCtor() const {
+		return ibCtorObjectType::ibCtorObjectType_object_metadata;
 	}
 
-	virtual void CallEvent(eCtorObjectTypeEvent event) {
-		if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_Register)
+	virtual void CallEvent(ibCtorObjectTypeEvent event) {
+		if (event == ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_Register)
 			T::OnRegisterObject(GetClassName(), this);
-		else if (event == eCtorObjectTypeEvent::eCtorObjectTypeEvent_UnRegister)
+		else if (event == ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_UnRegister)
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual CValue* CreateObject() const {
+	virtual ibValue* CreateObject() const {
 		return new T();
 	}
 };

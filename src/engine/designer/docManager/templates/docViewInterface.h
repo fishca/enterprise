@@ -8,13 +8,13 @@
 // ----------------------------------------------------------------------------
 
 // The view using a standard wxTextCtrl to show its contents
-class CInterfaceEditView : public CMetaView {
-	class CInterfaceEditor* m_interfaceEditor;
+class ibInterfaceEditView : public ibMetaView {
+	class ibInterfaceEditor* m_interfaceEditor;
 public:
 
-	CInterfaceEditView() : CMetaView() {}
+	ibInterfaceEditView() : ibMetaView() {}
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
@@ -22,17 +22,17 @@ public:
 private:
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(CInterfaceEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibInterfaceEditView);
 };
 
 // ----------------------------------------------------------------------------
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class CInterfaceDocument : public CMetaDocument
+class ibInterfacibDocument : public ibMetaDocument
 {
 public:
-	CInterfaceDocument() : CMetaDocument() { m_childDoc = false; }
+	ibInterfacibDocument() : ibMetaDocument() { m_childDoc = false; }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 
@@ -44,21 +44,21 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-	wxDECLARE_NO_COPY_CLASS(CInterfaceDocument);
-	wxDECLARE_ABSTRACT_CLASS(CInterfaceDocument);
+	wxDECLARE_NO_COPY_CLASS(ibInterfacibDocument);
+	wxDECLARE_ABSTRACT_CLASS(ibInterfacibDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class CInterfaceEditDocument : public CInterfaceDocument
+class ibInterfaceEditDocument : public ibInterfacibDocument
 {
 public:
-	CInterfaceEditDocument() : CInterfaceDocument() { }
+	ibInterfaceEditDocument() : ibInterfacibDocument() { }
 
-	wxDECLARE_NO_COPY_CLASS(CInterfaceEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(CInterfaceEditDocument);
+	wxDECLARE_NO_COPY_CLASS(ibInterfaceEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibInterfaceEditDocument);
 };
 
 #endif

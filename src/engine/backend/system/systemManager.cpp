@@ -109,7 +109,7 @@ enum
 	enRollBackTransaction
 };
 
-void CSystemFunction::PrepareNames() const
+void ibValueSystemFunction::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -219,7 +219,7 @@ void CSystemFunction::PrepareNames() const
 
 #include "backend/appData.h"
 
-bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueSystemFunction::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	if (!appData->DesignerMode()) {
 		switch (lMethodNum)
@@ -233,7 +233,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 		case enRound: pvarRetValue = Round(*paParams[0],
 			lSizeArray > 1 ? paParams[1]->GetInteger() : 0,
 			lSizeArray > 2 ?
-			paParams[2]->ConvertToEnumValue<eRoundMode>() : eRoundMode::eRoundMode_Round15as20
+			paParams[2]->ConvertToEnumValue<ibRoundMode>() : ibRoundMode::ibRoundMode_Round15as20
 		); return true;
 		case enInt: pvarRetValue = Int(*paParams[0]); return true;
 		case enLog10: pvarRetValue = Log10(*paParams[0]); return true;
@@ -294,10 +294,10 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			//--- Специальные:
 		case enMessage:
 			Message(paParams[0]->GetString(),
-				lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<eStatusMessage>() : eStatusMessage::eStatusMessage_Information);
+				lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<ibStatusMessage>() : ibStatusMessage::ibStatusMessage_Information);
 			return true;
 		case enAlert: Alert(paParams[0]->GetString()); return true;
-		case enQuestion: pvarRetValue = Question(paParams[0]->GetString(), paParams[1]->ConvertToEnumValue<eQuestionMode>());
+		case enQuestion: pvarRetValue = Question(paParams[0]->GetString(), paParams[1]->ConvertToEnumValue<ibQuestionMode>());
 		case enSetStatus: SetStatus(paParams[0]->GetString()); return true;
 		case enClearMessage: ClearMessage(); return true;
 		case enSetError: SetError(paParams[0]->GetString()); return true;
@@ -332,13 +332,13 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 			return lSizeArray > 0;
 		case enGetCommonForm: pvarRetValue = GetCommonForm(
 			paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+			lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr);
 			return true;
 		case enShowCommonForm: ShowCommonForm(
 			paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+			lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr);
 			return true;
 		case enGetCommonTemplate:
 			pvarRetValue = GetCommonTemplate(paParams[0]->GetString());
@@ -363,8 +363,8 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 
 		case enGetCommonForm:
 			pvarRetValue = GetCommonForm(paParams[0]->GetString(),
-				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+				lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+				lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr);
 			return true;
 
 		case enGetCommonTemplate:
@@ -376,7 +376,7 @@ bool CSystemFunction::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CV
 	return false;
 }
 
-bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueSystemFunction::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	if (!appData->DesignerMode()) {
 		switch (lMethodNum)
@@ -384,7 +384,7 @@ bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const
 			//--- Специальные:
 		case enMessage:
 			Message(paParams[0]->GetString(),
-				lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<eStatusMessage>() : eStatusMessage::eStatusMessage_Information);
+				lSizeArray > 1 ? paParams[1]->ConvertToEnumValue<ibStatusMessage>() : ibStatusMessage::ibStatusMessage_Information);
 			return true;
 		case enAlert: Alert(paParams[0]->GetString()); return true;
 		case enSetStatus: SetStatus(paParams[0]->GetString()); return true;
@@ -398,8 +398,8 @@ bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const
 		case enUserInterruptProcessing: UserInterruptProcessing(); return true;
 		case enShowCommonForm: ShowCommonForm(
 			paParams[0]->GetString(),
-			lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-			lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+			lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+			lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr);
 			return true;
 			//--- Тразакции:
 		case enBeginTransaction: BeginTransaction(); return true;
@@ -414,8 +414,8 @@ bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const
 			//--- Специальные:
 		case enShowCommonForm:
 			ShowCommonForm(paParams[0]->GetString(),
-				lSizeArray > 1 ? paParams[1]->ConvertToType<IBackendControlFrame>() : nullptr,
-				lSizeArray > 2 ? paParams[2]->ConvertToType<CValueGuid>() : nullptr);
+				lSizeArray > 1 ? paParams[1]->ConvertToType<ibBackendControlFrame>() : nullptr,
+				lSizeArray > 2 ? paParams[2]->ConvertToType<ibValueGuid>() : nullptr);
 			return true;
 		}
 	}
@@ -425,7 +425,7 @@ bool CSystemFunction::CallAsProc(const long lMethodNum, CValue** paParams, const
 
 //**********************************************************************
 
-wxDateTime CSystemFunction::ms_workDate = wxDateTime::Now();
+wxDateTime ibValueSystemFunction::ms_workDate = wxDateTime::Now();
 
 class wxOESRandModule : public wxModule
 {
@@ -446,4 +446,4 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxOESRandModule, wxModule)
 //*                       Runtime register                             *
 //**********************************************************************
 
-CONTEXT_TYPE_REGISTER(CSystemFunction, "SystemManager", string_to_clsid("CO_SYSM"));
+CONTEXT_TYPE_REGISTER(ibValueSystemFunction, "SystemManager", string_to_clsid("CO_SYSM"));

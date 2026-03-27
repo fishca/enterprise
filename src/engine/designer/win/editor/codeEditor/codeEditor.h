@@ -19,14 +19,14 @@
 #include "win/editor/codeEditor/components/autoComplete.h"
 #include "win/editor/codeEditor/components/callTip.h"
 
-class CMetaDocument;
-class CMemoryReader;
+class ibMetaDocument;
+class ibReaderMemory;
 
-class CModuleCommandProcessor : public wxCommandProcessor {
+class ibModuleCommandProcessor : public wxCommandProcessor {
 	wxStyledTextCtrl* m_codeEditor;
 public:
 
-	CModuleCommandProcessor(wxStyledTextCtrl* codeEditor) :
+	ibModuleCommandProcessor(wxStyledTextCtrl* codeEditor) :
 		wxCommandProcessor(), m_codeEditor(codeEditor) {
 	}
 
@@ -59,7 +59,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////
 
-class CCodeEditor : public wxStyledTextCtrl {
+class ibCodeEditor : public wxStyledTextCtrl {
 
 	enum {
 		Breakpoint = 1,
@@ -67,7 +67,7 @@ class CCodeEditor : public wxStyledTextCtrl {
 		BreakLine,
 	};
 
-	class CFoldLevelParser {
+	class ibFoldLevelParser {
 
 		enum {
 			FOLD_PROCEDURE,
@@ -79,7 +79,7 @@ class CCodeEditor : public wxStyledTextCtrl {
 
 	public:
 
-		CFoldLevelParser(CCodeEditor* codeEditor) : m_codeEditor(codeEditor), m_update_fold(false),
+		ibFoldLevelParser(ibCodeEditor* codeEditor) : m_codeEditor(codeEditor), m_update_fold(false),
 			m_proc_count(0), m_func_count(0), m_if_count(0), m_do_count(0), m_try_count(0)
 		{
 		}
@@ -228,7 +228,7 @@ class CCodeEditor : public wxStyledTextCtrl {
 			ClearFoldLevel();
 
 			for (unsigned int idx = 0; idx < m_codeEditor->m_precompileModule->m_listLexem.size(); idx++) {
-				const CLexem& lex = m_codeEditor->m_precompileModule->m_listLexem[idx];
+				const ibLexem& lex = m_codeEditor->m_precompileModule->m_listLexem[idx];
 				if (lex.m_lexType == KEYWORD) {
 
 					if (lex.m_numData == KEY_PROCEDURE) {
@@ -275,7 +275,7 @@ class CCodeEditor : public wxStyledTextCtrl {
 		short m_proc_count, m_func_count, m_if_count, m_do_count, m_try_count;
 
 		// current code editor
-		CCodeEditor* m_codeEditor;
+		ibCodeEditor* m_codeEditor;
 
 		// build a vector to include line and folding level
 		std::vector<std::pair<int, short>> m_folding_vector;
@@ -283,12 +283,12 @@ class CCodeEditor : public wxStyledTextCtrl {
 
 public:
 
-	CCodeEditor();
-	CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id = wxID_ANY,
+	ibCodeEditor();
+	ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = 0,
 		const wxString& strName = wxSTCNameStr);
-	virtual ~CCodeEditor();
+	virtual ~ibCodeEditor();
 
 	bool LoadModule();
 	bool SaveModule();
@@ -317,7 +317,7 @@ public:
 	void SetFontColorSettings(const CFontColorSettings& settings);
 
 	void ShowAutoComplete(
-		const CDebugAutoCompleteData& autoCompleteData);
+		const ibDebugAutoCompleteData& autoCompleteData);
 
 	void ShowCallTip(const wxString& title) { m_ct.Show(GetRealPosition(), title); }
 
@@ -358,7 +358,7 @@ protected:
 private:
 
 	// Private func
-	void AddKeywordFromObject(const CValue& vObject);
+	void AddKeywordFromObject(const ibValue& vObject);
 
 	bool PrepareExpression(unsigned int currPos, wxString& strexpression, wxString& strKeyWord, wxString& sCurrWord, bool& hasPoint);
 	void PrepareTooTipExpression(unsigned int currPos, wxString& strexpression, wxString& sCurrWord, bool& hasPoint);
@@ -379,13 +379,13 @@ private:
 	//Support debugger 
 	void EditDebugPoint(int line);
 
-	CMetaDocument* m_document;
+	ibMetaDocument* m_document;
 	CPrecompileCode* m_precompileModule;
 
 	CAutoComplete m_ac;
 	CCallTip m_ct;
-	CTranslateCode m_tc;
-	CFoldLevelParser m_fp;
+	ibTranslateCode m_tc;
+	ibFoldLevelParser m_fp;
 
 	bool m_bInitialized;
 	int  m_bIndentationSize;

@@ -18,18 +18,18 @@
 #include "firebirdPreparedStatementWrapper.h"
 #include "firebirdInterface.h"
 
-class IDatabaseResultSet;
+class ibDatabaseResultSet;
 
-WX_DEFINE_ARRAY_PTR(CFirebirdPreparedStatementWrapper*, FirebirdStatementVector);
+WX_DEFINE_ARRAY_PTR(ibPreparedStatementFirebirdWrapper*, FirebirdStatementVector);
 
-class CFirebirdPreparedStatement : public IPreparedStatement
+class ibPreparedStatementFirebird : public ibPreparedStatement
 {
 public:
 	// ctor
-	CFirebirdPreparedStatement(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction);
+	ibPreparedStatementFirebird(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction);
 
 	// dtor
-	virtual ~CFirebirdPreparedStatement();
+	virtual ~ibPreparedStatementFirebird();
 
 	virtual void Close();
 
@@ -38,7 +38,7 @@ public:
 	// get field
 	virtual void SetParamInt(int nPosition, int nValue);
 	virtual void SetParamDouble(int nPosition, double dblValue);
-	virtual void SetParamNumber(int nPosition, const number_t& dblValue);
+	virtual void SetParamNumber(int nPosition, const ibNumber& dblValue);
 	virtual void SetParamString(int nPosition, const wxString& strValue);
 	virtual void SetParamNull(int nPosition);
 	virtual void SetParamBlob(int nPosition, const void* pData, long nDataLength);
@@ -47,9 +47,9 @@ public:
 	virtual int GetParameterCount();
 
 	virtual int RunQuery();
-	virtual IDatabaseResultSet* RunQueryWithResults();
+	virtual ibDatabaseResultSet* RunQueryWithResults();
 
-	static CFirebirdPreparedStatement* CreateStatement(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL, const wxCSConv* conv);
+	static ibPreparedStatementFirebird* CreateStatement(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL, const wxCSConv* conv);
 
 	void SetManageTransaction(bool bManageTransaction) { m_bManageTransaction = bManageTransaction; }
 
@@ -67,7 +67,7 @@ private:
 	FirebirdStatementVector m_Statements;
 	ISC_STATUS_ARRAY m_Status;
 
-	CFirebirdInterface* m_pInterface;
+	ibInterfaceFirebird* m_pInterface;
 };
 
 #endif // __FIREBIRD_PREPARED_STATEMENT_H__

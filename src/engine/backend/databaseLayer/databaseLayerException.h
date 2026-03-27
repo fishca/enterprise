@@ -3,10 +3,10 @@
 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 
-class DatabaseLayerException
+class ibDatabaseLayerException
 {
 public:
-	DatabaseLayerException(int nCode, const wxString& strError)
+	ibDatabaseLayerException(int nCode, const wxString& strError)
 	{
 		m_nErrorCode = nCode;
 		m_strErrorMessage = strError;

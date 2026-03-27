@@ -7,30 +7,30 @@
 #include "backend/backend_core.h"
 #include "debugDefs.h"
 
-class BACKEND_API IDebuggerClientBridge {
+class BACKEND_API ibDebuggerClientBridge {
 public:
 
-	static void SetDebuggerClientBridge(IDebuggerClientBridge* bridge);
+	static void SetDebuggerClientBridge(ibDebuggerClientBridge* bridge);
 
-	virtual ~IDebuggerClientBridge() {}
+	virtual ~ibDebuggerClientBridge() {}
 
 	//commands 
 	virtual void OnSessionStart(wxSocketClient* sock) = 0;
 	virtual void OnSessionEnd(wxSocketClient* sock) = 0;
 
-	virtual void OnEnterLoop(wxSocketClient* sock, const CDebugLineData& data) = 0;
-	virtual void OnLeaveLoop(wxSocketClient* sock, const CDebugLineData& data) = 0;
+	virtual void OnEnterLoop(wxSocketClient* sock, const ibDebugLineData& data) = 0;
+	virtual void OnLeaveLoop(wxSocketClient* sock, const ibDebugLineData& data) = 0;
 
-	virtual void OnAutoComplete(const CDebugAutoCompleteData& data) = 0;
-	virtual void OnMessageFromServer(const CDebugLineData& data, const wxString& message) = 0;
-	virtual void OnSetToolTip(const CDebugExpressionData& data, const wxString& resultStr) = 0;
+	virtual void OnAutoComplete(const ibDebugAutoCompleteData& data) = 0;
+	virtual void OnMessageFromServer(const ibDebugLineData& data, const wxString& message) = 0;
+	virtual void OnSetToolTip(const ibDebugExpressionData& data, const wxString& resultStr) = 0;
 
-	virtual void OnSetStack(const CStackData& stackData) = 0;
+	virtual void OnSetStack(const ibStackData& stackData) = 0;
 
-	virtual void OnSetLocalVariable(const CLocalWindowData& watchData) = 0;
+	virtual void OnSetLocalVariable(const ibLocalWindowData& watchData) = 0;
 
-	virtual void OnSetVariable(const CWatchWindowData& watchData) = 0;
-	virtual void OnSetExpanded(const CWatchWindowData& watchData) = 0;
+	virtual void OnSetVariable(const ibWatchWindowData& watchData) = 0;
+	virtual void OnSetExpanded(const ibWatchWindowData& watchData) = 0;
 };
 
 

@@ -21,7 +21,7 @@ class FRONTEND_API CGridEditorPrintout : public wxPrintout {
 public:
 
 	CGridEditorPrintout(const wxString& title = wxT("CGridEditorPrintout"));
-	CGridEditorPrintout(const wxObjectDataPtr<CBackendSpreadsheetObject>& doc, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
+	CGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
 
 	void SetStyle(int style);
 	int GetStyle() const;
@@ -60,7 +60,7 @@ protected:
 
 private:
 
-	wxObjectDataPtr<CBackendSpreadsheetObject> m_doc;
+	wxObjectDataPtr<ibBackendSpreadsheetObject> m_doc;
 
 	int m_style;
 

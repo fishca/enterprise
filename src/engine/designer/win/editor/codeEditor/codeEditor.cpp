@@ -17,12 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CCodeEditor::CCodeEditor()
+ibCodeEditor::ibCodeEditor()
 	: wxStyledTextCtrl(), m_document(nullptr), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
 {
 }
 
-CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+ibCodeEditor::ibCodeEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 	: wxStyledTextCtrl(parent, id, pos, size, style, name), m_document(document), m_ac(this), m_ct(this), m_fp(this), m_precompileModule(nullptr), m_bInitialized(false), m_lineBreakpoint(wxNOT_FOUND)
 {
 	// initialize styles
@@ -36,12 +36,12 @@ CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID i
 		SetMarginCursor(margin, wxSTC_CURSORARROW);
 
 	//register event
-	Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(CCodeEditor::OnMarginClick), nullptr, this);
-	Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(CCodeEditor::OnStyleNeeded), nullptr, this);
-	Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(CCodeEditor::OnTextChange), nullptr, this);
+	Connect(wxEVT_STC_MARGINCLICK, wxStyledTextEventHandler(ibCodeEditor::OnMarginClick), nullptr, this);
+	Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(ibCodeEditor::OnStyleNeeded), nullptr, this);
+	Connect(wxEVT_STC_MODIFIED, wxStyledTextEventHandler(ibCodeEditor::OnTextChange), nullptr, this);
 
-	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(CCodeEditor::OnKeyDown), nullptr, this);
-	Connect(wxEVT_MOTION, wxMouseEventHandler(CCodeEditor::OnMouseMove), nullptr, this);
+	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(ibCodeEditor::OnKeyDown), nullptr, this);
+	Connect(wxEVT_MOTION, wxMouseEventHandler(ibCodeEditor::OnMouseMove), nullptr, this);
 
 	//set edge mode
 	SetEdgeMode(wxSTC_EDGE_MULTILINE);
@@ -84,18 +84,18 @@ CCodeEditor::CCodeEditor(CMetaDocument* document, wxWindow* parent, wxWindowID i
 	MarkerEnableHighlight(true);
 }
 
-CCodeEditor::~CCodeEditor()
+ibCodeEditor::~ibCodeEditor()
 {
-	const IValueMetaObject* metaObject = m_document->GetMetaObject();
+	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
-	const IMetaData* metaData = metaObject->GetMetaData();
+	const ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	IModuleDataObject* dataRef = nullptr;
+	ibModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
-		CCompileModule* compileModule = dataRef->GetCompileModule();
+		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		if (compileModule != nullptr) compileModule->ClearLexem();
 	}
 
@@ -104,11 +104,11 @@ CCodeEditor::~CCodeEditor()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CCodeEditor::EditDebugPoint(int line_to_edit)
+void ibCodeEditor::EditDebugPoint(int line_to_edit)
 {
 	//Update the list of breakpoints
 	const int dwFlags = MarkerGet(line_to_edit);
-	if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
+	if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
 		debugClient->RemoveBreakpoint(m_document->GetFilename(), line_to_edit);
 	}
 	else {
@@ -116,31 +116,31 @@ void CCodeEditor::EditDebugPoint(int line_to_edit)
 	}
 }
 
-void CCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
+void ibCodeEditor::RefreshBreakpoint(bool deleteCurrentBreakline)
 {
-	MarkerDeleteAll(CCodeEditor::Breakpoint);
+	MarkerDeleteAll(ibCodeEditor::Breakpoint);
 
 	//Update the list of breakpoints
 	for (auto& line_to_edit : debugClient->GetDebugList(m_document->GetFilename())) {
 		const int dwFlags = MarkerGet(line_to_edit);
-		if (!(dwFlags & (1 << CCodeEditor::Breakpoint))) {
-			MarkerAdd(line_to_edit, CCodeEditor::Breakpoint);
+		if (!(dwFlags & (1 << ibCodeEditor::Breakpoint))) {
+			MarkerAdd(line_to_edit, ibCodeEditor::Breakpoint);
 		}
 	}
 }
 
-void CCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
+void ibCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 {
 	const int firstVisibleLine = GetFirstVisibleLine(),
 		linesOnScreen = LinesOnScreen();
 
 	//Incorrect position when editing button title
-	//if (!CCodeEditor::GetSTCFocus()) 
+	//if (!ibCodeEditor::GetSTCFocus()) 
 	// CodeEditor::SetSTCFocus(true);
 
-	MarkerDeleteAll(CCodeEditor::BreakLine);
+	MarkerDeleteAll(ibCodeEditor::BreakLine);
 
-	if (setBreakLine) MarkerAdd(lineBreakpoint - 1, CCodeEditor::BreakLine);
+	if (setBreakLine) MarkerAdd(lineBreakpoint - 1, ibCodeEditor::BreakLine);
 
 	if (lineBreakpoint > 0) {
 
@@ -156,12 +156,12 @@ void CCodeEditor::SetCurrentLine(int lineBreakpoint, bool setBreakLine)
 		m_lineBreakpoint = wxNOT_FOUND;
 
 	//Set standart focus
-	if (lineBreakpoint > 0) CCodeEditor::SetFocus();
+	if (lineBreakpoint > 0) ibCodeEditor::SetFocus();
 
 	//if (!setBreakLine) GotoLine(lineBreakpoint - 1);
 }
 
-void CCodeEditor::SetEditorSettings(const CEditorSettings& settings)
+void ibCodeEditor::SetEditorSettings(const CEditorSettings& settings)
 {
 	m_bIndentationSize = settings.GetIndentSize();
 
@@ -224,7 +224,7 @@ inline wxColour GetInverse(const wxColour& color)
 	return wxColour(r ^ 0xFF, g ^ 0xFF, b ^ 0xFF);
 }
 
-void CCodeEditor::SetFontColorSettings(const CFontColorSettings& settings)
+void ibCodeEditor::SetFontColorSettings(const CFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -312,13 +312,13 @@ void CCodeEditor::SetFontColorSettings(const CFontColorSettings& settings)
 	SetCaretForeground(GetInverse(settings.GetColors(CFontColorSettings::DisplayItem_Default).backColor));
 }
 
-bool CCodeEditor::LoadModule()
+bool ibCodeEditor::LoadModule()
 {
 	ClearAll();
 	wxDELETE(m_precompileModule);
 
 	if (m_document != nullptr) {
-		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
+		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
 		if (moduleObject != nullptr) {
 			m_precompileModule = new CPrecompileCode(moduleObject);
 
@@ -350,11 +350,11 @@ bool CCodeEditor::LoadModule()
 	return m_document != nullptr;
 }
 
-bool CCodeEditor::SaveModule()
+bool ibCodeEditor::SaveModule()
 {
 	if (m_document != nullptr) {
 
-		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
+		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
 
 		if (moduleObject != nullptr) {
 			moduleObject->SetModuleText(GetText());
@@ -365,13 +365,13 @@ bool CCodeEditor::SaveModule()
 	return m_document != nullptr;
 }
 
-int CCodeEditor::GetRealPosition()
+int ibCodeEditor::GetRealPosition()
 {
 	const wxString& codeText = GetTextRange(0, GetCurrentPos());
 	return codeText.Length();
 }
 
-int CCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
+int ibCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 {
 	const wxString& codeText = GetTextRange(0, PositionFromPoint(pt));
 	return codeText.Length();
@@ -380,32 +380,32 @@ int CCodeEditor::GetRealPositionFromPoint(const wxPoint& pt)
 #include "win/dlg/lineInput/lineInput.h"
 #include "win/dlg/functionSearcher/functionSearcher.h"
 
-void CCodeEditor::RefreshEditor()
+void ibCodeEditor::RefreshEditor()
 {
-	CCodeEditor::SetEditorSettings(mainFrame->GetEditorSettings());
-	CCodeEditor::SetFontColorSettings(mainFrame->GetFontColorSettings());
+	ibCodeEditor::SetEditorSettings(mainFrame->GetEditorSettings());
+	ibCodeEditor::SetFontColorSettings(mainFrame->GetFontColorSettings());
 
-	CCodeEditor::RefreshBreakpoint();
+	ibCodeEditor::RefreshBreakpoint();
 }
 
-void CCodeEditor::ActivateEditor()
+void ibCodeEditor::ActivateEditor()
 {
 	if (m_document != nullptr) {
 	
-		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();	
+		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();	
 		if (moduleObject != nullptr && (moduleObject->GetClassType() == g_metaModuleCLSID || moduleObject->GetClassType() == g_metaManagerCLSID))
 			objectInspector->SelectObject(moduleObject->GetParent());
 		else
 			objectInspector->SelectObject(moduleObject);
 	}
 	
-	CCodeEditor::SetSTCFocus(true);
-	CCodeEditor::SetFocus();
+	ibCodeEditor::SetSTCFocus(true);
+	ibCodeEditor::SetFocus();
 }
 
 #include <wx/fdrepdlg.h>
 
-void CCodeEditor::FindText(const wxString& findString, int wxflags)
+void ibCodeEditor::FindText(const wxString& findString, int wxflags)
 {
 	int sciflags = 0;
 	if ((wxflags & wxFR_WHOLEWORD) != 0) {
@@ -416,39 +416,39 @@ void CCodeEditor::FindText(const wxString& findString, int wxflags)
 	}
 	int result = 0;
 	if ((wxflags & wxFR_DOWN) != 0) {
-		CCodeEditor::SetSelectionStart(GetSelectionEnd());
-		CCodeEditor::SearchAnchor();
-		result = CCodeEditor::SearchNext(sciflags, findString);
+		ibCodeEditor::SetSelectionStart(GetSelectionEnd());
+		ibCodeEditor::SearchAnchor();
+		result = ibCodeEditor::SearchNext(sciflags, findString);
 	}
 	else {
-		CCodeEditor::SetSelectionEnd(GetSelectionStart());
-		CCodeEditor::SearchAnchor();
-		result = CCodeEditor::SearchPrev(sciflags, findString);
+		ibCodeEditor::SetSelectionEnd(GetSelectionStart());
+		ibCodeEditor::SearchAnchor();
+		result = ibCodeEditor::SearchPrev(sciflags, findString);
 	}
 	if (wxSTC_INVALID_POSITION == result) {
 		wxMessageBox(wxString::Format(_("\"%s\" not found!"), findString.c_str()),
 			_("Not Found!"), wxICON_ERROR, (wxWindow*)this);
 	}
 	else {
-		CCodeEditor::EnsureCaretVisible();
-		CCodeEditor::SetSTCFocus(true);
+		ibCodeEditor::EnsureCaretVisible();
+		ibCodeEditor::SetSTCFocus(true);
 	}
 }
 
 #include "frontend/window_ptr.h"
 
-void CCodeEditor::ShowGotoLine()
+void ibCodeEditor::ShowGotoLine()
 {
-	CDialogLineInput dlg(this);
+	ibDialogLineInput dlg(this);
 	const int ret = dlg.ShowModal();
 
 	if (ret != wxNOT_FOUND) {
-		CCodeEditor::SetFocus();
-		CCodeEditor::GotoLine(ret - 1);
+		ibCodeEditor::SetFocus();
+		ibCodeEditor::GotoLine(ret - 1);
 	}
 }
 
-void CCodeEditor::ShowMethods()
+void ibCodeEditor::ShowMethods()
 {
 	CFunctionList dlg(m_document, this);
 	dlg.ShowModal();
@@ -456,25 +456,25 @@ void CCodeEditor::ShowMethods()
 
 #include "backend/system/systemManager.h"
 
-bool CCodeEditor::SyntaxControl(bool throwMessage) const
+bool ibCodeEditor::SyntaxControl(bool throwMessage) const
 {
-	const IValueMetaObject* metaObject = m_document->GetMetaObject();
+	const ibValueMetaObject* metaObject = m_document->GetMetaObject();
 	wxASSERT(metaObject);
-	const IMetaData* metaData = metaObject->GetMetaData();
+	const ibMetaData* metaData = metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IValueModuleManager* moduleManager = metaData->GetModuleManager();
+	const ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 	wxASSERT(moduleManager);
 
-	IModuleDataObject* dataRef = nullptr;
+	ibModuleDataObject* dataRef = nullptr;
 	if (moduleManager->FindCompileModule(metaObject, dataRef)) {
-		CCompileModule* compileModule = dataRef->GetCompileModule();
+		ibCompileModule* compileModule = dataRef->GetCompileModule();
 		try {
 			if (compileModule->Compile()) {
 				if (throwMessage)
-					CSystemFunction::Message(_("No syntax errors detected!"));
+					ibValueSystemFunction::Message(_("No syntax errors detected!"));
 				return true;
 			}
-			wxASSERT("CCompileCode::Compile return false");
+			wxASSERT("ibCompileCode::Compile return false");
 			return false;
 
 		}
@@ -498,25 +498,25 @@ bool CCodeEditor::SyntaxControl(bool throwMessage) const
 
 #ifdef UTF8_LEXEM_TRANSLATE
 #define appendStyle(style) \
-CCodeEditor::StartStyling(currPos); \
-CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentUtf8Pos() - currPos, style);
+ibCodeEditor::StartStyling(currPos); \
+ibCodeEditor::SetStyling(fromPos + m_tc.GetCurrentUtf8Pos() - currPos, style);
 #else
 #define appendStyle(style) \
-CCodeEditor::StartStyling(currPos); \
-CCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
+ibCodeEditor::StartStyling(currPos); \
+ibCodeEditor::SetStyling(fromPos + m_tc.GetCurrentPos() - currPos, style);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                          Styling                                                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos)
+void ibCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const int toPos)
 {
-	m_tc.Load(CCodeEditor::GetTextRange(fromPos, toPos));
+	m_tc.Load(ibCodeEditor::GetTextRange(fromPos, toPos));
 
 	//remove old styling
-	CCodeEditor::StartStyling(fromPos); //from here
-	CCodeEditor::SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
+	ibCodeEditor::StartStyling(fromPos); //from here
+	ibCodeEditor::SetStyling(toPos - fromPos, wxSTC_C_COMMENT); //with that length and style -> cleared
 
 	wxString strWord;
 	unsigned int currPos = fromPos;
@@ -529,7 +529,7 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const 
 #endif 
 		if (m_tc.IsWord()) {
 			(void)m_tc.GetWord(strWord, false, true);
-			const short keyWord = CTranslateCode::IsKeyWord(strWord);
+			const short keyWord = ibTranslateCode::IsKeyWord(strWord);
 			if (keyWord != wxNOT_FOUND) {
 				if (strWord.Left(1) == '#') {
 					appendStyle(wxSTC_C_PREPROCESSOR);
@@ -569,15 +569,15 @@ void CCodeEditor::HighlightSyntaxAndCalculateFoldLevel(const int fromPos, const 
 //                                                          EVENT                                                                         //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
+void ibCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 {
 	/*this is called every time the styler detects a line that needs style, so we style that range.
 	This will save a lot of performance since we only style text when needed instead of parsing the whole file every time.*/
-	int line_start = CCodeEditor::LineFromPosition(CCodeEditor::GetEndStyled());
-	int line_end = CCodeEditor::GetFirstVisibleLine() + CCodeEditor::LinesOnScreen();
+	int line_start = ibCodeEditor::LineFromPosition(ibCodeEditor::GetEndStyled());
+	int line_end = ibCodeEditor::GetFirstVisibleLine() + ibCodeEditor::LinesOnScreen();
 
-	if (line_end > CCodeEditor::GetLineCount()) {
-		line_end = CCodeEditor::GetLineCount() - 1;
+	if (line_end > ibCodeEditor::GetLineCount()) {
+		line_end = ibCodeEditor::GetLineCount() - 1;
 	}
 
 	/*fold level: May need to include the two lines in front because of the fold level these lines have- the line above
@@ -590,9 +590,9 @@ void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 	}
 
 	//if it is so small that all lines are visible, style the whole document
-	if (CCodeEditor::GetLineCount() == CCodeEditor::LinesOnScreen()) {
+	if (ibCodeEditor::GetLineCount() == ibCodeEditor::LinesOnScreen()) {
 		line_start = 0;
-		line_end = CCodeEditor::GetLineCount() - 1;
+		line_end = ibCodeEditor::GetLineCount() - 1;
 	}
 
 	if (line_end < line_start) {
@@ -601,37 +601,37 @@ void CCodeEditor::OnStyleNeeded(wxStyledTextEvent& event)
 	}
 
 	//style the line following the style area too (if present) in case fold level decreases in that one
-	if (line_end < CCodeEditor::GetLineCount() - 1) {
+	if (line_end < ibCodeEditor::GetLineCount() - 1) {
 		line_end++;
 	}
 
 	//get exact start positions
 	HighlightSyntaxAndCalculateFoldLevel(
-		CCodeEditor::PositionFromLine(line_start),
-		CCodeEditor::GetLineEndPosition(line_end)
+		ibCodeEditor::PositionFromLine(line_start),
+		ibCodeEditor::GetLineEndPosition(line_end)
 	);
 
 	event.Skip();
 }
 
-void CCodeEditor::OnMarginClick(wxStyledTextEvent& event)
+void ibCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 {
 	const int line_from_pos = LineFromPosition(event.GetPosition());
 
 	switch (event.GetMargin())
 	{
 	case DEF_BREAKPOINT_ID: {
-		const int dwFlags = CCodeEditor::MarkerGet(line_from_pos);
+		const int dwFlags = ibCodeEditor::MarkerGet(line_from_pos);
 		if (IsEditable()) {
 			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
-			if ((dwFlags & (1 << CCodeEditor::Breakpoint))) {
+			if ((dwFlags & (1 << ibCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, CCodeEditor::Breakpoint);
+					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
 				}
 			}
 			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, CCodeEditor::Breakpoint);
+				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
 			}
 		}
 		break;
@@ -644,7 +644,7 @@ void CCodeEditor::OnMarginClick(wxStyledTextEvent& event)
 	event.Skip();
 }
 
-void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
+void ibCodeEditor::OnTextChange(wxStyledTextEvent& event)
 {
 	const int modFlags = event.GetModificationType();
 
@@ -654,7 +654,7 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 
 	if (m_bInitialized) {
 
-		IValueMetaObjectModule* moduleObject = m_document->ConvertMetaObjectToType<IValueMetaObjectModule>();
+		ibValueMetaObjectModuleBase* moduleObject = m_document->ConvertMetaObjectToType<ibValueMetaObjectModuleBase>();
 
 		if (moduleObject != nullptr) {
 
@@ -670,10 +670,10 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 						moduleObject->GetDocPath(), line, event.m_linesAdded);
 
 					if (m_lineBreakpoint != wxNOT_FOUND) {
-						MarkerDeleteAll(CCodeEditor::BreakLine);
+						MarkerDeleteAll(ibCodeEditor::BreakLine);
 						if (line < m_lineBreakpoint)
 							m_lineBreakpoint += event.m_linesAdded;
-						MarkerAdd(m_lineBreakpoint, CCodeEditor::BreakLine);
+						MarkerAdd(m_lineBreakpoint, ibCodeEditor::BreakLine);
 					}
 
 					RefreshBreakpoint();
@@ -708,14 +708,14 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 				{
 				}
 
-				IMetaData* metaData = moduleObject->GetMetaData();
+				ibMetaData* metaData = moduleObject->GetMetaData();
 				wxASSERT(metaData);
 
-				IValueModuleManager* moduleManager = metaData->GetModuleManager();
+				ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 				wxASSERT(moduleManager);
-				IModuleDataObject* pRefData = nullptr;
+				ibModuleDataObject* pRefData = nullptr;
 				if (moduleManager->FindCompileModule(m_document->GetMetaObject(), pRefData)) {
-					CCompileCode* compileModule = pRefData->GetCompileModule();
+					ibCompileCode* compileModule = pRefData->GetCompileModule();
 					wxASSERT(compileModule);
 					if (!compileModule->m_changedCode) compileModule->m_changedCode = true;
 				}
@@ -729,7 +729,7 @@ void CCodeEditor::OnTextChange(wxStyledTextEvent& event)
 	}
 }
 
-void CCodeEditor::OnKeyDown(wxKeyEvent& event)
+void ibCodeEditor::OnKeyDown(wxKeyEvent& event)
 {
 	if (!IsEditable()) {
 		event.Skip(); return;
@@ -811,13 +811,13 @@ void CCodeEditor::OnKeyDown(wxKeyEvent& event)
 		if (IsEditable()) {
 			//Update the list of breakpoints
 			const wxString& strModuleName = m_document->GetFilename();
-			if ((CCodeEditor::MarkerGet(line_from_pos) & (1 << CCodeEditor::Breakpoint))) {
+			if ((ibCodeEditor::MarkerGet(line_from_pos) & (1 << ibCodeEditor::Breakpoint))) {
 				if (debugClient->RemoveBreakpoint(strModuleName, line_from_pos)) {
-					MarkerDelete(line_from_pos, CCodeEditor::Breakpoint);
+					MarkerDelete(line_from_pos, ibCodeEditor::Breakpoint);
 				}
 			}
 			else if (debugClient->ToggleBreakpoint(strModuleName, line_from_pos)) {
-				MarkerAdd(line_from_pos, CCodeEditor::Breakpoint);
+				MarkerAdd(line_from_pos, ibCodeEditor::Breakpoint);
 			}
 		}
 	}

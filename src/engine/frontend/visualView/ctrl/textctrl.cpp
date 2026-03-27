@@ -1,7 +1,7 @@
 ﻿#include "widgets.h"
 #include "frontend/win/ctrls/controlTextEditor.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTextCtrl, ibValueWindow)
 
 //****************************************************************************
 
@@ -9,27 +9,27 @@ wxIMPLEMENT_DYNAMIC_CLASS(CValueTextCtrl, IValueWindow)
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
+bool ibValueTextCtrl::GetChoiceForm(ibPropertyList* property)
 {
-	const IMetaData* metaData = GetMetaData();
+	const ibMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
-		IValueMetaObjectRecordDataRef* metaObject = nullptr;
+		ibValueMetaObjectRecordDataRef* metaObject = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
-			const IValueMetaObjectGenericData* metaObjectValue =
+			const ibValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 			if (metaObjectValue != nullptr) {
-				const IValueMetaObjectAttribute* attribute = wxDynamicCast(metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), IValueMetaObjectAttribute);
+				const ibValueMetaObjectAttributeBase* attribute = wxDynamicCast(metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource()), ibValueMetaObjectAttributeBase);
 				wxASSERT(attribute);
-				const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
+				const ibCtorMetaValueType* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 				if (so != nullptr) {
-					metaObject = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
+					metaObject = wxDynamicCast(so->GetMetaObject(), ibValueMetaObjectRecordDataRef);
 				}
 			}
 		}
 		else {
-			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
+			const ibCtorMetaValueType* so = metaData->GetTypeCtor(ibTypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
-				metaObject = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
+				metaObject = wxDynamicCast(so->GetMetaObject(), ibValueMetaObjectRecordDataRef);
 			}
 		}
 
@@ -48,7 +48,7 @@ bool CValueTextCtrl::GetChoiceForm(CPropertyList* property)
 	return true;
 }
 
-ISourceObject* CValueTextCtrl::GetSourceObject() const
+ibSourceObject* ibValueTextCtrl::GetSourceObject() const
 {
 	return m_formOwner ? m_formOwner->GetSourceObject()
 		: nullptr;
@@ -62,27 +62,27 @@ enum prop {
 	eControlValue,
 };
 
-CValueTextCtrl::CValueTextCtrl() :
-	IValueWindow(), ITypeControlFactory(), m_textModified(false)
+ibValueTextCtrl::ibValueTextCtrl() :
+	ibValueWindow(), ibTypeControlFactory(), m_textModified(false)
 {
 	//set default params
 	m_propertyBG->SetValue(wxColour(255, 255, 255));
 }
 
-IMetaData* CValueTextCtrl::GetMetaData() const
+ibMetaData* ibValueTextCtrl::GetMetaData() const
 {
 	return m_formOwner != nullptr ?
 		m_formOwner->GetMetaData() : nullptr;
 }
 
-void CValueTextCtrl::PrepareNames() const
+void ibValueTextCtrl::PrepareNames() const
 {
-	IValueFrame::PrepareNames();
+	ibValueFrame::PrepareNames();
 
 	m_methodHelper->AppendProp(wxT("Value"), eControlValue, eControl);
 }
 
-bool CValueTextCtrl::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueTextCtrl::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum); bool refreshColumn = false;
 	if (lPropAlias == eControl) {
@@ -92,10 +92,10 @@ bool CValueTextCtrl::SetPropVal(const long lPropNum, const CValue& varPropVal)
 		}
 	}
 
-	return IValueFrame::SetPropVal(lPropNum, varPropVal);
+	return ibValueFrame::SetPropVal(lPropNum, varPropVal);
 }
 
-bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueTextCtrl::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	const long lPropAlias = m_methodHelper->GetPropAlias(lPropNum);
 	if (lPropAlias == eControl) {
@@ -104,56 +104,56 @@ bool CValueTextCtrl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 			return GetControlValue(pvarPropVal);
 		}
 	}
-	return IValueFrame::GetPropVal(lPropNum, pvarPropVal);
+	return ibValueFrame::GetPropVal(lPropNum, pvarPropVal);
 }
 
-wxString CValueTextCtrl::GetControlTitle() const
+wxString ibValueTextCtrl::GetControlTitle() const
 {
 	if (!m_propertyTitle->IsEmptyProperty()) {
 		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
-		const IValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		const ibValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}
 	return wxEmptyString;
 }
 
-wxObject* CValueTextCtrl::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueTextCtrl::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	wxControlTextEditor* textEditor = new wxControlNavigationTextEditor(wxparent, wxID_ANY,
+	ibControlTextEditor* textEditor = new ibControlNavigationTextEditor(wxparent, wxID_ANY,
 		wxEmptyString,
 		wxDefaultPosition,
 		wxDefaultSize);
 
 	if (!m_propertySource->IsEmptyProperty()) {
-		ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
+		ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
 		if (srcObject != nullptr) {
 			srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 		}
 	}
 	else {
-		m_selValue = ITypeControlFactory::AdjustValue(m_selValue);
+		m_selValue = ibTypeControlFactory::AdjustValue(m_selValue);
 	}
 
 	return textEditor;
 }
 
-void CValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool firstСreated)
+void ibValueTextCtrl::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool firstСreated)
 {
 }
 
 #include "backend/appData.h"
 
-void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueTextCtrl::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(wxobject);
+	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
 
 		if (!m_propertySource->IsEmptyProperty()) {
-			ISourceDataObject* srcObject = m_formOwner->GetSourceObject();
+			ibSourceDataObject* srcObject = m_formOwner->GetSourceObject();
 			if (srcObject != nullptr) {
 				srcObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), m_selValue);
 			}
@@ -175,15 +175,15 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 			textEditor->ShowOpenButton(m_propertyOpenButton->GetValueAsBoolean());
 			textEditor->ShowClearButton(m_propertyClearButton->GetValueAsBoolean());
 
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTextCtrl::OnSelectButtonPressed, this);
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTextCtrl::OnOpenButtonPressed, this);
-			textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTextCtrl::OnClearButtonPressed, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueTextCtrl::OnSelectButtonPressed, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_OPEN, &ibValueTextCtrl::OnOpenButtonPressed, this);
+			textEditor->Bind(wxEVT_CONTROL_BUTTON_CLEAR, &ibValueTextCtrl::OnClearButtonPressed, this);
 
-			textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
-			textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
-			textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_ENTER, &ibValueTextCtrl::OnTextEnter, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_INPUT, &ibValueTextCtrl::OnTextUpdated, this);
+			textEditor->Bind(wxEVT_CONTROL_TEXT_CLEAR, &ibValueTextCtrl::OnTextUpdated, this);
 
-			textEditor->Bind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
+			textEditor->Bind(wxEVT_KILL_FOCUS, &ibValueTextCtrl::OnKillFocus, this);
 		}
 		else {
 			textEditor->ShowSelectButton(m_propertySelectButton->GetValueAsBoolean());
@@ -195,22 +195,22 @@ void CValueTextCtrl::Update(wxObject* wxobject, IVisualHost* visualHost)
 	UpdateWindow(textEditor);
 }
 
-void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
+void ibValueTextCtrl::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(wxobject);
+	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(wxobject);
 
 	if (textEditor != nullptr) {
 		if (!appData->DesignerMode()) {
 
-			textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &CValueTextCtrl::OnSelectButtonPressed, this);
-			textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &CValueTextCtrl::OnOpenButtonPressed, this);
-			textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &CValueTextCtrl::OnClearButtonPressed, this);
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_SELECT, &ibValueTextCtrl::OnSelectButtonPressed, this);
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_OPEN, &ibValueTextCtrl::OnOpenButtonPressed, this);
+			textEditor->Unbind(wxEVT_CONTROL_BUTTON_CLEAR, &ibValueTextCtrl::OnClearButtonPressed, this);
 
-			textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &CValueTextCtrl::OnTextEnter, this);
-			textEditor->Unbind(wxEVT_CONTROL_TEXT_INPUT, &CValueTextCtrl::OnTextUpdated, this);
-			textEditor->Unbind(wxEVT_CONTROL_TEXT_CLEAR, &CValueTextCtrl::OnTextUpdated, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_ENTER, &ibValueTextCtrl::OnTextEnter, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_INPUT, &ibValueTextCtrl::OnTextUpdated, this);
+			textEditor->Unbind(wxEVT_CONTROL_TEXT_CLEAR, &ibValueTextCtrl::OnTextUpdated, this);
 
-			textEditor->Unbind(wxEVT_KILL_FOCUS, &CValueTextCtrl::OnKillFocus, this);
+			textEditor->Unbind(wxEVT_KILL_FOCUS, &ibValueTextCtrl::OnKillFocus, this);
 
 		}
 	}
@@ -220,33 +220,33 @@ void CValueTextCtrl::Cleanup(wxObject* wxobject, IVisualHost* visualHost)
 //*							 Control value	                        *
 //*******************************************************************
 
-bool CValueTextCtrl::GetControlValue(CValue& pvarControlVal) const
+bool ibValueTextCtrl::GetControlValue(ibValue& pvarControlVal) const
 {
-	const ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
+	const ibSourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 	if (!m_propertySource->IsEmptyProperty() && sourceObject != nullptr) {
 		return sourceObject->GetValueByMetaID(m_propertySource->GetValueAsSource(), pvarControlVal);
 	}
 
-	pvarControlVal = ITypeControlFactory::AdjustValue(m_selValue);
+	pvarControlVal = ibTypeControlFactory::AdjustValue(m_selValue);
 	return true;
 }
 
-bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
+bool ibValueTextCtrl::SetControlValue(const ibValue& varControlVal)
 {
-	ISourceDataObject* sourceObject = m_formOwner->GetSourceObject();
+	ibSourceDataObject* sourceObject = m_formOwner->GetSourceObject();
 	if (!m_propertySource->IsEmptyProperty() && sourceObject != nullptr) {
-		const IValueMetaObjectAttribute* metaObject = m_propertySource->GetSourceAttributeObject();
+		const ibValueMetaObjectAttributeBase* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		sourceObject->SetValueByMetaID(m_propertySource->GetValueAsSource(), varControlVal);
 		m_selValue = metaObject->AdjustValue(varControlVal);
 	}
 	else {
-		m_selValue = ITypeControlFactory::AdjustValue(varControlVal);
+		m_selValue = ibTypeControlFactory::AdjustValue(varControlVal);
 	}
 
 	m_formOwner->RefreshForm();
 
-	wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(GetWxObject());
+	ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(GetWxObject());
 	if (textEditor != nullptr) {
 
 		textEditor->SetValue(m_selValue.GetString());
@@ -263,7 +263,7 @@ bool CValueTextCtrl::SetControlValue(const CValue& varControlVal)
 //*                            Data		                            *
 //*******************************************************************
 
-bool CValueTextCtrl::LoadData(CMemoryReader& reader)
+bool ibValueTextCtrl::LoadData(ibReaderMemory& reader)
 {
 	wxString caption; reader.r_stringZ(caption);
 	m_propertyTitle->SetValue(caption);
@@ -289,10 +289,10 @@ bool CValueTextCtrl::LoadData(CMemoryReader& reader)
 	m_eventOpening->LoadData(reader);
 	m_eventChoiceProcessing->LoadData(reader);
 
-	return IValueWindow::LoadData(reader);
+	return ibValueWindow::LoadData(reader);
 }
 
-bool CValueTextCtrl::SaveData(CMemoryWriter& writer)
+bool ibValueTextCtrl::SaveData(ibWriterMemory& writer)
 {
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 
@@ -317,11 +317,11 @@ bool CValueTextCtrl::SaveData(CMemoryWriter& writer)
 	m_eventOpening->SaveData(writer);
 	m_eventChoiceProcessing->SaveData(writer);
 
-	return IValueWindow::SaveData(writer);
+	return ibValueWindow::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-CONTROL_TYPE_REGISTER(CValueTextCtrl, "Textctrl", "Widget", string_to_clsid("CT_TXTC"));
+CONTROL_TYPE_REGISTER(ibValueTextCtrl, "Textctrl", "Widget", string_to_clsid("CT_TXTC"));

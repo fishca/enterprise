@@ -14,7 +14,7 @@ class BACKEND_API wxNumberProperty : public wxNumericProperty {
 public:
 	wxNumberProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
-		const number_t& value = 0.0);
+		const ibNumber& value = 0.0);
 	virtual ~wxNumberProperty();
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const wxOVERRIDE;
@@ -36,7 +36,7 @@ protected:
 	// Common validation code to be called in ValidateValue() implementations.
 	// Note that 'value' is reference on purpose, so we can write
 	// back to it when mode is wxPG_PROPERTY_VALIDATION_SATURATE or wxPG_PROPERTY_VALIDATION_WRAP.
-	bool DoNumericValidation(number_t& value, wxPGValidationInfo* pValidationInfo, int mode) const
+	bool DoNumericValidation(ibNumber& value, wxPGValidationInfo* pValidationInfo, int mode) const
 	{
 		if (value.IsNan()) {
 			if (value < 0) {

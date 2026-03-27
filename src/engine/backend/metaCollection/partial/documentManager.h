@@ -3,26 +3,26 @@
 
 #include "document.h"
 
-class CValueManagerDataObjectDocument :
-	public IValueManagerDataObject {
+class ibValueManagerDataObjectDocument :
+	public ibValueManagerDataObject {
 public:
 
-	CValueReferenceDataObject* FindByNumber(const CValue& vCode, const CValue& vPeriod);
-	CValueReferenceDataObject* EmptyRef();
+	ibValueReferenceDataObject* FindByNumber(const ibValue& vCode, const ibValue& vPeriod);
+	ibValueReferenceDataObject* EmptyRef();
 
-	CValueManagerDataObjectDocument(CValueMetaObjectDocument* metaObject = nullptr) : m_metaObject(metaObject) {}
-	virtual ~CValueManagerDataObjectDocument() {}
+	ibValueManagerDataObjectDocument(ibValueMetaObjectDocument* metaObject = nullptr) : m_metaObject(metaObject) {}
+	virtual ~ibValueManagerDataObjectDocument() {}
 
-	virtual CValueMetaObjectCommonModule* GetModuleManager() const;
-	virtual CValueMetaObjectDocument* GetMetaObject() const { return m_metaObject; }
+	virtual ibValueMetaObjectCommonModule* GetModuleManager() const;
+	virtual ibValueMetaObjectDocument* GetMetaObject() const { return m_metaObject; }
 
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);//method call
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);//method call
 
 protected:
-	CValueMetaObjectDocument* m_metaObject;
+	ibValueMetaObjectDocument* m_metaObject;
 private:
-	wxDECLARE_DYNAMIC_CLASS(CValueManagerDataObjectDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibValueManagerDataObjectDocument);
 };
 
 #endif 

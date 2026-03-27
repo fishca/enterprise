@@ -10,13 +10,13 @@
 #include <wx/sstream.h>
 #include <wx/xml/xml.h>
 
-wxBEGIN_EVENT_TABLE(CWatchCtrl, wxTreeListExtCtrl)
-EVT_SIZE(CWatchCtrl::OnSize)
-EVT_LIST_COL_END_DRAG(wxID_ANY, CWatchCtrl::OnColumnEndDrag)
+wxBEGIN_EVENT_TABLE(ibWatchCtrl, ibTreeListCtrl)
+EVT_SIZE(ibWatchCtrl::OnSize)
+EVT_LIST_COL_END_DRAG(wxID_ANY, ibWatchCtrl::OnColumnEndDrag)
 wxEND_EVENT_TABLE()
 
-CWatchCtrl::CWatchCtrl(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString& name)
-	: wxTreeListExtCtrl(parent, id, pos, size, style, validator, name)
+ibWatchCtrl::ibWatchCtrl(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxValidator &validator, const wxString& name)
+	: ibTreeListCtrl(parent, id, pos, size, style, validator, name)
 {
 	AddColumn(_("Name"), 0, wxALIGN_LEFT);
 	SetColumnEditable(0, true);
@@ -32,11 +32,11 @@ CWatchCtrl::CWatchCtrl(wxWindow *parent, wxWindowID id, const wxPoint& pos, cons
 	UpdateColumnSizes();
 }
 
-CWatchCtrl::~CWatchCtrl()
+ibWatchCtrl::~ibWatchCtrl()
 {
 }
 
-void CWatchCtrl::SetValueFont(const wxFont& font)
+void ibWatchCtrl::SetValueFont(const wxFont& font)
 {
 	m_valueFont = font;
 
@@ -44,7 +44,7 @@ void CWatchCtrl::SetValueFont(const wxFont& font)
 	UpdateFont(GetRootItem());
 }
 
-void CWatchCtrl::UpdateFont(const wxTreeItemId &item)
+void ibWatchCtrl::UpdateFont(const wxTreeItemId &item)
 {
 	if (item.IsOk())
 	{
@@ -62,7 +62,7 @@ void CWatchCtrl::UpdateFont(const wxTreeItemId &item)
 	}
 }
 
-void CWatchCtrl::UpdateColumnSizes()
+void ibWatchCtrl::UpdateColumnSizes()
 {
 	// We subtract two off of the size to avoid generating scroll bars on the window.
 	int totalSize = GetClientSize().x - 2;
@@ -76,7 +76,7 @@ void CWatchCtrl::UpdateColumnSizes()
 	}
 }
 
-void CWatchCtrl::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
+void ibWatchCtrl::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) const
 {
 	int fixedSize = 0;
 
@@ -107,7 +107,7 @@ void CWatchCtrl::GetColumnSizes(int totalSize, int columnSize[s_numColumns]) con
 	columnSize[s_numColumns - 1] = totalSize;
 }
 
-void CWatchCtrl::OnColumnEndDrag(wxListEvent& event)
+void ibWatchCtrl::OnColumnEndDrag(wxListEvent& event)
 {
 	// Resize all of the columns to eliminate the scroll bar.
 	int totalSize = GetClientSize().x;
@@ -150,7 +150,7 @@ void CWatchCtrl::OnColumnEndDrag(wxListEvent& event)
 	UpdateColumnSizes();
 }
 
-void CWatchCtrl::OnSize(wxSizeEvent& event)
+void ibWatchCtrl::OnSize(wxSizeEvent& event)
 {
 	UpdateColumnSizes();
 	event.Skip();

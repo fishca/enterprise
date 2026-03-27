@@ -9,7 +9,7 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGHyperLinkProperty, wxPGProperty, HyperLink)
 
 #include "backend/metaCollection/metaObject.h"
 
-wxPGHyperLinkProperty::wxPGHyperLinkProperty(IPropertyObject* ownerProperty, const wxString& label,
+wxPGHyperLinkProperty::wxPGHyperLinkProperty(ibPropertyObject* ownerProperty, const wxString& label,
 	const wxString& name, const wxVariant& value) : wxPGProperty(label, name), m_ownerProperty(ownerProperty) {
 
 	wxPGProperty::SetFlagRecursively(wxPGPropertyFlags::wxPG_PROP_READONLY, true);
@@ -40,13 +40,13 @@ bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
 void wxPGHyperLinkProperty::OnSetValue()
 {
 	if (wxT("hyperLink_clicked") == m_value.GetName() && m_value.GetBool()) {
-		IValueMetaObject* metaObject = dynamic_cast<IValueMetaObject*>(m_ownerProperty);
+		ibValueMetaObject* metaObject = dynamic_cast<ibValueMetaObject*>(m_ownerProperty);
 		if (metaObject != nullptr) {
 			wxTheApp->CallAfter(
 				[metaObject]() {
-					IMetaData* metaData = metaObject->GetMetaData();
+					ibMetaData* metaData = metaObject->GetMetaData();
 					if (metaData != nullptr) {
-						IBackendMetadataTree* metaTree = metaData->GetMetaTree();
+						ibBackendMetadataTree* metaTree = metaData->GetMetaTree();
 						if (metaTree != nullptr) metaTree->OpenFormMDI(metaObject);
 					}
 				}

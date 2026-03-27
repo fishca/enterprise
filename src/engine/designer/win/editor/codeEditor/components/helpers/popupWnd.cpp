@@ -326,7 +326,7 @@ void COESPopupWindow::OnFocus(wxFocusEvent& event)
 COESListBoxWin::COESListBoxWin(wxWindow* parent, CListBoxVisualData *visualData, int h)
 	: COESPopupWindow(parent), m_visualData(visualData)
 {
-	m_listBox = new COESListBox(this, m_visualData, h);
+	m_listBox = new ibListBox(this, m_visualData, h);
 
 	// Use the background of this window to form a valueForm around the listbox
 	// except on macos where the native Scintilla popup has no valueForm.

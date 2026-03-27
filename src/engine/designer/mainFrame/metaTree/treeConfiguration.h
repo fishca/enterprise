@@ -9,16 +9,16 @@
 #include <wx/srchctrl.h>
 #include <wx/treectrl.h>
 
-class IMetaDataTree : public wxPanel,
-	public IBackendMetadataTree {
-	wxDECLARE_ABSTRACT_CLASS(IMetaDataTree);
+class ibMetaDataTree : public wxPanel,
+	public ibBackendMetadataTree {
+	wxDECLARE_ABSTRACT_CLASS(ibMetaDataTree);
 public:
 
-	IMetaDataTree() : wxPanel(), m_docParent(nullptr), m_searchTree(nullptr), m_bReadOnly(false) {}
-	IMetaDataTree(wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(nullptr), m_bReadOnly(false) {}
-	IMetaDataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_searchTree(nullptr), m_bReadOnly(false) {}
+	ibMetaDataTree() : wxPanel(), m_docParent(nullptr), m_searchTree(nullptr), m_bReadOnly(false) {}
+	ibMetaDataTree(wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(nullptr), m_bReadOnly(false) {}
+	ibMetaDataTree(ibMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY) : wxPanel(parent, id), m_docParent(docParent), m_searchTree(nullptr), m_bReadOnly(false) {}
 
-	virtual form_identifier_t SelectFormType(CValueMetaObjectForm* metaObject) const;
+	virtual ibFormID SelectFormType(ibValueMetaObjectForm* metaObject) const;
 	virtual void Activate();
 
 	virtual void SetReadOnly(bool readOnly = true) { m_bReadOnly = readOnly; }
@@ -26,49 +26,49 @@ public:
 
 	virtual void Modify(bool modify);
 
-	virtual bool OpenFormMDI(IValueMetaObject* metaObject);
-	virtual bool OpenFormMDI(IValueMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
-	virtual bool CloseFormMDI(IValueMetaObject* metaObject);
+	virtual bool OpenFormMDI(ibValueMetaObject* metaObject);
+	virtual bool OpenFormMDI(ibValueMetaObject* metaObject, ibBackendMetaDocument*& foundedDoc);
+	virtual bool CloseFormMDI(ibValueMetaObject* metaObject);
 
 #pragma region __predefined_values_h__
-	virtual void EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* obj) {}
+	virtual void EditPredefinedValues(ibValueMetaObjectRecordDataHierarchyMutableRef* obj) {}
 #pragma endregion
 
-	virtual CMetaDocument* GetDocument(IValueMetaObject* metaObject) const;
+	virtual ibMetaDocument* GetDocument(ibValueMetaObject* metaObject) const;
 
-	virtual void CloseMetaObject(IValueMetaObject* metaObject) {
-		CMetaDocument* doc = GetDocument(metaObject);
+	virtual void CloseMetaObject(ibValueMetaObject* metaObject) {
+		ibMetaDocument* doc = GetDocument(metaObject);
 		if (doc != nullptr) {
 			doc->DeleteAllViews();
 		}
 	}
 
-	virtual IMetaData* GetMetaData() const = 0;
+	virtual ibMetaData* GetMetaData() const = 0;
 
 protected:
 
 	class wxTreeItemClsidData : public wxTreeItemData,
-		public CTreeDataClassIdentifier {
+		public ibTreeDataClassIdentifier {
 	public:
-		wxTreeItemClsidData(const class_identifier_t& clsid) : CTreeDataClassIdentifier(clsid) {}
+		wxTreeItemClsidData(const ibClassID& clsid) : ibTreeDataClassIdentifier(clsid) {}
 	};
 
-	class wxTreeItemMetaData : public wxTreeItemData, public CTreeDataMetaItem {
+	class wxTreeItemMetaData : public wxTreeItemData, public ibTreeDataMetaItem {
 	public:
-		wxTreeItemMetaData(IValueMetaObject* metaObject) : CTreeDataMetaItem(metaObject) {}
+		wxTreeItemMetaData(ibValueMetaObject* metaObject) : ibTreeDataMetaItem(metaObject) {}
 	};
 
 	class wxTreeItemClsidMetaData : public wxTreeItemData,
-		public CTreeDataMetaItem, public CTreeDataClassIdentifier {
+		public ibTreeDataMetaItem, public ibTreeDataClassIdentifier {
 	public:
-		wxTreeItemClsidMetaData(const class_identifier_t& clsid, IValueMetaObject* metaObject) :
-			CTreeDataClassIdentifier(clsid), CTreeDataMetaItem(metaObject)
+		wxTreeItemClsidMetaData(const ibClassID& clsid, ibValueMetaObject* metaObject) :
+			ibTreeDataClassIdentifier(clsid), ibTreeDataMetaItem(metaObject)
 		{
 		}
 	};
 
 	void CreateToolBar(wxWindow* parent);
-	void EditModule(const CGuid& moduleName, int lineNumber, bool setRunLine = true);
+	void EditModule(const ibGuid& moduleName, int lineNumber, bool setRunLine = true);
 
 	enum
 	{
@@ -87,13 +87,13 @@ protected:
 
 	wxSearchCtrl* m_searchTree;
 	wxAuiToolBar* m_metaTreeToolbar;
-	CMetaDocument* m_docParent;
+	ibMetaDocument* m_docParent;
 
 	bool			m_bReadOnly;
 };
 
-class CMetadataTree : public IMetaDataTree {
-	wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
+class ibMetadataTree : public ibMetaDataTree {
+	wxDECLARE_DYNAMIC_CLASS(ibMetadataTree);
 private:
 
 	wxTreeItemId m_treeMETADATA;
@@ -140,7 +140,7 @@ private:
 		while (parentItem != nullptr) {
 			wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 			if (item != nullptr) {
-				CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
+				ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
 				if (item_clsid != nullptr) return parentItem;
 			}
 			parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -148,33 +148,33 @@ private:
 		return wxTreeItemId(nullptr);
 	}
 
-	class_identifier_t GetClassIdentifier() const {
+	ibClassID GetClassIdentifier() const {
 		return GetClassIdentifier(GetSelectionIdentifier());
 	}
 
-	class_identifier_t GetClassIdentifier(const wxTreeItemId& id) const {
+	ibClassID GetClassIdentifier(const wxTreeItemId& id) const {
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(id);
 		if (item != nullptr) {
-			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
+			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) return item_clsid->m_clsid;
 		}
 		return 0;
 	}
 
-	IValueMetaObject* GetMetaIdentifier() const {
+	ibValueMetaObject* GetMetaIdentifier() const {
 		return GetMetaIdentifier(GetSelectionIdentifier());
 	}
 
-	IValueMetaObject* GetMetaIdentifier(const wxTreeItemId& id) const {
+	ibValueMetaObject* GetMetaIdentifier(const wxTreeItemId& id) const {
 		wxTreeItemId parentItem = id;
 		wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 		if (item != nullptr) {
-			CTreeDataClassIdentifier* item_clsid = dynamic_cast<CTreeDataClassIdentifier*>(item);
+			ibTreeDataClassIdentifier* item_clsid = dynamic_cast<ibTreeDataClassIdentifier*>(item);
 			if (item_clsid != nullptr) {
 				while (parentItem != nullptr) {
 					wxTreeItemData* item = m_metaTreeCtrl->GetItemData(parentItem);
 					if (item != nullptr) {
-						IValueMetaObject* parent = GetMetaObject(parentItem);
+						ibValueMetaObject* parent = GetMetaObject(parentItem);
 						if (parent != nullptr) return parent;
 					}
 					parentItem = m_metaTreeCtrl->GetItemParent(parentItem);
@@ -186,32 +186,32 @@ private:
 
 private:
 
-	IMetaDataConfiguration* m_metaData;
+	ibMetaDataConfigurationBase* m_metaData;
 
-	class CMetaTreeCtrl : public wxTreeCtrl {
-		wxDECLARE_DYNAMIC_CLASS(CMetadataTree);
+	class ibMetaTreeCtrl : public wxTreeCtrl {
+		wxDECLARE_DYNAMIC_CLASS(ibMetadataTree);
 
-		class CMatadataTreeView : public CMetaView
+		class CMatadataTreeView : public ibMetaView
 		{
 		public:
 
-			CMatadataTreeView(CMetaTreeCtrl* tree) : m_ownerTree(tree) {}
+			CMatadataTreeView(ibMetaTreeCtrl* tree) : m_ownerTree(tree) {}
 			virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 
 		private:
-			CMetaTreeCtrl* m_ownerTree;
+			ibMetaTreeCtrl* m_ownerTree;
 		};
 
 	private:
-		CMetadataTree* m_ownerTree;
-		CMetaView* m_metaView;
+		ibMetadataTree* m_ownerTree;
+		ibMetaView* m_metaView;
 	private:
 		wxTreeItemId m_draggedItem;
 	public:
 
-		IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+		ibValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
 			if (!item.IsOk()) return nullptr;
-			CTreeDataMetaItem* data = dynamic_cast<CTreeDataMetaItem*>(GetItemData(item));
+			ibTreeDataMetaItem* data = dynamic_cast<ibTreeDataMetaItem*>(GetItemData(item));
 			if (data == nullptr) return nullptr;
 			return data->m_metaObject;
 		}
@@ -227,9 +227,9 @@ private:
 			wxTreeCtrl::Update();
 		}
 
-		CMetaTreeCtrl();
-		CMetaTreeCtrl(CMetadataTree* parent);
-		virtual ~CMetaTreeCtrl();
+		ibMetaTreeCtrl();
+		ibMetaTreeCtrl(ibMetadataTree* parent);
+		virtual ~ibMetaTreeCtrl();
 
 		// this function is called to compare 2 items and should return -1, 0
 		// or +1 if the first item is less than, equal to or greater than the
@@ -241,9 +241,9 @@ private:
 			wxTreeItemMetaData* data1 = dynamic_cast<wxTreeItemMetaData*>(GetItemData(item1));
 			wxTreeItemMetaData* data2 = dynamic_cast<wxTreeItemMetaData*>(GetItemData(item2));
 			if (data1 != nullptr && data2 != nullptr && ret > 0) {
-				IValueMetaObject* metaObject1 = data1->m_metaObject;
-				IValueMetaObject* metaObject2 = data2->m_metaObject;
-				IValueMetaObject* parent = metaObject1->GetParent();
+				ibValueMetaObject* metaObject1 = data1->m_metaObject;
+				ibValueMetaObject* metaObject2 = data2->m_metaObject;
+				ibValueMetaObject* parent = metaObject1->GetParent();
 				wxASSERT(parent);
 				return parent->ChangeChildPosition(metaObject2,
 					parent->GetChildPosition(metaObject1)
@@ -301,12 +301,12 @@ private:
 		wxDECLARE_EVENT_TABLE();
 	};
 
-	CMetaTreeCtrl* m_metaTreeCtrl;
+	ibMetaTreeCtrl* m_metaTreeCtrl;
 
 private:
 
-	wxTreeItemId AppendRootItem(const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
-		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+	wxTreeItemId AppendRootItem(const ibClassID& clsid, const wxString& name = wxEmptyString) const {
+		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -319,8 +319,8 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const class_identifier_t& clsid, const wxString& name = wxEmptyString) const {
-		const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+		const ibClassID& clsid, const wxString& name = wxEmptyString) const {
+		const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
 		wxASSERT(typeCtor);
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
@@ -333,7 +333,7 @@ private:
 	}
 
 	wxTreeItemId AppendGroupItem(const wxTreeItemId& parent,
-		const class_identifier_t& clsid, IValueMetaObject* metaObject) const {
+		const ibClassID& clsid, ibValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -345,7 +345,7 @@ private:
 	}
 
 	wxTreeItemId AppendItem(const wxTreeItemId& parent,
-		IValueMetaObject* metaObject) const {
+		ibValueMetaObject* metaObject) const {
 		wxImageList* imageList = m_metaTreeCtrl->GetImageList();
 		wxASSERT(imageList);
 		const int imageIndex = imageList->Add(metaObject->GetIcon());
@@ -358,10 +358,10 @@ private:
 
 	void ActivateItem(const wxTreeItemId& item);
 
-	IValueMetaObject* NewItem(const class_identifier_t& clsid, IValueMetaObject* parent, bool runObject = true);
-	IValueMetaObject* CreateItem(bool showValue = true);
+	ibValueMetaObject* NewItem(const ibClassID& clsid, ibValueMetaObject* parent, bool runObject = true);
+	ibValueMetaObject* CreateItem(bool showValue = true);
 
-	wxTreeItemId FillItem(IValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
+	wxTreeItemId FillItem(ibValueMetaObject* metaItem, const wxTreeItemId& item, bool select = true, bool scroll = true);
 
 	void EditItem();
 	void RemoveItem();
@@ -385,42 +385,42 @@ private:
 	void PrepareReplaceMenu(wxMenu* menu);
 	void PrepareContextMenu(wxMenu* menu, const wxTreeItemId& item);
 
-	void AddInterfaceItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddInterfaceItem(ibValueMetaObject* obj, const wxTreeItemId& item);
 
-	void AddCatalogItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddDocumentItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddEnumerationItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddDataProcessorItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddReportItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddInformationRegisterItem(IValueMetaObject* obj, const wxTreeItemId& item);
-	void AddAccumulationRegisterItem(IValueMetaObject* obj, const wxTreeItemId& item);
+	void AddCatalogItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddDocumentItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddEnumerationItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddDataProcessorItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddReportItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddInformationRegisterItem(ibValueMetaObject* obj, const wxTreeItemId& item);
+	void AddAccumulationRegisterItem(ibValueMetaObject* obj, const wxTreeItemId& item);
 
 	void FillData();
 
-	IValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
+	ibValueMetaObject* GetMetaObject(const wxTreeItemId& item) const {
 		return m_metaTreeCtrl->GetMetaObject(item);
 	}
 
-	void UpdateToolbar(IValueMetaObject* obj, const wxTreeItemId& item);
+	void UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& item);
 
 public:
 
-	bool RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName);
+	bool RenameMetaObject(ibValueMetaObject* metaObject, const wxString& newName);
 
 #pragma region __predefined_values_h__
-	virtual void EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* obj);
+	virtual void EditPredefinedValues(ibValueMetaObjectRecordDataHierarchyMutableRef* obj);
 #pragma endregion
 
-	virtual IMetaData* GetMetaData() const { return m_metaData; }
+	virtual ibMetaData* GetMetaData() const { return m_metaData; }
 
-	CMetadataTree();
-	CMetadataTree(wxWindow* parent, int id = wxID_ANY);
-	CMetadataTree(CMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY);
-	virtual ~CMetadataTree();
+	ibMetadataTree();
+	ibMetadataTree(wxWindow* parent, int id = wxID_ANY);
+	ibMetadataTree(ibMetaDocument* docParent, wxWindow* parent, int id = wxID_ANY);
+	virtual ~ibMetadataTree();
 
 	void InitTree();
 
-	bool Load(IMetaDataConfiguration* metadata = nullptr);
+	bool Load(ibMetaDataConfigurationBase* metadata = nullptr);
 	bool Save();
 
 	void Search(const wxString& strSearch);

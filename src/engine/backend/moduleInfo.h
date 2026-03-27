@@ -4,12 +4,12 @@
 #include "backend/compiler/compileModule.h"
 #include "backend/compiler/procUnit.h"
 
-class BACKEND_API IModuleDataObject {
+class BACKEND_API ibModuleDataObject {
 public:
 
 	//method call
 	bool ExecuteProc(const wxString& strMethodName,
-		CValue** paParams, const long lSizeArray)
+		ibValue** paParams, const long lSizeArray)
 	{
 		if (m_procUnit != nullptr)
 			return m_procUnit->CallAsProc(strMethodName, paParams, lSizeArray);
@@ -17,27 +17,27 @@ public:
 	}
 
 	bool ExecuteFunc(const wxString& strMethodName,
-		CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+		ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 	{
 		if (m_procUnit != nullptr)
 			return m_procUnit->CallAsFunc(strMethodName, pvarRetValue, paParams, lSizeArray);
 		return false;
 	}
 
-	IModuleDataObject();
-	IModuleDataObject(CCompileModule* compileCode);
-	virtual ~IModuleDataObject();
+	ibModuleDataObject();
+	ibModuleDataObject(ibCompileModule* compileCode);
+	virtual ~ibModuleDataObject();
 
-	const IValueMetaObjectModule* GetMetaObject() const {
+	const ibValueMetaObjectModuleBase* GetMetaObject() const {
 		return GetCompileModule() ? GetCompileModule()->GetModuleObject() : nullptr;
 	}
 
-	virtual CCompileModule* GetCompileModule() const { return m_compileModule; }
-	virtual CProcUnit* GetProcUnit() const { return m_procUnit; }
+	virtual ibCompileModule* GetCompileModule() const { return m_compileModule; }
+	virtual ibProcUnit* GetProcUnit() const { return m_procUnit; }
 
 protected:
-	CCompileModule* m_compileModule;
-	CProcUnit* m_procUnit;
+	ibCompileModule* m_compileModule;
+	ibProcUnit* m_procUnit;
 };
 
 #endif 

@@ -1,7 +1,7 @@
 #include "metaInterfaceObject.h"
 #include "backend/metaData.h"
 
-bool CValueMetaObjectInterface::PrepareContextMenu(wxMenu* defaultMenu)
+bool ibValueMetaObjectInterface::PrepareContextMenu(wxMenu* defaultMenu)
 {
 	wxMenuItem* menuItem = defaultMenu->Append(ID_METATREE_OPEN_INTERFACE, _("Open interface"));
 	menuItem->SetBitmap(GetIcon());
@@ -9,9 +9,9 @@ bool CValueMetaObjectInterface::PrepareContextMenu(wxMenu* defaultMenu)
 	return false;
 }
 
-void CValueMetaObjectInterface::ProcessCommand(unsigned int id)
+void ibValueMetaObjectInterface::ProcessCommand(unsigned int id)
 {
-	IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
+	ibBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_INTERFACE)

@@ -45,7 +45,7 @@ private:
 class BACKEND_API wxTranslateStringProperty : public wxLongStringProperty {
 
 public:
-	wxTranslateStringProperty(const class BACKEND_API IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxTranslateStringProperty(const class BACKEND_API ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxString& value = wxEmptyString) :
 		wxLongStringProperty(label, name, value), m_ownerProperty(property)
@@ -61,7 +61,7 @@ protected:
 	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
 private:
 
-	const class BACKEND_API IPropertyObject* m_ownerProperty = nullptr;
+	const class BACKEND_API ibPropertyObject* m_ownerProperty = nullptr;
 
 	WX_PG_DECLARE_PROPERTY_CLASS(wxTranslateStringProperty);
 };

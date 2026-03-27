@@ -10,24 +10,24 @@
 
 #include "backend/appData.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueTabularSectionDataObject, IValueTable);
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine, IValueTable::IValueModelReturnLine);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTabularSectionDataObject, IValueTabularSectionDataObject);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTabularSectionDataObjectRef, IValueTabularSectionDataObject);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueTabularSectionDataObjectBase, ibValueModelTable);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine, ibValueModelTable::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTabularSectionDataObject, ibValueTabularSectionDataObjectBase);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTabularSectionDataObjectRef, ibValueTabularSectionDataObjectBase);
 
 //////////////////////////////////////////////////////////////////////
-//               IValueTabularSectionDataObject                          //
+//               ibValueTabularSectionDataObjectBase                          //
 //////////////////////////////////////////////////////////////////////
 
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-wxDataViewExtItem IValueTabularSectionDataObject::FindRowValue(const CValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueTabularSectionDataObjectBase::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
-	IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnByName(colName);
+	ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			const wxDataViewExtItem& item = GetItem(row);
+			const ibDataViewItem& item = GetItem(row);
 			wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 			if (node != nullptr &&
 				varValue == node->GetTableValue(colInfo->GetColumnID())) {
@@ -35,66 +35,66 @@ wxDataViewExtItem IValueTabularSectionDataObject::FindRowValue(const CValue& var
 			}
 		}
 	}
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-wxDataViewExtItem IValueTabularSectionDataObject::FindRowValue(IValueModelReturnLine* retLine) const
+ibDataViewItem ibValueTabularSectionDataObjectBase::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-bool IValueTabularSectionDataObject::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValueTabularSectionDataObjectBase::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
 	long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
-		CBackendCoreException::Error(_("Array index out of bounds"));
+		ibBackendCoreException::Error(_("Array index out of bounds"));
 		return false;
 	}
 
-	pvarValue = CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, GetItem(index));
+	pvarValue = ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, GetItem(index));
 	return true;
 }
 
-class_identifier_t IValueTabularSectionDataObject::GetClassType() const
+ibClassID ibValueTabularSectionDataObjectBase::GetClassType() const
 {
-	const IMetaData* metaData = m_metaTable->GetMetaData();
+	const ibMetaData* metaData = m_metaTable->GetMetaData();
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
-		const IMetaValueTypeCtor* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
+		const ibCtorMetaValueType* clsFactory =
+			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassType();
 	}
 	return 0;
 }
 
-wxString IValueTabularSectionDataObject::GetClassName() const
+wxString ibValueTabularSectionDataObjectBase::GetClassName() const
 {
-	const IMetaData* metaData = m_metaTable->GetMetaData();
+	const ibMetaData* metaData = m_metaTable->GetMetaData();
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
-		const IMetaValueTypeCtor* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
+		const ibCtorMetaValueType* clsFactory =
+			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
 	}
 	return _("<deleted metaobject>");
 }
 
-wxString IValueTabularSectionDataObject::GetString() const
+wxString ibValueTabularSectionDataObjectBase::GetString() const
 {
 	if (m_metaTable->IsAllowed()) {
-		const IMetaData* metaData = m_metaTable->GetMetaData();
+		const ibMetaData* metaData = m_metaTable->GetMetaData();
 		wxASSERT(metaData);
-		const IMetaValueTypeCtor* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, eCtorMetaType::eCtorMetaType_TabularSection);
+		const ibCtorMetaValueType* clsFactory =
+			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
 	}
 	return _("<deleted metaobject>");
 }
 
-bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool ibValueTabularSectionDataObjectBase::SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal)
 {
 	if (m_readOnly || m_metaTable->IsNumberLine(id))
 		return false;
@@ -102,7 +102,7 @@ bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewExtItem& i
 	if (!appData->DesignerMode()) {
 		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
 		if (node != nullptr) {
-			const IValueMetaObjectAttribute* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
+			const ibValueMetaObjectAttributeBase* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
 			wxASSERT(attribute);
 			if (attribute == nullptr) return false;
 			return node->SetValue(
@@ -114,7 +114,7 @@ bool IValueTabularSectionDataObject::SetValueByMetaID(const wxDataViewExtItem& i
 	return false;
 }
 
-bool IValueTabularSectionDataObject::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool ibValueTabularSectionDataObjectBase::GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const
 {
 	if (m_metaTable->IsNumberLine(id)) {
 		pvarMetaVal = GetRow(item) + 1;
@@ -122,7 +122,7 @@ bool IValueTabularSectionDataObject::GetValueByMetaID(const wxDataViewExtItem& i
 	}
 
 	if (appData->DesignerMode()) {
-		const IValueMetaObjectAttribute* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
+		const ibValueMetaObjectAttributeBase* attribute = m_metaTable->FindAnyAttributeObjectByFilter(id);
 		wxASSERT(attribute);
 		pvarMetaVal = attribute->CreateValue();
 		return true;
@@ -135,7 +135,7 @@ bool IValueTabularSectionDataObject::GetValueByMetaID(const wxDataViewExtItem& i
 	return false;
 }
 
-bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueTabularSectionDataObjectBase::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	const long lMethodAlias = m_methodHelper->GetMethodAlias(lMethodNum);
 	if (lMethodAlias != eTabularSection)
@@ -145,10 +145,10 @@ bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& p
 	switch (lMethodData)
 	{
 	case enAddValue:
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueTabularSectionDataObjectReturnLine>(this, GetItem(AppendRow()));
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueTabularSectionDataObjectReturnLine>(this, GetItem(AppendRow()));
 		return true;
 	case enFind: {
-		const wxDataViewExtItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
+		const ibDataViewItem& item = FindRowValue(*paParams[0], paParams[1]->GetString());
 		if (item.IsOk())
 			pvarRetValue = GetRowAt(item);
 		return true;
@@ -157,17 +157,17 @@ bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& p
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case enDelete: {
-		CValueTabularSectionDataObjectReturnLine* retLine = nullptr;
+		ibValueTabularSectionDataObjectReturnLine* retLine = nullptr;
 		if (paParams[0]->ConvertToValue(retLine)) {
 			wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
 			if (node != nullptr)
-				IValueTable::Remove(node);
+				ibValueModelTable::Remove(node);
 		}
 		else {
-			const number_t& number = paParams[0]->GetNumber();
+			const ibNumber& number = paParams[0]->GetNumber();
 			wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(number.ToInt()));
 			if (node != nullptr)
-				IValueTable::Remove(node);
+				ibValueModelTable::Remove(node);
 		}
 		return true;
 	}
@@ -175,7 +175,7 @@ bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& p
 		Clear();
 		return true;
 	case enLoad:
-		IValueTabularSectionDataObject::LoadDataFromTable(paParams[0]->ConvertToType<IValueTable>());
+		ibValueTabularSectionDataObjectBase::LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTable>());
 		return true;
 	case enUnload:
 		pvarRetValue = SaveDataToTable();
@@ -188,72 +188,72 @@ bool IValueTabularSectionDataObject::CallAsFunc(const long lMethodNum, CValue& p
 	return false;
 }
 
-void IValueTabularSectionDataObject::RefreshTabularSection() {
+void ibValueTabularSectionDataObjectBase::RefreshTabularSection() {
 
-	if (!CBackendException::IsEvalMode()) {
+	if (!ibBackendException::IsEvalMode()) {
 
-		CValue filterValue;
-		for (long row = 0; row < IValueTable::GetRowCount(); row++) {
+		ibValue filterValue;
+		for (long row = 0; row < ibValueModelTable::GetRowCount(); row++) {
 
-			const wxDataViewExtItem& item = IValueTable::GetItem(row); bool success_compare = true;
+			const ibDataViewItem& item = ibValueModelTable::GetItem(row); bool success_compare = true;
 			for (auto filter : m_filterRow.m_filters) {
 
 				if (filter.m_filterUse && GetValueByMetaID(item, filter.m_filterModel, filterValue)) {
 
-					if (filter.m_filterComparison == eComparisonType_Equal)
+					if (filter.m_filterComparison == ibComparisonType_Equal)
 						success_compare = success_compare && filter.m_filterValue == filterValue;
-					else if (filter.m_filterComparison == eComparisonType_NotEqual)
+					else if (filter.m_filterComparison == ibComparisonType_NotEqual)
 						success_compare = success_compare && filter.m_filterValue != filterValue;
 
 					if (!success_compare) break;
 				}
 			}
 
-			IValueTable::Show(item, success_compare);
+			ibValueModelTable::Show(item, success_compare);
 		}
 	}
 }
 
 //////////////////////////////////////////////////////////////////////
-//               CValueTabularSectionDataObject                          //
+//               ibValueTabularSectionDataObject                          //
 //////////////////////////////////////////////////////////////////////
 
-CValueTabularSectionDataObject::CValueTabularSectionDataObject() {}
+ibValueTabularSectionDataObject::ibValueTabularSectionDataObject() {}
 
-CValueTabularSectionDataObject::CValueTabularSectionDataObject(IValueRecordDataObject* recordObject, CValueMetaObjectTableData* tableObject) :
-	IValueTabularSectionDataObject(recordObject, tableObject)
+ibValueTabularSectionDataObject::ibValueTabularSectionDataObject(ibValueRecordDataObject* recordObject, ibValueMetaObjectTableData* tableObject) :
+	ibValueTabularSectionDataObjectBase(recordObject, tableObject)
 {
 }
 
 //////////////////////////////////////////////////////////////////////
-//               CValueTabularSectionDataObjectRef                       //
+//               ibValueTabularSectionDataObjectRef                       //
 //////////////////////////////////////////////////////////////////////
 
-CValueTabularSectionDataObjectRef::CValueTabularSectionDataObjectRef() : m_readAfter(false) {}
+ibValueTabularSectionDataObjectRef::ibValueTabularSectionDataObjectRef() : m_readAfter(false) {}
 
-CValueTabularSectionDataObjectRef::CValueTabularSectionDataObjectRef(CValueReferenceDataObject* reference, CValueMetaObjectTableData* tableObject, bool readAfter) :
-	IValueTabularSectionDataObject(reference, tableObject, true), m_readAfter(readAfter)
+ibValueTabularSectionDataObjectRef::ibValueTabularSectionDataObjectRef(ibValueReferenceDataObject* reference, ibValueMetaObjectTableData* tableObject, bool readAfter) :
+	ibValueTabularSectionDataObjectBase(reference, tableObject, true), m_readAfter(readAfter)
 {
 }
 
-CValueTabularSectionDataObjectRef::CValueTabularSectionDataObjectRef(IValueRecordDataObjectRef* recordObject, CValueMetaObjectTableData* tableObject) :
-	IValueTabularSectionDataObject(recordObject, tableObject), m_readAfter(false)
+ibValueTabularSectionDataObjectRef::ibValueTabularSectionDataObjectRef(ibValueRecordDataObjectRef* recordObject, ibValueMetaObjectTableData* tableObject) :
+	ibValueTabularSectionDataObjectBase(recordObject, tableObject), m_readAfter(false)
 {
 }
 
-CValueTabularSectionDataObjectRef::CValueTabularSectionDataObjectRef(CValueSelectorRecordDataObject* selectorObject, CValueMetaObjectTableData* tableObject) :
-	IValueTabularSectionDataObject((IValueDataObject*)selectorObject, tableObject), m_readAfter(false)
+ibValueTabularSectionDataObjectRef::ibValueTabularSectionDataObjectRef(ibValueSelectorRecordDataObject* selectorObject, ibValueMetaObjectTableData* tableObject) :
+	ibValueTabularSectionDataObjectBase((ibValueDataObject*)selectorObject, tableObject), m_readAfter(false)
 {
 }
 
 #include "backend/system/value/valueTable.h"
 
-bool IValueTabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
+bool ibValueTabularSectionDataObjectBase::LoadDataFromTable(ibValueModelTable* srcTable)
 {
 	if (m_readOnly)
 		return false;
 
-	IValueModelColumnCollection* colData = srcTable ?
+	ibValueModelColumnCollection* colData = srcTable ?
 		srcTable->GetColumnCollection() : nullptr;
 
 	if (colData == nullptr)
@@ -261,7 +261,7 @@ bool IValueTabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 
 	wxArrayString columnName;
 	for (unsigned int idx = 0; idx < colData->GetColumnCount(); idx++) {
-		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(idx);
+		ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = colData->GetColumnInfo(idx);
 		wxASSERT(colInfo);
 		if (m_recordColumnCollection->GetColumnByName(colInfo->GetColumnName()) != nullptr) {
 			columnName.push_back(colInfo->GetColumnName());
@@ -270,12 +270,12 @@ bool IValueTabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 
 	unsigned int rowCount = srcTable->GetRowCount();
 	for (unsigned int row = 0; row < rowCount; row++) {
-		const wxDataViewExtItem& srcItem = srcTable->GetItem(row);
-		const wxDataViewExtItem& dstItem = GetItem(AppendRow());
+		const ibDataViewItem& srcItem = srcTable->GetItem(row);
+		const ibDataViewItem& dstItem = GetItem(AppendRow());
 		for (auto colName : columnName) {
-			CValue cRetValue;
+			ibValue cRetValue;
 			if (srcTable->GetValueByMetaID(srcItem, srcTable->GetColumnIDByName(colName), cRetValue)) {
-				const meta_identifier_t& id = GetColumnIDByName(colName);
+				const ibMetaID& id = GetColumnIDByName(colName);
 				if (id != wxNOT_FOUND) SetValueByMetaID(dstItem, id, cRetValue);
 			}
 		}
@@ -284,30 +284,30 @@ bool IValueTabularSectionDataObject::LoadDataFromTable(IValueTable* srcTable)
 	return true;
 }
 
-IValueTable* IValueTabularSectionDataObject::SaveDataToTable() const
+ibValueModelTable* ibValueTabularSectionDataObjectBase::SaveDataToTable() const
 {
-	CValueTableMemory* valueTable = CValue::CreateAndPrepareValueRef<CValueTableMemory>();
-	IValueModelColumnCollection* colData = valueTable->GetColumnCollection();
+	ibValueModelTableMemory* valueTable = ibValue::CreateAndPrepareValueRef<ibValueModelTableMemory>();
+	ibValueModelColumnCollection* colData = valueTable->GetColumnCollection();
 	for (unsigned int idx = 0; idx < m_recordColumnCollection->GetColumnCount() - 1; idx++) {
-		IValueModelColumnCollection::IValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnInfo(idx);
+		ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = m_recordColumnCollection->GetColumnInfo(idx);
 		wxASSERT(colInfo);
-		IValueModelColumnCollection::IValueModelColumnInfo* newColInfo = colData->AddColumn(
+		ibValueModelColumnCollection::ibValueModelColumnInfo* newColInfo = colData->AddColumn(
 			colInfo->GetColumnName(), colInfo->GetColumnType(), colInfo->GetColumnCaption(), colInfo->GetColumnWidth()
 		);
 		newColInfo->SetColumnID(colInfo->GetColumnID());
 	}
 	valueTable->PrepareNames();
 	for (long row = 0; row < GetRowCount(); row++) {
-		const wxDataViewExtItem& srcItem = GetItem(row);
-		const wxDataViewExtItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
+		const ibDataViewItem& srcItem = GetItem(row);
+		const ibDataViewItem& dstItem = valueTable->GetItem(valueTable->AppendRow());
 		for (unsigned int col = 0; col < colData->GetColumnCount(); col++) {
-			IValueModelColumnCollection::IValueModelColumnInfo* colInfo = colData->GetColumnInfo(col);
+			ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = colData->GetColumnInfo(col);
 			wxASSERT(colInfo);
 			if (m_metaTable->IsNumberLine(colInfo->GetColumnID()))
 				continue;
-			CValue cRetValue;
+			ibValue cRetValue;
 			if (GetValueByMetaID(srcItem, colInfo->GetColumnID(), cRetValue)) {
-				const meta_identifier_t& id = GetColumnIDByName(colInfo->GetColumnName());
+				const ibMetaID& id = GetColumnIDByName(colInfo->GetColumnName());
 				if (id != wxNOT_FOUND) valueTable->SetValueByMetaID(dstItem, id, cRetValue);
 			}
 		}
@@ -316,13 +316,13 @@ IValueTable* IValueTabularSectionDataObject::SaveDataToTable() const
 	return valueTable;
 }
 
-bool CValueTabularSectionDataObjectRef::SetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, const CValue& varMetaVal)
+bool ibValueTabularSectionDataObjectRef::SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal)
 {
-	if (varMetaVal != IValueTabularSectionDataObject::GetValueByMetaID(item, id)) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
+	if (varMetaVal != ibValueTabularSectionDataObjectBase::GetValueByMetaID(item, id)) {
+		ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(
 			m_objectValue->GetGuid()
 		);
-		bool result = IValueTabularSectionDataObject::SetValueByMetaID(item, id, varMetaVal);
+		bool result = ibValueTabularSectionDataObjectBase::SetValueByMetaID(item, id, varMetaVal);
 		if (result && foundedForm != nullptr)
 			foundedForm->Modify(true);
 		return result;
@@ -331,24 +331,24 @@ bool CValueTabularSectionDataObjectRef::SetValueByMetaID(const wxDataViewExtItem
 	return false;
 }
 
-bool CValueTabularSectionDataObjectRef::GetValueByMetaID(const wxDataViewExtItem& item, const meta_identifier_t& id, CValue& pvarMetaVal) const
+bool ibValueTabularSectionDataObjectRef::GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const
 {
-	return IValueTabularSectionDataObject::GetValueByMetaID(item, id, pvarMetaVal);
+	return ibValueTabularSectionDataObjectBase::GetValueByMetaID(item, id, pvarMetaVal);
 }
 
 //////////////////////////////////////////////////////////////////////
-//               CValueTabularSectionDataObjectReturnLine                //
+//               ibValueTabularSectionDataObjectReturnLine                //
 //////////////////////////////////////////////////////////////////////
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::CValueTabularSectionDataObjectReturnLine(IValueTabularSectionDataObject* ownerTable, const wxDataViewExtItem& line)
-	: IValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new CMethodHelper()) {
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::ibValueTabularSectionDataObjectReturnLine(ibValueTabularSectionDataObjectBase* ownerTable, const ibDataViewItem& line)
+	: ibValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new ibValueMethodHelper()) {
 }
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::~CValueTabularSectionDataObjectReturnLine() {
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::~ibValueTabularSectionDataObjectReturnLine() {
 	wxDELETE(m_methodHelper);
 }
 
-void IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::PrepareNames() const
+void ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -369,93 +369,93 @@ void IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::P
 	}
 }
 
-bool IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return SetValueByMetaID(m_methodHelper->GetPropData(lPropNum), varPropVal);
 }
 
-bool IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	return GetValueByMetaID(m_methodHelper->GetPropData(lPropNum), pvarPropVal);
 }
 
-class_identifier_t IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::GetClassType() const
+ibClassID ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::GetClassType() const
 {
-	const IValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	const IMetaData* metaData = metaTable->GetMetaData();
+	const ibValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::GetClassName() const
+wxString ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::GetClassName() const
 {
-	const IValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	const IMetaData* metaData = metaTable->GetMetaData();
+	const ibValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString IValueTabularSectionDataObject::CValueTabularSectionDataObjectReturnLine::GetString() const
+wxString ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectReturnLine::GetString() const
 {
-	const IValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
-	const IMetaData* metaData = metaTable->GetMetaData();
+	const ibValueMetaObject* metaTable = m_ownerTable->GetMetaObject();
+	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(metaTable, eCtorMetaType::eCtorMetaType_TabularSection_String);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 //////////////////////////////////////////////////////////////////////
-//               CValueTabularSectionDataObjectColumnCollection          //
+//               ibValueTabularSectionDataObjectColumnCollection          //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection, IValueTable::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection, ibValueModelTable::ibValueModelColumnCollection);
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionDataObjectColumnCollection() :
-	IValueModelColumnCollection(),
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionDataObjectColumnCollection() :
+	ibValueModelColumnCollection(),
 	m_ownerTable(nullptr),
 	m_methodHelper(nullptr)
 {
 }
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionDataObjectColumnCollection(IValueTabularSectionDataObject* ownerTable) :
-	IValueModelColumnCollection(),
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionDataObjectColumnCollection(ibValueTabularSectionDataObjectBase* ownerTable) :
+	ibValueModelColumnCollection(),
 	m_ownerTable(ownerTable),
-	m_methodHelper(new CMethodHelper())
+	m_methodHelper(new ibValueMethodHelper())
 {
-	CValueMetaObjectTableData* metaTable = m_ownerTable->GetMetaObject();
+	ibValueMetaObjectTableData* metaTable = m_ownerTable->GetMetaObject();
 	wxASSERT(metaTable);
 	for (const auto object : metaTable->GetGenericAttributeArrayObject()) {
 		if (metaTable->IsNumberLine(object->GetMetaID()))
 			continue;
 		m_listColumnInfo.insert_or_assign(object->GetMetaID(),
-			CValue::CreateAndPrepareValueRef<CValueTabularSectionColumnInfo>(object)
+			ibValue::CreateAndPrepareValueRef<ibValueTabularSectionColumnInfo>(object)
 		);
 	}
 }
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::~CValueTabularSectionDataObjectColumnCollection()
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::~ibValueTabularSectionDataObjectColumnCollection()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendCoreException::Error(_("Index goes beyond array"));
+		ibBackendCoreException::Error(_("Index goes beyond array"));
 		return false;
 	}
 	auto it = m_listColumnInfo.begin();
@@ -465,26 +465,26 @@ bool IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollect
 }
 
 //////////////////////////////////////////////////////////////////////
-//               CValueTabularSectionColumnInfo                     //
+//               ibValueTabularSectionColumnInfo                     //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionColumnInfo, ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo::CValueTabularSectionColumnInfo() :
-	IValueModelColumnInfo(), m_metaAttribute(nullptr)
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionColumnInfo::ibValueTabularSectionColumnInfo() :
+	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo::CValueTabularSectionColumnInfo(IValueMetaObjectAttribute* attribute) :
-	IValueModelColumnInfo(), m_metaAttribute(attribute)
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionColumnInfo::ibValueTabularSectionColumnInfo(ibValueMetaObjectAttributeBase* attribute) :
+	ibValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo::~CValueTabularSectionColumnInfo()
+ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionColumnInfo::~ibValueTabularSectionColumnInfo()
 {
 }
 
-long IValueTabularSectionDataObject::AppendRow(unsigned int before)
+long ibValueTabularSectionDataObjectBase::AppendRow(unsigned int before)
 {
 	wxValueTableRow* rowData = new wxValueTableRow();
 	for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
@@ -493,23 +493,23 @@ long IValueTabularSectionDataObject::AppendRow(unsigned int before)
 	}
 
 	if (before > 0)
-		return IValueTable::Insert(rowData, before, !CBackendException::IsEvalMode());
+		return ibValueModelTable::Insert(rowData, before, !ibBackendException::IsEvalMode());
 
-	return IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+	return ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
 }
 
-long CValueTabularSectionDataObjectRef::AppendRow(unsigned int before)
+long ibValueTabularSectionDataObjectRef::AppendRow(unsigned int before)
 {
-	if (!CBackendException::IsEvalMode())
+	if (!ibBackendException::IsEvalMode())
 		m_objectValue->Modify(true);
-	return IValueTabularSectionDataObject::AppendRow(before);
+	return ibValueTabularSectionDataObjectBase::AppendRow(before);
 }
 
 //****************************************************************************
 //*                              Support methods                             *
 //****************************************************************************
 
-void IValueTabularSectionDataObject::PrepareNames() const
+void ibValueTabularSectionDataObjectBase::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -535,5 +535,5 @@ void IValueTabularSectionDataObject::PrepareNames() const
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection, "TabularSectionColumn", string_to_clsid("VL_TSCL"));
-SYSTEM_TYPE_REGISTER(IValueTabularSectionDataObject::CValueTabularSectionDataObjectColumnCollection::CValueTabularSectionColumnInfo, "TabularSectionColumnInfo", string_to_clsid("VL_CI"));
+SYSTEM_TYPE_REGISTER(ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection, "TabularSectionColumn", string_to_clsid("VL_TSCL"));
+SYSTEM_TYPE_REGISTER(ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectColumnCollection::ibValueTabularSectionColumnInfo, "TabularSectionColumnInfo", string_to_clsid("VL_CI"));

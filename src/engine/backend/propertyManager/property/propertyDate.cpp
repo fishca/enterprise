@@ -1,26 +1,26 @@
 #include "propertyDate.h"
 
 //base property for "date"
-bool CPropertyDate::SetDataValue(const CValue& varPropVal)
+bool ibPropertyDate::SetDataValue(const ibValue& varPropVal)
 {
-	CPropertyDate::SetValue(varPropVal.GetDate());
+	ibPropertyDate::SetValue(varPropVal.GetDate());
 	return true;
 }
 
-bool CPropertyDate::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyDate::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CPropertyDate::GetValueAsDateTime();
+	pvarPropVal = ibPropertyDate::GetValueAsDateTime();
 	return true;
 }
 
-bool CPropertyDate::LoadData(CMemoryReader& reader)
+bool ibPropertyDate::LoadData(ibReaderMemory& reader)
 {
-	CPropertyDate::SetValue((wxLongLong_t)reader.r_u64());
+	ibPropertyDate::SetValue((wxLongLong_t)reader.r_u64());
 	return true;
 }
 
-bool CPropertyDate::SaveData(CMemoryWriter& writer)
+bool ibPropertyDate::SaveData(ibWriterMemory& writer)
 {
-	writer.w_u64(CPropertyDate::GetValueAsDateTime());
+	writer.w_u64(ibPropertyDate::GetValueAsDateTime());
 	return true;
 }

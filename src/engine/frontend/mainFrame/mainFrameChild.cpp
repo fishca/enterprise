@@ -6,7 +6,7 @@
 #include "mainFrameChild.h"
 
 wxIMPLEMENT_CLASS(CAuiDocChildFrame, wxAuiMDIChildFrame);
-wxIMPLEMENT_CLASS(CDialogDocChildFrame, wxDialog);
+wxIMPLEMENT_CLASS(ibDialogDocChildFrame, wxDialog);
 
 #include "mainFrame.h"
 
@@ -14,7 +14,7 @@ CAuiDocChildFrame::~CAuiDocChildFrame()
 {
 	wxAuiMDIParentFrame* pParentFrame = GetMDIParentFrame();
 
-	if (pParentFrame && CFrontendDocMDIFrame::GetFrame()) {
+	if (pParentFrame && ibFrontendDocMDIFrame::GetFrame()) {
 		if (pParentFrame->GetActiveChild() == this) {
 			pParentFrame->SetActiveChild(nullptr);
 			pParentFrame->SetChildMenuBar(nullptr);

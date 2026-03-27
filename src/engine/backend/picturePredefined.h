@@ -8,39 +8,39 @@
 //*******************************************************************************
 
 //COMMON PICTURES
-const picture_identifier_t g_picStructureCLSID = string_to_clsid("PC_STRCT");
-const picture_identifier_t g_picErrorCLSID = string_to_clsid("PC_ERROR");
+const ibPictureID g_picStructureCLSID = string_to_clsid("PC_STRCT");
+const ibPictureID g_picErrorCLSID = string_to_clsid("PC_ERROR");
 
-const picture_identifier_t g_picCloseFormCLSID = string_to_clsid("PC_CLOSE");
-const picture_identifier_t g_picUpdateFormCLSID = string_to_clsid("PC_REFRE");
-const picture_identifier_t g_picHelpFormCLSID = string_to_clsid("PC_HELP");
+const ibPictureID g_picCloseFormCLSID = string_to_clsid("PC_CLOSE");
+const ibPictureID g_picUpdateFormCLSID = string_to_clsid("PC_REFRE");
+const ibPictureID g_picHelpFormCLSID = string_to_clsid("PC_HELP");
 
-const picture_identifier_t g_picChangeFormCLSID = string_to_clsid("PC_CHAGF");
+const ibPictureID g_picChangeFormCLSID = string_to_clsid("PC_CHAGF");
 
-const picture_identifier_t g_picAddCLSID = string_to_clsid("PC_ADDVL");
-const picture_identifier_t g_picEditCLSID = string_to_clsid("PC_EDITV");
-const picture_identifier_t g_picCopyCLSID = string_to_clsid("PC_COPYV");
-const picture_identifier_t g_picDeleteCLSID = string_to_clsid("PC_DELVL");
+const ibPictureID g_picAddCLSID = string_to_clsid("PC_ADDVL");
+const ibPictureID g_picEditCLSID = string_to_clsid("PC_EDITV");
+const ibPictureID g_picCopyCLSID = string_to_clsid("PC_COPYV");
+const ibPictureID g_picDeleteCLSID = string_to_clsid("PC_DELVL");
 
-const picture_identifier_t g_picAddFolderCLSID = string_to_clsid("PC_ADDFV");
-const picture_identifier_t g_picSelectCLSID = string_to_clsid("PC_SELVL");
+const ibPictureID g_picAddFolderCLSID = string_to_clsid("PC_ADDFV");
+const ibPictureID g_picSelectCLSID = string_to_clsid("PC_SELVL");
 
-const picture_identifier_t g_picFilterCLSID = string_to_clsid("PC_FLTER");
-const picture_identifier_t g_picFilterSetCLSID = string_to_clsid("PC_FLTES");
-const picture_identifier_t g_picFilterClearCLSID = string_to_clsid("PC_FLTEC");
+const ibPictureID g_picFilterCLSID = string_to_clsid("PC_FLTER");
+const ibPictureID g_picFilterSetCLSID = string_to_clsid("PC_FLTES");
+const ibPictureID g_picFilterClearCLSID = string_to_clsid("PC_FLTEC");
 
-const picture_identifier_t g_picCloneCLSID = string_to_clsid("PC_CLONE");
-const picture_identifier_t g_picSaveCLSID = string_to_clsid("PC_SAVE");
-const picture_identifier_t g_picPostCLSID = string_to_clsid("PC_POST");
-const picture_identifier_t g_picMarkAsDeleteCLSID = string_to_clsid("PC_MDEL");
-const picture_identifier_t g_picGenerateCLSID = string_to_clsid("PC_GENTE");
-const picture_identifier_t g_picPrintCLSID = string_to_clsid("PC_PRINT");
-const picture_identifier_t g_picHierarchyCLSID = string_to_clsid("PC_HRCHY");
+const ibPictureID g_picCloneCLSID = string_to_clsid("PC_CLONE");
+const ibPictureID g_picSaveCLSID = string_to_clsid("PC_SAVE");
+const ibPictureID g_picPostCLSID = string_to_clsid("PC_POST");
+const ibPictureID g_picMarkAsDeleteCLSID = string_to_clsid("PC_MDEL");
+const ibPictureID g_picGenerateCLSID = string_to_clsid("PC_GENTE");
+const ibPictureID g_picPrintCLSID = string_to_clsid("PC_PRINT");
+const ibPictureID g_picHierarchyCLSID = string_to_clsid("PC_HRCHY");
 
-const picture_identifier_t g_picUserCLSID = string_to_clsid("PC_USER");
-const picture_identifier_t g_picUserActiveCLSID = string_to_clsid("PC_USRAC");
-const picture_identifier_t g_picUserListCLSID = string_to_clsid("PC_USRLS");
+const ibPictureID g_picUserCLSID = string_to_clsid("PC_USER");
+const ibPictureID g_picUserActiveCLSID = string_to_clsid("PC_USRAC");
+const ibPictureID g_picUserListCLSID = string_to_clsid("PC_USRLS");
 
-const picture_identifier_t g_picAuthenticationCLSID = string_to_clsid("PC_ATTON");
+const ibPictureID g_picAuthenticationCLSID = string_to_clsid("PC_ATTON");
 
 #endif 

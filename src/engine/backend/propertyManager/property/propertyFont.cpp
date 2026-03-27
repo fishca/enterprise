@@ -2,29 +2,29 @@
 #include "backend/system/value/valueFont.h"
 
 //base property for "colour"
-bool CPropertyFont::SetDataValue(const CValue& varPropVal)
+bool ibPropertyFont::SetDataValue(const ibValue& varPropVal)
 {
-	CValueFont *valueFont = varPropVal.ConvertToType<CValueFont>();
+	ibValueFont *valueFont = varPropVal.ConvertToType<ibValueFont>();
 	if (valueFont == nullptr)
 		return false;
 	SetValue(valueFont->m_font);
 	return true;
 }
 
-bool CPropertyFont::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyFont::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValueFont>(GetValueAsFont());
+	pvarPropVal = ibValue::CreateObjectValue<ibValueFont>(GetValueAsFont());
 	return true;
 }
 
-bool CPropertyFont::LoadData(CMemoryReader& reader)
+bool ibPropertyFont::LoadData(ibReaderMemory& reader)
 {
-	CPropertyFont::SetValue(reader.r_stringZ());
+	ibPropertyFont::SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool CPropertyFont::SaveData(CMemoryWriter& writer)
+bool ibPropertyFont::SaveData(ibWriterMemory& writer)
 {
-	writer.w_stringZ(CPropertyFont::GetValueAsString());
+	writer.w_stringZ(ibPropertyFont::GetValueAsString());
 	return true;
 }

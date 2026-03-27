@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // Name:        wx/generic/gridctrl.h
-// Purpose:     wxGridExt controls
+// Purpose:     ibGrid controls
 // Author:      Paul Gammans, Roger Gammans
 // Modified by:
 // Created:     11/04/2001
@@ -20,41 +20,41 @@
 
 
 // the default renderer for the cells containing string data
-class FRONTEND_API wxGridExtCellStringRenderer : public wxGridExtCellRenderer
+class FRONTEND_API ibGridCellStringRenderer : public ibGridCellRenderer
 {
 public:
-	wxGridExtCellStringRenderer()
-		: wxGridExtCellRenderer()
+	ibGridCellStringRenderer()
+		: ibGridCellRenderer()
 	{
 	}
 
-	wxGridExtCellStringRenderer(const wxGridExtCellStringRenderer& other)
-		: wxGridExtCellRenderer(other)
+	ibGridCellStringRenderer(const ibGridCellStringRenderer& other)
+		: ibGridCellRenderer(other)
 	{
 	}
 
 	// draw the string
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
 	// return the string extent
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellStringRenderer(*this);
+		return new ibGridCellStringRenderer(*this);
 	}
 
 protected:
 	// calc the string extent for given string/font
-	wxSize DoGetBestSize(const wxGridExtCellAttr& attr,
+	wxSize DoGetBestSize(const ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxString& text, 
 		float scale = 1.0f);
@@ -65,65 +65,65 @@ private:
 };
 
 // the default renderer for the cells containing numeric (long) data
-class FRONTEND_API wxGridExtCellNumberRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API ibGridCellNumberRenderer : public ibGridCellStringRenderer
 {
 public:
-	explicit wxGridExtCellNumberRenderer(long minValue = LONG_MIN,
+	explicit ibGridCellNumberRenderer(long minValue = LONG_MIN,
 		long maxValue = LONG_MAX)
-		: wxGridExtCellStringRenderer(),
+		: ibGridCellStringRenderer(),
 		m_minValue(minValue),
 		m_maxValue(maxValue)
 	{
 	}
 
-	wxGridExtCellNumberRenderer(const wxGridExtCellNumberRenderer& other)
-		: wxGridExtCellStringRenderer(other),
+	ibGridCellNumberRenderer(const ibGridCellNumberRenderer& other)
+		: ibGridCellStringRenderer(other),
 		m_minValue(other.m_minValue),
 		m_maxValue(other.m_maxValue)
 	{
 	}
 
 	// draw the string right aligned
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual wxSize GetMaxBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetMaxBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc) wxOVERRIDE;
 
 	// Optional parameters for this renderer are "<min>,<max>".
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellNumberRenderer(*this);
+		return new ibGridCellNumberRenderer(*this);
 	}
 
 protected:
-	wxString GetString(const wxGridExt& grid, int row, int col);
+	wxString GetString(const ibGrid& grid, int row, int col);
 
 	long m_minValue,
 		m_maxValue;
 };
 
-class FRONTEND_API wxGridExtCellFloatRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API ibGridCellFloatRenderer : public ibGridCellStringRenderer
 {
 public:
-	wxGridExtCellFloatRenderer(int width = -1,
+	ibGridCellFloatRenderer(int width = -1,
 		int precision = -1,
 		int format = 16 /*wxGRID_FLOAT_FORMAT_DEFAULT*/);
 
-	wxGridExtCellFloatRenderer(const wxGridExtCellFloatRenderer& other)
-		: wxGridExtCellStringRenderer(other),
+	ibGridCellFloatRenderer(const ibGridCellFloatRenderer& other)
+		: ibGridCellStringRenderer(other),
 		m_width(other.m_width),
 		m_precision(other.m_precision),
 		m_style(other.m_style),
@@ -140,15 +140,15 @@ public:
 	void SetFormat(int format) { m_style = format; m_format.clear(); }
 
 	// draw the string right aligned with given width/precision
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
@@ -156,13 +156,13 @@ public:
 	// with format being one of f|e|g|E|F|G
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellFloatRenderer(*this);
+		return new ibGridCellFloatRenderer(*this);
 	}
 
 protected:
-	wxString GetString(const wxGridExt& grid, int row, int col);
+	wxString GetString(const ibGrid& grid, int row, int col);
 
 private:
 	// formatting parameters
@@ -174,40 +174,40 @@ private:
 };
 
 // renderer for boolean fields
-class FRONTEND_API wxGridExtCellBoolRenderer : public wxGridExtCellRenderer
+class FRONTEND_API ibGridCellBoolRenderer : public ibGridCellRenderer
 {
 public:
-	wxGridExtCellBoolRenderer()
-		: wxGridExtCellRenderer()
+	ibGridCellBoolRenderer()
+		: ibGridCellRenderer()
 	{
 	}
 
-	wxGridExtCellBoolRenderer(const wxGridExtCellBoolRenderer& other)
-		: wxGridExtCellRenderer(other)
+	ibGridCellBoolRenderer(const ibGridCellBoolRenderer& other)
+		: ibGridCellRenderer(other)
 	{
 	}
 
 	// draw a check mark or nothing
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
 	// return the checkmark size
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual wxSize GetMaxBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetMaxBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellBoolRenderer(*this);
+		return new ibGridCellBoolRenderer(*this);
 	}
 };
 
@@ -216,79 +216,79 @@ public:
 
 #include "wx/datetime.h"
 
-namespace wxGridExtPrivate { class DateParseParams; }
+namespace ibGridPrivate { class DateParseParams; }
 
 // renderer for the cells containing dates only, without time component
-class FRONTEND_API wxGridExtCellDateRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API ibGridCellDateRenderer : public ibGridCellStringRenderer
 {
 public:
-	explicit wxGridExtCellDateRenderer(const wxString& outformat = wxString());
+	explicit ibGridCellDateRenderer(const wxString& outformat = wxString());
 
-	wxGridExtCellDateRenderer(const wxGridExtCellDateRenderer& other)
-		: wxGridExtCellStringRenderer(other),
+	ibGridCellDateRenderer(const ibGridCellDateRenderer& other)
+		: ibGridCellStringRenderer(other),
 		m_oformat(other.m_oformat),
 		m_tz(other.m_tz)
 	{
 	}
 
 	// draw the string right aligned
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual wxSize GetMaxBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetMaxBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellDateRenderer(*this);
+		return new ibGridCellDateRenderer(*this);
 	}
 
 	// output strptime()-like format string
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
 protected:
-	wxString GetString(const wxGridExt& grid, int row, int col);
+	wxString GetString(const ibGrid& grid, int row, int col);
 
-	// This is overridden in wxGridExtCellDateTimeRenderer which uses a separate
+	// This is overridden in ibGridCellDateTimeRenderer which uses a separate
 	// input format and forbids fallback to ParseDate().
 	virtual void
-		GetDateParseParams(wxGridExtPrivate::DateParseParams& params) const;
+		GetDateParseParams(ibGridPrivate::DateParseParams& params) const;
 
 	wxString m_oformat;
 	wxDateTime::TimeZone m_tz;
 };
 
 // the default renderer for the cells containing times and dates
-class FRONTEND_API wxGridExtCellDateTimeRenderer : public wxGridExtCellDateRenderer
+class FRONTEND_API ibGridCellDateTimeRenderer : public ibGridCellDateRenderer
 {
 public:
-	wxGridExtCellDateTimeRenderer(const wxString& outformat = wxASCII_STR(wxDefaultDateTimeFormat),
+	ibGridCellDateTimeRenderer(const wxString& outformat = wxASCII_STR(wxDefaultDateTimeFormat),
 		const wxString& informat = wxASCII_STR(wxDefaultDateTimeFormat));
 
-	wxGridExtCellDateTimeRenderer(const wxGridExtCellDateTimeRenderer& other)
-		: wxGridExtCellDateRenderer(other),
+	ibGridCellDateTimeRenderer(const ibGridCellDateTimeRenderer& other)
+		: ibGridCellDateRenderer(other),
 		m_iformat(other.m_iformat)
 	{
 	}
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellDateTimeRenderer(*this);
+		return new ibGridCellDateTimeRenderer(*this);
 	}
 
 protected:
 	virtual void
-		GetDateParseParams(wxGridExtPrivate::DateParseParams& params) const wxOVERRIDE;
+		GetDateParseParams(ibGridPrivate::DateParseParams& params) const wxOVERRIDE;
 
 	wxString m_iformat;
 };
@@ -297,23 +297,23 @@ protected:
 
 // Renderer for fields taking one of a limited set of values: this is the same
 // as the renderer for strings, except that it can implement GetMaxBestSize().
-class FRONTEND_API wxGridExtCellChoiceRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API ibGridCellChoiceRenderer : public ibGridCellStringRenderer
 {
 public:
-	explicit wxGridExtCellChoiceRenderer(const wxString& choices = wxString());
+	explicit ibGridCellChoiceRenderer(const wxString& choices = wxString());
 
-	wxGridExtCellChoiceRenderer(const wxGridExtCellChoiceRenderer& other);
+	ibGridCellChoiceRenderer(const ibGridCellChoiceRenderer& other);
 
-	virtual wxSize GetMaxBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetMaxBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc) wxOVERRIDE;
 
 	// Parameters string is a comma-separated list of values.
 	virtual void SetParameters(const wxString& params) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellChoiceRenderer(*this);
+		return new ibGridCellChoiceRenderer(*this);
 	}
 
 protected:
@@ -323,88 +323,88 @@ protected:
 
 
 // renders a number using the corresponding text string
-class FRONTEND_API wxGridExtCellEnumRenderer : public wxGridExtCellChoiceRenderer
+class FRONTEND_API ibGridCellEnumRenderer : public ibGridCellChoiceRenderer
 {
 public:
-	explicit wxGridExtCellEnumRenderer(const wxString& choices = wxString())
-		: wxGridExtCellChoiceRenderer(choices)
+	explicit ibGridCellEnumRenderer(const wxString& choices = wxString())
+		: ibGridCellChoiceRenderer(choices)
 	{
 	}
 
-	wxGridExtCellEnumRenderer(const wxGridExtCellEnumRenderer& other)
-		: wxGridExtCellChoiceRenderer(other)
+	ibGridCellEnumRenderer(const ibGridCellEnumRenderer& other)
+		: ibGridCellChoiceRenderer(other)
 	{
 	}
 
 	// draw the string right aligned
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellEnumRenderer(*this);
+		return new ibGridCellEnumRenderer(*this);
 	}
 
 protected:
-	wxString GetString(const wxGridExt& grid, int row, int col);
+	wxString GetString(const ibGrid& grid, int row, int col);
 };
 
 
-class FRONTEND_API wxGridExtCellAutoWrapStringRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API ibGridCellAutoWrapStringRenderer : public ibGridCellStringRenderer
 {
 public:
-	wxGridExtCellAutoWrapStringRenderer()
-		: wxGridExtCellStringRenderer()
+	ibGridCellAutoWrapStringRenderer()
+		: ibGridCellStringRenderer()
 	{
 	}
 
-	wxGridExtCellAutoWrapStringRenderer(const wxGridExtCellAutoWrapStringRenderer& other)
-		: wxGridExtCellStringRenderer(other)
+	ibGridCellAutoWrapStringRenderer(const ibGridCellAutoWrapStringRenderer& other)
+		: ibGridCellStringRenderer(other)
 	{
 	}
 
-	virtual void Draw(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual void Draw(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		const wxRect& rect,
 		int row, int col,
 		bool isSelected) wxOVERRIDE;
 
-	virtual wxSize GetBestSize(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual wxSize GetBestSize(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col) wxOVERRIDE;
 
-	virtual int GetBestHeight(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual int GetBestHeight(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col,
 		int width) wxOVERRIDE;
 
-	virtual int GetBestWidth(wxGridExt& grid,
-		wxGridExtCellAttr& attr,
+	virtual int GetBestWidth(ibGrid& grid,
+		ibGridCellAttr& attr,
 		wxDC& dc,
 		int row, int col,
 		int height) wxOVERRIDE;
 
-	virtual wxGridExtCellRenderer* Clone() const wxOVERRIDE
+	virtual ibGridCellRenderer* Clone() const wxOVERRIDE
 	{
-		return new wxGridExtCellAutoWrapStringRenderer(*this);
+		return new ibGridCellAutoWrapStringRenderer(*this);
 	}
 
 private:
-	wxArrayString GetTextLines(wxGridExt& grid,
+	wxArrayString GetTextLines(ibGrid& grid,
 		wxDC& dc,
-		const wxGridExtCellAttr& attr,
+		const ibGridCellAttr& attr,
 		const wxRect& rect,
 		int row, int col);
 

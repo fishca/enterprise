@@ -10,9 +10,9 @@
 
 #include "backend/backend_exception.h"
 
-void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
+void ibAppEnterprise::OnKeyEvent(wxKeyEvent& event)
 {
-	if (!CBackendException::IsErrorOutputProcessing() && event.GetEventType() == wxEVT_KEY_DOWN && event.GetKeyCode() == WXK_ESCAPE) {
+	if (!ibBackendException::IsErrorOutputProcessing() && event.GetEventType() == wxEVT_KEY_DOWN && event.GetKeyCode() == WXK_ESCAPE) {
 		wxAuiMDIChildFrame* childFrame = mainFrame->GetActiveChild();
 		if (childFrame != nullptr) CallAfter([childFrame]() {childFrame->Close(); });
 	}
@@ -22,12 +22,12 @@ void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
 
 #include "frontend/visualView/visualHost.h"
 
-void CEnterpriseApp::OnMouseEvent(wxMouseEvent& event)
+void ibAppEnterprise::OnMouseEvent(wxMouseEvent& event)
 {
 	event.Skip();
 }
 
-void CEnterpriseApp::OnSetFocus(wxFocusEvent& event)
+void ibAppEnterprise::OnSetFocus(wxFocusEvent& event)
 {
 	wxWindow* child = dynamic_cast<wxWindow*>(event.GetEventObject());
 	while (child != nullptr && !child->IsKindOf(CLASSINFO(wxAuiMDIChildFrame))) {
@@ -42,7 +42,7 @@ void CEnterpriseApp::OnSetFocus(wxFocusEvent& event)
 	}
 }
 
-int CEnterpriseApp::FilterEvent(wxEvent& event)
+int ibAppEnterprise::FilterEvent(wxEvent& event)
 {
 	if (event.GetEventType() == wxEVT_KEY_DOWN) {
 		OnKeyEvent(

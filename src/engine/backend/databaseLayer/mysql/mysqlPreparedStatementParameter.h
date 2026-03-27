@@ -31,21 +31,21 @@ typedef struct bind_data {
 	unsigned long nBufferLength;
 } MysqlBindData;
 
-class CMysqlPreparedStatementParameter : public CDatabaseErrorReporter, public CDatabaseStringConverter
+class ibPreparedStatementMySQLParameter : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
 {
 public:
 	// ctor
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind);  // Default to nullptr
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const wxString& strValue);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, int nValue);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, double dblValue);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const void* pData, long nDataLength);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, const wxDateTime& dateValue);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, bool bValue);
-	CMysqlPreparedStatementParameter(MYSQL_BIND* pBind, MYSQL_FIELD* pField);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind);  // Default to nullptr
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const wxString& strValue);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, int nValue);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, double dblValue);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const void* pData, long nDataLength);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, const wxDateTime& dateValue);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, bool bValue);
+	ibPreparedStatementMySQLParameter(MYSQL_BIND* pBind, MYSQL_FIELD* pField);
 
 	// dtor
-	virtual ~CMysqlPreparedStatementParameter();
+	virtual ~ibPreparedStatementMySQLParameter();
 
 	MYSQL_BIND* GetMysqlBind() { return m_pBind; }
 	MysqlBindData* GetBindData() { return &m_Data; }

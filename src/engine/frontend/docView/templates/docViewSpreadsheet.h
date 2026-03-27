@@ -9,16 +9,16 @@
 // ----------------------------------------------------------------------------
 
 // The view using a standard wxTextCtrl to show its contents
-class FRONTEND_API CSpreadsheetEditView : public CMetaView
+class FRONTEND_API ibSpreadsheetEditView : public ibMetaView
 {
 public:
-	CSpreadsheetEditView() : CMetaView(), m_gridEditor(nullptr) {}
+	ibSpreadsheetEditView() : ibMetaView(), m_gridEditor(nullptr) {}
 
 #if wxUSE_MENUS	
-	wxMenuBar* CSpreadsheetEditView::CreateMenuBar() const;
+	wxMenuBar* ibSpreadsheetEditView::CreateMenuBar() const;
 #endif 
 
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
@@ -39,7 +39,7 @@ private:
 	CGridEditor* m_gridEditor;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetEditView);
 };
 
 // ----------------------------------------------------------------------------
@@ -48,31 +48,31 @@ private:
 
 #include "backend/metaCollection/metaSpreadsheetObject.h"
 
-class FRONTEND_API ISpreadsheetDocument : public CMetaDocument {
+class FRONTEND_API ibSpreadsheetDocument : public ibMetaDocument {
 public:
 
 	virtual wxIcon GetIcon() const {
-		return CBackendPicture::GetPictureAsIcon(g_metaCommonTemplateCLSID);
+		return ibBackendPicture::GetPictureAsIcon(g_metaCommonTemplateCLSID);
 	}
 
-	ISpreadsheetDocument() : CMetaDocument() {}
+	ibSpreadsheetDocument() : ibMetaDocument() {}
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
 	
 	virtual CGridEditor* GetGridCtrl() const;
 
 private:
-	wxDECLARE_NO_COPY_CLASS(ISpreadsheetDocument);
-	wxDECLARE_ABSTRACT_CLASS(ISpreadsheetDocument);
+	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetDocument);
+	wxDECLARE_ABSTRACT_CLASS(ibSpreadsheetDocument);
 };
 
 // ----------------------------------------------------------------------------
 // A very simple text document class
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API CSpreadsheetFileDocument : public ISpreadsheetDocument {
+class FRONTEND_API ibSpreadsheetFilibDocument : public ibSpreadsheetDocument {
 public:
 
-	CSpreadsheetFileDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<CBackendSpreadsheetObject>(new CBackendSpreadsheetObject)) : ISpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
+	ibSpreadsheetFilibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument = wxObjectDataPtr<ibBackendSpreadsheetObject>(new ibBackendSpreadsheetObject)) : ibSpreadsheetDocument(), m_spreadSheetDocument(spreadSheetDocument) { m_childDoc = false; }
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnNewDocument() override {
@@ -100,18 +100,18 @@ protected:
 	virtual bool DoSaveDocument(const wxString& filename) override;
 	virtual bool DoOpenDocument(const wxString& filename) override;
 
-	wxObjectDataPtr<CBackendSpreadsheetObject> m_spreadSheetDocument;
+	wxObjectDataPtr<ibBackendSpreadsheetObject> m_spreadSheetDocument;
 
 private:
 
-	wxDECLARE_NO_COPY_CLASS(CSpreadsheetFileDocument);
-	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetFileDocument);
+	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetFilibDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetFilibDocument);
 };
 
-class FRONTEND_API CSpreadsheetEditDocument : public ISpreadsheetDocument {
+class FRONTEND_API ibSpreadsheetEditDocument : public ibSpreadsheetDocument {
 public:
 
-	CSpreadsheetEditDocument() : ISpreadsheetDocument() {}
+	ibSpreadsheetEditDocument() : ibSpreadsheetDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool SaveAs() override;
@@ -122,8 +122,8 @@ protected:
 
 private:
 
-	wxDECLARE_NO_COPY_CLASS(CSpreadsheetEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(CSpreadsheetEditDocument);
+	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetEditDocument);
 };
 
 #endif

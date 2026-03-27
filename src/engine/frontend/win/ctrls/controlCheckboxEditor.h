@@ -9,17 +9,17 @@
 
 #include "frontend/frontend.h"
 
-class FRONTEND_API wxControlCheckbox :
+class FRONTEND_API ibControlCheckbox :
 
 	public wxCompositeWindow<wxWindow>,
-	public wxControlDynamicBorder {
+	public ibControlDynamicBorder {
 
-	class wxControlStaticText : public wxDynamicStaticText {
+	class ibControlStaticText : public ibDynamicStaticText {
 	public:
 
-		wxControlStaticText(wxWindow* parent,
+		ibControlStaticText(wxWindow* parent,
 			wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxST_ELLIPSIZE_MASK, const wxString& name = wxASCII_STR(wxStaticTextNameStr)) :
-			wxDynamicStaticText(parent, id, label, pos, size, style, name)
+			ibDynamicStaticText(parent, id, label, pos, size, style, name)
 		{
 			// Ensure that our best size is recomputed using our overridden
 			// DoGetBestSize().
@@ -27,18 +27,18 @@ class FRONTEND_API wxControlCheckbox :
 		}
 	};
 
-	wxControlStaticText* m_label;
+	ibControlStaticText* m_label;
 	wxCheckBox* m_checkBox;
 	wxAlignment m_align;
 
 public:
 
-	wxControlCheckbox() :
+	ibControlCheckbox() :
 		m_label(nullptr), m_checkBox(nullptr), m_align(wxAlignment::wxALIGN_LEFT)
 	{
 	}
 
-	wxControlCheckbox(wxWindow* parent,
+	ibControlCheckbox(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize, long style = wxBORDER_NONE) :
@@ -47,7 +47,7 @@ public:
 		Create(parent, id, pos, size, style);
 	}
 
-	virtual ~wxControlCheckbox() {
+	virtual ~ibControlCheckbox() {
 		delete m_label;
 		delete m_checkBox;
 	}
@@ -60,7 +60,7 @@ public:
 		if (!wxCompositeWindow::Create(parent, id, pos, size, style))
 			return false;
 
-		m_label = new wxControlStaticText(this, wxID_ANY, wxEmptyString);
+		m_label = new ibControlStaticText(this, wxID_ANY, wxEmptyString);
 		m_checkBox = new wxCheckBox(this,
 			wxID_ANY,
 			wxEmptyString,
@@ -154,7 +154,7 @@ public:
 	};
 
 	//dynamic border 
-	virtual wxDynamicStaticText* GetStaticText() const { return m_label; }
+	virtual ibDynamicStaticText* GetStaticText() const { return m_label; }
 	virtual wxWindow* GetControl() const { return m_checkBox; }
 	virtual wxSize GetControlSize() const { return m_checkBox->GetSize(); }
 
@@ -186,13 +186,13 @@ private:
 	// Implement pure virtual function inherited from wxCompositeWindow.
 	virtual wxWindowList GetCompositeWindowParts() const override;
 
-	wxDECLARE_DYNAMIC_CLASS(wxControlCheckbox);
-	wxDECLARE_NO_COPY_CLASS(wxControlCheckbox);
+	wxDECLARE_DYNAMIC_CLASS(ibControlCheckbox);
+	wxDECLARE_NO_COPY_CLASS(ibControlCheckbox);
 	wxDECLARE_EVENT_TABLE();
 };
 
 class FRONTEND_API wxControlNavigationCheckbox :
-	public wxNavigationEnabled<wxControlCheckbox> {
+	public wxNavigationEnabled<ibControlCheckbox> {
 public:
 
 	wxControlNavigationCheckbox() {}

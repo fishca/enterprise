@@ -2,29 +2,29 @@
 #include "backend/system/value/valueColour.h"
 
 //base property for "colour"
-bool CPropertyColour::SetDataValue(const CValue& varPropVal)
+bool ibPropertyColour::SetDataValue(const ibValue& varPropVal)
 {
-	CValueColour *valueColour = varPropVal.ConvertToType<CValueColour>();
+	ibValueColour *valueColour = varPropVal.ConvertToType<ibValueColour>();
 	if (valueColour == nullptr) 
 		return false;
 	SetValue(valueColour->m_colour);
 	return true;
 }
 
-bool CPropertyColour::GetDataValue(CValue& pvarPropVal) const
+bool ibPropertyColour::GetDataValue(ibValue& pvarPropVal) const
 {
-	pvarPropVal = CValue::CreateObjectValue<CValueColour>(GetValueAsColour());
+	pvarPropVal = ibValue::CreateObjectValue<ibValueColour>(GetValueAsColour());
 	return true;
 }
 
-bool CPropertyColour::LoadData(CMemoryReader& reader)
+bool ibPropertyColour::LoadData(ibReaderMemory& reader)
 {
 	SetValue(reader.r_stringZ());
 	return true;
 }
 
-bool CPropertyColour::SaveData(CMemoryWriter& writer)
+bool ibPropertyColour::SaveData(ibWriterMemory& writer)
 {
-	writer.w_stringZ(CPropertyColour::GetValueAsString());
+	writer.w_stringZ(ibPropertyColour::GetValueAsString());
 	return true;
 }

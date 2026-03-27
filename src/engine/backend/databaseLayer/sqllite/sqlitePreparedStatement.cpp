@@ -5,32 +5,32 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 // ctor
-CSqlitePreparedStatement::CSqlitePreparedStatement(sqlite3* pDatabase)
-	: IPreparedStatement()
+ibPreparedStatementSQLite::ibPreparedStatementSQLite(sqlite3* pDatabase)
+	: ibPreparedStatement()
 {
 	m_pDatabase = pDatabase;
 }
 
-CSqlitePreparedStatement::CSqlitePreparedStatement(sqlite3* pDatabase, sqlite3_stmt* pStatement)
-	: IPreparedStatement()
+ibPreparedStatementSQLite::ibPreparedStatementSQLite(sqlite3* pDatabase, sqlite3_stmt* pStatement)
+	: ibPreparedStatement()
 {
 	m_pDatabase = pDatabase;
 	m_Statements.push_back(pStatement);
 }
 
-CSqlitePreparedStatement::CSqlitePreparedStatement(sqlite3* pDatabase, StatementVector statements)
-	: IPreparedStatement(), m_Statements(statements)
+ibPreparedStatementSQLite::ibPreparedStatementSQLite(sqlite3* pDatabase, StatementVector statements)
+	: ibPreparedStatement(), m_Statements(statements)
 {
 	m_pDatabase = pDatabase;
 }
 
 // dtor
-CSqlitePreparedStatement::~CSqlitePreparedStatement()
+ibPreparedStatementSQLite::~ibPreparedStatementSQLite()
 {
 	Close();
 }
 
-void CSqlitePreparedStatement::Close()
+void ibPreparedStatementSQLite::Close()
 {
 	CloseResultSets();
 
@@ -49,18 +49,18 @@ void CSqlitePreparedStatement::Close()
 	m_Statements.Clear();
 }
 /*
-void CSqlitePreparedStatement::AddPreparedStatement(CppSQLite3Statement* pStatement)
+void ibPreparedStatementSQLite::AddPreparedStatement(CppSQLite3Statement* pStatement)
 {
   m_Statements.push_back(pStatement);
 }
 */
-void CSqlitePreparedStatement::AddPreparedStatement(sqlite3_stmt* pStatement)
+void ibPreparedStatementSQLite::AddPreparedStatement(sqlite3_stmt* pStatement)
 {
 	m_Statements.push_back(pStatement);
 }
 
 // get field
-void CSqlitePreparedStatement::SetParamInt(int nPosition, int nValue)
+void ibPreparedStatementSQLite::SetParamInt(int nPosition, int nValue)
 {
 	ResetErrorCodes();
 
@@ -71,14 +71,14 @@ void CSqlitePreparedStatement::SetParamInt(int nPosition, int nValue)
 		int nReturn = sqlite3_bind_int(m_Statements[nIndex], nPosition, nValue);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamDouble(int nPosition, double dblValue)
+void ibPreparedStatementSQLite::SetParamDouble(int nPosition, double dblValue)
 {
 	ResetErrorCodes();
 
@@ -89,14 +89,14 @@ void CSqlitePreparedStatement::SetParamDouble(int nPosition, double dblValue)
 		int nReturn = sqlite3_bind_double(m_Statements[nIndex], nPosition, dblValue);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamNumber(int nPosition, const number_t &dblValue)
+void ibPreparedStatementSQLite::SetParamNumber(int nPosition, const ibNumber &dblValue)
 {
 	ResetErrorCodes();
 
@@ -107,14 +107,14 @@ void CSqlitePreparedStatement::SetParamNumber(int nPosition, const number_t &dbl
 		int nReturn = sqlite3_bind_double(m_Statements[nIndex], nPosition, dblValue.ToDouble());
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamString(int nPosition, const wxString& strValue)
+void ibPreparedStatementSQLite::SetParamString(int nPosition, const wxString& strValue)
 {
 	ResetErrorCodes();
 
@@ -126,14 +126,14 @@ void CSqlitePreparedStatement::SetParamString(int nPosition, const wxString& str
 		int nReturn = sqlite3_bind_text(m_Statements[nIndex], nPosition, valueBuffer, -1, SQLITE_TRANSIENT);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamNull(int nPosition)
+void ibPreparedStatementSQLite::SetParamNull(int nPosition)
 {
 	ResetErrorCodes();
 
@@ -144,14 +144,14 @@ void CSqlitePreparedStatement::SetParamNull(int nPosition)
 		int nReturn = sqlite3_bind_null(m_Statements[nIndex], nPosition);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamBlob(int nPosition, const void* pData, long nDataLength)
+void ibPreparedStatementSQLite::SetParamBlob(int nPosition, const void* pData, long nDataLength)
 {
 	ResetErrorCodes();
 
@@ -162,14 +162,14 @@ void CSqlitePreparedStatement::SetParamBlob(int nPosition, const void* pData, lo
 		int nReturn = sqlite3_bind_blob(m_Statements[nIndex], nPosition, (const void*)pData, nDataLength, SQLITE_STATIC);
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-void CSqlitePreparedStatement::SetParamDate(int nPosition, const wxDateTime& dateValue)
+void ibPreparedStatementSQLite::SetParamDate(int nPosition, const wxDateTime& dateValue)
 {
 	ResetErrorCodes();
 
@@ -183,7 +183,7 @@ void CSqlitePreparedStatement::SetParamDate(int nPosition, const wxDateTime& dat
 			int nReturn = sqlite3_bind_text(m_Statements[nIndex], nPosition, valueBuffer, -1, SQLITE_TRANSIENT);
 			if (nReturn != SQLITE_OK)
 			{
-				SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+				SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 				SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 				ThrowDatabaseException();
 			}
@@ -198,7 +198,7 @@ void CSqlitePreparedStatement::SetParamDate(int nPosition, const wxDateTime& dat
 			int nReturn = sqlite3_bind_null(m_Statements[nIndex], nPosition);
 			if (nReturn != SQLITE_OK)
 			{
-				SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+				SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 				SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 				ThrowDatabaseException();
 			}
@@ -206,7 +206,7 @@ void CSqlitePreparedStatement::SetParamDate(int nPosition, const wxDateTime& dat
 	}
 }
 
-void CSqlitePreparedStatement::SetParamBool(int nPosition, bool bValue)
+void ibPreparedStatementSQLite::SetParamBool(int nPosition, bool bValue)
 {
 	ResetErrorCodes();
 
@@ -217,14 +217,14 @@ void CSqlitePreparedStatement::SetParamBool(int nPosition, bool bValue)
 		int nReturn = sqlite3_bind_int(m_Statements[nIndex], nPosition, (bValue ? 1 : 0));
 		if (nReturn != SQLITE_OK)
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 		}
 	}
 }
 
-int CSqlitePreparedStatement::GetParameterCount()
+int ibPreparedStatementSQLite::GetParameterCount()
 {
 	ResetErrorCodes();
 
@@ -239,7 +239,7 @@ int CSqlitePreparedStatement::GetParameterCount()
 	return nReturn;
 }
 
-int CSqlitePreparedStatement::RunQuery()
+int ibPreparedStatementSQLite::RunQuery()
 {
 	ResetErrorCodes();
 
@@ -254,7 +254,7 @@ int CSqlitePreparedStatement::RunQuery()
 
 		if ((nReturn != SQLITE_ROW) && (nReturn != SQLITE_DONE))
 		{
-			SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+			SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 			SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 			ThrowDatabaseException();
 			return DATABASE_LAYER_QUERY_RESULT_ERROR;
@@ -265,7 +265,7 @@ int CSqlitePreparedStatement::RunQuery()
 	return sqlite3_changes(m_pDatabase);
 }
 
-IDatabaseResultSet* CSqlitePreparedStatement::RunQueryWithResults()
+ibDatabaseResultSet* ibPreparedStatementSQLite::RunQueryWithResults()
 {
 	ResetErrorCodes();
 
@@ -281,7 +281,7 @@ IDatabaseResultSet* CSqlitePreparedStatement::RunQueryWithResults()
 			if ((nReturn != SQLITE_ROW) && (nReturn != SQLITE_DONE))
 			{
 				wxLogError(wxT("Error with RunQueryWithResults\n"));
-				SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+				SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 				SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(m_pDatabase)));
 				ThrowDatabaseException();
 				return nullptr;
@@ -290,7 +290,7 @@ IDatabaseResultSet* CSqlitePreparedStatement::RunQueryWithResults()
 	}
 	// Work off the assumption that only the last statement will return result
 
-	CSqliteResultSet* pResultSet = new CSqliteResultSet(this);
+	ibDatabaseResultSetSQLite* pResultSet = new ibDatabaseResultSetSQLite(this);
 	if (pResultSet)
 		pResultSet->SetEncoding(GetEncoding());
 
@@ -298,7 +298,7 @@ IDatabaseResultSet* CSqlitePreparedStatement::RunQueryWithResults()
 	return pResultSet;
 }
 
-int CSqlitePreparedStatement::FindStatementAndAdjustPositionIndex(int* pPosition)
+int ibPreparedStatementSQLite::FindStatementAndAdjustPositionIndex(int* pPosition)
 {
 	// Don't mess around if there's just one entry in the vector
 	if (m_Statements.size() == 0)

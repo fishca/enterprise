@@ -5,14 +5,14 @@
 
 #include "metaEnumObject.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueMetaObjectEnum, IValueMetaObject)
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectEnum, ibValueMetaObject)
 
-bool CValueMetaObjectEnum::LoadData(CMemoryReader &reader)
+bool ibValueMetaObjectEnum::LoadData(ibReaderMemory &reader)
 {
 	return true;
 }
 
-bool CValueMetaObjectEnum::SaveData(CMemoryWriter &writer)
+bool ibValueMetaObjectEnum::SaveData(ibWriterMemory &writer)
 {
 	return true;
 }
@@ -21,4 +21,4 @@ bool CValueMetaObjectEnum::SaveData(CMemoryWriter &writer)
 //*                       Register in runtime                           *
 //***********************************************************************
 
-METADATA_TYPE_REGISTER(CValueMetaObjectEnum, "Enum", g_metaEnumCLSID);
+METADATA_TYPE_REGISTER(ibValueMetaObjectEnum, "Enum", g_metaEnumCLSID);

@@ -6,14 +6,14 @@
 //*                              Events                                            *
 //**********************************************************************************
 
-void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
+void ibValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 {
-	CAuiToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), CAuiToolBar
+	ibOESToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibOESToolBar
 	);
 	wxASSERT(toolBar);
 	if (g_visualHostContext != nullptr) {
-		const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+		const ibFormVisualDocument* visualDoc = ibValueToolbar::GetVisualDocument();
 		if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 			wxAuiToolBarItem* foundedItem = toolBar->FindToolByPosition(event.GetX(), event.GetY());
 			if (foundedItem == nullptr) g_visualHostContext->SelectControl(this);
@@ -25,27 +25,27 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 
 #include "backend/system/systemManager.h"
 
-void CValueToolbar::OnTool(wxCommandEvent& event)
+void ibValueToolbar::OnTool(wxCommandEvent& event)
 {
-	const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+	const ibFormVisualDocument* visualDoc = ibValueToolbar::GetVisualDocument();
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 
-		IValueFrame* parentToolControl = FindControlByID(event.GetId());
+		ibValueFrame* parentToolControl = FindControlByID(event.GetId());
 		if (parentToolControl != nullptr) {
 
-			CAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), CAuiToolBar);
+			ibOESToolBar* toolBar = wxDynamicCast(GetWxObject(), ibOESToolBar);
 			wxASSERT(toolBar);
 
 			if (toolBar != nullptr)
 				toolBar->SetFocus();
 
-			CValueToolBarItem* foundedToolControl = dynamic_cast<CValueToolBarItem*>(parentToolControl);
+			ibValueToolBarItem* foundedToolControl = dynamic_cast<ibValueToolBarItem*>(parentToolControl);
 			if (foundedToolControl != nullptr) {
 
-				const CActionDescription& actionDesc = foundedToolControl->GetAction();
+				const ibActionDescription& actionDesc = foundedToolControl->GetAction();
 				const wxString& strAction = actionDesc.GetCustomAction();
 
-				IValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
+				ibValueFrame* sourceElement = GetActionSrc() != wxNOT_FOUND ? FindControlByID(GetActionSrc()) : nullptr;
 				if (sourceElement != nullptr && actionDesc.GetSystemAction() != wxNOT_FOUND) {
 					try {
 						sourceElement->ExecuteAction(
@@ -53,10 +53,10 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 							GetOwnerForm()
 						);
 					}
-					catch (const CBackendAccessException* err) {
-						CSystemFunction::Alert(err->GetErrorDescription());
+					catch (const ibBackendAccessException* err) {
+						ibValueSystemFunction::Alert(err->GetErrorDescription());
 					}
-					catch (const CBackendException*) {
+					catch (const ibBackendException*) {
 					}
 				}
 				else if (strAction.Length() > 0) {
@@ -73,10 +73,10 @@ void CValueToolbar::OnTool(wxCommandEvent& event)
 	event.Skip();
 }
 
-void CValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
+void ibValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
 {
-	CAuiToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), CAuiToolBar
+	ibOESToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibOESToolBar
 	);
 
 	if (event.IsDropDownClicked()) {
@@ -109,7 +109,7 @@ void CValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
 	}
 }
 
-void CValueToolbar::OnRightDown(wxMouseEvent& event)
+void ibValueToolbar::OnRightDown(wxMouseEvent& event)
 {
 	event.Skip();
 }

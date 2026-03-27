@@ -316,15 +316,15 @@ private:
 	wxDECLARE_NO_COPY_CLASS(CAuiDocChildFrame);
 };
 
-class FRONTEND_API CDialogDocChildFrame :
+class FRONTEND_API ibDialogDocChildFrame :
 	public wxDocChildFrameAny<wxDialog, wxWindow> {
 public:
 
-	CDialogDocChildFrame()
+	ibDialogDocChildFrame()
 	{
 	}
 
-	CDialogDocChildFrame(wxDocument* doc,
+	ibDialogDocChildFrame(wxDocument* doc,
 		wxView* view,
 		wxWindow* parent,
 		wxWindowID id,
@@ -357,7 +357,7 @@ public:
 
 private:
 
-	wxDECLARE_CLASS(CDialogDocChildFrame);
-	wxDECLARE_NO_COPY_CLASS(CDialogDocChildFrame);
+	wxDECLARE_CLASS(ibDialogDocChildFrame);
+	wxDECLARE_NO_COPY_CLASS(ibDialogDocChildFrame);
 };
 #endif 

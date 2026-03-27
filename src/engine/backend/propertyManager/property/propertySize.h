@@ -5,7 +5,7 @@
 #include "backend/propertyManager/property/advprop/advpropSize.h"
 
 //base property for "size"
-class BACKEND_API CPropertySize : public IProperty {
+class BACKEND_API ibPropertySize : public ibProperty {
 	wxVariant CreateVariantData(const wxSize& val) const {
 		wxVariant newValue;
 		newValue << val;
@@ -19,21 +19,21 @@ public:
 	}
 	wxString GetValueAsString() const { return typeConv::SizeToString(GetValueAsSize()); }
 	
-	void SetValue(const wxSize& val) { IProperty::SetValue(CreateVariantData(val)); }
+	void SetValue(const wxSize& val) { ibProperty::SetValue(CreateVariantData(val)); }
 	void SetValue(const wxString& val) { SetValue(typeConv::StringToSize(val)); }
 
-	CPropertySize(CPropertyCategory* cat, const wxString& name, const wxSize &s = wxDefaultSize)
-		: IProperty(cat, name, CreateVariantData(s))
+	ibPropertySize(ibPropertyCategory* cat, const wxString& name, const wxSize &s = wxDefaultSize)
+		: ibProperty(cat, name, CreateVariantData(s))
 	{
 	}
 
-	CPropertySize(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxSize& s = wxDefaultSize)
-		: IProperty(cat, name, label, CreateVariantData(s))
+	ibPropertySize(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxSize& s = wxDefaultSize)
+		: ibProperty(cat, name, label, CreateVariantData(s))
 	{
 	}
 
-	CPropertySize(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxSize& s = wxDefaultSize)
-		: IProperty(cat, name, label, helpString, CreateVariantData(s))
+	ibPropertySize(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxSize& s = wxDefaultSize)
+		: ibProperty(cat, name, label, helpString, CreateVariantData(s))
 	{
 	}
 
@@ -43,12 +43,12 @@ public:
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 };
 
 #endif

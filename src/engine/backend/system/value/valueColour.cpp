@@ -8,23 +8,23 @@
 
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueColour, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueColour, ibValue);
 
-CValue::CMethodHelper CValueColour::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueColour::m_methodHelper;
 
-CValueColour::CValueColour() :
-	CValue(eValueTypes::TYPE_VALUE), m_colour()
+ibValueColour::ibValueColour() :
+	ibValue(ibValueTypes::TYPE_VALUE), m_colour()
 {
 }
 
-CValueColour::CValueColour(const wxColour& colour) :
-	CValue(eValueTypes::TYPE_VALUE), m_colour(colour)
+ibValueColour::ibValueColour(const wxColour& colour) :
+	ibValue(ibValueTypes::TYPE_VALUE), m_colour(colour)
 {
 }
 
-bool CValueColour::Init(CValue** paParams, const long lSizeArray)
+bool ibValueColour::Init(ibValue** paParams, const long lSizeArray)
 {
-	if (lSizeArray > 0 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray > 0 && paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
 		m_colour = typeConv::StringToColour(paParams[0]->GetString());
 		return true;
 	}
@@ -46,7 +46,7 @@ enum
 	enColorB
 };
 
-void CValueColour::PrepareNames() const
+void ibValueColour::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -55,7 +55,7 @@ void CValueColour::PrepareNames() const
 	m_methodHelper.AppendProp(wxT("B"));
 }
 
-bool CValueColour::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueColour::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
@@ -72,7 +72,7 @@ bool CValueColour::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	return false;
 }
 
-bool CValueColour::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueColour::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -93,4 +93,4 @@ bool CValueColour::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueColour, "Colour", string_to_clsid("VL_COLOR"));
+VALUE_TYPE_REGISTER(ibValueColour, "Colour", string_to_clsid("VL_COLOR"));

@@ -4,10 +4,10 @@
 //*******************************************************************
 //*                             Events                              *
 //*******************************************************************
-void CValueButton::OnButtonPressed(wxCommandEvent &event)
+void ibValueButton::OnButtonPressed(wxCommandEvent &event)
 {
 	event.Skip(
-		CallAsEvent(m_onButtonPressed, CValueButton::GetValue())
+		CallAsEvent(m_onButtonPressed, ibValueButton::GetValue())
 	);
 
 	m_formOwner->RefreshForm();

@@ -3,17 +3,17 @@
 #include "backend/objCtor.h"
 #include "backend/metadataConfiguration.h"
 
-CValue* CMetaDataDataProcessor::CreateObjectRef(const class_identifier_t& clsid, CValue** paParams, const long lSizeArray) const
+ibValue* ibMetaDataDataProcessor::CreateObjectRef(const ibClassID& clsid, ibValue** paParams, const long lSizeArray) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IAbstractTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](ibCtorAbstractType* typeCtor) {
 		return clsid == typeCtor->GetClassType();
 		}
 	);
 
 	if (it != m_factoryCtors.end()) {
-		IAbstractTypeCtor* typeCtor(*it);
+		ibCtorAbstractType* typeCtor(*it);
 		wxASSERT(typeCtor);
-		CValue* newObject = typeCtor->CreateObject();
+		ibValue* newObject = typeCtor->CreateObject();
 		wxASSERT(newObject);
 
 		bool succes = true;
@@ -24,7 +24,7 @@ CValue* CMetaDataDataProcessor::CreateObjectRef(const class_identifier_t& clsid,
 
 		if (!succes) {
 			wxDELETE(newObject);
-			CBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
+			ibBackendCoreException::Error(_("Error initializing object '%s'"), typeCtor->GetClassName());
 		}
 		newObject->PrepareNames();
 		return newObject;
@@ -33,42 +33,42 @@ CValue* CMetaDataDataProcessor::CreateObjectRef(const class_identifier_t& clsid,
 	return activeMetaData->CreateObjectRef(clsid, paParams, lSizeArray);
 }
 
-bool CMetaDataDataProcessor::IsRegisterCtor(const wxString& className) const
+bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className) const
 {
-	if (!IMetaData::IsRegisterCtor(className))
+	if (!ibMetaData::IsRegisterCtor(className))
 		return activeMetaData->IsRegisterCtor(className);
 	return true;
 }
 
-bool CMetaDataDataProcessor::IsRegisterCtor(const wxString& className, eCtorObjectType objectType) const
+bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType) const
 {
-	if (!IMetaData::IsRegisterCtor(className, objectType))
+	if (!ibMetaData::IsRegisterCtor(className, objectType))
 		return activeMetaData->IsRegisterCtor(className);
 	return true;
 }
 
-bool CMetaDataDataProcessor::IsRegisterCtor(const wxString& className, eCtorObjectType objectType, eCtorMetaType refType) const
+bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorMetaType refType) const
 {
-	if (!IMetaData::IsRegisterCtor(className, objectType, refType))
+	if (!ibMetaData::IsRegisterCtor(className, objectType, refType))
 		return activeMetaData->IsRegisterCtor(className, objectType, refType);
 	return true;
 }
 
-bool CMetaDataDataProcessor::IsRegisterCtor(const class_identifier_t& clsid) const
+bool ibMetaDataDataProcessor::IsRegisterCtor(const ibClassID& clsid) const
 {
-	if (!IMetaData::IsRegisterCtor(clsid))
+	if (!ibMetaData::IsRegisterCtor(clsid))
 		return activeMetaData->IsRegisterCtor(clsid);
 	return true;
 }
 
-class_identifier_t CMetaDataDataProcessor::GetIDObjectFromString(const wxString& className) const
+ibClassID ibMetaDataDataProcessor::GetIDObjectFromString(const wxString& className) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](IAbstractTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](ibCtorAbstractType* typeCtor) {
 		return stringUtils::CompareString(className, typeCtor->GetClassName());
 		});
 
 	if (it != m_factoryCtors.end()) {
-		IAbstractTypeCtor* typeCtor = *it;
+		ibCtorAbstractType* typeCtor = *it;
 		wxASSERT(typeCtor);
 		return typeCtor->GetClassType();
 	}
@@ -76,14 +76,14 @@ class_identifier_t CMetaDataDataProcessor::GetIDObjectFromString(const wxString&
 	return activeMetaData->GetIDObjectFromString(className);
 }
 
-wxString CMetaDataDataProcessor::GetNameObjectFromID(const class_identifier_t& clsid, bool upper) const
+wxString ibMetaDataDataProcessor::GetNameObjectFromID(const ibClassID& clsid, bool upper) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IAbstractTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](ibCtorAbstractType* typeCtor) {
 		return clsid == typeCtor->GetClassType();
 		});
 
 	if (it != m_factoryCtors.end()) {
-		IAbstractTypeCtor* typeCtor = *it;
+		ibCtorAbstractType* typeCtor = *it;
 		wxASSERT(typeCtor);
 		return upper ? typeCtor->GetClassName().Upper() : typeCtor->GetClassName();
 	}
@@ -91,18 +91,18 @@ wxString CMetaDataDataProcessor::GetNameObjectFromID(const class_identifier_t& c
 	return activeMetaData->GetNameObjectFromID(clsid, upper);
 }
 
-IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const class_identifier_t& clsid) const
+ibCtorMetaValueType* ibMetaDataDataProcessor::GetTypeCtor(const ibClassID& clsid) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IMetaValueTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](ibCtorMetaValueType* typeCtor) {
 		return clsid == typeCtor->GetClassType(); }
 	);
 	if (it != m_factoryCtors.end()) return *it;
 	return activeMetaData->GetTypeCtor(clsid);
 }
 
-IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const IValueMetaObject* metaValue, eCtorMetaType refType) const
+ibCtorMetaValueType* ibMetaDataDataProcessor::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorMetaType refType) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [metaValue, refType](IMetaValueTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [metaValue, refType](ibCtorMetaValueType* typeCtor) {
 		return refType == typeCtor->GetMetaTypeCtor() &&
 			metaValue == typeCtor->GetMetaObject();
 		}
@@ -112,9 +112,9 @@ IMetaValueTypeCtor* CMetaDataDataProcessor::GetTypeCtor(const IValueMetaObject* 
 	return activeMetaData->GetTypeCtor(metaValue, refType);
 }
 
-IAbstractTypeCtor* CMetaDataDataProcessor::GetAvailableCtor(const wxString& className) const
+ibCtorAbstractType* ibMetaDataDataProcessor::GetAvailableCtor(const wxString& className) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](IAbstractTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [className](ibCtorAbstractType* typeCtor) {
 		return stringUtils::CompareString(className, typeCtor->GetClassName());
 		}
 	);
@@ -122,32 +122,32 @@ IAbstractTypeCtor* CMetaDataDataProcessor::GetAvailableCtor(const wxString& clas
 	return activeMetaData->GetAvailableCtor(className);
 }
 
-IAbstractTypeCtor* CMetaDataDataProcessor::GetAvailableCtor(const class_identifier_t& clsid) const
+ibCtorAbstractType* ibMetaDataDataProcessor::GetAvailableCtor(const ibClassID& clsid) const
 {
-	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](IMetaValueTypeCtor* typeCtor) {
+	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [clsid](ibCtorMetaValueType* typeCtor) {
 		return clsid == typeCtor->GetClassType(); }
 	);
 	if (it != m_factoryCtors.end()) return *it;
 	return activeMetaData->GetAvailableCtor(clsid);
 }
 
-std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType() const
+std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType() const
 {
 	return activeMetaData->GetListCtorsByType();
 }
 
-bool CMetaDataDataProcessor::GetOwner(IMetaData*& metaData) const
+bool ibMetaDataDataProcessor::GetOwner(ibMetaData*& metaData) const
 {
 	metaData = activeMetaData;
 	return true;
 }
 
-std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType(const class_identifier_t& clsid, eCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(const ibClassID& clsid, ibCtorMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(clsid, refType);
 }
 
-std::vector<IMetaValueTypeCtor*> CMetaDataDataProcessor::GetListCtorsByType(eCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(ibCtorMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(refType);
 }

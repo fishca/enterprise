@@ -4,12 +4,12 @@ static wxCriticalSection s_dbStringConverterCS;
 static wxCSConv g_def_encoding = wxT("UTF-8");
 
 // Default the encoding converter
-CDatabaseStringConverter::CDatabaseStringConverter()
+ibDatabaseStringConverter::ibDatabaseStringConverter()
 	: m_Encoding(nullptr)
 {
 }
 
-CDatabaseStringConverter::CDatabaseStringConverter(const CDatabaseStringConverter& src)
+ibDatabaseStringConverter::ibDatabaseStringConverter(const ibDatabaseStringConverter& src)
 	: m_Encoding(nullptr)
 {
 	if (src.m_Encoding != nullptr) {
@@ -17,7 +17,7 @@ CDatabaseStringConverter::CDatabaseStringConverter(const CDatabaseStringConverte
 	}
 }
 
-void CDatabaseStringConverter::SetEncoding(const wxCSConv* conv)
+void ibDatabaseStringConverter::SetEncoding(const wxCSConv* conv)
 {
 	if (conv != &g_def_encoding) {
 
@@ -30,7 +30,7 @@ void CDatabaseStringConverter::SetEncoding(const wxCSConv* conv)
 	}
 }
 
-const wxCSConv* CDatabaseStringConverter::GetEncoding()
+const wxCSConv* ibDatabaseStringConverter::GetEncoding()
 {
 	if (m_Encoding == nullptr)
 		return &g_def_encoding;
@@ -38,7 +38,7 @@ const wxCSConv* CDatabaseStringConverter::GetEncoding()
 	return m_Encoding;
 }
 
-const wxCharBuffer CDatabaseStringConverter::ConvertToUnicodeStream(const wxString& inputString)
+const wxCharBuffer ibDatabaseStringConverter::ConvertToUnicodeStream(const wxString& inputString)
 {
 #if wxUSE_UNICODE
 	return wxConvUTF8.cWC2MB(inputString.wc_str(*wxConvCurrent));
@@ -48,7 +48,7 @@ const wxCharBuffer CDatabaseStringConverter::ConvertToUnicodeStream(const wxStri
 #endif
 }
 
-unsigned int CDatabaseStringConverter::GetEncodedStreamLength(const wxString& inputString)
+unsigned int ibDatabaseStringConverter::GetEncodedStreamLength(const wxString& inputString)
 {
 #if wxUSE_UNICODE
 	unsigned int length = wxConvUTF8.WC2MB(nullptr, inputString.wc_str(), (unsigned int)0);
@@ -65,7 +65,7 @@ unsigned int CDatabaseStringConverter::GetEncodedStreamLength(const wxString& in
 	return length;
 }
 
-wxString CDatabaseStringConverter::ConvertFromUnicodeStream(const char* inputBuffer)
+wxString ibDatabaseStringConverter::ConvertFromUnicodeStream(const char* inputBuffer)
 {
 	wxString strReturn(wxConvUTF8.cMB2WC(inputBuffer), *wxConvCurrent);
 
@@ -76,7 +76,7 @@ wxString CDatabaseStringConverter::ConvertFromUnicodeStream(const char* inputBuf
 	return strReturn;
 }
 
-const wxCharBuffer CDatabaseStringConverter::ConvertToUnicodeStream(const wxString& inputString, const char* encoding)
+const wxCharBuffer ibDatabaseStringConverter::ConvertToUnicodeStream(const wxString& inputString, const char* encoding)
 {
 #if wxUSE_UNICODE
 	return wxConvUTF8.cWC2MB(inputString.wc_str(*wxConvCurrent));
@@ -86,7 +86,7 @@ const wxCharBuffer CDatabaseStringConverter::ConvertToUnicodeStream(const wxStri
 #endif
 }
 
-unsigned int CDatabaseStringConverter::GetEncodedStreamLength(const wxString& inputString, const char* encoding)
+unsigned int ibDatabaseStringConverter::GetEncodedStreamLength(const wxString& inputString, const char* encoding)
 {
 #if wxUSE_UNICODE
 	unsigned int length = wxConvUTF8.WC2MB(nullptr, inputString.wc_str(), (unsigned int)0);
@@ -96,14 +96,14 @@ unsigned int CDatabaseStringConverter::GetEncodedStreamLength(const wxString& in
 #endif
 	if (length == 0)
 	{
-		wxCharBuffer tempCharBuffer = CDatabaseStringConverter::ConvertToUnicodeStream(inputString, encoding);
+		wxCharBuffer tempCharBuffer = ibDatabaseStringConverter::ConvertToUnicodeStream(inputString, encoding);
 		length = wxStrlen((wxChar*)(const char*)tempCharBuffer);
 	}
 
 	return length;
 }
 
-wxString CDatabaseStringConverter::ConvertFromUnicodeStream(const char* inputBuffer, const char* encoding)
+wxString ibDatabaseStringConverter::ConvertFromUnicodeStream(const char* inputBuffer, const char* encoding)
 {
 	wxString strReturn(wxConvUTF8.cMB2WC(inputBuffer), *wxConvCurrent);
 

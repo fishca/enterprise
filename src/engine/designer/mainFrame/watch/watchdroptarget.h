@@ -13,7 +13,7 @@ class ibWatchWindow;
 /**
  * This class handles dragging and dropping items onto the watch window.
  */
-class CWatchDropTarget : public wxTextDropTarget
+class ibWatchDropTarget : public wxTextDropTarget
 {
 
 public:
@@ -22,7 +22,7 @@ public:
      * Constructor. The watch window that will be added to as a result of drag
      * and drop is specified.
      */
-    explicit CWatchDropTarget(ibWatchWindow* watch);
+    explicit ibWatchDropTarget(ibWatchWindow* watch);
 
     /**
      * From wxTextDropTarget.

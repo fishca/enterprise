@@ -285,10 +285,9 @@ protected:
 			wxWindow* new_active = pClientWindow->GetPage(pClientWindow->GetSelection());
 
 			pClientWindow->SetEvtHandlerEnabled(false);
-
 			const int page_idx = pClientWindow->GetPageIndex(this);
 			success_destroy = page_idx != wxNOT_FOUND ?
-				pClientWindow->DeletePage(page_idx) : false;
+				pClientWindow->RemovePage(page_idx) : false;
 
 			const int restore_selection = pClientWindow->GetPageIndex(new_active);
 
@@ -299,6 +298,10 @@ protected:
 		}
 	
 		pClientWindow->Thaw();
+
+		// This is a child window, so we need to delete it immediately instead of
+		// postponing it until idle time as we do with real TLWs.
+		delete this;
 
 		return success_destroy;
 	}

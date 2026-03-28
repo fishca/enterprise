@@ -19,10 +19,15 @@ public:
 	virtual void OnCustomPaint(wxDC& dc,
 		const wxRect& rect, wxPGPaintData& paintdata) override;
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const
+	{
+		return value.GetString();
+	}
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
 
@@ -53,10 +58,10 @@ public:
 
 	virtual ~wxPGPictureProperty() {}
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
+	virtual wxString ValueToString(wxVariant& value, wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override { return value.GetString(); }
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override {
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override {
 		return false;
 	}
 

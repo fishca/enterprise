@@ -8,8 +8,8 @@
 
 void ibValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 {
-	ibOESToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), ibOESToolBar
+	ibAuiToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibAuiToolBar
 	);
 	wxASSERT(toolBar);
 	if (g_visualHostContext != nullptr) {
@@ -33,7 +33,7 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 		ibValueFrame* parentToolControl = FindControlByID(event.GetId());
 		if (parentToolControl != nullptr) {
 
-			ibOESToolBar* toolBar = wxDynamicCast(GetWxObject(), ibOESToolBar);
+			ibAuiToolBar* toolBar = wxDynamicCast(GetWxObject(), ibAuiToolBar);
 			wxASSERT(toolBar);
 
 			if (toolBar != nullptr)
@@ -75,8 +75,8 @@ void ibValueToolbar::OnTool(wxCommandEvent& event)
 
 void ibValueToolbar::OnToolDropDown(wxAuiToolBarEvent& event)
 {
-	ibOESToolBar* toolBar = wxDynamicCast(
-		GetWxObject(), ibOESToolBar
+	ibAuiToolBar* toolBar = wxDynamicCast(
+		GetWxObject(), ibAuiToolBar
 	);
 
 	if (event.IsDropDownClicked()) {

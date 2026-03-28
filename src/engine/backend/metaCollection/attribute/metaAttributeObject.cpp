@@ -34,7 +34,7 @@ bool ibValueMetaObjectAttributeBase::EqualType(const ibClassID& clsid, const ibT
 	return GetTypeDesc().EqualType(clsid, rhs);
 }
 
-bool ibValueMetaObjectAttributeBase::ContainMetaType(ibCtorMetaType type) const
+bool ibValueMetaObjectAttributeBase::ContainMetaType(ibCtorObjectMetaType type) const
 {
 	for (auto& clsid : GetTypeDesc().GetClsidList()) {
 		const ibCtorMetaValueType* typeCtor = m_metaData->GetTypeCtor(clsid);
@@ -62,7 +62,7 @@ ibSelectMode ibValueMetaObjectAttribute::GetSelectMode() const
 	const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(GetTypeDesc().GetFirstClsid());
 	if (so != nullptr) {
 		ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
-		if (so->GetMetaTypeCtor() == ibCtorMetaType::ibCtorMetaType_Reference && metaObject != nullptr)
+		if (so->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_Reference && metaObject != nullptr)
 			return (ibSelectMode)m_propertySelectMode->GetValueAsInteger();
 		return ibSelectMode::ibSelectMode_Items;
 	}

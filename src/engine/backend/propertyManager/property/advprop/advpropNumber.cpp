@@ -21,7 +21,7 @@ wxNumberProperty::wxNumberProperty(const wxString& label,
 wxNumberProperty::~wxNumberProperty() {}
 
 wxString wxNumberProperty::ValueToString(wxVariant& variant,
-	int argFlags) const
+	wxPGPropValFormatFlags flags) const
 {
 	wxString text;
 	if (!variant.IsNull()) {
@@ -33,7 +33,7 @@ wxString wxNumberProperty::ValueToString(wxVariant& variant,
 	return text;
 }
 
-bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
+bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	ibNumber value;
 	ibVariantDataNumber* numberVariant =
@@ -51,7 +51,7 @@ bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, i
 			return true;
 		}
 	}
-	else if (argFlags & wxPG_REPORT_ERROR) {
+	else if (!!(flags & wxPGPropValFormatFlags::ReportError)) {
 	}
 	return false;
 }

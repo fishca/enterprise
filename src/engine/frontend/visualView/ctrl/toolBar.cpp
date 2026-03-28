@@ -38,11 +38,12 @@ ibValueToolbar::ibValueToolbar() : ibValueWindow()
 
 wxObject* ibValueToolbar::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = new ibOESToolBar(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_HORZ_TEXT | wxAUI_TB_OVERFLOW);
+	ibAuiToolBar* toolbar = new ibAuiToolBar(wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_NO_AUTORESIZE | wxAUI_TB_HORZ_TEXT | wxAUI_TB_OVERFLOW);
 	toolbar->SetArtProvider(new wxAuiLunaToolBarArt());
 	toolbar->Bind(wxEVT_TOOL, &ibValueToolbar::OnTool, this);
 	toolbar->Bind(wxEVT_AUITOOLBAR_TOOL_DROPDOWN, &ibValueToolbar::OnToolDropDown, this);
 	toolbar->Bind(wxEVT_LEFT_DOWN, &ibValueToolbar::OnToolBarLeftDown, this);
+
 	return toolbar;
 }
 
@@ -56,7 +57,7 @@ void ibValueToolbar::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualH
 
 void ibValueToolbar::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(wxobject);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxobject);
 
 	if (toolbar != nullptr) {
 
@@ -80,7 +81,7 @@ void ibValueToolbar::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualH
 
 void ibValueToolbar::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(obj);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(obj);
 	toolbar->Unbind(wxEVT_TOOL, &ibValueToolbar::OnTool, this);
 }
 

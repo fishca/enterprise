@@ -13,14 +13,14 @@ public:
 
 	wxEventProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
-		const wxString& value = wxEmptyString) : wxStringProperty(label, name, value) {
-		m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
-	}
+		const wxString& value = wxEmptyString);
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 

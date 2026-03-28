@@ -159,9 +159,9 @@ public:
 
 	static void DestroyFrame();
 
-	CKeyBinder             GetKeyBinder() const { return m_keyBinder; }
-	CFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
-	CEditorSettings        GetEditorSettings() const { return m_editorSettings; }
+	ibKeyBinder             GetKeyBinder() const { return m_keyBinder; }
+	ibFontColorSettings     GetFontColorSettings() const { return m_fontColorSettings; }
+	ibEditorSettings        GetEditorSettings() const { return m_editorSettings; }
 
 	/**
 	* Show property in mainFrame
@@ -196,9 +196,9 @@ protected:
 
 	CObjectInspector* m_objectInspector;
 
-	CKeyBinder             m_keyBinder;
-	CFontColorSettings     m_fontColorSettings;
-	CEditorSettings        m_editorSettings;
+	ibKeyBinder             m_keyBinder;
+	ibFontColorSettings     m_fontColorSettings;
+	ibEditorSettings        m_editorSettings;
 
 	bool m_callRaiseFrame, m_callUpdateFrameManager;
 
@@ -211,11 +211,11 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CDocBottomStatusBar : public wxStatusBar {
+class ibDocBottomStatusBar : public wxStatusBar {
 public:
 
-	CDocBottomStatusBar() : wxStatusBar() {};
-	CDocBottomStatusBar(wxWindow* parent,
+	ibDocBottomStatusBar() : wxStatusBar() {};
+	ibDocBottomStatusBar(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		long style = wxSTB_DEFAULT_STYLE,
 		const wxString& name = wxStatusBarNameStr)
@@ -240,9 +240,9 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CProcessSplashScreen : public wxSplashScreen {
+class ibProcessSplashScreen : public wxSplashScreen {
 public:
-	CProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
+	ibProcessSplashScreen(const wxBitmap& bitmap, long splashStyle = wxSPLASH_CENTRE_ON_SCREEN, int milliseconds = -1,
 		wxWindow* parent = nullptr, wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,

@@ -223,10 +223,10 @@ void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 	const wxString& strCode
 )
 {
-	class CFoldParser {
+	class ibFoldParser {
 		wxStyledTextCtrl* m_stc;
 	public:
-		CFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
+		ibFoldParser(wxStyledTextCtrl* stc, const int fromLine, const int toLine) :
 			m_stc(stc), m_fromLine(fromLine), m_toLine(toLine), m_foldLevel(0) {
 			m_foldLevel = m_stc->GetFoldLevel(fromLine);
 		}
@@ -296,7 +296,7 @@ void ibFrameCodeRunner::HighlightSyntaxAndCalculateFoldLevel(
 		int m_foldLevel;
 	};
 
-	CFoldParser foldParser(m_codeEditor, fromLine, toLine);
+	ibFoldParser foldParser(m_codeEditor, fromLine, toLine);
 
 	ibTranslateCode translate;
 	translate.Load(strCode);

@@ -311,10 +311,10 @@ public:
 	void RefreshBreakpoint(bool bDeleteCurrentBreakline = false);
 
 	//Editor setting 
-	void SetEditorSettings(const CEditorSettings& settings);
+	void SetEditorSettings(const ibEditorSettings& settings);
 
 	//Font setting 
-	void SetFontColorSettings(const CFontColorSettings& settings);
+	void SetFontColorSettings(const ibFontColorSettings& settings);
 
 	void ShowAutoComplete(
 		const ibDebugAutoCompleteData& autoCompleteData);
@@ -380,7 +380,7 @@ private:
 	void EditDebugPoint(int line);
 
 	ibMetaDocument* m_document;
-	CPrecompileCode* m_precompileModule;
+	ibPrecompileCode* m_precompileModule;
 
 	CAutoComplete m_ac;
 	CCallTip m_ct;

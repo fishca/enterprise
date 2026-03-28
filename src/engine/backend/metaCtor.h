@@ -3,20 +3,14 @@
 
 //metaobject register document, form, etc ... 
 template <class T>
-class CMetaTypeCtor : public ibCtorValueTypeBase {
+class ibCtorMetaType : public ibCtorValueTypeBase {
 
 public:
 
-	CMetaTypeCtor(const wxString& className, const ibClassID& clsid) :
-		ibCtorValueTypeBase(className, CLASSINFO(T), clsid) {}
+	ibCtorMetaType(const wxString& className, const ibClassID& clsid) :ibCtorValueTypeBase(className, CLASSINFO(T), clsid) {}
 
-	virtual wxIcon GetClassIcon() const {
-		return T::GetIconGroup();
-	}
-
-	virtual ibCtorObjectType GetObjectTypeCtor() const {
-		return ibCtorObjectType::ibCtorObjectType_object_metadata;
-	}
+	virtual wxIcon GetClassIcon() const { return T::GetIconGroup(); }
+	virtual ibCtorObjectType GetObjectTypeCtor() const { return ibCtorObjectType::ibCtorObjectType_object_metadata; }
 
 	virtual void CallEvent(ibCtorObjectTypeEvent event) {
 		if (event == ibCtorObjectTypeEvent::ibCtorObjectTypeEvent_Register)
@@ -25,12 +19,10 @@ public:
 			T::OnUnRegisterObject(GetClassName());
 	}
 
-	virtual ibValue* CreateObject() const {
-		return new T();
-	}
+	virtual ibValue* CreateObject() const { return new T(); }
 };
 
 #define METADATA_TYPE_REGISTER(class_info, class_name, clsid)\
-GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_m_), new CMetaTypeCtor<class_info>(wxT(class_name), clsid))
+GENERATE_REGISTER(wxT(class_name), wxMAKE_UNIQUE_NAME(s_cs_reg_m_), new ibCtorMetaType<class_info>(wxT(class_name), clsid))
 
 #endif

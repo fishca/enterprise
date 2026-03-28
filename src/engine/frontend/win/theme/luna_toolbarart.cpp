@@ -15,11 +15,11 @@
 wxBitmap wxAuiBitmapFromBits(const unsigned char bits[], int w, int h,
 	const wxColour& color);
 
-class CToolbarCommandCapture : public wxEvtHandler
+class ibToolbarCommandCapture : public wxEvtHandler
 {
 public:
 
-	CToolbarCommandCapture() { m_lastId = 0; }
+	ibToolbarCommandCapture() { m_lastId = 0; }
 	int GetCommandId() const { return m_lastId; }
 
 	bool ProcessEvent(wxEvent& evt) wxOVERRIDE
@@ -457,7 +457,7 @@ void wxAuiLunaToolBarArt::DrawControlLabel(
 }
 
 wxSize wxAuiLunaToolBarArt::GetLabelSize(
-	wxDC& dc,
+	wxReadOnlyDC& dc,
 	wxWindow* WXUNUSED(wnd),
 	const wxAuiToolBarItem& item)
 {
@@ -480,7 +480,7 @@ wxSize wxAuiLunaToolBarArt::GetLabelSize(
 }
 
 wxSize wxAuiLunaToolBarArt::GetToolSize(
-	wxDC& dc,
+	wxReadOnlyDC& dc,
 	wxWindow* wnd,
 	const wxAuiToolBarItem& item)
 {
@@ -705,7 +705,7 @@ int wxAuiLunaToolBarArt::ShowDropDown(wxWindow* wnd,
 	wxRect cli_rect = wnd->GetClientRect();
 	pt.y = cli_rect.y + cli_rect.height;
 
-	CToolbarCommandCapture* cc = new CToolbarCommandCapture;
+	ibToolbarCommandCapture* cc = new ibToolbarCommandCapture;
 	wnd->PushEventHandler(cc);
 	wnd->PopupMenu(&menuPopup, pt);
 	int command = cc->GetCommandId();

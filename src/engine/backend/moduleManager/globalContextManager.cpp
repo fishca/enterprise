@@ -18,7 +18,7 @@ public:
 		: ibValueStructure(true), m_clsid(clsid), m_metaData(metaData) {
 
 		for (const auto object : m_metaData->GetAnyArrayObject(clsid)) {
-			ibCtorMetaValueType* so = m_metaData->GetTypeCtor(object, ibCtorMetaType::ibCtorMetaType_Manager);
+			ibCtorMetaValueType* so = m_metaData->GetTypeCtor(object, ibCtorObjectMetaType::ibCtorObjectMetaType_Manager);
 			if (so == nullptr)
 				continue;
 			ibValuePtr<ibValue> createdValue = so->CreateObject();

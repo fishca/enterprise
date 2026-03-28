@@ -1,5 +1,6 @@
 #include "advpropPicture.h"
 
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/property/propertyPicture.h"
 #include "backend/propertyManager/property/variant/variantPicture.h"
 
@@ -276,8 +277,8 @@ const wxString& wxPGGetDefaultImageWildcard(int& indFilter)
 wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, const wxString& name, const wxVariant& value)
 	: wxEditorDialogProperty(label, name)
 {
-	m_flags |= wxPG_PROP_SHOW_FULL_FILENAME;
-	m_flags &= ~wxPG_PROP_ACTIVE_BTN; // Property button enabled only in not read-only mode.
+	m_flags |= wxPGPropertyFlags_ShowFullFileName;
+	m_flags &= ~wxPGPropertyFlags_ActiveButton; // Property button enabled only in not read-only mode.
 
 	m_wildcard = wxPGGetDefaultImageWildcard(m_indFilter);
 
@@ -316,7 +317,7 @@ void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	}
 }
 
-bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
+bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	if (text.IsEmpty()) {
 		variant = new ibVariantDataExternalPicture();

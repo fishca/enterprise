@@ -351,7 +351,7 @@ void ibValueListDataObjectEnumRef::ChooseValue(ibBackendValueForm* srcForm)
 ibClassID ibValueListDataObjectEnumRef::GetClassType() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -359,7 +359,7 @@ ibClassID ibValueListDataObjectEnumRef::GetClassType() const
 wxString ibValueListDataObjectEnumRef::GetClassName() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -367,7 +367,7 @@ wxString ibValueListDataObjectEnumRef::GetClassName() const
 wxString ibValueListDataObjectEnumRef::GetString() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -569,7 +569,7 @@ void ibValueListDataObjectRef::ChooseValue(ibBackendValueForm* srcForm)
 ibClassID ibValueListDataObjectRef::GetClassType() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -577,7 +577,7 @@ ibClassID ibValueListDataObjectRef::GetClassType() const
 wxString ibValueListDataObjectRef::GetClassName() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -585,7 +585,7 @@ wxString ibValueListDataObjectRef::GetClassName() const
 wxString ibValueListDataObjectRef::GetString() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -878,7 +878,7 @@ void ibValueModelTreeDataObjectFolderRef::ChooseValue(ibBackendValueForm* srcFor
 ibClassID ibValueModelTreeDataObjectFolderRef::GetClassType() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -886,7 +886,7 @@ ibClassID ibValueModelTreeDataObjectFolderRef::GetClassType() const
 wxString ibValueModelTreeDataObjectFolderRef::GetClassName() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -894,7 +894,7 @@ wxString ibValueModelTreeDataObjectFolderRef::GetClassName() const
 wxString ibValueModelTreeDataObjectFolderRef::GetString() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -1070,7 +1070,7 @@ void ibValueListRegisterObject::DeleteValue()
 ibClassID ibValueListRegisterObject::GetClassType() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -1078,7 +1078,7 @@ ibClassID ibValueListRegisterObject::GetClassType() const
 wxString ibValueListRegisterObject::GetClassName() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -1086,7 +1086,7 @@ wxString ibValueListRegisterObject::GetClassName() const
 wxString ibValueListRegisterObject::GetString() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_List);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }

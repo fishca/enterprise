@@ -3,6 +3,7 @@
 //	Description : report manager 
 ////////////////////////////////////////////////////////////////////////////
 
+#include <wx/except.h>
 #include <wx/docview.h>
 #include <wx/cmdproc.h>
 #include <wx/config.h>

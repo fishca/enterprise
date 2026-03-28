@@ -46,7 +46,7 @@ bool ibMetaDataReport::IsRegisterCtor(const wxString& className, ibCtorObjectTyp
 	return true;
 }
 
-bool ibMetaDataReport::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorMetaType refType) const
+bool ibMetaDataReport::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorObjectMetaType refType) const
 {
 	if (!ibMetaData::IsRegisterCtor(className, objectType, refType))
 		return activeMetaData->IsRegisterCtor(className, objectType, refType);
@@ -99,7 +99,7 @@ ibCtorMetaValueType* ibMetaDataReport::GetTypeCtor(const ibClassID& clsid) const
 	return activeMetaData->GetTypeCtor(clsid);
 }
 
-ibCtorMetaValueType* ibMetaDataReport::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorMetaType refType) const
+ibCtorMetaValueType* ibMetaDataReport::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorObjectMetaType refType) const
 {
 	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [metaValue, refType](ibCtorMetaValueType* typeCtor) {
 		return refType == typeCtor->GetMetaTypeCtor() &&
@@ -134,7 +134,7 @@ std::vector<ibCtorMetaValueType*> ibMetaDataReport::GetListCtorsByType() const
 	return activeMetaData->GetListCtorsByType();
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaDataReport::GetListCtorsByType(const ibClassID& clsid, ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataReport::GetListCtorsByType(const ibClassID& clsid, ibCtorObjectMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(clsid, refType);
 }
@@ -145,7 +145,7 @@ bool ibMetaDataReport::GetOwner(ibMetaData*& metaData) const
 	return true;
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaDataReport::GetListCtorsByType(ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataReport::GetListCtorsByType(ibCtorObjectMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(refType);
 }

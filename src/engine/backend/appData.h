@@ -237,7 +237,7 @@ public:
 		}
 		return wxEmptyString;
 	}
-	
+
 	inline wxString GetRunModeDescr() const { return GetRunModeDescr(m_runMode); }
 
 	ibDatabaseMode GetDatabaseMode() const { return m_dbMode; }
@@ -252,7 +252,7 @@ public:
 		}
 		return wxEmptyString;
 	}
-	
+
 	inline wxString GetDatabaseModeDescr() const { return GetDatabaseModeDescr(m_dbMode); }
 
 	bool AuthenticationAndSetUser(const wxString& strUserName, const wxString& strUserPassword);
@@ -270,25 +270,16 @@ public:
 
 #pragma region session  
 
-	const ibApplicationDataSessionArray GetSessionArray() const {
-		return m_sessionUpdater->GetSessionArray();
-	}
+	const ibApplicationDataSessionArray GetSessionArray() const { return m_sessionUpdater->GetSessionArray(); }
 
 #pragma endregion 
 
-	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const {
-		return m_userInfo.m_roleArray;
-	}
+	const std::vector<ibApplicationDataUserInfo::ibApplicationDataUserRole>& GetUserRoleArray() const { return m_userInfo.m_roleArray; }
 
 #pragma region language  
 
-	ibGuid GetUserLanguageGuid() const {
-		return m_userInfo.m_strLanguageGuid;
-	}
-
-	wxString GetUserLanguageCode() const {
-		return m_userInfo.m_strLanguageCode;
-	}
+	ibGuid GetUserLanguageGuid() const { return m_userInfo.m_strLanguageGuid; }
+	wxString GetUserLanguageCode() const { return m_userInfo.m_strLanguageCode; }
 
 #pragma endregion 
 

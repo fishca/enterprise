@@ -3,6 +3,8 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/props.h>
 
+#include "backend/propertyManager/property/private/prop.h"
+
 #include <wx/slider.h>
 #include <wx/odcombo.h>
 #include <wx/stattext.h>
@@ -46,7 +48,7 @@ WX_PG_IMPLEMENT_INTERNAL_EDITOR_CLASS(ComboBoxAndButton,
 	wxWindow* ch = CreateControlsBase(propGrid, property,
 		pos, ch_sz, 0);
 
-	if (!property->HasFlag(wxPG_PROP_ACTIVE_BTN)) {
+	if (!property->HasFlag(wxPGPropertyFlags_ActiveButton)) {
 		bt->Disable();
 	}
 
@@ -74,7 +76,7 @@ bool wxPGComboBoxAndButtonEditor::OnEvent(wxPropertyGrid* propGrid,
 		propGrid->GetEditorControlSecondary();
 
 	if (wndEditor2 != nullptr) {
-		bool needButton = property->HasFlag(wxPG_PROP_ACTIVE_BTN);
+		bool needButton = property->HasFlag(wxPGPropertyFlags_ActiveButton);
 		if (needButton != wndEditor2->IsEnabled()) {
 			wndEditor2->Enable(needButton);
 		}
@@ -90,7 +92,7 @@ void wxPGComboBoxAndButtonEditor::UpdateControl(wxPGProperty* property, wxWindow
 {
 	wxOwnerDrawnComboBox* cb = (wxOwnerDrawnComboBox*)ctrl;
 	const int index = property->GetChoiceSelection();
-	wxString s = property->GetValueAsString(wxPG_EDITABLE_VALUE);
+	wxString s = property->GetValueAsString(wxPGPropValFormatFlags::EditableValue);
 	cb->SetSelection(index);
 	property->GetGrid()->SetupTextCtrlValue(s);
 	cb->SetValue(s);
@@ -109,10 +111,10 @@ bool wxPGComboBoxAndButtonEditor::GetValueFromControl(wxVariant& variant, wxPGPr
 	int selection = cb->FindString(textVal); bool res = true;
 
 	if (selection != wxNOT_FOUND) {
-		res = property->IntToValue(variant, selection, wxPG_EDITABLE_VALUE | wxPG_PROPERTY_SPECIFIC);
+		res = property->IntToValue(variant, selection, wxPGPropValFormatFlags::EditableValue | wxPGPropValFormatFlags::PropertySpecific);
 	}
 	else {
-		res = property->StringToValue(variant, textVal, wxPG_EDITABLE_VALUE | wxPG_PROPERTY_SPECIFIC);
+		res = property->StringToValue(variant, textVal, wxPGPropValFormatFlags::EditableValue | wxPGPropValFormatFlags::PropertySpecific);
 	}
 
 	// Changing unspecified always causes event (returning

@@ -4,9 +4,9 @@
 
 #include <wx/xml/xml.h>
 
-const char* CFontColorSettings::s_displayItemName[] = { _("Default"), _("Comment"), _("Preprocessor"), _("Keyword"), _("Operator"), _("String"), _("Number"), _("Error"), _("Warning"), _("Selection") };
+const wxString ibFontColorSettings::s_displayItemName[] = { _("Default"), _("Comment"), _("Preprocessor"), _("Keyword"), _("Operator"), _("String"), _("Number"), _("Error"), _("Warning"), _("Selection") };
 
-CFontColorSettings::CFontColorSettings()
+ibFontColorSettings::ibFontColorSettings()
 {
 
 	m_font = wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
@@ -63,27 +63,27 @@ CFontColorSettings::CFontColorSettings()
 
 }
 
-unsigned int CFontColorSettings::GetNumDisplayItems() const
+unsigned int ibFontColorSettings::GetNumDisplayItems() const
 {
 	return DisplayItem_Last;
 }
 
-const char* CFontColorSettings::GetDisplayItemName(unsigned int i) const
+const char* ibFontColorSettings::GetDisplayItemName(unsigned int i) const
 {
 	return s_displayItemName[i];
 }
 
-void CFontColorSettings::SetFont(const wxFont& font)
+void ibFontColorSettings::SetFont(const wxFont& font)
 {
 	m_font = font;
 }
 
-const wxFont& CFontColorSettings::GetFont() const
+const wxFont& ibFontColorSettings::GetFont() const
 {
 	return m_font;
 }
 
-wxFont CFontColorSettings::GetFont(DisplayItem displayItem) const
+wxFont ibFontColorSettings::GetFont(DisplayItem displayItem) const
 {
 
 	wxFont font = GetFont();
@@ -102,17 +102,17 @@ wxFont CFontColorSettings::GetFont(DisplayItem displayItem) const
 
 }
 
-const CFontColorSettings::Colors& CFontColorSettings::GetColors(DisplayItem displayItem) const
+const ibFontColorSettings::Colors& ibFontColorSettings::GetColors(DisplayItem displayItem) const
 {
 	return m_colors[displayItem];
 }
 
-void CFontColorSettings::SetColors(DisplayItem displayItem, const Colors& colors)
+void ibFontColorSettings::SetColors(DisplayItem displayItem, const Colors& colors)
 {
 	m_colors[displayItem] = colors;
 }
 
-wxXmlNode* CFontColorSettings::Save(const wxString& tag) const
+wxXmlNode* ibFontColorSettings::Save(const wxString& tag) const
 {
 	wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, tag);
 
@@ -134,7 +134,7 @@ wxXmlNode* CFontColorSettings::Save(const wxString& tag) const
 
 }
 
-void CFontColorSettings::Load(wxXmlNode* root)
+void ibFontColorSettings::Load(wxXmlNode* root)
 {
 
 	wxXmlNode* node = root->GetChildren();

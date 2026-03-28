@@ -10,17 +10,17 @@
  * This class handles the UI for modifying the editor settings page of the
  * settings dialog.
  */
-class FRONTEND_API CEditorSettingsPanel : public wxPanel
+class FRONTEND_API ibPanelEditorSettings : public wxPanel
 {
 	
 public:
 
-	CEditorSettingsPanel( wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 461,438 ), int style = wxTAB_TRAVERSAL );
+	ibPanelEditorSettings( wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 461,438 ), int style = wxTAB_TRAVERSAL );
 
     void Initialize();
     
-    void SetSettings(const CEditorSettings& settings);
-    const CEditorSettings& GetSettings() const;
+    void SetSettings(const ibEditorSettings& settings);
+    const ibEditorSettings& GetSettings() const;
     
     /**
      * Called when "Insert spaces" radio button is selected.
@@ -89,7 +89,7 @@ private:
     wxCheckBox*     m_enableAutoComplete;
     wxCheckBox*     m_showWhiteSpace;
 
-    CEditorSettings  m_settings;
+    ibEditorSettings  m_settings;
 };
 
 #endif

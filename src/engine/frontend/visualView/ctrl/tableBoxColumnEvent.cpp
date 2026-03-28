@@ -122,7 +122,7 @@ void ibValueModelTableBoxColumn::OnSelectButtonPressed(wxCommandEvent& event)
 				const ibMetaData* metaData = GetMetaData();
 				wxASSERT(metaData);
 				const ibCtorMetaValueType* so = metaData->GetTypeCtor(clsid);
-				if (so != nullptr && so->GetMetaTypeCtor() == ibCtorMetaType_Reference) {
+				if (so != nullptr && so->GetMetaTypeCtor() == ibCtorObjectMetaType_Reference) {
 					ibValueMetaObject* metaObject = so->GetMetaObject();
 					if (metaObject != nullptr) {
 						const ibMetaID& id = m_propertyChoiceForm->GetValueAsInteger();

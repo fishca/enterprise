@@ -671,6 +671,9 @@
     <ClInclude Include="value_ptr.h" />
     <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="tableView.h" />
+    <ClInclude Include="propertyManager\property\private\prop.h">
+      <Filter>propertyManager\property\private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backend.cpp" />
@@ -1638,6 +1641,9 @@
     </Filter>
     <Filter Include="res">
       <UniqueIdentifier>{a0483170-54a9-48af-976d-9a8f5c30d00b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="propertyManager\property\private">
+      <UniqueIdentifier>{a5dc1db3-986d-43af-80b7-9fde24f0967f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

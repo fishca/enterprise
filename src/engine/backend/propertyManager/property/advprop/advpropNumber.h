@@ -17,10 +17,12 @@ public:
 		const ibNumber& value = 0.0);
 	virtual ~wxNumberProperty();
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const wxOVERRIDE;
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const wxOVERRIDE;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const wxOVERRIDE;
 	virtual bool DoSetAttribute(const wxString& name, wxVariant& value) wxOVERRIDE;
 
 	virtual bool ValidateValue(wxVariant& value,

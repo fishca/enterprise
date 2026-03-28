@@ -1,5 +1,6 @@
 #include "advpropType.h"
 
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/property/propertyType.h"
 #include "backend/propertyManager/property/variant/variantType.h"
 #include "backend/propertyManager/propertyEditor.h"
@@ -33,7 +34,7 @@ void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 		wxASSERT(metaData);
 		if (metaData != nullptr) {
 			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
-				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -42,7 +43,7 @@ void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 				}
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
-				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_List)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -51,21 +52,21 @@ void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 				}
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
-				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Object)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Object)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
 						choice.GetValue(), so->GetClassType()
 					);
 				}
-				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
 						choice.GetValue(), so->GetClassType()
 					);
 				}
-				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_RecordManager)) {
+				for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_RecordManager)) {
 					auto metaObject = so->GetMetaObject();
 					auto choice = m_choices.Add(so->GetClassName(), metaObject->GetIcon());
 					m_valChoices.insert_or_assign(
@@ -145,11 +146,11 @@ wxPGTypeProperty::wxPGTypeProperty(const ibPropertyObject* property, const ibSel
 
 	SetValue(value);
 
-	//m_flags |= wxPG_PROP_READONLY;
-	m_flags |= wxPG_PROP_ACTIVE_BTN;
+	//m_flags |= wxPGFlags::ReadOnly;
+	m_flags |= wxPGPropertyFlags_ActiveButton;
 }
 
-bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, int argFlags) const
+bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	ibVariantDataAttribute* dataType = property_cast(value, ibVariantDataAttribute);
 	if (dataType != nullptr) {
@@ -369,7 +370,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 					const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Ref"),
 						groupIcon, groupIcon);
 
-					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 						ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
@@ -396,7 +397,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 					const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("List"),
 						groupIcon, groupIcon);
 
-					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_List)) {
+					for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_List)) {
 						ibValueMetaObjectGenericData* registerData = dynamic_cast<ibValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
@@ -424,7 +425,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Object"),
 							groupIcon, groupIcon);
 
-						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Object)) {
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Object)) {
 							ibValueMetaObjectRecordData* registerData = dynamic_cast<ibValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
@@ -451,7 +452,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						const wxTreeItemId& parentID = tc->AppendItem(tc->GetRootItem(), so->GetClassName() + wxT("Ref"),
 							groupIcon, groupIcon);
 
-						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorMetaType::ibCtorMetaType_Reference)) {
+						for (auto so : metaData->GetListCtorsByType(clsid, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
@@ -507,7 +508,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			wxCheckBox* compositeDataType = new wxCheckBox(dlg, wxID_ANY,
 				_("Composite data type"), wxDefaultPosition, wxDefaultSize);
 
-			compositeDataType->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			compositeDataType->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
 			int style = wxPR_SINGLE_CHECK;
 
@@ -554,7 +555,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				}
 			);
 
-			tcSLength->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			tcSLength->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			topsizer->Add(stringSizer, 0, 0, 5);
 
 			wxBoxSizer* dateSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -579,7 +580,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				}
 			);
 
-			cDDateFormat->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			cDDateFormat->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			topsizer->Add(dateSizer, 0, 0, 5);
 
 			wxBoxSizer* numberSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -600,7 +601,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				}
 			);
 
-			tcNLength->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			tcNLength->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
 			wxStaticText* stNScale = new wxStaticText(dlg, wxID_ANY, _("Scale:"), wxDefaultPosition, wxDefaultSize);
 			stNScale->Wrap(-1);
@@ -622,7 +623,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				}
 			);
 
-			tcNScale->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			tcNScale->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			topsizer->Add(numberSizer, 0, 0, 5);
 
 			tc->SetDoubleBuffered(true);
@@ -686,47 +687,47 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			);
 
 			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_EMPTY), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_EMPTY), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 
 			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any
 				|| selectorDataType == ibSelectorDataType::ibSelectorDataType_reference) {
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_DATE), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_STRING), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_DATE), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_STRING), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_boolean) {
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_BOOLEAN), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 			else if (selectorDataType == ibSelectorDataType::ibSelectorDataType_resource) {
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NUMBER), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 
 			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
-				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NULL), tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(ibValue::GetIDByVT(ibValueTypes::TYPE_NULL), tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 
 			/////////////////////////////////////////////////
 			if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
-				FillByClsid(g_valueTableCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(g_valueTableCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 			}
 			/////////////////////////////////////////////////
 
 			ibMetaData* metaData = typeFactory->GetMetaData();
 			wxASSERT(metaData);
 			if (metaData != nullptr) {
-				FillByClsid(selectorDataType, metaData, g_metaCatalogCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(selectorDataType, metaData, g_metaDocumentCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-				FillByClsid(selectorDataType, metaData, g_metaEnumerationCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+				FillByClsid(selectorDataType, metaData, g_metaCatalogCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(selectorDataType, metaData, g_metaDocumentCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+				FillByClsid(selectorDataType, metaData, g_metaEnumerationCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 				if (selectorDataType == ibSelectorDataType::ibSelectorDataType_any) {
-					FillByClsid(selectorDataType, metaData, g_metaDataProcessorCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-					FillByClsid(selectorDataType, metaData, g_metaReportCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+					FillByClsid(selectorDataType, metaData, g_metaDataProcessorCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+					FillByClsid(selectorDataType, metaData, g_metaReportCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 				}
 				if (selectorDataType == ibSelectorDataType::ibSelectorDataType_table) {
-					FillByClsid(selectorDataType, metaData, g_metaInformationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
-					FillByClsid(selectorDataType, metaData, g_metaAccumulationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY));
+					FillByClsid(selectorDataType, metaData, g_metaInformationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
+					FillByClsid(selectorDataType, metaData, g_metaAccumulationRegisterCLSID, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly));
 				}
 			}
 
@@ -741,7 +742,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						if (item != nullptr && clsid == item->GetClassType()) { allowType = false; break; }
 					}
 				}
-				if (allowType) { FillByClsid(metaData, clsid, tc, data, !dlgProp->HasFlag(wxPG_PROP_READONLY)); }
+				if (allowType) { FillByClsid(metaData, clsid, tc, data, !dlgProp->HasFlag(wxPGFlags::ReadOnly)); }
 			}
 			tc->ExpandAll(); int res = dlg->ShowModal();
 			if (res == wxID_OK) {

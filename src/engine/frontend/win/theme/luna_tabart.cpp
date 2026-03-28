@@ -711,7 +711,7 @@ int wxAuiLunaTabArt::GetAdditionalBorderSpace(wxWindow* WXUNUSED(wnd))
 	return 0;
 }
 
-wxSize wxAuiLunaTabArt::GetTabSize(wxDC& dc,
+wxSize wxAuiLunaTabArt::GetTabSize(wxReadOnlyDC& dc,
 	wxWindow* wnd,
 	const wxString& caption,
 	const wxBitmapBundle& bitmap,

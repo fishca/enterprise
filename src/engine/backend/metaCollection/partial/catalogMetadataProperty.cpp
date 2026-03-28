@@ -19,7 +19,7 @@ void ibValueMetaObjectCatalog::OnPropertyChanged(ibProperty* property, const wxV
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 			const ibValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 			if (catalog != nullptr) {
-				const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorMetaType::ibCtorMetaType_Reference);
+				const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 				wxASSERT(so);
 				typeDesc.AppendMetaType(so->GetClassType());
 			}

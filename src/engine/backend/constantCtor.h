@@ -22,7 +22,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Object; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Object; }
 
 protected:
 	ibClassID m_classType;
@@ -52,7 +52,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Manager; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Manager; }
 
 protected:
 	ibClassID m_classType;

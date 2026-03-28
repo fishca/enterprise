@@ -19,10 +19,12 @@ public:
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 	virtual ~wxPGHyperLinkProperty();
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 	virtual void OnSetValue() override;
 

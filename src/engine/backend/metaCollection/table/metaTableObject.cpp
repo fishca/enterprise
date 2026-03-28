@@ -17,7 +17,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectTableData, ibValueMetaObjectComposite
 
 ibTypeDescription ibValueMetaObjectTableData::GetTypeDesc() const
 {
-	const ibCtorMetaValueType* typeCtor = m_metaData->GetTypeCtor(this, ibCtorMetaType::ibCtorMetaType_TabularSection);
+	const ibCtorMetaValueType* typeCtor = m_metaData->GetTypeCtor(this, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection);
 	wxASSERT(typeCtor);
 	if (typeCtor != nullptr) return ibTypeDescription(typeCtor->GetClassType());
 	return ibTypeDescription();

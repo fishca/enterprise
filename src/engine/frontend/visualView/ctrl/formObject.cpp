@@ -299,7 +299,7 @@ bool ibValueForm::InitializeFormModule()
 
 #pragma region _control_guard_
 
-	struct CControlGuard {
+	struct ibControlGuard {
 
 		static bool Initialize(ibValueFrame* controlParent) {
 			for (unsigned int idx = controlParent->GetChildCount(); idx > 0; idx--) {
@@ -310,7 +310,7 @@ bool ibValueForm::InitializeFormModule()
 		}
 	};
 
-	return CControlGuard::Initialize(this);
+	return ibControlGuard::Initialize(this);
 
 #pragma endregion 
 }
@@ -427,7 +427,7 @@ void ibValueForm::RemoveControl(const ibValue& vControl)
 
 void ibValueForm::ShowForm(ibBackendMetaDocument* doc, bool createContext)
 {
-	ibMetaDocument* docParent = wxDynamicCast(doc, ibMetaDocument);
+	ibMetaDocument* docParent = static_cast<ibMetaDocument *>(doc);
 
 	if (ibBackendException::IsEvalMode())
 		return;

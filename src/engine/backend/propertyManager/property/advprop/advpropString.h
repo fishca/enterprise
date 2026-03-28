@@ -26,10 +26,12 @@ public:
 	{
 	}
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 private:
 
@@ -52,10 +54,12 @@ public:
 	{
 	}
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
+	virtual wxString ValueToString(wxVariant& value,
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
+
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 protected:
 	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;

@@ -62,7 +62,7 @@ wxEND_EVENT_TABLE()
 
 bool ibSpreadsheetEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_gridEditor = new CGridEditor(doc, m_viewFrame, wxID_ANY);
+	m_gridEditor = new ibGridEditor(doc, m_viewFrame, wxID_ANY);
 	m_gridEditor->EnableEditing(flags != wxDOC_READONLY);
 	m_gridEditor->EnableGridArea(doc->ConvertMetaObjectToType<ibValueMetaObjectSpreadsheetBase>());
 
@@ -334,7 +334,7 @@ wxCommandProcessor* ibSpreadsheetDocument::OnCreateCommandProcessor()
 	return new ibGridCommandProcessor(GetGridCtrl());
 }
 
-CGridEditor* ibSpreadsheetDocument::GetGridCtrl() const
+ibGridEditor* ibSpreadsheetDocument::GetGridCtrl() const
 {
 	wxView* view = GetFirstView();
 	return view ? wxDynamicCast(view, ibSpreadsheetEditView)->GetGridCtrl() : nullptr;

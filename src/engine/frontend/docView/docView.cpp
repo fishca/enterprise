@@ -52,6 +52,8 @@ ibMetaDocument::~ibMetaDocument()
 		m_documentParent->m_childDocs.remove(this);
 }
 
+#include <wx/scopedptr.h>
+
 bool ibMetaDocument::OnCreate(const wxString& path, long flags)
 {
 	if (ibApplicationData::IsForceExit())
@@ -196,6 +198,8 @@ bool ibMetaDocument::SaveAs()
 
 	return false;
 }
+
+#include <wx/dlist.h>
 
 bool ibMetaDocument::Close()
 {

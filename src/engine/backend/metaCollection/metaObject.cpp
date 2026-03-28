@@ -339,7 +339,7 @@ bool ibValueMetaObject::IsEditable() const
 bool ibValueMetaObject::CompareObject(const ibValueMetaObject* compareObject) const
 {
 #pragma region _compare_fill_h_
-	class CControlComparator {
+	class ibControlComparator {
 	public:
 
 		static bool CompareObject(
@@ -377,14 +377,14 @@ bool ibValueMetaObject::CompareObject(const ibValueMetaObject* compareObject) co
 
 #pragma endregion 
 
-	return CControlComparator::CompareObject(this, compareObject);
+	return ibControlComparator::CompareObject(this, compareObject);
 }
 
 bool ibValueMetaObject::CopyObject(ibWriterMemory& writer) const
 {
 #pragma region _copy_guard_h_
 
-	class CControlCopyGuard {
+	class ibControlCopyGuard {
 
 		static void Generate(const ibValueMetaObject* copyObject) {
 			for (unsigned int idx = 0; idx < copyObject->GetChildCount(); idx++)
@@ -400,14 +400,14 @@ bool ibValueMetaObject::CopyObject(ibWriterMemory& writer) const
 
 	public:
 
-		CControlCopyGuard(const ibValueMetaObject* copyObject) : m_copyObject(copyObject) { Generate(m_copyObject); }
-		~CControlCopyGuard() { Erase(m_copyObject); }
+		ibControlCopyGuard(const ibValueMetaObject* copyObject) : m_copyObject(copyObject) { Generate(m_copyObject); }
+		~ibControlCopyGuard() { Erase(m_copyObject); }
 
 	protected:
 		const ibValueMetaObject* m_copyObject = nullptr;
 	};
 
-	CControlCopyGuard controlCopyGuard(this);
+	ibControlCopyGuard controlCopyGuard(this);
 
 #pragma endregion 
 
@@ -415,7 +415,7 @@ bool ibValueMetaObject::CopyObject(ibWriterMemory& writer) const
 
 #pragma region _copy_fill_h_
 
-	class CControlMemoryWriter {
+	class ibControlMemoryWriter {
 	public:
 
 		static bool CopyObject(const ibValueMetaObject* copyObject, ibWriterMemory& writer)
@@ -460,14 +460,14 @@ bool ibValueMetaObject::CopyObject(ibWriterMemory& writer) const
 
 #pragma endregion 
 
-	return CControlMemoryWriter::CopyObject(this, writer);
+	return ibControlMemoryWriter::CopyObject(this, writer);
 }
 
 bool ibValueMetaObject::PasteObject(ibReaderMemory& reader)
 {
 #pragma region _paste_fill_h_
 
-	class CControlMemoryReader {
+	class ibControlMemoryReader {
 
 		static bool PasteObject(ibValueMetaObject* pasteObject, ibReaderMemory& reader)
 		{
@@ -571,7 +571,7 @@ bool ibValueMetaObject::PasteObject(ibReaderMemory& reader)
 
 #pragma endregion 
 
-	return CControlMemoryReader::PasteAndRunObject(this, reader);
+	return ibControlMemoryReader::PasteAndRunObject(this, reader);
 }
 
 bool ibValueMetaObject::ChangeChildPosition(ibValueMetaObject* object, unsigned int pos)

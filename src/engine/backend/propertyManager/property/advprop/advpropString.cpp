@@ -1,4 +1,5 @@
 #include "advpropString.h"
+#include "backend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
 // wxGeneralStringProperty
@@ -6,23 +7,23 @@
 
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxGeneralStringProperty, wxStringProperty, TextCtrl)
 
-wxString wxGeneralStringProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxGeneralStringProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	wxString s = value.GetString();
 
-	if (GetChildCount() && HasFlag(wxPG_PROP_COMPOSED_VALUE))
+	if (HasAnyChild() && HasFlag(wxPGFlags::ComposedValue))
 	{
 		// Value stored in m_value is non-editable, non-full value
-		if ((argFlags & wxPG_FULL_VALUE) ||
-			(argFlags & wxPG_EDITABLE_VALUE) ||
+		if (!!(flags & wxPGPropValFormatFlags::FullValue) ||
+			!!(flags & wxPGPropValFormatFlags::EditableValue) ||
 			s.empty())
 		{
 			// Calling this under incorrect conditions will fail
-			wxASSERT_MSG(argFlags & wxPG_VALUE_IS_CURRENT,
+			wxASSERT_MSG(!!(flags & wxPGPropValFormatFlags::ValueIsCurrent),
 				wxS("Sorry, currently default wxPGProperty::ValueToString() ")
 				wxS("implementation only works if value is m_value."));
 
-			DoGenerateComposedValue(s, argFlags);
+			DoGenerateComposedValue(s, flags);
 		}
 
 		return s;
@@ -30,23 +31,23 @@ wxString wxGeneralStringProperty::ValueToString(wxVariant& value, int argFlags) 
 
 	// If string is password and value is for visual purposes,
 	// then return asterisks instead the actual string.
-	if ((m_flags & wxPG_PROP_PASSWORD) && !(argFlags & (wxPG_FULL_VALUE | wxPG_EDITABLE_VALUE)))
-		return wxString(wxS('*'), s.Length());
+	if (!!(m_flags & wxPGPropertyFlags_Password) && !(flags & (wxPGPropValFormatFlags::FullValue | wxPGPropValFormatFlags::EditableValue)))
+		return wxString(wxS('*'), s.length());
 
 	return s;
 }
 
 bool wxGeneralStringProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
-	int argFlags) const
+	wxPGPropValFormatFlags flags) const
 {
 	if (stringUtils::CheckCorrectName(text) >= 0) {
 		wxMessageBox(_("You can enter only numbers, letters and the symbol \"_\""), _("Error entering value"));
 		return false;
 	}
 
-	if (GetChildCount() && HasFlag(wxPG_PROP_COMPOSED_VALUE))
-		return wxPGProperty::StringToValue(variant, text, argFlags);
+	if (GetChildCount() && HasFlag(wxPGFlags::ComposedValue))
+		return wxPGProperty::StringToValue(variant, text, flags);
 
 	if (variant != text) {
 
@@ -67,12 +68,12 @@ bool wxGeneralStringProperty::StringToValue(wxVariant& variant,
 
 wxPG_IMPLEMENT_PROPERTY_CLASS(wxTranslateStringProperty, wxLongStringProperty, TextCtrlAndButton)
 
-wxString wxTranslateStringProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxTranslateStringProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	return ibBackendLocalization::GetTranslateGetRawLocText(value.GetString());
 }
 
-bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
+bool wxTranslateStringProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	ibBackendLocalizationEntryArray array;
 
@@ -149,7 +150,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 		const int spacing = wxPropertyGrid::IsSmallScreen() ? 4 : 8;
 		wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 		long edStyle = wxTE_MULTILINE;
-		if (HasFlag(wxPG_PROP_READONLY))
+		if (HasFlag(wxPGFlags::ReadOnly))
 			edStyle |= wxTE_READONLY;
 
 		ibMetaData* metaData = m_ownerProperty->GetMetaData();
@@ -207,7 +208,7 @@ bool wxTranslateStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 		}
 
 		long btnSizerFlags = wxCANCEL;
-		if (!HasFlag(wxPG_PROP_READONLY))
+		if (!HasFlag(wxPGFlags::ReadOnly))
 			btnSizerFlags |= wxOK;
 		wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(btnSizerFlags);
 		topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));
@@ -266,7 +267,7 @@ bool wxMultilineStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 	wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* rowsizer = new wxBoxSizer(wxHORIZONTAL);
 	long edStyle = wxTE_MULTILINE;
-	if (HasFlag(wxPG_PROP_READONLY))
+	if (HasFlag(wxPGFlags::ReadOnly))
 		edStyle |= wxTE_READONLY;
 	wxTextCtrl* ed = new wxTextCtrl(dlg, wxID_ANY, value.GetString(),
 		wxDefaultPosition, wxDefaultSize, edStyle);
@@ -277,7 +278,7 @@ bool wxMultilineStringProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVarian
 	topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
 
 	long btnSizerFlags = wxCANCEL;
-	if (!HasFlag(wxPG_PROP_READONLY))
+	if (!HasFlag(wxPGFlags::ReadOnly))
 		btnSizerFlags |= wxOK;
 	wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(btnSizerFlags);
 	topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));

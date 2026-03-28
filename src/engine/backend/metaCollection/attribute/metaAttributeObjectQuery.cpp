@@ -64,7 +64,7 @@ unsigned short ibValueMetaObjectAttributeBase::GetSQLFieldCount(const ibValueMet
 	if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM)) {
 		sqlField += 1;
 	}
-	if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		sqlField += 2;
 	}
 
@@ -106,7 +106,7 @@ wxString ibValueMetaObjectAttributeBase::GetSQLFieldName(const ibValueMetaObject
 			sqlField += ",";
 		sqlField += fieldName + "_E";
 	}
-	if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ",";
 		sqlField += fieldName + "_RTRef" + "," + fieldName + "_RRRef";
@@ -146,7 +146,7 @@ wxString ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(const ibValueM
 			sqlField += " AND ";
 		sqlField += fieldName + "_E " + cmp + " ? ";
 	}
-	if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += " AND ";
 		sqlField += fieldName + "_RTRef = ? AND " + fieldName + "_RRRef " + cmp + " ? ";
@@ -186,7 +186,7 @@ wxString ibValueMetaObjectAttributeBase::GetExcludeSQLFieldName(const ibValueMet
 			sqlField += ", ";
 		sqlField += fieldName + "_E = excluded." + fieldName + "_E";
 	}
-	if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		if (!sqlField.IsEmpty())
 			sqlField += ", ";
 		sqlField += fieldName + "_RTRef = excluded." + fieldName + "_RTRef, " + fieldName + "_RRRef = excluded." + fieldName + "_RRRef";
@@ -236,7 +236,7 @@ ibValueMetaObjectAttributeBase::ibSQLField ibValueMetaObjectAttributeBase::GetSQ
 		);
 	}
 
-	if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+	if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 		sqlData.AppendType(
 			ibFieldTypes::ibFieldTypes_Reference,
 			fieldName + "_RTRef",
@@ -281,7 +281,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 			default:
 				const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 				wxASSERT(typeCtor);
-				if (typeCtor != nullptr && ibCtorMetaType::ibCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+				if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					createReference = true;
 				}
 			}
@@ -325,7 +325,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 					default:
 						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && ibCtorMetaType::ibCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							createdRef.insert(clsid);
 						}
 					}
@@ -370,7 +370,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 					default:
 						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && ibCtorMetaType::ibCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							currentRef.insert(clsid);
 						}
 					}
@@ -410,7 +410,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 					default:
 						const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 						//wxASSERT(typeCtor);
-						if (typeCtor != nullptr && ibCtorMetaType::ibCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+						if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 							removedRef.insert(clsid);
 						}
 					}
@@ -483,7 +483,7 @@ int ibValueMetaObjectAttributeBase::ProcessAttribute(const wxString& tableName,
 			default:
 				const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 				//wxASSERT(typeCtor);
-				if (typeCtor != nullptr && ibCtorMetaType::ibCtorMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
+				if (typeCtor != nullptr && ibCtorObjectMetaType::ibCtorObjectMetaType_Reference == typeCtor->GetMetaTypeCtor()) {
 					removeReference = true;
 				}
 				break;
@@ -523,7 +523,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -544,7 +544,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -565,7 +565,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -586,7 +586,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -607,7 +607,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -628,7 +628,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -649,7 +649,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, cValue.GetInteger()); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -679,7 +679,7 @@ void ibValueMetaObjectAttributeBase::SetValueAttribute(const ibValueMetaObjectAt
 		const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(clsid);
 		wxASSERT(typeCtor);
 
-		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == ibCtorMetaType::ibCtorMetaType_Reference) {
+		if (typeCtor != nullptr && typeCtor->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_Reference) {
 			ibValueReferenceDataObject* refData = nullptr;
 			if (cValue.ConvertToValue(refData)) {
 				statement->SetParamNumber(position++, clsid); //TYPE REF
@@ -870,7 +870,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -894,7 +894,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -925,7 +925,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -949,7 +949,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -974,7 +974,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, wxNOT_FOUND); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -998,7 +998,7 @@ void ibValueMetaObjectAttributeBase::SetBinaryData(const ibValueMetaObjectAttrib
 		if (metaAttr->ContainType(ibValueTypes::TYPE_ENUM))
 			statement->SetParamInt(position++, reader.r_s32()); //DATA enum 
 
-		if (metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)) {
+		if (metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)) {
 			statement->SetParamNumber(position++, 0); //TYPE REF
 			statement->SetParamNull(position++); //DATA REF
 		}
@@ -1100,7 +1100,7 @@ void ibValueMetaObjectAttributeBase::GetBinaryData(const ibValueMetaObjectAttrib
 
 	//DATA reference 
 	if (fieldType == ibFieldTypes_Reference
-		&& metaAttr->ContainMetaType(ibCtorMetaType::ibCtorMetaType_Reference)
+		&& metaAttr->ContainMetaType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 		&& resultSet != nullptr) {
 		wxMemoryBuffer bufferData;
 		resultSet->GetResultBlob(fieldName + wxT("_RRRef"), bufferData);

@@ -23,7 +23,7 @@ public:
 	virtual void OnDraw(wxDC* dc) override;
 	virtual bool OnClose(bool deleteWindow = true) override;
 
-	CGridEditor* GetGridCtrl() const { return m_gridEditor; }
+	ibGridEditor* GetGridCtrl() const { return m_gridEditor; }
 
 private:
 
@@ -36,7 +36,7 @@ private:
 
 	void OnMenuEvent(wxCommandEvent& event);
 
-	CGridEditor* m_gridEditor;
+	ibGridEditor* m_gridEditor;
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_DYNAMIC_CLASS(ibSpreadsheetEditView);
@@ -58,7 +58,7 @@ public:
 	ibSpreadsheetDocument() : ibMetaDocument() {}
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
 	
-	virtual CGridEditor* GetGridCtrl() const;
+	virtual ibGridEditor* GetGridCtrl() const;
 
 private:
 	wxDECLARE_NO_COPY_CLASS(ibSpreadsheetDocument);

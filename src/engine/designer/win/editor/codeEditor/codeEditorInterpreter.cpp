@@ -13,7 +13,7 @@
 //array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
-CPrecompileCode::CPrecompileCode(ibValueMetaObjectModuleBase* moduleObject) :
+ibPrecompileCode::ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject) :
 	ibTranslateCode(moduleObject->GetFullName(), moduleObject->GetDocPath()),
 	m_moduleObject(moduleObject), m_pContext(nullptr), m_pCurrentContext(nullptr),
 	m_numCurrentCompile(wxNOT_FOUND), m_nCurrentPos(0), nLastPosition(0),
@@ -45,9 +45,9 @@ CPrecompileCode::CPrecompileCode(ibValueMetaObjectModuleBase* moduleObject) :
 	Load(m_moduleObject->GetModuleText());
 }
 
-CPrecompileCode::~CPrecompileCode() {}
+ibPrecompileCode::~ibPrecompileCode() {}
 
-void CPrecompileCode::Clear() //Сброс данных для повторного использования объекта
+void ibPrecompileCode::Clear() //Сброс данных для повторного использования объекта
 {
 	m_pCurrentContext = nullptr;
 	if (m_defineList != nullptr) m_defineList->Clear();
@@ -67,7 +67,7 @@ void CPrecompileCode::Clear() //Сброс данных для повторного использования объект
 #include "backend/compiler/enumFactory.h"
 #include "codeEditorParser.h"
 
-void CPrecompileCode::PrepareModuleData()
+void ibPrecompileCode::PrepareModuleData()
 {
 	ibModuleDataObject* contextVariable = nullptr;
 
@@ -77,7 +77,7 @@ void CPrecompileCode::PrepareModuleData()
 		ibValueModuleManager* moduleManager = metaData->GetModuleManager();
 		wxASSERT(moduleManager);
 		if (!moduleManager->FindCompileModule(m_moduleObject, contextVariable)) {
-			wxASSERT_MSG(false, "CPrecompileCode::PrepareModuleData");
+			wxASSERT_MSG(false, "ibPrecompileCode::PrepareModuleData");
 		}
 		for (auto pair : moduleManager->GetContextVariables()) {
 			//добавляем переменные из менеджера
@@ -325,7 +325,7 @@ void CPrecompileCode::PrepareModuleData()
 	}
 }
 
-bool CPrecompileCode::PrepareLexem()
+bool ibPrecompileCode::PrepareLexem()
 {
 	wxString s;
 	m_listLexem.clear();
@@ -456,9 +456,9 @@ bool CPrecompileCode::PrepareLexem()
 }
 
 #ifdef UTF8_LEXEM_TRANSLATE
-void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset, const int& pos_offset_utf8)
+void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset, const int& pos_offset_utf8)
 #else 
-void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset)
+void ibPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int& pos_offset)
 #endif
 {
 	m_currentLine = m_currentPos = 0;
@@ -674,7 +674,7 @@ void CPrecompileCode::PrepareLexem(unsigned int line, int line_offset, const int
 
 }
 
-bool CPrecompileCode::Compile()
+bool ibPrecompileCode::Compile()
 {
 	Clear();
 
@@ -693,7 +693,7 @@ bool CPrecompileCode::Compile()
 	return CompileModule();
 }
 
-bool CPrecompileCode::CompileModule()
+bool ibPrecompileCode::CompileModule()
 {
 	m_pContext = GetContext();// context of the module itself
 
@@ -733,7 +733,7 @@ bool CPrecompileCode::CompileModule()
 	return true;
 }
 
-bool CPrecompileCode::CompileFunction()
+bool ibPrecompileCode::CompileFunction()
 {
 	// we are now at the token level, where the FUNCTION or PROCEDURE keyword is specified
 	ibLexem lex;
@@ -875,7 +875,7 @@ bool CPrecompileCode::CompileFunction()
 	return true;
 }
 
-bool CPrecompileCode::CompileDeclaration()
+bool ibPrecompileCode::CompileDeclaration()
 {
 	wxString strType;
 	const ibLexem& lex = PreviewGetLexem();
@@ -927,7 +927,7 @@ bool CPrecompileCode::CompileDeclaration()
 	return true;
 }
 
-bool CPrecompileCode::CompileBlock()
+bool ibPrecompileCode::CompileBlock()
 {
 	ibLexem lex;
 
@@ -1050,7 +1050,7 @@ bool CPrecompileCode::CompileBlock()
 	return true;
 }
 
-bool CPrecompileCode::CompileNewObject()
+bool ibPrecompileCode::CompileNewObject()
 {
 	GETKeyWord(KEY_NEW);
 
@@ -1086,13 +1086,13 @@ bool CPrecompileCode::CompileNewObject()
 	return true;
 }
 
-bool CPrecompileCode::CompileGoto()
+bool ibPrecompileCode::CompileGoto()
 {
 	GETKeyWord(KEY_GOTO);
 	return true;
 }
 
-bool CPrecompileCode::CompileIf()
+bool ibPrecompileCode::CompileIf()
 {
 	GETKeyWord(KEY_IF);
 
@@ -1123,7 +1123,7 @@ bool CPrecompileCode::CompileIf()
 	return true;
 }
 
-bool CPrecompileCode::CompileWhile()
+bool ibPrecompileCode::CompileWhile()
 {
 	GETKeyWord(KEY_WHILE);
 
@@ -1136,7 +1136,7 @@ bool CPrecompileCode::CompileWhile()
 	return true;
 }
 
-bool CPrecompileCode::CompileFor()
+bool ibPrecompileCode::CompileFor()
 {
 	GETKeyWord(KEY_FOR);
 
@@ -1165,7 +1165,7 @@ bool CPrecompileCode::CompileFor()
 	return true;
 }
 
-bool CPrecompileCode::CompileForeach()
+bool ibPrecompileCode::CompileForeach()
 {
 	GETKeyWord(KEY_FOREACH);
 
@@ -1202,7 +1202,7 @@ bool CPrecompileCode::CompileForeach()
  * Возвращаемое значение:
  * 0 или указатель на лексему
  */
-ibLexem CPrecompileCode::GetLexem()
+ibLexem ibPrecompileCode::GetLexem()
 {
 	ibLexem lex;
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
@@ -1212,7 +1212,7 @@ ibLexem CPrecompileCode::GetLexem()
 }
 
 //Получить следующую лексему из списка байт кода без увеличения счетчика текущей позиции
-ibLexem CPrecompileCode::PreviewGetLexem()
+ibLexem ibPrecompileCode::PreviewGetLexem()
 {
 	ibLexem lex;
 	while (true) {
@@ -1231,7 +1231,7 @@ ibLexem CPrecompileCode::PreviewGetLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-ibLexem CPrecompileCode::GETLexem()
+ibLexem ibPrecompileCode::GETLexem()
 {
 	const ibLexem& lex = GetLexem();
 	if (lex.m_lexType == ERRORTYPE) {}
@@ -1244,7 +1244,7 @@ ibLexem CPrecompileCode::GETLexem()
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void CPrecompileCode::GETDelimeter(const wxUniChar& c)
+void ibPrecompileCode::GETDelimeter(const wxUniChar& c)
 {
 	ibLexem lex = GETLexem();
 
@@ -1263,7 +1263,7 @@ void CPrecompileCode::GETDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool CPrecompileCode::IsNextDelimeter(const wxUniChar& c)
+bool ibPrecompileCode::IsNextDelimeter(const wxUniChar& c)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
 		ibLexem lex = m_listLexem[m_numCurrentCompile + 1];
@@ -1281,7 +1281,7 @@ bool CPrecompileCode::IsNextDelimeter(const wxUniChar& c)
  * Возвращаемое значение:
  * true,false
  */
-bool CPrecompileCode::IsNextKeyWord(int nKey)
+bool ibPrecompileCode::IsNextKeyWord(int nKey)
 {
 	if (m_numCurrentCompile + 1 < m_listLexem.size()) {
 		const ibLexem& lex = m_listLexem[m_numCurrentCompile + 1];
@@ -1298,7 +1298,7 @@ bool CPrecompileCode::IsNextKeyWord(int nKey)
  * Возвращаемое значение:
  * нет (в случае неудачи генерится исключение)
  */
-void CPrecompileCode::GETKeyWord(int nKey)
+void ibPrecompileCode::GETKeyWord(int nKey)
 {
 	ibLexem lex = GETLexem();
 	while (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
@@ -1314,7 +1314,7 @@ void CPrecompileCode::GETKeyWord(int nKey)
  * Возвращаемое значение:
  * строка-идентификатор
  */
-wxString CPrecompileCode::GETIdentifier(bool strRealName)
+wxString ibPrecompileCode::GETIdentifier(bool strRealName)
 {
 	const ibLexem& lex = GETLexem();
 	if (lex.m_lexType != IDENTIFIER) {
@@ -1333,7 +1333,7 @@ wxString CPrecompileCode::GETIdentifier(bool strRealName)
  * Возвращаемое значение:
  * константа
  */
-ibValue CPrecompileCode::GETConstant()
+ibValue ibPrecompileCode::GETConstant()
 {
 	ibLexem lex;
 	int iNumRequire = 0;
@@ -1357,7 +1357,7 @@ ibValue CPrecompileCode::GETConstant()
 }
 
 // getting the number with a string constant (to determine the method number)
-int CPrecompileCode::GetConstString(const wxString& sMethod)
+int ibPrecompileCode::GetConstString(const wxString& sMethod)
 {
 	if (!m_aHashConstList[sMethod])
 	{
@@ -1366,7 +1366,7 @@ int CPrecompileCode::GetConstString(const wxString& sMethod)
 	return ((int)m_aHashConstList[sMethod]) - 1;
 }
 
-int CPrecompileCode::IsTypeVar(const wxString& strType)
+int ibPrecompileCode::IsTypeVar(const wxString& strType)
 {
 	if (!strType.IsEmpty()) {
 		if (ibValue::IsRegisterCtor(strType, ibCtorObjectType::ibCtorObjectType_object_primitive))
@@ -1381,7 +1381,7 @@ int CPrecompileCode::IsTypeVar(const wxString& strType)
 	return false;
 }
 
-wxString CPrecompileCode::GetTypeVar(const wxString& strType)
+wxString ibPrecompileCode::GetTypeVar(const wxString& strType)
 {
 	if (!strType.IsEmpty()) {
 		if (ibValue::IsRegisterCtor(strType, ibCtorObjectType::ibCtorObjectType_object_primitive))
@@ -1402,7 +1402,7 @@ wxString CPrecompileCode::GetTypeVar(const wxString& strType)
 /**
  * Компиляция произвольного выражения (служебные вызовы из самой функции)
  */
-ibParamValue CPrecompileCode::GetExpression(int nPriority)
+ibParamValue ibPrecompileCode::GetExpression(int nPriority)
 {
 	ibParamValue variable;
 	ibLexem lex = GETLexem();
@@ -1629,7 +1629,7 @@ MOperation:
  * index number of the variable where the identifier value lies
 */
 
-ibParamValue CPrecompileCode::GetCurrentIdentifier(int& nIsSet)
+ibParamValue ibPrecompileCode::GetCurrentIdentifier(int& nIsSet)
 {
 	int nPrevSet = nIsSet;
 
@@ -1923,7 +1923,7 @@ loopLabel:
 /**
  * обработка вызова функции или процедуры
  */
-ibParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
+ibParamValue ibPrecompileCode::GetCallFunction(const wxString& strName)
 {
 	std::vector<ibParamValue> listParam;
 
@@ -1967,7 +1967,7 @@ ibParamValue CPrecompileCode::GetCallFunction(const wxString& strName)
  * Назначение:
  * Добавить имя и адрес внешней перменной в специальный массив для дальнейшего использования
  */
-void CPrecompileCode::AddVariable(const wxString& strVarName, const ibValue& varVal)
+void ibPrecompileCode::AddVariable(const wxString& strVarName, const ibValue& varVal)
 {
 	if (strVarName.IsEmpty())
 		return;
@@ -1979,7 +1979,7 @@ void CPrecompileCode::AddVariable(const wxString& strVarName, const ibValue& var
 /**
  * Функция возвращает номер переменной по строковому имени
  */
-ibParamValue CPrecompileCode::GetVariable(const wxString& strName, bool bCheckError)
+ibParamValue ibPrecompileCode::GetVariable(const wxString& strName, bool bCheckError)
 {
 	return m_pContext->GetVariable(strName, true, bCheckError);
 }
@@ -1987,7 +1987,7 @@ ibParamValue CPrecompileCode::GetVariable(const wxString& strName, bool bCheckEr
 /**
  * Cоздаем новый идентификатор переменной
  */
-ibParamValue CPrecompileCode::GetVariable()
+ibParamValue ibPrecompileCode::GetVariable()
 {
 	const wxString& strVarName = wxString::Format("@%d", m_pContext->nTempVar); //@ - для гарантии уникальности имени
 	ibParamValue variable = m_pContext->GetVariable(strVarName, false);//временную переменную ищем только в локальном контексте
@@ -1995,7 +1995,7 @@ ibParamValue CPrecompileCode::GetVariable()
 	return variable;
 }
 
-void CPrecompileCode::SetVariable(const wxString& strVarName, const ibValue& varVal)
+void ibPrecompileCode::SetVariable(const wxString& strVarName, const ibValue& varVal)
 {
 	m_pContext->SetVariable(strVarName, varVal);
 }
@@ -2004,7 +2004,7 @@ void CPrecompileCode::SetVariable(const wxString& strVarName, const ibValue& var
  * Получает номер константы из уникального списка значений
  * (если такого значения в списке нет, то оно создается)
  */
-ibParamValue CPrecompileCode::FindConst(ibValue& vData)
+ibParamValue ibPrecompileCode::FindConst(ibValue& vData)
 {
 	ibParamValue Const;
 	wxString strType = vData.GetClassName();

@@ -210,14 +210,14 @@ EVT_MENU(wxID_PASTE, ibMetadataTree::ibMetaTreeCtrl::OnPasteItem)
 wxEND_EVENT_TABLE()
 
 ibMetadataTree::ibMetaTreeCtrl::ibMetaTreeCtrl()
-	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new CMatadataTreeView(this))
+	: wxTreeCtrl(), m_ownerTree(nullptr), m_metaView(new ibMatadataTreeView(this))
 {
 	//set double buffered
 	SetDoubleBuffered(true);
 }
 
 ibMetadataTree::ibMetaTreeCtrl::ibMetaTreeCtrl(ibMetadataTree* parent)
-	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new CMatadataTreeView(this))
+	: wxTreeCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_NO_LINES | wxTR_TWIST_BUTTONS), m_ownerTree(parent), m_metaView(new ibMatadataTreeView(this))
 {
 	wxAcceleratorEntry entries[2];
 	entries[0].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
@@ -246,7 +246,7 @@ ibMetadataTree::ibMetaTreeCtrl::~ibMetaTreeCtrl()
 
 #include "frontend/mainFrame/mainFrame.h"
 
-void ibMetadataTree::ibMetaTreeCtrl::CMatadataTreeView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void ibMetadataTree::ibMetaTreeCtrl::ibMatadataTreeView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) {
 		const wxTreeItemId& item = m_ownerTree->GetSelection();

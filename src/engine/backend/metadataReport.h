@@ -30,7 +30,7 @@ public:
 
 	virtual bool IsRegisterCtor(const wxString& className) const;
 	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType) const;
-	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, enum ibCtorMetaType refType) const;
+	virtual bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, enum ibCtorObjectMetaType refType) const;
 
 	virtual bool IsRegisterCtor(const ibClassID& clsid) const;
 
@@ -38,14 +38,14 @@ public:
 	virtual wxString GetNameObjectFromID(const ibClassID& clsid, bool upper = false) const;
 
 	virtual ibCtorMetaValueType* GetTypeCtor(const ibClassID& clsid) const;
-	virtual ibCtorMetaValueType* GetTypeCtor(const ibValueMetaObject* metaValue, enum ibCtorMetaType refType) const;
+	virtual ibCtorMetaValueType* GetTypeCtor(const ibValueMetaObject* metaValue, enum ibCtorObjectMetaType refType) const;
 
 	virtual ibCtorAbstractType* GetAvailableCtor(const wxString& className) const;
 	virtual ibCtorAbstractType* GetAvailableCtor(const ibClassID& clsid) const;
 
 	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType() const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(const ibClassID& clsid, ibCtorMetaType refType) const;
-	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(enum ibCtorMetaType refType) const;
+	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(const ibClassID& clsid, ibCtorObjectMetaType refType) const;
+	virtual std::vector<ibCtorMetaValueType*> GetListCtorsByType(enum ibCtorObjectMetaType refType) const;
 
 	//Get owner metadata 
 	virtual bool GetOwner(ibMetaData*& metaData) const;

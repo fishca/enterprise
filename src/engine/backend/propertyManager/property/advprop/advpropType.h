@@ -22,14 +22,14 @@ public:
 	wxPGTypeProperty(const ibPropertyObject* property = nullptr, const ibSelectorDataType& selectorDataType = ibSelectorDataType::ibSelectorDataType_any, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
-	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override { return value.GetString(); }
+	virtual wxString ValueToString(wxVariant& value, wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override { return value.GetString(); }
 	virtual bool StringToValue(wxVariant& variant,
 		const wxString& text,
-		int argFlags = 0) const override { return false; }
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override { return false; }
 
 	virtual bool IntToValue(wxVariant& value,
 		int number,
-		int argFlags = 0) const override;
+		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 	virtual wxVariant ChildChanged(wxVariant& thisValue,
 		int childIndex,

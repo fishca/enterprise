@@ -18,7 +18,7 @@ void ibValueModelTableBoxColumn::OnPropertyRefresh(wxPropertyGridManager* pg, wx
 		else {
 			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				if (so->GetMetaTypeCtor() != ibCtorMetaType::ibCtorMetaType_Reference)
+				if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else
 					pg->HideProperty(pgProperty, false);

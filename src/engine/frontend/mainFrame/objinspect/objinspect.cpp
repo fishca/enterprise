@@ -131,12 +131,12 @@ void CObjectInspector::Create(ibPropertyObject* object, bool force)
 			if (property != nullptr) {
 				wxPGProperty* parentProperty = property->GetParent();
 				if (parentProperty->IsCategory() &&
-					parentProperty->IsVisible() != (!property->HasFlag(wxPG_PROP_HIDDEN))) {
+					parentProperty->IsVisible() != (!property->HasFlag(wxPGFlags::Hidden))) {
 					bool visible = false;
 					for (unsigned int idx = 0; idx < parentProperty->GetChildCount(); idx++) {
 						wxPGProperty* currChild = parentProperty->Item(idx);
 						wxASSERT(currChild);
-						if (!currChild->HasFlag(wxPG_PROP_HIDDEN))
+						if (!currChild->HasFlag(wxPGFlags::Hidden))
 							visible = true;
 					}
 					if (parentProperty->IsVisible() != visible)
@@ -298,12 +298,12 @@ void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
 			if (property != nullptr) {
 				wxPGProperty* parentProperty = property->GetParent();
 				if (parentProperty->IsCategory() &&
-					parentProperty->IsVisible() != (!property->HasFlag(wxPG_PROP_HIDDEN))) {
+					parentProperty->IsVisible() != (!property->HasFlag(wxPGFlags::Hidden))) {
 					bool visible = false;
 					for (unsigned int idx = 0; idx < parentProperty->GetChildCount(); idx++) {
 						wxPGProperty* currChild = parentProperty->Item(idx);
 						wxASSERT(currChild);
-						if (!currChild->HasFlag(wxPG_PROP_HIDDEN)) visible = true;
+						if (!currChild->HasFlag(wxPGFlags::Hidden)) visible = true;
 					}
 					if (parentProperty->IsVisible() != visible) parentProperty->Hide(!visible);
 				}

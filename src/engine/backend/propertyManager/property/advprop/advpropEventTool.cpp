@@ -1,7 +1,9 @@
 #include "advpropEventTool.h"
 
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/property/eventAction.h"
 #include "backend/propertyManager/property/variant/variantAction.h"
+
 #include "backend/propertyManager/propertyEditor.h"
 
 // -----------------------------------------------------------------------
@@ -18,14 +20,14 @@ wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& 
 	wxASSERT(dataAction);
 
 	m_choices.Assign(choices);
-	m_value = wxPGVariant_Zero;
+	m_value = wxVariant(0L);
 	
 	const ibActionDescription& actionDesc = dataAction->GetValueAsActionDesc();
 	if (actionDesc.GetSystemAction() != wxNOT_FOUND) {
 		for (unsigned int i = 0; i < m_choices.GetCount(); i++) {
 			const int val = m_choices.GetValue(i);
 			if (val == actionDesc.GetSystemAction()) {
-				m_flags &= ~(wxPG_PROP_ACTIVE_BTN);
+				m_flags &= ~(wxPGPropertyFlags_ActiveButton);
 				m_valueBitmapBundle = m_choices.Item(i).GetBitmap();
 				m_actionData.SetNumber(val);
 				SetValue(value);
@@ -33,12 +35,12 @@ wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& 
 			}
 		}
 		m_actionData.SetString(value);
-		m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
+		m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 		SetValue(value);
 	}
 	else {
 		m_actionData.SetString(value);
-		m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
+		m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 		SetValue(value);
 	}
 }
@@ -47,7 +49,7 @@ wxEventToolProperty::~wxEventToolProperty()
 {
 }
 
-wxString wxEventToolProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxEventToolProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	ibVariantDataAction* dataAction = property_cast(value, ibVariantDataAction);
 	wxASSERT(dataAction);
@@ -64,13 +66,13 @@ wxString wxEventToolProperty::ValueToString(wxVariant& value, int argFlags) cons
 
 bool wxEventToolProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
-	int argFlags) const
+	wxPGPropValFormatFlags flags) const
 {
 	if (stringUtils::CheckCorrectName(text) > 0)
 		return false;
 
-	if (GetChildCount() && HasFlag(wxPG_PROP_COMPOSED_VALUE))
-		return wxPGProperty::StringToValue(variant, text, argFlags);
+	if (GetChildCount() && HasFlag(wxPGFlags::ComposedValue))
+		return wxPGProperty::StringToValue(variant, text, flags);
 
 	if (variant != text) {
 		if (text.IsEmpty()) {
@@ -83,7 +85,7 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 	return false;
 }
 
-bool wxEventToolProperty::IntToValue(wxVariant& value, int number, int argFlags) const
+bool wxEventToolProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	value = new ibVariantDataAction(m_choices.GetValue(number));
 	
@@ -98,7 +100,7 @@ void wxEventToolProperty::OnSetValue()
 {
 	if (m_actionData.IsCustomAction()) {
 		m_valueBitmapBundle = wxNullBitmap;
-		SetFlag(wxPG_PROP_ACTIVE_BTN); // Property button always enabled.
+		SetFlag(wxPGPropertyFlags_ActiveButton); // Property button always enabled.
 	}
 	else {
 		m_valueBitmapBundle = wxNullBitmap;
@@ -109,7 +111,7 @@ void wxEventToolProperty::OnSetValue()
 				break;
 			}
 		}
-		ClearFlag(wxPG_PROP_ACTIVE_BTN); // Property button always disabled.
+		ClearFlag(wxPGPropertyFlags_ActiveButton); // Property button always disabled.
 	}
 }
 

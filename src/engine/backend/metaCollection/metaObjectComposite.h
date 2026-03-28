@@ -110,7 +110,7 @@ public:
 	}
 
 	//runtime support:
-	const ibCtorMetaValueType* GetTypeCtor(const enum ibCtorMetaType& refType) const;
+	const ibCtorMetaValueType* GetTypeCtor(const enum ibCtorObjectMetaType& refType) const;
 
 #pragma region __generic_h__
 

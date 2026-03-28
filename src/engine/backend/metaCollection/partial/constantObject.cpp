@@ -115,7 +115,7 @@ ibClassID ibValueRecordDataObjectConstant::GetClassType() const
 	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, ibCtorMetaType::ibCtorMetaType_Object);
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -125,7 +125,7 @@ wxString ibValueRecordDataObjectConstant::GetClassName() const
 	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, ibCtorMetaType::ibCtorMetaType_Object);
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -135,7 +135,7 @@ wxString ibValueRecordDataObjectConstant::GetString() const
 	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, ibCtorMetaType::ibCtorMetaType_Object);
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Object);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }

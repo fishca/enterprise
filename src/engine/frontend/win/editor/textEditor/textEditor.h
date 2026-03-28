@@ -42,10 +42,10 @@ public:
 		const wxString& name = wxSTCNameStr);
 
 	//Editor setting 
-	void SetEditorSettings(const CEditorSettings& settings);
+	void SetEditorSettings(const ibEditorSettings& settings);
 	
 	//Font setting 
-	void SetFontColorSettings(const CFontColorSettings& settings);
+	void SetFontColorSettings(const ibFontColorSettings& settings);
 
 private:
 

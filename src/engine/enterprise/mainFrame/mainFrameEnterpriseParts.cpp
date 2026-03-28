@@ -59,7 +59,7 @@ void ibFrontendDocMDIFrameEnterprise::CreateWideGui()
 
 	InitializeDefaultMenu();
 
-	SetStatusBar(new CDocBottomStatusBar(this));
+	SetStatusBar(new ibDocBottomStatusBar(this));
 	SetStatusText(_("Ready"));
 	GetNotebook()->GetAuiManager().GetArtProvider()->SetColour(wxAUI_DOCKART_BACKGROUND_COLOUR, wxAUI_DEFAULT_COLOUR);
 

@@ -28,7 +28,7 @@ ibWatchWindow::ibWatchWindow(wxWindow* parent, wxWindowID winid)
 	m_root = AddRoot(_T("Root"));
 	SetItemText(m_root, 1, _T("Root"));
 
-	SetDropTarget(new CWatchDropTarget(this));
+	SetDropTarget(new ibWatchDropTarget(this));
 
 	CreateEmptySlotIfNeeded();
 

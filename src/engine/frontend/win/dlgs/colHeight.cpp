@@ -1,7 +1,7 @@
 #include "colHeight.h"
 #include "frontend/win/editor/gridEditor/gridEditor.h"
 
-ibDialogColWidth::ibDialogColWidth(CGridEditor* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+ibDialogColWidth::ibDialogColWidth(ibGridEditor* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);

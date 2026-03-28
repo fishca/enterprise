@@ -191,11 +191,11 @@ private:
 	class ibMetaTreeCtrl : public wxTreeCtrl {
 		wxDECLARE_DYNAMIC_CLASS(ibMetadataTree);
 
-		class CMatadataTreeView : public ibMetaView
+		class ibMatadataTreeView : public ibMetaView
 		{
 		public:
 
-			CMatadataTreeView(ibMetaTreeCtrl* tree) : m_ownerTree(tree) {}
+			ibMatadataTreeView(ibMetaTreeCtrl* tree) : m_ownerTree(tree) {}
 			virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 
 		private:

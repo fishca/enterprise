@@ -228,7 +228,7 @@ ibValueRecordDataObjectRef* ibValueReferenceDataObject::GetObject() const
 ibClassID ibValueReferenceDataObject::GetClassType() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_Reference);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -247,7 +247,7 @@ wxString ibValueReferenceDataObject::GetString() const
 wxString ibValueReferenceDataObject::GetClassName() const
 {
 	const ibCtorMetaValueType* clsFactory =
-		m_metaObject->GetTypeCtor(ibCtorMetaType::ibCtorMetaType_Reference);
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }

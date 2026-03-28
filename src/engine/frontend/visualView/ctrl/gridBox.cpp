@@ -21,7 +21,7 @@ m_valueSpreadsheet(ibValue::CreateAndPrepareValueRef<ibValueSpreadsheetDocument>
 
 wxObject* ibValueGridBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	CGridEditor* gridWindow = new CGridEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	ibGridEditor* gridWindow = new ibGridEditor(nullptr, wxparent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
 	gridWindow->EnableProperty(!visualHost->IsDesignerHost());
 	gridWindow->EnableGridArea(false);
@@ -34,7 +34,7 @@ wxObject* ibValueGridBox::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 
 void ibValueGridBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
-	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
+	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(wxobject);
 }
 
 void ibValueGridBox::OnSelected(wxObject* wxobject)
@@ -43,7 +43,7 @@ void ibValueGridBox::OnSelected(wxObject* wxobject)
 
 void ibValueGridBox::Update(wxObject* wxobject, ibVisualHost* visualHost)
 {
-	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(wxobject);
+	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(wxobject);
 
 	if (gridWindow) {
 	}
@@ -61,7 +61,7 @@ void ibValueGridBox::Cleanup(wxObject* wxobject, ibVisualHost* visualHost)
 
 wxPrintout* ibValueGridBox::CreatePrintout() const
 {
-	CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
+	ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(GetWxObject());
 	if (gridWindow != nullptr)
 		return gridWindow->CreatePrintout();
 
@@ -103,7 +103,7 @@ bool ibValueGridBox::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 	if (lPropAlias == eControl) {
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eGridValue) {
-			CGridEditor* gridWindow = dynamic_cast<CGridEditor*>(GetWxObject());
+			ibGridEditor* gridWindow = dynamic_cast<ibGridEditor*>(GetWxObject());
 			m_valueSpreadsheet = varPropVal.ConvertToType<ibValueSpreadsheetDocument>();
 			if (gridWindow != nullptr) gridWindow->LoadDocument(m_valueSpreadsheet->GetSpreadsheetDesc());
 		}

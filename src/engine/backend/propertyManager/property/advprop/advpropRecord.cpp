@@ -1,4 +1,6 @@
 #include "advpropRecord.h"
+
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/property/variant/variantRecord.h"
 #include "backend/propertyManager/propertyEditor.h"
 
@@ -30,25 +32,25 @@ wxPGRecordProperty::wxPGRecordProperty(const ibPropertyObject* property, const w
     FillByClsid(g_metaInformationRegisterCLSID);
     FillByClsid(g_metaAccumulationRegisterCLSID);
 
-    //m_flags |= wxPG_PROP_READONLY;
-    m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
+    //m_flags |= wxPGFlags::ReadOnly;
+    m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 
     SetValue(value);
 }
 
-wxString wxPGRecordProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxPGRecordProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
     return value.GetString();
 }
 
 bool wxPGRecordProperty::StringToValue(wxVariant& variant,
     const wxString& text,
-    int argFlags) const
+    wxPGPropValFormatFlags flags) const
 {
     return false;
 }
 
-bool wxPGRecordProperty::IntToValue(wxVariant& value, int number, int argFlags) const
+bool wxPGRecordProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
     ibVariantDataRecord* dataRecord = property_cast(value, ibVariantDataRecord);
     if (dataRecord != nullptr) {
@@ -136,7 +138,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
             topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
 
             tc->SetDoubleBuffered(true);
-            tc->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+            tc->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
             wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(wxOK | wxCANCEL);
             topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));

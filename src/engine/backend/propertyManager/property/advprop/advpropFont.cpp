@@ -94,7 +94,7 @@ wxPGFontProperty::wxPGFontProperty(const wxString& label, const wxString& strNam
 	wxPGProperty* p = new wxEnumProperty(_("Face Name"), wxT("face Name"),
 		*wxPGGlobalVars->m_fontFamilyChoices);
 
-	p->SetValueFromString(faceName, wxPG_FULL_VALUE);
+	p->SetValueFromString(faceName, wxPGPropValFormatFlags::FullValue);
 
 	AddPrivateChild(p);
 
@@ -115,9 +115,9 @@ void wxPGFontProperty::OnSetValue()
 	// do nothing
 }
 
-wxString wxPGFontProperty::GetValueAsString(int argFlags) const
+wxString wxPGFontProperty::GetValueAsString(wxPGPropValFormatFlags flags) const
 {
-	return wxPGProperty::GetValueAsString(argFlags);
+	return wxPGProperty::GetValueAsString(flags);
 }
 
 bool wxPGFontProperty::OnEvent(wxPropertyGrid* propgrid, wxWindow* WXUNUSED(primary),
@@ -156,7 +156,7 @@ void wxPGFontProperty::RefreshChildren()
 
 	Item(0)->SetValue(font.m_pointSize);
 	Item(1)->SetValue(font.m_family);
-	Item(2)->SetValueFromString(font.m_faceName, wxPG_FULL_VALUE);
+	Item(2)->SetValueFromString(font.m_faceName, wxPGPropValFormatFlags::FullValue);
 	Item(3)->SetValue(font.m_style);
 	Item(4)->SetValue(font.m_weight);
 	Item(5)->SetValue(font.m_underlined);

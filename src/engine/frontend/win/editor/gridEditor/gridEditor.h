@@ -16,12 +16,12 @@ static const wxString s_strTypeParameter = wxT("stringParameter");
 #include "frontend/win/ctrls/grid/gridextctrl.h"
 #include "frontend/win/ctrls/grid/gridexteditors.h"
 
-class FRONTEND_API CGridEditor : public ibGrid {
+class FRONTEND_API ibGridEditor : public ibGrid {
 
-	class CGenericSpreadsheetNotifier : public ibBackendSpreadsheetNotifier {
+	class ibGenericSpreadsheetNotifier : public ibBackendSpreadsheetNotifier {
 	public:
 
-		CGenericSpreadsheetNotifier(CGridEditor* view) : m_view(view) {}
+		ibGenericSpreadsheetNotifier(ibGridEditor* view) : m_view(view) {}
 		virtual void ClearSpreadsheet() { m_view->ClearGrid(); }
 		virtual void EnableEditing(bool edit) { m_view->EnableEditing(edit); }
 
@@ -79,7 +79,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 
 	private:
 
-		CGridEditor* GetOrCreateCell(int row, int col) const {
+		ibGridEditor* GetOrCreateCell(int row, int col) const {
 
 			if (m_view->GetTable() != nullptr) {
 
@@ -93,20 +93,20 @@ class FRONTEND_API CGridEditor : public ibGrid {
 			return m_view;
 		}
 
-		CGridEditor* m_view;
+		ibGridEditor* m_view;
 	};
 
 	// the editor for string/text data
-	class CGridEditorCellTextEditor : public ibGridCellEditor
+	class ibGridEditorCellTextEditor : public ibGridCellEditor
 	{
 	public:
-		explicit CGridEditorCellTextEditor(size_t maxChars = 0)
+		explicit ibGridEditorCellTextEditor(size_t maxChars = 0)
 			: ibGridCellEditor(),
 			m_maxChars(maxChars)
 		{
 		}
 
-		CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other);
+		ibGridEditorCellTextEditor(const ibGridEditorCellTextEditor& other);
 
 		virtual void Create(wxWindow* parent,
 			wxWindowID id,
@@ -131,7 +131,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 #endif
 
 		virtual ibGridCellEditor* Clone() const override {
-			return new CGridEditorCellTextEditor(*this);
+			return new ibGridEditorCellTextEditor(*this);
 		}
 
 		// added GetValue so we can get the value which is in the control
@@ -154,11 +154,11 @@ class FRONTEND_API CGridEditor : public ibGrid {
 		wxString                 m_value;
 	};
 
-	class CGridEditorStringTable : public ibGridStringTable {
+	class ibGridEditorStringTable : public ibGridStringTable {
 
-		struct CGridEditorStringTableFillType {
+		struct ibGridEditorStringTableFillType {
 
-			CGridEditorStringTableFillType(int row, int col, ibSpreadsheetFillType type) :
+			ibGridEditorStringTableFillType(int row, int col, ibSpreadsheetFillType type) :
 				m_row(row), m_col(col), m_fillType(type) {
 			}
 
@@ -168,8 +168,8 @@ class FRONTEND_API CGridEditor : public ibGrid {
 
 	public:
 
-		CGridEditorStringTable() : ibGridStringTable() {}
-		CGridEditorStringTable(int numRows, int numCols) : ibGridStringTable(numRows, numCols) {}
+		ibGridEditorStringTable() : ibGridStringTable() {}
+		ibGridEditorStringTable(int numRows, int numCols) : ibGridStringTable(numRows, numCols) {}
 
 		virtual bool IsEmptyCell(int row, int col) {
 			wxCHECK_MSG((row >= 0 && row < GetNumberRows()) &&
@@ -253,7 +253,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 					[row, col](const auto& value) { return value.m_row == row && value.m_col == col; });
 				if (iterator != m_setColRowType.end())
 					m_setColRowType.erase(iterator);
-				CGridEditorStringTable::SetValue(row, col, *s);
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeTemplate)) {
 				const wxString* s = static_cast<wxString*>(value);
@@ -263,7 +263,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 					m_setColRowType.emplace_back(row, col, ibSpreadsheetFillType_StrTemplate);
 				else
 					iterator->m_fillType = ibSpreadsheetFillType_StrTemplate;
-				CGridEditorStringTable::SetValue(row, col, *s);
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 			else if (value && stringUtils::CompareString(typeName, s_strTypeParameter)) {
 				const wxString* s = static_cast<wxString*>(value);
@@ -273,7 +273,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 					m_setColRowType.emplace_back(row, col, ibSpreadsheetFillType_StrParameter);
 				else
 					iterator->m_fillType = ibSpreadsheetFillType_StrParameter;
-				CGridEditorStringTable::SetValue(row, col, *s);
+				ibGridEditorStringTable::SetValue(row, col, *s);
 			}
 		}
 
@@ -336,7 +336,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 			return ibSpreadsheetFillType_StrText;
 		}
 
-		std::vector<CGridEditorStringTableFillType> m_setColRowType;
+		std::vector<ibGridEditorStringTableFillType> m_setColRowType;
 	};
 
 	// the property of grid 
@@ -344,7 +344,7 @@ class FRONTEND_API CGridEditor : public ibGrid {
 		public ibPropertyObject {
 	public:
 
-		ibPropertyGridEditorSpreadsheet(CGridEditor* view) : m_view(view) {
+		ibPropertyGridEditorSpreadsheet(ibGridEditor* view) : m_view(view) {
 			if (m_view != nullptr) {
 				m_view->Bind(wxEVT_GRID_SELECT_CELL, &ibPropertyGridEditorSpreadsheet::OnSelectCell, this);
 				m_view->Bind(wxEVT_GRID_RANGE_SELECTED, &ibPropertyGridEditorSpreadsheet::OnSelectCells, this);
@@ -371,14 +371,14 @@ class FRONTEND_API CGridEditor : public ibGrid {
 		virtual void OnPropertyRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibProperty* property);
 		virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-		friend class CGridEditor;
+		friend class ibGridEditor;
 
 	protected:
 
 		void OnSelectCell(ibGridEvent& event);
 		void OnSelectCells(ibGridRangeSelectEvent& event);
 
-		CGridEditor* m_view;
+		ibGridEditor* m_view;
 
 		wxVector<ibGridBlockCoords> m_selection;
 
@@ -440,12 +440,12 @@ public:
 	////////////////////////////////////////////////////////////
 
 	// ctor and Create() create the grid window, as with the other controls
-	CGridEditor();
-	CGridEditor(class ibMetaDocument* document, wxWindow* parent,
+	ibGridEditor();
+	ibGridEditor(class ibMetaDocument* document, wxWindow* parent,
 		wxWindowID id, const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize);
 
-	virtual ~CGridEditor();
+	virtual ~ibGridEditor();
 
 #pragma region area
 

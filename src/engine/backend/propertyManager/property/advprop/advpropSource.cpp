@@ -1,5 +1,6 @@
 #include "advpropSource.h"
 
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/property/variant/variantSource.h"
 #include "backend/system/value/valueTable.h"
 
@@ -22,19 +23,19 @@ wxPGSourceDataProperty::wxPGSourceDataProperty(const ibPropertyObject* property,
 	m_typeSelector = new wxPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : ibSelectorDataType::ibSelectorDataType_reference, _("Type"), wxT("type"), dataSource->CloneSourceAttribute());
 	AddPrivateChild(m_typeSelector);
 
-	//m_flags |= wxPG_PROP_READONLY;
-	m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
+	//m_flags |= wxPGFlags::ReadOnly;
+	m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 
 	SetValue(value);
 }
 
 wxString wxPGSourceDataProperty::ValueToString(wxVariant& variant,
-	int WXUNUSED(argFlags)) const
+	wxPGPropValFormatFlags WXUNUSED(flags)) const
 {
 	return variant.GetString();
 }
 
-bool wxPGSourceDataProperty::StringToValue(wxVariant& variant, const wxString& text, int argFlags) const
+bool wxPGSourceDataProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	if (text.IsEmpty()) {
 		ibVariantDataSource* dataSource = property_cast(variant, ibVariantDataSource);
@@ -55,7 +56,7 @@ void wxPGSourceDataProperty::RefreshChildren()
 		if (id != wxNOT_FOUND) m_typeSelector->SetValue(dataSource->CloneSourceAttribute(id));
 		else m_typeSelector->SetValue(dataSource->CloneSourceAttribute());
 	}
-	m_typeSelector->SetFlagRecursively(wxPG_PROP_READONLY, dataSource != nullptr ? !dataSource->IsPropAllowed() : false);
+	m_typeSelector->SetFlagRecursively(wxPGFlags::ReadOnly, dataSource != nullptr ? !dataSource->IsPropAllowed() : false);
 	wxPGSourceDataProperty::SetExpanded(true);
 }
 
@@ -66,7 +67,7 @@ wxVariant wxPGSourceDataProperty::ChildChanged(wxVariant& thisValue, int childIn
 		ibVariantDataAttributeSource* attrSource = property_cast(childValue, ibVariantDataAttributeSource);
 		if (attrSource != nullptr) {
 			ibVariantDataSource* cloneDataSource = dataSource->Clone();
-			if (!m_typeSelector->HasFlag(wxPG_PROP_READONLY)) cloneDataSource->SetSource(wxNOT_FOUND);
+			if (!m_typeSelector->HasFlag(wxPGFlags::ReadOnly)) cloneDataSource->SetSource(wxNOT_FOUND);
 			cloneDataSource->SetSourceAttribute(attrSource);
 			return cloneDataSource;
 		}
@@ -152,7 +153,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
 
 			tc->SetDoubleBuffered(true);
-			tc->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			tc->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
 			wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(wxOK | wxCANCEL);
 			topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));
@@ -175,7 +176,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 				const ibCtorMetaValueType* typeCtor = metaData->GetTypeCtor(srcObject->GetSourceClassType());
 				if (typeCtor != nullptr) {
 					if (typeFactory->GetFilterSourceDataType() == ibSourceDataType::ibSourceDataType_attribute) {
-						bool is_list_source = typeCtor->GetMetaTypeCtor() == ibCtorMetaType::ibCtorMetaType_List;
+						bool is_list_source = typeCtor->GetMetaTypeCtor() == ibCtorObjectMetaType::ibCtorObjectMetaType_List;
 						allow_create = !is_list_source;
 					}
 				}
@@ -319,7 +320,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
 
 			tc->SetDoubleBuffered(true);
-			tc->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			tc->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
 			wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(wxOK | wxCANCEL);
 			topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));

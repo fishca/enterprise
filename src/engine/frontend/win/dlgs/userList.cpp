@@ -7,11 +7,11 @@
 #define colUserName 1
 #define colUserFullName 2
 
-class CUserListModel : public ibDataViewIndexListModel {
-	wxDECLARE_NO_COPY_CLASS(CUserListModel);
+class ibUserListModel : public ibDataViewIndexListModel {
+	wxDECLARE_NO_COPY_CLASS(ibUserListModel);
 public:
 
-	CUserListModel() { PrepareData(); }
+	ibUserListModel() { PrepareData(); }
 
 	void PrepareData() {
 		m_aUsersData.clear();
@@ -116,7 +116,7 @@ ibDialogUserList::ibDialogUserList(wxWindow* parent, wxWindowID id, const wxStri
 
 	m_dataEditor->SetHeaderAttr(attr);
 
-	m_dataEditor->AssociateModel(new CUserListModel);
+	m_dataEditor->AssociateModel(new ibUserListModel);
 
 	sizerList->Add(m_dataEditor, 1, wxALL | wxEXPAND, 5);
 
@@ -160,8 +160,8 @@ void ibDialogUserList::OnItemActivated(ibDataViewEvent& event)
 {
 	ibDialogUserItem dlg(this, wxID_ANY);
 
-	CUserListModel* model =
-		static_cast<CUserListModel*>(m_dataEditor->GetModel());
+	ibUserListModel* model =
+		static_cast<ibUserListModel*>(m_dataEditor->GetModel());
 
 	dlg.ReadUserData(model->GetGuidByRow(event.GetItem()));
 	dlg.ShowModal();
@@ -178,8 +178,8 @@ void ibDialogUserList::OnCommandMenu(wxCommandEvent& event)
 		dlg.ShowModal();
 	}
 
-	CUserListModel* model =
-		dynamic_cast<CUserListModel*>(m_dataEditor->GetModel());
+	ibUserListModel* model =
+		dynamic_cast<ibUserListModel*>(m_dataEditor->GetModel());
 
 	if (sel.IsOk()) {
 		if (event.GetId() == wxID_USERS_TOOL_EDIT) {

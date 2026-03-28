@@ -103,7 +103,7 @@ bool ibMetaData::IsRegisterCtor(const wxString& className, ibCtorObjectType obje
 	return ibValue::IsRegisterCtor(className, objectType);
 }
 
-bool ibMetaData::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorMetaType refType) const
+bool ibMetaData::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorObjectMetaType refType) const
 {
 	if (className.IsEmpty())
 		return false;
@@ -150,7 +150,7 @@ ibMetaID ibMetaData::GetVTByID(const ibClassID& clsid) const
 	return ibValue::GetVTByID(clsid);
 }
 
-ibClassID ibMetaData::GetIDByVT(const ibMetaID& valueType, ibCtorMetaType refType) const
+ibClassID ibMetaData::GetIDByVT(const ibMetaID& valueType, ibCtorObjectMetaType refType) const
 {
 	for (auto& typeCtor : m_factoryCtors) {
 		const ibValueMetaObject* metaValue = typeCtor->GetMetaObject();
@@ -177,7 +177,7 @@ ibCtorMetaValueType* ibMetaData::GetTypeCtor(const ibClassID& clsid) const
 	return nullptr;
 }
 
-ibCtorMetaValueType* ibMetaData::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorMetaType refType) const
+ibCtorMetaValueType* ibMetaData::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorObjectMetaType refType) const
 {
 	for (auto& typeCtor : m_factoryCtors)
 		if (refType == typeCtor->GetMetaTypeCtor() && metaValue == typeCtor->GetMetaObject())
@@ -217,7 +217,7 @@ std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType() const
 	return retVector;
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType(const ibClassID& clsid, ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType(const ibClassID& clsid, ibCtorObjectMetaType refType) const
 {
 	std::vector<ibCtorMetaValueType*> retVector;
 	std::copy_if(m_factoryCtors.begin(), m_factoryCtors.end(), std::back_inserter(retVector), [clsid, refType](ibCtorMetaValueType* t) {
@@ -234,7 +234,7 @@ std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType(const ibClassID
 	return retVector;
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType(ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaData::GetListCtorsByType(ibCtorObjectMetaType refType) const
 {
 	std::vector<ibCtorMetaValueType*> retVector;
 	std::copy_if(m_factoryCtors.begin(), m_factoryCtors.end(), std::back_inserter(retVector), [refType](const ibCtorMetaValueType* t) { return refType == t->GetMetaTypeCtor(); });

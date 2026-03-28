@@ -54,7 +54,7 @@ bool ibValueReferenceDataObject::ReadData(bool createData)
 
 bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector<ibValue>& listValue) const
 {
-	class CObjectComparatorValue : public ibValueDataObject {
+	class ibValueDataObjectComparator : public ibValueDataObject {
 		bool ReadValues() {
 			if (m_metaObject == nullptr || m_newObject)
 				return false;
@@ -84,12 +84,12 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 		}
 		ibValueMetaObjectRecordDataRef* m_metaObject;
 	private:
-		CObjectComparatorValue(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) : ibValueDataObject(guid, false), m_metaObject(metaObject) {}
+		ibValueDataObjectComparator(ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) : ibValueDataObject(guid, false), m_metaObject(metaObject) {}
 	public:
 
 		static bool CompareValue(const wxString& findData, ibValueMetaObjectRecordDataRef* metaObject, const ibGuid& guid) {
 			bool allow = false;
-			CObjectComparatorValue* comparator = new CObjectComparatorValue(metaObject, guid);
+			ibValueDataObjectComparator* comparator = new ibValueDataObjectComparator(metaObject, guid);
 			if (comparator->ReadValues()) {
 				for (const auto object : metaObject->GetSearchedAttributeObjectArray()) {
 					const wxString& fieldCompare = comparator->m_listObjectValue[object->GetMetaID()].GetString();
@@ -120,7 +120,7 @@ bool ibValueReferenceDataObject::FindValue(const wxString& findData, std::vector
 			return false;
 		while (resultSet->Next()) {
 			const ibGuid& currentGuid = resultSet->GetResultString(guidName);
-			if (CObjectComparatorValue::CompareValue(findData, m_metaObject, currentGuid)) {
+			if (ibValueDataObjectComparator::CompareValue(findData, m_metaObject, currentGuid)) {
 				listValue.push_back(
 					ibValueReferenceDataObject::Create(m_metaObject, currentGuid)
 				);

@@ -198,7 +198,7 @@ wxObject* ibVisualHost::GetWxObject(const ibValueFrame* baseobject) const
 
 void ibVisualHost::GenerateControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
 {
-	class CControlCreator
+	class ibControlCreator
 	{
 	public:
 		static void CreateControl(ibVisualHost* visualHost, ibValueFrame* obj, wxWindow* wxparent, wxObject* parent, bool firstCreated)
@@ -270,12 +270,12 @@ void ibVisualHost::GenerateControl(ibValueFrame* obj, wxWindow* wxparent, wxObje
 		}
 	};
 
-	CControlCreator::CreateControl(this, obj, wxparent, parent, firstCreated);
+	ibControlCreator::CreateControl(this, obj, wxparent, parent, firstCreated);
 }
 
 void ibVisualHost::RefreshControl(ibValueFrame* obj, wxWindow* wxparent, wxObject* parent)
 {
-	class CControlUpdater
+	class ibControlUpdater
 	{
 	public:
 		static void UpdateControl(ibVisualHost* visualHost, ibValueFrame* obj, wxWindow* wxparent, wxObject* parent)
@@ -349,7 +349,7 @@ void ibVisualHost::RefreshControl(ibValueFrame* obj, wxWindow* wxparent, wxObjec
 		}
 	};
 
-	CControlUpdater::UpdateControl(this, obj, wxparent, parent);
+	ibControlUpdater::UpdateControl(this, obj, wxparent, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +510,7 @@ void ibVisualHost::RemoveControl(ibValueFrame* obj, ibValueFrame* parent)
 
 void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 {
-	class CControlCleaner {
+	class ibControlCleaner {
 
 		static inline void DeleteObject(ibVisualHost* visualHost, ibValueFrame* control, bool force) {
 
@@ -585,7 +585,7 @@ void ibVisualHost::ClearControl(ibValueFrame* control, bool force)
 		}
 	};
 
-	CControlCleaner::ClearControl(this, control, force);
+	ibControlCleaner::ClearControl(this, control, force);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +594,7 @@ bool ibVisualHost::CalculateLabelSize(ibValueFrame* control)
 {
 	static wxCoord widthTextMax, heightTextTotal;
 
-	class CControlCalculateSize {
+	class ibControlCalculateSize {
 
 		static inline void Calculate(const ibValueFrame* child, wxBoxSizer* parentSizer, int& maxX) {
 
@@ -682,7 +682,7 @@ bool ibVisualHost::CalculateLabelSize(ibValueFrame* control)
 		}
 	};
 
-	return CControlCalculateSize::CalculateAndApply(GetValueForm());
+	return ibControlCalculateSize::CalculateAndApply(GetValueForm());
 }
 
 void ibVisualHost::UpdateVirtualSize()

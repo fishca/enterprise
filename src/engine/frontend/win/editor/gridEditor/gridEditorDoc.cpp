@@ -1,6 +1,6 @@
 #include "gridEditor.h"
 
-bool CGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+bool ibGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	if (m_spreadsheetObject != doc) {
 
@@ -8,13 +8,13 @@ bool CGridEditor::AssociatibDocument(const wxObjectDataPtr<ibBackendSpreadsheetO
 			m_spreadsheetObject->RemoveNotifier(m_notifier);
 
 		m_spreadsheetObject = doc;
-		m_notifier = m_spreadsheetObject->AddNotifier<CGenericSpreadsheetNotifier>(this);
+		m_notifier = m_spreadsheetObject->AddNotifier<ibGenericSpreadsheetNotifier>(this);
 	}
 
 	return true;
 }
 
-bool CGridEditor::GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
+bool ibGridEditor::GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
 {
 	doc = m_spreadsheetObject;
 	return true;
@@ -22,7 +22,7 @@ bool CGridEditor::GetActivibDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>
 
 #pragma region file
 
-bool CGridEditor::LoadDocument(const ibSpreadsheetDescription& spreadsheetDesc)
+bool ibGridEditor::LoadDocument(const ibSpreadsheetDescription& spreadsheetDesc)
 {
 	if (!LoadSpreadsheet(spreadsheetDesc))
 		return false;
@@ -33,14 +33,14 @@ bool CGridEditor::LoadDocument(const ibSpreadsheetDescription& spreadsheetDesc)
 	return AssociatibDocument(doc);
 }
 
-bool CGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+bool ibGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	const ibSpreadsheetDescription& spreadsheetDesc = doc->GetSpreadsheetDesc();
 
 	if (!spreadsheetDesc.IsEmptySpreadsheet())
 	{
 		ibGrid::SetTable(
-			new CGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
+			new ibGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
 
 		ibGrid::SetEvtHandlerEnabled(false);
 
@@ -155,23 +155,23 @@ bool CGridEditor::LoadDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 	return AssociatibDocument(doc);
 }
 
-bool CGridEditor::SaveDocument(ibSpreadsheetDescription& spreadsheetDesc) const
+bool ibGridEditor::SaveDocument(ibSpreadsheetDescription& spreadsheetDesc) const
 {
 	return SaveSpreadsheet(spreadsheetDesc);
 }
 
-bool CGridEditor::SaveDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
+bool ibGridEditor::SaveDocument(wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) const
 {
 	return SaveSpreadsheet(doc->GetSpreadsheetDesc());
 }
 
-void CGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	ibGrid::SetEvtHandlerEnabled(false);
 
 	if (m_table == nullptr) {
 		ibGrid::SetTable(
-			new CGridEditorStringTable, true);
+			new ibGridEditorStringTable, true);
 	}
 
 	const int maxRowBrake = GetMaxRowBrake();
@@ -231,13 +231,13 @@ void CGridEditor::PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>&
 	ibGrid::SetEvtHandlerEnabled(true);
 }
 
-void CGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
+void ibGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc)
 {
 	ibGrid::SetEvtHandlerEnabled(false);
 
 	if (m_table == nullptr) {
 		ibGrid::SetTable(
-			new CGridEditorStringTable, true);
+			new ibGridEditorStringTable, true);
 	}
 
 	const int maxRowBrake = GetMaxRowBrake();
@@ -296,12 +296,12 @@ void CGridEditor::JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>
 	ibGrid::SetEvtHandlerEnabled(true);
 }
 
-bool CGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDesc)
+bool ibGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDesc)
 {
 	if (!spreadsheetDesc.IsEmptySpreadsheet())
 	{
 		ibGrid::SetTable(
-			new CGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
+			new ibGridEditorStringTable(spreadsheetDesc.GetNumberRows(), spreadsheetDesc.GetNumberCols()), true);
 
 		ibGrid::SetEvtHandlerEnabled(false);
 
@@ -425,7 +425,7 @@ bool CGridEditor::LoadSpreadsheet(const ibSpreadsheetDescription& spreadsheetDes
 	return true;
 }
 
-bool CGridEditor::SaveSpreadsheet(ibSpreadsheetDescription& spreadsheetDesc) const
+bool ibGridEditor::SaveSpreadsheet(ibSpreadsheetDescription& spreadsheetDesc) const
 {
 	spreadsheetDesc = m_spreadsheetObject->GetSpreadsheetDesc();
 	return true;

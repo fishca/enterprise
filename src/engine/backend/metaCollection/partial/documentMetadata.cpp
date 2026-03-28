@@ -12,9 +12,9 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibValueMetaObjectDocument, ibValueMetaObjectRecordData
 
 //********************************************************************************************
 
-class CListDocumentDataObjectRef : public ibValueListDataObjectRef {
+class ibValueListDataObjectRefDocument : public ibValueListDataObjectRef {
 public:
-	CListDocumentDataObjectRef(ibValueMetaObjectDocument* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false) :
+	ibValueListDataObjectRefDocument(ibValueMetaObjectDocument* metaObject = nullptr, const ibFormID& formType = wxNOT_FOUND, bool choiceMode = false) :
 		ibValueListDataObjectRef(metaObject, formType, choiceMode)
 	{
 		ibValueListDataObject::AppendSort(metaObject->GetDocumentNumber(), true, false);
@@ -97,10 +97,10 @@ ibSourceDataObject* ibValueMetaObjectDocument::CreateSourceObject(ibValueMetaObj
 	{
 	case eFormObject: return CreateObjectValue(); break;
 	case eFormList:
-		return ibValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm());
+		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectRefDocument>(this, metaObject->GetTypeForm());
 		break;
 	case eFormSelect:
-		return ibValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, metaObject->GetTypeForm(), true);
+		return ibValue::CreateAndPrepareValueRef<ibValueListDataObjectRefDocument>(this, metaObject->GetTypeForm(), true);
 		break;
 	}
 
@@ -123,7 +123,7 @@ ibBackendValueForm* ibValueMetaObjectDocument::GetListForm(const wxString& strFo
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		ibValueMetaObjectDocument::eFormList,
-		ownerControl, ibValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, ibValueMetaObjectDocument::eFormList),
+		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueListDataObjectRefDocument>(this, ibValueMetaObjectDocument::eFormList),
 		formGuid
 	);
 }
@@ -133,7 +133,7 @@ ibBackendValueForm* ibValueMetaObjectDocument::GetSelectForm(const wxString& str
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		ibValueMetaObjectDocument::eFormSelect,
-		ownerControl, ibValue::CreateAndPrepareValueRef<CListDocumentDataObjectRef>(this, ibValueMetaObjectDocument::eFormSelect, true),
+		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueListDataObjectRefDocument>(this, ibValueMetaObjectDocument::eFormSelect, true),
 		formGuid
 	);
 }

@@ -254,7 +254,6 @@ void ibHeaderGenericCtrl::Init()
 		m_colBeingReordered = COL_NONE;
 	m_dragOffset = 0;
 	m_scrollOffset = 0;
-	m_xPhysical = -1;
 	m_numHeight = 1;
 	m_wasSeparatorDClick = false;
 }
@@ -595,28 +594,26 @@ void ibHeaderGenericCtrl::UpdateReorderingMarker(int xPhysical)
 	wxDCOverlay dcover(m_overlay, &dc);
 	dcover.Clear();
 
-	//dc.SetPen(*wxBLUE);
-	//dc.SetBrush(*wxTRANSPARENT_BRUSH);
+	dc.SetPen(colour_selection);
+	dc.SetBrush(*wxTRANSPARENT_BRUSH);
 
-	//// draw the phantom position of the column being dragged
-	//int x = xPhysical - m_dragOffset;
-	//int y = GetClientSize().y;
-	//dc.DrawRectangle(x, 0,
-	//	GetColumn(m_colBeingReordered).GetWidth(), y);
+	// draw the phantom position of the column being dragged
+	int x = xPhysical - m_dragOffset;
+	int y = GetClientSize().y;
+	dc.DrawRectangle(x, 0,
+		GetColumn(m_colBeingReordered).GetWidth(), y);
 
-	//// and also a hint indicating where it is going to be inserted if it's
-	//// dropped now
-	//unsigned int col = FindColumnClosestToPoint(xPhysical);
-	//if (col != COL_NONE)
-	//{
-	//	static const int DROP_MARKER_WIDTH = 4;
+	// and also a hint indicating where it is going to be inserted if it's
+	// dropped now
+	unsigned int col = FindColumnClosestToPoint(xPhysical);
+	if (col != COL_NONE)
+	{
+		static const int DROP_MARKER_WIDTH = 4;
 
-	//	dc.SetBrush(*wxBLUE);
-	//	dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
-	//		DROP_MARKER_WIDTH, y);
-	//}
-
-	m_xPhysical = xPhysical;
+		dc.SetBrush(brush_reorder);
+		dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
+			DROP_MARKER_WIDTH, y);
+	}
 }
 
 void ibHeaderGenericCtrl::StartReordering(unsigned int col, int xPhysical)
@@ -640,8 +637,6 @@ void ibHeaderGenericCtrl::StartReordering(unsigned int col, int xPhysical)
 	// do not call UpdateReorderingMarker() here: we don't want to give
 	// feedback for reordering until the user starts to really move the mouse
 	// as he might want to just click on the column and not move it at all
-
-	m_xPhysical = xPhysical;
 }
 
 bool ibHeaderGenericCtrl::EndReordering(int xPhysical)
@@ -684,8 +679,6 @@ bool ibHeaderGenericCtrl::EndReordering(int xPhysical)
 			DoMoveCol(colOld, pos);
 		}
 	}
-
-	m_xPhysical = -1;
 
 	// whether we moved the column or not, the user did move the mouse and so
 	// did try to do it so return true
@@ -789,22 +782,6 @@ void ibHeaderGenericCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 			// Next column and all the others are beyond the right border of
 			// the window, no need to continue.
 			break;
-		}
-	}
-
-	if (IsReordering())
-	{
-		// a hint indicating where it is going to be inserted if it's
-		// dropped now
-
-		unsigned int col = FindColumnClosestToPoint(m_xPhysical);
-		if (col != COL_NONE)
-		{
-			static const int DROP_MARKER_WIDTH = 4;
-
-			dc.SetBrush(brush_reorder);
-			dc.DrawRectangle(GetColEnd(col) - DROP_MARKER_WIDTH / 2, 0,
-				DROP_MARKER_WIDTH, GetClientSize().y);
 		}
 	}
 

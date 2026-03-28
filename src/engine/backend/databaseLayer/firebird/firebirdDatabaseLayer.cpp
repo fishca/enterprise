@@ -1130,7 +1130,7 @@ wxString ibDatabaseLayerFirebird::TranslateErrorCodeToString(ibInterfaceFirebird
 	else
 	{
 		pInterface->GetIscSqlInterprete()(nCode, szError, sizeof(szError));
-		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str(*wxConvCurrent);
+		wxCharBuffer systemEncoding = wxLocale::GetSystemEncodingName().mb_str();
 		strReturn = ibDatabaseStringConverter::ConvertFromUnicodeStream(szError, (const char*)systemEncoding);
 	}
 

@@ -12,9 +12,9 @@ wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGHyperLinkProperty, wxPGProperty, HyperLink)
 wxPGHyperLinkProperty::wxPGHyperLinkProperty(ibPropertyObject* ownerProperty, const wxString& label,
 	const wxString& name, const wxVariant& value) : wxPGProperty(label, name), m_ownerProperty(ownerProperty) {
 
-	wxPGProperty::SetFlagRecursively(wxPGPropertyFlags::wxPG_PROP_READONLY, true);
-	//wxPGProperty::SetFlagRecursively(wxPGPropertyFlags::wxPG_PROP_HIDDEN, true);
-	wxPGProperty::SetFlagRecursively(wxPGPropertyFlags::wxPG_PROP_NOEDITOR, true);
+	wxPGProperty::SetFlagRecursively(wxPGFlags::ReadOnly, true);
+	//wxPGProperty::SetFlagRecursively(wxPGFlags::Hidden, true);
+	wxPGProperty::SetFlagRecursively(wxPGFlags::NoEditor, true);
 
 	wxPGProperty::SetValue(wxVariant(false, wxT("hyperLink_clicked")));
 }
@@ -23,14 +23,14 @@ wxPGHyperLinkProperty::~wxPGHyperLinkProperty()
 {
 }
 
-wxString wxPGHyperLinkProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxPGHyperLinkProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	return _("Open");
 }
 
 bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
-	int argFlags) const
+	wxPGPropValFormatFlags flags) const
 {
 	return false;
 }

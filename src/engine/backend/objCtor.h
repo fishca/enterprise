@@ -3,18 +3,18 @@
 
 #include "backend/compiler/typeCtor.h"
 
-enum ibCtorMetaType {
-	ibCtorMetaType_Reference = 1,
-	ibCtorMetaType_List,
-	ibCtorMetaType_Object,
-	ibCtorMetaType_Manager,
-	ibCtorMetaType_Selection,
-	ibCtorMetaType_TabularSection,
-	ibCtorMetaType_TabularSection_String,
-	ibCtorMetaType_RecordSet,
-	ibCtorMetaType_RecordSet_String,
-	ibCtorMetaType_RecordKey,
-	ibCtorMetaType_RecordManager
+enum ibCtorObjectMetaType {
+	ibCtorObjectMetaType_Reference = 1,
+	ibCtorObjectMetaType_List,
+	ibCtorObjectMetaType_Object,
+	ibCtorObjectMetaType_Manager,
+	ibCtorObjectMetaType_Selection,
+	ibCtorObjectMetaType_TabularSection,
+	ibCtorObjectMetaType_TabularSection_String,
+	ibCtorObjectMetaType_RecordSet,
+	ibCtorObjectMetaType_RecordSet_String,
+	ibCtorObjectMetaType_RecordKey,
+	ibCtorObjectMetaType_RecordManager
 };
 
 #define generate_class_name(prefix) GetClassName() + prefix + GetName()
@@ -58,7 +58,7 @@ public:
 			metaObject->GetIcon() : wxNullIcon;
 	}
 
-	virtual ibCtorMetaType GetMetaTypeCtor() const = 0;
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const = 0;
 	virtual ibValueMetaObject* GetMetaObject() const = 0;
 };
 
@@ -80,7 +80,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Reference; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Reference; }
 
 protected:
 	ibClassID m_classType;
@@ -110,7 +110,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_List; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_List; }
 
 protected:
 	ibClassID m_classType;
@@ -140,7 +140,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_List; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_List; }
 
 protected:
 	ibClassID m_classType;
@@ -171,7 +171,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Object; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Object; }
 
 protected:
 	ibClassID m_classType;
@@ -219,7 +219,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Manager; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Manager; }
 
 protected:
 	ibClassID m_classType;
@@ -262,7 +262,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual ibValue* CreateObject() const { return nullptr; }
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_Selection; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_Selection; }
 
 protected:
 	ibClassID m_classType;
@@ -292,7 +292,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual ibValue* CreateObject() const { return nullptr; }
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaTable; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_TabularSection; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection; }
 
 protected:
 	ibClassID m_classType;
@@ -323,7 +323,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual ibValue* CreateObject() const { return nullptr; }
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaTable; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_TabularSection_String; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection_String; }
 
 protected:
 	ibClassID m_classType;
@@ -354,7 +354,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_RecordKey; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_RecordKey; }
 
 protected:
 	ibClassID m_classType;
@@ -384,7 +384,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_RecordManager; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_RecordManager; }
 
 protected:
 	ibClassID m_classType;
@@ -414,7 +414,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const;
 	virtual ibValue* CreateObject() const;
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_RecordSet; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_RecordSet; }
 
 protected:
 	ibClassID m_classType;
@@ -444,7 +444,7 @@ public:
 	virtual wxClassInfo* GetClassInfo() const { return nullptr; }
 	virtual ibValue* CreateObject() const { return nullptr; }
 	virtual ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
-	virtual ibCtorMetaType GetMetaTypeCtor() const { return ibCtorMetaType::ibCtorMetaType_RecordSet_String; }
+	virtual ibCtorObjectMetaType GetMetaTypeCtor() const { return ibCtorObjectMetaType::ibCtorObjectMetaType_RecordSet_String; }
 
 protected:
 	ibClassID m_classType;

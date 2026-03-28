@@ -389,9 +389,6 @@ private:
 	// clear any overlaid markers
 	void ClearMarkers();
 
-	// pos physical
-	int m_xPhysical;
-
 	//number of column height point
 	unsigned int m_numHeight;
 

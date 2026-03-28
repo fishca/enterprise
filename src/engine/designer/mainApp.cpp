@@ -113,8 +113,8 @@ int ibAppDesigner::OnRun()
 		return 1;
 	}
 
-	CProcessSplashScreen* splashScreenLoader =
-		new CProcessSplashScreen(wxBitmap(splashLogo_xpm),
+	ibProcessSplashScreen* splashScreenLoader =
+		new ibProcessSplashScreen(wxBitmap(splashLogo_xpm),
 			wxSPLASH_CENTRE_ON_SCREEN,
 			-1, nullptr, -1, wxDefaultPosition, wxDefaultSize,
 			wxBORDER_SIMPLE

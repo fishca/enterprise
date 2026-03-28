@@ -58,7 +58,7 @@ void ibFrontendDocMDIFrameDesigner::OnStartDebugWithoutDebug(wxCommandEvent& WXU
 
 void ibFrontendDocMDIFrameDesigner::OnAttachForDebugging(wxCommandEvent& WXUNUSED)
 {
-	CWindowPtr<ibDialogDebugItem> dlg(new ibDialogDebugItem(this, wxID_ANY));
+	ibWindowPtr<ibDialogDebugItem> dlg(new ibDialogDebugItem(this, wxID_ANY));
 	dlg->Show();
 }
 
@@ -370,19 +370,19 @@ void ibFrontendDocMDIFrameDesigner::OnRunDebugCommand(wxCommandEvent& event)
 
 void ibFrontendDocMDIFrameDesigner::OnToolsSettings(wxCommandEvent& event)
 {
-	CSettingsDialog dialog(this);
+	ibDialogSettings dialog(this);
 
-	CKeyBinderDialog* keyBinder = dialog.GetKeyBinderDialog();
+	ibDialogKeyBinder* keyBinder = dialog.GetKeyBinderDialog();
 
 	for (unsigned int i = 0; i < m_keyBinder.GetNumCommands(); ++i)
 	{
 		keyBinder->AddCommand(m_keyBinder.GetCommand(i));
 	}
 
-	CFontColorSettingsPanel* fontColorSettings = dialog.GetFontColorSettingsPanel();
+	ibPanelFontColorSettings* fontColorSettings = dialog.GetFontColorSettingsPanel();
 	fontColorSettings->SetSettings(m_fontColorSettings);
 
-	CEditorSettingsPanel* editorSettings = dialog.GetEditorSettingsPanel();
+	ibPanelEditorSettings* editorSettings = dialog.GetEditorSettingsPanel();
 	editorSettings->SetSettings(m_editorSettings);
 
 	if (dialog.ShowModal() == wxID_OK)
@@ -415,7 +415,7 @@ void ibFrontendDocMDIFrameDesigner::OnToolsSettings(wxCommandEvent& event)
 
 void ibFrontendDocMDIFrameDesigner::OnUsers(wxCommandEvent& event)
 {
-	CWindowPtr<ibDialogUserList> dlg(new ibDialogUserList(this, wxID_ANY));
+	ibWindowPtr<ibDialogUserList> dlg(new ibDialogUserList(this, wxID_ANY));
 	dlg->Show();
 }
 
@@ -423,7 +423,7 @@ void ibFrontendDocMDIFrameDesigner::OnUsers(wxCommandEvent& event)
 
 void ibFrontendDocMDIFrameDesigner::OnActiveUsers(wxCommandEvent& event)
 {
-	CWindowPtr<ibDialogActiveUser> dlg(new ibDialogActiveUser(this, wxID_ANY));
+	ibWindowPtr<ibDialogActiveUser> dlg(new ibDialogActiveUser(this, wxID_ANY));
 	dlg->Show();
 }
 

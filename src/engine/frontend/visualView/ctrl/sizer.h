@@ -104,8 +104,6 @@ public:
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
-	friend class CVisualEditorDatabase;
-
 private:
 
 	//frame owner 

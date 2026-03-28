@@ -1,4 +1,6 @@
 #include "advpropList.h"
+
+#include "backend/propertyManager/property/private/prop.h"
 #include "backend/propertyManager/propertyEditor.h"
 
 #define icon_size 16
@@ -14,13 +16,13 @@ wxPGListProperty::wxPGListProperty(const wxString& label, const wxString& strNam
 	: wxPGProperty(label, strName)
 {
 	m_choices.Assign(choices);
-	m_value = wxPGVariant_Zero;
+	m_value = wxVariant(0L);
 
-	m_flags |= wxPG_PROP_ACTIVE_BTN; // Property button always enabled.
+	m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 	SetValue(value);
 }
 
-wxString wxPGListProperty::ValueToString(wxVariant& value, int argFlags) const
+wxString wxPGListProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	for (unsigned int idx = 0; idx < m_choices.GetCount(); idx++) {
 		if (value.GetLong() == m_choices.GetValue(idx))
@@ -32,7 +34,7 @@ wxString wxPGListProperty::ValueToString(wxVariant& value, int argFlags) const
 
 bool wxPGListProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
-	int argFlags) const
+	wxPGPropValFormatFlags flags) const
 {
 	if (text.IsEmpty()) {
 		variant = WXVARIANT(wxNOT_FOUND);
@@ -42,7 +44,7 @@ bool wxPGListProperty::StringToValue(wxVariant& variant,
 	return false;
 }
 
-bool wxPGListProperty::IntToValue(wxVariant& value, int number, int argFlags) const
+bool wxPGListProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	value = WXVARIANT(m_choices.GetValue(number));
 	return true;
@@ -121,7 +123,7 @@ wxPGEditorDialogAdapter* wxPGListProperty::GetEditorDialog() const
 			topsizer->Add(rowsizer, wxSizerFlags(1).Expand());
 
 			lc->SetDoubleBuffered(true);
-			lc->Enable(!dlgProp->HasFlag(wxPG_PROP_READONLY));
+			lc->Enable(!dlgProp->HasFlag(wxPGFlags::ReadOnly));
 
 			wxStdDialogButtonSizer* buttonSizer = dlg->CreateStdDialogButtonSizer(wxOK | wxCANCEL);
 			topsizer->Add(buttonSizer, wxSizerFlags(0).Right().Border(wxBOTTOM | wxRIGHT, spacing));

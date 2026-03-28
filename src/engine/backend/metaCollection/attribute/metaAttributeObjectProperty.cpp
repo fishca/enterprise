@@ -29,7 +29,7 @@ void ibValueMetaObjectAttribute::OnPropertyRefresh(wxPropertyGridManager* pg, wx
 				ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = dynamic_cast<ibValueMetaObjectRecordDataHierarchyMutableRef*>(so->GetMetaObject());
 				if (metaObject == nullptr)
 					pg->HideProperty(pgProperty, true);
-				else if (so->GetMetaTypeCtor() != ibCtorMetaType::ibCtorMetaType_Reference)
+				else if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else 
 					pg->HideProperty(pgProperty, false);

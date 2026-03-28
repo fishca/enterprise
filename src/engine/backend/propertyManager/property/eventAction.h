@@ -113,17 +113,17 @@ class BACKEND_API CEventAction : public IEvent {
 		std::vector<CEventOptionItem> m_listValue;
 	};
 
-	class BACKEND_API CEventFunctor {
+	class BACKEND_API ibEventFunctor {
 	public:
-		virtual ~CEventFunctor() {}
+		virtual ~ibEventFunctor() {}
 		virtual bool Invoke(CEventAction* property) = 0;
 	};
 
 	template <typename optClass>
-	class CEventValueFunctor : public CEventFunctor {
+	class ibEventValueFunctor : public ibEventFunctor {
 		bool (optClass::* m_funcHandler)(CEventAction* evt);
 	public:
-		CEventValueFunctor(bool (optClass::* funcHandler)(CEventAction* evt), optClass* handler)
+		ibEventValueFunctor(bool (optClass::* funcHandler)(CEventAction* evt), optClass* handler)
 			: m_funcHandler(funcHandler), m_handler(handler)
 		{
 		}
@@ -157,21 +157,21 @@ public:
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args,
 		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
-		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
+		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
 		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
-		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
+		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
 		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
-		m_functor = new CEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
+		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	virtual ~CEventAction() { wxDELETE(m_functor); }
@@ -195,7 +195,7 @@ public:
 
 private:
 	CEventOptionList m_listPropValue;
-	CEventFunctor* m_functor;
+	ibEventFunctor* m_functor;
 };
 
 #endif

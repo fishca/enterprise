@@ -439,7 +439,7 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 	int horizAlign, int vertAlign, int textOrientation)
 {
 	wxArrayString lines, naturalLines;
-	CGridEditor::ParseLines(strValue, naturalLines);
+	ibGridEditor::ParseLines(strValue, naturalLines);
 
 	rect.x += 2;
 	rect.width -= 2;
@@ -456,7 +456,7 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 
 	dc.SetFont(font);
 
-	CGridEditor::DrawTextRectangle(dc,
+	ibGridEditor::DrawTextRectangle(dc,
 		lines, rect, horizAlign, vertAlign, textOrientation);
 }
 

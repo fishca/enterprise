@@ -4,6 +4,7 @@
 #include <wx/app.h>
 #include <wx/cmdproc.h>
 #include <wx/docview.h>
+#include <wx/dlist.h>
 #include <wx/msgdlg.h>
 
 #include <vector>
@@ -78,7 +79,7 @@ public:
 		}
 		else {
 			auto it = m_documentParent->m_childDocs.Find(this);
-			wxASSERT(it != nullptr);
+			//wxASSERT(it != m_documentParent->m_childDocs.end());
 			if (it->GetData() != nullptr) {
 				m_documentParent->m_childDocs.Erase(it);
 				m_documentParent = nullptr;

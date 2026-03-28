@@ -714,15 +714,15 @@ void ibCodeEditor::LoadFromKeyWord(const wxString& strKeyWord)
 				ibMetaData* metaData = metaObject->GetMetaData();
 				wxASSERT(metaData);
 
-				for (auto class_obj : metaData->GetListCtorsByType(ibCtorMetaType::ibCtorMetaType_Object))
+				for (auto class_obj : metaData->GetListCtorsByType(ibCtorObjectMetaType::ibCtorObjectMetaType_Object))
 					m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
-				for (auto class_obj : metaData->GetListCtorsByType(ibCtorMetaType::ibCtorMetaType_Reference))
+				for (auto class_obj : metaData->GetListCtorsByType(ibCtorObjectMetaType::ibCtorObjectMetaType_Reference))
 					m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
-				for (auto class_obj : metaData->GetListCtorsByType(ibCtorMetaType::ibCtorMetaType_List))
+				for (auto class_obj : metaData->GetListCtorsByType(ibCtorObjectMetaType::ibCtorObjectMetaType_List))
 					m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
-				for (auto class_obj : metaData->GetListCtorsByType(ibCtorMetaType::ibCtorMetaType_Manager))
+				for (auto class_obj : metaData->GetListCtorsByType(ibCtorObjectMetaType::ibCtorObjectMetaType_Manager))
 					m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
-				for (auto class_obj : metaData->GetListCtorsByType(ibCtorMetaType::ibCtorMetaType_Selection))
+				for (auto class_obj : metaData->GetListCtorsByType(ibCtorObjectMetaType::ibCtorObjectMetaType_Selection))
 					m_ac.Append(ibContentType::eVariable, class_obj->GetClassName(), wxEmptyString);
 			}
 		}

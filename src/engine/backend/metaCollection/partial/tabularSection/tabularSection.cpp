@@ -61,7 +61,7 @@ ibClassID ibValueTabularSectionDataObjectBase::GetClassType() const
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
 		const ibCtorMetaValueType* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
+			metaData->GetTypeCtor(m_metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassType();
 	}
@@ -74,7 +74,7 @@ wxString ibValueTabularSectionDataObjectBase::GetClassName() const
 	wxASSERT(metaData);
 	if (m_metaTable->IsAllowed()) {
 		const ibCtorMetaValueType* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
+			metaData->GetTypeCtor(m_metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
 	}
@@ -87,7 +87,7 @@ wxString ibValueTabularSectionDataObjectBase::GetString() const
 		const ibMetaData* metaData = m_metaTable->GetMetaData();
 		wxASSERT(metaData);
 		const ibCtorMetaValueType* clsFactory =
-			metaData->GetTypeCtor(m_metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection);
+			metaData->GetTypeCtor(m_metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection);
 		wxASSERT(clsFactory);
 		return clsFactory->GetClassName();
 	}
@@ -385,7 +385,7 @@ ibClassID ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectRe
 	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
+		metaData->GetTypeCtor(metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
@@ -396,7 +396,7 @@ wxString ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectRet
 	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
+		metaData->GetTypeCtor(metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -407,7 +407,7 @@ wxString ibValueTabularSectionDataObjectBase::ibValueTabularSectionDataObjectRet
 	const ibMetaData* metaData = metaTable->GetMetaData();
 	wxASSERT(metaData);
 	const ibCtorMetaValueType* clsFactory =
-		metaData->GetTypeCtor(metaTable, ibCtorMetaType::ibCtorMetaType_TabularSection_String);
+		metaData->GetTypeCtor(metaTable, ibCtorObjectMetaType::ibCtorObjectMetaType_TabularSection_String);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }

@@ -67,7 +67,7 @@ private:
 
 #include <wx/clipbrd.h>
 
-void CGridEditor::Copy()
+void ibGridEditor::Copy()
 {
 	if (wxTheClipboard->Open()) {
 
@@ -172,7 +172,7 @@ void CGridEditor::Copy()
 	}
 }
 
-void CGridEditor::Paste()
+void ibGridEditor::Paste()
 {
 	if (wxTheClipboard->Open() &&
 		wxTheClipboard->IsSupported(oes_clipboard_template))

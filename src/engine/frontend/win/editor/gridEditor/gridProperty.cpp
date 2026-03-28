@@ -6,7 +6,7 @@
 #include "gridEditor.h"
 #include "frontend/mainFrame/mainFrame.h"
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::ShowInspector()
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::ShowInspector()
 {
 	m_selection.clear(); bool hasBlocks = false;
 
@@ -29,7 +29,7 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::ShowInspector()
 	}
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property, const ibGridBlockCoords& coords)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property, const ibGridBlockCoords& coords)
 {
 	if (m_propertyName == property) {
 		if (coords.GetTopLeft() != coords.GetBottomRight()) {
@@ -130,7 +130,7 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty*
 	}
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const ibGridBlockCoords& coords)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const ibGridBlockCoords& coords)
 {
 	if (m_propertyFont == property) {
 		m_view->SetCellFont(coords, m_propertyFont->GetValueAsFont());
@@ -206,18 +206,18 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty*
 
 #include "backend/metadataConfiguration.h"
 
-ibMetaData* CGridEditor::ibPropertyGridEditorSpreadsheet::GetMetaData() const
+ibMetaData* ibGridEditor::ibPropertyGridEditorSpreadsheet::GetMetaData() const
 {
 	return ibMetaDataConfiguration::Get();
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyCreated(ibProperty* property)
 {
 	for (const auto& coords : m_selection)
 		ibPropertyGridEditorSpreadsheet::OnPropertyCreated(property, coords);
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty* pgProperty, ibProperty* property)
 {
 	if (m_propertyText == property) {
 		pg->HideProperty(pgProperty, m_propertyFillType->GetValueAsEnum() == ibSpreadsheetFillType::ibSpreadsheetFillType_StrParameter);
@@ -228,7 +228,7 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyRefresh(wxPropertyG
 
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	const int row = m_view->GetGridCursorRow(),
 		col = m_view->GetGridCursorCol();
@@ -239,7 +239,7 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::OnPropertyChanged(ibProperty*
 	m_view->ForceRefresh();
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCell(ibGridEvent& event)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCell(ibGridEvent& event)
 {
 	if (event.Selecting()) {
 		ibGridBlockCoords coords(event.GetRow(), event.GetCol(),
@@ -258,7 +258,7 @@ void CGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCell(ibGridEvent& eve
 	event.Skip();
 }
 
-void CGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCells(ibGridRangeSelectEvent& event)
+void ibGridEditor::ibPropertyGridEditorSpreadsheet::OnSelectCells(ibGridRangeSelectEvent& event)
 {
 	if (event.Selecting()) {
 		ibGridBlockCoords coords(event.GetTopRow(), event.GetLeftCol(),

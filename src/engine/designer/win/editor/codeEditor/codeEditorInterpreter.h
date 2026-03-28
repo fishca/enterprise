@@ -10,7 +10,7 @@ struct ibParamValue {
 	ibValue m_paramObject;
 };
 
-class CPrecompileCode;
+class ibPrecompileCode;
 struct CPrecompileFunction;
 
 struct CPrecompileVariable
@@ -34,8 +34,8 @@ struct CPrecompileVariable
 
 struct CPrecompileContext
 {
-	CPrecompileCode* pModule;
-	void SetModule(CPrecompileCode* pSetModule) { pModule = pSetModule; }
+	ibPrecompileCode* pModule;
+	void SetModule(ibPrecompileCode* pSetModule) { pModule = pSetModule; }
 
 	CPrecompileContext* pParent;//родительский контекст
 	CPrecompileContext* pStopParent;//начало запрещенной области прародителя
@@ -132,7 +132,7 @@ struct CPrecompileFunction
 //*******************************************************************
 //*                         Класс: пре-компилятор                   *
 //*******************************************************************
-class CPrecompileCode : public ibTranslateCode
+class ibPrecompileCode : public ibTranslateCode
 {
 	int m_numCurrentCompile;		//текущее положение в массиве лексем
 
@@ -164,8 +164,8 @@ public:
 	virtual void Clear();//Сброс данных для повторного использования объекта
 	void PrepareModuleData();
 
-	CPrecompileCode(ibValueMetaObjectModuleBase* moduleObject);
-	virtual ~CPrecompileCode();
+	ibPrecompileCode(ibValueMetaObjectModuleBase* moduleObject);
+	virtual ~ibPrecompileCode();
 
 	ibValue GetComputeValue() const { return m_valObject; }
 	CPrecompileContext* GetContext() {

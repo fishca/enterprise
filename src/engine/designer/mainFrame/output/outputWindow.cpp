@@ -71,7 +71,7 @@ ibOutputWindow* ibOutputWindow::GetOutputWindow()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ibOutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
+void ibOutputWindow::SetFontColorSettings(const ibFontColorSettings& settings)
 {
 	// For some reason StyleSetFont takes a (non-const) reference, so we need to make
 	// a copy before passing it in.
@@ -80,10 +80,10 @@ void ibOutputWindow::SetFontColorSettings(const CFontColorSettings& settings)
 	StyleClearAll();
 	StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	SetSelForeground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).foreColor);
-	SetSelBackground(true, settings.GetColors(CFontColorSettings::DisplayItem_Selection).backColor);
+	SetSelForeground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).foreColor);
+	SetSelBackground(true, settings.GetColors(ibFontColorSettings::DisplayItem_Selection).backColor);
 
-	font = settings.GetFont(CFontColorSettings::DisplayItem_Default);
+	font = settings.GetFont(ibFontColorSettings::DisplayItem_Default);
 
 	StyleSetFont(wxSTC_C_DEFAULT, font);
 	StyleSetFont(wxSTC_C_IDENTIFIER, font);

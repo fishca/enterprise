@@ -21,7 +21,7 @@ void ibValueTextCtrl::OnPropertyRefresh(wxPropertyGridManager* pg, wxPGProperty*
 		else {
 			const ibCtorMetaValueType* so = GetMetaData()->GetTypeCtor(GetFirstClsid());
 			if (so != nullptr) {
-				if (so->GetMetaTypeCtor() != ibCtorMetaType::ibCtorMetaType_Reference)
+				if (so->GetMetaTypeCtor() != ibCtorObjectMetaType::ibCtorObjectMetaType_Reference)
 					pg->HideProperty(pgProperty, true);
 				else
 					pg->HideProperty(pgProperty, false);

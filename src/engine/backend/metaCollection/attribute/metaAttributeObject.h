@@ -150,7 +150,7 @@ public:
 	bool ContainType(const ibClassID& clsid) const;
 
 	//contain meta type
-	bool ContainMetaType(enum ibCtorMetaType type) const;
+	bool ContainMetaType(enum ibCtorObjectMetaType type) const;
 
 	//equal type 
 	bool EqualType(const ibClassID& clsid, const ibTypeDescription& rhs) const;

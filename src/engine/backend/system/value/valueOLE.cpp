@@ -27,7 +27,7 @@ public:
 
 	// Constructs with the owned BSTR created from a wxString
 	wxBasicString(const wxString& str)
-		: m_bstrBuf(SysAllocString(str.wc_str(*wxConvCurrent))) {
+		: m_bstrBuf(SysAllocString(str.wc_str())) {
 	}
 
 	// Constructs with the owned BSTR as a copy of the BSTR owned by bstr
@@ -40,7 +40,7 @@ public:
 	void AssignFromString(const wxString& str)
 	{
 		SysFreeString(m_bstrBuf);
-		m_bstrBuf = SysAllocString(str.wc_str(*wxConvCurrent));
+		m_bstrBuf = SysAllocString(str.wc_str());
 	}
 
 	// Returns the owned BSTR and gives up its ownership,

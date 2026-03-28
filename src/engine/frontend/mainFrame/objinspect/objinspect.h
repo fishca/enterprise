@@ -39,11 +39,11 @@ public:
 	//   wxPG_DONT_RECURSE to prevent this.
 	bool HideProperty(wxPGPropArg id,
 		bool hide = true,
-		int flags = wxPG_RECURSE) { return m_pg->HideProperty(id, hide, flags); }
+		wxPGPropertyValuesFlags flags = wxPGPropertyValuesFlags::Recurse) { return m_pg->HideProperty(id, hide, flags); }
 
 	bool ShowProperty(wxPGPropArg id,
 		bool show = true,
-		int flags = wxPG_RECURSE) {
+		wxPGPropertyValuesFlags flags = wxPGPropertyValuesFlags::Recurse) {
 		return m_pg->HideProperty(id, !show, flags);
 	}
 

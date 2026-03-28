@@ -47,7 +47,7 @@ bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className, ibCtorOb
 	return true;
 }
 
-bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorMetaType refType) const
+bool ibMetaDataDataProcessor::IsRegisterCtor(const wxString& className, ibCtorObjectType objectType, ibCtorObjectMetaType refType) const
 {
 	if (!ibMetaData::IsRegisterCtor(className, objectType, refType))
 		return activeMetaData->IsRegisterCtor(className, objectType, refType);
@@ -100,7 +100,7 @@ ibCtorMetaValueType* ibMetaDataDataProcessor::GetTypeCtor(const ibClassID& clsid
 	return activeMetaData->GetTypeCtor(clsid);
 }
 
-ibCtorMetaValueType* ibMetaDataDataProcessor::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorMetaType refType) const
+ibCtorMetaValueType* ibMetaDataDataProcessor::GetTypeCtor(const ibValueMetaObject* metaValue, ibCtorObjectMetaType refType) const
 {
 	auto it = std::find_if(m_factoryCtors.begin(), m_factoryCtors.end(), [metaValue, refType](ibCtorMetaValueType* typeCtor) {
 		return refType == typeCtor->GetMetaTypeCtor() &&
@@ -142,12 +142,12 @@ bool ibMetaDataDataProcessor::GetOwner(ibMetaData*& metaData) const
 	return true;
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(const ibClassID& clsid, ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(const ibClassID& clsid, ibCtorObjectMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(clsid, refType);
 }
 
-std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(ibCtorMetaType refType) const
+std::vector<ibCtorMetaValueType*> ibMetaDataDataProcessor::GetListCtorsByType(ibCtorObjectMetaType refType) const
 {
 	return activeMetaData->GetListCtorsByType(refType);
 }

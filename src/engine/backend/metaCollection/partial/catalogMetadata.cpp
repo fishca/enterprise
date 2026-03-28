@@ -301,7 +301,7 @@ bool ibValueMetaObjectCatalog::OnBeforeRunMetaObject(int flags)
 		return false;
 
 	const ibCtorMetaValueType* typeCtor =
-		m_metaData->GetTypeCtor(this, ibCtorMetaType::ibCtorMetaType_Reference);
+		m_metaData->GetTypeCtor(this, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 
 	if (typeCtor != nullptr && !(*m_propertyAttributeParent)->ContainType(typeCtor->GetClassType())) {
 		(*m_propertyAttributeParent)->SetDefaultMetaType(typeCtor->GetClassType());
@@ -328,7 +328,7 @@ bool ibValueMetaObjectCatalog::OnAfterRunMetaObject(int flags)
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 		const ibValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 		if (catalog != nullptr) {
-			const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorMetaType::ibCtorMetaType_Reference);
+			const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 			wxASSERT(so);
 			typeDesc.AppendMetaType(so->GetClassType());
 		}
@@ -370,7 +370,7 @@ bool ibValueMetaObjectCatalog::OnBeforeCloseMetaObject()
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 		const ibValueMetaObject* catalog = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
 		if (catalog != nullptr) {
-			const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorMetaType::ibCtorMetaType_Reference);
+			const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(catalog, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
 			wxASSERT(so);
 			(*m_propertyAttributeOwner)->GetTypeDesc().ClearMetaType(so->GetClassType());
 		}

@@ -22,7 +22,8 @@ public:
 	virtual void RefreshChildren() override;
 
 	virtual void OnSetValue() override;
-	virtual wxString GetValueAsString(int argFlags = 0) const override;
+	
+	virtual wxString GetValueAsString(wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
 
 	virtual bool OnEvent(wxPropertyGrid* propgrid, wxWindow* primary, wxEvent& event) override;
 

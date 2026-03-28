@@ -16,62 +16,62 @@ enum
 	wxID_SHOW_CELL
 };
 
-wxBEGIN_EVENT_TABLE(CGridEditor, ibGrid)
-EVT_GRID_CELL_LEFT_DCLICK(CGridEditor::OnMouseLeftDown)
-EVT_GRID_CELL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
-EVT_GRID_LABEL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
-EVT_KEY_DOWN(CGridEditor::OnKeyDown)
-EVT_GRID_ROW_MODIFIED(CGridEditor::OnGridRowSize)
-EVT_GRID_COL_MODIFIED(CGridEditor::OnGridColSize)
-EVT_GRID_TABLE_MODIFIED(CGridEditor::OnGridTableModified)
-EVT_GRID_TABLE_ATTR_MODIFIED(CGridEditor::OnGridTableAttrModified)
-EVT_GRID_ROW_BRAKE_ADD(CGridEditor::OnGridRowBrake)
-EVT_GRID_ROW_BRAKE_SET(CGridEditor::OnGridRowBrake)
-EVT_GRID_ROW_BRAKE_DELETE(CGridEditor::OnGridRowBrake)
-EVT_GRID_COL_BRAKE_ADD(CGridEditor::OnGridColBrake)
-EVT_GRID_COL_BRAKE_SET(CGridEditor::OnGridColBrake)
-EVT_GRID_COL_BRAKE_DELETE(CGridEditor::OnGridRowBrake)
-EVT_GRID_ROW_AREA_CREATE(CGridEditor::OnGridRowArea)
-EVT_GRID_ROW_AREA_DELETE(CGridEditor::OnGridRowArea)
-EVT_GRID_ROW_AREA_SIZE(CGridEditor::OnGridRowArea)
-EVT_GRID_ROW_AREA_NAME(CGridEditor::OnGridRowArea)
-EVT_GRID_COL_AREA_CREATE(CGridEditor::OnGridColArea)
-EVT_GRID_COL_AREA_DELETE(CGridEditor::OnGridColArea)
-EVT_GRID_COL_AREA_SIZE(CGridEditor::OnGridColArea)
-EVT_GRID_COL_AREA_NAME(CGridEditor::OnGridColArea)
-EVT_GRID_ROW_FREEZE(CGridEditor::OnGridRowFreeze)
-EVT_GRID_COL_FREEZE(CGridEditor::OnGridColFreeze)
-EVT_SCROLLWIN(CGridEditor::OnScroll)
-EVT_IDLE(CGridEditor::OnIdle)
-EVT_SIZE(CGridEditor::OnSize)
-EVT_MENU(wxID_COPY, CGridEditor::OnCopy)
-EVT_MENU(wxID_PASTE, CGridEditor::OnPaste)
-EVT_MENU(wxID_DELETE, CGridEditor::OnDelete)
-EVT_MENU(wxID_ROW_HEIGHT, CGridEditor::OnRowHeight)
-EVT_MENU(wxID_COL_WIDTH, CGridEditor::OnColWidth)
-EVT_MENU(wxID_HIDE_CELL, CGridEditor::OnHideCell)
-EVT_MENU(wxID_SHOW_CELL, CGridEditor::OnShowCell)
-EVT_MENU(wxID_PROPERTIES, CGridEditor::OnProperties)
-EVT_GRID_ZOOM(CGridEditor::OnGridZoom)
+wxBEGIN_EVENT_TABLE(ibGridEditor, ibGrid)
+EVT_GRID_CELL_LEFT_DCLICK(ibGridEditor::OnMouseLeftDown)
+EVT_GRID_CELL_RIGHT_CLICK(ibGridEditor::OnMouseRightDown)
+EVT_GRID_LABEL_RIGHT_CLICK(ibGridEditor::OnMouseRightDown)
+EVT_KEY_DOWN(ibGridEditor::OnKeyDown)
+EVT_GRID_ROW_MODIFIED(ibGridEditor::OnGridRowSize)
+EVT_GRID_COL_MODIFIED(ibGridEditor::OnGridColSize)
+EVT_GRID_TABLE_MODIFIED(ibGridEditor::OnGridTableModified)
+EVT_GRID_TABLE_ATTR_MODIFIED(ibGridEditor::OnGridTableAttrModified)
+EVT_GRID_ROW_BRAKE_ADD(ibGridEditor::OnGridRowBrake)
+EVT_GRID_ROW_BRAKE_SET(ibGridEditor::OnGridRowBrake)
+EVT_GRID_ROW_BRAKE_DELETE(ibGridEditor::OnGridRowBrake)
+EVT_GRID_COL_BRAKE_ADD(ibGridEditor::OnGridColBrake)
+EVT_GRID_COL_BRAKE_SET(ibGridEditor::OnGridColBrake)
+EVT_GRID_COL_BRAKE_DELETE(ibGridEditor::OnGridRowBrake)
+EVT_GRID_ROW_AREA_CREATE(ibGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_DELETE(ibGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_SIZE(ibGridEditor::OnGridRowArea)
+EVT_GRID_ROW_AREA_NAME(ibGridEditor::OnGridRowArea)
+EVT_GRID_COL_AREA_CREATE(ibGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_DELETE(ibGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_SIZE(ibGridEditor::OnGridColArea)
+EVT_GRID_COL_AREA_NAME(ibGridEditor::OnGridColArea)
+EVT_GRID_ROW_FREEZE(ibGridEditor::OnGridRowFreeze)
+EVT_GRID_COL_FREEZE(ibGridEditor::OnGridColFreeze)
+EVT_SCROLLWIN(ibGridEditor::OnScroll)
+EVT_IDLE(ibGridEditor::OnIdle)
+EVT_SIZE(ibGridEditor::OnSize)
+EVT_MENU(wxID_COPY, ibGridEditor::OnCopy)
+EVT_MENU(wxID_PASTE, ibGridEditor::OnPaste)
+EVT_MENU(wxID_DELETE, ibGridEditor::OnDelete)
+EVT_MENU(wxID_ROW_HEIGHT, ibGridEditor::OnRowHeight)
+EVT_MENU(wxID_COL_WIDTH, ibGridEditor::OnColWidth)
+EVT_MENU(wxID_HIDE_CELL, ibGridEditor::OnHideCell)
+EVT_MENU(wxID_SHOW_CELL, ibGridEditor::OnShowCell)
+EVT_MENU(wxID_PROPERTIES, ibGridEditor::OnProperties)
+EVT_GRID_ZOOM(ibGridEditor::OnGridZoom)
 wxEND_EVENT_TABLE()
 
 ////////////////////////////////////////////////////////////////////
 
 #include "frontend/mainFrame/objinspect/objinspect.h"
 
-void CGridEditor::ActivateEditor()
+void ibGridEditor::ActivateEditor()
 {
 	if (m_enableProperty)
 		objectInspector->SelectObject(m_propertySpreadsheet, true);
 }
 
 // ctor and Create() create the grid window, as with the other controls
-CGridEditor::CGridEditor() : ibGrid(),
+ibGridEditor::ibGridEditor() : ibGrid(),
 m_propertySpreadsheet(nullptr), m_document(nullptr), m_spreadsheetObject(nullptr), m_enableProperty(true)
 {
 }
 
-CGridEditor::CGridEditor(ibMetaDocument* document,
+ibGridEditor::ibGridEditor(ibMetaDocument* document,
 	wxWindow* parent,
 	wxWindowID id, const wxPoint& pos,
 	const wxSize& size) : ibGrid(parent, id, pos, size),
@@ -97,7 +97,7 @@ CGridEditor::CGridEditor(ibMetaDocument* document,
 
 	// Cell Defaults
 	ibGrid::SetDefaultCellAlignment(wxAlignment::wxALIGN_LEFT, wxAlignment::wxALIGN_BOTTOM);
-	ibGrid::SetTable(new CGridEditorStringTable, true);
+	ibGrid::SetTable(new ibGridEditorStringTable, true);
 
 	m_selectionBackground.Set(211, 217, 239);
 	m_selectionForeground.Set(0, 0, 0);
@@ -105,7 +105,7 @@ CGridEditor::CGridEditor(ibMetaDocument* document,
 	ibGrid::SetLabelFont(s_defaultSpreadsheetFont);
 	ibGrid::SetDefaultCellFont(s_defaultSpreadsheetFont);
 
-	ibGrid::SetDefaultEditor(new CGridEditorCellTextEditor);
+	ibGrid::SetDefaultEditor(new ibGridEditorCellTextEditor);
 
 	wxAcceleratorEntry entries[5];
 	entries[0].Set(wxACCEL_CTRL, (int)'A', wxID_SELECTALL);
@@ -119,7 +119,7 @@ CGridEditor::CGridEditor(ibMetaDocument* document,
 	SetAcceleratorTable(accel);
 }
 
-CGridEditor::~CGridEditor()
+ibGridEditor::~ibGridEditor()
 {
 	//delete property
 	wxDELETE(m_propertySpreadsheet);
@@ -127,14 +127,14 @@ CGridEditor::~CGridEditor()
 
 #include "gridPrintout.h"
 
-CGridEditorPrintout* CGridEditor::CreatePrintout() const
+CGridEditorPrintout* ibGridEditor::CreatePrintout() const
 {
 	return new CGridEditorPrintout(m_spreadsheetObject, wxGP_SHOW_NONE, m_document ? m_document->GetTitle() : _("Spreadsheet document"));
 }
 
 #pragma region commands
 
-void CGridEditor::AddArea()
+void ibGridEditor::AddArea()
 {
 	if (!ibGrid::IsEditable())
 		return;
@@ -143,7 +143,7 @@ void CGridEditor::AddArea()
 	ibGrid::ForceRefresh();
 }
 
-void CGridEditor::DeleteArea()
+void ibGridEditor::DeleteArea()
 {
 	if (!ibGrid::IsEditable())
 		return;
@@ -152,7 +152,7 @@ void CGridEditor::DeleteArea()
 	ibGrid::ForceRefresh();
 }
 
-void CGridEditor::MergeCells()
+void ibGridEditor::MergeCells()
 {
 	if (!ibGrid::IsEditable())
 		return;
@@ -164,13 +164,13 @@ void CGridEditor::MergeCells()
 	ibGrid::ForceRefresh();
 }
 
-void CGridEditor::DockTable()
+void ibGridEditor::DockTable()
 {
 	if (!ibGrid::IsEditable())
 		return;
 
 	const ibGridBlockCoords& cellRange = GetSelectedCellRange();
-	CGridEditor::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
+	ibGridEditor::FreezeTo(cellRange.GetBottomRow(), cellRange.GetRightCol());
 
 	ibGrid::ForceRefresh();
 }
@@ -179,13 +179,13 @@ void CGridEditor::DockTable()
 
 #include "backend/metaCollection/metaSpreadsheetObject.h"
 
-void CGridEditor::GetCellDetailsParameter(int row, int col, wxString& s) const
+void ibGridEditor::GetCellDetailsParameter(int row, int col, wxString& s) const
 {
 	if (m_spreadsheetObject != nullptr)
 		m_spreadsheetObject->GetCellDetailsParameter(row, col, s);
 }
 
-void CGridEditor::SetCellDetailsParameter(int row, int col, const wxString& s)
+void ibGridEditor::SetCellDetailsParameter(int row, int col, const wxString& s)
 {
 	if (m_document != nullptr) {
 
@@ -207,7 +207,7 @@ void CGridEditor::SetCellDetailsParameter(int row, int col, const wxString& s)
 	SetColBrake(col);
 }
 
-void CGridEditor::SetCellDetailsParameter(const ibGridBlockCoords& coords, const wxString& s, bool sendUndoCommand)
+void ibGridEditor::SetCellDetailsParameter(const ibGridBlockCoords& coords, const wxString& s, bool sendUndoCommand)
 {
 	for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
 	{
@@ -226,7 +226,7 @@ void CGridEditor::SetCellDetailsParameter(const ibGridBlockCoords& coords, const
 
 #include "frontend/artProvider/artProvider.h"
 
-void CGridEditor::OnMouseLeftDown(ibGridEvent& event)
+void ibGridEditor::OnMouseLeftDown(ibGridEvent& event)
 {
 	if (m_spreadsheetObject != nullptr && !IsEditable())
 		m_spreadsheetObject->OpenCellDetailsParameter(event.GetRow(), event.GetCol());
@@ -234,7 +234,7 @@ void CGridEditor::OnMouseLeftDown(ibGridEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnMouseRightDown(ibGridEvent& event)
+void ibGridEditor::OnMouseRightDown(ibGridEvent& event)
 {
 	if (event.GetRow() == wxNOT_FOUND &&
 		event.GetCol() == wxNOT_FOUND) {
@@ -317,7 +317,7 @@ void CGridEditor::OnMouseRightDown(ibGridEvent& event)
 // This seems to be required for wxMotif/wxGTK otherwise the mouse
 // cursor must be in the cell edit control to get key events
 //
-void CGridEditor::OnKeyDown(wxKeyEvent& event)
+void ibGridEditor::OnKeyDown(wxKeyEvent& event)
 {
 	const int code = event.GetKeyCode();
 
@@ -366,7 +366,7 @@ void CGridEditor::OnKeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridRowSize(ibGridSizeEvent& event)
+void ibGridEditor::OnGridRowSize(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -386,7 +386,7 @@ void CGridEditor::OnGridRowSize(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridColSize(ibGridSizeEvent& event)
+void ibGridEditor::OnGridColSize(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -408,7 +408,7 @@ void CGridEditor::OnGridColSize(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridRowBrake(ibGridSizeEvent& event)
+void ibGridEditor::OnGridRowBrake(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -440,7 +440,7 @@ void CGridEditor::OnGridRowBrake(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridColBrake(ibGridSizeEvent& event)
+void ibGridEditor::OnGridColBrake(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -472,7 +472,7 @@ void CGridEditor::OnGridColBrake(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridRowArea(ibGridAreaEvent& event)
+void ibGridEditor::OnGridRowArea(ibGridAreaEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -508,7 +508,7 @@ void CGridEditor::OnGridRowArea(ibGridAreaEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridColArea(ibGridAreaEvent& event)
+void ibGridEditor::OnGridColArea(ibGridAreaEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -544,7 +544,7 @@ void CGridEditor::OnGridColArea(ibGridAreaEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridRowFreeze(ibGridSizeEvent& event)
+void ibGridEditor::OnGridRowFreeze(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -566,7 +566,7 @@ void CGridEditor::OnGridRowFreeze(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridColFreeze(ibGridSizeEvent& event)
+void ibGridEditor::OnGridColFreeze(ibGridSizeEvent& event)
 {
 	if (m_document != nullptr) {
 
@@ -588,7 +588,7 @@ void CGridEditor::OnGridColFreeze(ibGridSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridTableModified(ibGridEvent& event)
+void ibGridEditor::OnGridTableModified(ibGridEvent& event)
 {
 	ibSpreadsheetFillType type = ibSpreadsheetFillType::ibSpreadsheetFillType_StrText;
 
@@ -636,7 +636,7 @@ void CGridEditor::OnGridTableModified(ibGridEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridTableAttrModified(ibGridEvent& event)
+void ibGridEditor::OnGridTableAttrModified(ibGridEvent& event)
 {
 	int horiz, vert;
 	GetCellAlignment(event.GetRow(), event.GetCol(), &horiz, &vert);
@@ -716,7 +716,7 @@ void CGridEditor::OnGridTableAttrModified(ibGridEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnScroll(wxScrollWinEvent& event)
+void ibGridEditor::OnScroll(wxScrollWinEvent& event)
 {
 	int ux, uy,
 		sx, sy;
@@ -826,12 +826,12 @@ void CGridEditor::OnScroll(wxScrollWinEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnIdle(wxIdleEvent& event)
+void ibGridEditor::OnIdle(wxIdleEvent& event)
 {
 	event.Skip();
 }
 
-void CGridEditor::OnSize(wxSizeEvent& event)
+void ibGridEditor::OnSize(wxSizeEvent& event)
 {
 	int ux, uy,
 		sx, sy;
@@ -882,7 +882,7 @@ void CGridEditor::OnSize(wxSizeEvent& event)
 	event.Skip();
 }
 
-void CGridEditor::OnGridZoom(ibGridEvent& event)
+void ibGridEditor::OnGridZoom(ibGridEvent& event)
 {
 	int ux, uy,
 		sx, sy;
@@ -936,17 +936,17 @@ void CGridEditor::OnGridZoom(ibGridEvent& event)
 #pragma endregion
 
 #pragma region context_menu
-void CGridEditor::OnCopy(wxCommandEvent& event)
+void ibGridEditor::OnCopy(wxCommandEvent& event)
 {
 	Copy();
 }
 
-void CGridEditor::OnPaste(wxCommandEvent& event)
+void ibGridEditor::OnPaste(wxCommandEvent& event)
 {
 	Paste();
 }
 
-void CGridEditor::OnDelete(wxCommandEvent& event)
+void ibGridEditor::OnDelete(wxCommandEvent& event)
 {
 	for (auto cell : ibGrid::GetSelectedBlocks()) {
 		for (int col = cell.GetLeftCol(); col <= cell.GetRightCol(); col++) {
@@ -986,7 +986,7 @@ void CGridEditor::OnDelete(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/rowHeight.h"
 
-void CGridEditor::OnRowHeight(wxCommandEvent& event)
+void ibGridEditor::OnRowHeight(wxCommandEvent& event)
 {
 	std::shared_ptr <ibDialogRowHeight> rowHeight(new ibDialogRowHeight(this));
 	const int result = rowHeight->ShowModal();
@@ -1002,7 +1002,7 @@ void CGridEditor::OnRowHeight(wxCommandEvent& event)
 
 #include "frontend/win/dlgs/colHeight.h"
 
-void CGridEditor::OnColWidth(wxCommandEvent& event)
+void ibGridEditor::OnColWidth(wxCommandEvent& event)
 {
 	std::shared_ptr<ibDialogColWidth> colWidth(new ibDialogColWidth(this));
 	const int result = colWidth->ShowModal();
@@ -1016,7 +1016,7 @@ void CGridEditor::OnColWidth(wxCommandEvent& event)
 	}
 }
 
-void CGridEditor::OnHideCell(wxCommandEvent& event)
+void ibGridEditor::OnHideCell(wxCommandEvent& event)
 {
 	for (auto cell : ibGrid::GetSelectedBlocks()) {
 		if (cell.GetLeftCol() > 0 &&
@@ -1051,7 +1051,7 @@ void CGridEditor::OnHideCell(wxCommandEvent& event)
 	}
 }
 
-void CGridEditor::OnShowCell(wxCommandEvent& event)
+void ibGridEditor::OnShowCell(wxCommandEvent& event)
 {
 	for (auto cell : ibGrid::GetSelectedBlocks()) {
 		if (cell.GetLeftCol() > 0 &&
@@ -1096,7 +1096,7 @@ void CGridEditor::OnShowCell(wxCommandEvent& event)
 	}
 }
 
-void CGridEditor::OnProperties(wxCommandEvent& event)
+void ibGridEditor::OnProperties(wxCommandEvent& event)
 {
 	m_propertySpreadsheet->ShowInspector();
 }

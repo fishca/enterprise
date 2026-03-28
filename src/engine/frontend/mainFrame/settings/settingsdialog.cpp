@@ -7,54 +7,54 @@
 
 #include <wx/bookctrl.h>
     
-BEGIN_EVENT_TABLE(CSettingsDialog, wxPropertySheetDialog)
-    EVT_INIT_DIALOG(        CSettingsDialog::OnInitDialog)
+BEGIN_EVENT_TABLE(ibDialogSettings, wxPropertySheetDialog)
+    EVT_INIT_DIALOG(        ibDialogSettings::OnInitDialog)
     EVT_HELP(wxID_ANY,                      OnHelp) 
 END_EVENT_TABLE()
 
-CSettingsDialog::CSettingsDialog(wxWindow* parent)
+ibDialogSettings::ibDialogSettings(wxWindow* parent)
     : wxPropertySheetDialog(parent, -1, _("Settings"), wxDefaultPosition, wxSize(450, 450), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) 
 {
     SetMinSize(wxSize(450, 450));
 
     CreateButtons(wxOK | wxCANCEL);
     
-    m_keyBinderDialog = new CKeyBinderDialog(GetBookCtrl());
+    m_keyBinderDialog = new ibDialogKeyBinder(GetBookCtrl());
     GetBookCtrl()->AddPage(m_keyBinderDialog, _("Key Bindings"));
 
-    m_editorSettingsPanel = new CEditorSettingsPanel(GetBookCtrl());
+    m_editorSettingsPanel = new ibPanelEditorSettings(GetBookCtrl());
     GetBookCtrl()->AddPage(m_editorSettingsPanel, _("Editor"));
 
-    m_fontColorSettingsPanel = new CFontColorSettingsPanel(GetBookCtrl());
+    m_fontColorSettingsPanel = new ibPanelFontColorSettings(GetBookCtrl());
     GetBookCtrl()->AddPage(m_fontColorSettingsPanel, _("Font and Colors"));
 
     LayoutDialog();
 
 }
 
-void CSettingsDialog::OnInitDialog(wxInitDialogEvent& event)
+void ibDialogSettings::OnInitDialog(wxInitDialogEvent& event)
 {
     m_keyBinderDialog->Initialize();
     m_fontColorSettingsPanel->Initialize();
     m_editorSettingsPanel->Initialize();
 }
 
-CKeyBinderDialog* CSettingsDialog::GetKeyBinderDialog() const
+ibDialogKeyBinder* ibDialogSettings::GetKeyBinderDialog() const
 {
     return m_keyBinderDialog;
 }
 
-CFontColorSettingsPanel* CSettingsDialog::GetFontColorSettingsPanel() const
+ibPanelFontColorSettings* ibDialogSettings::GetFontColorSettingsPanel() const
 {
     return m_fontColorSettingsPanel;
 }
 
-CEditorSettingsPanel* CSettingsDialog::GetEditorSettingsPanel() const
+ibPanelEditorSettings* ibDialogSettings::GetEditorSettingsPanel() const
 {
     return m_editorSettingsPanel;
 }
 
-void CSettingsDialog::OnHelp(wxHelpEvent&)
+void ibDialogSettings::OnHelp(wxHelpEvent&)
 {
     wxCommandEvent event( wxEVT_SHOW_HELP_EVENT, GetId() );
     event.SetEventObject( this );

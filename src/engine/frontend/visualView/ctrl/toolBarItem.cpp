@@ -18,7 +18,7 @@ ibValueToolBarItem::ibValueToolBarItem() : ibValueControl()
 
 void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(wxparent);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddTool(GetControlID(),
 		m_propertyTitle->GetValueAsTranslateString(),
@@ -52,7 +52,7 @@ void ibValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(wxparent);
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(wxparent);
 	wxASSERT(toolbar);
 
 	wxAuiToolBarItem* toolItem = toolbar->FindTool(GetControlID());
@@ -166,7 +166,7 @@ void ibValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVis
 
 void ibValueToolBarItem::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(visualHost->GetWxObject(GetParent()));
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 
 	toolbar->DestroyTool(GetControlID());
 
@@ -200,7 +200,7 @@ ibValueToolBarSeparator::ibValueToolBarSeparator() : ibValueControl()
 
 void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(visualHost->GetWxObject(GetParent()));
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 	wxAuiToolBarItem* toolItem = toolbar->AddSeparator();
 	toolItem->SetId(GetControlID());
@@ -214,7 +214,7 @@ void ibValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, 
 
 void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(visualHost->GetWxObject(GetParent()));
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	wxASSERT(toolbar);
 
 	wxAuiToolBarItem* toolItem = toolbar->FindTool(GetControlID());
@@ -238,7 +238,7 @@ void ibValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, 
 
 void ibValueToolBarSeparator::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	ibOESToolBar* toolbar = dynamic_cast<ibOESToolBar*>(visualHost->GetWxObject(GetParent()));
+	ibAuiToolBar* toolbar = dynamic_cast<ibAuiToolBar*>(visualHost->GetWxObject(GetParent()));
 	if (toolbar) toolbar->DestroyTool(GetControlID());
 }
 

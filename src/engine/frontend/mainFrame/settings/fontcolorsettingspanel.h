@@ -12,12 +12,12 @@
 // Forward declarations.
 //
 
-class CStaticTextEx;
+class ibStaticTextEx;
 
 /**
  * Panel for selecting font and color settings.
  */
-class FRONTEND_API CFontColorSettingsPanel : public wxPanel 
+class FRONTEND_API ibPanelFontColorSettings : public wxPanel 
 {
 	
 public:
@@ -25,7 +25,7 @@ public:
     /**
      * Constructor.
      */
-    CFontColorSettingsPanel(wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 500,300 ), int style = wxTAB_TRAVERSAL);
+    ibPanelFontColorSettings(wxWindow* parent, int id = wxID_ANY, wxPoint pos = wxDefaultPosition, wxSize size = wxSize( 500,300 ), int style = wxTAB_TRAVERSAL);
 
     /**
      * Finializes the initialization. Should be called after the display items have been added.
@@ -80,12 +80,12 @@ public:
     /**
      * Adds a new item to be displayed.
      */
-    void SetSettings(const CFontColorSettings& settings);
+    void SetSettings(const ibFontColorSettings& settings);
 
     /**
      * Returns the settings set by the user.
      */
-    const CFontColorSettings& GetSettings() const;
+    const ibFontColorSettings& GetSettings() const;
 
     DECLARE_EVENT_TABLE()
 
@@ -151,9 +151,9 @@ private:
 	wxButton*           m_button5;
     wxButton*           m_button51;
 	wxStaticText*       m_staticText10;
-	CStaticTextEx*       m_previewPanel;
+	ibStaticTextEx*       m_previewPanel;
 
-    CFontColorSettings   m_settings;
+    ibFontColorSettings   m_settings;
 	
 };
 

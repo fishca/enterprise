@@ -118,7 +118,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 		wxImageList* GetSourceImageList() const {
 			wxImageList* list = new wxImageList(icon_size, icon_size);
 			list->Add(ibValue::GetIconGroup());
-			list->Add(ibValueModelTableMemory::GetIconGroup());
+			list->Add(ibValueModelTable::GetIconGroup());
 			return list;
 		}
 

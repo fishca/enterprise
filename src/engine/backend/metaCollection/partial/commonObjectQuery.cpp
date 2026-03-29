@@ -1718,7 +1718,7 @@ bool ibValueRecordSetObject::ReadData(const CUniquePairKey& key)
 	else if (db_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable::Clear(); int position = 1;
+	ibValueModelTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1752,14 +1752,14 @@ bool ibValueRecordSetObject::ReadData(const CUniquePairKey& key)
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		wxValueTableRow* rowData = new wxValueTableRow();
+		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -1776,7 +1776,7 @@ bool ibValueRecordSetObject::ReadData()
 	else if (db_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTable::Clear(); int position = 1;
+	ibValueModelTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1810,14 +1810,14 @@ bool ibValueRecordSetObject::ReadData()
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		wxValueTableRow* rowData = new wxValueTableRow();
+		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -1839,7 +1839,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 	for (long row = 0; row < GetRowCount(); row++) {
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			if (object->FillCheck()) {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
@@ -1952,7 +1952,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 				);
 			}
 			else {
-				wxValueTableRow* node = GetViewData< wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData< ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
@@ -1972,7 +1972,7 @@ bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		return false;
 
 	if (!hasError && clearTable)
-		ibValueModelTable::Clear();
+		ibValueModelTableBase::Clear();
 	else if (!clearTable)
 		m_selected = true;
 

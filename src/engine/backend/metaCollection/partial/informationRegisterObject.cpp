@@ -409,10 +409,10 @@ bool ibValueRecordSetObjectInformationRegister::CallAsFunc(const long lMethodNum
 		pvarRetValue = (unsigned int)GetRowCount();
 		return true;
 	case recordSet::enClear:
-		ibValueModelTable::Clear();
+		ibValueModelTableBase::Clear();
 		return true;
 	case recordSet::enLoad:
-		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTable>());
+		LoadDataFromTable(paParams[0]->ConvertToType<ibValueModelTableBase>());
 		return true;
 	case recordSet::enUnload:
 		pvarRetValue = SaveDataToTable();

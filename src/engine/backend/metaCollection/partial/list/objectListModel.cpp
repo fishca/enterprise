@@ -12,7 +12,7 @@
 void ibValueListDataObjectEnumRef::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
@@ -21,7 +21,7 @@ void ibValueListDataObjectEnumRef::GetValueByRow(wxVariant& variant,
 bool ibValueListDataObjectEnumRef::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return false;
 	return node->SetValue(col, variant);
@@ -32,7 +32,7 @@ bool ibValueListDataObjectEnumRef::SetValueByRow(const wxVariant& variant,
 void ibValueListDataObjectRef::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
@@ -41,7 +41,7 @@ void ibValueListDataObjectRef::GetValueByRow(wxVariant& variant,
 bool ibValueListDataObjectRef::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return false;
 	return node->SetValue(col, variant);
@@ -52,7 +52,7 @@ bool ibValueListDataObjectRef::SetValueByRow(const wxVariant& variant,
 void ibValueModelTreeDataObjectFolderRef::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& item, unsigned int col) const
 {
-	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+	ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
@@ -61,7 +61,7 @@ void ibValueModelTreeDataObjectFolderRef::GetValueByRow(wxVariant& variant,
 bool ibValueModelTreeDataObjectFolderRef::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& item, unsigned int col)
 {
-	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+	ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 	if (node == nullptr)
 		return false;
 	return node->SetValue(col, variant);
@@ -72,7 +72,7 @@ bool ibValueModelTreeDataObjectFolderRef::SetValueByRow(const wxVariant& variant
 bool ibValueModelTreeDataObjectFolderRef::GetAttrByRow(const ibDataViewItem& item,
 	unsigned int col, ibDataViewItemAttr& attr) const
 {
-	wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+	ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 	if (node == nullptr)
 		return false;
 	const ibValue& isFolder =
@@ -92,7 +92,7 @@ bool ibValueModelTreeDataObjectFolderRef::SetParentTopItem(const ibDataViewItem&
 		return true;
 	}
 
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(item);
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(item);
 	if (node == nullptr)
 		return false;
 
@@ -102,23 +102,23 @@ bool ibValueModelTreeDataObjectFolderRef::SetParentTopItem(const ibDataViewItem&
 
 ibDataViewItem ibValueModelTreeDataObjectFolderRef::GetParentTopItem() const
 {
-	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const ibGuid&)> findGuid =
-		[&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const ibGuid& guid)
+	std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid =
+		[&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
 		{
 			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
 			else if (foundedNode != nullptr) { return; }
 
 			for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-				wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(parent->GetChild(n));
+				ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
 				if (child != nullptr)
 					findGuid(child, foundedNode, guid);
 				if (foundedNode != nullptr) break;
 			}
 		};
 
-	wxValueTreeListNode* foundedNode = nullptr;
+	ibValueTreeListNode* foundedNode = nullptr;
 	for (unsigned int c = 0; c < GetRoot()->GetChildCount(); c++) {
-		wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(GetRoot()->GetChild(c));
+		ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(c));
 		if (child != nullptr) findGuid(child, foundedNode, m_topParentGuid);
 		if (foundedNode != nullptr) break;
 	}
@@ -134,7 +134,7 @@ ibDataViewItem ibValueModelTreeDataObjectFolderRef::GetParentTopItem() const
 void ibValueListRegisterObject::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
@@ -143,7 +143,7 @@ void ibValueListRegisterObject::GetValueByRow(wxVariant& variant,
 bool ibValueListRegisterObject::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return false;
 	return node->SetValue(col, variant);

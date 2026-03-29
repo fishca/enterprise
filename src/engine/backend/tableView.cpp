@@ -206,7 +206,7 @@ void ibDataViewModel::StartEditing(const ibDataViewItem& item, unsigned int col,
 		m_notifiers[view_id]->StartEditing(item, col);
 }
 
-bool ibDataViewModel::ShowFilter(CFilterRow& filter, int view_id)
+bool ibDataViewModel::ShowFilter(ibFilterRow& filter, int view_id)
 {
 	if (m_notifiers.size() > 0)
 		return m_notifiers[view_id]->ShowFilter(filter);

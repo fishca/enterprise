@@ -18,11 +18,11 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPe
 	else if (db_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTableMemory* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTableMemory>();
-	ibValueModelTableMemory::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
+	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto dimension : m_metaObject->GetDimentionArrayObject()) {
-		ibValueModelTableMemory::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
+		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				dimension->GetName(),
 				dimension->GetTypeDesc(),
@@ -160,7 +160,7 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Balance(const ibValue& cPe
 			return retTable;
 
 		while (resultSet->Next()) {
-			ibValueModelTableMemory::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+			ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 			wxASSERT(retLine);
 			for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 				ibValue retVal;
@@ -189,11 +189,11 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Turnovers(const ibValue& c
 	else if (db_query == nullptr)
 		ibBackendCoreException::Error(_("Database is not open!"));
 
-	ibValueModelTableMemory* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTableMemory>();
-	ibValueModelTableMemory::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
+	ibValueModelTable* retTable = ibValue::CreateAndPrepareValueRef<ibValueModelTable>();
+	ibValueModelTable::ibValueModelColumnCollection* colCollection = retTable->GetColumnCollection();
 	wxASSERT(colCollection);
 	for (auto dimension : m_metaObject->GetDimentionArrayObject()) {
-		ibValueModelTableMemory::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
+		ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo =
 			colCollection->AddColumn(
 				dimension->GetName(),
 				dimension->GetTypeDesc(),
@@ -377,7 +377,7 @@ ibValue ibValueManagerDataObjectAccumulationRegister::Turnovers(const ibValue& c
 
 	while (resultSet->Next()) {
 
-		ibValueModelTableMemory::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
+		ibValueModelTable::ibValueModelTableReturnLine* retLine = retTable->GetRowAt(retTable->AppendRow());
 		wxASSERT(retLine);
 		for (const auto object : m_metaObject->GetDimentionArrayObject()) {
 			ibValue retValue;

@@ -9,13 +9,13 @@
 
 #include "backend/appData.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueListDataObject, ibValueModelTable);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueListDataObject, ibValueModelTableBase);
 
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObjectEnumRef, ibValueListDataObject);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObjectRef, ibValueListDataObject);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueListRegisterObject, ibValueListDataObject);
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeDataObject, ibValueModelTree);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeDataObject, ibValueModelTreeBase);
 wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObjectFolderRef, ibValueModelTreeDataObject);
 
 ibValueListDataObject::ibValueListDataObject(ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
@@ -68,7 +68,7 @@ ibValueModelTreeDataObject::~ibValueModelTreeDataObject()
 //					  ibValueDataObjectListColumnCollection               //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection, ibValueModelTable::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
 
 ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnCollection() :
 	ibValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
@@ -111,7 +111,7 @@ bool ibValueListDataObject::ibValueDataObjectListColumnCollection::GetAt(const i
 	return true;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection, ibValueModelTree::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection, ibValueModelTreeBase::ibValueModelColumnCollection);
 
 ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnCollection() :
 	ibValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
@@ -157,7 +157,7 @@ bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::GetAt(co
 //							 ibValueDataObjectListColumnInfo              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo, ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
 ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo::ibValueDataObjectListColumnInfo() :
 	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
@@ -173,7 +173,7 @@ ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectL
 {
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo, ibValueModelTree::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo, ibValueModelTreeBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
 ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo::ibValueDataObjectTreeColumnInfo() :
 	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
@@ -193,7 +193,7 @@ ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataOb
 //					  ibValueDataObjectListReturnLine                     //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListReturnLine, ibValueModelTable::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
 
 ibValueListDataObject::ibValueDataObjectListReturnLine::ibValueDataObjectListReturnLine(ibValueListDataObject* ownerTable, const ibDataViewItem& line) :
 	ibValueModelReturnLine(line), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
@@ -228,13 +228,13 @@ bool ibValueListDataObject::ibValueDataObjectListReturnLine::GetPropVal(const lo
 	if (appData->DesignerMode())
 		return false;
 	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
-	wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_lineItem);
+	ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_lineItem);
 	if (node == nullptr)
 		return false;
 	return node->GetValue(id, pvarPropVal);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine, ibValueModelTree::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine, ibValueModelTreeBase::ibValueModelReturnLine);
 
 ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::ibValueDataObjectTreeReturnLine(ibValueModelTreeDataObject* ownerTable, const ibDataViewItem& line) :
 	ibValueModelReturnLine(line),
@@ -270,7 +270,7 @@ bool ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::GetPropVal(con
 	if (appData->DesignerMode())
 		return false;
 	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
-	wxValueTreeNode* node = m_ownerTable->GetViewData<wxValueTreeNode>(m_lineItem);
+	ibValueTreeNode* node = m_ownerTable->GetViewData<ibValueTreeNode>(m_lineItem);
 	if (node != nullptr) {
 		return node->GetValue(id, pvarPropVal);
 	}
@@ -286,7 +286,7 @@ ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(const ibValue& varValu
 		for (long row = 0; row < GetRowCount(); row++) {
 			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(item);
+				ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
 					return item;
 			}
@@ -297,10 +297,10 @@ ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(const ibValue& varValu
 
 ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
+	ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
 		{
-			return node->GetGuid() == ((wxValueTableEnumRow*)row)->GetGuid();
+			return node->GetGuid() == ((ibValueTableEnumRow*)row)->GetGuid();
 		}
 	);
 	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
@@ -336,7 +336,7 @@ bool ibValueListDataObjectEnumRef::GetModel(ibValueModel*& tableValue, const ibM
 //events 
 void ibValueListDataObjectEnumRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(GetSelection());
+	ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(GetSelection());
 	if (node == nullptr)
 		return;
 	wxASSERT(srcForm);
@@ -381,7 +381,7 @@ ibDataViewItem ibValueListDataObjectRef::FindRowValue(const ibValue& varValue, c
 		for (long row = 0; row < GetRowCount(); row++) {
 			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableListRow* node = GetViewData<wxValueTableListRow>(item);
+				ibValueTableListRow* node = GetViewData<ibValueTableListRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
 					return item;
 			}
@@ -392,10 +392,10 @@ ibDataViewItem ibValueListDataObjectRef::FindRowValue(const ibValue& varValue, c
 
 ibDataViewItem ibValueListDataObjectRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTableListRow* node = GetViewData<wxValueTableListRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
+	ibValueTableListRow* node = GetViewData<ibValueTableListRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
 		{
-			return node->GetGuid() == ((wxValueTableListRow*)row)->GetGuid();
+			return node->GetGuid() == ((ibValueTableListRow*)row)->GetGuid();
 		}
 	);
 	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
@@ -459,7 +459,7 @@ void ibValueListDataObjectRef::CopyValue()
 	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
@@ -480,7 +480,7 @@ void ibValueListDataObjectRef::EditValue()
 	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
@@ -501,7 +501,7 @@ void ibValueListDataObjectRef::DeleteValue()
 	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
@@ -526,7 +526,7 @@ void ibValueListDataObjectRef::MarkAsDeleteValue()
 	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
@@ -548,7 +548,7 @@ void ibValueListDataObjectRef::MarkAsDeleteValue()
 
 void ibValueListDataObjectRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+	ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 	if (node == nullptr)
 		return;
 
@@ -596,7 +596,7 @@ ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& 
 {
 	ibValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
-		std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const ibGuid&)> findGuid = [&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const ibGuid& guid)
+		std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid = [&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
 			{
 				if (guid == parent->GetGuid()) {
 					foundedNode = parent; return;
@@ -605,16 +605,16 @@ ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& 
 					return;
 				}
 				for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-					wxValueTreeListNode* node = dynamic_cast<wxValueTreeListNode*>(parent->GetChild(n));
+					ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
 					if (node != nullptr)
 						findGuid(node, foundedNode, guid);
 					if (foundedNode != nullptr)
 						break;
 				}
 			};
-		wxValueTreeListNode* foundedNode = nullptr;
+		ibValueTreeListNode* foundedNode = nullptr;
 		for (unsigned int child = 0; child < GetRoot()->GetChildCount(); child++) {
-			wxValueTreeListNode* node = dynamic_cast<wxValueTreeListNode*>(GetRoot()->GetChild(child));
+			ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(child));
 			if (node != nullptr)
 				findGuid(node, foundedNode, pRefData->GetGuid());
 			if (foundedNode != nullptr)
@@ -628,23 +628,23 @@ ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& 
 
 ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(retLine->GetLineItem());
-	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const ibGuid&)> findGuid =
-		[&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const ibGuid& guid)
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(retLine->GetLineItem());
+	std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid =
+		[&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
 		{
 			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
 			else if (foundedNode != nullptr) { return; }
 
 			for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-				wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(parent->GetChild(n));
+				ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
 				if (child != nullptr)
 					findGuid(child, foundedNode, guid);
 				if (foundedNode != nullptr) break;
 			}
 		};
-	wxValueTreeListNode* foundedNode = nullptr;
+	ibValueTreeListNode* foundedNode = nullptr;
 	for (unsigned int c = 0; c < GetRoot()->GetChildCount(); c++) {
-		wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(GetRoot()->GetChild(c));
+		ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(c));
 		if (child != nullptr) findGuid(child, foundedNode, node->GetGuid());
 		if (foundedNode != nullptr) break;
 	}
@@ -705,7 +705,7 @@ void ibValueModelTreeDataObjectFolderRef::AddValue(unsigned int before)
 		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
 	}
 	else {
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node != nullptr) {
 			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 			if (!isFolder.GetBoolean())
@@ -731,7 +731,7 @@ void ibValueModelTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
 	}
 	else {
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node != nullptr) {
 			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 			if (!isFolder.GetBoolean())
@@ -757,7 +757,7 @@ void ibValueModelTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 
 void ibValueModelTreeDataObjectFolderRef::CopyValue()
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
@@ -778,7 +778,7 @@ void ibValueModelTreeDataObjectFolderRef::CopyValue()
 
 void ibValueModelTreeDataObjectFolderRef::EditValue()
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
@@ -798,7 +798,7 @@ void ibValueModelTreeDataObjectFolderRef::EditValue()
 
 void ibValueModelTreeDataObjectFolderRef::DeleteValue()
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
@@ -824,7 +824,7 @@ void ibValueModelTreeDataObjectFolderRef::MarkAsDeleteValue()
 	ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node == nullptr)
 			return;
 
@@ -848,7 +848,7 @@ void ibValueModelTreeDataObjectFolderRef::MarkAsDeleteValue()
 
 void ibValueModelTreeDataObjectFolderRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
@@ -910,7 +910,7 @@ ibDataViewItem ibValueListRegisterObject::FindRowValue(const ibValue& varValue, 
 		for (long row = 0; row < GetRowCount(); row++) {
 			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(item);
+				ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetUniquePairKey(metaObject))
 					return item;
 			}
@@ -924,10 +924,10 @@ ibDataViewItem ibValueListRegisterObject::FindRowValue(ibValueModelReturnLine* r
 {
 	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
-	wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](wxValueTableRow* row)
+	ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](ibValueTableRow* row)
 		{
-			return node->GetUniquePairKey(metaObject) == ((wxValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
+			return node->GetUniquePairKey(metaObject) == ((ibValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
 		}
 	);
 	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
@@ -994,7 +994,7 @@ void ibValueListRegisterObject::AddValue(unsigned int before)
 void ibValueListRegisterObject::CopyValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {
@@ -1014,7 +1014,7 @@ void ibValueListRegisterObject::CopyValue()
 void ibValueListRegisterObject::EditValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {
@@ -1048,7 +1048,7 @@ void ibValueListRegisterObject::EditValue()
 void ibValueListRegisterObject::DeleteValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {

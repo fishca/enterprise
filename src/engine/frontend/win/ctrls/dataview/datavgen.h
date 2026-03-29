@@ -721,7 +721,7 @@ public:
 	virtual void DrawTableContent(wxDC& dc, ibDataViewMainWindow* tableWindow);
 
 	//show data filter
-	virtual bool ShowFilter(struct CFilterRow& filter) { return false; }
+	virtual bool ShowFilter(struct ibFilterRow& filter) { return false; }
 	virtual bool ShowViewMode() { return false; }
 
 	virtual bool AllowMultiColumnSort(bool allow) wxOVERRIDE;

@@ -73,7 +73,7 @@ public:
 	virtual unsigned int GetCurrentModelColumn() const = 0;
 	virtual void StartEditing(const ibDataViewItem& item, unsigned int col) const = 0;
 
-	virtual bool ShowFilter(struct CFilterRow& filter) = 0;
+	virtual bool ShowFilter(struct ibFilterRow& filter) = 0;
 	virtual bool ShowViewMode() = 0;
 
 	virtual void Select(const ibDataViewItem& item) const = 0;
@@ -232,7 +232,7 @@ public:
 	unsigned int GetCurrentModelColumn(int view_id = 0) const;
 	void StartEditing(const ibDataViewItem& item, unsigned int col, int view_id = 0) const;
 
-	bool ShowFilter(struct CFilterRow& filterm, int view_id = 0);
+	bool ShowFilter(struct ibFilterRow& filterm, int view_id = 0);
 	bool ShowViewMode(int view_id = 0);
 
 	void Select(const ibDataViewItem& item, int view_id = 0) const;

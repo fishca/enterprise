@@ -9,20 +9,20 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void ibValueModelTableMemory::GetValueByRow(wxVariant& variant,
+void ibValueModelTable::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return;
 	node->GetValue(col, variant);
 }
 
-bool ibValueModelTableMemory::SetValueByRow(const wxVariant& variant,
+bool ibValueModelTable::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col)
 {
 	const wxString& strData = variant.GetString();
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr)
 		return false;
 	const ibTypeDescription& typeDescription =

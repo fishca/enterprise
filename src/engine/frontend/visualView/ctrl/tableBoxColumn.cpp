@@ -156,7 +156,7 @@ void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparen
 	const ibFormID source_column = GetModelColumn();
 
 	ibValueModel* modelValue = GetOwner()->GetModel();
-	CSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
+	ibSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
 
 	dataViewColumn->SetHidden(!m_propertyVisible->GetValueAsBoolean());
 	dataViewColumn->SetSortable(sort != nullptr && !appData->DesignerMode());
@@ -199,7 +199,7 @@ bool ibValueModelTableBoxColumn::FilterSource(const CSourceExplorer& src, const 
 
 bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 {
-	ibValueModelTable::ibValueModelReturnLine* currentLine = GetCurrentLine();
+	ibValueModelTableBase::ibValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		currentLine->SetValueByMetaID(
 			GetModelColumn(), varControlVal
@@ -228,7 +228,7 @@ bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 
 bool ibValueModelTableBoxColumn::GetControlValue(ibValue& pvarControlVal) const
 {
-	ibValueModelTable::ibValueModelReturnLine* currentLine = GetCurrentLine();
+	ibValueModelTableBase::ibValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		return currentLine->GetValueByMetaID(
 			GetModelColumn(), pvarControlVal

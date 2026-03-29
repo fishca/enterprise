@@ -8,19 +8,19 @@
 
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableMemory, ibValueModelTable);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable, ibValueModelTableBase);
 
 //////////////////////////////////////////////////////////////////////
-ibValue::ibValueMethodHelper ibValueModelTableMemory::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueModelTable::m_methodHelper;
 //////////////////////////////////////////////////////////////////////
 
-ibDataViewItem ibValueModelTableMemory::FindRowValue(const ibValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueModelTable::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
 	ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(colName);
 	if (colInfo != nullptr) {
 		for (long row = 0; row < GetRowCount(); row++) {
 			const ibDataViewItem& item = GetItem(row);
-			wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+			ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 			if (node != nullptr &&
 				varValue == node->GetTableValue((ibMetaID)colInfo->GetColumnID())) {
 				return item;
@@ -30,26 +30,26 @@ ibDataViewItem ibValueModelTableMemory::FindRowValue(const ibValue& varValue, co
 	return ibDataViewItem(nullptr);
 }
 
-ibDataViewItem ibValueModelTableMemory::FindRowValue(ibValueModelReturnLine* retLine) const
+ibDataViewItem ibValueModelTable::FindRowValue(ibValueModelReturnLine* retLine) const
 {
 	return ibDataViewItem(nullptr);
 }
 
-ibValueModelTableMemory::ibValueModelTableMemory() : ibValueModelTable(),
+ibValueModelTable::ibValueModelTable() : ibValueModelTableBase(),
 m_tableColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueModelTableColumnCollection>(this))
 {
 }
 
-ibValueModelTableMemory::ibValueModelTableMemory(const ibValueModelTableMemory& valueTable) : ibValueModelTable(),
+ibValueModelTable::ibValueModelTable(const ibValueModelTable& valueTable) : ibValueModelTableBase(),
 m_tableColumnCollection(valueTable.m_tableColumnCollection)
 {
 }
 
-ibValueModelTableMemory::~ibValueModelTableMemory()
+ibValueModelTable::~ibValueModelTable()
 {
 }
 
-void ibValueModelTableMemory::PrepareNames() const
+void ibValueModelTable::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
@@ -67,7 +67,7 @@ void ibValueModelTableMemory::PrepareNames() const
 		m_tableColumnCollection->PrepareNames();
 }
 
-bool ibValueModelTableMemory::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool ibValueModelTable::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
@@ -79,7 +79,7 @@ bool ibValueModelTableMemory::GetPropVal(const long lPropNum, ibValue& pvarPropV
 	return false;
 }
 
-bool ibValueModelTableMemory::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool ibValueModelTable::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -103,13 +103,13 @@ bool ibValueModelTableMemory::CallAsFunc(const long lMethodNum, ibValue& pvarRet
 	{
 		ibValueModelTableReturnLine* retLine = nullptr;
 		if (paParams[0]->ConvertToValue(retLine)) {
-			wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
+			ibValueTableRow* node = GetViewData<ibValueTableRow>(retLine->GetLineItem());
 			if (node != nullptr)
-				ibValueModelTable::Remove(node);
+				ibValueModelTableBase::Remove(node);
 		}
 		else {
-			wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(paParams[0]->GetInteger()));
-			if (node != nullptr) ibValueModelTable::Remove(node);
+			ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(paParams[0]->GetInteger()));
+			if (node != nullptr) ibValueModelTableBase::Remove(node);
 		}
 		return true;
 	}
@@ -119,7 +119,7 @@ bool ibValueModelTableMemory::CallAsFunc(const long lMethodNum, ibValue& pvarRet
 	case enSort:
 		ibValueModelColumnCollection::ibValueModelColumnInfo* colInfo = m_tableColumnCollection->GetColumnByName(paParams[0]->GetString());
 		if (colInfo != nullptr) {
-			ibValueModelTable::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
+			ibValueModelTableBase::Sort(colInfo->GetColumnID(), lSizeArray > 0 ? paParams[1]->GetBoolean() : true);
 			return true;
 		}
 		return false;
@@ -130,7 +130,7 @@ bool ibValueModelTableMemory::CallAsFunc(const long lMethodNum, ibValue& pvarRet
 
 #include "backend/appData.h"
 
-bool ibValueModelTableMemory::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
+bool ibValueModelTable::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
 	const long index = varKeyValue.GetUInteger();
 	if (index >= GetRowCount() && !appData->DesignerMode()) {
@@ -145,21 +145,21 @@ bool ibValueModelTableMemory::GetAt(const ibValue& varKeyValue, ibValue& pvarVal
 //               ibValueModelTableColumnCollection                        //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableMemory::ibValueModelTableColumnCollection, ibValueModelTable::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
 
-ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnCollection(ibValueModelTableMemory* ownerTable) : ibValueModelColumnCollection(),
+ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnCollection(ibValueModelTable* ownerTable) : ibValueModelColumnCollection(),
 m_ownerTable(ownerTable),
 m_methodHelper(new ibValueMethodHelper())
 {
 }
 
-ibValueModelTableMemory::ibValueModelTableColumnCollection::~ibValueModelTableColumnCollection() {
+ibValueModelTable::ibValueModelTableColumnCollection::~ibValueModelTableColumnCollection() {
 	wxDELETE(m_methodHelper);
 }
 
 //работа с массивом как с агрегатным объектом
 //перечисление строковых ключей
-void ibValueModelTableMemory::ibValueModelTableColumnCollection::PrepareNames() const
+void ibValueModelTable::ibValueModelTableColumnCollection::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -169,7 +169,7 @@ void ibValueModelTableMemory::ibValueModelTableColumnCollection::PrepareNames() 
 
 #include "valueType.h"
 
-bool ibValueModelTableMemory::ibValueModelTableColumnCollection::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
+bool ibValueModelTable::ibValueModelTableColumnCollection::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -190,7 +190,7 @@ bool ibValueModelTableMemory::ibValueModelTableColumnCollection::CallAsProc(cons
 	return false;
 }
 
-bool ibValueModelTableMemory::ibValueModelTableColumnCollection::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool ibValueModelTable::ibValueModelTableColumnCollection::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -214,12 +214,12 @@ bool ibValueModelTableMemory::ibValueModelTableColumnCollection::CallAsFunc(cons
 	return false;
 }
 
-bool ibValueModelTableMemory::ibValueModelTableColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//индекс массива должен начинаться с 0
+bool ibValueModelTable::ibValueModelTableColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool ibValueModelTableMemory::ibValueModelTableColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //индекс массива должен начинаться с 0
+bool ibValueModelTable::ibValueModelTableColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
@@ -236,16 +236,16 @@ bool ibValueModelTableMemory::ibValueModelTableColumnCollection::GetAt(const ibV
 //               ibValueModelTableColumnInfo                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
-ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::ibValueModelTableColumnInfo() : ibValueModelColumnInfo() {
+ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::ibValueModelTableColumnInfo() : ibValueModelColumnInfo() {
 }
 
-ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::ibValueModelTableColumnInfo(unsigned int colID, const wxString& colName, const ibTypeDescription& typeDescription, const wxString& caption, int width) :
+ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::ibValueModelTableColumnInfo(unsigned int colID, const wxString& colName, const ibTypeDescription& typeDescription, const wxString& caption, int width) :
 	ibValueModelColumnInfo(), m_columnID(colID), m_columnName(colName), m_columnType(typeDescription), m_columnCaption(caption), m_columnWidth(width) {
 }
 
-ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::~ibValueModelTableColumnInfo() {
+ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo::~ibValueModelTableColumnInfo() {
 	wxDELETE(m_methodHelper);
 }
 
@@ -253,17 +253,17 @@ ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableCol
 //               ibValueModelTableReturnLine                              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableMemory::ibValueModelTableReturnLine, ibValueModelTable::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTable::ibValueModelTableReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
 
-ibValueModelTableMemory::ibValueModelTableReturnLine::ibValueModelTableReturnLine(ibValueModelTableMemory* ownerTable, const ibDataViewItem& line) :
+ibValueModelTable::ibValueModelTableReturnLine::ibValueModelTableReturnLine(ibValueModelTable* ownerTable, const ibDataViewItem& line) :
 	ibValueModelReturnLine(line), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable) {
 }
 
-ibValueModelTableMemory::ibValueModelTableReturnLine::~ibValueModelTableReturnLine() {
+ibValueModelTable::ibValueModelTableReturnLine::~ibValueModelTableReturnLine() {
 	wxDELETE(m_methodHelper);
 }
 
-void ibValueModelTableMemory::ibValueModelTableReturnLine::PrepareNames() const
+void ibValueModelTable::ibValueModelTableReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	for (auto& colInfo : m_ownerTable->m_tableColumnCollection->m_listColumnInfo) {
@@ -275,7 +275,7 @@ void ibValueModelTableMemory::ibValueModelTableReturnLine::PrepareNames() const
 	}
 }
 
-bool ibValueModelTableMemory::ibValueModelTableReturnLine::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool ibValueModelTable::ibValueModelTableReturnLine::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -285,7 +285,7 @@ bool ibValueModelTableMemory::ibValueModelTableReturnLine::SetPropVal(const long
 	);
 }
 
-bool ibValueModelTableMemory::ibValueModelTableReturnLine::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool ibValueModelTable::ibValueModelTableReturnLine::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
@@ -297,32 +297,32 @@ bool ibValueModelTableMemory::ibValueModelTableReturnLine::GetPropVal(const long
 
 //**********************************************************************
 
-long ibValueModelTableMemory::AppendRow(unsigned int before)
+long ibValueModelTable::AppendRow(unsigned int before)
 {
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 	for (auto& colData : m_tableColumnCollection->m_listColumnInfo) {
 		rowData->AppendTableValue(colData->GetColumnID(),
 			ibValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(colData->GetColumnID()))
 		);
 	}
 
-	return ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+	return ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 }
 
-void ibValueModelTableMemory::EditRow()
+void ibValueModelTable::EditRow()
 {
-	ibValueModelTable::RowValueStartEdit(GetSelection());
+	ibValueModelTableBase::RowValueStartEdit(GetSelection());
 }
 
-void ibValueModelTableMemory::CopyRow()
+void ibValueModelTable::CopyRow()
 {
 	ibDataViewItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 	for (auto& colData : m_tableColumnCollection->m_listColumnInfo) {
 		rowData->AppendTableValue(
 			colData->GetColumnID(), node->GetTableValue(colData->GetColumnID())
@@ -330,38 +330,38 @@ void ibValueModelTableMemory::CopyRow()
 	}
 	const long& currentLine = GetRow(currentItem);
 	if (currentLine != wxNOT_FOUND) {
-		ibValueModelTable::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
 	}
 	else {
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	}
 }
 
-void ibValueModelTableMemory::DeleteRow()
+void ibValueModelTable::DeleteRow()
 {
 	ibDataViewItem currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
 	if (!ibBackendException::IsEvalMode())
-		ibValueModelTable::Remove(node);
+		ibValueModelTableBase::Remove(node);
 }
 
-void ibValueModelTableMemory::Clear()
+void ibValueModelTable::Clear()
 {
 	if (ibBackendException::IsEvalMode())
 		return;
-	ibValueModelTable::Clear();
+	ibValueModelTableBase::Clear();
 }
 
 //**********************************************************************
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(ibValueModelTableMemory, "Table", g_valueTableCLSID);
+VALUE_TYPE_REGISTER(ibValueModelTable, "Table", g_valueTableCLSID);
 
-SYSTEM_TYPE_REGISTER(ibValueModelTableMemory::ibValueModelTableColumnCollection, "TableValueColumn", string_to_clsid("VL_TVCLM"));
-SYSTEM_TYPE_REGISTER(ibValueModelTableMemory::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, "TableValueColumnInfo", string_to_clsid("VL_TVCLI"));
-SYSTEM_TYPE_REGISTER(ibValueModelTableMemory::ibValueModelTableReturnLine, "TableValueRow", string_to_clsid("VL_TVROW"));
+SYSTEM_TYPE_REGISTER(ibValueModelTable::ibValueModelTableColumnCollection, "TableValueColumn", string_to_clsid("VL_TVCLM"));
+SYSTEM_TYPE_REGISTER(ibValueModelTable::ibValueModelTableColumnCollection::ibValueModelTableColumnInfo, "TableValueColumnInfo", string_to_clsid("VL_TVCLI"));
+SYSTEM_TYPE_REGISTER(ibValueModelTable::ibValueModelTableReturnLine, "TableValueRow", string_to_clsid("VL_TVROW"));

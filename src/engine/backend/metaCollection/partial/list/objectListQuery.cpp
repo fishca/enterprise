@@ -69,7 +69,7 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 
 	ibValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 	ibValueMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
-	ibValueModelTable::Clear();
+	ibValueModelTableBase::Clear();
 	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
@@ -88,16 +88,16 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 		}
 	}
 	/////////////////////////////////////////////////////////
-	ibValueModelTable::Reserve(countPerPage + 1);
+	ibValueModelTableBase::Reserve(countPerPage + 1);
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	/////////////////////////////////////////////////////////
 	while (resultSet->Next()) {
 		ibGuid enumRow = resultSet->GetResultString(guidName);
-		wxValueTableEnumRow* rowData = new wxValueTableEnumRow(enumRow);
+		ibValueTableEnumRow* rowData = new ibValueTableEnumRow(enumRow);
 		rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 		rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(enumRow)->GetParentPosition());
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	};
 
 	db_query->CloseResultSet(resultSet);
@@ -111,7 +111,7 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 
 	if (row_top == 0 && countPerPage < GetRowCount() && scroll > 0) {
 
-		wxValueTableEnumRow* valueTableListRow = GetViewData<wxValueTableEnumRow>(GetItem(0));
+		ibValueTableEnumRow* valueTableListRow = GetViewData<ibValueTableEnumRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -207,23 +207,23 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableEnumRow* rowData = new wxValueTableEnumRow(resultSet->GetResultString(guidName));
+			ibValueTableEnumRow* rowData = new ibValueTableEnumRow(resultSet->GetResultString(guidName));
 			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(rowData->GetGuid())->GetParentPosition());
-			ibValueModelTable::Insert(rowData, 0, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Insert(rowData, 0, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(ibValueModelTable::GetRowCount() - 1, ibValueModelTable::GetRowCount(), !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(ibValueModelTableBase::GetRowCount() - 1, ibValueModelTableBase::GetRowCount(), !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
 	}
 	else if (row_top + countPerPage == GetRowCount() && scroll < 0) {
 
-		wxValueTableEnumRow* valueTableListRow = GetViewData<wxValueTableEnumRow>(GetItem(GetRowCount() - 1));
+		ibValueTableEnumRow* valueTableListRow = GetViewData<ibValueTableEnumRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -319,16 +319,16 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableEnumRow* rowData = new wxValueTableEnumRow(resultSet->GetResultString(guidName));
+			ibValueTableEnumRow* rowData = new ibValueTableEnumRow(resultSet->GetResultString(guidName));
 			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
 			rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(rowData->GetGuid())->GetParentPosition());
-			ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(0, 1, !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(0, 1, !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
@@ -423,7 +423,7 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 
 	ibValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 	/////////////////////////////////////////////////////////
-	ibValueModelTable::Clear();
+	ibValueModelTableBase::Clear();
 	/////////////////////////////////////////////////////////
 	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
@@ -443,18 +443,18 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 		}
 	}
 	/////////////////////////////////////////////////////////
-	ibValueModelTable::Reserve(countPerPage + 1);
+	ibValueModelTableBase::Reserve(countPerPage + 1);
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	while (resultSet->Next()) {
-		wxValueTableListRow* rowData = new wxValueTableListRow(resultSet->GetResultString(guidName));
+		ibValueTableListRow* rowData = new ibValueTableListRow(resultSet->GetResultString(guidName));
 		for (auto& attribute : vec_attr) {
 			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 				continue;
 			ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
 		rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	};
 
 	db_query->CloseResultSet(resultSet);
@@ -468,7 +468,7 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 
 	if (row_top == 0 && countPerPage < GetRowCount() && scroll > 0) {
 
-		wxValueTableListRow* valueTableListRow = GetViewData<wxValueTableListRow>(GetItem(0));
+		ibValueTableListRow* valueTableListRow = GetViewData<ibValueTableListRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -603,27 +603,27 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableListRow* rowData = new wxValueTableListRow(resultSet->GetResultString(guidName));
+			ibValueTableListRow* rowData = new ibValueTableListRow(resultSet->GetResultString(guidName));
 			for (auto& attribute : vec_attr) {
 				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 					continue;
 				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
 			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-			ibValueModelTable::Insert(rowData, 0, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Insert(rowData, 0, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(ibValueModelTable::GetRowCount() - 1, ibValueModelTable::GetRowCount(), !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(ibValueModelTableBase::GetRowCount() - 1, ibValueModelTableBase::GetRowCount(), !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
 	}
 	else if (row_top + countPerPage == GetRowCount() && scroll < 0) {
 
-		wxValueTableListRow* valueTableListRow = GetViewData<wxValueTableListRow>(GetItem(GetRowCount() - 1));
+		ibValueTableListRow* valueTableListRow = GetViewData<ibValueTableListRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -752,20 +752,20 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableListRow* rowData = new wxValueTableListRow(resultSet->GetResultString(guidName));
+			ibValueTableListRow* rowData = new ibValueTableListRow(resultSet->GetResultString(guidName));
 			for (auto& attribute : vec_attr) {
 				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 					continue;
 				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
 			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-			ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(0, 1, !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(0, 1, !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
@@ -835,7 +835,7 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 	else
 		queryText = queryText + whereText + orderText;
 
-	ibValueModelTable::Clear();
+	ibValueModelTableBase::Clear();
 	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto& filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
@@ -845,11 +845,11 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 		}
 	}
 	/////////////////////////////////////////////////////////
-	ibValueModelTable::Reserve(countPerPage + 1);
+	ibValueModelTableBase::Reserve(countPerPage + 1);
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	while (resultSet->Next()) {
-		wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
+		ibValueTableKeyRow* rowData = new ibValueTableKeyRow;
 		if (m_metaObject->HasRecorder()) {
 			ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
@@ -866,7 +866,7 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 		for (auto& attribute : vec_attr) {
 			ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 		}
-		ibValueModelTable::Append(
+		ibValueModelTableBase::Append(
 			rowData, !ibBackendException::IsEvalMode()
 		);
 	};
@@ -882,7 +882,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 
 	if (row_top == 0 && countPerPage < GetRowCount() && scroll > 0) {
 
-		wxValueTableKeyRow* valueTableListRow = GetViewData<wxValueTableKeyRow>(GetItem(0));
+		ibValueTableKeyRow* valueTableListRow = GetViewData<ibValueTableKeyRow>(GetItem(0));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -988,7 +988,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
+			ibValueTableKeyRow* rowData = new ibValueTableKeyRow;
 			if (m_metaObject->HasRecorder()) {
 				ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
@@ -1005,20 +1005,20 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 			for (auto& attribute : vec_attr) {
 				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
-			ibValueModelTable::Insert(rowData, 0, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Insert(rowData, 0, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(ibValueModelTable::GetRowCount() - 1, ibValueModelTable::GetRowCount(), !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(ibValueModelTableBase::GetRowCount() - 1, ibValueModelTableBase::GetRowCount(), !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
 	}
 	else if (row_top + countPerPage == GetRowCount() && scroll < 0) {
 
-		wxValueTableKeyRow* valueTableListRow = GetViewData<wxValueTableKeyRow>(GetItem(GetRowCount() - 1));
+		ibValueTableKeyRow* valueTableListRow = GetViewData<ibValueTableKeyRow>(GetItem(GetRowCount() - 1));
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
@@ -1124,7 +1124,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 		bool insertedValue = false;
 		/////////////////////////////////////////////////////////
 		while (resultSet->Next()) {
-			wxValueTableKeyRow* rowData = new wxValueTableKeyRow;
+			ibValueTableKeyRow* rowData = new ibValueTableKeyRow;
 			if (m_metaObject->HasRecorder()) {
 				ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 				wxASSERT(attributeRecorder);
@@ -1141,13 +1141,13 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 			for (auto& attribute : vec_attr) {
 				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
 			}
-			ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+			ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 			/////////////////////////////////////////////////////////
 			insertedValue = true;
 			/////////////////////////////////////////////////////////
 		};
 		/////////////////////////////////////////////////////////
-		if (insertedValue) ibValueModelTable::ClearRange(0, 1, !ibBackendException::IsEvalMode());
+		if (insertedValue) ibValueModelTableBase::ClearRange(0, 1, !ibBackendException::IsEvalMode());
 		/////////////////////////////////////////////////////////
 		db_query->CloseResultSet(resultSet);
 		db_query->CloseStatement(statement);
@@ -1194,7 +1194,7 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 	ibValueMetaObjectAttributePredefined* metaIsFolder = m_metaObject->GetDataIsFolder();
 	wxASSERT(metaReference);
 	queryText = queryText + whereText;
-	ibValueModelTree::Clear();
+	ibValueModelTreeBase::Clear();
 	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
@@ -1213,7 +1213,7 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 		}
 	}
 	//////////////////////////////////////////////////
-	std::vector<wxValueTreeListNode*> arrTree;
+	std::vector<ibValueTreeListNode*> arrTree;
 	//////////////////////////////////////////////////
 	
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
@@ -1223,7 +1223,7 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 		if (m_listMode == ibValueModelTreeDataObjectFolderRef::LIST_FOLDER && !isFolder.GetBoolean()) continue;
 		if (!ibValueMetaObjectAttributeBase::GetValueAttribute(metaParent, parent, resultSet)) continue;
 
-		wxValueTreeListNode* rowData = new wxValueTreeListNode(nullptr, resultSet->GetResultString(guidName), this, isFolder.GetBoolean());
+		ibValueTreeListNode* rowData = new ibValueTreeListNode(nullptr, resultSet->GetResultString(guidName), this, isFolder.GetBoolean());
 		for (auto& attribute : vec_attr) {
 			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
 				continue;
@@ -1246,7 +1246,7 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 			if (cReference.ConvertToValue(reference)) {
 				
 				auto iterator = std::find_if(arrTree.begin(), arrTree.end(),
-					[reference](wxValueTreeListNode* node) { return reference->GetGuid() == node->GetGuid(); });
+					[reference](ibValueTreeListNode* node) { return reference->GetGuid() == node->GetGuid(); });
 
 				if (iterator != arrTree.end())
 					node->SetParent(*iterator);

@@ -11,7 +11,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(ibTableViewCtrl, ibDataViewCtrl);
 
 #include "backend/objCtor.h"
 
-bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
+bool ibTableViewCtrl::ShowFilter(struct ibFilterRow& filter)
 {
 	enum {
 		eModelUse = 1,
@@ -23,19 +23,19 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 	class wxFilterDialog : public wxDialog {
 
 		class wxDataViewFilterModel : public ibDataViewVirtualListModel {
-			CFilterRow m_filter;
+			ibFilterRow m_filter;
 		public:
 
 			inline void CopyValue(wxVariant& variant, const ibValue& cValue) const {
 				variant = cValue.GetString();
 			}
 
-			void SetFilter(const CFilterRow& filter) {
+			void SetFilter(const ibFilterRow& filter) {
 				m_filter = filter;
 				Reset(filter.m_filters.size());
 			};
 
-			CFilterRow& GetFilter() {
+			ibFilterRow& GetFilter() {
 				return m_filter;
 			};
 
@@ -248,8 +248,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				pvarControlVal = filterData.m_filterValue;
 				return true;
 			}
@@ -259,8 +259,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return wxNullGuid;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				return filterData.m_filterGuid;
 			}
 
@@ -269,8 +269,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return false;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = varValue;
 				return true;
 			}
@@ -303,8 +303,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				ibTypeDescription& typeDescription = filterData.m_filterTypeDescription;
 				if (filterData.m_filterValue.GetType() == ibValueTypes::TYPE_EMPTY) {
 					const ibClassID& clsid = ibTypeControlFactory::ShowSelectType(activeMetaData,
@@ -336,8 +336,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = ibValueTypeDescription::AdjustValue(filterData.m_filterTypeDescription);
 				filterData.m_filterUse = true;
 				FinishSelecting();
@@ -348,8 +348,8 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 				if (!item.IsOk())
 					return;
 				size_t index = reinterpret_cast<size_t>(item.GetID());
-				CFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
-				CFilterRow::CFilterData& filterData = filter.m_filters[index - 1];
+				ibFilterRow& filter = m_filterDialog->m_filterModel->GetFilter();
+				ibFilterRow::ibFilterData& filterData = filter.m_filters[index - 1];
 				filterData.m_filterValue = vSelected;
 				filterData.m_filterUse = true;
 				FinishSelecting();
@@ -373,14 +373,14 @@ bool ibTableViewCtrl::ShowFilter(struct CFilterRow& filter)
 
 	public:
 
-		void SetFilter(const CFilterRow& filter) {
+		void SetFilter(const ibFilterRow& filter) {
 			m_filterModel->SetFilter(filter);
 		}
 
-		CFilterRow GetFilter() const {
+		ibFilterRow GetFilter() const {
 			if (m_filterModel != nullptr)
 				return m_filterModel->GetFilter();
-			return CFilterRow();
+			return ibFilterRow();
 		}
 
 		wxFilterDialog::wxFilterDialog(wxWindow* parent, wxWindowID id,

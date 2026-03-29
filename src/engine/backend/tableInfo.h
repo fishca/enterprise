@@ -1,5 +1,5 @@
-#ifndef _TABLE_MODEL_H__
-#define _TABLE_MODEL_H__
+#ifndef __TABLE_INFO_H__
+#define __TABLE_INFO_H__
 
 #include "backend/tableView.h"
 
@@ -17,9 +17,9 @@ enum ibComparisonType {
 	ibComparisonType_NotEqual, // !=
 };
 
-struct CFilterRow {
+struct ibFilterRow {
 
-	struct CFilterData {
+	struct ibFilterData {
 		unsigned int m_filterModel;
 		ibGuid m_filterGuid;
 		wxString m_filterName;
@@ -29,7 +29,7 @@ struct CFilterRow {
 		ibValue m_filterValue;
 		bool m_filterUse;
 	public:
-		CFilterData(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
+		ibFilterData(unsigned int filterModel, const wxString& filterName, const wxString& filterPresentation,
 			ibComparisonType comparisonType, const ibTypeDescription& filterTypeDescription, const ibValue& filterValue,
 			bool filterUse = false) :
 			m_filterModel(filterModel),
@@ -43,7 +43,7 @@ struct CFilterRow {
 		}
 	};
 
-	std::vector< CFilterData> m_filters;
+	std::vector< ibFilterData> m_filters;
 
 public:
 
@@ -69,16 +69,16 @@ public:
 		);
 	}
 
-	CFilterData* GetFilterByID(unsigned int filterModel) {
-		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterModel](const CFilterData& data) {
+	ibFilterData* GetFilterByID(unsigned int filterModel) {
+		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterModel](const ibFilterData& data) {
 			return filterModel == data.m_filterModel; });
 		if (iterator != m_filters.end())
 			return &*iterator;
 		return nullptr;
 	}
 
-	CFilterData* GetFilterByName(const wxString& filterName) {
-		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterName](const CFilterData& data) {
+	ibFilterData* GetFilterByName(const wxString& filterName) {
+		auto iterator = std::find_if(m_filters.begin(), m_filters.end(), [filterName](const ibFilterData& data) {
 			return filterName == data.m_filterName; });
 		if (iterator != m_filters.end())
 			return &*iterator;
@@ -86,7 +86,7 @@ public:
 	}
 
 	void SetFilterByID(unsigned int filterModel, const ibValue& filterValue) {
-		CFilterData* data = GetFilterByID(filterModel);
+		ibFilterData* data = GetFilterByID(filterModel);
 		if (data != nullptr) {
 			data->m_filterValue = filterValue;
 			data->m_filterUse = true;
@@ -94,7 +94,7 @@ public:
 	}
 
 	void SetFilterByName(const wxString& filterName, const ibValue& filterValue) {
-		CFilterData* data = GetFilterByName(filterName);
+		ibFilterData* data = GetFilterByName(filterName);
 		if (data != nullptr) {
 			data->m_filterValue = filterValue;
 			data->m_filterUse = true;
@@ -112,7 +112,7 @@ public:
 	}
 };
 
-struct CSortOrder {
+struct ibSortOrder {
 	struct CSortData {
 		unsigned int m_sortModel;
 		wxString m_sortName;
@@ -154,15 +154,15 @@ public:
 	}
 };
 
-struct CSortModel {
+struct ibSortModel {
 	unsigned int m_sortModel;
 	bool m_sortAscending;
 };
 
 #pragma region _data_model_h_
-class BACKEND_API ibDataViewModelProviderBase : public ibDataViewModel {
+class BACKEND_API ibDataViewModelProvider : public ibDataViewModel {
 public:
-	virtual ~ibDataViewModelProviderBase() {}
+	virtual ~ibDataViewModelProvider() {}
 	virtual class ibValueModel* GetOwnerValueModel() const = 0;
 };
 #pragma endregion 
@@ -248,11 +248,11 @@ protected:
 
 #pragma region _data_model_h_
 
-	class BACKEND_API ibDataViewModelProvider :
-		public ibDataViewModelProviderBase {
+	class BACKEND_API ibDataViewModelProviderBase :
+		public ibDataViewModelProvider {
 	public:
 
-		ibDataViewModelProvider(ibValueModel* owner) : ibDataViewModelProviderBase(), m_ownerModel(owner) {}
+		ibDataViewModelProviderBase(ibValueModel* owner) : ibDataViewModelProvider(), m_ownerModel(owner) {}
 
 		virtual ibValueModel* GetOwnerValueModel() const { return m_ownerModel; }
 
@@ -345,7 +345,7 @@ protected:
 		ibValueModel* m_ownerModel;
 	};
 
-	ibDataViewModelProvider* m_modelProvider;
+	ibDataViewModelProviderBase* m_modelProvider;
 
 #pragma endregion 
 
@@ -528,7 +528,7 @@ public:
 		}
 	}
 
-	CSortOrder::CSortData* GetSortByID(unsigned int col) const {
+	ibSortOrder::CSortData* GetSortByID(unsigned int col) const {
 		return m_sortOrder.GetSortByID(col);
 	}
 
@@ -556,7 +556,7 @@ public:
 	};
 
 #pragma region _data_model_h_
-	ibDataViewModelProvider* GetDataViewModel() const { return m_modelProvider; }
+	ibDataViewModelProviderBase* GetDataViewModel() const { return m_modelProvider; }
 #pragma endregion 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +589,7 @@ public:
 	}
 
 	virtual bool IsSortable(unsigned int col) const {
-		CSortOrder::CSortData* sortData = m_sortOrder.GetSortByID(col);
+		ibSortOrder::CSortData* sortData = m_sortOrder.GetSortByID(col);
 		if (sortData == nullptr)
 			return false;
 		return true;
@@ -698,15 +698,15 @@ protected:
 
 protected:
 
-	CFilterRow m_filterRow;
-	CSortOrder m_sortOrder;
+	ibFilterRow m_filterRow;
+	ibSortOrder m_sortOrder;
 
 	bool m_refreshModel;
 };
 
 //Table support
-class BACKEND_API ibValueModelTable : public ibValueModel {
-	wxDECLARE_ABSTRACT_CLASS(ibValueModelTable);
+class BACKEND_API ibValueModelTableBase : public ibValueModel {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelTableBase);
 public:
 
 	enum
@@ -714,13 +714,13 @@ public:
 		TABLE_NODE_HIDDEN = 0x0001,
 	};
 
-	struct wxValueTableRow : public wxRefCounter {
+	struct ibValueTableRow : public wxRefCounter {
 
-		wxValueTableRow() :
+		ibValueTableRow() :
 			m_valueTable(nullptr), m_nodeValues(), m_nodeFlags(0) {
 		}
 
-		wxValueTableRow(const wxValueTableRow& tableRow) :
+		ibValueTableRow(const ibValueTableRow& tableRow) :
 			m_valueTable(tableRow.m_valueTable), m_nodeValues(tableRow.m_nodeValues), m_nodeFlags(0) {
 		}
 
@@ -806,7 +806,7 @@ public:
 				m_nodeValues.erase(col);
 		}
 
-		bool CompareRow(const wxValueTableRow* tableRow, std::vector<CSortModel>& paSort) const {
+		bool CompareRow(const ibValueTableRow* tableRow, std::vector<ibSortModel>& paSort) const {
 			try {
 				for (unsigned long p = 0; p < paSort.size(); p++) {
 					const ibValue& lhs = tableRow->m_nodeValues.at(paSort[p].m_sortModel);
@@ -878,17 +878,17 @@ public:
 		void ClearFlag(long flag) { m_nodeFlags &= ~(flag); }
 
 	private:
-		friend class ibValueModelTable;
+		friend class ibValueModelTableBase;
 	protected:
-		ibValueModelTable* m_valueTable;
+		ibValueModelTableBase* m_valueTable;
 		ibMetaValueArray m_nodeValues;
 		long m_nodeFlags;
 	};
 
 public:
 
-	ibValueModelTable() : ibValueModel() {}
-	virtual ~ibValueModelTable() { Clear(false); }
+	ibValueModelTableBase() : ibValueModel() {}
+	virtual ~ibValueModelTableBase() { Clear(false); }
 
 	/////////////////////////////////////////////////////////
 
@@ -897,7 +897,7 @@ public:
 	/////////////////////////////////////////////////////////
 
 	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(retLine->GetLineItem());
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(retLine->GetLineItem());
 		wxASSERT(node);
 		return node ? node->m_valueTable != nullptr : false;
 	}
@@ -927,11 +927,11 @@ public:
 
 	/////////////////////////////////////////////////////////
 
-	void RowChanged(wxValueTableRow* item) {
+	void RowChanged(ibValueTableRow* item) {
 		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
 	}
 
-	void RowValueChanged(wxValueTableRow* item, unsigned int col) {
+	void RowValueChanged(ibValueTableRow* item, unsigned int col) {
 		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
 	}
 
@@ -941,7 +941,7 @@ public:
 	}
 	/////////////////////////////////////////////////////////
 
-	long Append(wxValueTableRow* child, bool notify = true) {
+	long Append(ibValueTableRow* child, bool notify = true) {
 		wxASSERT(child);
 
 		child->m_valueTable = this;
@@ -960,7 +960,7 @@ public:
 		return m_nodeValues.size() - 1;
 	}
 
-	long Insert(wxValueTableRow* child, unsigned int row, bool notify = true) {
+	long Insert(ibValueTableRow* child, unsigned int row, bool notify = true) {
 		wxASSERT(child);
 
 		child->m_valueTable = this;
@@ -978,7 +978,7 @@ public:
 		return row + 1;
 	}
 
-	bool Remove(wxValueTableRow*& child, bool notify = true) {
+	bool Remove(ibValueTableRow*& child, bool notify = true) {
 		wxASSERT(child);
 
 		auto iterator = std::find(
@@ -999,14 +999,14 @@ public:
 	}
 
 	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
-		std::vector<CSortModel> fixedSort = { { col, ascending } };
+		std::vector<ibSortModel> fixedSort = { { col, ascending } };
 		Sort(fixedSort, notify);
 	}
 
-	void Sort(std::vector<CSortModel>& paSort, bool notify = true) {
+	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
 		if (notify) m_modelProvider->BeforeReset();
 		std::sort(m_nodeValues.begin(), m_nodeValues.end(),
-			[&paSort](const wxValueTableRow* a, const wxValueTableRow* b)
+			[&paSort](const ibValueTableRow* a, const ibValueTableRow* b)
 			{
 				return a->CompareRow(b, paSort);
 			}
@@ -1020,7 +1020,7 @@ public:
 
 	void Show(const ibDataViewItem& item, bool show = true) {
 
-		wxValueTableRow* child = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* child = GetViewData<ibValueTableRow>(item);
 		if (child != nullptr && show && child->HasFlag(TABLE_NODE_HIDDEN)) {
 
 			/* wxDataViewModel:: */
@@ -1061,7 +1061,7 @@ public:
 
 	// helper methods provided by list models only
 	virtual long GetRow(const ibDataViewItem& item) const {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return wxNOT_FOUND;
 		auto iterator = std::find(m_nodeValues.begin(), m_nodeValues.end(), node);
@@ -1131,15 +1131,15 @@ public:
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
 
-		CSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
+		ibSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
 		if (foundedSort == nullptr && col != unsigned int(wxNOT_FOUND))
 			return 0;
 
-		wxValueTableRow* node1 = GetViewData<wxValueTableRow>(item1);
+		ibValueTableRow* node1 = GetViewData<ibValueTableRow>(item1);
 		if (node1 == nullptr)
 			return 0;
 
-		wxValueTableRow* node2 = GetViewData<wxValueTableRow>(item2);
+		ibValueTableRow* node2 = GetViewData<ibValueTableRow>(item2);
 		if (node2 == nullptr)
 			return 0;
 
@@ -1182,30 +1182,30 @@ public:
 #pragma endregion 
 
 protected:
-	std::vector< wxValueTableRow*> m_nodeValues;
+	std::vector< ibValueTableRow*> m_nodeValues;
 };
 
 //Tree support 
-class BACKEND_API ibValueModelTree : public ibValueModel {
-	wxDECLARE_ABSTRACT_CLASS(ibValueModelTable);
+class BACKEND_API ibValueModelTreeBase : public ibValueModel {
+	wxDECLARE_ABSTRACT_CLASS(ibValueModelTableBase);
 public:
 
-	struct wxValueTreeNode : public wxRefCounter {
+	struct ibValueTreeNode : public wxRefCounter {
 
-		wxValueTreeNode(ibValueModelTree* valueTree) :
+		ibValueTreeNode(ibValueModelTreeBase* valueTree) :
 			m_valueTree(valueTree), m_parent(nullptr) {
 		}
 
-		wxValueTreeNode(wxValueTreeNode* parent) :
+		ibValueTreeNode(ibValueTreeNode* parent) :
 			m_valueTree(nullptr), m_parent(parent), m_nodeValues() {
 			if (m_parent != nullptr) m_parent->Append(this);
 		}
 
-		virtual ~wxValueTreeNode() {
+		virtual ~ibValueTreeNode() {
 			// free all our children nodes
 			size_t count = m_children.size();
 			for (size_t i = 0; i < count; i++) {
-				wxValueTreeNode* child = m_children[i];
+				ibValueTreeNode* child = m_children[i];
 				wxASSERT(child);
 				child->m_valueTree = nullptr;
 				child->DecRef();
@@ -1226,7 +1226,7 @@ public:
 
 		/////////////////////////////////////////////////////////////////////////////
 
-		void SetParent(wxValueTreeNode* parent) {
+		void SetParent(ibValueTreeNode* parent) {
 			if (m_parent)
 				m_parent->Remove(this);
 			if (parent != nullptr)
@@ -1234,11 +1234,11 @@ public:
 			m_parent = parent;
 		}
 
-		wxValueTreeNode* GetParent() const { return m_parent; }
-		std::vector<wxValueTreeNode*>& GetChildren() { return m_children; }
-		wxValueTreeNode* GetChild(unsigned int n) const { return m_children.at(n); }
+		ibValueTreeNode* GetParent() const { return m_parent; }
+		std::vector<ibValueTreeNode*>& GetChildren() { return m_children; }
+		ibValueTreeNode* GetChild(unsigned int n) const { return m_children.at(n); }
 
-		bool Append(wxValueTreeNode* child, bool notify = true) {
+		bool Append(ibValueTreeNode* child, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			auto iterator = m_children.emplace_back(child);
 			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
@@ -1249,7 +1249,7 @@ public:
 			return true;
 		}
 
-		bool Insert(wxValueTreeNode* child, unsigned int n, bool notify = true) {
+		bool Insert(ibValueTreeNode* child, unsigned int n, bool notify = true) {
 			child->m_valueTree = m_valueTree;
 			auto iterator = m_children.insert(m_children.begin() + n, child);
 			if (notify && !m_valueTree->m_modelProvider->ItemAdded(ibDataViewItem(this), ibDataViewItem(child))) {
@@ -1260,7 +1260,7 @@ public:
 			return true;
 		}
 
-		bool Remove(wxValueTreeNode* child, bool notify = true) {
+		bool Remove(ibValueTreeNode* child, bool notify = true) {
 			auto iterator = std::find(m_children.begin(), m_children.end(), child);
 			if (notify && !m_valueTree->m_modelProvider->ItemDeleted(ibDataViewItem(this), ibDataViewItem(child)))
 				return false;
@@ -1271,9 +1271,9 @@ public:
 			return true;
 		}
 
-		void Sort(std::vector<CSortModel>& paSort) {
+		void Sort(std::vector<ibSortModel>& paSort) {
 			std::sort(m_children.begin(), m_children.end(),
-				[&paSort](const wxValueTreeNode* a, const wxValueTreeNode* b)
+				[&paSort](const ibValueTreeNode* a, const ibValueTreeNode* b)
 				{
 					return a->CompareNode(b, paSort);
 				}
@@ -1287,7 +1287,7 @@ public:
 
 	public:
 
-		bool CompareNode(const wxValueTreeNode* node, std::vector<CSortModel>& paSort) const {
+		bool CompareNode(const ibValueTreeNode* node, std::vector<ibSortModel>& paSort) const {
 			try {
 				for (unsigned long p = 0; p < paSort.size(); p++) {
 					const ibValue& lhs = node->m_nodeValues.at(paSort[p].m_sortModel);
@@ -1373,22 +1373,22 @@ public:
 		}
 
 	private:
-		friend class ibValueModelTree;
+		friend class ibValueModelTreeBase;
 	private:
-		wxValueTreeNode* m_parent;
-		std::vector<wxValueTreeNode*> m_children;
+		ibValueTreeNode* m_parent;
+		std::vector<ibValueTreeNode*> m_children;
 	protected:
-		ibValueModelTree* m_valueTree;
+		ibValueModelTreeBase* m_valueTree;
 		ibMetaValueArray m_nodeValues;
 	};
 
 public:
 
-	ibValueModelTree() : ibValueModel() {
-		m_root = new wxValueTreeNode(this);
+	ibValueModelTreeBase() : ibValueModel() {
+		m_root = new ibValueTreeNode(this);
 	}
 
-	virtual ~ibValueModelTree() {
+	virtual ~ibValueModelTreeBase() {
 		wxDELETE(m_root);
 	}
 
@@ -1401,7 +1401,7 @@ public:
 	/////////////////////////////////////////////////////////
 
 	virtual bool ValidateReturnLine(ibValueModelReturnLine* retLine) const {
-		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(retLine->GetLineItem());
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(retLine->GetLineItem());
 		wxASSERT(node);
 		return node ? node->m_valueTree != nullptr : false;
 	}
@@ -1409,19 +1409,19 @@ public:
 
 	/////////////////////////////////////////////////////////
 
-	wxValueTreeNode* GetRoot() const { return m_root; }
+	ibValueTreeNode* GetRoot() const { return m_root; }
 
-	void RowChanged(wxValueTreeNode* item) {
+	void RowChanged(ibValueTreeNode* item) {
 		/* wxDataViewModel:: */ m_modelProvider->ItemChanged(ibDataViewItem(item));
 	}
 
-	void RowValueChanged(wxValueTreeNode* item, unsigned int col) {
+	void RowValueChanged(ibValueTreeNode* item, unsigned int col) {
 		/* wxDataViewModel:: */ m_modelProvider->ValueChanged(ibDataViewItem(item), col);
 	}
 
 	// helper methods to change the model
 	bool Delete(const ibDataViewItem& item, bool notify = true) {
-		wxValueTreeNode* node = (wxValueTreeNode*)item.GetID();
+		ibValueTreeNode* node = (ibValueTreeNode*)item.GetID();
 		if (node == nullptr)
 			return false;
 		ibDataViewItem parent(node->GetParent());
@@ -1435,8 +1435,8 @@ public:
 		// first remove the node from the parent's array of children;
 		// NOTE: MyMusicTreeModelNodePtrArray is only an array of _pointers_
 		//       thus removing the node from it doesn't result in freeing it
-		std::vector<wxValueTreeNode*>& children = node->GetParent()->GetChildren();
-		std::vector<wxValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
+		std::vector<ibValueTreeNode*>& children = node->GetParent()->GetChildren();
+		std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
 		if (children_iterator != children.end())
 			children.erase(children_iterator);
 
@@ -1451,10 +1451,10 @@ public:
 	}
 
 	void Clear(bool notify = true) {
-		std::vector<wxValueTreeNode*>& children = m_root->GetChildren();
+		std::vector<ibValueTreeNode*>& children = m_root->GetChildren();
 		while (!children.empty()) {
-			wxValueTreeNode* node = m_root->GetChild(0);
-			std::vector<wxValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
+			ibValueTreeNode* node = m_root->GetChild(0);
+			std::vector<ibValueTreeNode*>::iterator children_iterator = std::find(children.begin(), children.end(), node);
 			if (children_iterator != children.end())
 				children.erase(children_iterator);
 			node->m_valueTree = nullptr;
@@ -1464,11 +1464,11 @@ public:
 	}
 
 	void Sort(unsigned int col, bool ascending = true, bool notify = true) {
-		std::vector<CSortModel> fixedSort = { { col, ascending } };
+		std::vector<ibSortModel> fixedSort = { { col, ascending } };
 		Sort(fixedSort, notify);
 	}
 
-	void Sort(std::vector<CSortModel>& paSort, bool notify = true) {
+	void Sort(std::vector<ibSortModel>& paSort, bool notify = true) {
 		if (notify) /* wxDataViewModel:: */ m_modelProvider->BeforeReset();
 		m_root->Sort(paSort);
 		if (notify) /* wxDataViewModel:: */ m_modelProvider->AfterReset();
@@ -1529,7 +1529,7 @@ public:
 		// the invisible root node has no parent
 		if (!item.IsOk())
 			return ibDataViewItem(nullptr);
-		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 		// "root" also has no parent
 		if (m_root == node ||
 			m_root == node->GetParent())
@@ -1542,7 +1542,7 @@ public:
 		// (in our model always "root")
 		if (!item.IsOk())
 			return true;
-		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 		if (node == nullptr)
 			return false;
 		return node->IsContainer();
@@ -1551,7 +1551,7 @@ public:
 	// define current parent for hierarchical view 
 	virtual unsigned int GetChildren(const ibDataViewItem& parent,
 		ibDataViewItemArray& array) const override {
-		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(parent);
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(parent);
 		if (node == nullptr)
 			return GetChildren(ibDataViewItem(m_root), array);
 		unsigned int count = node->GetChildCount();
@@ -1572,14 +1572,14 @@ public:
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
 
-		CSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
+		ibSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
 		if (foundedSort == nullptr && col != unsigned int(wxNOT_FOUND))
 			return 0;
 
-		wxValueTreeNode* node1 = GetViewData<wxValueTreeNode>(item1);
+		ibValueTreeNode* node1 = GetViewData<ibValueTreeNode>(item1);
 		if (node1 == nullptr)
 			return 0;
-		wxValueTreeNode* node2 = GetViewData<wxValueTreeNode>(item2);
+		ibValueTreeNode* node2 = GetViewData<ibValueTreeNode>(item2);
 		if (node2 == nullptr)
 			return 0;
 
@@ -1619,7 +1619,7 @@ public:
 #pragma endregion 
 
 protected:
-	wxValueTreeNode* m_root;
+	ibValueTreeNode* m_root;
 };
 
 #endif 

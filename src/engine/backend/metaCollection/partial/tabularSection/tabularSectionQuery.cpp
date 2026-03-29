@@ -19,7 +19,7 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 		return false;
 	}
 
-	ibValueModelTable::Clear();
+	ibValueModelTableBase::Clear();
 	ibValueMetaObjectRecordData* metaObject = m_objectValue->GetMetaObject();
 	wxASSERT(metaObject);
 	const wxString& tableName = m_metaTable->GetTableNameDB();
@@ -28,13 +28,13 @@ bool ibValueTabularSectionDataObjectRef::LoadData(const ibGuid& srcGuid, bool cr
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		wxValueTableRow* rowData = new wxValueTableRow();
+		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (m_metaTable->IsNumberLine(object->GetMetaID()))
 				continue;
 			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet, createData);
 		}
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 
 	}
 
@@ -59,7 +59,7 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 	for (long row = 0; row < GetRowCount(); row++) {
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (object->FillCheck()) {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
@@ -111,7 +111,7 @@ bool ibValueTabularSectionDataObjectRef::SaveData()
 		statement->SetParamString(1, m_objectValue->GetGuid());
 		for (const auto object : m_metaTable->GetGenericAttributeArrayObject()) {
 			if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,

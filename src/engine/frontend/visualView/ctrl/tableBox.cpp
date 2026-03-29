@@ -540,12 +540,12 @@ bool ibValueModelTableBox::SetPropVal(const long lPropNum, const ibValue& varPro
 	if (lPropAlias == eControl) {
 		const long lPropData = m_methodHelper->GetPropData(lPropNum);
 		if (lPropData == eTableValue) {
-			m_tableModel = varPropVal.ConvertToType<ibValueModelTable>();
+			m_tableModel = varPropVal.ConvertToType<ibValueModelTableBase>();
 			m_tableCurrentLine.Reset();
 			refreshColumn = true;
 		}
 		else if (lPropData == eCurrentRow) {
-			ibValueModelTable::ibValueModelReturnLine* tableReturnLine = nullptr;
+			ibValueModelTableBase::ibValueModelReturnLine* tableReturnLine = nullptr;
 			if (varPropVal.ConvertToValue(tableReturnLine)) {
 				if (m_tableModel == tableReturnLine->GetOwnerModel())
 					m_tableCurrentLine = tableReturnLine;

@@ -1521,9 +1521,9 @@ bool ibValueRecordDataObject::GetValueByMetaID(const ibMetaID& id, ibValue& pvar
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ibValueModelTable* ibValueRecordDataObject::GetTableByMetaID(const ibMetaID& id) const
+ibValueModelTableBase* ibValueRecordDataObject::GetTableByMetaID(const ibMetaID& id) const
 {
-	const ibValue& cTable = GetValueByMetaID(id); ibValueModelTable* retTable = nullptr;
+	const ibValue& cTable = GetValueByMetaID(id); ibValueModelTableBase* retTable = nullptr;
 	if (cTable.ConvertToValue(retTable))
 		return retTable;
 	return nullptr;
@@ -2370,7 +2370,7 @@ void ibValueRecordDataObjectHierarchyRef::PrepareEmptyObject(const ibValueRecord
 //*						     metaData									* 
 //***********************************************************************
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordSetObject, ibValueModelTable);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordSetObject, ibValueModelTableBase);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordManagerObject, ibValue);
 
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueRecordKeyObject, ibValue);
@@ -2666,9 +2666,9 @@ bool ibValueRecordSetObject::InitializeObject(const ibValueRecordSetObject* sour
 
 	if (source != nullptr) {
 		for (long row = 0; row < source->GetRowCount(); row++) {
-			wxValueTableRow* node = source->GetViewData<wxValueTableRow>(source->GetItem(row));
+			ibValueTableRow* node = source->GetViewData<ibValueTableRow>(source->GetItem(row));
 			wxASSERT(node);
-			ibValueModelTable::Append(new wxValueTableRow(*node), false);
+			ibValueModelTableBase::Append(new ibValueTableRow(*node), false);
 		}
 	}
 
@@ -2698,22 +2698,22 @@ ibValueRecordSetObject* ibValueRecordSetObject::CopyRegisterValue()
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-ibValueRecordSetObject::ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : ibValueModelTable(),
+ibValueRecordSetObject::ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : ibValueModelTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())
 {
 }
 
-ibValueRecordSetObject::ibValueRecordSetObject(const ibValueRecordSetObject& source) : ibValueModelTable(),
+ibValueRecordSetObject::ibValueRecordSetObject(const ibValueRecordSetObject& source) : ibValueModelTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(source.m_metaObject), m_keyValues(source.m_keyValues), m_objModified(true), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())
 {
 	for (long row = 0; row < source.GetRowCount(); row++) {
-		wxValueTableRow* node = source.GetViewData<wxValueTableRow>(source.GetItem(row));
+		ibValueTableRow* node = source.GetViewData<ibValueTableRow>(source.GetItem(row));
 		wxASSERT(node);
-		ibValueModelTable::Append(new wxValueTableRow(*node), false);
+		ibValueModelTableBase::Append(new ibValueTableRow(*node), false);
 	}
 }
 
@@ -2759,7 +2759,7 @@ wxString ibValueRecordSetObject::GetString() const
 
 #include "backend/system/value/valueTable.h"
 
-bool ibValueRecordSetObject::LoadDataFromTable(ibValueModelTable* srcTable)
+bool ibValueRecordSetObject::LoadDataFromTable(ibValueModelTableBase* srcTable)
 {
 	ibValueModelColumnCollection* colData = srcTable->GetColumnCollection();
 
@@ -2789,9 +2789,9 @@ bool ibValueRecordSetObject::LoadDataFromTable(ibValueModelTable* srcTable)
 	return true;
 }
 
-ibValueModelTable* ibValueRecordSetObject::SaveDataToTable() const
+ibValueModelTableBase* ibValueRecordSetObject::SaveDataToTable() const
 {
-	ibValueModelTableMemory* valueTable = ibValue::CreateAndConvertObjectRef<ibValueModelTableMemory>();
+	ibValueModelTable* valueTable = ibValue::CreateAndConvertObjectRef<ibValueModelTable>();
 
 	ibValueModelColumnCollection* colData = valueTable->GetColumnCollection();
 	for (unsigned int idx = 0; idx < m_recordColumnCollection->GetColumnCount() - 1; idx++) {
@@ -2823,7 +2823,7 @@ ibValueModelTable* ibValueRecordSetObject::SaveDataToTable() const
 bool ibValueRecordSetObject::SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal)
 {
 	if (!appData->DesignerMode()) {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node != nullptr) {
 			const ibValueMetaObjectAttributeBase* attribute = m_metaObject->FindAnyAttributeObjectByFilter(id);
 			if (attribute != nullptr) {
@@ -2848,7 +2848,7 @@ bool ibValueRecordSetObject::GetValueByMetaID(const ibDataViewItem& item, const 
 		return false;
 	}
 
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 	if (node == nullptr)
 		return false;
 	return node->GetValue(id, pvarMetaVal);
@@ -2860,7 +2860,7 @@ bool ibValueRecordSetObject::GetValueByMetaID(const ibDataViewItem& item, const 
 
 
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection, ibValueModelTable::ibValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetObjectRegisterColumnCollection() :
 	ibValueModelColumnCollection(),
@@ -2911,7 +2911,7 @@ bool ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::Get
 //					ibValueRecordSetRegisterColumnInfo               //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo, ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueRecordSetRegisterColumnInfo::ibValueRecordSetRegisterColumnInfo() :
 	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
@@ -2931,7 +2931,7 @@ ibValueRecordSetObject::ibValueRecordSetObjectRegisterColumnCollection::ibValueR
 //					 ibValueRecordSetObjectRegisterReturnLine					//
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine, ibValueModelTable::ibValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
 
 ibValueRecordSetObject::ibValueRecordSetObjectRegisterReturnLine::ibValueRecordSetObjectRegisterReturnLine(ibValueRecordSetObject* ownerTable, const ibDataViewItem& line)
 	: ibValueModelReturnLine(line), m_ownerTable(ownerTable), m_methodHelper(new ibValueMethodHelper())
@@ -2995,7 +2995,7 @@ ibValueRecordSetObject::ibValueRecordSetObjectRegisterKeyValue::ibValueRecordSet
 
 long ibValueRecordSetObject::AppendRow(unsigned int before)
 {
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 
 	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
@@ -3005,9 +3005,9 @@ long ibValueRecordSetObject::AppendRow(unsigned int before)
 	}
 
 	if (before > 0)
-		return ibValueModelTable::Insert(rowData, before, !ibBackendException::IsEvalMode());
+		return ibValueModelTableBase::Insert(rowData, before, !ibBackendException::IsEvalMode());
 
-	return ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+	return ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 }
 
 enum Func

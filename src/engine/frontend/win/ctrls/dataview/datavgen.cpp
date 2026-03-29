@@ -637,7 +637,7 @@ public:
 		}
 	}
 
-	virtual bool ShowFilter(struct CFilterRow& filter)
+	virtual bool ShowFilter(struct ibFilterRow& filter)
 	{
 		wxASSERT(m_mainWindow);
 		return m_mainWindow->ShowFilter(filter);

@@ -12,7 +12,7 @@
 void ibValueTabularSectionDataObjectBase::GetValueByRow(wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr) return;
 
 	if (m_metaTable->IsNumberLine(col))
@@ -26,7 +26,7 @@ void ibValueTabularSectionDataObjectBase::GetValueByRow(wxVariant& variant,
 bool ibValueTabularSectionDataObjectBase::SetValueByRow(const wxVariant& variant,
 	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr) return false;
 
 	if (!m_metaTable->IsNumberLine(col)) {
@@ -75,10 +75,10 @@ void ibValueTabularSectionDataObjectBase::CopyValue()
 	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 	for (const auto object : m_metaTable->GetAttributeArrayObject()) {
 		if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 			rowData->AppendTableValue(object->GetMetaID(), node->GetTableValue(object->GetMetaID()));
@@ -89,10 +89,10 @@ void ibValueTabularSectionDataObjectBase::CopyValue()
 	}
 	long currentLine = GetRow(currentItem);
 	if (currentLine != wxNOT_FOUND) {
-		ibValueModelTable::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
 	}
 	else {
-		ibValueModelTable::Append(rowData, !ibBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	}
 
 	RefreshTabularSection();
@@ -109,10 +109,10 @@ void ibValueTabularSectionDataObjectBase::EditValue()
 		if (m_metaTable->IsNumberLine(m_modelProvider->GetCurrentModelColumn()))
 			return;
 
-		ibValueModelTable::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
+		ibValueModelTableBase::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
 	}
 	else {
-		ibValueModelTable::RowValueStartEdit(currentItem);
+		ibValueModelTableBase::RowValueStartEdit(currentItem);
 	}
 
 	RefreshTabularSection();
@@ -123,14 +123,14 @@ void ibValueTabularSectionDataObjectBase::DeleteValue()
 	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
 
 	RefreshTabularSection();
 
 	if (!ibBackendException::IsEvalMode()) {
-		ibValueModelTable::Remove(node);
+		ibValueModelTableBase::Remove(node);
 	}
 }
 

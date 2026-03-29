@@ -10,15 +10,15 @@ wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection, ibValue);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelColumnCollection::ibValueModelColumnInfo, ibValue);
 wxIMPLEMENT_ABSTRACT_CLASS(ibValueModel::ibValueModelReturnLine, ibValue);
 
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTable, ibValueModel);
-wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTree, ibValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTableBase, ibValueModel);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeBase, ibValueModel);
 
 ibValueModel::ibValueModel()
 	: ibValue(ibValueTypes::TYPE_VALUE),
 	m_modelProvider(nullptr),
 	m_refreshModel(false)
 {
-	m_modelProvider = new ibDataViewModelProvider(this);
+	m_modelProvider = new ibDataViewModelProviderBase(this);
 	//m_modelProvider->IncRef(); // always one 
 }
 

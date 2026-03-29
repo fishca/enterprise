@@ -9,8 +9,8 @@
 const ibClassID g_valueTableCLSID = string_to_clsid("VL_TABL");
 
 //Table support
-class BACKEND_API ibValueModelTableMemory : public ibValueModelTable {
-	wxDECLARE_DYNAMIC_CLASS(ibValueModelTableMemory);
+class BACKEND_API ibValueModelTable : public ibValueModelTableBase {
+	wxDECLARE_DYNAMIC_CLASS(ibValueModelTable);
 private:
 	// methods:
 	enum Func {
@@ -27,7 +27,7 @@ private:
 		enColumns = 0,
 	};
 public:
-	class ibValueModelTableColumnCollection : public ibValueModelTable::ibValueModelColumnCollection {
+	class ibValueModelTableColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(ibValueModelTableColumnCollection);
 	private:
 		enum Func {
@@ -36,7 +36,7 @@ public:
 		};
 	public:
 
-		class ibValueModelTableColumnInfo : public ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo {
+		class ibValueModelTableColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(ibValueModelTableColumnInfo);
 		private:
 
@@ -68,7 +68,7 @@ public:
 
 	public:
 
-		ibValueModelTableColumnCollection(ibValueModelTableMemory* ownerTable = nullptr);
+		ibValueModelTableColumnCollection(ibValueModelTable* ownerTable = nullptr);
 		virtual ~ibValueModelTableColumnCollection();
 
 		ibValueModelColumnInfo* AddColumn(const wxString& colName,
@@ -85,7 +85,7 @@ public:
 			}
 
 			for (long row = 0; row < m_ownerTable->GetRowCount(); row++) {
-				wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_ownerTable->GetItem(row));
+				ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_ownerTable->GetItem(row));
 				wxASSERT(node);
 				node->SetValue(max_id + 1, ibValueTypeDescription::AdjustValue(typeData));
 			}
@@ -106,7 +106,7 @@ public:
 		virtual void RemoveColumn(unsigned int col) {
 
 			for (long row = 0; row < m_ownerTable->GetRowCount(); row++) {
-				wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_ownerTable->GetItem(row));
+				ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_ownerTable->GetItem(row));
 				wxASSERT(node);
 				node->EraseValue(col);
 			}
@@ -146,11 +146,11 @@ public:
 		virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
 		virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
-		friend class ibValueModelTableMemory;
+		friend class ibValueModelTable;
 
 	protected:
 
-		ibValueModelTableMemory* m_ownerTable;
+		ibValueModelTable* m_ownerTable;
 		std::vector<ibValuePtr<ibValueModelTableColumnInfo>> m_listColumnInfo;
 		ibValueMethodHelper* m_methodHelper;
 	};
@@ -159,10 +159,10 @@ public:
 		wxDECLARE_DYNAMIC_CLASS(ibValueModelTableReturnLine);
 	public:
 
-		ibValueModelTableReturnLine(ibValueModelTableMemory* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
+		ibValueModelTableReturnLine(ibValueModelTable* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
 		virtual ~ibValueModelTableReturnLine();
 
-		virtual ibValueModelTable* GetOwnerModel() const { return m_ownerTable; }
+		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
 
 		virtual ibValueMethodHelper* GetPMethods() const {
 			//PrepareNames();
@@ -175,7 +175,7 @@ public:
 		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal); //attribute value
 
 	private:
-		ibValueModelTableMemory* m_ownerTable;
+		ibValueModelTable* m_ownerTable;
 		ibValueMethodHelper* m_methodHelper;
 	};
 
@@ -202,22 +202,22 @@ public:
 
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal) {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return false;
 		return node->SetValue(id, ibValueTypeDescription::AdjustValue(m_tableColumnCollection->GetColumnType(id), varMetaVal), true);
 	}
 
 	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return false;
 		return node->GetValue(id, pvarMetaVal);
 	}
 
-	ibValueModelTableMemory();
-	ibValueModelTableMemory(const ibValueModelTableMemory& val);
-	virtual ~ibValueModelTableMemory();
+	ibValueModelTable();
+	ibValueModelTable(const ibValueModelTable& val);
+	virtual ~ibValueModelTable();
 
 	virtual void AddValue(unsigned int before = 0) {
 		long row = GetRow(GetSelection());
@@ -258,7 +258,7 @@ public:
 	void EditRow();
 	void DeleteRow();
 
-	ibValueModelTableMemory* Clone() { return ibValue::CreateAndPrepareValueRef<ibValueModelTableMemory>(*this); }
+	ibValueModelTable* Clone() { return ibValue::CreateAndPrepareValueRef<ibValueModelTable>(*this); }
 	unsigned int Count() { return GetRowCount(); }
 	void Clear();
 

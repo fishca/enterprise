@@ -5,7 +5,7 @@
 
 #include "backend/metaCollection/table/metaTableObject.h"
 
-class BACKEND_API ibValueTabularSectionDataObjectBase : public ibValueModelTable {
+class BACKEND_API ibValueTabularSectionDataObjectBase : public ibValueModelTableBase {
 	wxDECLARE_ABSTRACT_CLASS(ibValueTabularSectionDataObjectBase);
 private:
 
@@ -58,10 +58,10 @@ public:
 		return ibValue();
 	}
 
-	class ibValueTabularSectionDataObjectColumnCollection : public ibValueModelTable::ibValueModelColumnCollection {
+	class ibValueTabularSectionDataObjectColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionDataObjectColumnCollection);
 	public:
-		class ibValueTabularSectionColumnInfo : public ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo {
+		class ibValueTabularSectionColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(ibValueTabularSectionColumnInfo);
 		public:
 
@@ -119,7 +119,7 @@ public:
 		ibValueTabularSectionDataObjectReturnLine(ibValueTabularSectionDataObjectBase* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
 		virtual ~ibValueTabularSectionDataObjectReturnLine();
 
-		virtual ibValueModelTable* GetOwnerModel() const { return m_ownerTable; }
+		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
 		virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
 			return m_methodHelper;
@@ -192,7 +192,7 @@ public:
 
 	virtual void ActivateItem(ibBackendValueForm* formOwner,
 		const ibDataViewItem& item, unsigned int col) {
-		ibValueModelTable::RowValueStartEdit(item, col);
+		ibValueModelTableBase::RowValueStartEdit(item, col);
 	}
 
 	virtual void AddValue(unsigned int before = 0);
@@ -207,8 +207,8 @@ public:
 	virtual bool SaveData() { return true; }
 	virtual bool DeleteData() { return true; }
 
-	virtual bool LoadDataFromTable(ibValueModelTable* srcTable);
-	virtual ibValueModelTable* SaveDataToTable() const;
+	virtual bool LoadDataFromTable(ibValueModelTableBase* srcTable);
+	virtual ibValueModelTableBase* SaveDataToTable() const;
 
 	//****************************************************************************
 	//*                              Support methods                             *

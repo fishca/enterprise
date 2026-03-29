@@ -5,7 +5,7 @@
 #include "backend/metaCollection/partial/reference/reference.h"
 
 //base list class 
-class BACKEND_API ibValueListDataObject : public ibValueModelTable,
+class BACKEND_API ibValueListDataObject : public ibValueModelTableBase,
 	public ibSourceDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueListDataObject);
 protected:
@@ -36,10 +36,10 @@ public:
 		return 0;
 	}
 
-	class ibValueDataObjectListColumnCollection : public ibValueModelTable::ibValueModelColumnCollection {
+	class ibValueDataObjectListColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(ibValueDataObjectListColumnCollection);
 	public:
-		class ibValueDataObjectListColumnInfo : public ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo {
+		class ibValueDataObjectListColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(ibValueDataObjectListColumnInfo);
 		public:
 
@@ -101,7 +101,7 @@ public:
 		ibValueDataObjectListReturnLine(ibValueListDataObject* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
 		virtual ~ibValueDataObjectListReturnLine();
 
-		virtual ibValueModelTable* GetOwnerModel() const {
+		virtual ibValueModelTableBase* GetOwnerModel() const {
 			return m_ownerTable;
 		}
 
@@ -139,7 +139,7 @@ public:
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal) { return false; }
 	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const {
-		wxValueTableRow* node = GetViewData<wxValueTableRow>(item);
+		ibValueTableRow* node = GetViewData<ibValueTableRow>(item);
 		if (node == nullptr)
 			return false;
 		return node->GetValue(id, pvarMetaVal);
@@ -200,9 +200,9 @@ protected:
 class BACKEND_API ibValueListDataObjectEnumRef : public ibValueListDataObject {
 	wxDECLARE_DYNAMIC_CLASS(ibValueListDataObjectRef);
 public:
-	struct wxValueTableEnumRow : public wxValueTableRow {
-		wxValueTableEnumRow(const ibGuid& guid) :
-			wxValueTableRow(), m_objGuid(guid) {
+	struct ibValueTableEnumRow : public ibValueTableRow {
+		ibValueTableEnumRow(const ibGuid& guid) :
+			ibValueTableRow(), m_objGuid(guid) {
 		}
 		ibGuid GetGuid() const {
 			return m_objGuid;
@@ -298,9 +298,9 @@ private:
 class BACKEND_API ibValueListDataObjectRef : public ibValueListDataObject {
 	wxDECLARE_DYNAMIC_CLASS(ibValueListDataObjectRef);
 public:
-	struct wxValueTableListRow : public wxValueTableRow {
-		wxValueTableListRow(const ibGuid& guid) :
-			wxValueTableRow(), m_objGuid(guid) {
+	struct ibValueTableListRow : public ibValueTableRow {
+		ibValueTableListRow(const ibGuid& guid) :
+			ibValueTableRow(), m_objGuid(guid) {
 		}
 		ibGuid GetGuid() const {
 			return m_objGuid;
@@ -401,9 +401,9 @@ private:
 class BACKEND_API ibValueListRegisterObject : public ibValueListDataObject {
 	wxDECLARE_DYNAMIC_CLASS(ibValueListRegisterObject);
 public:
-	struct wxValueTableKeyRow : public wxValueTableRow {
-		wxValueTableKeyRow() :
-			wxValueTableRow(), m_nodeKeys() {
+	struct ibValueTableKeyRow : public ibValueTableRow {
+		ibValueTableKeyRow() :
+			ibValueTableRow(), m_nodeKeys() {
 		}
 		void AppendNodeValue(const ibMetaID& id, const ibValue& variant) { m_nodeKeys.insert_or_assign(id, variant); }
 		ibValue& AppendNodeValue(const ibMetaID& id) { return m_nodeKeys[id]; }
@@ -494,7 +494,7 @@ private:
 };
 
 //base tree class 
-class BACKEND_API ibValueModelTreeDataObject : public ibValueModelTree,
+class BACKEND_API ibValueModelTreeDataObject : public ibValueModelTreeBase,
 	public ibSourceDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueModelTreeDataObject);
 protected:
@@ -513,10 +513,10 @@ private:
 
 public:
 
-	class ibValueDataObjectTreeColumnCollection : public ibValueModelTree::ibValueModelColumnCollection {
+	class ibValueDataObjectTreeColumnCollection : public ibValueModelTreeBase::ibValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(ibValueDataObjectTreeColumnCollection);
 	public:
-		class ibValueDataObjectTreeColumnInfo : public ibValueModelTree::ibValueModelColumnCollection::ibValueModelColumnInfo {
+		class ibValueDataObjectTreeColumnInfo : public ibValueModelTreeBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(ibValueDataObjectTreeColumnInfo);
 		public:
 
@@ -578,7 +578,7 @@ public:
 		ibValueDataObjectTreeReturnLine(ibValueModelTreeDataObject* ownerTable = nullptr, const ibDataViewItem& line = ibDataViewItem(nullptr));
 		virtual ~ibValueDataObjectTreeReturnLine();
 
-		virtual ibValueModelTree* GetOwnerModel() const {
+		virtual ibValueModelTreeBase* GetOwnerModel() const {
 			return m_ownerTable;
 		}
 
@@ -616,7 +616,7 @@ public:
 	//set meta/get meta
 	virtual bool SetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, const ibValue& varMetaVal) { return false; }
 	virtual bool GetValueByMetaID(const ibDataViewItem& item, const ibMetaID& id, ibValue& pvarMetaVal) const {
-		wxValueTreeNode* node = GetViewData<wxValueTreeNode>(item);
+		ibValueTreeNode* node = GetViewData<ibValueTreeNode>(item);
 		if (node == nullptr)
 			return false;
 		return node->GetValue(id, pvarMetaVal);
@@ -681,10 +681,10 @@ public:
 		LIST_ITEM,
 	};
 
-	struct wxValueTreeListNode : public wxValueTreeNode {
+	struct ibValueTreeListNode : public ibValueTreeNode {
 		ibGuid GetGuid() const { return m_objGuid; }
-		wxValueTreeListNode(wxValueTreeNode* parent, const ibGuid& guid, ibValueModelTreeDataObject* treeValue = nullptr, bool container = false) :
-			wxValueTreeNode(parent), m_objGuid(guid), m_container(container) {
+		ibValueTreeListNode(ibValueTreeNode* parent, const ibGuid& guid, ibValueModelTreeDataObject* treeValue = nullptr, bool container = false) :
+			ibValueTreeNode(parent), m_objGuid(guid), m_container(container) {
 			m_valueTree = treeValue;
 		}
 		virtual bool IsContainer() const { return m_container; }

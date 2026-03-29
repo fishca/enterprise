@@ -1388,7 +1388,7 @@ public:
 	}
 
 	//support tabular section 
-	virtual ibValueModelTable* GetTableByMetaID(const ibMetaID& id) const;
+	virtual ibValueModelTableBase* GetTableByMetaID(const ibMetaID& id) const;
 
 	//counter
 	virtual void SourceIncrRef() { ibValue::IncrRef(); }
@@ -1670,7 +1670,7 @@ protected:
 	ibValueMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API ibValueRecordSetObject : public ibValueModelTable, public ibModuleDataObject {
+class BACKEND_API ibValueRecordSetObject : public ibValueModelTableBase, public ibModuleDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordSetObject);
 public:
 
@@ -1681,11 +1681,11 @@ public:
 		return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterReturnLine>(this, line);
 	}
 
-	class ibValueRecordSetObjectRegisterColumnCollection : public ibValueModelTable::ibValueModelColumnCollection {
+	class ibValueRecordSetObjectRegisterColumnCollection : public ibValueModelTableBase::ibValueModelColumnCollection {
 		wxDECLARE_DYNAMIC_CLASS(ibValueRecordSetObjectRegisterColumnCollection);
 	public:
 
-		class ibValueRecordSetRegisterColumnInfo : public ibValueModelTable::ibValueModelColumnCollection::ibValueModelColumnInfo {
+		class ibValueRecordSetRegisterColumnInfo : public ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo {
 			wxDECLARE_DYNAMIC_CLASS(ibValueRecordSetRegisterColumnInfo);
 		public:
 
@@ -1751,7 +1751,7 @@ public:
 			const ibDataViewItem& line = ibDataViewItem(nullptr));
 		virtual ~ibValueRecordSetObjectRegisterReturnLine();
 
-		virtual ibValueModelTable* GetOwnerModel() const { return m_ownerTable; }
+		virtual ibValueModelTableBase* GetOwnerModel() const { return m_ownerTable; }
 
 		virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames(); 
@@ -1902,7 +1902,7 @@ public:
 
 	virtual void ActivateItem(ibBackendValueForm* formOwner,
 		const ibDataViewItem& item, unsigned int col) {
-		ibValueModelTable::RowValueStartEdit(item, col);
+		ibValueModelTableBase::RowValueStartEdit(item, col);
 	}
 
 	virtual void AddValue(unsigned int before = 0) {}
@@ -1919,8 +1919,8 @@ public:
 	//support def. methods (in runtime)
 	virtual long AppendRow(unsigned int before = 0);
 
-	virtual bool LoadDataFromTable(ibValueModelTable* srcTable);
-	virtual ibValueModelTable* SaveDataToTable() const;
+	virtual bool LoadDataFromTable(ibValueModelTableBase* srcTable);
+	virtual ibValueModelTableBase* SaveDataToTable() const;
 
 	//default methods
 	virtual bool WriteRecordSet(bool replace = true, bool clearTable = true) = 0;
@@ -2113,7 +2113,7 @@ protected:
 	ibValueMetaObjectRegisterData* m_metaObject;
 
 	ibValuePtr<ibValueRecordSetObject> m_recordSet;
-	ibValuePtr<ibValueModelTable::ibValueModelReturnLine> m_recordLine;
+	ibValuePtr<ibValueModelTableBase::ibValueModelReturnLine> m_recordLine;
 
 	ibValueMethodHelper* m_methodHelper;
 };

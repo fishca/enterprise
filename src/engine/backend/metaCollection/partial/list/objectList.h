@@ -145,7 +145,7 @@ public:
 		return node->GetValue(id, pvarMetaVal);
 	}
 
-	virtual bool GetValueAttribute(ibValueMetaObjectAttributeBase* metaAttr, ibValue& retValue, class ibDatabaseResultSet* resultSet, bool createData = true) {
+	virtual bool GetValueAttribute(const ibValueMetaObjectAttributeBase* metaAttr, ibValue& retValue, class ibDatabaseResultSet* resultSet, bool createData = true) {
 		return ibValueMetaObjectAttributeBase::GetValueAttribute(metaAttr, retValue, resultSet, createData);
 	}
 

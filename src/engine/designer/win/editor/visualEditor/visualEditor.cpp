@@ -440,7 +440,7 @@ ibDesignerWindow::ibDesignerWindow(wxWindow* parent, int id, const wxPoint& pos,
 
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
 	GetFrameContentPanel()->PushEventHandler(
-		new CHighlightPaintHandler(GetFrameContentPanel())
+		new ibHighlightPaintHandler(GetFrameContentPanel())
 	);
 }
 
@@ -569,15 +569,15 @@ void ibDesignerWindow::HighlightSelection(wxDC& dc)
 	}
 }
 
-BEGIN_EVENT_TABLE(ibDesignerWindow::CHighlightPaintHandler, wxEvtHandler)
-EVT_PAINT(ibDesignerWindow::CHighlightPaintHandler::OnPaint)
+BEGIN_EVENT_TABLE(ibDesignerWindow::ibHighlightPaintHandler, wxEvtHandler)
+EVT_PAINT(ibDesignerWindow::ibHighlightPaintHandler::OnPaint)
 END_EVENT_TABLE()
 
-ibDesignerWindow::CHighlightPaintHandler::CHighlightPaintHandler(wxWindow* win) : m_dsgnWin(win)
+ibDesignerWindow::ibHighlightPaintHandler::ibHighlightPaintHandler(wxWindow* win) : m_dsgnWin(win)
 {
 }
 
-void ibDesignerWindow::CHighlightPaintHandler::OnPaint(wxPaintEvent& event)
+void ibDesignerWindow::ibHighlightPaintHandler::OnPaint(wxPaintEvent& event)
 {
 	wxWindow* aux = m_dsgnWin;
 	while (!aux->IsKindOf(CLASSINFO(ibDesignerWindow))) aux = aux->GetParent();

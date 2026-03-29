@@ -79,7 +79,7 @@ void ibFrontendDocMDIFrame::ActivateView(ibMetaView* view, bool activate) {
 
 			if (viewFrame != nullptr) {
 
-				class CProcSubMenu {
+				class ibProcSubMenu {
 
 					static void SetChildEnable(wxMenu* dst, bool enable = false) {
 
@@ -93,14 +93,14 @@ void ibFrontendDocMDIFrame::ActivateView(ibMetaView* view, bool activate) {
 
 					static void SetMenuEnabled(wxMenuBar* menuBar, bool enable = false) {
 						for (size_t idx = 0; idx < menuBar->GetMenuCount(); idx++) {
-							CProcSubMenu::SetChildEnable(menuBar->GetMenu(idx), enable);
+							ibProcSubMenu::SetChildEnable(menuBar->GetMenu(idx), enable);
 						}
 					}
 				};
 
 				wxMenuBar* menuBar = view->CreateMenuBar();
 				if (menuBar != nullptr)
-					CProcSubMenu::SetMenuEnabled(menuBar);
+					ibProcSubMenu::SetMenuEnabled(menuBar);
 				
 				viewFrame->SetMenuBar(menuBar);
 			}
@@ -252,7 +252,7 @@ bool ibFrontendDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wx
 
 bool ibFrontendDocMDIFrame::PrintSpreadSheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg)
 {
-	wxScopedPtr<CGridEditorPrintout> printout(new CGridEditorPrintout(doc));
+	wxScopedPtr<ibGridEditorPrintout> printout(new ibGridEditorPrintout(doc));
 
 	const wxPageSetupDialogData& pageSetupDialogData =
 		docManager->GetPageSetupDialogData();

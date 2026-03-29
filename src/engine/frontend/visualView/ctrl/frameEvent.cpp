@@ -42,7 +42,7 @@ ibValue ibValueFrame::ibValueEventContainer::GetIteratorAt(unsigned int idx)
 		return ibValue();
 	}
 
-	IEvent* event = m_controlEvent->GetEvent(idx);
+	ibEvent* event = m_controlEvent->GetEvent(idx);
 	if (event == nullptr) return ibValue();
 	//return ibValue::CreateAndPrepareValueRef<ibValueEvent>(event->GetValue());
 
@@ -58,7 +58,7 @@ bool ibValueFrame::ibValueEventContainer::SetAt(const ibValue& varKeyValue, cons
 	const ibNumber number = varKeyValue.GetNumber();
 	if (m_controlEvent->GetEventCount() < number.ToUInt())
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(number.ToUInt());
+	ibEvent* event = m_controlEvent->GetEvent(number.ToUInt());
 	if (event == nullptr) return false;
 	//ibValueEvent* eventValue = nullptr;
 	//if (varValue.ConvertToValue(eventValue)) {
@@ -76,7 +76,7 @@ bool ibValueFrame::ibValueEventContainer::GetAt(const ibValue& varKeyValue, ibVa
 	ibNumber number = varKeyValue.GetNumber();
 	if (m_controlEvent->GetEventCount() < number.ToUInt())
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(number.ToUInt());
+	ibEvent* event = m_controlEvent->GetEvent(number.ToUInt());
 	if (event == nullptr) return false;
 	//wxString eventValue = event->GetValue();
 	//if (eventValue.IsEmpty())
@@ -90,7 +90,7 @@ bool ibValueFrame::ibValueEventContainer::Property(const ibValue& varKeyValue, i
 {
 	const wxString& key = varKeyValue.GetString();
 	for (unsigned int idx = 0; idx < m_controlEvent->GetEventCount(); idx++) {
-		IEvent* event = m_controlEvent->GetEvent(idx);
+		ibEvent* event = m_controlEvent->GetEvent(idx);
 		if (event == nullptr) continue;
 		if (stringUtils::CompareString(key, event->GetName())) {
 			//cValueFound = ibValue::CreateAndPrepareValueRef<ibValueEvent>(event->GetName());
@@ -115,7 +115,7 @@ void ibValueFrame::ibValueEventContainer::PrepareNames() const
 	m_methodHelper->AppendFunc(wxT("Count"), wxT("Count()"));
 
 	for (unsigned int idx = 0; idx < m_controlEvent->GetEventCount(); idx++) {
-		IEvent* event = m_controlEvent->GetEvent(idx);
+		ibEvent* event = m_controlEvent->GetEvent(idx);
 		if (event == nullptr)
 			continue;
 		m_methodHelper->AppendProp(event->GetName());
@@ -127,7 +127,7 @@ bool ibValueFrame::ibValueEventContainer::SetPropVal(const long lPropNum, const 
 	//ibValueEvent* eventValue = nullptr;
 	if (m_controlEvent->GetEventCount() < (unsigned int)lPropNum)
 		return false;
-	IEvent* event = m_controlEvent->GetEvent(lPropNum);
+	ibEvent* event = m_controlEvent->GetEvent(lPropNum);
 	if (event == nullptr) return false;
 	//if (varPropVal.ConvertToValue(eventValue)) {
 	//	event->SetValue(eventValue->GetString());
@@ -144,7 +144,7 @@ bool ibValueFrame::ibValueEventContainer::GetPropVal(const long lPropNum, ibValu
 	if (m_controlEvent->GetEventCount() < (unsigned int)lPropNum)
 		return false;
 
-	IEvent* event = m_controlEvent->GetEvent(lPropNum);
+	ibEvent* event = m_controlEvent->GetEvent(lPropNum);
 	if (event == nullptr) return false;
 
 	const wxString& eventValue = event->GetValue();

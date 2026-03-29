@@ -476,4 +476,4 @@ void ibValueMetaObjectDocument::OnRemoveMetaForm(ibValueMetaObjectFormBase* meta
 //***********************************************************************
 
 METADATA_TYPE_REGISTER(ibValueMetaObjectDocument, "Document", g_metaDocumentCLSID);
-SYSTEM_TYPE_REGISTER(ibValueRecordDataObjectDocument::CRecorderRegisterDocument, "RecordRegister", string_to_clsid("VL_RECR"));
+SYSTEM_TYPE_REGISTER(ibValueRecordDataObjectDocument::ibRecorderRegisterDocument, "RecordRegister", string_to_clsid("VL_RECR"));

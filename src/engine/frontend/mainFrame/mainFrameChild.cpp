@@ -34,7 +34,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 	wxMenuBar* pOldMenuBar = m_pMenuBar;
 	m_pMenuBar = menuBar;
 
-	struct CProcSubMenu {
+	struct ibProcSubMenu {
 
 		static void ConstructMenu(wxMenu* dst, wxMenu* src) {
 
@@ -106,7 +106,7 @@ void CAuiDocChildFrame::SetMenuBar(wxMenuBar* menuBar)
 					);
 				}
 
-				CProcSubMenu::ConstructMenu(dst, src);
+				ibProcSubMenu::ConstructMenu(dst, src);
 			}
 		}
 

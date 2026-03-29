@@ -8,115 +8,6 @@
 #include "frontend/visualView/ctrl/sizer.h"
 #include "frontend/visualView/ctrl/widgets.h"
 
-class ibVisualEditorCmd {
-	bool m_executed;
-protected:
-
-	/**
-	 * Ejecuta el comando.
-	 */
-	virtual void DoExecute() = 0;
-
-	/**
-	 * Restaura el estado previo a la ejecución del comando.
-	 */
-	virtual void DoRestore() = 0;
-
-public:
-
-	ibVisualEditorCmd() : m_executed(false) {}
-
-	void Execute() {
-		if (!m_executed) {
-			DoExecute();
-			m_executed = true;
-		}
-	}
-
-	void Restore() {
-		if (m_executed) {
-			DoRestore();
-			m_executed = false;
-		}
-	}
-};
-
-class ibCommandProcessor {
-public:
-
-	ibCommandProcessor() : m_savePoint(0) {}
-
-	~ibCommandProcessor() {
-		while (!m_redoStack.empty()) {
-			ibVisualEditorCmd* redoCmd = m_redoStack.top();
-			delete redoCmd;
-			m_redoStack.pop();
-		}
-		while (!m_undoStack.empty()) {
-			ibVisualEditorCmd* undoCmd = m_undoStack.top();
-			delete undoCmd;
-			m_undoStack.pop();
-		}
-	}
-
-	void ibCommandProcessor::Execute(ibVisualEditorCmd* command) {
-		command->Execute();
-		m_undoStack.push(command);
-		while (!m_redoStack.empty()) {
-			m_redoStack.pop();
-		}
-	}
-
-	bool ibCommandProcessor::Undo() {
-		if (!m_undoStack.empty()) {
-			ibVisualEditorCmd* command = m_undoStack.top();
-			m_undoStack.pop();
-			command->Restore();
-			m_redoStack.push(command);
-		}
-		return true;
-	}
-
-	bool ibCommandProcessor::Redo() {
-		if (!m_redoStack.empty()) {
-			ibVisualEditorCmd* command = m_redoStack.top();
-			m_redoStack.pop();
-			command->Execute();
-			m_undoStack.push(command);
-		}
-		return true;
-	}
-
-	void ibCommandProcessor::Reset() {
-		while (!m_redoStack.empty())
-			m_redoStack.pop();
-		while (!m_undoStack.empty())
-			m_undoStack.pop();
-		m_savePoint = 0;
-	}
-
-	bool ibCommandProcessor::CanUndo() const {
-		return (!m_undoStack.empty());
-	}
-
-	bool ibCommandProcessor::CanRedo() const {
-		return (!m_redoStack.empty());
-	}
-
-	void ibCommandProcessor::SetSavePoint() {
-		m_savePoint = m_undoStack.size();
-	}
-
-	bool ibCommandProcessor::IsAtSavePoint() {
-		return m_savePoint == m_undoStack.size();
-	}
-
-private:
-	typedef std::stack<ibVisualEditorCmd*> CommandStack;
-	CommandStack m_undoStack, m_redoStack;
-	unsigned int m_savePoint;
-};
-
 #include "frontend/visualView/visualHost.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -124,9 +15,10 @@ private:
 #define wxNOTEBOOK_PAGE_DESIGNER 0
 #define wxNOTEBOOK_PAGE_CODE_EDITOR 1
 
-/**
- * Extends the ibInnerFrame to show the object highlight
-*/
+///////////////////////////////////////////////////////////////////////////////
+// ibDesignerWindow - Extends the ibInnerFrame to show the object highlight
+///////////////////////////////////////////////////////////////////////////////
+
 class ibDesignerWindow : public ibInnerFrame {
 	wxDECLARE_CLASS(ibDesignerWindow);
 private:
@@ -137,12 +29,12 @@ public:
 
 	// Augh!, this class is needed to paint the highlight in the
 	// frame content panel.
-	class CHighlightPaintHandler : public wxEvtHandler {
+	class ibHighlightPaintHandler : public wxEvtHandler {
 		wxDECLARE_EVENT_TABLE();
 	private:
 		wxWindow* m_dsgnWin;
 	public:
-		CHighlightPaintHandler(wxWindow* win);
+		ibHighlightPaintHandler(wxWindow* win);
 		void OnPaint(wxPaintEvent& event);
 	};
 
@@ -178,10 +70,128 @@ private:
 	wxDECLARE_EVENT_TABLE();
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// ibVisualEditorCmd
+///////////////////////////////////////////////////////////////////////////////
+
+class ibVisualEditorCmd {
+protected:
+
+	/**
+	 * Ejecuta el comando.
+	 */
+	virtual void DoExecute() = 0;
+
+	/**
+	 * Restaura el estado previo a la ejecución del comando.
+	 */
+	virtual void DoRestore() = 0;
+
+public:
+
+	ibVisualEditorCmd() : m_executed(false) {}
+
+	void Execute() {
+		if (!m_executed) {
+			DoExecute();
+			m_executed = true;
+		}
+	}
+
+	void Restore() {
+		if (m_executed) {
+			DoRestore();
+			m_executed = false;
+		}
+	}
+
+protected:
+
+	bool m_executed;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// ibVisualEditorNotebook
+///////////////////////////////////////////////////////////////////////////////
+
 class ibVisualEditorNotebook : public ibFrontendVisualEditorNotebook, public wxAuiNotebook {
 
-public: class ibVisualEditor : public wxPanel {
-	wxDECLARE_DYNAMIC_CLASS(ibVisualEditor);
+public: class ibVisualEditor :
+	public wxPanel {
+
+	class ibCommandProcessor {
+	public:
+
+		ibCommandProcessor() : m_savePoint(0) {}
+
+		~ibCommandProcessor() {
+			while (!m_redoStack.empty()) {
+				wxDELETE(m_redoStack.top());
+				m_redoStack.pop();
+			}
+			while (!m_undoStack.empty()) {
+				wxDELETE(m_undoStack.top());
+				m_undoStack.pop();
+			}
+		}
+
+		void ibCommandProcessor::Execute(ibVisualEditorCmd* command) {
+			command->Execute();
+			m_undoStack.push(command);
+			while (!m_redoStack.empty()) {
+				m_redoStack.pop();
+			}
+		}
+
+		bool ibCommandProcessor::Undo() {
+			if (!m_undoStack.empty()) {
+				ibVisualEditorCmd* command = m_undoStack.top();
+				m_undoStack.pop();
+				command->Restore();
+				m_redoStack.push(command);
+			}
+			return true;
+		}
+
+		bool ibCommandProcessor::Redo() {
+			if (!m_redoStack.empty()) {
+				ibVisualEditorCmd* command = m_redoStack.top();
+				m_redoStack.pop();
+				command->Execute();
+				m_undoStack.push(command);
+			}
+			return true;
+		}
+
+		void ibCommandProcessor::Reset() {
+			while (!m_redoStack.empty())
+				m_redoStack.pop();
+			while (!m_undoStack.empty())
+				m_undoStack.pop();
+			m_savePoint = 0;
+		}
+
+		bool ibCommandProcessor::CanUndo() const {
+			return (!m_undoStack.empty());
+		}
+
+		bool ibCommandProcessor::CanRedo() const {
+			return (!m_redoStack.empty());
+		}
+
+		void ibCommandProcessor::SetSavePoint() {
+			m_savePoint = m_undoStack.size();
+		}
+
+		bool ibCommandProcessor::IsAtSavePoint() {
+			return m_savePoint == m_undoStack.size();
+		}
+
+	private:
+		std::stack<ibVisualEditorCmd*> m_undoStack, m_redoStack;
+		unsigned int m_savePoint;
+	};
+
 public:
 
 	class ibVisualEditorHost : public ibVisualHost {
@@ -240,7 +250,7 @@ public:
 
 		virtual wxWindow* GetParentBackgroundWindow() const { return m_back; }
 		virtual wxWindow* GetBackgroundWindow() const { return m_back->GetFrameContentPanel(); }
-	
+
 		/////////////////////////////////////////////////////////////////////////////////////////
 
 		void OnResizeBackPanel(wxCommandEvent& event);
@@ -266,14 +276,13 @@ public:
 		friend class ibVisualEditor;
 		friend class ibVisualEditorObjectTree;
 
-		friend class ExpandObjectCmd;
-		friend class InsertObjectCmd;
-		friend class RemoveObjectCmd;
-		friend class ModifyPropertyCmd;
-		friend class ModifyEventCmd;
-		friend class ShiftChildCmd;
-		friend class CutObjectCmd;
-		friend class ReparentObjectCmd;
+		friend class ibVisualEditorExpandObjectCmd;
+		friend class ibVisualEditorInsertObjectCmd;
+		friend class ibVisualEditorRemoveObjectCmd;
+		friend class ibVisualEditorModifyPropertyCmd;
+		friend class ibVisualEditorModifyEventCmd;
+		friend class ibVisualEditorShiftChildCmd;
+		friend class ibVisualEditorCutObjectCmd;
 
 		//designer 
 		ibDesignerWindow* m_back;
@@ -469,7 +478,7 @@ protected:
 	void NotifyObjectRemoved(ibValueFrame* obj);
 
 	void NotifyPropertyModified(ibProperty* prop);
-	void NotifyEventModified(IEvent* event);
+	void NotifyEventModified(ibEvent* event);
 
 	//Execute command 
 	void Execute(ibVisualEditorCmd* cmd);
@@ -500,7 +509,7 @@ public:
 	void ExpandObject(ibValueFrame* obj, bool expand);
 
 	void ModifyProperty(ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue);
-	void ModifyEvent(IEvent* evt, const wxVariant& oldValue, const wxVariant& newValue);
+	void ModifyEvent(ibEvent* evt, const wxVariant& oldValue, const wxVariant& newValue);
 
 	void CreateWideGui();
 
@@ -516,8 +525,8 @@ public:
 	void ScrollToObject(ibValueFrame* obj);
 
 	// Servicios para los observadores
-	ibValueFrame* GetSelectedObject() const { 
-		return m_selObj != nullptr ? m_selObj : m_valueForm; 
+	ibValueFrame* GetSelectedObject() const {
+		return m_selObj != nullptr ? m_selObj : m_valueForm;
 	}
 
 	void RefreshEditor() {
@@ -603,6 +612,8 @@ private:
 	friend class ibVisualEditorNotebook;
 	friend class ibVisualEditorHost;
 	friend class ibVisualEditorObjectTree;
+
+	wxDECLARE_DYNAMIC_CLASS(ibVisualEditor);
 };
 
 public:
@@ -699,7 +710,7 @@ public:
 			wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);
 	}
 
-	void ModifyEvent(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
+	void ModifyEvent(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
 	void ModifyProperty(ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) {
 		m_visualEditor->ModifyProperty(prop, oldValue, newValue);
 		if (wxAuiNotebook::GetSelection() != wxNOTEBOOK_PAGE_DESIGNER)
@@ -771,7 +782,7 @@ public:
 	virtual	ibMetaDocument* GetEditorDocument() const { return m_visualEditor->GetEditorDocument(); }
 	virtual ibVisualHost* GetVisualHost() const { return m_visualEditor->GetVisualEditor(); }
 
-	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const { return new ibDesignerWindow::CHighlightPaintHandler(wnd); }
+	virtual wxEvtHandler* GetHighlightPaintHandler(wxWindow* wnd) const { return new ibDesignerWindow::ibHighlightPaintHandler(wnd); }
 
 	void ActivateEditor();
 
@@ -787,14 +798,17 @@ protected:
 private:
 	ibVisualEditor* m_visualEditor;
 	ibCodeEditor* m_codeEditor;
+
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// ibVisualDesignerCommandProcessor
+///////////////////////////////////////////////////////////////////////////////
 
-class CVisualDesignerCommandProcessor : public wxCommandProcessor {
+class ibVisualDesignerCommandProcessor : public wxCommandProcessor {
 public:
 
-	CVisualDesignerCommandProcessor(ibVisualEditorNotebook* visualNotebook) : wxCommandProcessor(),
+	ibVisualDesignerCommandProcessor(ibVisualEditorNotebook* visualNotebook) : wxCommandProcessor(),
 		m_visualNotebook(visualNotebook) {
 	}
 

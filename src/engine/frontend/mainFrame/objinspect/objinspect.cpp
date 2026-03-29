@@ -78,7 +78,7 @@ void CObjectInspector::Create(ibPropertyObject* object, bool force)
 		if (object != nullptr) {
 
 			std::map<wxString, ibProperty*> propMap, dummyPropMap;
-			std::map<wxString, IEvent*> eventMap, dummyEventMap;
+			std::map<wxString, ibEvent*> eventMap, dummyEventMap;
 
 			// We create the categories with the properties of the object organized by "classes"
 			CreateCategory(object->GetClassName(), object, propMap, false);
@@ -220,7 +220,7 @@ wxPGProperty* CObjectInspector::GetProperty(ibProperty* prop) const
 	return result;
 }
 
-wxPGProperty* CObjectInspector::GetEvent(IEvent* event) const
+wxPGProperty* CObjectInspector::GetEvent(ibEvent* event) const
 {
 	wxPGProperty* result = event->GetPGProperty();
 	if (result != nullptr) {
@@ -241,7 +241,7 @@ bool CObjectInspector::ModifyProperty(ibProperty* prop, const wxVariant& newValu
 	return false;
 }
 
-bool CObjectInspector::ModifyEvent(IEvent* event, const wxVariant& newValue)
+bool CObjectInspector::ModifyEvent(ibEvent* event, const wxVariant& newValue)
 {
 	const wxVariant oldValue = event->GetValue();
 	if (m_currentSel->OnEventChanging(event, newValue)) {
@@ -270,9 +270,9 @@ void CObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
 		return;
 	}
 
-	std::map< wxPGProperty*, IEvent*>::iterator itEvent = m_eventMap.find(propPtr);
+	std::map< wxPGProperty*, ibEvent*>::iterator itEvent = m_eventMap.find(propPtr);
 	if (itEvent != m_eventMap.end()) {
-		IEvent* event_ptr = itEvent->second;
+		ibEvent* event_ptr = itEvent->second;
 		// Update displayed description for the new selection
 		const wxString& helpString = event_ptr->GetHelp();
 		if (!ModifyEvent(event_ptr, event.GetPropertyValue()))
@@ -314,7 +314,7 @@ void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
 		}
 
 		for (auto evt : m_eventMap) {
-			IEvent* event_ptr = evt.second;
+			ibEvent* event_ptr = evt.second;
 			wxASSERT(event_ptr);
 			event_ptr->RefreshPGProperty(evt.first);
 		};

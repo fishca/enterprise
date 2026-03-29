@@ -48,7 +48,7 @@ public:
 	}
 
 	wxPGProperty* GetProperty(ibProperty* prop) const;
-	wxPGProperty* GetEvent(IEvent* event) const;
+	wxPGProperty* GetEvent(ibEvent* event) const;
 
 	// Servicios para los observadores
 	void SelectObject(ibPropertyObject* selobj, bool force = false) {
@@ -231,12 +231,12 @@ private:
 		}
 	}
 
-	void AddItems(const wxString& name, ibPropertyObject* obj, ibPropertyCategory* category, std::map<wxString, IEvent*>& events) {
+	void AddItems(const wxString& name, ibPropertyObject* obj, ibPropertyCategory* category, std::map<wxString, ibEvent*>& events) {
 		unsigned int eventCount = category->GetEventCount();
 		for (unsigned int i = 0; i < eventCount; i++) {
 
 			const wxString& eventName = category->GetEventName(i);
-			IEvent* event = obj->GetEvent(eventName);
+			ibEvent* event = obj->GetEvent(eventName);
 
 			if (!event)
 				continue;
@@ -266,8 +266,8 @@ private:
 							m_pg->Collapse(id);
 						}
 					}
-					events.insert(std::map<wxString, IEvent*>::value_type(eventName, event));
-					m_eventMap.insert(std::map< wxPGProperty*, IEvent*>::value_type(id, event));
+					events.insert(std::map<wxString, ibEvent*>::value_type(eventName, event));
+					m_eventMap.insert(std::map< wxPGProperty*, ibEvent*>::value_type(id, event));
 				}
 			}
 		}
@@ -308,7 +308,7 @@ private:
 	void Create(ibPropertyObject* object, bool force = false);
 
 	bool ModifyProperty(ibProperty* prop, const wxVariant& newValue);
-	bool ModifyEvent(IEvent* event, const wxVariant& newValue);
+	bool ModifyEvent(ibEvent* event, const wxVariant& newValue);
 
 	void RestoreLastSelectedPropItem() {
 
@@ -328,9 +328,9 @@ private:
 				return;
 			}
 
-			std::map< wxPGProperty*, IEvent*>::iterator itEvent = m_eventMap.find(propPtr);
+			std::map< wxPGProperty*, ibEvent*>::iterator itEvent = m_eventMap.find(propPtr);
 			if (itEvent != m_eventMap.end()) {
-				IEvent* event_ptr = itEvent->second;
+				ibEvent* event_ptr = itEvent->second;
 				// Update displayed description for the new selection
 				const wxString& helpString = event_ptr->GetHelp();
 				const wxString& localized = wxGetTranslation(helpString);
@@ -348,7 +348,7 @@ private:
 	std::map< wxString, bool > m_isExpanded;
 
 	std::map< wxPGProperty*, ibProperty*> m_propMap;
-	std::map< wxPGProperty*, IEvent*> m_eventMap;
+	std::map< wxPGProperty*, ibEvent*> m_eventMap;
 
 	ibPropertyObject* m_currentSel;
 

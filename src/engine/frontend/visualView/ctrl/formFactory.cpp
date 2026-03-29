@@ -72,7 +72,7 @@ ibValueFrame* ibValueForm::NewObject(const ibClassID& clsid, ibValueFrame* contr
 
 void ibValueForm::ResolveNameConflict(ibValueFrame* control)
 {
-	class CResolveNameConflict {
+	class ibResolveNameConflict {
 
 	public:
 
@@ -140,7 +140,7 @@ void ibValueForm::ResolveNameConflict(ibValueFrame* control)
 	};
 
 	// el nombre no puede estar repetido dentro del mismo form
-	CResolveNameConflict::BuildNameSet(control, control->GetOwnerForm());
+	ibResolveNameConflict::BuildNameSet(control, control->GetOwnerForm());
 }
 
 ibValueFrame* ibValueForm::CreateObject(const wxString& className, ibValueFrame* controlParent)

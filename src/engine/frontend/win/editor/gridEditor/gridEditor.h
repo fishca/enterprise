@@ -494,7 +494,7 @@ public:
 	void PutDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
 	void JoinDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc);
 
-	class CGridEditorPrintout* CreatePrintout() const;
+	class ibGridEditorPrintout* CreatePrintout() const;
 
 protected:
 

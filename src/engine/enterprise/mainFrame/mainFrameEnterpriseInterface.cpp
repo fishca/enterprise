@@ -15,13 +15,13 @@
 
 #include "frontend/visualView/ctrl/frame.h"
 
-class CSubSystemWindow : public wxWindow {
+class ibSubSystemWindow : public wxWindow {
 
 	// ----------------------------------------------------------------------------
-	// CSubSystemButton: search button used by search control
+	// ibSubSystemButton: search button used by search control
 	// ----------------------------------------------------------------------------
 
-	class CSubSystemButton : public wxControl {
+	class ibSubSystemButton : public wxControl {
 
 		wxString ChopText(wxDC& dc, const wxString& text, int max_size) {
 
@@ -57,8 +57,8 @@ class CSubSystemWindow : public wxWindow {
 			if (!wnd)
 				m_mainWindow->m_activeButton = nullptr;
 
-			CSubSystemButton::Refresh();
-			CSubSystemButton::Update();
+			ibSubSystemButton::Refresh();
+			ibSubSystemButton::Update();
 		}
 
 		void DismissPopupWindow() {
@@ -69,7 +69,7 @@ class CSubSystemWindow : public wxWindow {
 
 		const ibValueMetaObjectInterface* GetMetaObject() const { return m_metaObject; }
 
-		CSubSystemButton(CSubSystemWindow* mainWindow, wxWindowID id, const ibValueMetaObjectInterface* object)
+		ibSubSystemButton(ibSubSystemWindow* mainWindow, wxWindowID id, const ibValueMetaObjectInterface* object)
 			: wxControl(mainWindow, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER),
 			m_mainWindow(mainWindow), m_bitmap(object->GetPictureAsBitmap()), m_metaObject(object), m_popupWindow(nullptr),
 			m_eventType(wxEVT_BUTTON) {
@@ -116,8 +116,8 @@ class CSubSystemWindow : public wxWindow {
 				GetEventHandler()->ProcessEvent(event);
 			}
 
-			CSubSystemButton::Refresh();
-			CSubSystemButton::Update();
+			ibSubSystemButton::Refresh();
+			ibSubSystemButton::Update();
 		}
 
 		void OnPaint(wxPaintEvent& e) {
@@ -380,7 +380,7 @@ class CSubSystemWindow : public wxWindow {
 		wxBrush m_baseColourBrush;
 		wxColour m_activeColour;
 
-		CSubSystemWindow* m_mainWindow;
+		ibSubSystemWindow* m_mainWindow;
 		wxBitmap m_bitmap;
 		wxEventType   m_eventType;
 
@@ -713,7 +713,7 @@ class CSubSystemWindow : public wxWindow {
 
 		// ctors
 		ibPopupSubWindow() : m_currentButton(nullptr) {}
-		ibPopupSubWindow(wxWindow* parent, CSubSystemButton* btn, const wxPoint& point, const wxSize& size, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS)
+		ibPopupSubWindow(wxWindow* parent, ibSubSystemButton* btn, const wxPoint& point, const wxSize& size, int style = wxBORDER_NONE | wxPU_CONTAINS_CONTROLS)
 			: wxPopupTransientWindow(parent, style), m_currentButton(btn) {
 
 			wxPopupTransientWindow::SetPosition(point);
@@ -755,19 +755,19 @@ class CSubSystemWindow : public wxWindow {
 	private:
 
 		wxWindow* m_staticLine;
-		CSubSystemButton* m_currentButton;
+		ibSubSystemButton* m_currentButton;
 		wxScrolledWindow* m_mainWindow;
 	};
 
-	CSubSystemButton* CreateSubMenu(const ibValueMetaObjectInterface* object) {
+	ibSubSystemButton* CreateSubMenu(const ibValueMetaObjectInterface* object) {
 		return m_arrayPageButton.emplace_back(
-			new CSubSystemButton(this, wxID_ANY, object));
+			new ibSubSystemButton(this, wxID_ANY, object));
 	}
 
 public:
 
-	CSubSystemWindow() : wxWindow(), m_activeButton(nullptr) {}
-	CSubSystemWindow(wxWindow* parent,
+	ibSubSystemWindow() : wxWindow(), m_activeButton(nullptr) {}
+	ibSubSystemWindow(wxWindow* parent,
 		wxWindowID id,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
@@ -823,24 +823,24 @@ protected:
 
 private:
 
-	CSubSystemButton* m_activeButton;
+	ibSubSystemButton* m_activeButton;
 
 	static const int ms_text_height = 35;
 	static const int ms_text_width = 200;
 
-	std::vector<CSubSystemButton*> m_arrayPageButton;
+	std::vector<ibSubSystemButton*> m_arrayPageButton;
 
 	wxDECLARE_EVENT_TABLE();
 };
 
-wxBEGIN_EVENT_TABLE(CSubSystemWindow::CSubSystemButton, wxControl)
-EVT_LEFT_UP(CSubSystemWindow::CSubSystemButton::OnLeftUp)
-EVT_PAINT(CSubSystemWindow::CSubSystemButton::OnPaint)
+wxBEGIN_EVENT_TABLE(ibSubSystemWindow::ibSubSystemButton, wxControl)
+EVT_LEFT_UP(ibSubSystemWindow::ibSubSystemButton::OnLeftUp)
+EVT_PAINT(ibSubSystemWindow::ibSubSystemButton::OnPaint)
 wxEND_EVENT_TABLE()
 
-wxBEGIN_EVENT_TABLE(CSubSystemWindow, wxWindow)
-EVT_BUTTON(wxID_ANY, CSubSystemWindow::OnEventButton)
-EVT_SIZE(CSubSystemWindow::OnEventSize)
+wxBEGIN_EVENT_TABLE(ibSubSystemWindow, wxWindow)
+EVT_BUTTON(wxID_ANY, ibSubSystemWindow::OnEventButton)
+EVT_SIZE(ibSubSystemWindow::OnEventSize)
 wxEND_EVENT_TABLE()
 
 //////////////////////////////////////////////////////////////////////////////
@@ -868,7 +868,7 @@ void ibFrontendDocMDIFrameEnterprise::CreateSubSystem()
 		m_infoSection.Fixed();
 
 		m_mgr.AddPane(
-			new CSubSystemWindow(this, wxID_ANY), m_infoSection);
+			new ibSubSystemWindow(this, wxID_ANY), m_infoSection);
 	}
 }
 

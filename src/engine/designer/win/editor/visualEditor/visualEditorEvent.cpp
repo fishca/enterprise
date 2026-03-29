@@ -7,12 +7,6 @@
 
 #include "backend/metaCollection/metaFormObject.h"
 
-void ibVisualEditorNotebook::ibVisualEditor::Execute(ibVisualEditorCmd* cmd)
-{
-	if (m_cmdProc != nullptr) m_cmdProc->Execute(cmd);
-	NotifyEditorSaved();
-}
-
 //////////////////////////////////////////////////////////////////////////////////////
 
 void ibVisualEditorNotebook::ibVisualEditor::NotifyEditorLoaded()
@@ -58,7 +52,7 @@ void ibVisualEditorNotebook::ibVisualEditor::NotifyPropertyModified(ibProperty* 
 	m_objectTree->OnPropertyModified(prop);
 }
 
-void ibVisualEditorNotebook::ibVisualEditor::NotifyEventModified(IEvent* event)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyEventModified(ibEvent* event)
 {
 }
 

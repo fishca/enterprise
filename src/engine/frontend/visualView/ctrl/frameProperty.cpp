@@ -11,12 +11,12 @@ void ibValueFrame::OnPropertyChanged(ibProperty* property, const wxVariant& oldV
 		g_visualHostContext->ModifyProperty(property, oldValue, newValue);
 }
 
-bool ibValueFrame::OnEventChanging(IEvent* event, const wxString& newValue)
+bool ibValueFrame::OnEventChanging(ibEvent* event, const wxString& newValue)
 {
 	return true;
 }
 
-void ibValueFrame::OnEventChanged(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueFrame::OnEventChanged(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (g_visualHostContext != nullptr) 
 		g_visualHostContext->ModifyEvent(event, oldValue, newValue);

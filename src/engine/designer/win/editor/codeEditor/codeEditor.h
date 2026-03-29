@@ -382,8 +382,8 @@ private:
 	ibMetaDocument* m_document;
 	ibPrecompileCode* m_precompileModule;
 
-	CAutoComplete m_ac;
-	CCallTip m_ct;
+	ibAutoComplete m_ac;
+	ibCallTip m_ct;
 	ibTranslateCode m_tc;
 	ibFoldLevelParser m_fp;
 

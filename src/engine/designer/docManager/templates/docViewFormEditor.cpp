@@ -139,7 +139,7 @@ bool ibFormEditView::OnClose(bool deleteWindow)
 wxPrintout* ibFormEditView::OnCreatePrintout()
 {
 	if (m_visualNotebook->GetSelection() == wxNOTEBOOK_PAGE_CODE_EDITOR)
-		return new CCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
+		return new ibCodeEditorPrintout(m_visualNotebook->GetCodeEditor(), m_viewDocument->GetTitle());
 	return new ibFormPrintout(m_visualNotebook->GetVisualHost(), m_viewDocument->GetTitle());
 }
 
@@ -259,7 +259,7 @@ bool ibFormDocument::OnCloseDocument()
 
 wxCommandProcessor* ibFormDocument::OnCreateCommandProcessor()
 {
-	CVisualDesignerCommandProcessor* commandProcessor = new CVisualDesignerCommandProcessor(GetVisualNotebook());
+	ibVisualDesignerCommandProcessor* commandProcessor = new ibVisualDesignerCommandProcessor(GetVisualNotebook());
 	commandProcessor->SetEditMenu(mainFrame->GetDefaultMenu(wxID_EDIT));
 	commandProcessor->Initialize();
 	return commandProcessor;

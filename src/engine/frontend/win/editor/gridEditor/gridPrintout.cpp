@@ -5,7 +5,7 @@
 
 #include "gridPrintout.h"
 
-CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(title)
+ibGridEditorPrintout::ibGridEditorPrintout(const wxString& title) : wxPrintout(title)
 {
 	SetStyle(wxGP_SHOW_NONE);
 
@@ -21,7 +21,7 @@ CGridEditorPrintout::CGridEditorPrintout(const wxString& title) : wxPrintout(tit
 	m_rightMargin = 50;
 }
 
-CGridEditorPrintout::CGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style, const wxString& title) : wxPrintout(title)
+ibGridEditorPrintout::ibGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style, const wxString& title) : wxPrintout(title)
 {
 	m_doc = doc;
 	SetStyle(style);
@@ -38,7 +38,7 @@ CGridEditorPrintout::CGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsh
 	m_rightMargin = 50;
 }
 
-void CGridEditorPrintout::SetStyle(int style)
+void ibGridEditorPrintout::SetStyle(int style)
 {
 	m_style = style;
 
@@ -65,12 +65,12 @@ void CGridEditorPrintout::SetStyle(int style)
 		m_showRlAlways = true;
 }
 
-int CGridEditorPrintout::GetStyle() const
+int ibGridEditorPrintout::GetStyle() const
 {
 	return m_style;
 }
 
-bool CGridEditorPrintout::OnPrintPage(int page)
+bool ibGridEditorPrintout::OnPrintPage(int page)
 {
 	wxDC* dc = GetDC();
 
@@ -87,12 +87,12 @@ bool CGridEditorPrintout::OnPrintPage(int page)
 	return DrawPage(dc, page);
 }
 
-bool CGridEditorPrintout::HasPage(int page)
+bool ibGridEditorPrintout::HasPage(int page)
 {
 	return true;
 }
 
-void CGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
+void ibGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFrom, int* selPageTo)
 {
 	*minPage = m_minPage;
 	*maxPage = m_maxPage;
@@ -100,7 +100,7 @@ void CGridEditorPrintout::GetPageInfo(int* minPage, int* maxPage, int* selPageFr
 	*selPageTo = m_selPageTo;
 }
 
-bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
+bool ibGridEditorPrintout::DrawPage(wxDC* dc, int page)
 {
 	int columnPages = m_colsPerPage.Count();
 	int rowPages = m_rowsPerPage.Count();
@@ -336,7 +336,7 @@ bool CGridEditorPrintout::DrawPage(wxDC* dc, int page)
 	return true;
 }
 
-void CGridEditorPrintout::OnPreparePrinting()
+void ibGridEditorPrintout::OnPreparePrinting()
 {
 	wxDC* dc = GetDC();
 	CalculateScale(dc);
@@ -398,7 +398,7 @@ void CGridEditorPrintout::OnPreparePrinting()
 	m_maxPage = m_rowsPerPage.GetCount() * m_colsPerPage.GetCount();
 }
 
-void CGridEditorPrintout::CalculateScale(wxDC* dc)
+void ibGridEditorPrintout::CalculateScale(wxDC* dc)
 {
 	// You might use THIS code to set the printer DC to roughly
 	// reflect the screen text size. This page also draws lines of
@@ -429,13 +429,13 @@ void CGridEditorPrintout::CalculateScale(wxDC* dc)
 	m_screenScale = screenScale;
 }
 
-void CGridEditorPrintout::SetUserScale(float scale)
+void ibGridEditorPrintout::SetUserScale(float scale)
 {
 	m_userScale = scale;
 	m_overallScale = m_screenScale * m_userScale;
 }
 
-void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
+void ibGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue, wxRect& rect, const wxFont& font, const wxColour& fontClr,
 	int horizAlign, int vertAlign, int textOrientation)
 {
 	wxArrayString lines, naturalLines;
@@ -460,7 +460,7 @@ void CGridEditorPrintout::DrawTextInRectangle(wxDC& dc, const wxString& strValue
 		lines, rect, horizAlign, vertAlign, textOrientation);
 }
 
-wxArrayString CGridEditorPrintout::GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect)
+wxArrayString ibGridEditorPrintout::GetTextLines(wxDC& dc, const wxString& data, const wxFont& font, const wxRect& rect)
 {
 	wxArrayString lines;
 

@@ -17,11 +17,11 @@
 #define wxGP_SHOW_RL_ALWAYS 0x0008 //show row labels on all pages
 #define wxGP_DEFAULT		0x0010 //default, shows all labels on all the pages.
 
-class FRONTEND_API CGridEditorPrintout : public wxPrintout {
+class FRONTEND_API ibGridEditorPrintout : public wxPrintout {
 public:
 
-	CGridEditorPrintout(const wxString& title = wxT("CGridEditorPrintout"));
-	CGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style = wxGP_SHOW_NONE, const wxString& title = wxT("CGridEditorPrintout"));
+	ibGridEditorPrintout(const wxString& title = wxT("ibGridEditorPrintout"));
+	ibGridEditorPrintout(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, int style = wxGP_SHOW_NONE, const wxString& title = wxT("ibGridEditorPrintout"));
 
 	void SetStyle(int style);
 	int GetStyle() const;

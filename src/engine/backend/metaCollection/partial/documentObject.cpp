@@ -12,21 +12,21 @@
 #include "backend/system/systemManager.h"
 
 //*********************************************************************************************
-//*                                  CRecorderRegisterDocument	                              *
+//*                                  ibRecorderRegisterDocument	                              *
 //*********************************************************************************************
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordDataObjectDocument::CRecorderRegisterDocument, ibValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueRecordDataObjectDocument::ibRecorderRegisterDocument, ibValue);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::CreateRecordSet()
 {
 	ibValueMetaObjectDocument* metaDocument = dynamic_cast<ibValueMetaObjectDocument*>(m_document->GetMetaObject());
 	wxASSERT(metaDocument);
 	ibMetaData* metaData = metaDocument->GetMetaData();
 	wxASSERT(metaData);
 
-	CRecorderRegisterDocument::ClearRecordSet();
+	ibRecorderRegisterDocument::ClearRecordSet();
 
 	const ibMetaDescription& metaDesc = metaDocument->GetRecordDescription();
 	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
@@ -43,7 +43,7 @@ void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::CreateRecordSet
 	PrepareNames();
 }
 
-bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::WriteRecordSet()
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::WriteRecordSet()
 {
 	for (auto& pair : m_records) {
 		ibValueRecordSetObject* record = pair.second;
@@ -61,7 +61,7 @@ bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::WriteRecordSet(
 	return true;
 }
 
-bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::DeleteRecordSet()
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::DeleteRecordSet()
 {
 	for (auto& pair : m_records) {
 		ibValueRecordSetObject* record = pair.second;
@@ -79,12 +79,12 @@ bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::DeleteRecordSet
 	return true;
 }
 
-void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::ClearRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::ClearRecordSet()
 {
 	m_records.clear();
 }
 
-void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::RefreshRecordSet()
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::RefreshRecordSet()
 {
 	for (auto& pair : m_records) {
 		ibValueRecordSetObject* record = pair.second;
@@ -97,15 +97,15 @@ void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::RefreshRecordSe
 	}
 }
 
-ibValueRecordDataObjectDocument::CRecorderRegisterDocument::CRecorderRegisterDocument(ibValueRecordDataObjectDocument* currentDoc) :
+ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::ibRecorderRegisterDocument(ibValueRecordDataObjectDocument* currentDoc) :
 	ibValue(ibValueTypes::TYPE_VALUE), m_document(currentDoc), m_methodHelper(new ibValueMethodHelper())
 {
-	CRecorderRegisterDocument::CreateRecordSet();
+	ibRecorderRegisterDocument::CreateRecordSet();
 }
 
-ibValueRecordDataObjectDocument::CRecorderRegisterDocument::~CRecorderRegisterDocument()
+ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::~ibRecorderRegisterDocument()
 {
-	CRecorderRegisterDocument::ClearRecordSet();
+	ibRecorderRegisterDocument::ClearRecordSet();
 	wxDELETE(m_methodHelper);
 }
 
@@ -115,13 +115,13 @@ ibValueRecordDataObjectDocument::CRecorderRegisterDocument::~CRecorderRegisterDo
 
 ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(ibValueMetaObjectDocument* metaObject, const ibGuid& objGuid) :
 	ibValueRecordDataObjectRef(metaObject, objGuid),
-	m_registerRecords(new CRecorderRegisterDocument(this))
+	m_registerRecords(new ibRecorderRegisterDocument(this))
 {
 }
 
 ibValueRecordDataObjectDocument::ibValueRecordDataObjectDocument(const ibValueRecordDataObjectDocument& source) :
 	ibValueRecordDataObjectRef(source),
-	m_registerRecords(new CRecorderRegisterDocument(this))
+	m_registerRecords(new ibRecorderRegisterDocument(this))
 {
 }
 
@@ -644,7 +644,7 @@ enum {
 	enWriteRegister = 0
 };
 
-void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() const
+void ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendFunc(wxT("Write"), wxT("Write()"));
@@ -660,12 +660,12 @@ void ibValueRecordDataObjectDocument::CRecorderRegisterDocument::PrepareNames() 
 	}
 }
 
-bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	auto& it = m_records.find(m_methodHelper->GetPropData(lPropNum));
 	if (it != m_records.end()) {
@@ -675,7 +675,7 @@ bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::GetPropVal(cons
 	return false;
 }
 
-bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
+bool ibValueRecordDataObjectDocument::ibRecorderRegisterDocument::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -691,4 +691,4 @@ bool ibValueRecordDataObjectDocument::CRecorderRegisterDocument::CallAsFunc(cons
 //*                       Register in runtime                           *
 //***********************************************************************
 
-SYSTEM_TYPE_REGISTER(ibValueRecordDataObjectDocument::CRecorderRegisterDocument, "RecorderRegister", string_to_clsid("VL_RGST"));
+SYSTEM_TYPE_REGISTER(ibValueRecordDataObjectDocument::ibRecorderRegisterDocument, "RecorderRegister", string_to_clsid("VL_RGST"));

@@ -7,7 +7,7 @@
 #include "backend/actionInfo.h"
 
 //base event for "list"
-class BACKEND_API CEventAction : public IEvent {
+class BACKEND_API CEventAction : public ibEvent {
 
 	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const;
 	wxPGChoices GetEventList() const {
@@ -155,21 +155,21 @@ public:
 
 	template <typename optClass>
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
 	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : IEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
+		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}

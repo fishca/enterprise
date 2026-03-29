@@ -24,7 +24,7 @@ void ibProperty::InitProperty(ibPropertyCategory* cat, const wxVariant& value)
 	DoSetValue(value);
 }
 
-void IEvent::InitEvent(ibPropertyCategory* cat, const wxVariant& value)
+void ibEvent::InitEvent(ibPropertyCategory* cat, const wxVariant& value)
 {
 	m_owner->AddEvent(this);
 	if (cat != nullptr) cat->AddEvent(this);
@@ -99,10 +99,10 @@ ibProperty* ibPropertyObject::GetProperty(unsigned int idx) const
 	return nullptr;
 }
 
-IEvent* ibPropertyObject::GetEvent(const wxString& nameParam) const
+ibEvent* ibPropertyObject::GetEvent(const wxString& nameParam) const
 {
-	std::map<wxString, IEvent*>::const_iterator it = std::find_if(m_events.begin(), m_events.end(),
-		[nameParam](const std::pair<wxString, IEvent*>& pair) {
+	std::map<wxString, ibEvent*>::const_iterator it = std::find_if(m_events.begin(), m_events.end(),
+		[nameParam](const std::pair<wxString, ibEvent*>& pair) {
 			return stringUtils::CompareString(nameParam, pair.first);
 		}
 	);
@@ -110,15 +110,15 @@ IEvent* ibPropertyObject::GetEvent(const wxString& nameParam) const
 	if (it != m_events.end())
 		return it->second;
 
-	//LogDebug("[ibPropertyObject::GetEvent] IEvent " + name + " not found!");
+	//LogDebug("[ibPropertyObject::GetEvent] ibEvent " + name + " not found!");
 	return nullptr;
 }
 
-IEvent* ibPropertyObject::GetEvent(unsigned int idx) const
+ibEvent* ibPropertyObject::GetEvent(unsigned int idx) const
 {
 	assert(idx < m_events.size());
 
-	std::map<wxString, IEvent*>::const_iterator it = m_events.begin();
+	std::map<wxString, ibEvent*>::const_iterator it = m_events.begin();
 	unsigned int i = 0;
 	while (i < idx && it != m_events.end()) {
 		i++; it++;
@@ -135,9 +135,9 @@ void ibPropertyObject::AddProperty(ibProperty* prop)
 	m_properties.emplace(std::map<wxString, ibProperty*>::value_type(prop->GetName(), prop));
 }
 
-void ibPropertyObject::AddEvent(IEvent* event)
+void ibPropertyObject::AddEvent(ibEvent* event)
 {
-	m_events.emplace(std::map<wxString, IEvent*>::value_type(event->GetName(), event));
+	m_events.emplace(std::map<wxString, ibEvent*>::value_type(event->GetName(), event));
 }
 
 unsigned int ibPropertyObject::GetPropertyIndex(const wxString& nameParam) const {
@@ -171,7 +171,7 @@ bool ibPropertyObject::PasteProperty(ibReaderMemory& reader)
 			std::shared_ptr <ibReaderMemory>eventDataReader(eventReader->open_chunk(iter_pos));
 			if (eventDataReader == nullptr)
 				break;
-			IEvent* event = GetEvent(eventDataReader->r_stringZ());
+			ibEvent* event = GetEvent(eventDataReader->r_stringZ());
 			if (event != nullptr && !event->PasteData(*eventDataReader))
 				return false;
 		};
@@ -197,7 +197,7 @@ bool ibPropertyObject::CopyProperty(ibWriterMemory& writer) const
 
 	ibWriterMemory eventWritter;
 	for (unsigned int idx = 0; idx < GetEventCount(); idx++) {
-		IEvent* event = GetEvent(idx);
+		ibEvent* event = GetEvent(idx);
 		wxASSERT(event);
 		ibWriterMemory eventDataWritter;
 		eventDataWritter.w_stringZ(event->GetName());
@@ -217,7 +217,7 @@ void ibPropertyCategory::AddProperty(ibProperty* property)
 	m_properties.emplace_back(property->GetName());
 }
 
-void ibPropertyCategory::AddEvent(IEvent* event)
+void ibPropertyCategory::AddEvent(ibEvent* event)
 {
 	m_events.emplace_back(event->GetName());
 }

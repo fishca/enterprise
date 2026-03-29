@@ -84,7 +84,7 @@ bool ibModuleEditView::OnClose(bool deleteWindow)
 
 wxPrintout* ibModuleEditView::OnCreatePrintout()
 {
-	return new CCodeEditorPrintout(m_codeEditor, m_viewDocument->GetTitle());
+	return new ibCodeEditorPrintout(m_codeEditor, m_viewDocument->GetTitle());
 }
 
 #include "frontend/artProvider/artProvider.h"

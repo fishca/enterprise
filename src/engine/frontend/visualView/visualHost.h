@@ -176,7 +176,7 @@ public:
 	virtual void ExpandControl(ibValueFrame* obj, bool expand) = 0;
 	virtual void SelectControl(ibValueFrame* obj) = 0;
 
-	virtual void ModifyEvent(class IEvent* event, const wxVariant& oldValue, const wxVariant& newValue) = 0;
+	virtual void ModifyEvent(class ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 	virtual void ModifyProperty(class ibProperty* prop, const wxVariant& oldValue, const wxVariant& newValue) = 0;
 
 	virtual void RefreshEditor() = 0;

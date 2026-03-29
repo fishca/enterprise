@@ -17,7 +17,7 @@
 class ibListBox : public wxSystemThemedControl<wxVListBox>
 {
 public:
-	ibListBox(wxWindow*, CListBoxVisualData*, int);
+	ibListBox(wxWindow*, ibListBoxVisualData*, int);
 
 	// wxWindow overrides
 	virtual bool AcceptsFocus() const override;
@@ -59,7 +59,7 @@ private:
 
 	WX_DECLARE_HASH_SET(int, wxIntegerHash, wxIntegerEqual, SetOfInts);
 
-	CListBoxVisualData* m_visualData;
+	ibListBoxVisualData* m_visualData;
 	wxVector<wxString>      m_labels;
 	wxVector<int>           m_imageNos;
 	size_t                  m_maxStrWidth;

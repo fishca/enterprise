@@ -238,7 +238,7 @@ public:
 
 	// call current event
 	template <typename ...Types>
-	bool CallAsEvent(const IEvent* event, Types&&... args) {
+	bool CallAsEvent(const ibEvent* event, Types&&... args) {
 		if (event == nullptr)
 			return false;
 		const wxString& eventValue = event->GetValue();
@@ -351,8 +351,8 @@ public:
 	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
 	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
 
-	virtual bool OnEventChanging(IEvent* event, const wxString& newValue);
-	virtual void OnEventChanged(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual bool OnEventChanging(ibEvent* event, const wxString& newValue);
+	virtual void OnEventChanged(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue);
 
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo

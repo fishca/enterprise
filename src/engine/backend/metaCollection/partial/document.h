@@ -209,8 +209,8 @@ private:
 
 class ibValueRecordDataObjectDocument : public ibValueRecordDataObjectRef {
 public:
-	class CRecorderRegisterDocument : public ibValue {
-		wxDECLARE_DYNAMIC_CLASS(CRecorderRegisterDocument);
+	class ibRecorderRegisterDocument : public ibValue {
+		wxDECLARE_DYNAMIC_CLASS(ibRecorderRegisterDocument);
 	public:
 
 		void CreateRecordSet();
@@ -220,8 +220,8 @@ public:
 
 		void RefreshRecordSet();
 
-		CRecorderRegisterDocument(ibValueRecordDataObjectDocument* currentDoc = nullptr);
-		virtual ~CRecorderRegisterDocument();
+		ibRecorderRegisterDocument(ibValueRecordDataObjectDocument* currentDoc = nullptr);
+		virtual ~ibRecorderRegisterDocument();
 
 		//standart override 
 		virtual ibValueMethodHelper* GetPMethods() const {
@@ -326,7 +326,7 @@ public:
 public:
 	virtual void SetDeletionMark(bool deletionMark = true);
 private:
-	ibValuePtr<CRecorderRegisterDocument> m_registerRecords;
+	ibValuePtr<ibRecorderRegisterDocument> m_registerRecords;
 	friend class ibValue;
 };
 

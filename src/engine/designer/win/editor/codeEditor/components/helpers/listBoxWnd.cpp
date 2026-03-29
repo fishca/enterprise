@@ -2,7 +2,7 @@
 
 #define EXTENT_TEST wxT(" `~!@#$%^&*()-_=+\\|[]{};:\"\'<,>.?/1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-ibListBox::ibListBox(wxWindow* parent, CListBoxVisualData* v, int ht)
+ibListBox::ibListBox(wxWindow* parent, ibListBoxVisualData* v, int ht)
 	:wxSystemThemedControl<wxVListBox>(),
 	m_visualData(v), m_maxStrWidth(0), m_currentRow(wxNOT_FOUND),
 	m_aveCharWidth(8), m_textHeight(ht), m_itemHeight(ht),

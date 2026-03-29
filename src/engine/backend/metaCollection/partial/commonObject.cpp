@@ -39,14 +39,14 @@ ibBackendValueForm* ibValueMetaObjectGenericData::GetGenericForm(const wxString&
 ibBackendValueForm* ibValueMetaObjectGenericData::CreateAndBuildForm(const wxString& strFormName, const ibFormID& form_id, ibBackendControlFrame* ownerControl, ibSourceDataObject* srcObject, const ibUniqueKey& formGuid)
 {
 #pragma region _source_guard_
-	class CSourceDataObjectGuard {
+	class ibSourceDataObjectGuard {
 	public:
 
-		CSourceDataObjectGuard(ibSourceDataObject* srcObject) : m_srcObject(srcObject) {
+		ibSourceDataObjectGuard(ibSourceDataObject* srcObject) : m_srcObject(srcObject) {
 			if (m_srcObject != nullptr) m_srcObject->SourceIncrRef();
 		}
 
-		~CSourceDataObjectGuard() {
+		~ibSourceDataObjectGuard() {
 			if (m_srcObject != nullptr) m_srcObject->SourceDecrRef();
 		}
 
@@ -54,7 +54,7 @@ ibBackendValueForm* ibValueMetaObjectGenericData::CreateAndBuildForm(const wxStr
 		ibSourceDataObject* m_srcObject;
 	};
 
-	CSourceDataObjectGuard sourceGuard(srcObject);
+	ibSourceDataObjectGuard sourceGuard(srcObject);
 #pragma endregion
 
 	ibValueMetaObjectFormBase* creator = nullptr;

@@ -10,7 +10,7 @@ class BACKEND_API ibPropertyObject;
 ///////////////////////////////////////////////////////////////////////////////
 
 class BACKEND_API ibProperty;
-class BACKEND_API IEvent;
+class BACKEND_API ibEvent;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +35,7 @@ public:
 	}
 
 	void AddProperty(ibProperty* property);
-	void AddEvent(IEvent* event);
+	void AddEvent(ibEvent* event);
 	void AddCategory(ibPropertyCategory* cat);
 
 	wxString GetName() const { return m_catName; }
@@ -226,15 +226,15 @@ public:
 	virtual bool PasteData(ibReaderMemory& reader);
 };
 
-class BACKEND_API IEvent : public ibBackendCellField {
+class BACKEND_API ibEvent : public ibBackendCellField {
 	void InitEvent(ibPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendCellField(cat, name, value) { InitEvent(cat, value); }
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
-	IEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :ibBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendCellField(cat, name, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :ibBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
 public:
 	const wxArrayString& GetArgs() const { return m_args; }
 protected:
@@ -284,7 +284,7 @@ protected:
 	ibPropertyObject() /*: m_parent(nullptr)*/ { m_category = new ibPropertyCategory(this); }
 
 	friend class ibProperty;
-	friend class IEvent;
+	friend class ibEvent;
 
 	/**
 	* Añade una propiedad al objeto.
@@ -294,7 +294,7 @@ protected:
 	* Los objetos siempre se crearán a través del registro de descriptores.
 	*/
 	void AddProperty(ibProperty* property);
-	void AddEvent(IEvent* event);
+	void AddEvent(ibEvent* event);
 
 public:
 
@@ -322,7 +322,7 @@ public:
 	*       se hace a través de la referencia.
 	*/
 	ibProperty* GetProperty(const wxString& nameParam) const;
-	IEvent* GetEvent(const wxString& nameParam) const;
+	ibEvent* GetEvent(const wxString& nameParam) const;
 
 	/**
 	* Obtiene el número de propiedades del objeto.
@@ -331,7 +331,7 @@ public:
 	unsigned int GetEventCount() const { return m_events.size(); }
 
 	ibProperty* GetProperty(unsigned int idx) const; // throws ...;
-	IEvent* GetEvent(unsigned int idx) const; // throws ...;
+	ibEvent* GetEvent(unsigned int idx) const; // throws ...;
 
 	/**
 	* Obtiene el número de hijos del objeto.
@@ -369,14 +369,14 @@ public:
 	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
 	/**
-	* IEvent events
+	* ibEvent events
 	*/
 	virtual void OnEventCreated() {}
-	virtual void OnEventCreated(IEvent* event) {}
-	virtual void OnEventRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, IEvent* event) {}
-	virtual void OnEventSelected(IEvent* event) {}
-	virtual bool OnEventChanging(IEvent* event, const wxVariant& newValue) { return true; }
-	virtual void OnEventChanged(IEvent* property, const wxVariant& oldValue, const wxVariant& newValue) {}
+	virtual void OnEventCreated(ibEvent* event) {}
+	virtual void OnEventRefresh(class wxPropertyGridManager* pg, class wxPGProperty* pgProperty, ibEvent* event) {}
+	virtual void OnEventSelected(ibEvent* event) {}
+	virtual bool OnEventChanging(ibEvent* event, const wxVariant& newValue) { return true; }
+	virtual void OnEventChanged(ibEvent* property, const wxVariant& oldValue, const wxVariant& newValue) {}
 
 	/**
 	* Comprueba si el tipo es derivado del que se pasa como parámetro.
@@ -396,7 +396,7 @@ protected:
 private:
 
 	std::map<wxString, ibProperty*> m_properties;
-	std::map<wxString, IEvent*> m_events;
+	std::map<wxString, ibEvent*> m_events;
 };
 
 template <typename T>

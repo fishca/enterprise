@@ -11,10 +11,10 @@
 #include <vector>
 #include <algorithm>
 
-CAutoComplete::CAutoComplete(wxStyledTextCtrl* textCtrl) :
+ibAutoComplete::ibAutoComplete(wxStyledTextCtrl* textCtrl) :
 	active(false),
 	lb(nullptr),
-	m_visualData(new CListBoxVisualData(5)),
+	m_visualData(new ibListBoxVisualData(5)),
 	m_evtHandler(nullptr),
 	m_owner(textCtrl),
 	posStart(0),
@@ -24,7 +24,7 @@ CAutoComplete::CAutoComplete(wxStyledTextCtrl* textCtrl) :
 {
 }
 
-CAutoComplete::~CAutoComplete()
+ibAutoComplete::~ibAutoComplete()
 {
 	if (lb)
 	{
@@ -35,18 +35,18 @@ CAutoComplete::~CAutoComplete()
 	delete m_visualData;
 }
 
-bool CAutoComplete::Active() const
+bool ibAutoComplete::Active() const
 {
 	return active;
 }
 
-void CAutoComplete::Start(const wxString& strCurWord,
+void ibAutoComplete::Start(const wxString& strCurWord,
 	int position, int startLen_,
 	int lineHeight)
 {
 	if (active) Cancel();
 
-	lb = new COESListBoxWin(m_owner, m_visualData, m_owner->TextHeight(m_owner->GetCurrentLine()));
+	lb = new ibOESListBoxWin(m_owner, m_visualData, m_owner->TextHeight(m_owner->GetCurrentLine()));
 	lb->SetSize(225, 200);
 
 	active = true;
@@ -58,34 +58,34 @@ void CAutoComplete::Start(const wxString& strCurWord,
 	ibListBox* m_listBox = lb->GetListBox();
 	m_listBox->SetListBoxFont(m_owner->StyleGetFont(wxSTC_STYLE_DEFAULT));
 
-	m_listBox->Bind(wxEVT_LISTBOX, &CAutoComplete::OnSelection, this);
-	m_listBox->Bind(wxEVT_LISTBOX_DCLICK, &CAutoComplete::OnSelection, this);
+	m_listBox->Bind(wxEVT_LISTBOX, &ibAutoComplete::OnSelection, this);
+	m_listBox->Bind(wxEVT_LISTBOX_DCLICK, &ibAutoComplete::OnSelection, this);
 
-	m_listBox->Bind(wxEVT_MOTION, &CAutoComplete::OnMouseMotion, this);
+	m_listBox->Bind(wxEVT_MOTION, &ibAutoComplete::OnMouseMotion, this);
 
 	m_evtHandler = new wxEvtHandler;
-	m_evtHandler->Bind(wxEVT_KEY_DOWN, &CAutoComplete::OnKeyDown, this);
+	m_evtHandler->Bind(wxEVT_KEY_DOWN, &ibAutoComplete::OnKeyDown, this);
 
 	//focus kill/set
-	m_evtHandler->Bind(wxEVT_SET_FOCUS, &CAutoComplete::OnProcessFocus, this);
-	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &CAutoComplete::OnProcessFocus, this);
-	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &CAutoComplete::OnProcessChildFocus, this);
+	m_evtHandler->Bind(wxEVT_SET_FOCUS, &ibAutoComplete::OnProcessFocus, this);
+	m_evtHandler->Bind(wxEVT_KILL_FOCUS, &ibAutoComplete::OnProcessFocus, this);
+	m_evtHandler->Bind(wxEVT_CHILD_FOCUS, &ibAutoComplete::OnProcessChildFocus, this);
 
 	//on sizing 
-	m_evtHandler->Bind(wxEVT_SIZE, &CAutoComplete::OnProcessSize, this);
-	m_evtHandler->Bind(wxEVT_SIZING, &CAutoComplete::OnProcessSize, this);
+	m_evtHandler->Bind(wxEVT_SIZE, &ibAutoComplete::OnProcessSize, this);
+	m_evtHandler->Bind(wxEVT_SIZING, &ibAutoComplete::OnProcessSize, this);
 
 	//on mouse event
-	m_evtHandler->Bind(wxEVT_LEFT_DCLICK, &CAutoComplete::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_RIGHT_DCLICK, &CAutoComplete::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_MIDDLE_DCLICK, &CAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_LEFT_DCLICK, &ibAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_RIGHT_DCLICK, &ibAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_MIDDLE_DCLICK, &ibAutoComplete::OnProcessMouse, this);
 
-	m_evtHandler->Bind(wxEVT_LEFT_UP, &CAutoComplete::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_RIGHT_UP, &CAutoComplete::OnProcessMouse, this);
-	m_evtHandler->Bind(wxEVT_MIDDLE_UP, &CAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_LEFT_UP, &ibAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_RIGHT_UP, &ibAutoComplete::OnProcessMouse, this);
+	m_evtHandler->Bind(wxEVT_MIDDLE_UP, &ibAutoComplete::OnProcessMouse, this);
 }
 
-void CAutoComplete::Append(short type, const wxString& strName, const wxString& desc)
+void ibAutoComplete::Append(short type, const wxString& strName, const wxString& desc)
 {
 	if (strName.IsEmpty())
 		return;
@@ -105,17 +105,17 @@ void CAutoComplete::Append(short type, const wxString& strName, const wxString& 
 	);
 }
 
-int CAutoComplete::GetSelection() const
+int ibAutoComplete::GetSelection() const
 {
 	return lb->GetListBox()->GetSelection();
 }
 
-wxString CAutoComplete::GetValue(int item) const
+wxString ibAutoComplete::GetValue(int item) const
 {
 	return lb->GetListBox()->GetValue(item);
 }
 
-void CAutoComplete::Show(const wxPoint& position)
+void ibAutoComplete::Show(const wxPoint& position)
 {
 	if (!active) return;
 	if (!m_aKeywords.size()) {
@@ -125,7 +125,7 @@ void CAutoComplete::Show(const wxPoint& position)
 	ibListBox* m_listBox = lb->GetListBox();
 
 	std::sort(m_aKeywords.begin(), m_aKeywords.end(),
-		[](keywordElement_t a, keywordElement_t b) {
+		[](ibKeywordElement a, ibKeywordElement b) {
 			return a.m_name.CompareTo(b.m_name, wxString::caseCompare::ignoreCase) < 0;
 		}
 	);
@@ -139,7 +139,7 @@ void CAutoComplete::Show(const wxPoint& position)
 	else if (lb->Show()) m_listBox->Select(0);
 }
 
-void CAutoComplete::Cancel()
+void ibAutoComplete::Cancel()
 {
 	active = false;
 	strCurrentWord = wxEmptyString;
@@ -153,7 +153,7 @@ void CAutoComplete::Cancel()
 	wxDELETE(m_evtHandler);
 }
 
-void CAutoComplete::MoveUp()
+void ibAutoComplete::MoveUp()
 {
 	int count = lb->GetListBox()->Length();
 	int current = lb->GetListBox()->GetSelection();
@@ -168,7 +168,7 @@ void CAutoComplete::MoveUp()
 	lb->GetListBox()->Select(current);
 }
 
-void CAutoComplete::MoveDown()
+void ibAutoComplete::MoveDown()
 {
 	int count = lb->GetListBox()->Length();
 	int current = lb->GetListBox()->GetSelection();
@@ -185,11 +185,11 @@ void CAutoComplete::MoveDown()
 
 #include "../codeEditor.h"
 
-void CAutoComplete::Select(int index)
+void ibAutoComplete::Select(int index)
 {
 	wxString sDescription; bool m_bNeedCallTip = false;
 
-	std::vector< keywordElement_t>::iterator m_selectedKeyword = m_aKeywords.begin() + index;
+	std::vector< ibKeywordElement>::iterator m_selectedKeyword = m_aKeywords.begin() + index;
 
 	if (m_selectedKeyword != m_aKeywords.end())
 	{
@@ -223,7 +223,7 @@ void CAutoComplete::Select(int index)
 	}
 }
 
-bool CAutoComplete::CallEvent(wxEvent& event)
+bool ibAutoComplete::CallEvent(wxEvent& event)
 {
 	if (!active) return false;
 	bool result = m_evtHandler->ProcessEvent(event);
@@ -240,7 +240,7 @@ bool CAutoComplete::CallEvent(wxEvent& event)
 
 #include "frontend/artProvider/artProvider.h"
 
-wxBitmap CAutoComplete::GetImageByType(short type) const
+wxBitmap ibAutoComplete::GetImageByType(short type) const
 {
 	if (type == eProcedure || type == eExportProcedure)
 		return wxArtProvider::GetBitmap(wxART_PROCEDURE_RED, wxART_AUTOCOMPLETE);
@@ -251,12 +251,12 @@ wxBitmap CAutoComplete::GetImageByType(short type) const
 	return wxNullBitmap;
 }
 
-void CAutoComplete::OnSelection(wxCommandEvent& event)
+void ibAutoComplete::OnSelection(wxCommandEvent& event)
 {
 	Select(event.GetSelection());
 }
 
-void CAutoComplete::OnKeyDown(wxKeyEvent& event)
+void ibAutoComplete::OnKeyDown(wxKeyEvent& event)
 {
 	ibListBox* m_listBox = lb->GetListBox();
 
@@ -272,12 +272,12 @@ void CAutoComplete::OnKeyDown(wxKeyEvent& event)
 	}
 }
 
-void CAutoComplete::OnMouseMotion(wxMouseEvent& event)
+void ibAutoComplete::OnMouseMotion(wxMouseEvent& event)
 {
 	ibListBox* listBox = lb->GetListBox();
 	int currentRow = listBox->VirtualHitTest(event.GetY());
 	if (currentRow != wxNOT_FOUND) {
-		std::vector< keywordElement_t>::iterator selectedKeyword = m_aKeywords.begin() + currentRow;
+		std::vector< ibKeywordElement>::iterator selectedKeyword = m_aKeywords.begin() + currentRow;
 
 		if (selectedKeyword->m_shortDescription.IsEmpty())
 			listBox->SetToolTip(nullptr);
@@ -288,22 +288,22 @@ void CAutoComplete::OnMouseMotion(wxMouseEvent& event)
 	event.Skip();
 }
 
-void CAutoComplete::OnProcessFocus(wxFocusEvent& event)
+void ibAutoComplete::OnProcessFocus(wxFocusEvent& event)
 {
 	Cancel();
 }
 
-void CAutoComplete::OnProcessChildFocus(wxChildFocusEvent& event)
+void ibAutoComplete::OnProcessChildFocus(wxChildFocusEvent& event)
 {
 	Cancel();
 }
 
-void CAutoComplete::OnProcessSize(wxSizeEvent& event)
+void ibAutoComplete::OnProcessSize(wxSizeEvent& event)
 {
 	Cancel();
 }
 
-void CAutoComplete::OnProcessMouse(wxMouseEvent& event)
+void ibAutoComplete::OnProcessMouse(wxMouseEvent& event)
 {
 	Cancel();
 }

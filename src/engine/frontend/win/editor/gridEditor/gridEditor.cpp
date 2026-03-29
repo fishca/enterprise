@@ -127,9 +127,9 @@ ibGridEditor::~ibGridEditor()
 
 #include "gridPrintout.h"
 
-CGridEditorPrintout* ibGridEditor::CreatePrintout() const
+ibGridEditorPrintout* ibGridEditor::CreatePrintout() const
 {
-	return new CGridEditorPrintout(m_spreadsheetObject, wxGP_SHOW_NONE, m_document ? m_document->GetTitle() : _("Spreadsheet document"));
+	return new ibGridEditorPrintout(m_spreadsheetObject, wxGP_SHOW_NONE, m_document ? m_document->GetTitle() : _("Spreadsheet document"));
 }
 
 #pragma region commands

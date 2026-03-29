@@ -57,7 +57,7 @@ bool ibVisualEditorNotebook::CanRedo() const
 	return false;
 }
 
-void ibVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
+void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	ibParserModule parser; bool procFounded = false;
 

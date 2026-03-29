@@ -173,7 +173,7 @@ void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::AddItem(i
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Enterprise IEvent Handlers
+// Enterprise ibEvent Handlers
 /////////////////////////////////////////////////////////////////////////////
 
 void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorObjectTree::OnEditorLoaded()

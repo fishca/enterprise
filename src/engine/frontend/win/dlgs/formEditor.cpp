@@ -11,9 +11,9 @@ enum {
 };
 
 #pragma region __command_h__
-class CModifyPropertyCmd : public ibFormEditorCmd {
+class ibModifyPropertyCmd : public ibFormEditorCmd {
 public:
-	CModifyPropertyCmd(ibValueFrame* object, ibProperty* prop, const wxVariant& newValue)
+	ibModifyPropertyCmd(ibValueFrame* object, ibProperty* prop, const wxVariant& newValue)
 		: m_object(object), m_property(prop), m_newValue(newValue)
 	{
 	}
@@ -28,9 +28,9 @@ private:
 	wxVariant m_newValue;
 };
 
-class CShiftChildCmd : public ibFormEditorCmd {
+class ibShiftChildCmd : public ibFormEditorCmd {
 public:
-	CShiftChildCmd(ibValueFrame* object, int pos)
+	ibShiftChildCmd(ibValueFrame* object, int pos)
 		: m_object(object), m_newPos(pos)
 	{
 	}
@@ -400,7 +400,7 @@ void ibDialogFormEditor::OnPropertyGridChanging(wxPropertyGridEvent& event)
 	auto it = m_pgArray.find(event.GetProperty());
 	if (it != m_pgArray.end()) {
 		ExecuteCommand(
-			new CModifyPropertyCmd(m_selectedControl, it->second, event.GetValue())
+			new ibModifyPropertyCmd(m_selectedControl, it->second, event.GetValue())
 		);
 	}
 
@@ -494,7 +494,7 @@ void ibDialogFormEditor::MovePosition(ibValueFrame* move_obj, bool right, unsign
 				parent = object->GetParent();
 			}
 
-			ExecuteCommand(new CShiftChildCmd(object, (right ? num : -1 * num)));
+			ExecuteCommand(new ibShiftChildCmd(object, (right ? num : -1 * num)));
 		}
 
 		m_listItem[move_obj] = inserted_item;

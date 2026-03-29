@@ -1,16 +1,16 @@
 #include "eventAction.h"
 #include "backend/propertyManager/property/variant/variantAction.h"
 
-wxVariantData* CEventAction::CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const
+wxVariantData* ibEventAction::CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const
 {
 	return new ibVariantDataAction(act);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-ibActionID CEventAction::GetValueAsInteger() const {
+ibActionID ibEventAction::GetValueAsInteger() const {
 	const ibActionID sel = GetValueAsActionDesc().GetSystemAction();
-	if (m_functor->Invoke(const_cast<CEventAction*>(this))) {
+	if (m_functor->Invoke(const_cast<ibEventAction*>(this))) {
 		for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 			if (m_listPropValue.GetItemId(idx) == sel) {
 				return sel;
@@ -20,17 +20,17 @@ ibActionID CEventAction::GetValueAsInteger() const {
 	return wxNOT_FOUND;
 }
 
-wxString CEventAction::GetValueAsString() const
+wxString ibEventAction::GetValueAsString() const
 {
 	return GetValueAsActionDesc().GetCustomAction();
 }
 
-ibActionDescription& CEventAction::GetValueAsActionDesc() const
+ibActionDescription& ibEventAction::GetValueAsActionDesc() const
 {
 	return get_cell_variant<ibVariantDataAction>()->GetValueAsActionDesc();
 }
 
-void CEventAction::SetValue(const ibActionDescription& val)
+void ibEventAction::SetValue(const ibActionDescription& val)
 {
 	m_propValue = CreateVariantData(m_owner, val);
 }
@@ -38,7 +38,7 @@ void CEventAction::SetValue(const ibActionDescription& val)
 ////////////////////////////////////////////////////////////////////////
 
 //base property for "action"
-bool CEventAction::SetDataValue(const ibValue& varPropVal)
+bool ibEventAction::SetDataValue(const ibValue& varPropVal)
 {
 	if (!m_functor->Invoke(this))
 		return false;
@@ -51,9 +51,9 @@ bool CEventAction::SetDataValue(const ibValue& varPropVal)
 	return false;
 }
 
-bool CEventAction::GetDataValue(ibValue& pvarPropVal) const
+bool ibEventAction::GetDataValue(ibValue& pvarPropVal) const
 {
-	if (!m_functor->Invoke(const_cast<CEventAction*>(this)))
+	if (!m_functor->Invoke(const_cast<ibEventAction*>(this)))
 		return false;
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
 		if (m_listPropValue.GetItemId(idx) == GetValueAsInteger()) {
@@ -79,12 +79,12 @@ bool ibActionDescriptionMemory::SaveData(ibWriterMemory& writer, ibActionDescrip
 }
 
 
-bool CEventAction::LoadData(ibReaderMemory& reader)
+bool ibEventAction::LoadData(ibReaderMemory& reader)
 {
 	return ibActionDescriptionMemory::LoadData(reader, GetValueAsActionDesc());
 }
 
-bool CEventAction::SaveData(ibWriterMemory& writer)
+bool ibEventAction::SaveData(ibWriterMemory& writer)
 {
 	return ibActionDescriptionMemory::SaveData(writer, GetValueAsActionDesc());
 }

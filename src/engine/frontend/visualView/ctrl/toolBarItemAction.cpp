@@ -3,7 +3,7 @@
 
 #include "backend/system/value/valueEvent.h"
 
-bool ibValueToolBarItem::GetToolAction(CEventAction* evtList)
+bool ibValueToolBarItem::GetToolAction(ibEventAction* evtList)
 {
 	ibValueToolbar* toolbar = dynamic_cast<ibValueToolbar*> (m_parent);
 	if (toolbar == nullptr) return false;

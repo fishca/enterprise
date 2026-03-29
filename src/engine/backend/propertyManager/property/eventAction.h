@@ -7,7 +7,7 @@
 #include "backend/actionInfo.h"
 
 //base event for "list"
-class BACKEND_API CEventAction : public ibEvent {
+class BACKEND_API ibEventAction : public ibEvent {
 
 	wxVariantData* CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const;
 	wxPGChoices GetEventList() const {
@@ -23,44 +23,36 @@ class BACKEND_API CEventAction : public ibEvent {
 		return constants;
 	}
 
-	class BACKEND_API CEventOptionList {
+	class BACKEND_API ibEventOptionList {
 
-		struct CEventOptionItem {
-			bool m_isOk;
-			wxString m_strName;
-			wxString m_strLabel;
-			wxString m_strHelp;
-			wxBitmap m_bmp;
-			ibActionID m_id;
-			ibValue m_value;
-		public:
+		struct ibEventOptionItem {
 
-			CEventOptionItem() :
+			ibEventOptionItem() :
 				m_strName(), m_strLabel(), m_id(wxNOT_FOUND), m_value(), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
+			ibEventOptionItem(const wxString& name, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(name), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
+			ibEventOptionItem(const wxString& name, const wxString& label, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(label), m_bmp(b), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
+			ibEventOptionItem(const wxString& name, const wxString& label, const wxString& help, const ibActionID& l, const wxBitmap& b, const ibValue& v) :
 				m_strName(name), m_strLabel(label), m_bmp(b), m_strHelp(help), m_id(l), m_value(v), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem(const CEventOptionItem& item) :
+			ibEventOptionItem(const ibEventOptionItem& item) :
 				m_strName(item.m_strName), m_strLabel(item.m_strLabel), m_strHelp(item.m_strHelp), m_bmp(item.m_bmp), m_id(item.m_id), m_value(item.m_value), m_isOk(true)
 			{
 			}
 
-			CEventOptionItem& operator = (const CEventOptionItem& src) {
+			ibEventOptionItem& operator = (const ibEventOptionItem& src) {
 				m_strName = src.m_strName;
 				m_strLabel = src.m_strLabel;
 				m_strHelp = src.m_strHelp;
@@ -71,23 +63,31 @@ class BACKEND_API CEventAction : public ibEvent {
 			}
 
 			operator const ibActionID() const { return m_id; }
+
+			bool m_isOk;
+			wxString m_strName;
+			wxString m_strLabel;
+			wxString m_strHelp;
+			wxBitmap m_bmp;
+			ibActionID m_id;
+			ibValue m_value;
 		};
 
-		CEventOptionItem GetItemAt(const unsigned int idx) const {
+		ibEventOptionItem GetItemAt(const unsigned int idx) const {
 			if (idx > m_listValue.size())
-				return CEventOptionItem();
+				return ibEventOptionItem();
 			auto it = m_listValue.begin();
 			std::advance(it, idx);
 			return *it;
 		};
 
-		CEventOptionItem GetItemById(const ibActionID& id) const {
+		ibEventOptionItem GetItemById(const ibActionID& id) const {
 			auto it = std::find_if(m_listValue.begin(), m_listValue.end(),
-				[id](const CEventOptionItem& p) { return id == p.m_id; }
+				[id](const ibEventOptionItem& p) { return id == p.m_id; }
 			);
 			if (it != m_listValue.end())
 				return *it;
-			return CEventOptionItem();
+			return ibEventOptionItem();
 		};
 
 	public:
@@ -110,31 +110,32 @@ class BACKEND_API CEventAction : public ibEvent {
 		unsigned int GetItemCount() const { return (unsigned int)m_listValue.size(); }
 
 	private:
-		std::vector<CEventOptionItem> m_listValue;
+		std::vector<ibEventOptionItem> m_listValue;
 	};
 
 	class BACKEND_API ibEventFunctor {
 	public:
 		virtual ~ibEventFunctor() {}
-		virtual bool Invoke(CEventAction* property) = 0;
+		virtual bool Invoke(ibEventAction* property) = 0;
 	};
 
 	template <typename optClass>
 	class ibEventValueFunctor : public ibEventFunctor {
-		bool (optClass::* m_funcHandler)(CEventAction* evt);
+		bool (optClass::* m_funcHandler)(ibEventAction* evt);
 	public:
-		ibEventValueFunctor(bool (optClass::* funcHandler)(CEventAction* evt), optClass* handler)
+		ibEventValueFunctor(bool (optClass::* funcHandler)(ibEventAction* evt), optClass* handler)
 			: m_funcHandler(funcHandler), m_handler(handler)
 		{
 		}
-		virtual bool Invoke(CEventAction* property) override {
-			const CEventOptionList listPropValue = property->m_listPropValue;
+		virtual bool Invoke(ibEventAction* property) override {
+			const ibEventOptionList listPropValue = property->m_listPropValue;
 			if (property != nullptr) property->ResetListItem();
 			return (m_handler->*m_funcHandler)(property);
 		}
 	private:
 		optClass* m_handler;
 	};
+
 #pragma region item 
 	void ResetListItem() { (void)m_listPropValue.ResetListItem(); }
 #pragma endregion
@@ -154,33 +155,33 @@ public:
 #pragma endregion
 
 	template <typename optClass>
-	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
+	ibEventAction(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args,
+		bool (optClass::* funcHandler)(ibEventAction* evt), const ibActionID& value) : ibEvent(cat, name, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
-	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
+	ibEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args,
+		bool (optClass::* funcHandler)(ibEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
 	template <typename optClass>
-	CEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
-		bool (optClass::* funcHandler)(CEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
+	ibEventAction(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args,
+		bool (optClass::* funcHandler)(ibEventAction* evt), const ibActionID& value) : ibEvent(cat, name, label, helpString, args, CreateVariantData(cat->GetPropertyObject(), value))
 	{
 		m_functor = new ibEventValueFunctor<optClass>(funcHandler, (optClass*)cat->GetPropertyObject());
 	}
 
-	virtual ~CEventAction() { wxDELETE(m_functor); }
+	virtual ~ibEventAction() { wxDELETE(m_functor); }
 
 	virtual bool IsEmptyProperty() const { return GetValueAsInteger() == wxNOT_FOUND; }
 
 	//get property for grid 
 	virtual wxPGProperty* GetPGProperty() const {
-		if (!m_functor->Invoke(const_cast<CEventAction*>(this)))
+		if (!m_functor->Invoke(const_cast<ibEventAction*>(this)))
 			return nullptr;
 		return new wxEventToolProperty(m_propLabel, m_propName, GetEventList(), m_propValue);
 	}
@@ -194,7 +195,7 @@ public:
 	virtual bool SaveData(ibWriterMemory& writer);
 
 private:
-	CEventOptionList m_listPropValue;
+	ibEventOptionList m_listPropValue;
 	ibEventFunctor* m_functor;
 };
 

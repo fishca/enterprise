@@ -5,20 +5,20 @@
 #include "backend/propertyManager/property/advprop/advpropEvent.h"
 
 //base property for "event"
-class BACKEND_API CEventControl : public ibEvent {
+class BACKEND_API ibEventControl : public ibEvent {
 public:
 
-	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args)
+	ibEventControl(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args)
 		: ibEvent(cat, name, args, wxEmptyString)
 	{
 	}
 
-	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args)
+	ibEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args)
 		: ibEvent(cat, name, label, args, wxEmptyString)
 	{
 	}
 
-	CEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args)
+	ibEventControl(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args)
 		: ibEvent(cat, name, label, helpString, args, wxEmptyString)
 	{
 	}

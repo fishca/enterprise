@@ -223,7 +223,7 @@ public:
 	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
-	bool GetToolAction(CEventAction* evtList);
+	bool GetToolAction(ibEventAction* evtList);
 private:
 
 	ibPropertyCategory* m_categoryToolbar = ibPropertyObject::CreatePropertyCategory(wxT("ToolBarItem"), _("Item"));
@@ -235,7 +235,7 @@ private:
 	ibPropertyTString* m_properyTooltip = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categoryToolbar, wxT("Tooltip"), _("Tooltip"), wxEmptyString);
 	ibPropertyBoolean* m_propertyEnabled = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categoryToolbar, wxT("Enabled"), _("Enabled"), true);
 
-	CEventAction* m_eventAction = ibPropertyObject::CreateEvent<CEventAction>(m_categoryToolbar, wxT("Action"), _("Action"), wxArrayString{ wxT("Control") }, &ibValueToolBarItem::GetToolAction, wxNOT_FOUND);
+	ibEventAction* m_eventAction = ibPropertyObject::CreateEvent<ibEventAction>(m_categoryToolbar, wxT("Action"), _("Action"), wxArrayString{ wxT("Control") }, &ibValueToolBarItem::GetToolAction, wxNOT_FOUND);
 
 	friend class ibValueForm;
 	friend class ibValueToolbar;

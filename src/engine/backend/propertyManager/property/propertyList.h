@@ -61,14 +61,6 @@ class BACKEND_API ibPropertyList : public ibProperty {
 	class BACKEND_API ibPropertyOptionList {
 
 		struct ibPropertyOptionItem {
-			bool m_isOk;
-			wxString m_strName;
-			wxString m_strLabel;
-			wxString m_strHelp;
-			wxBitmap m_bmp;
-			long m_id;
-			ibPropertyOptionValue m_value;
-		public:
 
 			ibPropertyOptionItem() :
 				m_strName(), m_strLabel(), m_id(-1), m_value(), m_isOk(true)
@@ -105,6 +97,14 @@ class BACKEND_API ibPropertyList : public ibProperty {
 			}
 
 			operator const long() const { return m_id; }
+
+			bool m_isOk;
+			wxString m_strName;
+			wxString m_strLabel;
+			wxString m_strHelp;
+			wxBitmap m_bmp;
+			long m_id;
+			ibPropertyOptionValue m_value;
 		};
 
 		ibPropertyOptionItem GetItemAt(const unsigned int idx) const {

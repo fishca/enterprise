@@ -69,7 +69,6 @@ private:
 	ibVisualHostClient* m_visualHost;
 };
 
-
 class FRONTEND_API ibFormVisualCommandProcessor : public wxCommandProcessor {
 
 public:
@@ -116,7 +115,7 @@ public:
 
 	static ibFormVisualDocument* FindDocByUniqueKey(const ibUniqueKey& guid);
 
-	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
+	static bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid);
 
 protected:
 	virtual ibMetaView* DoCreateView();
@@ -124,10 +123,10 @@ private:
 	ibValuePtr<ibValueForm> m_valueForm;
 };
 
-class FRONTEND_API ibFormVisualDemoDocument : public ibFormVisualDocument {
+class FRONTEND_API ibFormVisualDocumentDemo : public ibFormVisualDocument {
 public:
 
-	ibFormVisualDemoDocument(ibValueForm* valueForm) :
+	ibFormVisualDocumentDemo(ibValueForm* valueForm) :
 		ibFormVisualDocument(valueForm)
 	{
 	}

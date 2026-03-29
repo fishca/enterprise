@@ -1055,16 +1055,16 @@ public:
 	ibValueRecordKeyObject* CreateRecordKeyObjectValue();
 
 	ibValueRecordSetObject* CreateRecordSetObjectValue(bool needInitialize = true);
-	ibValueRecordSetObject* CreateRecordSetObjectValue(const CUniquePairKey& uniqueKey, bool needInitialize = true);
+	ibValueRecordSetObject* CreateRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey, bool needInitialize = true);
 	ibValueRecordSetObject* CreateRecordSetObjectValue(ibValueRecordSetObject* source, bool needInitialize = true);
 
-	ibValueRecordSetObject* CopyRecordSetObjectValue(const CUniquePairKey& uniqueKey);
+	ibValueRecordSetObject* CopyRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey);
 
 	ibValueRecordManagerObject* CreateRecordManagerObjectValue();
-	ibValueRecordManagerObject* CreateRecordManagerObjectValue(const CUniquePairKey& uniqueKey);
+	ibValueRecordManagerObject* CreateRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey);
 	ibValueRecordManagerObject* CreateRecordManagerObjectValue(ibValueRecordManagerObject* source);
 
-	ibValueRecordManagerObject* CopyRecordManagerObjectValue(const CUniquePairKey& uniqueKey);
+	ibValueRecordManagerObject* CopyRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey);
 
 	//get module object in compose object 
 	virtual ibValueMetaObjectModule* GetModuleObject() const { return nullptr; }
@@ -1134,8 +1134,8 @@ protected:
 
 	///////////////////////////////////////////////////////////////////
 
-	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey) = 0;
-	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey) { return nullptr; }
+	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) = 0;
+	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) { return nullptr; }
 
 	//create and update table 
 	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
@@ -1648,7 +1648,7 @@ public:
 	virtual bool IsEmpty() const;
 
 	//Get unique key 
-	CUniquePairKey GetUniqueKey() { return CUniquePairKey(m_metaObject, m_keyValues); }
+	ibUniqueKeyPair GetUniqueKey() { return ibUniqueKeyPair(m_metaObject, m_keyValues); }
 
 	//get metaData from object 
 	virtual ibValueMetaObjectRegisterData* GetMetaObject() const { return m_metaObject; };
@@ -1835,7 +1835,7 @@ public:
 	};
 
 protected:
-	ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey);
+	ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
 	ibValueRecordSetObject(const ibValueRecordSetObject& source);
 public:
 	virtual ~ibValueRecordSetObject();
@@ -1955,7 +1955,7 @@ protected:
 	virtual bool ExistData();
 	virtual bool ExistData(ibNumber& lastNum); //for records
 	virtual bool ReadData();
-	virtual bool ReadData(const CUniquePairKey& key);
+	virtual bool ReadData(const ibUniqueKeyPair& key);
 	virtual bool SaveData(bool replace = true, bool clearTable = true);
 	virtual bool DeleteData();
 
@@ -1991,7 +1991,7 @@ class BACKEND_API ibValueRecordManagerObject : public ibValue,
 	public ibSourceDataObject, public ibActionDataObject {
 	wxDECLARE_ABSTRACT_CLASS(ibValueRecordManagerObject);
 protected:
-	ibValueRecordManagerObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey);
+	ibValueRecordManagerObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey);
 	ibValueRecordManagerObject(const ibValueRecordManagerObject& source);
 public:
 
@@ -2002,7 +2002,7 @@ public:
 	virtual void CreateEmptyKey();
 
 	bool InitializeObject(const ibValueRecordManagerObject* source = nullptr, bool newRecord = false);
-	bool InitializeObject(const CUniquePairKey& key);
+	bool InitializeObject(const ibUniqueKeyPair& key);
 
 	virtual bool IsNewObject() const { return !m_recordSet->m_selected; }
 
@@ -2102,13 +2102,13 @@ protected:
 protected:
 
 	virtual bool ExistData();
-	virtual bool ReadData(const CUniquePairKey& key);
+	virtual bool ReadData(const ibUniqueKeyPair& key);
 	virtual bool SaveData(bool replace = true);
 	virtual bool DeleteData();
 
 protected:
 
-	CUniquePairKey m_objGuid;
+	ibUniqueKeyPair m_objGuid;
 
 	ibValueMetaObjectRegisterData* m_metaObject;
 

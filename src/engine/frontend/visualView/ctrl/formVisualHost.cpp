@@ -111,7 +111,7 @@ bool ibValueForm::CreateDocForm(ibMetaDocument* docParent, bool createContext)
 
 	ibFormVisualDocument* visualCreatedDoc = createContext ?
 		new ibFormVisualDocument(this) :
-		new ibFormVisualDemoDocument(this);
+		new ibFormVisualDocumentDemo(this);
 
 	//if doc has parent - special delete!
 	if (docParent != nullptr) {

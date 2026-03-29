@@ -1188,7 +1188,7 @@ ibValueRecordSetObject* ibValueMetaObjectRegisterData::CreateRecordSetObjectValu
 	return createdValue;
 }
 
-ibValueRecordSetObject* ibValueMetaObjectRegisterData::CreateRecordSetObjectValue(const CUniquePairKey& uniqueKey, bool needInitialize)
+ibValueRecordSetObject* ibValueMetaObjectRegisterData::CreateRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey, bool needInitialize)
 {
 	ibValueRecordSetObject* createdValue = CreateRecordSetObjectRegValue(uniqueKey);
 	if (!needInitialize)
@@ -1212,7 +1212,7 @@ ibValueRecordSetObject* ibValueMetaObjectRegisterData::CreateRecordSetObjectValu
 	return createdValue;
 }
 
-ibValueRecordSetObject* ibValueMetaObjectRegisterData::CopyRecordSetObjectValue(const CUniquePairKey& uniqueKey)
+ibValueRecordSetObject* ibValueMetaObjectRegisterData::CopyRecordSetObjectValue(const ibUniqueKeyPair& uniqueKey)
 {
 	ibValueRecordSetObject* createdValue = CreateRecordSetObjectRegValue(uniqueKey);
 	if (createdValue && !createdValue->InitializeObject(nullptr, true)) {
@@ -1232,7 +1232,7 @@ ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CreateRecordManagerOb
 	return createdValue;
 }
 
-ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CreateRecordManagerObjectValue(const CUniquePairKey& uniqueKey)
+ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CreateRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey)
 {
 	ibValueRecordManagerObject* createdValue = CreateRecordManagerObjectRegValue(uniqueKey);
 	if (createdValue && !createdValue->InitializeObject(nullptr, false)) {
@@ -1252,7 +1252,7 @@ ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CreateRecordManagerOb
 	return createdValue;
 }
 
-ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CopyRecordManagerObjectValue(const CUniquePairKey& uniqueKey)
+ibValueRecordManagerObject* ibValueMetaObjectRegisterData::CopyRecordManagerObjectValue(const ibUniqueKeyPair& uniqueKey)
 {
 	ibValueRecordManagerObject* createdValue = CreateRecordManagerObjectRegValue();
 	if (createdValue && !createdValue->InitializeObject(uniqueKey)) {
@@ -2463,7 +2463,7 @@ bool ibValueRecordManagerObject::InitializeObject(const ibValueRecordManagerObje
 	return true;
 }
 
-bool ibValueRecordManagerObject::InitializeObject(const CUniquePairKey& key)
+bool ibValueRecordManagerObject::InitializeObject(const ibUniqueKeyPair& key)
 {
 	if (!m_recordSet->InitializeObject(nullptr, true))
 		return false;
@@ -2492,7 +2492,7 @@ ibValueRecordManagerObject* ibValueRecordManagerObject::CopyRegisterValue()
 	return m_metaObject->CreateRecordManagerObjectValue(this);
 }
 
-ibValueRecordManagerObject::ibValueRecordManagerObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : ibValue(ibValueTypes::TYPE_VALUE),
+ibValueRecordManagerObject::ibValueRecordManagerObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey) : ibValue(ibValueTypes::TYPE_VALUE),
 m_metaObject(metaObject), m_methodHelper(new ibValueMethodHelper()),
 m_recordSet(m_metaObject->CreateRecordSetObjectValue(uniqueKey, false)), m_recordLine(nullptr),
 m_objGuid(uniqueKey)
@@ -2698,7 +2698,7 @@ ibValueRecordSetObject* ibValueRecordSetObject::CopyRegisterValue()
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-ibValueRecordSetObject::ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const CUniquePairKey& uniqueKey) : ibValueModelTableBase(),
+ibValueRecordSetObject::ibValueRecordSetObject(ibValueMetaObjectRegisterData* metaObject, const ibUniqueKeyPair& uniqueKey) : ibValueModelTableBase(),
 m_recordColumnCollection(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterColumnCollection>(this)), m_recordSetKeyValue(ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectRegisterKeyValue>(this)),
 m_metaObject(metaObject), m_keyValues(uniqueKey.IsOk() ? uniqueKey : metaObject), m_objModified(false), m_selected(false),
 m_methodHelper(new ibValueMethodHelper())

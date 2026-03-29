@@ -280,7 +280,7 @@ ibFormVisualDocument* ibFormVisualDocument::FindDocByUniqueKey(const ibUniqueKey
 	return nullptr;
 }
 
-bool ibFormVisualDocument::UpdateFormUniqueKey(const CUniquePairKey& formKey)
+bool ibFormVisualDocument::UpdateFormUniqueKey(const ibUniqueKeyPair& formKey)
 {
 	std::set<ibFormVisualDocument*>::iterator foundedForm =
 		std::find_if(s_createdDocFormArray.begin(), s_createdDocFormArray.end(),

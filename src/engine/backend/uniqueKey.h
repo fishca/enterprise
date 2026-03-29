@@ -13,7 +13,7 @@ class BACKEND_API ibValueMetaObjectRegisterData;
 class BACKEND_API ibUniqueKey {
 protected:
 
-	enum class enUniqueData {
+	enum class ibUniqueData {
 		enUniqueKey = 10,
 		enUniqueGuid
 	} m_uniqueData;
@@ -50,7 +50,7 @@ public:
 
 protected:
 
-	ibUniqueKey(enUniqueData uniqueData) : m_uniqueData(uniqueData) {}
+	ibUniqueKey(ibUniqueData uniqueData) : m_uniqueData(uniqueData) {}
 
 protected:
 
@@ -59,11 +59,11 @@ protected:
 	ibMetaValueArray m_keyValues;
 };
 
-class BACKEND_API CUniquePairKey : public ibUniqueKey {
+class BACKEND_API ibUniqueKeyPair : public ibUniqueKey {
 public:
 
-	CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject = nullptr);
-	CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject, const ibMetaValueArray& keyValues);
+	ibUniqueKeyPair(const ibValueMetaObjectRegisterData* metaObject = nullptr);
+	ibUniqueKeyPair(const ibValueMetaObjectRegisterData* metaObject, const ibMetaValueArray& keyValues);
 
 	bool IsOk() const {
 		return m_metaObject != nullptr && m_keyValues.size() > 0;
@@ -90,6 +90,6 @@ public:
 };
 
 #define wxNullUniqueKey ibUniqueKey()
-#define wxNullUniquePairKey CUniquePairKey()
+#define wxNullUniquePairKey ibUniqueKeyPair()
 
 #endif // !_UNIQUE_KEY_H__

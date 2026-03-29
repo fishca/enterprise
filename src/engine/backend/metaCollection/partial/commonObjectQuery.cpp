@@ -1545,7 +1545,7 @@ bool ibValueRecordManagerObject::ExistData()
 	return success;
 }
 
-bool ibValueRecordManagerObject::ReadData(const CUniquePairKey& key)
+bool ibValueRecordManagerObject::ReadData(const ibUniqueKeyPair& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));
@@ -1711,7 +1711,7 @@ bool ibValueRecordSetObject::ExistData(ibNumber& lastNum)
 	return founded;
 }
 
-bool ibValueRecordSetObject::ReadData(const CUniquePairKey& key)
+bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
 		ibBackendCoreException::Error(_("Database is not open!"));

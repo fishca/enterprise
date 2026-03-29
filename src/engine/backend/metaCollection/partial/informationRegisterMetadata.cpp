@@ -301,7 +301,7 @@ ibValueManagerDataObject* ibValueMetaObjectInformationRegister::CreateManagerDat
 	return ibValue::CreateAndPrepareValueRef<ibValueManagerDataObjectInformationRegister>(this);
 }
 
-ibValueRecordSetObject* ibValueMetaObjectInformationRegister::CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey)
+ibValueRecordSetObject* ibValueMetaObjectInformationRegister::CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey)
 {
 	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
@@ -317,7 +317,7 @@ ibValueRecordSetObject* ibValueMetaObjectInformationRegister::CreateRecordSetObj
 	return ibValue::CreateAndPrepareValueRef<ibValueRecordSetObjectInformationRegister>(this, uniqueKey);
 }
 
-ibValueRecordManagerObject* ibValueMetaObjectInformationRegister::CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey)
+ibValueRecordManagerObject* ibValueMetaObjectInformationRegister::CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey)
 {
 	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);

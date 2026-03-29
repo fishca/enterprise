@@ -196,7 +196,7 @@ ibBackendValueForm* ibFrontendDocMDIFrame::FindFormBySourceUniqueKey(const ibUni
 	return ibFormVisualDocument::FindFormBySourceUniqueKey(guid);
 }
 
-bool ibFrontendDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
+bool ibFrontendDocMDIFrame::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 {
 	return ibFormVisualDocument::UpdateFormUniqueKey(guid);
 }

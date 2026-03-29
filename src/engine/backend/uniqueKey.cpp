@@ -33,18 +33,18 @@ bool ibUniqueKey::operator<=(const ibUniqueKey& other) const
 
 bool ibUniqueKey::operator==(const ibUniqueKey& other) const
 {
-	if (m_uniqueData == enUniqueData::enUniqueGuid) {
+	if (m_uniqueData == ibUniqueData::enUniqueGuid) {
 		return m_objGuid == other.m_objGuid;
 	}
-	else if (m_uniqueData == enUniqueData::enUniqueKey) {
-		if (other.m_uniqueData == enUniqueData::enUniqueKey) {
+	else if (m_uniqueData == ibUniqueData::enUniqueKey) {
+		if (other.m_uniqueData == ibUniqueData::enUniqueKey) {
 			if ((m_metaObject == nullptr && other.m_metaObject == nullptr) &&
 				(m_keyValues.size() == 0 && other.m_keyValues.size() == 0))
 				return m_objGuid == other.m_objGuid; // new object 
 			return m_metaObject == other.m_metaObject &&
 				m_keyValues == other.m_keyValues;
 		}
-		else if (m_uniqueData == enUniqueData::enUniqueGuid) {
+		else if (m_uniqueData == ibUniqueData::enUniqueGuid) {
 			return m_objGuid == other.m_objGuid;
 		}
 	}
@@ -66,21 +66,21 @@ bool ibUniqueKey::operator!=(const ibGuid& other) const
 	return m_objGuid != other;
 }
 
-ibUniqueKey::ibUniqueKey() : ibUniqueKey(enUniqueData::enUniqueGuid)
+ibUniqueKey::ibUniqueKey() : ibUniqueKey(ibUniqueData::enUniqueGuid)
 {
 	m_objGuid = wxNullGuid;
 	m_metaObject = nullptr;
 	m_keyValues = {};
 }
 
-ibUniqueKey::ibUniqueKey(const ibGuid& guid) : ibUniqueKey(enUniqueData::enUniqueGuid)
+ibUniqueKey::ibUniqueKey(const ibGuid& guid) : ibUniqueKey(ibUniqueData::enUniqueGuid)
 {
 	m_objGuid = guid;
 	m_metaObject = nullptr;
 	m_keyValues = {};
 }
 
-CUniquePairKey::CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject) : ibUniqueKey(enUniqueData::enUniqueKey)
+ibUniqueKeyPair::ibUniqueKeyPair(const ibValueMetaObjectRegisterData* metaObject) : ibUniqueKey(ibUniqueData::enUniqueKey)
 {
 	m_objGuid = wxNewUniqueGuid;
 	m_metaObject = metaObject;
@@ -96,7 +96,7 @@ CUniquePairKey::CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject) 
 	}
 }
 
-CUniquePairKey::CUniquePairKey(const ibValueMetaObjectRegisterData* metaObject, const ibMetaValueArray& keyValues) : ibUniqueKey(enUniqueData::enUniqueKey)
+ibUniqueKeyPair::ibUniqueKeyPair(const ibValueMetaObjectRegisterData* metaObject, const ibMetaValueArray& keyValues) : ibUniqueKey(ibUniqueData::enUniqueKey)
 {
 	m_objGuid = wxNewUniqueGuid;
 	m_metaObject = metaObject;

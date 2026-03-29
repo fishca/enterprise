@@ -56,7 +56,7 @@ public:
 	static ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid);
 	static ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid);
 
-	static bool UpdateFormUniqueKey(const CUniquePairKey& guid);
+	static bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid);
 
 #pragma endregion 
 

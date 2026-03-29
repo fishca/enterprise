@@ -407,7 +407,7 @@ public:
 		}
 		void AppendNodeValue(const ibMetaID& id, const ibValue& variant) { m_nodeKeys.insert_or_assign(id, variant); }
 		ibValue& AppendNodeValue(const ibMetaID& id) { return m_nodeKeys[id]; }
-		CUniquePairKey GetUniquePairKey(ibValueMetaObjectRegisterData* metaObject) const { return CUniquePairKey(metaObject, m_nodeValues); }
+		ibUniqueKeyPair GetUniquePairKey(ibValueMetaObjectRegisterData* metaObject) const { return ibUniqueKeyPair(metaObject, m_nodeValues); }
 
 	private:
 		ibMetaValueArray m_nodeKeys;

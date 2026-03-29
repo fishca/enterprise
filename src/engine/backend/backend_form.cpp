@@ -75,7 +75,7 @@ ibBackendValueForm* ibBackendValueForm::FindFormBySourceUniqueKey(const ibUnique
 	return nullptr;
 }
 
-bool ibBackendValueForm::UpdateFormUniqueKey(const CUniquePairKey& guid)
+bool ibBackendValueForm::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 {
 	if (backend_mainFrame != nullptr) return backend_mainFrame->UpdateFormUniqueKey(guid);
 	ibBackendCoreException::Error(_("Context functions are not available!"));

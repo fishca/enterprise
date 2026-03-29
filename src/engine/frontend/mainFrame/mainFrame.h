@@ -69,7 +69,7 @@ public:
 	virtual class ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid) override;
 	virtual class ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid) override;
 
-	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) override;
+	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) override;
 
 	// Grid support
 	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) override;

@@ -138,7 +138,7 @@ ibValueRecordManagerObject* ibValueSelectorRegisterDataObject::GetRecordManager(
 	}
 
 	return m_metaObject->CreateRecordManagerObjectValue(
-		CUniquePairKey(m_metaObject, keyValues)
+		ibUniqueKeyPair(m_metaObject, keyValues)
 	);
 }
 

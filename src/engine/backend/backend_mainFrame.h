@@ -44,7 +44,7 @@ public:
 	virtual class ibBackendValueForm* FindFormByControlUniqueKey(const ibUniqueKey& guid) { return nullptr; }
 	virtual class ibBackendValueForm* FindFormBySourceUniqueKey(const ibUniqueKey& guid) { return nullptr; }
 
-	virtual bool UpdateFormUniqueKey(const CUniquePairKey& guid) { return nullptr; }
+	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) { return nullptr; }
 
 	// Grid support
 	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) { return false; }

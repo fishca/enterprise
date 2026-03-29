@@ -149,8 +149,8 @@ protected:
 	virtual ibValueManagerDataObject* CreateManagerDataObjectValue();
 
 	//create record set
-	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
-	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const CUniquePairKey& uniqueKey = wxNullUniquePairKey);
+	virtual ibValueRecordSetObject* CreateRecordSetObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey);
+	virtual ibValueRecordManagerObject* CreateRecordManagerObjectRegValue(const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey);
 
 	//create object data with meta form
 	virtual ibSourceDataObject* CreateSourceObject(ibValueMetaObjectFormBase* metaObject);
@@ -229,7 +229,7 @@ private:
 //********************************************************************************************
 
 class ibValueRecordSetObjectInformationRegister : public ibValueRecordSetObject {
-	ibValueRecordSetObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+	ibValueRecordSetObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) :
 		ibValueRecordSetObject(metaObject, uniqueKey) {
 	}
 	ibValueRecordSetObjectInformationRegister(const ibValueRecordSetObjectInformationRegister& source) :
@@ -266,7 +266,7 @@ protected:
 
 class ibValueRecordManagerObjectInformationRegister : public ibValueRecordManagerObject {
 public:
-	ibValueRecordManagerObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const CUniquePairKey& uniqueKey = wxNullUniquePairKey) :
+	ibValueRecordManagerObjectInformationRegister(ibValueMetaObjectInformationRegister* metaObject, const ibUniqueKeyPair& uniqueKey = wxNullUniquePairKey) :
 		ibValueRecordManagerObject(metaObject, uniqueKey)
 	{
 	}

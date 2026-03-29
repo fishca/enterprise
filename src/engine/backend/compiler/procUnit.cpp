@@ -41,7 +41,7 @@
 
 ibProcUnit* ibProcUnit::m_currentRunModule = nullptr;
 
-struct CErrorPlace {
+struct ibErrorPlace {
 
 	bool IsEmpty() const { return m_errorLine == wxNOT_FOUND; }
 
@@ -56,7 +56,7 @@ struct CErrorPlace {
 	ibByteCode* m_skipByteCode = nullptr;
 };
 
-static CErrorPlace s_errorPlace;
+static ibErrorPlace s_errorPlace;
 
 void ibProcUnit::Raise() {
 
@@ -87,9 +87,9 @@ inline bool EndByteCode()
 //Stack reset
 inline void ResetByteCode() { while (EndByteCode()); }
 
-struct CProcStackGuard {
+struct ibProcStackGuard {
 
-	CProcStackGuard(ibRunContext* runContext) {
+	ibProcStackGuard(ibRunContext* runContext) {
 		if (s_nRecCount > MAX_REC_COUNT) { //critical error
 			wxString strError;
 			for (unsigned int i = 0; i < ibProcUnit::GetCountRunContext(); i++) {
@@ -109,7 +109,7 @@ struct CProcStackGuard {
 		BeginByteCode(runContext);
 	}
 
-	~CProcStackGuard() { s_nRecCount--; EndByteCode(); }
+	~ibProcStackGuard() { s_nRecCount--; EndByteCode(); }
 
 private:
 	ibRunContext* m_currentContext;
@@ -492,7 +492,7 @@ void ibProcUnit::Execute(ibRunContext* pContext, ibValue* pvarRetValue, bool bDe
 
 	pContext->SetProcUnit(this);
 
-	CProcStackGuard stackGuard(pContext);
+	ibProcStackGuard stackGuard(pContext);
 
 	ibValue* pLocVars = pContext->m_pLocVars;
 	ibValue** pRefLocVars = pContext->m_pRefLocVars;

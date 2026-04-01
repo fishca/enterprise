@@ -15,4 +15,17 @@ public:
 	};
 };
 
+class ibValueEnumSyntax : public ibValueEnumeration<ibProgramSyntax> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumSyntax);
+public:
+
+	ibValueEnumSyntax() : ibValueEnumeration() {}
+	//ibValueEnumSyntax(ibProgramSyntax v) : ibValueEnumeration(v) {}
+
+	virtual void CreateEnumeration() {
+		AddEnumeration(syntax_vbs, wxT("vbs"), _("vbs"));
+		AddEnumeration(syntax_ces, wxT("ces"), _("ces"));
+	};
+};
+
 #endif

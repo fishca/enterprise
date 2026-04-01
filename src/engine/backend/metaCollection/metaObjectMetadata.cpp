@@ -51,8 +51,10 @@ bool ibValueMetaObjectConfiguration::LoadData(ibReaderMemory& dataReader)
 
 	m_propertyDefRole->LoadData(dataReader);
 	m_propertyDefLanguage->LoadData(dataReader);
+	(*m_propertyModuleConfiguration)->LoadMeta(dataReader);
+	m_propertySyntax->LoadData(dataReader);
 
-	return (*m_propertyModuleConfiguration)->LoadMeta(dataReader);
+	return true;
 }
 
 bool ibValueMetaObjectConfiguration::SaveData(ibWriterMemory& dataWritter)
@@ -61,8 +63,10 @@ bool ibValueMetaObjectConfiguration::SaveData(ibWriterMemory& dataWritter)
 
 	m_propertyDefRole->SaveData(dataWritter);
 	m_propertyDefLanguage->SaveData(dataWritter);
+	(*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
+	m_propertySyntax->SaveData(dataWritter);
 
-	return (*m_propertyModuleConfiguration)->SaveMeta(dataWritter);
+	return true;
 }
 
 //***********************************************************************
@@ -123,6 +127,7 @@ bool ibValueMetaObjectConfiguration::OnBeforeRunMetaObject(int flags)
 	if (!moduleManager->AddCompileModule(m_propertyModuleConfiguration->GetMetaObject(), moduleManager))
 		return false;
 
+	ibCompileCode::SetCodeStyle(m_propertySyntax->GetValueAsEnum());
 	return ibValueMetaObject::OnBeforeRunMetaObject(flags);
 }
 

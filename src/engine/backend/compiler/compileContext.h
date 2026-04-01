@@ -21,8 +21,8 @@ enum {
 };
 
 enum {
-	CODE_CES, 
-	CODE_VBS,
+	CODE_VBS = ibProgramSyntax::syntax_vbs,
+	CODE_CES = ibProgramSyntax::syntax_ces
 };
 
 struct ibCompileContext {

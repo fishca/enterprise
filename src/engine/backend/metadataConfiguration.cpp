@@ -179,6 +179,9 @@ bool ibMetaDataConfigurationFile::RunDatabase(int flags)
 {
 	wxASSERT(!m_configOpened);
 
+	if ((flags & loadConfigFlag) == 0)
+		ibCompileCode::SetCodeStyle(m_commonObject->GetCompileSyntax());
+
 	if (!m_commonObject->OnBeforeRunMetaObject(flags)) {
 		wxASSERT_MSG(false, "m_commonObject->OnBeforeRunMetaObject() == false");
 		return false;

@@ -238,8 +238,10 @@ public:
 
 	//run/close 
 	virtual bool RunDatabase(int flags = defaultFlag) {
+		
 		if (!ibMetaDataConfiguration::RunDatabase(flags))
 			return false;
+		
 		return m_configMetadata->RunDatabase(flags | loadConfigFlag);
 	}
 

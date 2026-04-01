@@ -57,6 +57,8 @@ public:
 		return false;
 	}
 
+	ibProgramSyntax GetCompileSyntax() const { return m_propertySyntax->GetValueAsEnum(); }
+
 	void SetVersion(const ibVersionID& version) { m_propertyVersion->SetValue(static_cast<ibProgramVersion>(version)); }
 	ibVersionID GetVersion() const { return m_propertyVersion->GetValueAsInteger(); }
 
@@ -151,6 +153,7 @@ private:
 
 	ibPropertyCategory* m_compatibilityCategory = ibPropertyObject::CreatePropertyCategory(wxT("Compatibility"), _("Compatibility"));
 	ibPropertyEnum<ibValueEnumVersion>* m_propertyVersion = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumVersion>>(m_compatibilityCategory, wxT("Version"), _("Version"), version_oes_last);
+	ibPropertyEnum<ibValueEnumSyntax>* m_propertySyntax = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumSyntax>>(m_compatibilityCategory, wxT("Syntax"), _("Syntax"), syntax_vbs);
 
 #pragma region role 
 	ibRole* m_roleAdministration = ibValueMetaObject::CreateRole(wxT("Administration"), _("Administration"));

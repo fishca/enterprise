@@ -107,6 +107,11 @@ enum ibProgramVersion {
 	version_oes_last  = version_oes_1_0_1
 };
 
+enum ibProgramSyntax {
+	syntax_vbs, 
+	syntax_ces,
+};
+
 //*******************************************************************************************
 
 #define COMPONENT_TYPE_ABSTRACT		 0

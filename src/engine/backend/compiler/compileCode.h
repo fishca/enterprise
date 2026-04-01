@@ -66,13 +66,9 @@ public:
 public:
 
 	static void InitializeCompileModule();
+	static void SetCodeStyle(short codeStyle);
+
 	ibCompileContext* GetContext() const { return m_rootContext; }
-
-private:
-
-	// methods for displaying errors during compilation::
-	void SetError(int nErr, const wxString& strError = wxEmptyString);
-	void SetError(int nErr, const wxUniChar& c);
 
 public:
 
@@ -134,6 +130,7 @@ protected:
 	bool CompileWhile(ibCompileContext* context);
 	bool CompileFor(ibCompileContext* context);
 	bool CompileForeach(ibCompileContext* context);
+	bool CompileException(ibCompileContext* context);
 
 	ibParamUnit GetCallFunction(ibCompileContext* context, const wxString& strName, const int& nIsSet);
 	ibParamUnit GetCurrentIdentifier(ibCompileContext* context, int& nIsSet);
@@ -151,6 +148,14 @@ protected:
 
 	std::map<wxString, unsigned int> m_listHashConst;
 	std::vector<std::shared_ptr<ibCallFunction>> m_listCallFunc;	// list of encountered procedure and function calls
+
+private:
+
+	// methods for displaying errors during compilation::
+	void SetError(int nErr, const wxString& strError = wxEmptyString);
+	void SetError(int nErr, const wxUniChar& c);
+
+	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
 
 	friend struct ibCompileContext;
 };

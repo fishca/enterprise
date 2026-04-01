@@ -28,22 +28,6 @@ enum {
 	LEXEM_IGNORE,
 };
 
-//Function properties:
-enum {
-	RETURN_NONE = 0,//no return (module code)
-	RETURN_PROCEDURE,//return from procedure
-	RETURN_FUNCTION,//return from function
-};
-
-//variable flags (specified with a negative value in the nArray attribute of the bytecode)
-enum {
-	DEF_VAR_SKIP = -1,// missing parameter
-	DEF_VAR_DEFAULT = -2,//default parameter
-	DEF_VAR_TEMP = -3,//flag of a temporary local variable
-	DEF_VAR_NORET = -7,//function (procedure) does not return values
-	DEF_VAR_CONST = 1000,//loading constants
-};
-
 //definitions
 #define UTF8_LEXEM_TRANSLATE 
 

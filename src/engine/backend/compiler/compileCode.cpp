@@ -18,6 +18,9 @@
 // array of mathematical operation priorities
 static std::array<int, 256> gs_operPriority = { 0 };
 
+// set code style by file extension
+static short gs_codeStyle = CODE_VBS;
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction ibCompileCode
 //////////////////////////////////////////////////////////////////////
@@ -88,6 +91,11 @@ void ibCompileCode::InitializeCompileModule()
 	gs_operPriority['='] = 3;
 
 	gs_operPriority[gs_operPriority.size() - 1] = 1;
+}
+
+void ibCompileCode::SetCodeStyle(short codeStyle)
+{
+	gs_codeStyle = codeStyle;
 }
 
 void ibCompileCode::Reset()
@@ -824,7 +832,7 @@ bool ibCompileCode::CompileModule()
 	m_cByteCode.m_lStartModule = 0;
 	CompileBlock(mainContext);
 
-	mainContext->DoLabels();
+	mainContext->CreateLabels();
 
 	// set the end of the program
 	ibByteUnit code;
@@ -1145,18 +1153,18 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 #endif
 	m_cByteCode.m_listCode.emplace_back(std::move(code0));
 
-	const long lAddres = createdFunction->m_nStart = m_cByteCode.m_listCode.size() - 1;
+	const long lAddress = createdFunction->m_nStart = m_cByteCode.m_listCode.size() - 1;
 
 	m_cByteCode.m_listFunc[strFuncName] = {
 		(long)createdFunction->m_listParam.size(),
-		lAddres,
+		lAddress,
 		functionContext->m_numReturn == RETURN_FUNCTION
 	};
 
 	if (createdFunction->m_bExport) {
 		m_cByteCode.m_listExportFunc[strFuncName] = {
 			(long)createdFunction->m_listParam.size(),
-			lAddres,
+			lAddress,
 			functionContext->m_numReturn == RETURN_FUNCTION
 		};
 	}
@@ -1186,16 +1194,22 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 		AddTypeSet(variable);
 	}
 
-	context->m_strCurFuncName = strFuncName;
-	CompileBlock(functionContext);
-	functionContext->DoLabels();
-	context->m_strCurFuncName = wxEmptyString;
+	m_strCurFuncName = strFuncName;
 
-	if (functionContext->m_numReturn == RETURN_FUNCTION) {
-		GETKeyWord(KEY_ENDFUNCTION);
-	}
-	else {
-		GETKeyWord(KEY_ENDPROCEDURE);
+	CompileBlock(functionContext);
+
+	functionContext->CreateLabels();
+
+	m_strCurFuncName = wxEmptyString;
+
+	if (gs_codeStyle == CODE_VBS) {
+
+		if (functionContext->m_numReturn == RETURN_FUNCTION) {
+			GETKeyWord(KEY_ENDFUNCTION);
+		}
+		else {
+			GETKeyWord(KEY_ENDPROCEDURE);
+		}
 	}
 
 	ibByteUnit code;
@@ -1206,8 +1220,8 @@ bool ibCompileCode::CompileFunction(ibCompileContext* context)
 	createdFunction->m_nFinish = m_cByteCode.m_listCode.size() - 1;
 	createdFunction->m_lVarCount = functionContext->m_listVariable.size();
 
-	m_cByteCode.m_listCode[lAddres].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
-	m_cByteCode.m_listCode[lAddres].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
+	m_cByteCode.m_listCode[lAddress].m_param3.m_numIndex = createdFunction->m_lVarCount;// number of local variables
+	m_cByteCode.m_listCode[lAddress].m_param3.m_numArray = createdFunction->m_listParam.size();//number of formal parameters
 	return true;
 }
 
@@ -1267,10 +1281,19 @@ if(!sKey.m_strType.IsEmpty())\
 
 bool ibCompileCode::CompileBlock(ibCompileContext* context)
 {
+	bool bCompileBlock = false;
+
+	if (gs_codeStyle == CODE_CES && (context != m_rootContext && (context->m_numReturn != RETURN_NONE || IsNextDelimeter(wxT('{'))))) {
+		GETDelimeter(wxT('{'));
+		bCompileBlock = true;
+	}
+
 	while (true) {
 
 		const ibLexem& lex = PreviewGetLexem();
-		if (lex.m_lexType == ERRORTYPE) break;
+
+		if (lex.m_lexType == ERRORTYPE)
+			break;
 
 		if (KEYWORD == lex.m_lexType) {
 
@@ -1297,60 +1320,9 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 			case KEY_GOTO:
 				CompileGoto(context);
 				break;
-			case KEY_RETURN:
-			{
-				GETKeyWord(KEY_RETURN);
-				if (context->m_numReturn == RETURN_NONE) {
-					SetError(ERROR_USE_RETURN); // return operator cannot be used outside a procedure or function
-					return false;
-				}
-
-				ibByteUnit code;
-				AddLineInfo(code);
-				code.m_numOper = OPER_RET;
-
-				if (context->m_numReturn == RETURN_FUNCTION) { // some value is returned
-					if (IsNextDelimeter(';')) {
-						SetError(ERROR_EXPRESSION_REQUIRE);
-						return false;
-					}
-					code.m_param1 = GetExpression(context);
-				}
-				else {
-					code.m_param1.m_numArray = DEF_VAR_NORET;
-					code.m_param1.m_numIndex = DEF_VAR_NORET;
-				}
-
-				m_cByteCode.m_listCode.emplace_back(std::move(code));
-				break;
-			}
 			case KEY_TRY:
-			{
-				GETKeyWord(KEY_TRY);
-				ibByteUnit code1;
-				AddLineInfo(code1);
-				code1.m_numOper = OPER_TRY;
-				m_cByteCode.m_listCode.emplace_back(std::move(code1));
-
-				const int lineTry = m_cByteCode.m_listCode.size() - 1;
-
-				ibByteUnit code2;
-				AddLineInfo(code2);
-				CompileBlock(context);
-				code2.m_numOper = OPER_ENDTRY;
-				m_cByteCode.m_listCode.emplace_back(std::move(code2));
-
-				const int addrLine = m_cByteCode.m_listCode.size() - 1;
-
-				m_cByteCode.m_listCode[lineTry].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
-
-				GETKeyWord(KEY_EXCEPT);
-				CompileBlock(context);
-				GETKeyWord(KEY_ENDTRY);
-
-				m_cByteCode.m_listCode[addrLine].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
+				CompileException(context);
 				break;
-			}
 			case KEY_RAISE:
 			{
 				GETKeyWord(KEY_RAISE);
@@ -1365,6 +1337,38 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 				else {
 					code.m_numOper = OPER_RAISE;
 				}
+				m_cByteCode.m_listCode.emplace_back(std::move(code));
+				break;
+			}
+			case KEY_RETURN:
+			{
+				GETKeyWord(KEY_RETURN);
+
+				ibCompileContext* currContext = context;
+				while (currContext->m_numReturn == RETURN_CONTEXT)
+					currContext = currContext->m_parentContext;
+
+				if (currContext->m_numReturn == RETURN_NONE) {
+					SetError(ERROR_USE_RETURN); // return operator cannot be used outside a procedure or function
+					return false;
+				}
+
+				ibByteUnit code;
+				AddLineInfo(code);
+				code.m_numOper = OPER_RET;
+
+				if (currContext->m_numReturn == RETURN_FUNCTION) { // some value is returned
+					if (IsNextDelimeter(';')) {
+						SetError(ERROR_EXPRESSION_REQUIRE);
+						return false;
+					}
+					code.m_param1 = GetExpression(context);
+				}
+				else {
+					code.m_param1.m_numArray = DEF_VAR_NORET;
+					code.m_param1.m_numIndex = DEF_VAR_NORET;
+				}
+
 				m_cByteCode.m_listCode.emplace_back(std::move(code));
 				break;
 			}
@@ -1418,17 +1422,20 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 		}
 		else {
 
-			const ibLexem& next_lexem = GetLexem();
-			if (IDENTIFIER == next_lexem.m_lexType) {
-				context->m_numTempVar = 0;
+			const ibLexem& nextLexem = GetLexem();
+			if (IDENTIFIER == nextLexem.m_lexType) {
+
+				if (gs_codeStyle == CODE_VBS)
+					context->m_numTempVar = 0;
+
 				if (IsNextDelimeter(':')) {// this is a label task encountered
-					unsigned int pLabel = context->m_listLabelDef[next_lexem.m_strData];
+					unsigned int pLabel = context->m_listLabelDef[nextLexem.m_strData];
 					if (pLabel > 0) {
-						SetError(ERROR_IDENTIFIER_DUPLICATE, next_lexem.m_strData);// duplicate label definitions occurred
+						SetError(ERROR_IDENTIFIER_DUPLICATE, nextLexem.m_strData);// duplicate label definitions occurred
 						return false;
 					}
 					// write the address of the label:
-					context->m_listLabelDef[next_lexem.m_strData] = m_cByteCode.m_listCode.size() - 1;
+					context->m_listLabelDef[nextLexem.m_strData] = m_cByteCode.m_listCode.size() - 1;
 					GETDelimeter(':');
 				}
 				else { //function and method calls, expression assignments are processed here
@@ -1488,21 +1495,47 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 					}
 				}
 			}
-			else {
-				if (DELIMITER == next_lexem.m_lexType
-					&& ';' == next_lexem.m_numData)
-				{
-				}
-				else if (ENDPROGRAM == next_lexem.m_lexType) {
-					break;
-				}
-				else {
-					SetError(ERROR_CODE);
-					return false;
-				}
+			else if (nextLexem.m_lexType == DELIMITER
+				&& nextLexem.m_numData == wxT(';'))
+			{
 			}
+			else if (gs_codeStyle == CODE_CES && nextLexem.m_lexType == DELIMITER
+				&& nextLexem.m_numData == wxT('{'))
+			{
+				m_numCurrentCompile--;// step back
+
+				std::shared_ptr<ibCompileContext> blockContext(
+					context->CreateContext(RETURN_CONTEXT));
+
+				const int numTempVar = context->m_numTempVar;
+				CompileBlock(blockContext.get());
+				context->m_numTempVar = numTempVar;
+			}
+			else if (gs_codeStyle == CODE_CES && nextLexem.m_lexType == DELIMITER
+				&& nextLexem.m_numData == wxT('}'))
+			{
+				m_numCurrentCompile--;// step back
+
+				if (context->m_numReturn != RETURN_NONE)
+					break;
+			}
+			else if (nextLexem.m_lexType == ENDPROGRAM) {
+				break;
+			}
+			else {
+				SetError(ERROR_CODE);
+				return false;
+			}
+
+			if (gs_codeStyle == CODE_CES && !bCompileBlock && context->m_numReturn == RETURN_CONTEXT)
+				break;
 		}
+
 	}//while
+
+	if (gs_codeStyle == CODE_CES && bCompileBlock)
+		GETDelimeter(wxT('}'));
+
 	return true;
 }//CompileBlock
 
@@ -1832,6 +1865,9 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 	AddLineInfo(code);
 	code.m_numOper = OPER_IF;
 
+	if (gs_codeStyle == CODE_CES)
+		GETDelimeter(wxT('('));
+
 	ibParamUnit variable = GetExpression(context);
 	code.m_param1 = variable;
 	CorrectTypeDef(variable);// check value type
@@ -1840,7 +1876,11 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 
 	int nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
-	GETKeyWord(KEY_THEN);
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_THEN);
+	else
+		GETDelimeter(wxT(')'));
+
 	CompileBlock(context);
 
 	while (IsNextKeyWord(KEY_ELSEIF)) {
@@ -1865,6 +1905,9 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		AddLineInfo(code2);
 		code2.m_numOper = OPER_IF;
 
+		if (gs_codeStyle == CODE_CES)
+			GETDelimeter(wxT('('));
+
 		variable = GetExpression(context);
 		code2.m_param1 = variable;
 		CorrectTypeDef(variable);// check value type
@@ -1872,7 +1915,12 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		m_cByteCode.m_listCode.emplace_back(std::move(code2));
 		nLastIFLine = m_cByteCode.m_listCode.size() - 1;
 
-		GETKeyWord(KEY_THEN);
+		if (gs_codeStyle == CODE_VBS)
+			GETKeyWord(KEY_THEN);
+		else
+			GETDelimeter(wxT(')'));
+
+
 		CompileBlock(context);
 	}
 
@@ -1896,7 +1944,8 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		CompileBlock(context);
 	}
 
-	GETKeyWord(KEY_ENDIF);
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_ENDIF);
 
 	const int numCurCompile = m_cByteCode.m_listCode.size();
 
@@ -1913,7 +1962,7 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 
 bool ibCompileCode::CompileWhile(ibCompileContext* context)
 {
-	context->StartDoList();
+	context->StartLoopList();
 
 	const int nStartWhile = m_cByteCode.m_listCode.size();
 
@@ -1921,6 +1970,9 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 	ibByteUnit code;
 	AddLineInfo(code);
 	code.m_numOper = OPER_IF;
+
+	if (gs_codeStyle == CODE_CES)
+		GETDelimeter(wxT('('));
 
 	ibParamUnit variable = GetExpression(context);
 	code.m_param1 = variable;
@@ -1930,9 +1982,15 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 
 	m_cByteCode.m_listCode.emplace_back(std::move(code));
 
-	GETKeyWord(KEY_DO);
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_DO);
+	else
+		GETDelimeter(wxT(')'));
+
 	CompileBlock(context);
-	GETKeyWord(KEY_ENDDO);
+
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
 	AddLineInfo(code2);
@@ -1943,16 +2001,19 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 	m_cByteCode.m_listCode[numEndWhile].m_param2.m_numIndex = m_cByteCode.m_listCode.size();
 
 	// remember the transition addresses for the Continue and Break commands
-	context->FinishDoList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
+	context->FinishLoopList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
 
 	return true;
 }
 
 bool ibCompileCode::CompileFor(ibCompileContext* context)
 {
-	context->StartDoList();
+	context->StartLoopList();
 
 	GETKeyWord(KEY_FOR);
+
+	if (gs_codeStyle == CODE_CES)
+		GETDelimeter(wxT('('));
 
 	const wxString& strRealName = GETIdentifier(true);
 	const wxString& strName = stringUtils::MakeUpper(strRealName);
@@ -2006,9 +2067,15 @@ bool ibCompileCode::CompileFor(ibCompileContext* context)
 
 	const int nStartFOR = m_cByteCode.m_listCode.size() - 1;
 
-	GETKeyWord(KEY_DO);
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_DO);
+	else
+		GETDelimeter(wxT(')'));
+
 	CompileBlock(context);
-	GETKeyWord(KEY_ENDDO);
+
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
 	AddLineInfo(code2);
@@ -2020,16 +2087,19 @@ bool ibCompileCode::CompileFor(ibCompileContext* context)
 	m_cByteCode.m_listCode[nStartFOR].m_param3.m_numIndex = m_cByteCode.m_listCode.size();
 
 	// remember the transition addresses for the Continue and Break commands
-	context->FinishDoList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
+	context->FinishLoopList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
 
 	return true;
 }
 
 bool ibCompileCode::CompileForeach(ibCompileContext* context)
 {
-	context->StartDoList();
+	context->StartLoopList();
 
 	GETKeyWord(KEY_FOREACH);
+
+	if (gs_codeStyle == CODE_CES)
+		GETDelimeter(wxT('('));
 
 	const wxString& strRealName = GETIdentifier(true);
 	const wxString& strName = stringUtils::MakeUpper(strRealName);
@@ -2062,9 +2132,15 @@ bool ibCompileCode::CompileForeach(ibCompileContext* context)
 
 	const int numStartFOREACH = m_cByteCode.m_listCode.size() - 1;
 
-	GETKeyWord(KEY_DO);
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_DO);
+	else
+		GETDelimeter(wxT(')'));
+
 	CompileBlock(context);
-	GETKeyWord(KEY_ENDDO);
+
+	if (gs_codeStyle == CODE_VBS)
+		GETKeyWord(KEY_ENDDO);
 
 	ibByteUnit code2;
 	AddLineInfo(code2);
@@ -2076,7 +2152,38 @@ bool ibCompileCode::CompileForeach(ibCompileContext* context)
 	m_cByteCode.m_listCode[numStartFOREACH].m_param4.m_numIndex = m_cByteCode.m_listCode.size();
 
 	// remember the transition addresses for the Continue and Break commands
-	context->FinishDoList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
+	context->FinishLoopList(m_cByteCode, m_cByteCode.m_listCode.size() - 1, m_cByteCode.m_listCode.size());
+	return true;
+}
+
+bool ibCompileCode::CompileException(ibCompileContext* context)
+{
+	GETKeyWord(KEY_TRY);
+	ibByteUnit code1;
+	AddLineInfo(code1);
+	code1.m_numOper = OPER_TRY;
+	m_cByteCode.m_listCode.emplace_back(std::move(code1));
+
+	const int lineTry = m_cByteCode.m_listCode.size() - 1;
+
+	ibByteUnit code2;
+	AddLineInfo(code2);
+	CompileBlock(context);
+	code2.m_numOper = OPER_ENDTRY;
+	m_cByteCode.m_listCode.emplace_back(std::move(code2));
+
+	const int addrLine = m_cByteCode.m_listCode.size() - 1;
+
+	m_cByteCode.m_listCode[lineTry].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
+
+	GETKeyWord(KEY_EXCEPT);
+	CompileBlock(context);
+
+	if (gs_codeStyle == CODE_VBS) {
+		GETKeyWord(KEY_ENDTRY);
+	}
+
+	m_cByteCode.m_listCode[addrLine].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
 	return true;
 }
 
@@ -2122,14 +2229,14 @@ ibParamUnit ibCompileCode::GetCallFunction(ibCompileContext* context, const wxSt
 	callFunc->m_numIsSet = numIsSet;
 
 	std::shared_ptr<ibCompileContext::ibFunction> foundedFunc = nullptr;
-	if (m_bExpressionOnly)
-		(void)GetFunction(callFunc->m_strName, foundedFunc);
-	else
-		(void)context->FindFunction(callFunc->m_strName, foundedFunc);
+	(void)GetFunction(callFunc->m_strName, foundedFunc);
 
-	if (foundedFunc != nullptr && context->m_strCurFuncName != callFunc->m_strName) {
+	if (foundedFunc != nullptr && m_strCurFuncName != callFunc->m_strName) {
+
 		if (!PushCallFunction(callFunc))
 			return ibParamUnit();
+
+		return callFunc->m_puRetValue;
 	}
 
 	if (m_bExpressionOnly) {
@@ -2334,15 +2441,15 @@ ibParamUnit ibCompileCode::GetExpression(ibCompileContext* context, int nPriorit
 
 delimOperation:
 
-	const ibLexem& preview_lex = PreviewGetLexem();
+	const ibLexem& prevLexem = PreviewGetLexem();
 
-	if (preview_lex.m_lexType == DELIMITER && preview_lex.m_numData == ')')
+	if (prevLexem.m_lexType == DELIMITER && prevLexem.m_numData == ')')
 		return variable;
 
 	// we look to see if there are any further operators for performing actions on this variable
-	if ((preview_lex.m_lexType == DELIMITER && preview_lex.m_numData != ';') || (preview_lex.m_lexType == KEYWORD && preview_lex.m_numData == KEY_AND) || (preview_lex.m_lexType == KEYWORD && preview_lex.m_numData == KEY_OR)) {
-		if (preview_lex.m_numData >= 0 && preview_lex.m_numData <= 255) {
-			const int numCurPriority = gs_operPriority[preview_lex.m_numData];
+	if ((prevLexem.m_lexType == DELIMITER && prevLexem.m_numData != ';') || (prevLexem.m_lexType == KEYWORD && prevLexem.m_numData == KEY_AND) || (prevLexem.m_lexType == KEYWORD && prevLexem.m_numData == KEY_OR)) {
+		if (prevLexem.m_numData >= 0 && prevLexem.m_numData <= 255) {
+			const int numCurPriority = gs_operPriority[prevLexem.m_numData];
 			if (nPriority < numCurPriority) { // ñompare the priorities of the left (previous operation) and the currently running operation
 
 				ibByteUnit code;

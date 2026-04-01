@@ -3,6 +3,28 @@
 
 #include "backend/compiler/byteCode.h"
 
+//function properties:
+enum {
+	RETURN_NONE = 0,//no return (module code)
+	RETURN_PROCEDURE,//return from procedure
+	RETURN_FUNCTION,//return from function
+	RETURN_CONTEXT,//return from context
+};
+
+//variable flags (specified with a negative value in the nArray attribute of the bytecode)
+enum {
+	DEF_VAR_SKIP = -1,// missing parameter
+	DEF_VAR_DEFAULT = -2,//default parameter
+	DEF_VAR_TEMP = -3,//flag of a temporary local variable
+	DEF_VAR_NORET = -7,//function (procedure) does not return values
+	DEF_VAR_CONST = 1000,//loading constants
+};
+
+enum {
+	CODE_CES, 
+	CODE_VBS,
+};
+
 struct ibCompileContext {
 
 #pragma region __context_unit_h__
@@ -114,7 +136,7 @@ struct ibCompileContext {
 	}
 
 	//Setting jump addresses for Continue and Break commands
-	void StartDoList() {
+	void StartLoopList() {
 
 		//create lists for Continue and Break commands (they will store the addresses of byte codes where the corresponding commands were encountered)
 		m_numDoNumber++;
@@ -123,12 +145,12 @@ struct ibCompileContext {
 	}
 
 	//Setting jump addresses for Continue and Break commands
-	void FinishDoList(ibByteCode& cByteCode, int gotoContinue, int gotoBreak) {
+	void FinishLoopList(ibByteCode& cByteCode, int gotoContinue, int gotoBreak) {
 		std::vector<int>* pListC = m_listContinue[m_numDoNumber];
 		std::vector<int>* pListB = m_listBreak[m_numDoNumber];
 		if (pListC == 0 || pListB == 0) {
 #ifdef DEBUG 
-			wxLogDebug(wxT("Error (FinishDoList) gotoContinue=%d, gotoBreak=%d\n"), gotoContinue, gotoBreak);
+			wxLogDebug(wxT("Error (FinishLoopList) gotoContinue=%d, gotoBreak=%d\n"), gotoContinue, gotoBreak);
 			wxLogDebug(wxT("m_numDoNumber=%d\n"), m_numDoNumber);
 #endif 
 			m_numDoNumber--;
@@ -147,9 +169,9 @@ struct ibCompileContext {
 		m_numDoNumber--;
 	}
 
-	void DoLabels();
+	void CreateLabels();
 
-	ibParamUnit CreateVariable(const wxString strPrefix = wxT("@temp_"));
+	ibParamUnit CreateVariable(const wxString& strPrefix = wxT("@temp_"));
 	ibParamUnit AddVariable(const wxString& strVarName, const wxString& strType = wxEmptyString, bool bExport = false, bool bContext = false, bool bTempVar = false);
 	ibParamUnit GetVariable(const wxString& strVarName, bool bFindInParent = true, bool bCheckError = false, bool bContext = false, bool bTempVar = false);
 
@@ -176,8 +198,6 @@ struct ibCompileContext {
 		m_listLabel.clear();
 		m_listLabelDef.clear();
 
-		m_strCurFuncName.clear();
-
 		// clear functions & variables 
 		m_listVariable.clear();
 		m_listFunction.clear();
@@ -199,7 +219,6 @@ struct ibCompileContext {
 	std::map<wxString, std::shared_ptr<ibFunction>> m_listFunction; //list of encountered function definitions
 
 	short m_numReturn;//RETURN operator processing mode: RETURN_NONE,RETURN_PROCEDURE,RETURN_FUNCTION
-	wxString m_strCurFuncName;//name of the current compiled function (for processing the recursive function call option)
 
 	//LOOPS
 	//Service attributes

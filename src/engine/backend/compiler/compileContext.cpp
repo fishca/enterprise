@@ -9,11 +9,16 @@
 * Create a new variable identifier
 */
 
-ibParamUnit ibCompileContext::CreateVariable(const wxString strPrefix)
+ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 {
-	const wxString& strTempName = wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
+	if (m_numReturn == RETURN_CONTEXT)
+		return m_parentContext->CreateVariable(strPrefix);
 
-	ibParamUnit variable = GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
+	const wxString& strTempName =
+		wxString::Format(strPrefix + wxT("%d"), ++m_numTempVar); //@temp_ - to ensure the uniqueness of the name
+
+	ibParamUnit variable =
+		GetVariable(strTempName, false, false, false, true); //we look for a temporary variable only in the local context
 	variable.m_numArray = DEF_VAR_TEMP; //flag of a temporary local variable
 	return variable;
 }
@@ -32,8 +37,18 @@ ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 		return ibParamUnit();
 	}
 
+	if (m_numReturn == RETURN_CONTEXT) {
+
+		ibParamUnit variable = CreateVariable(wxT("@context"));
+
+		PushVariable(strVarName, wxT(""), variable.m_numIndex,
+			typeVar, exportVar, true, tempVar);
+
+		return variable;
+	}
+
 	unsigned int numVariable = m_listVariable.size();
-	PushVariable(strVarName, wxEmptyString, numVariable,
+	PushVariable(strVarName, wxT(""), numVariable,
 		typeVar, exportVar, contextVar, tempVar);
 
 	ibParamUnit variable;
@@ -61,31 +76,47 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 
 		//search in parent contexts (modules)
 		if (bFindInParent) {
-			int numParent = 0;
+
+			int numParent = 0, numContext = 0;
 			ibCompileContext* pCurContext = m_parentContext;
+
+			if (m_numReturn == RETURN_CONTEXT)
+				numContext++;
+
 			while (pCurContext) {
+
 				numParent++;
+
+				if (pCurContext->m_numReturn == RETURN_CONTEXT)
+					numContext++;
+
 				if (numParent > MAX_OBJECTS_LEVEL) {
 					//ibValueSystemFunction::Message(pCurContext->m_compileModule->GetModuleName());
 					if (numParent > 2 * MAX_OBJECTS_LEVEL) {
 						ibBackendCoreException::Error(_("Recursive call of modules!"));
 					}
 				}
+
 				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found
+
 					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
-					if (numCanUseLocalInParent > 0 ||
-						currentVariable->m_bExport) {
+					if (m_numReturn == RETURN_CONTEXT || numCanUseLocalInParent > 0 || currentVariable->m_bExport) {
 
 						ibParamUnit variable;
 
 						//determine the variable number
-						variable.m_numArray = numParent;
+						if (pCurContext->m_numReturn == RETURN_CONTEXT)
+							variable.m_numArray = DEF_VAR_TEMP;
+						else
+							variable.m_numArray = numParent - numContext;
+
 						variable.m_numIndex = currentVariable->m_numVariable;
 						variable.m_strType = currentVariable->m_strType;
 
 						return variable;
 					}
 				}
+
 				numCanUseLocalInParent--;
 				pCurContext = pCurContext->m_parentContext;
 			}
@@ -105,7 +136,11 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 	ibParamUnit variable;
 
 	//determine the number and type of the variable
-	variable.m_numArray = 0;
+	if (m_numReturn == RETURN_CONTEXT)
+		variable.m_numArray = DEF_VAR_TEMP;
+	else
+		variable.m_numArray = 0;
+
 	variable.m_numIndex = currentVariable->m_numVariable;
 	variable.m_strType = currentVariable->m_strType;
 
@@ -229,7 +264,7 @@ bool ibCompileContext::FindFunction(const wxString& strFuncName, std::shared_ptr
 /**
  * Linking GOTO statements to labels
  */
-void ibCompileContext::DoLabels()
+void ibCompileContext::CreateLabels()
 {
 	wxASSERT(m_compileModule != nullptr);
 	for (unsigned int i = 0; i < m_listLabel.size(); i++) {

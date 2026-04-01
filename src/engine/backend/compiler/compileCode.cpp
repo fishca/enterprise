@@ -299,7 +299,7 @@ const ibLexem& ibCompileCode::GETLexem()
 
 void ibCompileCode::GETDelimeter(const wxUniChar& c)
 {
-	const ibLexem& lex = GETLexem();
+	const ibLexem& lex = GetLexem();
 	if (!(lex.m_lexType == DELIMITER && c == lex.m_numData)) {
 		m_numCurrentCompile--;
 		SetError(ERROR_DELIMETER, c);
@@ -387,7 +387,7 @@ bool ibCompileCode::IsNextDelimeter(const wxUniChar& c)
 
 void ibCompileCode::GETKeyWord(int nKey)
 {
-	const ibLexem& lex = GETLexem();
+	const ibLexem& lex = GetLexem();
 	if (!(lex.m_lexType == KEYWORD && lex.m_numData == nKey)) {
 		m_numCurrentCompile--;
 		SetError(ERROR_KEYWORD,
@@ -405,7 +405,7 @@ void ibCompileCode::GETKeyWord(int nKey)
 
 wxString ibCompileCode::GETIdentifier(bool strRealName)
 {
-	const ibLexem& lex = GETLexem();
+	const ibLexem& lex = GetLexem();
 	if (lex.m_lexType != IDENTIFIER) {
 		m_numCurrentCompile--;
 		SetError(ERROR_IDENTIFIER_DEFINE);
@@ -437,7 +437,7 @@ ibValue ibCompileCode::GETConstant()
 		lex = GETLexem();
 	}
 
-	lex = GETLexem();
+	lex = GetLexem();
 
 	if (lex.m_lexType != CONSTANT) {
 		SetError(ERROR_CONST_DEFINE);

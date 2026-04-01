@@ -4390,6 +4390,14 @@ void ibDataViewCtrl::Refresh(bool eraseb, const wxRect* rect)
 
 bool ibDataViewCtrl::AssociateModel(ibDataViewModel* model)
 {
+	if (ibDataViewModel* const oldModel = GetModel())
+	{
+		// Remove the notifier from the model before calling the base class
+		// version which may (or not) delete the model.
+		oldModel->RemoveNotifier(m_notifier);
+		m_notifier = nullptr;
+	}
+
 	if (!ibDataViewCtrlBase::AssociateModel(model))
 		return false;
 
@@ -4397,14 +4405,6 @@ bool ibDataViewCtrl::AssociateModel(ibDataViewModel* model)
 	{
 		m_notifier = new ibGenericDataViewModelNotifier(this);
 		model->AddNotifier(m_notifier);
-	}
-	else
-	{
-		// Our previous notifier has either been already deleted when the
-		// previous model was DecRef()'d in the base class AssociateModel() or
-		// is not associated with us any more because if the model is still
-		// alive, it's not used by this control.
-		m_notifier = NULL;
 	}
 
 	DestroyTree();

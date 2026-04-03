@@ -158,7 +158,7 @@ struct ibSpreadsheetCellDescription {
 			&& m_font == rhs.m_font
 			&& m_backgroundColour == rhs.m_backgroundColour
 			&& m_textColour == rhs.m_textColour
-			&& m_borderAt == rhs.m_borderAt
+			&& m_borderAt[0] == rhs.m_borderAt[0] && m_borderAt[1] == rhs.m_borderAt[1] && m_borderAt[2] == rhs.m_borderAt[2] && m_borderAt[3] == rhs.m_borderAt[3]
 			&& m_row_size == rhs.m_row_size && m_col_size == rhs.m_col_size
 			&& m_fillSetType == rhs.m_fillSetType
 			&& m_detailsParameter == rhs.m_detailsParameter;

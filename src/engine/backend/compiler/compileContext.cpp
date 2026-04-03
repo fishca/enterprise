@@ -11,7 +11,7 @@
 
 ibParamUnit ibCompileContext::CreateVariable(const wxString& strPrefix)
 {
-	if (m_numReturn == RETURN_CONTEXT)
+	if (m_numReturn == RETURN_BLOCK)
 		return m_parentContext->CreateVariable(strPrefix);
 
 	const wxString& strTempName =
@@ -37,7 +37,7 @@ ibParamUnit ibCompileContext::AddVariable(const wxString& strVarName,
 		return ibParamUnit();
 	}
 
-	if (m_numReturn == RETURN_CONTEXT) {
+	if (m_numReturn == RETURN_BLOCK) {
 
 		ibParamUnit variable = CreateVariable(wxT("@context"));
 
@@ -80,14 +80,14 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 			int numParent = 0, numContext = 0;
 			ibCompileContext* pCurContext = m_parentContext;
 
-			if (m_numReturn == RETURN_CONTEXT)
+			if (m_numReturn == RETURN_BLOCK)
 				numContext++;
 
 			while (pCurContext) {
 
 				numParent++;
 
-				if (pCurContext->m_numReturn == RETURN_CONTEXT)
+				if (pCurContext->m_numReturn == RETURN_BLOCK)
 					numContext++;
 
 				if (numParent > MAX_OBJECTS_LEVEL) {
@@ -100,12 +100,12 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 				if (pCurContext->FindVariable(strVarName, currentVariable)) { // found
 
 					//check if this is an export variable or not (if m_numFindLocalInParent=true, then you can take local variables of the parent)
-					if (m_numReturn == RETURN_CONTEXT || numCanUseLocalInParent > 0 || currentVariable->m_bExport) {
+					if (m_numReturn == RETURN_BLOCK || numCanUseLocalInParent > 0 || currentVariable->m_bExport) {
 
 						ibParamUnit variable;
 
 						//determine the variable number
-						if (pCurContext->m_numReturn == RETURN_CONTEXT)
+						if (pCurContext->m_numReturn == RETURN_BLOCK)
 							variable.m_numArray = DEF_VAR_TEMP;
 						else
 							variable.m_numArray = numParent - numContext;
@@ -136,7 +136,7 @@ ibParamUnit ibCompileContext::GetVariable(const wxString& strVarName, bool bFind
 	ibParamUnit variable;
 
 	//determine the number and type of the variable
-	if (m_numReturn == RETURN_CONTEXT)
+	if (m_numReturn == RETURN_BLOCK)
 		variable.m_numArray = DEF_VAR_TEMP;
 	else
 		variable.m_numArray = 0;

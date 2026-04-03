@@ -1269,6 +1269,11 @@ if(!sKey.m_strType.IsEmpty())\
 	else SetError(ERROR_BAD_TYPE_EXPRESSION);\
 }
 
+// macro for local context 
+#define CreateLocalContext(ctx) \
+	std::shared_ptr<ibCompileContext>(\
+	ctx->CreateContext(RETURN_BLOCK)).get()
+
 /**
  * CompileBlock
  * Purpose:
@@ -1283,7 +1288,7 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 {
 	bool bCompileBlock = false;
 
-	if (gs_codeStyle == CODE_CES && (context != m_rootContext && (context->m_numReturn != RETURN_NONE || IsNextDelimeter(wxT('{'))))) {
+	if (gs_codeStyle == CODE_CES && (context->m_numReturn != RETURN_NONE && context->m_numReturn != RETURN_BLOCK) || IsNextDelimeter(wxT('{'))) {
 		GETDelimeter(wxT('{'));
 		bCompileBlock = true;
 	}
@@ -1345,7 +1350,7 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 				GETKeyWord(KEY_RETURN);
 
 				ibCompileContext* currContext = context;
-				while (currContext->m_numReturn == RETURN_CONTEXT)
+				while (currContext->m_numReturn == RETURN_BLOCK)
 					currContext = currContext->m_parentContext;
 
 				if (currContext->m_numReturn == RETURN_NONE) {
@@ -1504,11 +1509,8 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 			{
 				m_numCurrentCompile--;// step back
 
-				std::shared_ptr<ibCompileContext> blockContext(
-					context->CreateContext(RETURN_CONTEXT));
-
 				const int numTempVar = context->m_numTempVar;
-				CompileBlock(blockContext.get());
+				CompileBlock(CreateLocalContext(context));
 				context->m_numTempVar = numTempVar;
 			}
 			else if (gs_codeStyle == CODE_CES && nextLexem.m_lexType == DELIMITER
@@ -1527,7 +1529,7 @@ bool ibCompileCode::CompileBlock(ibCompileContext* context)
 				return false;
 			}
 
-			if (gs_codeStyle == CODE_CES && !bCompileBlock && context->m_numReturn == RETURN_CONTEXT)
+			if (gs_codeStyle == CODE_CES && !bCompileBlock && context->m_numReturn == RETURN_BLOCK)
 				break;
 		}
 
@@ -1881,7 +1883,10 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 	else
 		GETDelimeter(wxT(')'));
 
-	CompileBlock(context);
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
 
 	while (IsNextKeyWord(KEY_ELSEIF)) {
 
@@ -1920,8 +1925,10 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		else
 			GETDelimeter(wxT(')'));
 
-
-		CompileBlock(context);
+		if (gs_codeStyle == CODE_CES)
+			CompileBlock(CreateLocalContext(context));
+		else
+			CompileBlock(context);
 	}
 
 	if (IsNextKeyWord(KEY_ELSE)) {
@@ -1941,7 +1948,11 @@ bool ibCompileCode::CompileIf(ibCompileContext* context)
 		nLastIFLine = 0;
 
 		GETKeyWord(KEY_ELSE);
-		CompileBlock(context);
+
+		if (gs_codeStyle == CODE_CES)
+			CompileBlock(CreateLocalContext(context));
+		else
+			CompileBlock(context);
 	}
 
 	if (gs_codeStyle == CODE_VBS)
@@ -1987,7 +1998,10 @@ bool ibCompileCode::CompileWhile(ibCompileContext* context)
 	else
 		GETDelimeter(wxT(')'));
 
-	CompileBlock(context);
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
 
 	if (gs_codeStyle == CODE_VBS)
 		GETKeyWord(KEY_ENDDO);
@@ -2072,7 +2086,10 @@ bool ibCompileCode::CompileFor(ibCompileContext* context)
 	else
 		GETDelimeter(wxT(')'));
 
-	CompileBlock(context);
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
 
 	if (gs_codeStyle == CODE_VBS)
 		GETKeyWord(KEY_ENDDO);
@@ -2137,7 +2154,10 @@ bool ibCompileCode::CompileForeach(ibCompileContext* context)
 	else
 		GETDelimeter(wxT(')'));
 
-	CompileBlock(context);
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
 
 	if (gs_codeStyle == CODE_VBS)
 		GETKeyWord(KEY_ENDDO);
@@ -2168,7 +2188,12 @@ bool ibCompileCode::CompileException(ibCompileContext* context)
 
 	ibByteUnit code2;
 	AddLineInfo(code2);
-	CompileBlock(context);
+
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
+
 	code2.m_numOper = OPER_ENDTRY;
 	m_cByteCode.m_listCode.emplace_back(std::move(code2));
 
@@ -2177,11 +2202,14 @@ bool ibCompileCode::CompileException(ibCompileContext* context)
 	m_cByteCode.m_listCode[lineTry].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
 
 	GETKeyWord(KEY_EXCEPT);
-	CompileBlock(context);
 
-	if (gs_codeStyle == CODE_VBS) {
+	if (gs_codeStyle == CODE_CES)
+		CompileBlock(CreateLocalContext(context));
+	else
+		CompileBlock(context);
+
+	if (gs_codeStyle == CODE_VBS)
 		GETKeyWord(KEY_ENDTRY);
-	}
 
 	m_cByteCode.m_listCode[addrLine].m_param1.m_numIndex = m_cByteCode.m_listCode.size();
 	return true;

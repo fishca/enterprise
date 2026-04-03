@@ -8,7 +8,7 @@ enum {
 	RETURN_NONE = 0,//no return (module code)
 	RETURN_PROCEDURE,//return from procedure
 	RETURN_FUNCTION,//return from function
-	RETURN_CONTEXT,//return from context
+	RETURN_BLOCK,//return from context
 };
 
 //variable flags (specified with a negative value in the nArray attribute of the bytecode)

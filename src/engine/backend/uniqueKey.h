@@ -46,7 +46,7 @@ public:
 
 	operator wxString() const { return GetGuid().str(); }
 	operator ibGuid() const { return GetGuid(); }
-	operator guid_t() const { return GetGuid(); }
+	operator ibGuidImpl() const { return GetGuid(); }
 
 protected:
 

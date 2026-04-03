@@ -18,7 +18,7 @@ ibValueModel::ibValueModel()
 	m_modelProvider(nullptr),
 	m_refreshModel(false)
 {
-	m_modelProvider = new ibDataViewModelProviderBase(this);
+	m_modelProvider = new ibDataViewModelProviderImpl(this);
 	//m_modelProvider->IncRef(); // always one 
 }
 

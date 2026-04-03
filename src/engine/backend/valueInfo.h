@@ -6,9 +6,9 @@
 //reference data
 struct ibReference {
 
-	ibReference(const ibMetaID& id, const guid_t& guid) : m_id(id), m_guid(guid) {}
+	ibReference(const ibMetaID& id, const ibGuidImpl& guid) : m_id(id), m_guid(guid) {}
 
-	guid_t m_guid;
+	ibGuidImpl m_guid;
 	ibMetaID m_id; // id of metadata 
 };
 

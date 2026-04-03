@@ -33,26 +33,26 @@ bool ibValuePoint::Init(ibValue** paParams, const long lSizeArray)
 
 enum
 {
-	eX,
-	eY
+	eLeft,
+	eTop
 };
 
 void ibValuePoint::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("X"));
-	m_methodHelper.AppendProp(wxT("Y"));
+	m_methodHelper.AppendProp(wxT("Left"));
+	m_methodHelper.AppendProp(wxT("Top"));
 }
 
 bool ibValuePoint::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eLeft:
 		m_point.x = varPropVal.GetInteger();
 		return true;
-	case eY:
+	case eTop:
 		m_point.y = varPropVal.GetInteger();
 		return true;
 	}
@@ -64,10 +64,10 @@ bool ibValuePoint::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eLeft:
 		pvarPropVal = m_point.x;
 		return true;
-	case eY:
+	case eTop:
 		pvarPropVal = m_point.y;
 		return true;
 	}

@@ -113,7 +113,8 @@ public:
 };
 
 struct ibSortOrder {
-	struct CSortData {
+	
+	struct ibSortData {
 		unsigned int m_sortModel;
 		wxString m_sortName;
 		wxString m_sortPresentation;
@@ -121,7 +122,7 @@ struct ibSortOrder {
 		bool m_sortEnable;
 		bool m_sortSystem;
 	public:
-		CSortData(unsigned int sortModel, const wxString& sortName, const wxString& sortPresentation = wxEmptyString, bool sortAscending = true, bool sortEnable = true, bool sortSystem = false) :
+		ibSortData(unsigned int sortModel, const wxString& sortName, const wxString& sortPresentation = wxEmptyString, bool sortAscending = true, bool sortEnable = true, bool sortSystem = false) :
 			m_sortModel(sortModel),
 			m_sortName(sortName),
 			m_sortPresentation(sortPresentation),
@@ -131,7 +132,7 @@ struct ibSortOrder {
 		{
 		}
 	};
-	std::vector< CSortData> m_sorts;
+	std::vector< ibSortData> m_sorts;
 public:
 
 	void AppendSort(unsigned int col_id, const wxString& name, bool ascending = true, bool use = true, bool system = false) {
@@ -142,10 +143,10 @@ public:
 		if (GetSortByID(col_id) == nullptr) m_sorts.emplace_back(col_id, name, presentation, ascending, use, system);
 	}
 
-	CSortData* GetSortByID(unsigned int col_id) const {
+	ibSortData* GetSortByID(unsigned int col_id) const {
 		auto iterator = std::find_if(m_sorts.begin(), m_sorts.end(),
-			[col_id](const CSortData& data) {return col_id == data.m_sortModel; });
-		if (iterator != m_sorts.end()) return const_cast<CSortData*>(&*iterator);
+			[col_id](const ibSortData& data) {return col_id == data.m_sortModel; });
+		if (iterator != m_sorts.end()) return const_cast<ibSortData*>(&*iterator);
 		return nullptr;
 	}
 
@@ -248,11 +249,11 @@ protected:
 
 #pragma region _data_model_h_
 
-	class BACKEND_API ibDataViewModelProviderBase :
+	class BACKEND_API ibDataViewModelProviderImpl :
 		public ibDataViewModelProvider {
 	public:
 
-		ibDataViewModelProviderBase(ibValueModel* owner) : ibDataViewModelProvider(), m_ownerModel(owner) {}
+		ibDataViewModelProviderImpl(ibValueModel* owner) : ibDataViewModelProvider(), m_ownerModel(owner) {}
 
 		virtual ibValueModel* GetOwnerValueModel() const { return m_ownerModel; }
 
@@ -345,7 +346,7 @@ protected:
 		ibValueModel* m_ownerModel;
 	};
 
-	ibDataViewModelProviderBase* m_modelProvider;
+	ibDataViewModelProviderImpl* m_modelProvider;
 
 #pragma endregion 
 
@@ -528,7 +529,7 @@ public:
 		}
 	}
 
-	ibSortOrder::CSortData* GetSortByID(unsigned int col) const {
+	ibSortOrder::ibSortData* GetSortByID(unsigned int col) const {
 		return m_sortOrder.GetSortByID(col);
 	}
 
@@ -556,7 +557,7 @@ public:
 	};
 
 #pragma region _data_model_h_
-	ibDataViewModelProviderBase* GetDataViewModel() const { return m_modelProvider; }
+	ibDataViewModelProviderImpl* GetDataViewModel() const { return m_modelProvider; }
 #pragma endregion 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +590,7 @@ public:
 	}
 
 	virtual bool IsSortable(unsigned int col) const {
-		ibSortOrder::CSortData* sortData = m_sortOrder.GetSortByID(col);
+		ibSortOrder::ibSortData* sortData = m_sortOrder.GetSortByID(col);
 		if (sortData == nullptr)
 			return false;
 		return true;
@@ -1131,7 +1132,7 @@ public:
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
 
-		ibSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
+		ibSortOrder::ibSortData* foundedSort = m_sortOrder.GetSortByID(col);
 		if (foundedSort == nullptr && col != unsigned int(wxNOT_FOUND))
 			return 0;
 
@@ -1572,7 +1573,7 @@ public:
 
 		wxASSERT(item1.IsOk() && item2.IsOk());
 
-		ibSortOrder::CSortData* foundedSort = m_sortOrder.GetSortByID(col);
+		ibSortOrder::ibSortData* foundedSort = m_sortOrder.GetSortByID(col);
 		if (foundedSort == nullptr && col != unsigned int(wxNOT_FOUND))
 			return 0;
 

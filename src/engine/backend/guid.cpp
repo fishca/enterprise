@@ -110,10 +110,10 @@ std::string ibGuid::str() const
 	return out;
 }
 
-// conversion operator for guid_t
-ibGuid::operator guid_t() const
+// conversion operator for ibGuidImpl
+ibGuid::operator ibGuidImpl() const
 {
-	guid_t guid;
+	ibGuidImpl guid;
 	guid.m_data1 = _bytes[0] << 24 ^ _bytes[1] << 16 ^ _bytes[2] << 8 ^ _bytes[3];
 	guid.m_data2 = _bytes[4] << 8 ^ _bytes[5];
 	guid.m_data3 = _bytes[6] << 8 ^ _bytes[7];
@@ -271,7 +271,7 @@ ibGuid::ibGuid(const wxString& fromString)
 }
 #endif
 
-ibGuid::ibGuid(const guid_t& guid)
+ibGuid::ibGuid(const ibGuidImpl& guid)
 {
 	_bytes = {
 		(unsigned char)((guid.m_data1 >> 24) & 0xFF),

@@ -41,31 +41,31 @@ bool ibValueColour::Init(ibValue** paParams, const long lSizeArray)
 
 enum
 {
-	enColorR,
-	enColorG,
-	enColorB
+	enColorRed,
+	enColorGreen,
+	enColorBlue
 };
 
 void ibValueColour::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("R"));
-	m_methodHelper.AppendProp(wxT("G"));
-	m_methodHelper.AppendProp(wxT("B"));
+	m_methodHelper.AppendProp(wxT("Red"));
+	m_methodHelper.AppendProp(wxT("Green"));
+	m_methodHelper.AppendProp(wxT("Blue"));
 }
 
 bool ibValueColour::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
-	case enColorR:
+	case enColorRed:
 		m_colour.Set((unsigned char)varPropVal.GetUInteger(), m_colour.Green(), m_colour.Blue());
 		return true;
-	case enColorG:
+	case enColorGreen:
 		m_colour.Set(m_colour.Red(), (unsigned char)varPropVal.GetUInteger(), m_colour.Blue());
 		return true;
-	case enColorB:
+	case enColorBlue:
 		m_colour.Set(m_colour.Red(), m_colour.Green(), (unsigned char)varPropVal.GetUInteger());
 		return true;
 	}
@@ -76,13 +76,13 @@ bool ibValueColour::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-	case enColorR:
+	case enColorRed:
 		pvarPropVal = m_colour.Red();
 		return true;
-	case enColorG:
+	case enColorGreen:
 		pvarPropVal = m_colour.Green();
 		return true;
-	case enColorB:
+	case enColorBlue:
 		pvarPropVal = m_colour.Blue();
 		return true;
 	}

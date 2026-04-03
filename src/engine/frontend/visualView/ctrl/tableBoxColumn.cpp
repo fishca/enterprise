@@ -156,7 +156,7 @@ void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparen
 	const ibFormID source_column = GetModelColumn();
 
 	ibValueModel* modelValue = GetOwner()->GetModel();
-	ibSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
+	ibSortOrder::ibSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
 
 	dataViewColumn->SetHidden(!m_propertyVisible->GetValueAsBoolean());
 	dataViewColumn->SetSortable(sort != nullptr && !appData->DesignerMode());

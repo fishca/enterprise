@@ -15,7 +15,7 @@ void ibValueModelTableBox::OnColumnClick(ibDataViewEvent& event)
 	}
 
 	if (m_tableModel != nullptr) {
-		ibSortOrder::CSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
+		ibSortOrder::ibSortData* sort = m_tableModel->GetSortByID(event.GetColumn());
 		if (sort != nullptr && !sort->m_sortSystem) {
 
 			m_tableModel->ResetSort();

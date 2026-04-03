@@ -33,26 +33,26 @@ bool ibValueSize::Init(ibValue** paParams, const long lSizeArray)
 
 enum
 {
-	eX,
-	eY
+	eWidth,
+	eHeight
 };
 
 void ibValueSize::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("X"));
-	m_methodHelper.AppendProp(wxT("Y"));
+	m_methodHelper.AppendProp(wxT("Width"));
+	m_methodHelper.AppendProp(wxT("Height"));
 }
 
 bool ibValueSize::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eWidth:
 		m_size.x = varPropVal.GetInteger();
 		return true;
-	case eY:
+	case eHeight:
 		m_size.y = varPropVal.GetInteger();
 		return true;
 	}
@@ -63,10 +63,10 @@ bool ibValueSize::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eWidth:
 		pvarPropVal = m_size.x;
 		return true;
-	case eY:
+	case eHeight:
 		pvarPropVal = m_size.y;
 		return true;
 	}

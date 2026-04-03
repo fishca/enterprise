@@ -24,8 +24,7 @@ THE SOFTWARE.
 #include <array>
 #include <wx/wx.h>
 
-struct guid_t  // UUID = GUID = CLSID = LIBID = IID
-{
+struct ibGuidImpl { // UUID = GUID = CLSID = LIBID = IID
 	unsigned long   m_data1;
 	unsigned short  m_data2;
 	unsigned short  m_data3;
@@ -61,7 +60,7 @@ public:
 	explicit ibGuid(const std::string_view& fromString);
 
 	ibGuid();
-	ibGuid(const guid_t& bytes);
+	ibGuid(const ibGuidImpl& bytes);
 #if __WXWINDOWS__
 	ibGuid(const wxString& fromString);
 #endif
@@ -82,7 +81,7 @@ public:
 	bool operator==(const ibGuid& other) const;
 	bool operator!=(const ibGuid& other) const;
 
-	operator guid_t() const;
+	operator ibGuidImpl() const;
 
 	// convert to string using std::snprintf() and std::string
 	std::string str() const;

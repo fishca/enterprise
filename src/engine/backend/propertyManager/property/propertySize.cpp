@@ -1,6 +1,8 @@
 #include "propertySize.h"
 #include "backend/system/value/valueSize.h"
 
+wxObject* (*ibPropertySize::ms_propertySize)(const wxString&, const wxString&, const wxSize&) = nullptr;
+
 //base property for "size"
 bool ibPropertySize::SetDataValue(const ibValue& varPropVal)
 {

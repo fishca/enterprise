@@ -5,23 +5,23 @@ enum {
 };
 
 // -----------------------------------------------------------------------
-// CObjectInspector
+// ibObjectInspector
 // -----------------------------------------------------------------------
 
-wxBEGIN_EVENT_TABLE(CObjectInspector, wxPanel)
-EVT_PG_CHANGING(WXOES_PROPERTY_GRID, CObjectInspector::OnPropertyGridChanging)
-EVT_PG_CHANGED(WXOES_PROPERTY_GRID, CObjectInspector::OnPropertyGridChanged)
-EVT_PG_ITEM_COLLAPSED(WXOES_PROPERTY_GRID, CObjectInspector::OnPropertyGridExpand)
-EVT_PG_ITEM_EXPANDED(WXOES_PROPERTY_GRID, CObjectInspector::OnPropertyGridExpand)
-EVT_PG_SELECTED(WXOES_PROPERTY_GRID, CObjectInspector::OnPropertyGridItemSelected)
-EVT_CHILD_FOCUS(CObjectInspector::OnChildFocus)
+wxBEGIN_EVENT_TABLE(ibObjectInspector, wxPanel)
+EVT_PG_CHANGING(WXOES_PROPERTY_GRID, ibObjectInspector::OnPropertyGridChanging)
+EVT_PG_CHANGED(WXOES_PROPERTY_GRID, ibObjectInspector::OnPropertyGridChanged)
+EVT_PG_ITEM_COLLAPSED(WXOES_PROPERTY_GRID, ibObjectInspector::OnPropertyGridExpand)
+EVT_PG_ITEM_EXPANDED(WXOES_PROPERTY_GRID, ibObjectInspector::OnPropertyGridExpand)
+EVT_PG_SELECTED(WXOES_PROPERTY_GRID, ibObjectInspector::OnPropertyGridItemSelected)
+EVT_CHILD_FOCUS(ibObjectInspector::OnChildFocus)
 wxEND_EVENT_TABLE()
 
 ///////////////////////////////////////////////////////////////////////////////
-// CObjectInspector
+// ibObjectInspector
 ///////////////////////////////////////////////////////////////////////////////
 
-CObjectInspector::CObjectInspector(wxWindow* parent, int id, int style)
+ibObjectInspector::ibObjectInspector(wxWindow* parent, int id, int style)
 	: wxPanel(parent, id), m_style(style), m_currentSel(nullptr)
 {
 	m_pg = CreatePropertyGridManager(this, WXOES_PROPERTY_GRID);
@@ -30,17 +30,17 @@ CObjectInspector::CObjectInspector(wxWindow* parent, int id, int style)
 	topSizer->Add(m_pg, 1, wxALL | wxEXPAND, 0);
 	SetSizer(topSizer);
 
-	CObjectInspector::Connect(wxID_ANY, wxEVT_OES_PROP_PICTURE_CHANGED, wxCommandEventHandler(CObjectInspector::OnBitmapPropertyChanged));
+	ibObjectInspector::Connect(wxID_ANY, wxEVT_OES_PROP_PICTURE_CHANGED, wxCommandEventHandler(ibObjectInspector::OnBitmapPropertyChanged));
 }
 
-CObjectInspector::~CObjectInspector()
+ibObjectInspector::~ibObjectInspector()
 {
-	CObjectInspector::Disconnect(wxID_ANY, wxEVT_OES_PROP_PICTURE_CHANGED, wxCommandEventHandler(CObjectInspector::OnBitmapPropertyChanged));
+	ibObjectInspector::Disconnect(wxID_ANY, wxEVT_OES_PROP_PICTURE_CHANGED, wxCommandEventHandler(ibObjectInspector::OnBitmapPropertyChanged));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CObjectInspector::SavePosition()
+void ibObjectInspector::SavePosition()
 {
 	// Save Layout
 	wxConfigBase* config = wxConfigBase::Get();
@@ -49,14 +49,14 @@ void CObjectInspector::SavePosition()
 
 #include "frontend/mainFrame/mainFrame.h"
 
-CObjectInspector* CObjectInspector::GetObjectInspector()
+ibObjectInspector* ibObjectInspector::GetObjectInspector()
 {
 	return ibFrontendDocMDIFrame::GetObjectInspector();
 }
 
 #include "frontend/visualView/formdefs.h"
 
-void CObjectInspector::Create(ibPropertyObject* object, bool force)
+void ibObjectInspector::Create(ibPropertyObject* object, bool force)
 {
 	if (force || object != m_currentSel) {
 		m_pg->Freeze();
@@ -150,14 +150,14 @@ void CObjectInspector::Create(ibPropertyObject* object, bool force)
 	RestoreLastSelectedPropItem();
 }
 
-bool CObjectInspector::IsShownInspector() const
+bool ibObjectInspector::IsShownInspector() const
 {
 	if (mainFrame != nullptr)
 		return mainFrame->IsShownInspector();
 	return false;
 }
 
-void CObjectInspector::ShowInspector()
+void ibObjectInspector::ShowInspector()
 {
 	if (mainFrame != nullptr)
 		mainFrame->ShowInspector();
@@ -165,7 +165,7 @@ void CObjectInspector::ShowInspector()
 
 #include "frontend/visualView/ctrl/frame.h"
 
-wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const
+wxPropertyGridManager* ibObjectInspector::CreatePropertyGridManager(wxWindow* parent, wxWindowID id) const
 {
 	int pgStyle;
 	int defaultDescBoxHeight;
@@ -210,9 +210,9 @@ wxPropertyGridManager* CObjectInspector::CreatePropertyGridManager(wxWindow* par
 	return pg;
 }
 
-wxPGProperty* CObjectInspector::GetProperty(ibProperty* prop) const 
+wxPGProperty* ibObjectInspector::GetProperty(ibProperty* prop) const 
 {
-	wxPGProperty* result = prop->GetPGProperty();
+	wxPGProperty* result = (wxPGProperty* )prop->GetPGProperty();
 	if (result != nullptr) {
 		result->SetHelpString(prop->GetHelp());
 		result->Enable(prop->IsEditable());
@@ -220,9 +220,9 @@ wxPGProperty* CObjectInspector::GetProperty(ibProperty* prop) const
 	return result;
 }
 
-wxPGProperty* CObjectInspector::GetEvent(ibEvent* event) const
+wxPGProperty* ibObjectInspector::GetEvent(ibEvent* event) const
 {
-	wxPGProperty* result = event->GetPGProperty();
+	wxPGProperty* result = (wxPGProperty*)event->GetPGProperty();
 	if (result != nullptr) {
 		result->SetHelpString(event->GetHelp());
 		result->Enable(event->IsEditable());
@@ -230,7 +230,7 @@ wxPGProperty* CObjectInspector::GetEvent(ibEvent* event) const
 	return result;
 }
 
-bool CObjectInspector::ModifyProperty(ibProperty* prop, const wxVariant& newValue)
+bool ibObjectInspector::ModifyProperty(ibProperty* prop, const wxVariant& newValue)
 {
 	const wxVariant oldValue = prop->GetValue();
 	if (m_currentSel->OnPropertyChanging(prop, newValue)) {
@@ -241,7 +241,7 @@ bool CObjectInspector::ModifyProperty(ibProperty* prop, const wxVariant& newValu
 	return false;
 }
 
-bool CObjectInspector::ModifyEvent(ibEvent* event, const wxVariant& newValue)
+bool ibObjectInspector::ModifyEvent(ibEvent* event, const wxVariant& newValue)
 {
 	const wxVariant oldValue = event->GetValue();
 	if (m_currentSel->OnEventChanging(event, newValue)) {
@@ -254,7 +254,7 @@ bool CObjectInspector::ModifyEvent(ibEvent* event, const wxVariant& newValue)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
+void ibObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
 {
 	wxPGProperty* propPtr = event.GetProperty();
 	std::map< wxPGProperty*, ibProperty*>::iterator itProperty = m_propMap.find(propPtr);
@@ -287,7 +287,7 @@ void CObjectInspector::OnPropertyGridChanging(wxPropertyGridEvent& event)
 	m_pg->SetDescription(wxEmptyString, wxEmptyString);
 }
 
-void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
+void ibObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
 {
 	if (m_currentSel != nullptr) {
 		m_pg->Freeze();
@@ -324,7 +324,7 @@ void CObjectInspector::OnPropertyGridChanged(wxPropertyGridEvent& event)
 	event.Skip();
 }
 
-void CObjectInspector::OnPropertyGridExpand(wxPropertyGridEvent& event)
+void ibObjectInspector::OnPropertyGridExpand(wxPropertyGridEvent& event)
 {
 	m_isExpanded[event.GetPropertyName()] = event.GetProperty()->IsExpanded();
 
@@ -339,7 +339,7 @@ void CObjectInspector::OnPropertyGridExpand(wxPropertyGridEvent& event)
 	}
 }
 
-void CObjectInspector::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
+void ibObjectInspector::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
 {
 	wxPGProperty* propPtr = event.GetProperty();
 	if (propPtr != nullptr) {
@@ -358,7 +358,7 @@ void CObjectInspector::OnPropertyGridItemSelected(wxPropertyGridEvent& event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CObjectInspector::OnBitmapPropertyChanged(wxCommandEvent& event)
+void ibObjectInspector::OnBitmapPropertyChanged(wxCommandEvent& event)
 {
 	wxLogDebug(wxT("OI::BitmapPropertyChanged: %s"), event.GetString().c_str());
 
@@ -373,6 +373,6 @@ void CObjectInspector::OnBitmapPropertyChanged(wxCommandEvent& event)
 	//}
 }
 
-void CObjectInspector::OnChildFocus(wxChildFocusEvent&) {
+void ibObjectInspector::OnChildFocus(wxChildFocusEvent&) {
 	// do nothing to avoid "scrollbar jump" if wx2.9 is used
 }

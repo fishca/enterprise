@@ -2,7 +2,7 @@
 #define __PROPERTY_PICTURE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropPicture.h"
+#include "backend/backend_picture.h"
 
 //base property for "picture"
 class BACKEND_API ibPropertyPicture : public ibProperty {
@@ -33,8 +33,10 @@ public:
 	virtual bool IsEmptyProperty() const;
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGPictureProperty(m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyPicture != nullptr)
+			return ms_propertyPicture(m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	//set/Get property data
@@ -44,6 +46,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyPicture)(const wxString&, const wxString&, const wxVariant&);
 };
 
 //base property for "external picture"
@@ -75,8 +81,10 @@ public:
 	virtual bool IsEmptyProperty() const;
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGExternalImageProperty(m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyExtPicture != nullptr)
+			return ms_propertyExtPicture(m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	//set/Get property data
@@ -86,6 +94,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyExtPicture)(const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

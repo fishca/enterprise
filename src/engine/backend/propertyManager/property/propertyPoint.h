@@ -2,7 +2,6 @@
 #define __PROPERTY_POINT_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropPoint.h"
 
 //base property for "size"
 class BACKEND_API ibPropertyPoint : public ibProperty {
@@ -19,11 +18,11 @@ public:
 		return point;
 	}
 	wxString GetValueAsString() const { return typeConv::PointToString(GetValueAsPoint()); }
-	
+
 	void SetValue(const wxPoint& val) { ibProperty::SetValue(CreateVariantData(val)); }
 	void SetValue(const wxString& val) { SetValue(typeConv::StringToPoint(val)); }
 
-	ibPropertyPoint(ibPropertyCategory* cat, const wxString& name, const wxPoint &p = wxDefaultPosition)
+	ibPropertyPoint(ibPropertyCategory* cat, const wxString& name, const wxPoint& p = wxDefaultPosition)
 		: ibProperty(cat, name, CreateVariantData(p))
 	{
 	}
@@ -39,8 +38,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGPointProperty(m_propLabel, m_propName, GetValueAsPoint());
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyPoint != nullptr)
+			return ms_propertyPoint(m_propLabel, m_propName, GetValueAsPoint());
+		return nullptr;
 	}
 
 	// set/get property data
@@ -50,6 +51,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyPoint)(const wxString&, const wxString&, const wxPoint&);
 };
 
 #endif

@@ -2,7 +2,7 @@
 #define __PROPERTY_GENERATION_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropGeneration.h"
+#include "backend/backend_type.h"
 
 //base property for "generation"
 class BACKEND_API ibPropertyGeneration : public ibProperty {
@@ -29,8 +29,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGGenerationProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyGeneration != nullptr)
+			return ms_propertyGeneration(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -40,6 +42,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyGeneration)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

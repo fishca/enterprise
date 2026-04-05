@@ -21,15 +21,15 @@ enum {
 	wxOES_OI_SINGLE_PAGE_STYLE
 };
 
-#define objectInspector  CObjectInspector::GetObjectInspector()
+#define objectInspector  ibObjectInspector::GetObjectInspector()
 
-class FRONTEND_API CObjectInspector final : public wxPanel {
+class FRONTEND_API ibObjectInspector final : public wxPanel {
 
-	CObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
+	ibObjectInspector(wxWindow* parent, int id, int style = wxOES_OI_DEFAULT_STYLE);
 
 public:
 
-	virtual ~CObjectInspector();
+	virtual ~ibObjectInspector();
 
 	wxPropertyGridManager* GetPropertyManager() const { return m_pg; }
 
@@ -70,7 +70,7 @@ public:
 
 	void SavePosition();
 
-	static CObjectInspector* GetObjectInspector();
+	static ibObjectInspector* GetObjectInspector();
 
 protected:
 

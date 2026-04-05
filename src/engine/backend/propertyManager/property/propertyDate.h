@@ -3,8 +3,6 @@
 
 #include "backend/propertyManager/propertyObject.h"
 
-#include <wx/propgrid/advprops.h>
-
 //base property for "date"
 class BACKEND_API ibPropertyDate : public ibProperty {
 public:
@@ -30,8 +28,10 @@ public:
 	virtual bool IsEmptyProperty() const { return GetValueAsDateTime() == emptyDate; }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxDateProperty(m_propLabel, m_propName, GetValueAsDateTime());
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyDate != nullptr)
+			return ms_propertyDate(m_propLabel, m_propName, GetValueAsDateTime());
+		return nullptr;
 	}
 
 	// set/get property data
@@ -41,6 +41,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyDate)(const wxString&, const wxString&, const wxDateTime&);
 };
 
 #endif

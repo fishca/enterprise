@@ -30,7 +30,6 @@
     <ClInclude Include="backend_type.h" />
     <ClInclude Include="constantCtor.h" />
     <ClInclude Include="moduleManager\globalContextManager.h" />
-    <ClInclude Include="propertyManager\property\private\prop.h" />
     <ClInclude Include="restructureInfo.h" />
     <ClInclude Include="spreadsheetDescription.h" />
     <ClInclude Include="clsid.h" />
@@ -186,25 +185,8 @@
     <ClInclude Include="number.h" />
     <ClInclude Include="objCtor.h" />
     <ClInclude Include="picturePredefined.h" />
-    <ClInclude Include="propertyManager\propertyEditor.h" />
     <ClInclude Include="propertyManager\propertyManager.h" />
     <ClInclude Include="propertyManager\propertyObject.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropEvent.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropEventTool.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropFont.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropGeneration.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropList.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropNumber.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropOwner.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropPicture.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropPoint.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropRecord.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropSize.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropSource.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropString.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropType.h" />
-    <ClInclude Include="propertyManager\property\advprop\ctrl\checktree.h" />
     <ClInclude Include="propertyManager\property\eventControl.h" />
     <ClInclude Include="propertyManager\property\eventAction.h" />
     <ClInclude Include="propertyManager\property\propertyBoolean.h" />
@@ -488,24 +470,7 @@
     <ClCompile Include="moduleManager\moduleManagerUnit.cpp" />
     <ClCompile Include="objCtor.cpp" />
     <ClCompile Include="picturePredefined.cpp" />
-    <ClCompile Include="propertyManager\propertyEditor.cpp" />
     <ClCompile Include="propertyManager\propertyObject.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropEvent.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropEventTool.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropFont.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropGeneration.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropList.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropNumber.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropOwner.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropPicture.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropPoint.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropRecord.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropSize.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropSource.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropString.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropType.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\ctrl\checktree.cpp" />
     <ClCompile Include="propertyManager\property\eventControl.cpp" />
     <ClCompile Include="propertyManager\property\eventAction.cpp" />
     <ClCompile Include="propertyManager\property\propertyBoolean.cpp" />
@@ -805,14 +770,6 @@
     <CopyFileToFolders Include="backend.conf">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <None Include="propertyManager\property\advprop\ctrl\res\checked2.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_d.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_ld.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_mo.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked2.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_d.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_ld.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_mo.xpm" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\backend.rc" />

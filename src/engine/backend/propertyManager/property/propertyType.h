@@ -2,11 +2,11 @@
 #define __PROPERTY_TYPE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropType.h"
+#include "backend/backend_type.h"
 
 //base property for "type"
 class BACKEND_API ibPropertyType : public ibProperty {
-	wxVariantData* CreateVariantData(ibPropertyObject *property, const ibValueTypes type) const;
+	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibValueTypes type) const;
 	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibClassID& clsid) const;
 	wxVariantData* CreateVariantData(ibPropertyObject* property, const ibTypeDescription& typeDesc) const;
 public:
@@ -25,8 +25,10 @@ public:
 	virtual bool IsEmptyProperty() const { return !GetValueAsTypeDesc().IsOk(); }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGTypeProperty(m_owner, GetFilterDataType(), m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyType != nullptr)
+			return ms_propertyType(m_owner, GetFilterDataType(), m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	//set/get property data
@@ -36,6 +38,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyType)(ibPropertyObject*, ibSelectorDataType, const wxString&, const wxString&, const wxVariant&);
 
 protected:
 	ibSelectorDataType GetFilterDataType() const;

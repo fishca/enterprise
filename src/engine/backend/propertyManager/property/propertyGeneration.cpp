@@ -1,6 +1,11 @@
 #include "propertyGeneration.h"
 #include "backend/propertyManager/property/variant/variantGen.h"
 
+// get property for grid
+wxObject* (*ibPropertyGeneration::ms_propertyGeneration)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
+/////////////////////////////////////////////////////////////////////
+
 wxVariantData* ibPropertyGeneration::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
 {
 	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);

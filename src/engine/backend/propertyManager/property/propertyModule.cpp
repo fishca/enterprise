@@ -3,6 +3,9 @@
 
 #define chunkForm 0x023456543
 
+// get property for grid
+wxObject* (*ibPropertyModule::ms_propertyModule)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
 ////////////////////////////////////////////////////////////////////////
 
 wxVariantData* ibPropertyModule::CreateVariantData()

@@ -501,13 +501,13 @@ bool ibValueSpreadsheetDocument::CallAsProc(const long lMethodNum, ibValue** paP
 	}
 	else if (lMethodNum == ePrint) {
 		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->PrintSpreadSheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
+			return backend_mainFrame->PrintSpreadsheetDocument(m_spreadsheetDoc, lSizeArray > 0 ? paParams[0]->GetBoolean() : false);
 		ibBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}
 	else if (lMethodNum == eShow) {
 		if (backend_mainFrame != nullptr)
-			return backend_mainFrame->ShowSpreadSheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
+			return backend_mainFrame->ShowSpreadsheetDocument(paParams[0]->GetString(), m_spreadsheetDoc);
 		ibBackendCoreException::Error(_("Context functions are not available!"));
 		return false;
 	}

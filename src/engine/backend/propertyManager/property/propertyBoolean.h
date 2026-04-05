@@ -26,8 +26,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxBoolProperty(m_propLabel, m_propName, GetValueAsBoolean());
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyBoolean != nullptr)
+			return ms_propertyBoolean(m_propLabel, m_propName, GetValueAsBoolean());
+		return nullptr;
 	}
 
 	// set/get property data
@@ -37,6 +39,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyBoolean)(const wxString&, const wxString&, const bool&);
 };
 
 #endif

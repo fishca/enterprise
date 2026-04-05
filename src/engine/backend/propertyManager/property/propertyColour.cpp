@@ -1,11 +1,14 @@
 #include "propertyColour.h"
 #include "backend/system/value/valueColour.h"
 
+// get property for grid	
+wxObject* (*ibPropertyColour::ms_propertyColour)(const wxString&, const wxString&, const wxColour&) = nullptr;
+
 //base property for "colour"
 bool ibPropertyColour::SetDataValue(const ibValue& varPropVal)
 {
-	ibValueColour *valueColour = varPropVal.ConvertToType<ibValueColour>();
-	if (valueColour == nullptr) 
+	ibValueColour* valueColour = varPropVal.ConvertToType<ibValueColour>();
+	if (valueColour == nullptr)
 		return false;
 	SetValue(valueColour->m_colour);
 	return true;

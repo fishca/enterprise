@@ -1,5 +1,8 @@
 #include "propertyDate.h"
 
+// get property for grid	
+wxObject* (*ibPropertyDate::ms_propertyDate)(const wxString&, const wxString&, const wxDateTime&) = nullptr;
+
 //base property for "date"
 bool ibPropertyDate::SetDataValue(const ibValue& varPropVal)
 {

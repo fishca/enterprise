@@ -110,10 +110,10 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class BACKEND_API ibBackendCellField {
+class BACKEND_API ibBackendProperty {
 protected:
 
-	ibBackendCellField(ibPropertyCategory* cat, const wxString& name,
+	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
 		const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(name),
@@ -121,7 +121,7 @@ protected:
 		m_owner(cat->GetPropertyObject())
 	{
 	}
-	ibBackendCellField(ibPropertyCategory* cat, const wxString& name,
+	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
 		const wxString& label, const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(label.IsEmpty() ? name : label),
@@ -129,7 +129,7 @@ protected:
 		m_owner(cat->GetPropertyObject())
 	{
 	}
-	ibBackendCellField(ibPropertyCategory* cat, const wxString& name,
+	ibBackendProperty(ibPropertyCategory* cat, const wxString& name,
 		const wxString& label, const wxString& helpString, const wxVariant& value) :
 		m_propName(name),
 		m_propLabel(label.IsEmpty() ? name : label),
@@ -139,7 +139,7 @@ protected:
 	}
 
 public:
-	virtual ~ibBackendCellField() {}
+	virtual ~ibBackendProperty() {}
 public:
 
 	bool IsEditable() const;
@@ -165,7 +165,7 @@ public:
 	void SetValue(const wxVariant& val) { DoSetValue(val); }
 	////////////////////
 
-	ibBackendCellField& operator =(const wxVariant& val) {
+	ibBackendProperty& operator =(const wxVariant& val) {
 		SetValue(val);
 		return *this;
 	}
@@ -190,7 +190,7 @@ public:
 	virtual bool IsEmptyProperty() const { return false; }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const = 0;
+	virtual wxObject* GetPGProperty() const = 0;
 	virtual void RefreshPGProperty(wxPGProperty* pg) {};
 
 	//load & save object in control 
@@ -216,25 +216,25 @@ protected:
 	wxVariant       m_propValue;
 };
 
-class BACKEND_API ibProperty : public ibBackendCellField {
+class BACKEND_API ibProperty : public ibBackendProperty {
 	void InitProperty(ibPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendCellField(cat, name, value) { InitProperty(cat, value); }
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendCellField(cat, name, label, value) { InitProperty(cat, value); }
-	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendCellField(cat, name, label, helpString, value) { InitProperty(cat, value); }
+	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendProperty(cat, name, value) { InitProperty(cat, value); }
+	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendProperty(cat, name, label, value) { InitProperty(cat, value); }
+	ibProperty(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendProperty(cat, name, label, helpString, value) { InitProperty(cat, value); }
 public:
 	virtual bool PasteData(ibReaderMemory& reader);
 };
 
-class BACKEND_API ibEvent : public ibBackendCellField {
+class BACKEND_API ibEvent : public ibBackendProperty {
 	void InitEvent(ibPropertyCategory* cat, const wxVariant& value = wxNullVariant);
 protected:
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendCellField(cat, name, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendCellField(cat, name, label, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendCellField(cat, name, label, helpString, value) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, value), m_args(args) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : ibBackendCellField(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
-	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :ibBackendCellField(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxVariant& value) : ibBackendProperty(cat, name, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxVariant& value) : ibBackendProperty(cat, name, label, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxVariant& value) : ibBackendProperty(cat, name, label, helpString, value) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxArrayString& args, const wxVariant& value) : ibBackendProperty(cat, name, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxArrayString& args, const wxVariant& value) : ibBackendProperty(cat, name, label, value), m_args(args) { InitEvent(cat, value); }
+	ibEvent(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString, const wxArrayString& args, const wxVariant& value) :ibBackendProperty(cat, name, label, helpString, value), m_args(args) { InitEvent(cat, value); }
 public:
 	const wxArrayString& GetArgs() const { return m_args; }
 protected:

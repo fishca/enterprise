@@ -1,6 +1,9 @@
 #include "eventControl.h"
 #include "backend/system/value/valueEvent.h"
 
+// get property for grid
+wxObject* (*ibEventControl::ms_propertyEvent)(const wxString&, const wxString&, const wxString&) = nullptr;
+
 //base property for "event"
 bool ibEventControl::SetDataValue(const ibValue& varPropVal)
 {

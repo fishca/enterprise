@@ -1,5 +1,8 @@
 #include "propertyEnum.h"
 
+//get property for grid 	
+wxObject* (*ibPropertyEnumBase::ms_propertyEnum)(const wxString&, const wxString&, const wxPGChoices&, const int&) = nullptr;
+
 //load & save object in control 
 bool ibPropertyEnumBase::LoadData(ibReaderMemory& reader)
 {

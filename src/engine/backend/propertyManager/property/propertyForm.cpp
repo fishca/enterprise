@@ -3,6 +3,9 @@
 
 #define chunkForm 0x023456543
 
+// get property for grid
+wxObject* (*ibPropertyForm::ms_propertyForm)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
 ////////////////////////////////////////////////////////////////////////
 
 wxVariantData* ibPropertyForm::CreateVariantData()
@@ -69,14 +72,14 @@ bool ibPropertyForm::PasteData(ibReaderMemory& reader)
 	ibValueMetaObjectFormBase* metaForm = dynamic_cast<ibValueMetaObjectFormBase*>(m_owner);
 	if (metaForm == nullptr) return false;
 	reader.r_chunk(chunkForm, GetValueAsMemoryBuffer());
-	ibPropertyForm::SetValue(reader.r_stringZ());	
+	ibPropertyForm::SetValue(reader.r_stringZ());
 	return metaForm->PasteFormData();
 }
 
 bool ibPropertyForm::CopyData(ibWriterMemory& writer)
 {
 	ibValueMetaObjectFormBase* metaForm = dynamic_cast<ibValueMetaObjectFormBase*>(m_owner);
-	if (metaForm == nullptr) return false; 
+	if (metaForm == nullptr) return false;
 	writer.w_chunk(chunkForm, metaForm->CopyFormData());
 	writer.w_stringZ(GetValueAsString());
 	return true;

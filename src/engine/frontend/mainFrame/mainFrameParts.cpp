@@ -11,7 +11,7 @@ void ibFrontendDocMDIFrame::CreatePropertyPane()
 	if (m_mgr.GetPane(wxAUI_PANE_PROPERTY).IsOk())
 		return;
 
-	m_objectInspector = new CObjectInspector(this, wxID_ANY);
+	m_objectInspector = new ibObjectInspector(this, wxID_ANY);
 
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxAUI_PANE_PROPERTY);
@@ -204,7 +204,7 @@ bool ibFrontendDocMDIFrame::UpdateFormUniqueKey(const ibUniqueKeyPair& guid)
 #include "frontend/docView/templates/docViewSpreadsheet.h"
 
 // Grid support
-bool ibFrontendDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument)
+bool ibFrontendDocMDIFrame::ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument)
 {
 	class ibSpreadsheetMemoryDocument :
 		public ibSpreadsheetFilibDocument {
@@ -250,7 +250,7 @@ bool ibFrontendDocMDIFrame::ShowSpreadSheetDocument(const wxString& strTitle, wx
 
 #include "frontend/win/editor/gridEditor/gridPrintout.h"
 
-bool ibFrontendDocMDIFrame::PrintSpreadSheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg)
+bool ibFrontendDocMDIFrame::PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg)
 {
 	wxScopedPtr<ibGridEditorPrintout> printout(new ibGridEditorPrintout(doc));
 

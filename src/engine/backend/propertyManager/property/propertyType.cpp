@@ -1,6 +1,8 @@
 #include "propertyType.h"
 #include "backend/propertyManager/property/variant/variantType.h"
 
+wxObject* (*ibPropertyType::ms_propertyType)(ibPropertyObject*, ibSelectorDataType, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
 ////////////////////////////////////////////////////////////////////////
 
 wxVariantData* ibPropertyType::CreateVariantData(ibPropertyObject* property, const ibValueTypes type) const

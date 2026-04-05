@@ -2,7 +2,6 @@
 #define __PROPERTY_MODULE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropHyperLink.h"
 
 //base property for "module"
 class BACKEND_API ibPropertyModule : public ibProperty {
@@ -28,8 +27,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGHyperLinkProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyModule != nullptr)
+			return ms_propertyModule(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -39,6 +40,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyModule)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

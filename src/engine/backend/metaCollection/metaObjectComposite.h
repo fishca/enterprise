@@ -37,7 +37,7 @@ public:
 	T* operator->() { return GetMetaObject(); }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const { return nullptr; }
+	virtual wxObject* GetPGProperty() const { return nullptr; }
 
 	// set/get property data
 	virtual bool SetDataValue(const ibValue& varPropVal) { return false; }

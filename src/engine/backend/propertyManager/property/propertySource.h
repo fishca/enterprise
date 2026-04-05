@@ -2,7 +2,7 @@
 #define __PROPERTY_SOURCE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropSource.h"
+#include "backend/backend_type.h"
 
 //////////////////////////////////////////////////////////////////
 struct ibTypeDescription;
@@ -62,8 +62,10 @@ public:
 	virtual bool IsEmptyProperty() const;
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGSourceDataProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertySource != nullptr)
+			return ms_propertySource(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -73,6 +75,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertySource)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

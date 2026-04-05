@@ -47,8 +47,8 @@ public:
 	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) { return nullptr; }
 
 	// Grid support
-	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) { return false; }
-	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) { return false; }
+	virtual bool ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& doc) { return false; }
+	virtual bool PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) { return false; }
 
 #pragma endregion 
 

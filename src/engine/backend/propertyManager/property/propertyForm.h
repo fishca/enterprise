@@ -2,7 +2,6 @@
 #define __PROPERTY_FORM_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropHyperLink.h"
 
 //base property for "form"
 class BACKEND_API ibPropertyForm : public ibProperty {
@@ -30,8 +29,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGHyperLinkProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyForm != nullptr)
+			return ms_propertyForm(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -43,8 +44,12 @@ public:
 	virtual bool SaveData(ibWriterMemory& writer);
 
 	//copy & paste object in control 
-	virtual bool PasteData(ibReaderMemory& reader); 
-	virtual bool CopyData(ibWriterMemory& writer); 
+	virtual bool PasteData(ibReaderMemory& reader);
+	virtual bool CopyData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyForm)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

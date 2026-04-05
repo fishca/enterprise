@@ -2,7 +2,6 @@
 #define __PROPERTY_LIST_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropList.h"
 
 //base property for "list"
 class BACKEND_API ibPropertyList : public ibProperty {
@@ -217,9 +216,12 @@ public:
 	virtual bool IsEmptyProperty() const { return GetValueAsInteger() == wxNOT_FOUND; }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		m_functor->Invoke(const_cast<ibPropertyList*>(this));
-		return new wxPGListProperty(m_propLabel, m_propName, GetValueList(), GetValueAsInteger());
+	virtual wxObject* GetPGProperty() const {
+		if (!m_functor->Invoke(const_cast<ibPropertyList*>(this)))
+			return nullptr;
+		if (ms_propertyList != nullptr)
+			return ms_propertyList(m_propLabel, m_propName, GetValueList(), GetValueAsInteger());
+		return nullptr;
 	}
 
 	// Set/Get property data
@@ -230,6 +232,10 @@ public:
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
 
+public:
+
+	static wxObject* (*ms_propertyList)(const wxString&, const wxString&, const wxPGChoices&, const int&);
+
 protected:
 
 	virtual void DoSetValue(const wxVariant& val) {
@@ -238,6 +244,7 @@ protected:
 	}
 
 private:
+
 	ibPropertyOptionList m_listPropValue;
 	ibPropertyFunctor* m_functor;
 };

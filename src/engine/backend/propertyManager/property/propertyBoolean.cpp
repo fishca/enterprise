@@ -1,5 +1,8 @@
 #include "propertyBoolean.h"
 
+//get property for grid	
+wxObject* (*ibPropertyBoolean::ms_propertyBoolean)(const wxString&, const wxString&, const bool&) = nullptr;
+
 //base property for "bool"
 bool ibPropertyBoolean::SetDataValue(const ibValue& varPropVal)
 {

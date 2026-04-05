@@ -1,6 +1,10 @@
 #include "propertyRecord.h"
 #include "backend/propertyManager/property/variant/variantRecord.h"
 
+wxObject* (*ibPropertyRecord::ms_propertyRecord)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
+////////////////////////////////////////////////////////////////////
+
 wxVariantData* ibPropertyRecord::CreateVariantData(ibPropertyObject* property, const ibMetaDescription& typeDesc) const
 {
 	const ibValueMetaObjectGenericData* propFactory = dynamic_cast<const ibValueMetaObjectGenericData*>(property);

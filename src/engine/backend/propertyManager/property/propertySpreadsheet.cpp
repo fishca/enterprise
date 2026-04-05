@@ -1,6 +1,8 @@
 #include "propertySpreadsheet.h"
 #include "backend/propertyManager/property/variant/variantSpreadsheet.h"
 
+wxObject* (*ibPropertySpreadsheet::ms_propertySpreadsheet)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&) = nullptr;
+
 ////////////////////////////////////////////////////////////////////////
 
 wxVariantData* ibPropertySpreadsheet::CreateVariantData(const ibSpreadsheetDescription& val)

@@ -1,6 +1,13 @@
 #include "propertyNumber.h"
 #include "backend/propertyManager/property/variant/variantNumber.h"
 
+//get property for grid 
+wxObject* (*ibPropertyNumber::ms_propertyNumber)(const wxString&, const wxString&, const ibNumber&) = nullptr;
+wxObject* (*ibPropertyInteger::ms_propertyInteger)(const wxString&, const wxString&, const int&) = nullptr;
+wxObject* (*ibPropertyUInteger::ms_propertyUInteger)(const wxString&, const wxString&, const unsigned int&) = nullptr;
+
+////////////////////////////////////////////////////////////////////////
+
 wxVariantData* ibPropertyNumber::CreateVariantData(const ibNumber& val)
 {
 	return new ibVariantDataNumber(val);

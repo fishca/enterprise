@@ -303,7 +303,7 @@ void ibDialogFormEditor::OnSelChanged(wxTreeEvent& event)
 							continue;
 					}
 
-					wxPGProperty* pg = prop->GetPGProperty();
+					wxPGProperty* pg = (wxPGProperty *)prop->GetPGProperty();
 					propertyGridPage->Append(pg);
 					pg->SetHelpString(prop->GetHelp());
 					pg->RefreshChildren();

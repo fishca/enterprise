@@ -10,7 +10,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-bool ibBackendCellField::IsEditable() const
+bool ibBackendProperty::IsEditable() const
 {
 	return m_owner ? m_owner->IsEditable() : false;
 }

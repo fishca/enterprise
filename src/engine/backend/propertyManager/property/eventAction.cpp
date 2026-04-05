@@ -1,6 +1,11 @@
 #include "eventAction.h"
 #include "backend/propertyManager/property/variant/variantAction.h"
 
+// get property for grid
+wxObject* (*ibEventAction::ms_propertyEventAction)(const wxString&, const wxString&, const wxPGChoices&, const wxVariant&) = nullptr;
+
+//////////////////////////////////////////////////////////////////
+
 wxVariantData* ibEventAction::CreateVariantData(const ibPropertyObject* property, const ibActionDescription& act) const
 {
 	return new ibVariantDataAction(act);

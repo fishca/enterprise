@@ -1,6 +1,8 @@
 #include "propertyPoint.h"
 #include "backend/system/value/valuePoint.h"
 
+wxObject* (*ibPropertyPoint::ms_propertyPoint)(const wxString&,const wxString&,const wxPoint&) = nullptr;
+
 //base property for "point"
 bool ibPropertyPoint::SetDataValue(const ibValue& varPropVal)
 {

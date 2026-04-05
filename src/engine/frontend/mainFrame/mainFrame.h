@@ -72,8 +72,8 @@ public:
 	virtual bool UpdateFormUniqueKey(const ibUniqueKeyPair& guid) override;
 
 	// Grid support
-	virtual bool ShowSpreadSheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) override;
-	virtual bool PrintSpreadSheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
+	virtual bool ShowSpreadsheetDocument(const wxString& strTitle, wxObjectDataPtr<ibBackendSpreadsheetObject>& spreadSheetDocument) override;
+	virtual bool PrintSpreadsheetDocument(const wxObjectDataPtr<ibBackendSpreadsheetObject>& doc, bool showPrintDlg = true) override;
 
 #pragma endregion 
 
@@ -145,7 +145,7 @@ public:
 	static wxWindow* CreateChildFrame(ibMetaView* view,
 		const wxPoint& pos, const wxSize& size, long style = wxDEFAULT_FRAME_STYLE);
 
-	static CObjectInspector* GetObjectInspector() {
+	static ibObjectInspector* GetObjectInspector() {
 		if (s_instance != nullptr)
 			return s_instance->m_objectInspector;
 		return nullptr;
@@ -194,7 +194,7 @@ protected:
 
 	static ibFrontendDocMDIFrame* s_instance;
 
-	CObjectInspector* m_objectInspector;
+	ibObjectInspector* m_objectInspector;
 
 	ibKeyBinder             m_keyBinder;
 	ibFontColorSettings     m_fontColorSettings;

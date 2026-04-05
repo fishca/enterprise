@@ -1,5 +1,12 @@
 #include "propertyString.h"
 
+// get property for grid
+wxObject* (*ibPropertyStringBase::ms_propertyString)(const wxString&, const wxString&, const wxString&) = nullptr;
+wxObject* (*ibPropertyStringBase::ms_propertyUString)(const wxString&, const wxString&, const wxString&) = nullptr;
+wxObject* (*ibPropertyStringBase::ms_propertyUEString)(const wxString&, const wxString&, const wxString&) = nullptr;
+wxObject* (*ibPropertyStringBase::ms_propertyTString)(const ibPropertyObject*, const wxString&, const wxString&, const wxString&) = nullptr;
+wxObject* (*ibPropertyStringBase::ms_propertyMString)(const wxString&, const wxString&, const wxString&) = nullptr;
+
 //base property for "string"
 bool ibPropertyStringBase::SetDataValue(const ibValue& varPropVal)
 {

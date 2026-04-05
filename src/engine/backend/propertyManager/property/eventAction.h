@@ -2,8 +2,6 @@
 #define __EVENT_LIST_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropEventTool.h"
-
 #include "backend/actionInfo.h"
 
 //base event for "list"
@@ -180,10 +178,12 @@ public:
 	virtual bool IsEmptyProperty() const { return GetValueAsInteger() == wxNOT_FOUND; }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
+	virtual wxObject* GetPGProperty() const {
 		if (!m_functor->Invoke(const_cast<ibEventAction*>(this)))
 			return nullptr;
-		return new wxEventToolProperty(m_propLabel, m_propName, GetEventList(), m_propValue);
+		if (ms_propertyEventAction != nullptr)
+			return ms_propertyEventAction(m_propLabel, m_propName, GetEventList(), m_propValue);
+		return nullptr;
 	}
 
 	// Set/Get property data
@@ -194,7 +194,12 @@ public:
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
 
+public:
+
+	static wxObject* (*ms_propertyEventAction)(const wxString&, const wxString&, const wxPGChoices&, const wxVariant&);
+
 private:
+
 	ibEventOptionList m_listPropValue;
 	ibEventFunctor* m_functor;
 };

@@ -26,8 +26,10 @@ public:
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxEnumProperty(m_propLabel, m_propName, GetEnumList(), GetValueAsInteger());
+	virtual wxObject* GetPGProperty() const final {
+		if (ms_propertyEnum != nullptr)
+			return ms_propertyEnum(m_propLabel, m_propName, GetEnumList(), GetValueAsInteger());
+		return nullptr;
 	}
 
 	// set/get property data
@@ -38,7 +40,12 @@ public:
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
 
+public:
+
+	static wxObject* (*ms_propertyEnum)(const wxString&, const wxString&, const wxPGChoices&, const int&);
+
 protected:
+
 	virtual wxPGChoices GetEnumList() const = 0;
 };
 
@@ -77,7 +84,7 @@ public:
 
 	virtual bool GetDataValue(ibValue& pvarPropVal) const {
 		ibValue enumVariant = ibPropertyEnum::GetValueAsInteger();
-		ibValue* ppParams[] = {&enumVariant, nullptr};
+		ibValue* ppParams[] = { &enumVariant, nullptr };
 		if (m_enumCreator->Init(ppParams, 1)) {
 			pvarPropVal = m_enumCreator->GetEnumVariantValue();
 			return true;

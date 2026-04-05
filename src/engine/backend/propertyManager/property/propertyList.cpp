@@ -1,13 +1,16 @@
 #include "propertyList.h"
 
+//get property for grid  	
+wxObject* (*ibPropertyList::ms_propertyList)(const wxString&, const wxString&, const wxPGChoices&, const int&) = nullptr;
+
 //base property for "list"
-bool ibPropertyList::SetDataValue(const ibValue& varPropVal) 
+bool ibPropertyList::SetDataValue(const ibValue& varPropVal)
 {
 	if (!m_functor->Invoke(this))
 		return false;
 
 	for (unsigned int idx = 0; idx < m_listPropValue.GetItemCount(); idx++) {
-		const ibValue *selValue = m_listPropValue.GetItemValue(idx); 
+		const ibValue* selValue = m_listPropValue.GetItemValue(idx);
 		if ((selValue != nullptr && *selValue == varPropVal) || (selValue == nullptr && varPropVal == wxEmptyValue)) {
 			SetValue(stringUtils::IntToStr(m_listPropValue.GetItemId(idx)));
 			return true;
@@ -16,7 +19,7 @@ bool ibPropertyList::SetDataValue(const ibValue& varPropVal)
 	return false;
 };
 
-bool ibPropertyList::GetDataValue(ibValue& pvarPropVal) const 
+bool ibPropertyList::GetDataValue(ibValue& pvarPropVal) const
 {
 	if (!m_functor->Invoke(const_cast<ibPropertyList*>(this)))
 		return false;
@@ -36,7 +39,7 @@ bool ibPropertyList::LoadData(ibReaderMemory& reader)
 	return true;
 };
 
-bool ibPropertyList::SaveData(ibWriterMemory& writer) 
+bool ibPropertyList::SaveData(ibWriterMemory& writer)
 {
 	writer.w_s32(GetValueAsInteger());
 	return true;

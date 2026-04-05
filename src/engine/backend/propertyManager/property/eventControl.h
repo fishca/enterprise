@@ -2,7 +2,6 @@
 #define __EVENT_CONTROL_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropEvent.h"
 
 //base property for "event"
 class BACKEND_API ibEventControl : public ibEvent {
@@ -26,8 +25,10 @@ public:
 	virtual bool IsEmptyProperty() const { return m_propValue.GetString().IsEmpty(); }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxEventProperty(m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyEvent != nullptr)
+			return ms_propertyEvent(m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -37,6 +38,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyEvent)(const wxString&, const wxString&, const wxString&);
 };
 
 #endif

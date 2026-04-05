@@ -2,8 +2,6 @@
 #define __PROPERTY_TEMPLATE_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropHyperLink.h"
-
 #include "backend/spreadsheetDescription.h"
 
 //base property for "spreadsheet"
@@ -34,8 +32,10 @@ public:
 	virtual bool IsEmptyProperty() const;
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGHyperLinkProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertySpreadsheet != nullptr)
+			return ms_propertySpreadsheet(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
@@ -45,6 +45,10 @@ public:
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
 	virtual bool SaveData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertySpreadsheet)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

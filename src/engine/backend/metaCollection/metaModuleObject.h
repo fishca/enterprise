@@ -18,9 +18,9 @@ public:
 
 	template <typename... Args>
 	ibPropertyInnerModule(ibPropertyCategory* cat, Args&&... args)
-		: ibProperty(cat, 
-			std::get<0>(std::forward_as_tuple(args...)), 
-			std::get<1>(std::forward_as_tuple(args...)), 
+		: ibProperty(cat,
+			std::get<0>(std::forward_as_tuple(args...)),
+			std::get<1>(std::forward_as_tuple(args...)),
 			wxNullVariant), m_metaObject(nullptr)
 	{
 		ibValueMetaObject* parent =
@@ -43,8 +43,10 @@ public:
 	T* operator->() { return GetMetaObject(); }
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGHyperLinkProperty(m_metaObject, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ibPropertyModule::ms_propertyModule != nullptr)
+			return ibPropertyModule::ms_propertyModule(m_metaObject, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data

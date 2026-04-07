@@ -323,7 +323,6 @@ bool ibApplicationData::Disconnect()
 			const bool isConfigOpen = activeMetaData->IsConfigOpen();
 			if (isConfigOpen && !activeMetaData->CloseDatabase(forceCloseFlag))
 				return false;
-			m_connected_to_db = false;
 		}
 
 		metaDataDestroy();

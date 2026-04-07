@@ -437,7 +437,7 @@ void ibApplicationData::CreateTableEvent()
 
 bool ibApplicationData::ClearTableUser()
 {
-	if (!db_query->TableExists(user_table)) 
+	if (!db_query->TableExists(user_table))
 		return false;
 
 	db_query->RunQuery(wxT("DELETE FROM %s;"), user_table);
@@ -737,7 +737,8 @@ bool ibApplicationData::CloseSession()
 {
 	if (m_sessionUpdater != nullptr) {
 
-		if (m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
+		if (m_sessionUpdater->IsRunning() &&
+			m_sessionUpdater->Delete() != wxTHREAD_NO_ERROR)
 			return false;
 
 		m_sessionUpdater = nullptr;

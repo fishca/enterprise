@@ -11,7 +11,7 @@
 // wxPGRecordSelectorProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGRecordProperty, wxPGProperty, ComboBoxAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGRecordProperty, wxPGProperty, ComboBoxAndButton)
 
 // register frontend property 
 class ibPropertyRecordLoader
@@ -19,11 +19,11 @@ class ibPropertyRecordLoader
 public:
     ibPropertyRecordLoader()
     {
-        ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGRecordProperty, ibPropertyRecord::ms_propertyRecord);
+        ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGRecordProperty, ibPropertyRecord::ms_propertyRecord);
     }
 }g_recordLoader;
 
-void wxPGRecordProperty::FillByClsid(const ibClassID& clsid)
+void ibPGRecordProperty::FillByClsid(const ibClassID& clsid)
 {
     const ibValueMetaObjectGenericData* metaGenericData = dynamic_cast<const ibValueMetaObjectGenericData*>(m_ownerProperty);
     if (metaGenericData != nullptr) {
@@ -37,7 +37,7 @@ void wxPGRecordProperty::FillByClsid(const ibClassID& clsid)
     }
 }
 
-wxPGRecordProperty::wxPGRecordProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
+ibPGRecordProperty::ibPGRecordProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
     : wxPGProperty(label, strName), m_ownerProperty(property)
 {
     FillByClsid(g_metaInformationRegisterCLSID);
@@ -49,19 +49,19 @@ wxPGRecordProperty::wxPGRecordProperty(const ibPropertyObject* property, const w
     SetValue(value);
 }
 
-wxString wxPGRecordProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
+wxString ibPGRecordProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
     return value.GetString();
 }
 
-bool wxPGRecordProperty::StringToValue(wxVariant& variant,
+bool ibPGRecordProperty::StringToValue(wxVariant& variant,
     const wxString& text,
     wxPGPropValFormatFlags flags) const
 {
     return false;
 }
 
-bool wxPGRecordProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
+bool ibPGRecordProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
     ibVariantDataRecord* dataRecord = property_cast(value, ibVariantDataRecord);
     if (dataRecord != nullptr) {
@@ -77,13 +77,13 @@ bool wxPGRecordProperty::IntToValue(wxVariant& value, int number, wxPGPropValFor
 
 #include "frontend/win/ctrls/checktree.h"
 
-wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGRecordProperty::GetEditorDialog() const
 {
-    class wxPGRecordEventAdapter : public wxPGEditorDialogAdapter {
-        class wxTreeItemOptionData : public wxTreeItemData {
+    class ibPGEditorRecordDialogAdapter : public wxPGEditorDialogAdapter {
+        class ibTreeItemPropertyData : public wxTreeItemData {
             ibValueMetaObject* m_metaObject;
         public:
-            wxTreeItemOptionData(ibValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
+            ibTreeItemPropertyData(ibValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
             ibMetaID GetMetaID() const { return m_metaObject->GetMetaID(); }
         };
 
@@ -100,7 +100,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
                 ibValueMetaObjectRegisterData* registerData = dynamic_cast<ibValueMetaObjectRegisterData*>(metaObject);
                 if (registerData != nullptr && registerData->HasRecorder()) {
                     const int icon = imageList->Add(registerData->GetIcon());
-                    wxTreeItemOptionData* itemData = new wxTreeItemOptionData(metaObject);
+                    ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(metaObject);
                     wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                         icon, icon,
                         itemData);
@@ -121,7 +121,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
 
         virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
         {
-            wxPGRecordProperty* dlgProp = wxDynamicCast(prop, wxPGRecordProperty);
+            ibPGRecordProperty* dlgProp = wxDynamicCast(prop, ibPGRecordProperty);
             wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
             ibVariantDataRecord* data = property_cast(dlgProp->GetValue(), ibVariantDataRecord);
@@ -185,7 +185,7 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
                     if (selItem.IsOk()) {
                         wxTreeItemData* dataItem = tc->GetItemData(selItem);
                         if (dataItem && res == wxID_OK) {
-                            wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(dataItem);
+                            ibTreeItemPropertyData* item = dynamic_cast<ibTreeItemPropertyData*>(dataItem);
                             wxASSERT(item);
                             metaDesc.AppendMetaType(item->GetMetaID());
                         }
@@ -197,5 +197,5 @@ wxPGEditorDialogAdapter* wxPGRecordProperty::GetEditorDialog() const
             return res == wxID_OK;
         }
     };
-    return new wxPGRecordEventAdapter();
+    return new ibPGEditorRecordDialogAdapter();
 }

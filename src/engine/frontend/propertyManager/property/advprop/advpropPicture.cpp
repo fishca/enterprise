@@ -22,7 +22,7 @@ public:
 	ibPropertyPictureLoader()
 	{
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGPictureProperty, ibPropertyPicture::ms_propertyPicture);
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGExternalImageProperty, ibPropertyExternalPicture::ms_propertyExtPicture);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGExternalImageProperty, ibPropertyExternalPicture::ms_propertyExtPicture);
 	}
 }g_pictureLoader;
 
@@ -117,7 +117,7 @@ wxPGPictureProperty::wxPGPictureProperty(const wxString& label,
 	AddPrivateChild(m_propertyConfiguration);
 
 	// Add 'file_path' property (common for 'Load From File' and 'Load From Embedded File' choices)
-	m_propertyFile = new wxPGExternalImageProperty(_("File path"), wxT("file_path"), pictureVariant->CloneExternalPicture());
+	m_propertyFile = new ibPGExternalImageProperty(_("File path"), wxT("file_path"), pictureVariant->CloneExternalPicture());
 	m_propertyFile->SetHelpString(_("Path to the image file."));
 
 	AddPrivateChild(m_propertyFile);
@@ -237,10 +237,10 @@ void wxPGPictureProperty::RefreshChildren()
 }
 
 // -----------------------------------------------------------------------
-// wxPGExternalImageProperty
+// ibPGExternalImageProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGExternalImageProperty, wxEditorDialogProperty, TextCtrlAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGExternalImageProperty, wxEditorDialogProperty, TextCtrlAndButton)
 
 const wxString& wxPGGetDefaultImageWildcard(int& indFilter)
 {
@@ -286,7 +286,7 @@ const wxString& wxPGGetDefaultImageWildcard(int& indFilter)
 	return wxPGGlobalVars->m_pDefaultImageWildcard;
 }
 
-wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, const wxString& name, const wxVariant& value)
+ibPGExternalImageProperty::ibPGExternalImageProperty(const wxString& label, const wxString& name, const wxVariant& value)
 	: wxEditorDialogProperty(label, name)
 {
 	m_flags |= wxPGPropertyFlags_ShowFullFileName;
@@ -297,7 +297,7 @@ wxPGExternalImageProperty::wxPGExternalImageProperty(const wxString& label, cons
 	SetValue(value);
 }
 
-void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
+void ibPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	const wxRect& rect,
 	wxPGPaintData& d)
 {
@@ -329,7 +329,7 @@ void wxPGExternalImageProperty::OnCustomPaint(wxDC& dc,
 	}
 }
 
-bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
+bool ibPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	if (text.IsEmpty()) {
 		variant = new ibVariantDataExternalPicture();
@@ -339,7 +339,7 @@ bool wxPGExternalImageProperty::StringToValue(wxVariant& variant, const wxString
 	return false;
 }
 
-bool wxPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
+bool ibPGExternalImageProperty::DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value)
 {
 	ibVariantDataExternalPicture* externalPicture = property_cast(value, ibVariantDataExternalPicture);
 	wxASSERT_MSG(externalPicture != nullptr, "Function called for incompatible property");

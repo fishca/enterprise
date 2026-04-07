@@ -26,9 +26,9 @@ ibValueRecordDataObjectCatalog::ibValueRecordDataObjectCatalog(const ibValueReco
 {
 }
 
-CSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectCatalog::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);

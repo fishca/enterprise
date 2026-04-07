@@ -104,7 +104,7 @@ ibValue ibBackendTypeConfigFactory::AdjustValue(const ibValue& varValue) const
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool ibBackendTypeSourceFactory::FilterSource(const CSourceExplorer& src, const ibMetaID& id) const
+bool ibBackendTypeSourceFactory::FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const
 {
 	return !src.IsTableSection();
 }

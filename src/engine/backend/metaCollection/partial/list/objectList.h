@@ -228,7 +228,7 @@ public:
 		const ibDataViewItem& row, unsigned int col) override;
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//****************************************************************************
@@ -322,7 +322,7 @@ public:
 		const ibDataViewItem& row, unsigned int col) override;
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//****************************************************************************
@@ -428,7 +428,7 @@ public:
 		const ibDataViewItem& row, unsigned int col) override;
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//****************************************************************************
@@ -715,7 +715,7 @@ public:
 	virtual ibDataViewItem GetParentTopItem() const;
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//****************************************************************************

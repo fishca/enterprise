@@ -3,7 +3,7 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
-#include "backend/utils/wxmd5.hpp"
+#include "backend/utils/md5.hpp"
 #include "backend/appData.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

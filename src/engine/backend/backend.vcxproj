@@ -248,7 +248,7 @@
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="typeDescription.h" />
     <ClInclude Include="uniqueKey.h" />
-    <ClInclude Include="utils\wxmd5.hpp" />
+    <ClInclude Include="utils\md5.hpp" />
     <ClInclude Include="valueInfo.h" />
     <ClInclude Include="value_cast.h" />
     <ClInclude Include="value_ptr.h" />
@@ -534,7 +534,7 @@
     <ClCompile Include="tableView.cpp" />
     <ClCompile Include="typeDescription.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
-    <ClCompile Include="utils\wxmd5.cpp" />
+    <ClCompile Include="utils\md5.cpp" />
     <ClCompile Include="value_cast.cpp" />
   </ItemGroup>
   <ItemGroup>

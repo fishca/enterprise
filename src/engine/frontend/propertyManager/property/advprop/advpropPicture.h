@@ -7,14 +7,14 @@
 #include "backend/pictureDescription.h"
 
 // -----------------------------------------------------------------------
-// wxPGExternalImageProperty
+// ibPGExternalImageProperty
 // -----------------------------------------------------------------------
 
-class wxPGExternalImageProperty : public wxEditorDialogProperty {
+class ibPGExternalImageProperty : public wxEditorDialogProperty {
 
 public:
 
-	wxPGExternalImageProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxVariant& value = wxVariant());
+	ibPGExternalImageProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxVariant& value = wxVariant());
 
 	virtual wxSize OnMeasureImage(int item) const override { return wxSize(16, 16); }
 	virtual void OnCustomPaint(wxDC& dc,
@@ -43,7 +43,7 @@ protected:
 	wxBitmap   m_bitmap; // final thumbnail area
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGExternalImageProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGExternalImageProperty);
 };
 
 // -----------------------------------------------------------------------
@@ -76,7 +76,7 @@ protected:
 
 	wxEditEnumProperty* m_propertyBackend;
 	wxEditEnumProperty* m_propertyConfiguration;
-	wxPGExternalImageProperty* m_propertyFile;
+	ibPGExternalImageProperty* m_propertyFile;
 
 	std::map<int, ibClassID> m_valChoices;
 	std::map<int, ibGuid> m_confChoices;

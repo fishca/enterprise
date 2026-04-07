@@ -48,7 +48,7 @@
    // files which are not included by wxprec.h
 #endif
 
-#include "wxmd5.hpp"
+#include "md5.hpp"
 
 #define HIGHFIRST
 

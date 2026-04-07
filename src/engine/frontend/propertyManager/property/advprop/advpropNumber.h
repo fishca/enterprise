@@ -7,15 +7,15 @@
 #include "backend/backend_core.h"
 
 // -----------------------------------------------------------------------
-// wxNumberProperty
+// ibPGNumberProperty
 // -----------------------------------------------------------------------
 
-class wxNumberProperty : public wxNumericProperty {
+class ibPGNumberProperty : public wxNumericProperty {
 public:
-	wxNumberProperty(const wxString& label = wxPG_LABEL,
+	ibPGNumberProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const ibNumber& value = 0.0);
-	virtual ~wxNumberProperty();
+	virtual ~ibPGNumberProperty();
 
 	virtual wxString ValueToString(wxVariant& value,
 		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
@@ -64,7 +64,7 @@ protected:
 	int m_precision;
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxNumberProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGNumberProperty);
 };
 
 #endif

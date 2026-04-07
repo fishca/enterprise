@@ -169,7 +169,7 @@ public:
 	}
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//support source set/get data 

@@ -6,10 +6,10 @@
 #define icon_size 16
 
 // -----------------------------------------------------------------------
-// wxPGListProperty
+// ibPGListProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGListProperty, wxPGProperty, ComboBoxAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGListProperty, wxPGProperty, ComboBoxAndButton)
 
 // register frontend property 
 class ibPropertyListLoader
@@ -17,11 +17,11 @@ class ibPropertyListLoader
 public:
 	ibPropertyListLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGListProperty, ibPropertyList::ms_propertyList);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGListProperty, ibPropertyList::ms_propertyList);
 	}
 }g_listLoader;
 
-wxPGListProperty::wxPGListProperty(const wxString& label, const wxString& strName,
+ibPGListProperty::ibPGListProperty(const wxString& label, const wxString& strName,
 	wxPGChoices& choices, int value)
 	: wxPGProperty(label, strName)
 {
@@ -32,7 +32,7 @@ wxPGListProperty::wxPGListProperty(const wxString& label, const wxString& strNam
 	SetValue(value);
 }
 
-wxString wxPGListProperty::ValueToString(wxVariant& value, wxPGPropValFormatFlags flags) const
+wxString ibPGListProperty::ValueToString(wxVariant& value, wxPGPropValFormatFlags flags) const
 {
 	for (unsigned int idx = 0; idx < m_choices.GetCount(); idx++) {
 		if (value.GetLong() == m_choices.GetValue(idx))
@@ -42,7 +42,7 @@ wxString wxPGListProperty::ValueToString(wxVariant& value, wxPGPropValFormatFlag
 	return wxEmptyString;
 }
 
-bool wxPGListProperty::StringToValue(wxVariant& variant,
+bool ibPGListProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
 	wxPGPropValFormatFlags flags) const
 {
@@ -54,7 +54,7 @@ bool wxPGListProperty::StringToValue(wxVariant& variant,
 	return false;
 }
 
-bool wxPGListProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
+bool ibPGListProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	value = WXVARIANT(m_choices.GetValue(number));
 	return true;
@@ -63,7 +63,7 @@ bool wxPGListProperty::IntToValue(wxVariant& value, int number, wxPGPropValForma
 #include <wx/dataview.h>
 #include <wx/treectrl.h>
 
-wxPGEditorDialogAdapter* wxPGListProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGListProperty::GetEditorDialog() const
 {
 	class wxPGListEventAdapter : public wxPGEditorDialogAdapter {
 
@@ -112,7 +112,7 @@ wxPGEditorDialogAdapter* wxPGListProperty::GetEditorDialog() const
 
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
-			wxPGListProperty* dlgProp = wxDynamicCast(prop, wxPGListProperty);
+			ibPGListProperty* dlgProp = wxDynamicCast(prop, ibPGListProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
 			// launch editor dialog

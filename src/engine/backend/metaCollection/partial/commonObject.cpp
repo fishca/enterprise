@@ -1457,11 +1457,11 @@ wxString ibValueRecordDataObject::GetString() const
 	return clsFactory->GetClassName();
 }
 
-CSourceExplorer ibValueRecordDataObject::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObject::GetSourceExplorer() const
 {
 	ibValueMetaObjectRecordData* metaObject = GetMetaObject();
 
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		metaObject, GetClassType(),
 		false
 	);
@@ -2006,9 +2006,9 @@ wxString ibValueRecordDataObjectRef::GetString() const
 	return m_metaObject->GetDataPresentation(this);
 }
 
-CSourceExplorer ibValueRecordDataObjectRef::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
@@ -2172,9 +2172,9 @@ ibValueRecordDataObjectHierarchyRef::~ibValueRecordDataObjectHierarchyRef()
 {
 }
 
-CSourceExplorer ibValueRecordDataObjectHierarchyRef::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectHierarchyRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);
@@ -2525,9 +2525,9 @@ bool ibValueRecordManagerObject::IsEmpty() const
 	return m_recordSet->IsEmpty();
 }
 
-CSourceExplorer ibValueRecordManagerObject::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordManagerObject::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(), false
 	);
 

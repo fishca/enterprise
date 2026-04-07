@@ -221,7 +221,7 @@ ibClassID ibValueModelTableBox::GetSourceClassType() const
 	return m_tableModel->GetSourceClassType();
 }
 
-bool ibValueModelTableBox::FilterSource(const CSourceExplorer& src, const ibMetaID& id) const
+bool ibValueModelTableBox::FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const
 {
 	return src.IsTableSection();
 }

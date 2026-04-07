@@ -10,6 +10,6 @@ class ibPropertyFormLoader
 public:
 	ibPropertyFormLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGHyperLinkProperty, ibPropertyForm::ms_propertyForm);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGHyperLinkProperty, ibPropertyForm::ms_propertyForm);
 	}
 }g_dateLoader;

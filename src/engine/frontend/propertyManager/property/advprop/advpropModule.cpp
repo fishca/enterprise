@@ -10,6 +10,6 @@ class ibPropertyModuleLoader
 public:
 	ibPropertyModuleLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGHyperLinkProperty, ibPropertyModule::ms_propertyModule);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGHyperLinkProperty, ibPropertyModule::ms_propertyModule);
 	}
 }g_moduleLoader;

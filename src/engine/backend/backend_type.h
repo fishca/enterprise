@@ -105,7 +105,7 @@ public:
 	virtual class ibSourceObject* GetSourceObject() const = 0;
 
 	// filter data 
-	virtual bool FilterSource(const class CSourceExplorer& src, const ibMetaID& id) const;
+	virtual bool FilterSource(const class ibSourceExplorer& src, const ibMetaID& id) const;
 };
 
 #endif

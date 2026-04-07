@@ -5,13 +5,13 @@
 #include "backend/backend_core.h"
 
 // -----------------------------------------------------------------------
-// wxPGSizeProperty
+// ibPGSizeProperty
 // -----------------------------------------------------------------------
 
-class wxPGSizeProperty : public wxPGProperty {
+class ibPGSizeProperty : public wxPGProperty {
 public:
 	
-	wxPGSizeProperty(const wxString& label = wxPG_LABEL,
+	ibPGSizeProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxSize& value = wxSize());
 
@@ -23,7 +23,7 @@ public:
 protected:
 	void DoSetValue(const wxSize& value) { m_value = WXVARIANT(value); }
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGSizeProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGSizeProperty);
 };
 
 #endif

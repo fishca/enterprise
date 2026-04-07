@@ -7,16 +7,16 @@
 class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
-// wxPGGenerationProperty
+// ibPGGenerationProperty
 // -----------------------------------------------------------------------
 
-class wxPGGenerationProperty : public wxPGProperty {
+class ibPGGenerationProperty : public wxPGProperty {
 	void FillByClsid(const ibClassID& clsid);
 public:
 
 	const ibPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGGenerationProperty(const ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	ibPGGenerationProperty(const ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value,
@@ -35,7 +35,7 @@ public:
 protected:
 	const ibPropertyObject* m_ownerProperty = nullptr;
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGGenerationProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGGenerationProperty);
 };
 
 #endif

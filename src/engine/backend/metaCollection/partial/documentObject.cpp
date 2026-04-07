@@ -148,9 +148,9 @@ void ibValueRecordDataObjectDocument::SetDeletionMark(bool deletionMark)
 	ibValueRecordDataObjectRef::SetDeletionMark(deletionMark);
 }
 
-CSourceExplorer ibValueRecordDataObjectDocument::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectDocument::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);

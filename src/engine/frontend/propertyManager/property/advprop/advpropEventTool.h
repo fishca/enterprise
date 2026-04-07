@@ -7,10 +7,10 @@
 class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
-// wxEventToolProperty
+// ibPGEventToolProperty
 // -----------------------------------------------------------------------
 
-class wxEventToolProperty : public wxPGProperty {
+class ibPGEventToolProperty : public wxPGProperty {
 private:
 
 	mutable class wxEventToolPropertyData {
@@ -41,11 +41,11 @@ public:
 	long GetNumber() const { return m_actionData.GetNumber(); }
 	wxString GetString() const { return m_actionData.GetString(); }
 
-	wxEventToolProperty(const wxString& label = wxPG_LABEL,
+	ibPGEventToolProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxPGChoices& choices = wxPGChoices(),
 		const wxVariant& value = wxNullVariant);
 
-	virtual ~wxEventToolProperty();
+	virtual ~ibPGEventToolProperty();
 
 	virtual wxString ValueToString(wxVariant& value,
 		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
@@ -62,7 +62,7 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxEventToolProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGEventToolProperty);
 };
 
 #endif

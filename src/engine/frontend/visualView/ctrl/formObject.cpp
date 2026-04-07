@@ -62,7 +62,7 @@ void ibValueForm::BuildForm(const ibFormID& formType)
 			}
 		}
 
-		const CSourceExplorer& sourceExplorer = m_sourceObject->GetSourceExplorer();
+		const ibSourceExplorer& sourceExplorer = m_sourceObject->GetSourceExplorer();
 		if (sourceExplorer.IsTableSection()) {
 
 			mainTableBox =
@@ -76,7 +76,7 @@ void ibValueForm::BuildForm(const ibFormID& formType)
 
 		for (unsigned int idx = 0; idx < sourceExplorer.GetHelperCount(); idx++) {
 
-			const CSourceExplorer& nextSourceExplorer = sourceExplorer.GetHelper(idx);
+			const ibSourceExplorer& nextSourceExplorer = sourceExplorer.GetHelper(idx);
 
 			if (sourceExplorer.IsTableSection()) {
 				ibValueModelTableBoxColumn* tableBoxColumn =
@@ -135,7 +135,7 @@ void ibValueForm::BuildForm(const ibFormID& formType)
 					}
 
 					for (unsigned int col = 0; col < nextSourceExplorer.GetHelperCount(); col++) {
-						const CSourceExplorer& colSourceExplorer = nextSourceExplorer.GetHelper(col);
+						const ibSourceExplorer& colSourceExplorer = nextSourceExplorer.GetHelper(col);
 
 						ibValueModelTableBoxColumn* tableBoxColumn =
 							wxDynamicCast(

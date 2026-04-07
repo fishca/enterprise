@@ -140,9 +140,9 @@ wxString ibValueRecordDataObjectConstant::GetString() const
 	return clsFactory->GetClassName();
 }
 
-CSourceExplorer ibValueRecordDataObjectConstant::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordDataObjectConstant::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false, true
 	);

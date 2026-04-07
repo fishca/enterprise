@@ -7,14 +7,14 @@
 #include "backend/backend_core.h"
 
 // -----------------------------------------------------------------------
-// wxPGFontProperty
+// ibPGFontProperty
 // -----------------------------------------------------------------------
 
-class wxPGFontProperty : public wxPGProperty {
+class ibPGFontProperty : public wxPGProperty {
 public:
 
-	wxPGFontProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxFontContainer& value = *wxNORMAL_FONT);
-	virtual ~wxPGFontProperty() override;
+	ibPGFontProperty(const wxString& label = wxPG_LABEL, const wxString& name = wxPG_LABEL, const wxFontContainer& value = *wxNORMAL_FONT);
+	virtual ~ibPGFontProperty() override;
 
 	virtual wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
 		wxVariant& childValue) const override;
@@ -28,7 +28,7 @@ public:
 	virtual bool OnEvent(wxPropertyGrid* propgrid, wxWindow* primary, wxEvent& event) override;
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGFontProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGFontProperty);
 };
 
 #endif

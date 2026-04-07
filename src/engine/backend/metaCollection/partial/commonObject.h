@@ -55,7 +55,7 @@ class BACKEND_API ibValueRecordKeyObject;
 class BACKEND_API ibValueRecordManagerObject;
 class BACKEND_API ibValueRecordSetObject;
 
-class BACKEND_API CSourceExplorer;
+class BACKEND_API ibSourceExplorer;
 
 //special names 
 #define guidName wxT("uuid")
@@ -1201,7 +1201,7 @@ public:
 	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const = 0;
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const = 0;
+	virtual ibSourceExplorer GetSourceExplorer() const = 0;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id) = 0;
 
 	//support source set/get data 
@@ -1373,7 +1373,7 @@ public:
 	}
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//support source set/get data 
@@ -1513,7 +1513,7 @@ public:
 	}
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//get metaData from object 
@@ -1585,7 +1585,7 @@ public:
 	virtual ~ibValueRecordDataObjectHierarchyRef();
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//Get presentation 
@@ -2064,7 +2064,7 @@ public:
 	}
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
+	virtual ibSourceExplorer GetSourceExplorer() const;
 	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//get metaData from object 

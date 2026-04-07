@@ -672,7 +672,7 @@ wxMemoryBuffer ibApplicationData::SaveUserData_Language(const ibApplicationDataU
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <backend/utils/wxmd5.hpp>
+#include "backend/utils/md5.hpp"
 
 wxString ibApplicationData::ComputeMd5(const wxString& userPassword) const
 {

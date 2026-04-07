@@ -9,15 +9,15 @@
 class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
-// wxPGHyperLinkProperty
+// ibPGHyperLinkProperty
 // -----------------------------------------------------------------------
 
-class wxPGHyperLinkProperty : public wxPGProperty {
+class ibPGHyperLinkProperty : public wxPGProperty {
 public:
 
-	wxPGHyperLinkProperty(ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	ibPGHyperLinkProperty(ibPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
-	virtual ~wxPGHyperLinkProperty();
+	virtual ~ibPGHyperLinkProperty();
 
 	virtual wxString ValueToString(wxVariant& value,
 		wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override;
@@ -35,7 +35,7 @@ public:
 protected:
 	ibPropertyObject* m_ownerProperty = nullptr;
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGHyperLinkProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGHyperLinkProperty);
 };
 
 #endif

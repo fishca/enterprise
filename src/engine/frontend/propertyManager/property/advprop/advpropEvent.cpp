@@ -6,10 +6,10 @@
 #include "frontend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
-// wxEventProperty
+// ibPGEventProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxEventProperty, wxStringProperty, TextCtrlAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGEventProperty, wxStringProperty, TextCtrlAndButton)
 
 // register frontend property 
 class ibPropertyEventLoader
@@ -17,17 +17,17 @@ class ibPropertyEventLoader
 public:
 	ibPropertyEventLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxEventProperty, ibEventControl::ms_propertyEvent);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGEventProperty, ibEventControl::ms_propertyEvent);
 	}
 } g_eventLoader;
 
-wxEventProperty::wxEventProperty(const wxString& label, const wxString& name, const wxString& value)
+ibPGEventProperty::ibPGEventProperty(const wxString& label, const wxString& name, const wxString& value)
 	: wxStringProperty(label, name, value)
 {
 	m_flags |= wxPGPropertyFlags_ActiveButton; // Property button always enabled.
 }
 
-wxString wxEventProperty::ValueToString(wxVariant& value,
+wxString ibPGEventProperty::ValueToString(wxVariant& value,
 	wxPGPropValFormatFlags flags) const
 {
 	wxString s = value.GetString();
@@ -58,7 +58,7 @@ wxString wxEventProperty::ValueToString(wxVariant& value,
 	return s;
 }
 
-bool wxEventProperty::StringToValue(wxVariant& variant,
+bool ibPGEventProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
 	wxPGPropValFormatFlags flags) const
 {
@@ -79,14 +79,14 @@ bool wxEventProperty::StringToValue(wxVariant& variant,
 
 #include <wx/propgrid/advprops.h>
 
-wxPGEditorDialogAdapter* wxEventProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGEventProperty::GetEditorDialog() const
 {
-	class wxPGRecordEventAdapter : public wxPGEditorDialogAdapter {
+	class ibPGEditorRecordDialogAdapter : public wxPGEditorDialogAdapter {
 	public:
 
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
-			wxEventProperty* dlgProp = wxDynamicCast(prop, wxEventProperty);
+			ibPGEventProperty* dlgProp = wxDynamicCast(prop, ibPGEventProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 			const wxString& eventName = pg->GetUncommittedPropertyValue();
 			if (eventName.IsEmpty()) {
@@ -105,5 +105,5 @@ wxPGEditorDialogAdapter* wxEventProperty::GetEditorDialog() const
 		}
 	};
 
-	return new wxPGRecordEventAdapter();
+	return new ibPGEditorRecordDialogAdapter();
 }

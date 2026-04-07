@@ -9,10 +9,10 @@
 #define icon_size 16
 
 // -----------------------------------------------------------------------
-// wxPGTypeProperty
+// ibPGTypeProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGTypeProperty, wxStringProperty, ComboBoxAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGTypeProperty, wxStringProperty, ComboBoxAndButton)
 
 // register frontend property 
 class ibPropertyTypeLoader
@@ -20,11 +20,11 @@ class ibPropertyTypeLoader
 public:
 	ibPropertyTypeLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGTypeProperty, ibPropertyType::ms_propertyType);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGTypeProperty, ibPropertyType::ms_propertyType);
 	}
 }g_typeLoader;
 
-wxPGChoices wxPGTypeProperty::GetDateTime()
+wxPGChoices ibPGTypeProperty::GetDateTime()
 {
 	wxPGChoices choices;
 	choices.Add(_("Date"), ibDateFractions::ibDateFractions_Date);
@@ -36,7 +36,7 @@ wxPGChoices wxPGTypeProperty::GetDateTime()
 #include "backend/metadata.h"
 #include "backend/objCtor.h"
 
-void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, const ibClassID& clsid)
+void ibPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, const ibClassID& clsid)
 {
 	const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
 	wxASSERT(so);
@@ -97,7 +97,7 @@ void wxPGTypeProperty::FillByClsid(const ibSelectorDataType& selectorDataType, c
 
 #include "backend/system/value/valueTable.h"
 
-wxPGTypeProperty::wxPGTypeProperty(const ibPropertyObject* property, const ibSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
+ibPGTypeProperty::ibPGTypeProperty(const ibPropertyObject* property, const ibSelectorDataType& selectorDataType, const wxString& label, const wxString& strName, const wxVariant& value) :
 	wxPGProperty(label, strName), m_ownerProperty(property)
 {
 	m_precision = new wxUIntProperty(_("Precision"), wxT("precision"), 0);
@@ -161,7 +161,7 @@ wxPGTypeProperty::wxPGTypeProperty(const ibPropertyObject* property, const ibSel
 	m_flags |= wxPGPropertyFlags_ActiveButton;
 }
 
-bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
+bool ibPGTypeProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	ibVariantDataAttribute* dataType = property_cast(value, ibVariantDataAttribute);
 	if (dataType != nullptr) {
@@ -175,7 +175,7 @@ bool wxPGTypeProperty::IntToValue(wxVariant& value, int number, wxPGPropValForma
 	return false;
 }
 
-wxVariant wxPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, wxVariant& childValue) const
+wxVariant ibPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, wxVariant& childValue) const
 {
 	ibVariantDataAttribute* dataType = property_cast(thisValue, ibVariantDataAttribute);
 	if (dataType != nullptr) {
@@ -214,7 +214,7 @@ wxVariant wxPGTypeProperty::ChildChanged(wxVariant& thisValue, int childIndex, w
 	return wxNullVariant;
 }
 
-void wxPGTypeProperty::RefreshChildren()
+void ibPGTypeProperty::RefreshChildren()
 {
 	ibVariantDataAttribute* varData = property_cast(m_value, ibVariantDataAttribute);
 
@@ -299,21 +299,21 @@ void wxPGTypeProperty::RefreshChildren()
 		m_length->SetExpanded(false);
 	}
 
-	wxPGTypeProperty::SetExpanded(true);
+	ibPGTypeProperty::SetExpanded(true);
 }
 
 #include <wx/spinctrl.h>
 
 #include "frontend/win/ctrls/checktree.h"
 
-wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGTypeProperty::GetEditorDialog() const
 {
-	class wxPGEditorTypeDialogAdapter : public wxPGEditorDialogAdapter {
+	class ibPGEditorTypeDialogAdapter : public wxPGEditorDialogAdapter {
 
-		class wxTreeItemOptionData : public wxTreeItemData {
+		class ibTreeItemPropertyData : public wxTreeItemData {
 			const ibCtorAbstractType* m_typeCtor;
 		public:
-			wxTreeItemOptionData(const ibCtorAbstractType* typeCtor) : wxTreeItemData(), m_typeCtor(typeCtor) {}
+			ibTreeItemPropertyData(const ibCtorAbstractType* typeCtor) : wxTreeItemData(), m_typeCtor(typeCtor) {}
 			ibClassID GetClassType() const { return m_typeCtor->GetClassType(); }
 			const ibCtorAbstractType* GetTypeCtor() const { return m_typeCtor; }
 		};
@@ -326,7 +326,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			const ibCtorAbstractType* so = ibValue::GetAvailableCtor(clsid);
 			const int groupIcon = imageList->Add(so->GetClassIcon());
 
-			wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+			ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 			wxTreeItemId newItem = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
 				groupIcon, groupIcon,
 				itemData);
@@ -351,7 +351,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				const ibCtorAbstractType* so = metaData ? metaData->GetAvailableCtor(clsid) : ibValue::GetAvailableCtor(clsid);
 				const int groupIcon = imageList->Add(so->GetClassIcon());
 
-				wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+				ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 				wxTreeItemId newItem = tc->AppendItem(tc->GetRootItem(), so->GetClassName(),
 					groupIcon, groupIcon,
 					itemData);
@@ -385,7 +385,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
-							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 							wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
 								icon, icon,
 								itemData);
@@ -412,7 +412,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 						ibValueMetaObjectGenericData* registerData = dynamic_cast<ibValueMetaObjectGenericData*>(so->GetMetaObject());
 						{
 							int icon = imageList->Add(registerData->GetIcon());
-							wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+							ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 							wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
 								icon, icon,
 								itemData);
@@ -440,7 +440,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 							ibValueMetaObjectRecordData* registerData = dynamic_cast<ibValueMetaObjectRecordData*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
-								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 								wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
 									icon, icon,
 									itemData);
@@ -467,7 +467,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 							ibValueMetaObjectRecordDataRef* registerData = dynamic_cast<ibValueMetaObjectRecordDataRef*>(so->GetMetaObject());
 							{
 								int icon = imageList->Add(registerData->GetIcon());
-								wxTreeItemOptionData* itemData = new wxTreeItemOptionData(so);
+								ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(so);
 								wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
 									icon, icon,
 									itemData);
@@ -492,7 +492,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
-			wxPGTypeProperty* dlgProp = wxDynamicCast(prop, wxPGTypeProperty);
+			ibPGTypeProperty* dlgProp = wxDynamicCast(prop, ibPGTypeProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
 			const ibBackendTypeConfigFactory* typeFactory = dynamic_cast<const ibBackendTypeConfigFactory*>(dlgProp->GetPropertyObject());
@@ -661,7 +661,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 			tc->Bind(wxEVT_COMMAND_TREE_SEL_CHANGED,
 				[tc, numberSizer, dateSizer, stringSizer, topsizer](wxTreeEvent& event)
 				{
-					wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(tc->GetItemData(event.GetItem()));
+					ibTreeItemPropertyData* item = dynamic_cast<ibTreeItemPropertyData*>(tc->GetItemData(event.GetItem()));
 					if (item != nullptr) {
 						const ibClassID& clsid = item->GetClassType();
 						for (unsigned int i = 0; i < numberSizer->GetItemCount(); i++) {
@@ -749,7 +749,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				bool allowType = true;
 				for (const wxTreeItemId& selItem : ids) {
 					if (selItem.IsOk()) {
-						const wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(tc->GetItemData(selItem));
+						const ibTreeItemPropertyData* item = dynamic_cast<ibTreeItemPropertyData*>(tc->GetItemData(selItem));
 						if (item != nullptr && clsid == item->GetClassType()) { allowType = false; break; }
 					}
 				}
@@ -763,7 +763,7 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 				unsigned int selCount = tc->GetSelections(ids);
 				for (const wxTreeItemId& selItem : ids) {
 					if (selItem.IsOk()) {
-						const wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(tc->GetItemData(selItem));
+						const ibTreeItemPropertyData* item = dynamic_cast<ibTreeItemPropertyData*>(tc->GetItemData(selItem));
 						if (item != nullptr) createdDesc.AppendMetaType(item->GetClassType());
 					}
 				}
@@ -776,5 +776,5 @@ wxPGEditorDialogAdapter* wxPGTypeProperty::GetEditorDialog() const
 		}
 	};
 
-	return new wxPGEditorTypeDialogAdapter();
+	return new ibPGEditorTypeDialogAdapter();
 }

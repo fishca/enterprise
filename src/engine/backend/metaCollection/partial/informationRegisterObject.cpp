@@ -124,9 +124,9 @@ bool ibValueRecordSetObjectInformationRegister::DeleteRecordSet()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CSourceExplorer ibValueRecordManagerObjectInformationRegister::GetSourceExplorer() const
+ibSourceExplorer ibValueRecordManagerObjectInformationRegister::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		false
 	);

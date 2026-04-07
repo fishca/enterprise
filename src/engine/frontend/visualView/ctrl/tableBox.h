@@ -152,7 +152,7 @@ public:
 	virtual void ExecuteMenu(ibVisualHost* visualHost, int id);
 
 	// filter data 
-	virtual bool FilterSource(const CSourceExplorer& src, const ibMetaID& id) const;
+	virtual bool FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const;
 
 	//contol value
 	virtual bool HasValueInControl() const {
@@ -369,7 +369,7 @@ public:
 public:
 
 	//filter source
-	virtual bool FilterSource(const CSourceExplorer& src, const ibMetaID& id) const;
+	virtual bool FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const;
 
 	//get control value
 	virtual bool SetControlValue(const ibValue& varControlVal = ibValue());

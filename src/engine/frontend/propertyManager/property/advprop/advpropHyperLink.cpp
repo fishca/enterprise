@@ -4,14 +4,14 @@
 #include "frontend/propertyManager/propertyEditor.h"
 
 // -----------------------------------------------------------------------
-// wxPGHyperLinkProperty
+// ibPGHyperLinkProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGHyperLinkProperty, wxPGProperty, HyperLink)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGHyperLinkProperty, wxPGProperty, HyperLink)
 
 #include "backend/metaCollection/metaObject.h"
 
-wxPGHyperLinkProperty::wxPGHyperLinkProperty(ibPropertyObject* ownerProperty, const wxString& label,
+ibPGHyperLinkProperty::ibPGHyperLinkProperty(ibPropertyObject* ownerProperty, const wxString& label,
 	const wxString& name, const wxVariant& value) : wxPGProperty(label, name), m_ownerProperty(ownerProperty) {
 
 	wxPGProperty::SetFlagRecursively(wxPGFlags::ReadOnly, true);
@@ -21,16 +21,16 @@ wxPGHyperLinkProperty::wxPGHyperLinkProperty(ibPropertyObject* ownerProperty, co
 	wxPGProperty::SetValue(wxVariant(false, wxT("hyperLink_clicked")));
 }
 
-wxPGHyperLinkProperty::~wxPGHyperLinkProperty()
+ibPGHyperLinkProperty::~ibPGHyperLinkProperty()
 {
 }
 
-wxString wxPGHyperLinkProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
+wxString ibPGHyperLinkProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	return _("Open");
 }
 
-bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
+bool ibPGHyperLinkProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
 	wxPGPropValFormatFlags flags) const
 {
@@ -39,7 +39,7 @@ bool wxPGHyperLinkProperty::StringToValue(wxVariant& variant,
 
 #include "backend/metadata.h"
 
-void wxPGHyperLinkProperty::OnSetValue()
+void ibPGHyperLinkProperty::OnSetValue()
 {
 	if (wxT("hyperLink_clicked") == m_value.GetName() && m_value.GetBool()) {
 		ibValueMetaObject* metaObject = dynamic_cast<ibValueMetaObject*>(m_ownerProperty);
@@ -57,7 +57,7 @@ void wxPGHyperLinkProperty::OnSetValue()
 	}
 }
 
-void wxPGHyperLinkProperty::RefreshChildren()
+void ibPGHyperLinkProperty::RefreshChildren()
 {
 	wxPGProperty::Enable(true);
 }

@@ -314,9 +314,9 @@ ibValueListDataObjectEnumRef::ibValueListDataObjectEnumRef(ibValueMetaObjectReco
 	ibValueListDataObject::AppendSort(m_metaObject->GetDataReference(), true, true, true);
 }
 
-CSourceExplorer ibValueListDataObjectEnumRef::GetSourceExplorer() const
+ibSourceExplorer ibValueListDataObjectEnumRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -407,9 +407,9 @@ ibValueListDataObjectRef::ibValueListDataObjectRef(ibValueMetaObjectRecordDataMu
 {
 }
 
-CSourceExplorer ibValueListDataObjectRef::GetSourceExplorer() const
+ibSourceExplorer ibValueListDataObjectRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -662,9 +662,9 @@ ibValueModelTreeDataObjectFolderRef::ibValueModelTreeDataObjectFolderRef(ibValue
 	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataReference());
 }
 
-CSourceExplorer ibValueModelTreeDataObjectFolderRef::GetSourceExplorer() const
+ibSourceExplorer ibValueModelTreeDataObjectFolderRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -951,9 +951,9 @@ ibValueListRegisterObject::ibValueListRegisterObject(ibValueMetaObjectRegisterDa
 	}
 }
 
-CSourceExplorer ibValueListRegisterObject::GetSourceExplorer() const
+ibSourceExplorer ibValueListRegisterObject::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);

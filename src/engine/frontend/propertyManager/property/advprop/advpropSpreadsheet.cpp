@@ -10,6 +10,6 @@ class ibPropertySpreadsheetLoader
 public:
 	ibPropertySpreadsheetLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGHyperLinkProperty, ibPropertySpreadsheet::ms_propertySpreadsheet);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGHyperLinkProperty, ibPropertySpreadsheet::ms_propertySpreadsheet);
 	}
 }g_dateLoader;

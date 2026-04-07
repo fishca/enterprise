@@ -4,7 +4,7 @@
 #include "frontend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
-// wxPGFontProperty
+// ibPGFontProperty
 // -----------------------------------------------------------------------
 
 #include <wx/fontdlg.h>
@@ -52,9 +52,9 @@ static long gs_fp_es_weight_values[] = {
 };
 
 #if wxCHECK_VERSION(3, 1, 0)
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGFontProperty, wxPGProperty, TextCtrlAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGFontProperty, wxPGProperty, TextCtrlAndButton)
 #else
-WX_PG_IMPLEMENT_PROPERTY_CLASS(wxPGFontProperty, wxPGProperty, wxFont, const wxFont&, TextCtrlAndButton)
+WX_PG_IMPLEMENT_PROPERTY_CLASS(ibPGFontProperty, wxPGProperty, wxFont, const wxFont&, TextCtrlAndButton)
 #endif
 
 // register frontend property 
@@ -62,13 +62,13 @@ class ibPropertyFontLoader
 {
 public:
 	ibPropertyFontLoader() {
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGFontProperty, ibPropertyFont::ms_propertyFont);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGFontProperty, ibPropertyFont::ms_propertyFont);
 	}
 } g_fontLoader;
 
 #include "backend/typeconv.h"
 
-wxPGFontProperty::wxPGFontProperty(const wxString& label, const wxString& strName,
+ibPGFontProperty::ibPGFontProperty(const wxString& label, const wxString& strName,
 	const wxFontContainer& value)
 	: wxPGProperty(label, strName)
 {
@@ -120,19 +120,19 @@ wxPGFontProperty::wxPGFontProperty(const wxString& label, const wxString& strNam
 		value.m_underlined));
 }
 
-wxPGFontProperty::~wxPGFontProperty() {}
+ibPGFontProperty::~ibPGFontProperty() {}
 
-void wxPGFontProperty::OnSetValue()
+void ibPGFontProperty::OnSetValue()
 {
 	// do nothing
 }
 
-wxString wxPGFontProperty::GetValueAsString(wxPGPropValFormatFlags flags) const
+wxString ibPGFontProperty::GetValueAsString(wxPGPropValFormatFlags flags) const
 {
 	return wxPGProperty::GetValueAsString(flags);
 }
 
-bool wxPGFontProperty::OnEvent(wxPropertyGrid* propgrid, wxWindow* WXUNUSED(primary),
+bool ibPGFontProperty::OnEvent(wxPropertyGrid* propgrid, wxWindow* WXUNUSED(primary),
 	wxEvent& event)
 {
 	if (propgrid->IsMainButtonEvent(event))
@@ -161,7 +161,7 @@ bool wxPGFontProperty::OnEvent(wxPropertyGrid* propgrid, wxWindow* WXUNUSED(prim
 	return false;
 }
 
-void wxPGFontProperty::RefreshChildren()
+void ibPGFontProperty::RefreshChildren()
 {
 	wxString fstr = m_value.GetString();
 	wxFontContainer font = typeConv::StringToFont(fstr);
@@ -174,7 +174,7 @@ void wxPGFontProperty::RefreshChildren()
 	Item(5)->SetValue(font.m_underlined);
 }
 
-wxVariant wxPGFontProperty::ChildChanged(wxVariant& thisValue, int ind, wxVariant& childValue) const
+wxVariant ibPGFontProperty::ChildChanged(wxVariant& thisValue, int ind, wxVariant& childValue) const
 {
 	wxFontContainer font = typeConv::StringToFont(thisValue.GetString());
 

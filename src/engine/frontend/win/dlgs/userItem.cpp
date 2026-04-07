@@ -1,7 +1,7 @@
 #include "userItem.h"
 
 #include "backend/appData.h"
-#include "backend/utils/wxmd5.hpp"
+#include "backend/utils/md5.hpp"
 
 #include "backend/metadataConfiguration.h"
 

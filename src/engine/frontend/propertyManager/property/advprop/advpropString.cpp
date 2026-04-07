@@ -10,20 +10,20 @@ public:
 	ibPropertyStringLoader()
 	{
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxStringProperty, ibPropertyStringBase::ms_propertyString);
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxUStringProperty, ibPropertyStringBase::ms_propertyUString);
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxUEStringProperty, ibPropertyStringBase::ms_propertyUEString);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibUStringProperty, ibPropertyStringBase::ms_propertyUString);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibUEStringProperty, ibPropertyStringBase::ms_propertyUEString);
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxTStringProperty, ibPropertyStringBase::ms_propertyTString);
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxMStringProperty, ibPropertyStringBase::ms_propertyMString);
 	}
 }g_stringLoader;
 
 // -----------------------------------------------------------------------
-// wxUStringProperty
+// ibUStringProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxUStringProperty, wxStringProperty, TextCtrl)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibUStringProperty, wxStringProperty, TextCtrl)
 
-wxString wxUStringProperty::ValueToString(wxVariant& value, wxPGPropValFormatFlags flags) const
+wxString ibUStringProperty::ValueToString(wxVariant& value, wxPGPropValFormatFlags flags) const
 {
 	wxString s = value.GetString();
 
@@ -53,7 +53,7 @@ wxString wxUStringProperty::ValueToString(wxVariant& value, wxPGPropValFormatFla
 	return s;
 }
 
-bool wxUStringProperty::StringToValue(wxVariant& variant,
+bool ibUStringProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
 	wxPGPropValFormatFlags flags) const
 {
@@ -79,10 +79,10 @@ bool wxUStringProperty::StringToValue(wxVariant& variant,
 }
 
 // -----------------------------------------------------------------------
-// wxUEStringProperty
+// ibUEStringProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxUEStringProperty, wxUStringProperty, TextCtrl)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibUEStringProperty, ibUStringProperty, TextCtrl)
 
 // -----------------------------------------------------------------------
 // wxTStringProperty

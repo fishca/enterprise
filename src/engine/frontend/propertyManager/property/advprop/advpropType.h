@@ -7,11 +7,11 @@
 class BACKEND_API ibPropertyObject;
 
 // -----------------------------------------------------------------------
-// wxPGTypeProperty
+// ibPGTypeProperty
 // -----------------------------------------------------------------------
 
-class wxPGTypeProperty : public wxPGProperty {
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGTypeProperty);
+class ibPGTypeProperty : public wxPGProperty {
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGTypeProperty);
 private:
 	wxPGChoices GetDateTime();
 	void FillByClsid(const ibSelectorDataType &selectorDataType, const ibClassID& clsid);
@@ -19,7 +19,7 @@ public:
 
 	const ibPropertyObject* GetPropertyObject() const { return m_ownerProperty; }
 
-	wxPGTypeProperty(const ibPropertyObject* property = nullptr, const ibSelectorDataType& selectorDataType = ibSelectorDataType::ibSelectorDataType_any, const wxString& label = wxPG_LABEL,
+	ibPGTypeProperty(const ibPropertyObject* property = nullptr, const ibSelectorDataType& selectorDataType = ibSelectorDataType::ibSelectorDataType_any, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, const wxVariant& value = wxNullVariant);
 
 	virtual wxString ValueToString(wxVariant& value, wxPGPropValFormatFlags flags = wxPGPropValFormatFlags::Null) const override { return value.GetString(); }

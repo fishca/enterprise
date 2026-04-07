@@ -4,13 +4,13 @@
 #include <wx/propgrid/propgrid.h>
 
 // -----------------------------------------------------------------------
-// wxEventProperty
+// ibPGEventProperty
 // -----------------------------------------------------------------------
 
-class wxEventProperty : public wxStringProperty {
+class ibPGEventProperty : public wxStringProperty {
 public:
 
-	wxEventProperty(const wxString& label = wxPG_LABEL,
+	ibPGEventProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxString& value = wxEmptyString);
 
@@ -24,7 +24,7 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxEventProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGEventProperty);
 };
 
 #endif

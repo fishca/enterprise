@@ -4,10 +4,10 @@
 #include "frontend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
-// wxPGSourceDataProperty
+// ibPGDataSourceProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxNumberProperty, wxNumericProperty, TextCtrl)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGNumberProperty, wxNumericProperty, TextCtrl)
 
 // register frontend property 
 class ibPropertyNumberLoader
@@ -15,13 +15,13 @@ class ibPropertyNumberLoader
 public:
 	ibPropertyNumberLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxNumberProperty, ibPropertyNumber::ms_propertyNumber);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGNumberProperty, ibPropertyNumber::ms_propertyNumber);
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxIntProperty, ibPropertyInteger::ms_propertyInteger);
 		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxUIntProperty, ibPropertyUInteger::ms_propertyUInteger);
 	}
 }g_numberLoader;
 
-wxNumberProperty::wxNumberProperty(const wxString& label,
+ibPGNumberProperty::ibPGNumberProperty(const wxString& label,
 	const wxString& strName,
 	const ibNumber& value)
 	: wxNumericProperty(label, strName)
@@ -32,9 +32,9 @@ wxNumberProperty::wxNumberProperty(const wxString& label,
 	);
 }
 
-wxNumberProperty::~wxNumberProperty() {}
+ibPGNumberProperty::~ibPGNumberProperty() {}
 
-wxString wxNumberProperty::ValueToString(wxVariant& variant,
+wxString ibPGNumberProperty::ValueToString(wxVariant& variant,
 	wxPGPropValFormatFlags flags) const
 {
 	wxString text;
@@ -47,7 +47,7 @@ wxString wxNumberProperty::ValueToString(wxVariant& variant,
 	return text;
 }
 
-bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
+bool ibPGNumberProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	ibNumber value;
 	ibVariantDataNumber* numberVariant =
@@ -71,7 +71,7 @@ bool wxNumberProperty::StringToValue(wxVariant& variant, const wxString& text, w
 }
 
 bool
-wxNumberProperty::ValidateValue(wxVariant& variant,
+ibPGNumberProperty::ValidateValue(wxVariant& variant,
 	wxPGValidationInfo& validationInfo) const
 {
 	ibNumber fpv = 0.0f;
@@ -82,7 +82,7 @@ wxNumberProperty::ValidateValue(wxVariant& variant,
 	return DoNumericValidation(fpv, &validationInfo, wxPG_PROPERTY_VALIDATION_ERROR_MESSAGE);
 }
 
-bool wxNumberProperty::DoSetAttribute(const wxString& strName, wxVariant& variant)
+bool ibPGNumberProperty::DoSetAttribute(const wxString& strName, wxVariant& variant)
 {
 	if (strName == wxPG_FLOAT_PRECISION) {
 		m_precision = variant.GetLong();
@@ -92,7 +92,7 @@ bool wxNumberProperty::DoSetAttribute(const wxString& strName, wxVariant& varian
 }
 
 wxValidator*
-wxNumberProperty::GetClassValidator()
+ibPGNumberProperty::GetClassValidator()
 {
 #if wxUSE_VALIDATORS
 	WX_PG_DOGETVALIDATOR_ENTRY()
@@ -106,12 +106,12 @@ wxNumberProperty::GetClassValidator()
 #endif
 }
 
-wxValidator* wxNumberProperty::DoGetValidator() const
+wxValidator* ibPGNumberProperty::DoGetValidator() const
 {
 	return GetClassValidator();
 }
 
-wxVariant wxNumberProperty::AddSpinStepValue(long stepScale) const
+wxVariant ibPGNumberProperty::AddSpinStepValue(long stepScale) const
 {
 	int mode = m_spinWrap ? wxPG_PROPERTY_VALIDATION_WRAP
 		: wxPG_PROPERTY_VALIDATION_SATURATE;

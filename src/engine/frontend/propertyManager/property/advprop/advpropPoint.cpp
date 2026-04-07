@@ -4,13 +4,13 @@
 #include "frontend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
-// wxPGPointProperty
+// ibPGPointProperty
 // -----------------------------------------------------------------------
 
 #if wxCHECK_VERSION(3, 1, 0)
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGPointProperty, wxPGProperty, TextCtrl)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGPointProperty, wxPGProperty, TextCtrl)
 #else
-WX_PG_IMPLEMENT_PROPERTY_CLASS(wxPGPointProperty, wxPGProperty, wxPoint, const wxPoint&, TextCtrl)
+WX_PG_IMPLEMENT_PROPERTY_CLASS(ibPGPointProperty, wxPGProperty, wxPoint, const wxPoint&, TextCtrl)
 #endif
 
 // register frontend property 
@@ -19,11 +19,11 @@ class ibPropertyPointerLoader
 public:
 	ibPropertyPointerLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGPointProperty, ibPropertyPoint::ms_propertyPoint);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGPointProperty, ibPropertyPoint::ms_propertyPoint);
 	}
 }g_pointerLoader;
 
-wxPGPointProperty::wxPGPointProperty(const wxString& label,
+ibPGPointProperty::ibPGPointProperty(const wxString& label,
 	const wxString& strName,
 	const wxPoint& value) : wxPGProperty(label, strName)
 {
@@ -32,9 +32,9 @@ wxPGPointProperty::wxPGPointProperty(const wxString& label,
 	AddPrivateChild(new wxIntProperty(_("Y"), wxT("y"), value.y));
 }
 
-wxPGPointProperty::~wxPGPointProperty() {}
+ibPGPointProperty::~ibPGPointProperty() {}
 
-void wxPGPointProperty::RefreshChildren()
+void ibPGPointProperty::RefreshChildren()
 {
 	if (GetChildCount() < 2) return;
 
@@ -44,7 +44,7 @@ void wxPGPointProperty::RefreshChildren()
 	Item(1)->SetValue((long)point.y);
 }
 
-wxVariant wxPGPointProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
+wxVariant ibPGPointProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
 	wxVariant& childValue) const {
 	wxPoint point;
 	point << thisValue;

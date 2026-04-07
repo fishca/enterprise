@@ -8,10 +8,10 @@
 #define icon_size 16
 
 // -----------------------------------------------------------------------
-// wxPGGenerationProperty
+// ibPGGenerationProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGGenerationProperty, wxPGProperty, ComboBoxAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGGenerationProperty, wxPGProperty, ComboBoxAndButton)
 
 // register frontend property 
 class ibPropertyGenerationLoader
@@ -19,11 +19,11 @@ class ibPropertyGenerationLoader
 public:
     ibPropertyGenerationLoader()
     {
-        ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGGenerationProperty, ibPropertyGeneration::ms_propertyGeneration);
+        ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGGenerationProperty, ibPropertyGeneration::ms_propertyGeneration);
     }
 }g_generationLoader;
 
-void wxPGGenerationProperty::FillByClsid(const ibClassID& clsid)
+void ibPGGenerationProperty::FillByClsid(const ibClassID& clsid)
 {
     const ibValueMetaObjectGenericData* metaGenericData = dynamic_cast<const ibValueMetaObjectGenericData*>(m_ownerProperty);
     if (metaGenericData != nullptr) {
@@ -35,7 +35,7 @@ void wxPGGenerationProperty::FillByClsid(const ibClassID& clsid)
     }
 }
 
-wxPGGenerationProperty::wxPGGenerationProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
+ibPGGenerationProperty::ibPGGenerationProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName, const wxVariant& value)
     : wxPGProperty(label, strName), m_ownerProperty(property)
 {
     FillByClsid(g_metaCatalogCLSID);
@@ -47,19 +47,19 @@ wxPGGenerationProperty::wxPGGenerationProperty(const ibPropertyObject* property,
     SetValue(value);
 }
 
-wxString wxPGGenerationProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
+wxString ibPGGenerationProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
     return value.GetString();
 }
 
-bool wxPGGenerationProperty::StringToValue(wxVariant& variant,
+bool ibPGGenerationProperty::StringToValue(wxVariant& variant,
     const wxString& text,
     wxPGPropValFormatFlags flags) const
 {
     return false;
 }
 
-bool wxPGGenerationProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
+bool ibPGGenerationProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
     ibVariantDataGeneration* dataGen = property_cast(value, ibVariantDataGeneration);
     if (dataGen != nullptr) {
@@ -75,13 +75,13 @@ bool wxPGGenerationProperty::IntToValue(wxVariant& value, int number, wxPGPropVa
 
 #include "frontend/win/ctrls/checktree.h"
 
-wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGGenerationProperty::GetEditorDialog() const
 {
     class wxPGGenerationEventAdapter : public wxPGEditorDialogAdapter {
-        class wxTreeItemOptionData : public wxTreeItemData {
+        class ibTreeItemPropertyData : public wxTreeItemData {
             ibValueMetaObject* m_metaObject;
         public:
-            wxTreeItemOptionData(ibValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
+            ibTreeItemPropertyData(ibValueMetaObject* opt) : wxTreeItemData(), m_metaObject(opt) {}
             ibMetaID GetMetaID() const { return m_metaObject->GetMetaID(); }
         };
 
@@ -99,7 +99,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
                 if (registerData != nullptr) {
                     {
                         const int icon = imageList->Add(registerData->GetIcon());
-                        wxTreeItemOptionData* itemData = new wxTreeItemOptionData(metaObject);
+                        ibTreeItemPropertyData* itemData = new ibTreeItemPropertyData(metaObject);
                         wxTreeItemId newItem = tc->AppendItem(parentID, registerData->GetName(),
                             icon, icon,
                             itemData);
@@ -122,7 +122,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
 
         virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
         {
-            wxPGGenerationProperty* dlgProp = wxDynamicCast(prop, wxPGGenerationProperty);
+            ibPGGenerationProperty* dlgProp = wxDynamicCast(prop, ibPGGenerationProperty);
             wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
             ibVariantDataGeneration* data = property_cast(dlgProp->GetValue(), ibVariantDataGeneration);
@@ -188,7 +188,7 @@ wxPGEditorDialogAdapter* wxPGGenerationProperty::GetEditorDialog() const
                     if (selItem.IsOk()) {
                         wxTreeItemData* dataItem = tc->GetItemData(selItem);
                         if (dataItem && res == wxID_OK) {
-                            wxTreeItemOptionData* item = dynamic_cast<wxTreeItemOptionData*>(dataItem);
+                            ibTreeItemPropertyData* item = dynamic_cast<ibTreeItemPropertyData*>(dataItem);
                             wxASSERT(item);
                             metaDesc.AppendMetaType(item->GetMetaID());
                         }

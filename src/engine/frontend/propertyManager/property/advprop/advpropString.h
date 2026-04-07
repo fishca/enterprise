@@ -8,10 +8,10 @@
 #include "backend/backend_localization.h"
 
 // -----------------------------------------------------------------------
-// wxUStringProperty
+// ibUStringProperty
 // -----------------------------------------------------------------------
 
-class wxUStringProperty : public wxStringProperty {
+class ibUStringProperty : public wxStringProperty {
 public:
 
 	enum {
@@ -19,7 +19,7 @@ public:
 		allow_empty,
 	};
 
-	wxUStringProperty(const wxString& label = wxPG_LABEL,
+	ibUStringProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxString& value = wxEmptyString, const int flags = string_default) :
 		wxStringProperty(label, name, value), m_strFlags(flags)
@@ -37,24 +37,24 @@ private:
 
 	int m_strFlags;
 
-	WX_PG_DECLARE_PROPERTY_CLASS(wxUStringProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibUStringProperty);
 };
 
 // -----------------------------------------------------------------------
-// wxUEStringProperty
+// ibUEStringProperty
 // -----------------------------------------------------------------------
 
-class wxUEStringProperty : public wxUStringProperty {
+class ibUEStringProperty : public ibUStringProperty {
 public:
 
-	wxUEStringProperty(const wxString& label = wxPG_LABEL,
+	ibUEStringProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxString& value = wxEmptyString, const int flags = allow_empty) :
-		wxUStringProperty(label, name, value, flags)
+		ibUStringProperty(label, name, value, flags)
 	{
 	}
 
-	WX_PG_DECLARE_PROPERTY_CLASS(wxUEStringProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibUEStringProperty);
 };
 
 // -----------------------------------------------------------------------

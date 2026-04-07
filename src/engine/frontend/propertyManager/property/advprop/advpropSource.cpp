@@ -9,10 +9,10 @@
 #define icon_size 16
 
 // -----------------------------------------------------------------------
-// wxPGSourceDataProperty
+// ibPGDataSourceProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGSourceDataProperty, wxPGProperty, TextCtrlAndButton)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGDataSourceProperty, wxPGProperty, TextCtrlAndButton)
 
 // register frontend property 
 class ibPropertySourceLoader
@@ -20,11 +20,11 @@ class ibPropertySourceLoader
 public:
 	ibPropertySourceLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGSourceDataProperty, ibPropertySource::ms_propertySource);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGDataSourceProperty, ibPropertySource::ms_propertySource);
 	}
 }g_sourceLoader;
 
-wxPGSourceDataProperty::wxPGSourceDataProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName,
+ibPGDataSourceProperty::ibPGDataSourceProperty(const ibPropertyObject* property, const wxString& label, const wxString& strName,
 	const wxVariant& value) : wxPGProperty(label, strName)
 {
 	ibVariantDataSource* dataSource = property_cast(value, ibVariantDataSource);
@@ -32,7 +32,7 @@ wxPGSourceDataProperty::wxPGSourceDataProperty(const ibPropertyObject* property,
 
 	const ibBackendTypeSourceFactory* typeFactory = dynamic_cast<const ibBackendTypeSourceFactory*>(property);
 	wxASSERT(typeFactory);
-	m_typeSelector = new wxPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : ibSelectorDataType::ibSelectorDataType_reference, _("Type"), wxT("type"), dataSource->CloneSourceAttribute());
+	m_typeSelector = new ibPGTypeProperty(property, typeFactory != nullptr ? typeFactory->GetFilterDataType() : ibSelectorDataType::ibSelectorDataType_reference, _("Type"), wxT("type"), dataSource->CloneSourceAttribute());
 	AddPrivateChild(m_typeSelector);
 
 	//m_flags |= wxPGFlags::ReadOnly;
@@ -41,13 +41,13 @@ wxPGSourceDataProperty::wxPGSourceDataProperty(const ibPropertyObject* property,
 	SetValue(value);
 }
 
-wxString wxPGSourceDataProperty::ValueToString(wxVariant& variant,
+wxString ibPGDataSourceProperty::ValueToString(wxVariant& variant,
 	wxPGPropValFormatFlags WXUNUSED(flags)) const
 {
 	return variant.GetString();
 }
 
-bool wxPGSourceDataProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
+bool ibPGDataSourceProperty::StringToValue(wxVariant& variant, const wxString& text, wxPGPropValFormatFlags flags) const
 {
 	if (text.IsEmpty()) {
 		ibVariantDataSource* dataSource = property_cast(variant, ibVariantDataSource);
@@ -60,7 +60,7 @@ bool wxPGSourceDataProperty::StringToValue(wxVariant& variant, const wxString& t
 	return text.IsEmpty();
 }
 
-void wxPGSourceDataProperty::RefreshChildren()
+void ibPGDataSourceProperty::RefreshChildren()
 {
 	const ibVariantDataSource* dataSource = property_cast(m_value, ibVariantDataSource);
 	if (dataSource != nullptr) {
@@ -69,10 +69,10 @@ void wxPGSourceDataProperty::RefreshChildren()
 		else m_typeSelector->SetValue(dataSource->CloneSourceAttribute());
 	}
 	m_typeSelector->SetFlagRecursively(wxPGFlags::ReadOnly, dataSource != nullptr ? !dataSource->IsPropAllowed() : false);
-	wxPGSourceDataProperty::SetExpanded(true);
+	ibPGDataSourceProperty::SetExpanded(true);
 }
 
-wxVariant wxPGSourceDataProperty::ChildChanged(wxVariant& thisValue, int childIndex, wxVariant& childValue) const
+wxVariant ibPGDataSourceProperty::ChildChanged(wxVariant& thisValue, int childIndex, wxVariant& childValue) const
 {
 	ibVariantDataSource* dataSource = property_cast(thisValue, ibVariantDataSource);
 	if (dataSource != nullptr && childIndex == 0) {
@@ -92,14 +92,14 @@ wxVariant wxPGSourceDataProperty::ChildChanged(wxVariant& thisValue, int childIn
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGDataSourceProperty::GetEditorDialog() const
 {
 	enum {
 		icon_attribute = 0,
 		icon_table
 	};
 
-	class wxPGSourceEventAdapter : public wxPGEditorDialogAdapter {
+	class ibPGEditorDataSourceDialogAdapter : public wxPGEditorDialogAdapter {
 
 		wxString MakeTypeString(const ibMetaData* metaData, const ibTypeDescription& typeDesc) const {
 			wxString strDescr;
@@ -115,12 +115,12 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			return strDescr;
 		}
 
-		class wxTreeItemSourceData : public wxTreeItemData {
+		class ibTreeItemDataSource : public wxTreeItemData {
 			const wxString m_nameProp;
 			const ibMetaID m_id;
 			const bool m_tableSection;
 		public:
-			wxTreeItemSourceData(const wxString& nameProp, const ibMetaID& id, bool tableSection) : wxTreeItemData(), m_nameProp(nameProp), m_id(id), m_tableSection(tableSection) {};
+			ibTreeItemDataSource(const wxString& nameProp, const ibMetaID& id, bool tableSection) : wxTreeItemData(), m_nameProp(nameProp), m_id(id), m_tableSection(tableSection) {};
 
 			const wxString& GetPropName() const { return m_nameProp; }
 			const ibMetaID& GetID() const { return m_id; }
@@ -193,11 +193,11 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 					}
 				}
 
-				const CSourceExplorer& srcExplorer = srcObject->GetSourceExplorer();
-				wxTreeItemSourceData* srcItemData = nullptr;
+				const ibSourceExplorer& srcExplorer = srcObject->GetSourceExplorer();
+				ibTreeItemDataSource* srcItemData = nullptr;
 				if (typeFactory->FilterSource(srcExplorer, srcExplorer.GetSourceId())) {
 					if (srcExplorer.IsSelect()) {
-						srcItemData = new wxTreeItemSourceData(
+						srcItemData = new ibTreeItemDataSource(
 							srcExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcExplorer.GetClsidList()) + wxT(")"), srcExplorer.GetSourceId(), srcExplorer.IsTableSection()
 						);
 					}
@@ -216,11 +216,11 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 						tc->SelectItem(rootItem);
 					}
 					for (unsigned int idx = 0; idx < srcExplorer.GetHelperCount(); idx++) {
-						const CSourceExplorer& srcNextExplorer = srcExplorer.GetHelper(idx);
-						wxTreeItemSourceData* itemData = nullptr;
+						const ibSourceExplorer& srcNextExplorer = srcExplorer.GetHelper(idx);
+						ibTreeItemDataSource* itemData = nullptr;
 						if (typeFactory->FilterSource(srcNextExplorer, srcExplorer.GetSourceId())) {
 							if (srcNextExplorer.IsSelect()) {
-								itemData = new wxTreeItemSourceData(
+								itemData = new ibTreeItemDataSource(
 									srcNextExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcNextExplorer.GetClsidList()) + wxT(")"),
 									srcNextExplorer.GetSourceId(),
 									srcNextExplorer.IsTableSection()
@@ -241,10 +241,10 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 						if (srcNextExplorer.IsTableSection()) {
 							tc->SetItemBold(newItem);
 							for (unsigned int i = 0; i < srcNextExplorer.GetHelperCount(); i++) {
-								CSourceExplorer srcColExplorer = srcNextExplorer.GetHelper(i);
-								wxTreeItemSourceData* itemTableData = nullptr;
+								ibSourceExplorer srcColExplorer = srcNextExplorer.GetHelper(i);
+								ibTreeItemDataSource* itemTableData = nullptr;
 								if (typeFactory->FilterSource(srcColExplorer, srcNextExplorer.GetSourceId())) {
-									itemTableData = new wxTreeItemSourceData(
+									itemTableData = new ibTreeItemDataSource(
 										srcColExplorer.GetSourceName() + wxT(" (") + MakeTypeString(typeFactory->GetMetaData(), srcColExplorer.GetClsidList()) + wxT(")"),
 										srcColExplorer.GetSourceId(),
 										srcColExplorer.IsTableSection()
@@ -278,7 +278,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			if (selItem.IsOk()) {
 				wxTreeItemData* dataItem = tc->GetItemData(selItem);
 				if (dataItem != nullptr && res == wxID_OK) {
-					wxTreeItemSourceData* item = dynamic_cast<wxTreeItemSourceData*>(dataItem);
+					ibTreeItemDataSource* item = dynamic_cast<ibTreeItemDataSource*>(dataItem);
 					wxASSERT(item);
 					if (is_tableBox == item->IsTableSection()) {
 						SetValue(new ibVariantDataSource(typeFactory, item->GetID()));
@@ -352,12 +352,12 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 			if (typeCtor != nullptr) {
 				const ibValueMetaObjectCompositeData* metaObject = nullptr;
 				if (typeCtor->ConvertToMetaValue(metaObject)) {
-					wxTreeItemSourceData* srcItemData = new wxTreeItemSourceData(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), wxNOT_FOUND, true);
+					ibTreeItemDataSource* srcItemData = new ibTreeItemDataSource(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), wxNOT_FOUND, true);
 					const wxTreeItemId& rootItem = tc->AddRoot(metaObject->GetName() + wxT(" (") + MakeTypeString(metaData, clsid) + wxT(")"), icon_table, icon_table, srcItemData);
 					for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 						if (!object->IsAllowed())
 							continue;
-						wxTreeItemSourceData* itemData = itemData = new wxTreeItemSourceData(
+						ibTreeItemDataSource* itemData = itemData = new ibTreeItemDataSource(
 							object->GetName() + wxT(" (") + MakeTypeString(metaData, object->GetTypeDesc()) + wxT(")"),
 							object->GetMetaID(),
 							false
@@ -375,7 +375,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 				wxTreeItemData* dataItem = tc->GetItemData(selItem);
 				if (dataItem
 					&& res == wxID_OK) {
-					wxTreeItemSourceData* item = dynamic_cast<wxTreeItemSourceData*>(dataItem);
+					ibTreeItemDataSource* item = dynamic_cast<ibTreeItemDataSource*>(dataItem);
 					wxASSERT(item);
 					SetValue(new ibVariantDataSource(typeFactory, item->GetID()));
 				}
@@ -394,7 +394,7 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
-			wxPGSourceDataProperty* dlgProp = wxDynamicCast(prop, wxPGSourceDataProperty);
+			ibPGDataSourceProperty* dlgProp = wxDynamicCast(prop, ibPGDataSourceProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
 			const ibBackendTypeSourceFactory* typeFactory = dynamic_cast<const ibBackendTypeSourceFactory*>(dlgProp->GetPropertyObject());
@@ -409,5 +409,5 @@ wxPGEditorDialogAdapter* wxPGSourceDataProperty::GetEditorDialog() const
 		}
 	};
 
-	return new wxPGSourceEventAdapter();
+	return new ibPGEditorDataSourceDialogAdapter();
 }

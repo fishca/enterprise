@@ -7,10 +7,10 @@
 #include "frontend/propertyManager/propertyEditor.h"
 
 // -----------------------------------------------------------------------
-// wxEventToolProperty
+// ibPGEventToolProperty
 // -----------------------------------------------------------------------
 
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxEventToolProperty, wxStringProperty, ComboBoxAndButton);
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGEventToolProperty, wxStringProperty, ComboBoxAndButton);
 
 // register frontend property 
 class ibPropertyToolLoader
@@ -18,11 +18,11 @@ class ibPropertyToolLoader
 public:
 	ibPropertyToolLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxEventToolProperty, ibEventAction::ms_propertyEventAction);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGEventToolProperty, ibEventAction::ms_propertyEventAction);
 	}
 } g_toolLoader;
 
-wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& strName,
+ibPGEventToolProperty::ibPGEventToolProperty(const wxString& label, const wxString& strName,
 	const wxPGChoices& choices,
 	const wxVariant& value) : wxPGProperty(label, strName)
 {
@@ -55,11 +55,11 @@ wxEventToolProperty::wxEventToolProperty(const wxString& label, const wxString& 
 	}
 }
 
-wxEventToolProperty::~wxEventToolProperty()
+ibPGEventToolProperty::~ibPGEventToolProperty()
 {
 }
 
-wxString wxEventToolProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
+wxString ibPGEventToolProperty::ValueToString( wxVariant& value, wxPGPropValFormatFlags flags ) const
 {
 	ibVariantDataAction* dataAction = property_cast(value, ibVariantDataAction);
 	wxASSERT(dataAction);
@@ -74,7 +74,7 @@ wxString wxEventToolProperty::ValueToString( wxVariant& value, wxPGPropValFormat
 	return actionDesc.GetCustomAction();
 }
 
-bool wxEventToolProperty::StringToValue(wxVariant& variant,
+bool ibPGEventToolProperty::StringToValue(wxVariant& variant,
 	const wxString& text,
 	wxPGPropValFormatFlags flags) const
 {
@@ -95,7 +95,7 @@ bool wxEventToolProperty::StringToValue(wxVariant& variant,
 	return false;
 }
 
-bool wxEventToolProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
+bool ibPGEventToolProperty::IntToValue(wxVariant& value, int number, wxPGPropValFormatFlags flags) const
 {
 	value = new ibVariantDataAction(m_choices.GetValue(number));
 	
@@ -106,7 +106,7 @@ bool wxEventToolProperty::IntToValue(wxVariant& value, int number, wxPGPropValFo
 	return true;
 }
 
-void wxEventToolProperty::OnSetValue()
+void ibPGEventToolProperty::OnSetValue()
 {
 	if (m_actionData.IsCustomAction()) {
 		m_valueBitmapBundle = wxNullBitmap;
@@ -125,13 +125,13 @@ void wxEventToolProperty::OnSetValue()
 	}
 }
 
-wxPGEditorDialogAdapter* wxEventToolProperty::GetEditorDialog() const
+wxPGEditorDialogAdapter* ibPGEventToolProperty::GetEditorDialog() const
 {
 	class wxPGEditorEventDialogAdapter : public wxPGEditorDialogAdapter {
 	public:
 		virtual bool DoShowDialog(wxPropertyGrid* pg, wxPGProperty* prop) wxOVERRIDE
 		{
-			wxEventToolProperty* dlgProp = wxDynamicCast(prop, wxEventToolProperty);
+			ibPGEventToolProperty* dlgProp = wxDynamicCast(prop, ibPGEventToolProperty);
 			wxCHECK_MSG(dlgProp, false, "Function called for incompatible property");
 
 			const wxString& strActionEvent = pg->GetUncommittedPropertyValue();

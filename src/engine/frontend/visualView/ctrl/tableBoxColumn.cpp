@@ -190,7 +190,7 @@ bool ibValueModelTableBoxColumn::CanDeleteControl() const
 //*							 Control value	                        *
 //*******************************************************************
 
-bool ibValueModelTableBoxColumn::FilterSource(const CSourceExplorer& src, const ibMetaID& id) const
+bool ibValueModelTableBoxColumn::FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const
 {
 	return id == GetOwner()->GetSource();
 }

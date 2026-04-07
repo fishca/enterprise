@@ -5,13 +5,13 @@
 #include "backend/backend_type.h"
 
 // -----------------------------------------------------------------------
-// wxPGListProperty
+// ibPGListProperty
 // -----------------------------------------------------------------------
 
-class wxPGListProperty : public wxPGProperty {
+class ibPGListProperty : public wxPGProperty {
 
 public:
-	wxPGListProperty(const wxString& label = wxPG_LABEL,
+	ibPGListProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL, wxPGChoices& choices = wxPGChoices(), int value = 0);
 
 	virtual wxString ValueToString(wxVariant& value,
@@ -28,7 +28,7 @@ public:
 	virtual wxPGEditorDialogAdapter* GetEditorDialog() const override;
 
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGListProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGListProperty);
 };
 
 #endif

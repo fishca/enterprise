@@ -5,15 +5,15 @@
 #include "backend/backend_core.h"
 
 // -----------------------------------------------------------------------
-// wxPGPointProperty
+// ibPGPointProperty
 // -----------------------------------------------------------------------
 
-class wxPGPointProperty : public wxPGProperty {
+class ibPGPointProperty : public wxPGProperty {
 public:
-	wxPGPointProperty(const wxString& label = wxPG_LABEL,
+	ibPGPointProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxPoint& value = wxPoint());
-	virtual ~wxPGPointProperty() override;
+	virtual ~ibPGPointProperty() override;
 
 	virtual wxVariant ChildChanged(wxVariant& thisValue, int childIndex,
 		wxVariant& childValue) const override;
@@ -23,7 +23,7 @@ public:
 protected:
 	virtual void DoSetValue(const wxPoint& value) { m_value = WXVARIANT(value); }
 private:
-	WX_PG_DECLARE_PROPERTY_CLASS(wxPGPointProperty);
+	WX_PG_DECLARE_PROPERTY_CLASS(ibPGPointProperty);
 };
 
 #endif

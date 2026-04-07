@@ -1,9 +1,9 @@
 #ifndef __SRC_EXPLORER_H__
 #define __SRC_EXPLORER_H__
 
-class BACKEND_API CSourceExplorer {
+class BACKEND_API ibSourceExplorer {
 
-	struct CSourceInfo {
+	struct ibSourceInfo {
 
 		wxString m_srcName;
 		wxString m_srcSynonym;
@@ -22,36 +22,36 @@ class BACKEND_API CSourceExplorer {
 
 private:
 
-	CSourceExplorer() {}
+	ibSourceExplorer() {}
 
-	CSourceExplorer(const ibValueMetaObjectCompositeData* object, const ibClassID& cid) {
+	ibSourceExplorer(const ibValueMetaObjectCompositeData* object, const ibClassID& cid) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, false, false, true, { cid }, object
 		};
 
-		for (const auto child : object->GetGenericAttributeArrayObject()) CSourceExplorer::AppendSource(child);
+		for (const auto child : object->GetGenericAttributeArrayObject()) ibSourceExplorer::AppendSource(child);
 	}
 
-	CSourceExplorer(const ibValueMetaObjectAttributeBase* object, bool enabled = true, bool visible = true) {
+	ibSourceExplorer(const ibValueMetaObjectAttributeBase* object, bool enabled = true, bool visible = true) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), enabled, visible, false, true, object->GetTypeDesc(), object
 		};
 	}
 
-	CSourceExplorer(const ibValueMetaObjectTableData* object) {
+	ibSourceExplorer(const ibValueMetaObjectTableData* object) {
 
 		m_sourceInfo = {
 			object->GetName(), object->GetSynonym(), object->GetMetaID(), true, true, true, true,  object->GetTypeDesc(), object
 		};
 
-		for (const auto child : object->GetGenericAttributeArrayObject()) CSourceExplorer::AppendSource(child);
+		for (const auto child : object->GetGenericAttributeArrayObject()) ibSourceExplorer::AppendSource(child);
 	}
 
 public:
 
-	CSourceExplorer(const ibValueMetaObject* object, const ibClassID& cid, bool tableSection, bool select = false) {
+	ibSourceExplorer(const ibValueMetaObject* object, const ibClassID& cid, bool tableSection, bool select = false) {
 
 		m_sourceInfo = {
 			wxT("ref"), _("Ref"), object->GetMetaID(), true, true, tableSection, select, cid, object
@@ -59,7 +59,7 @@ public:
 	}
 
 	// this object 
-	CSourceExplorer(const ibValueMetaObjectGenericData* object, const ibClassID& cid, bool tableSection, bool select = false) {
+	ibSourceExplorer(const ibValueMetaObjectGenericData* object, const ibClassID& cid, bool tableSection, bool select = false) {
 
 		if (object->IsDeleted())
 			return;
@@ -89,13 +89,13 @@ public:
 	void AppendSource(ibValueMetaObjectGenericData* refData, const ibClassID& cid) {
 		if (refData->IsDeleted())
 			return;
-		m_arraySource.emplace_back(CSourceExplorer{ refData, cid });
+		m_arraySource.emplace_back(ibSourceExplorer{ refData, cid });
 	}
 
 	void AppendSource(ibValueMetaObjectAttributeBase* attribute, bool enabled = true, bool visible = true) {
 		if (attribute->IsDeleted())
 			return;
-		m_arraySource.emplace_back(CSourceExplorer{ attribute, enabled , visible });
+		m_arraySource.emplace_back(ibSourceExplorer{ attribute, enabled , visible });
 	}
 
 	void AppendSource(ibValueMetaObjectTableData* tableSection) {
@@ -103,13 +103,13 @@ public:
 		if (tableSection->IsDeleted())
 			return;
 		
-		m_arraySource.emplace_back(CSourceExplorer{ tableSection });
+		m_arraySource.emplace_back(ibSourceExplorer{ tableSection });
 	}
 
-	CSourceExplorer GetHelper(unsigned int idx) const {
+	ibSourceExplorer GetHelper(unsigned int idx) const {
 		
 		if (m_arraySource.size() < idx)
-			return CSourceExplorer();
+			return ibSourceExplorer();
 		
 		return m_arraySource[idx];
 	}
@@ -118,9 +118,9 @@ public:
 
 protected:
 
-	CSourceInfo m_sourceInfo;
+	ibSourceInfo m_sourceInfo;
 
-	std::vector<CSourceExplorer> m_arraySource;
+	std::vector<ibSourceExplorer> m_arraySource;
 };
 
 #include "backend/srcObject.h"

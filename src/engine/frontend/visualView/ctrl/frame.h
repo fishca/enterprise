@@ -16,7 +16,7 @@
 #include "frontend/visualView/controlCtor.h"
 #include "frontend/visualView/visualHost.h"
 
-class BACKEND_API CSourceExplorer;
+class BACKEND_API ibSourceExplorer;
 class BACKEND_API ibProcUnit;
 
 class BACKEND_API ibValueMetaObjectFormBase;

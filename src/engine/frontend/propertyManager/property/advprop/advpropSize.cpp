@@ -4,12 +4,12 @@
 #include "frontend/propertyManager/property/private/prop.h"
 
 // -----------------------------------------------------------------------
-// wxPGSizeProperty
+// ibPGSizeProperty
 // -----------------------------------------------------------------------
 #if wxCHECK_VERSION(3, 1, 0)
-wxPG_IMPLEMENT_PROPERTY_CLASS(wxPGSizeProperty, wxPGProperty, TextCtrl)
+wxPG_IMPLEMENT_PROPERTY_CLASS(ibPGSizeProperty, wxPGProperty, TextCtrl)
 #else
-WX_PG_IMPLEMENT_PROPERTY_CLASS(wxPGSizeProperty, wxPGProperty, wxSize, const wxSize&, TextCtrl)
+WX_PG_IMPLEMENT_PROPERTY_CLASS(ibPGSizeProperty, wxPGProperty, wxSize, const wxSize&, TextCtrl)
 #endif
 
 // register frontend property 
@@ -18,11 +18,11 @@ class ibPropertySizeLoader
 public:
 	ibPropertySizeLoader()
 	{
-		ibPG_IMPLEMENT_PROPERTY_CALLBACK(wxPGSizeProperty, ibPropertySize::ms_propertySize);
+		ibPG_IMPLEMENT_PROPERTY_CALLBACK(ibPGSizeProperty, ibPropertySize::ms_propertySize);
 	}
 }g_sizeLoader;
 
-wxPGSizeProperty::wxPGSizeProperty(const wxString& label,
+ibPGSizeProperty::ibPGSizeProperty(const wxString& label,
 	const wxString& strName,
 	const wxSize& value) : wxPGProperty(label, strName)
 {
@@ -31,7 +31,7 @@ wxPGSizeProperty::wxPGSizeProperty(const wxString& label,
 	AddPrivateChild(new wxIntProperty(_("Height"), wxT("height"), value.y));
 }
 
-void wxPGSizeProperty::RefreshChildren()
+void ibPGSizeProperty::RefreshChildren()
 {
 	if (GetChildCount() < 2) return;
 
@@ -41,7 +41,7 @@ void wxPGSizeProperty::RefreshChildren()
 	Item(1)->SetValue((long)size.y);
 }
 
-wxVariant wxPGSizeProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
+wxVariant ibPGSizeProperty::ChildChanged(wxVariant& thisValue, const int childIndex,
 	wxVariant& childValue) const {
 	wxSize size;
 	size << thisValue;

@@ -67,7 +67,7 @@ IValueManagerDataObject* CValueMetaObjectCatalog::CreateManagerDataObjectValue()
 
 #include "backend/appData.h"
 
-IValueRecordDataObjectFolderRef* CValueMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const CGuid& guid)
+IValueRecordDataObjectHierarchyRef* CValueMetaObjectCatalog::CreateObjectRefValue(eObjectMode mode, const CGuid& guid)
 {
 	IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);

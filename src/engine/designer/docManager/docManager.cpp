@@ -44,7 +44,7 @@ CDesignerDocManager::CDesignerDocManager()
 	AddDocTemplate(g_metaModuleCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));
 	AddDocTemplate(g_metaManagerCLSID, CLASSINFO(CModuleEditDocument), CLASSINFO(CModuleEditView));
 	AddDocTemplate(g_metaFormCLSID, CLASSINFO(CFormEditDocument), CLASSINFO(CFormEditView));
-	AddDocTemplate(g_metaTemplateCLSID, CLASSINFO(CSpreadsheetEditDocument), CLASSINFO(CSpreadsheetEditView));
+	AddDocTemplate(g_metaTemplateCLSID, _("Spreadsheet document"), wxT("*.oxl"), wxT("oxl"), CLASSINFO(CSpreadsheetEditDocument), CLASSINFO(CSpreadsheetEditView));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

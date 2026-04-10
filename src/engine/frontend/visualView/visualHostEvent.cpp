@@ -3,7 +3,7 @@
 //	Description : visual editor 
 ////////////////////////////////////////////////////////////////////////////
 
-#include "visual.h"
+#include "visualHost.h"
 #include "frontend/visualView/ctrl/control.h"
 
 wxObject* IVisualHost::Create(IValueFrame *control, wxWindow* wndParent)

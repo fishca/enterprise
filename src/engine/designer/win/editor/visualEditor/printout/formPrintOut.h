@@ -2,7 +2,7 @@
 #define _FORM_PRINTOUT_H__
 
 #include <wx/print.h>
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 class CFormPrintout : public wxPrintout
 {

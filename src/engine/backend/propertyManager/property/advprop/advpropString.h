@@ -14,9 +14,16 @@
 class BACKEND_API wxGeneralStringProperty : public wxStringProperty {
 public:
 
+	enum {
+		string_default = 0,
+		allow_empty,
+	};
+
 	wxGeneralStringProperty(const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
-		const wxString& value = wxEmptyString) : wxStringProperty(label, name, value) {
+		const wxString& value = wxEmptyString, const int flags = string_default) :
+		wxStringProperty(label, name, value), m_strFlags(flags)
+	{
 	}
 
 	virtual wxString ValueToString(wxVariant& value, int argFlags = 0) const override;
@@ -25,6 +32,9 @@ public:
 		int argFlags = 0) const override;
 
 private:
+
+	int m_strFlags;
+
 	WX_PG_DECLARE_PROPERTY_CLASS(wxGeneralStringProperty);
 };
 
@@ -32,11 +42,10 @@ private:
 // wxTranslateStringProperty
 // -----------------------------------------------------------------------
 
-class BACKEND_API IPropertyObject;
-
 class BACKEND_API wxTranslateStringProperty : public wxLongStringProperty {
+
 public:
-	wxTranslateStringProperty(const IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
+	wxTranslateStringProperty(const class BACKEND_API IPropertyObject* property = nullptr, const wxString& label = wxPG_LABEL,
 		const wxString& name = wxPG_LABEL,
 		const wxString& value = wxEmptyString) :
 		wxLongStringProperty(label, name, value), m_ownerProperty(property)
@@ -52,7 +61,7 @@ protected:
 	virtual bool DisplayEditorDialog(wxPropertyGrid* pg, wxVariant& value) override;
 private:
 
-	const IPropertyObject* m_ownerProperty = nullptr;
+	const class BACKEND_API IPropertyObject* m_ownerProperty = nullptr;
 
 	WX_PG_DECLARE_PROPERTY_CLASS(wxTranslateStringProperty);
 };

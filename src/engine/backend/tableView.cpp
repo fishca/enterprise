@@ -213,6 +213,13 @@ bool wxDataViewExtModel::ShowFilter(CFilterRow& filter, int view_id)
 	return false;
 }
 
+bool wxDataViewExtModel::ShowViewMode(int view_id)
+{
+	if (m_notifiers.size() > 0)
+		return m_notifiers[view_id]->ShowViewMode();
+	return false;
+}
+
 void wxDataViewExtModel::Select(const wxDataViewExtItem& item, int view_id) const
 {
 	if (m_notifiers.size() > 0)

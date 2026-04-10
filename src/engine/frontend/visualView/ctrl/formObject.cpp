@@ -9,7 +9,7 @@
 #include "frontend/docView/docManager.h"
 #include "backend/srcExplorer.h"
 #include "backend/moduleManager/moduleManager.h"
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 
 //*************************************************************************************************
 //*                                    System attribute                                           *
@@ -432,7 +432,7 @@ void CValueForm::ShowForm(IBackendMetaDocument* doc, bool createContext)
 	if (CBackendException::IsEvalMode())
 		return;
 
-	CVisualDocument* const ownerDocForm = GetVisualDocument();
+	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 		ActivateForm();
@@ -454,11 +454,11 @@ void CValueForm::UpdateForm()
 	if (CBackendException::IsEvalMode())
 		return;
 
-	CVisualDocument* const ownerDocForm = GetVisualDocument();
+	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 
-		CVisualHost* visualView = ownerDocForm->GetFirstView() ?
+		CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
 			ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 
 		if (visualView != nullptr) {
@@ -480,7 +480,7 @@ bool CValueForm::CloseForm(bool force)
 		}
 	}
 
-	CVisualDocument* const ownerDocForm = GetVisualDocument();
+	CFormVisualDocument* const ownerDocForm = GetVisualDocument();
 
 	if (ownerDocForm != nullptr) {
 		return ownerDocForm->DeleteAllViews();
@@ -500,8 +500,8 @@ void CValueForm::HelpForm()
 
 void CValueForm::ChangeForm()
 {
-	CDialogFormEditor* formEditor = new CDialogFormEditor(this);
-	formEditor->ShowModal();
+	CDialogFormEditor dlg(this);
+	dlg.ShowModal();
 }
 
 #include "frontend/win/dlgs/generation.h"
@@ -552,9 +552,9 @@ IValueFrame* CValueForm::CreateControl(const wxString& clsControl, IValueFrame* 
 	IValueFrame* newControl = CValueForm::CreateObject(clsControl, parentControl);
 	wxASSERT(newControl);
 	if (!CBackendException::IsEvalMode()) {
-		CVisualDocument* const ownerDocForm = GetVisualDocument();
+		CFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
-			CVisualHost* visualView = ownerDocForm->GetFirstView() ?
+			CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 			visualView->CreateControl(newControl);
 		}
@@ -575,9 +575,9 @@ void CValueForm::RemoveControl(IValueFrame* control)
 	IValueFrame* currentControl = control;
 	wxASSERT(currentControl);
 	if (!CBackendException::IsEvalMode()) {
-		CVisualDocument* const ownerDocForm = GetVisualDocument();
+		CFormVisualDocument* const ownerDocForm = GetVisualDocument();
 		if (ownerDocForm != nullptr) {
-			CVisualHost* visualView = ownerDocForm->GetFirstView() ?
+			CVisualClientHost* visualView = ownerDocForm->GetFirstView() ?
 				ownerDocForm->GetFirstView()->GetVisualHost() : nullptr;
 			visualView->RemoveControl(currentControl);
 		}

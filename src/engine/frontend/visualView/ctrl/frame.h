@@ -14,7 +14,7 @@
 
 #include "frontend/visualView/formdefs.h"
 #include "frontend/visualView/controlCtor.h"
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 class BACKEND_API CSourceExplorer;
 class BACKEND_API CProcUnit;
@@ -26,9 +26,7 @@ class BACKEND_API IValueListDataObject;
 class BACKEND_API IValueRecordDataObject;
 
 class FRONTEND_API CValueForm;
-
-class FRONTEND_API CVisualEditorHost;
-class FRONTEND_API CVisualHost;
+class FRONTEND_API CVisualClientHost;
 
 #include "backend/actionInfo.h"
 #include "backend/moduleInfo.h"
@@ -38,7 +36,7 @@ class FRONTEND_API CVisualHost;
 
 #include "backend/fileSystem/fs.h"
 
-class FRONTEND_API CVisualDocument;
+class FRONTEND_API CFormVisualDocument;
 
 #include "frontend/visualView/controlEnum.h"
 
@@ -56,7 +54,7 @@ public:
 	virtual class_identifier_t GetClassType() const { return 0; }
 
 	//get visual document
-	virtual CVisualDocument* GetVisualDocument() const { return nullptr; }
+	virtual CFormVisualDocument* GetVisualDocument() const { return nullptr; }
 
 	virtual bool HasQuickChoice() const = 0;
 	virtual void ChoiceProcessing(CValue& vSelected) = 0;
@@ -288,7 +286,7 @@ public:
 	virtual IBackendValueForm* GetBackendForm() const;
 
 	//get visual doc
-	virtual CVisualDocument* GetVisualDocument() const;
+	virtual CFormVisualDocument* GetVisualDocument() const;
 
 	virtual bool HasQuickChoice() const;
 	virtual void ChoiceProcessing(CValue& vSelected) {}

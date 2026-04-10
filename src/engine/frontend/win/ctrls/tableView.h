@@ -3,7 +3,7 @@
 
 #include "dataview/dataview.h"
 
-class wxTableViewCtrl :
+class FRONTEND_API wxTableViewCtrl :
 	public wxDataViewExtCtrl {
 public:
 
@@ -18,6 +18,7 @@ public:
 
 	//show data filter
 	virtual bool ShowFilter(struct CFilterRow& filter);
+	virtual bool ShowViewMode();
 
 private:
 

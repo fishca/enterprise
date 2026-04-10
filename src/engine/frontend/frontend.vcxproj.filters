@@ -68,16 +68,16 @@
     <ClCompile Include="visualView\pageWindow.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
+    <ClCompile Include="visualView\visualHostClient.cpp">
+      <Filter>visualView</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\visualHostClient_impl.cpp">
+      <Filter>visualView</Filter>
+    </ClCompile>
     <ClCompile Include="visualView\visualHost.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\visualHost_impl.cpp">
-      <Filter>visualView</Filter>
-    </ClCompile>
-    <ClCompile Include="visualView\visual.cpp">
-      <Filter>visualView</Filter>
-    </ClCompile>
-    <ClCompile Include="visualView\visualEvent.cpp">
+    <ClCompile Include="visualView\visualHostEvent.cpp">
       <Filter>visualView</Filter>
     </ClCompile>
     <ClCompile Include="win\theme\luna_dockart.cpp">
@@ -554,7 +554,7 @@
     <ClCompile Include="visualView\ctrl\formControl.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="visualView\ctrl\formDocView.cpp">
+    <ClCompile Include="visualView\ctrl\formVisualHost.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
     <ClCompile Include="visualView\ctrl\formFactory.cpp">
@@ -809,6 +809,21 @@
     <ClCompile Include="visualView\ctrl\tableBoxColumnRenderer.cpp">
       <Filter>visualView\ctrl</Filter>
     </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\visualHostClientDocView.cpp">
+      <Filter>visualView</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\ctrl\textBox_res.cpp">
+      <Filter>visualView\ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="visualView\ctrl\textBox.cpp">
+      <Filter>visualView\ctrl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mainFrame\mainFrame.h">
@@ -884,10 +899,10 @@
     <ClInclude Include="visualView\pageWindow.h">
       <Filter>visualView</Filter>
     </ClInclude>
-    <ClInclude Include="visualView\visualHost.h">
+    <ClInclude Include="visualView\visualHostClient.h">
       <Filter>visualView</Filter>
     </ClInclude>
-    <ClInclude Include="visualView\visual.h">
+    <ClInclude Include="visualView\visualHost.h">
       <Filter>visualView</Filter>
     </ClInclude>
     <ClInclude Include="win\theme\luna_dockart.h">
@@ -1430,6 +1445,12 @@
     </ClInclude>
     <ClInclude Include="win\dlgs\filterDataView.h">
       <Filter>win\dlg</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrls\dataview\headerctrlg.h">
+      <Filter>win\ctrl\dataview</Filter>
+    </ClInclude>
+    <ClInclude Include="visualView\ctrl\textBox.h">
+      <Filter>visualView\ctrl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

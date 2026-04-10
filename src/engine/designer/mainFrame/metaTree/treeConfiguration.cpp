@@ -158,6 +158,16 @@ CMetadataTree::~CMetadataTree()
 wxIMPLEMENT_DYNAMIC_CLASS(CMetadataTree::CMetaTreeCtrl, wxTreeCtrl);
 
 //**********************************************************************************
+
+#include "win/dlg/predefinedEditor.h"
+
+void CMetadataTree::EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+{
+	CDialogPredefinedEditor dlg(this, valueMetaObjectHierarchy);
+	dlg.ShowModal();
+}
+
+//**********************************************************************************
 //*                                  metaTree window						       *
 //**********************************************************************************
 
@@ -224,7 +234,7 @@ CMetadataTree::CMetaTreeCtrl::CMetaTreeCtrl(CMetadataTree* parent)
 
 CMetadataTree::CMetaTreeCtrl::~CMetaTreeCtrl()
 {
-	if (docManager != nullptr && 
+	if (docManager != nullptr &&
 		m_metaView == docManager->GetAnyUsableView()) {
 		docManager->ActivateView(nullptr);
 	}

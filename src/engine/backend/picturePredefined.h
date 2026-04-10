@@ -35,6 +35,7 @@ const picture_identifier_t g_picPostCLSID = string_to_clsid("PC_POST");
 const picture_identifier_t g_picMarkAsDeleteCLSID = string_to_clsid("PC_MDEL");
 const picture_identifier_t g_picGenerateCLSID = string_to_clsid("PC_GENTE");
 const picture_identifier_t g_picPrintCLSID = string_to_clsid("PC_PRINT");
+const picture_identifier_t g_picHierarchyCLSID = string_to_clsid("PC_HRCHY");
 
 const picture_identifier_t g_picUserCLSID = string_to_clsid("PC_USER");
 const picture_identifier_t g_picUserActiveCLSID = string_to_clsid("PC_USRAC");

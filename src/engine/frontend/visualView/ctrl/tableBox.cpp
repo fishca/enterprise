@@ -3,7 +3,7 @@
 
 #include "form.h"
 
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 #include "backend/system/value/valueTable.h"
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
@@ -13,7 +13,9 @@
 //***********************************************************************************
 
 wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBox, IValueWindow);
+
 wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxSelectionMode, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(CValueEnumTableBoxViewMode, CValue);
 
 //***********************************************************************************
 //*                                 Special tablebox func                           *
@@ -78,13 +80,13 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 		dataViewCtrl : dynamic_cast<wxDataViewExtCtrl*>(GetWxObject());
 	wxASSERT(tc);
 
-	CVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
+	CFormVisualDocument* visualDocument = m_formOwner->GetVisualDocument();
 	//clear all controls 
 	for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 		IValueFrame* childColumn = GetChild(idx);
 		wxASSERT(childColumn);
 		if (visualDocument != nullptr) {
-			CVisualHost* visualView = visualDocument->GetFirstView() ?
+			CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 			wxASSERT(visualView);
 			visualView->RemoveControl(childColumn, this);
@@ -123,7 +125,7 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 
 		if (visualDocument != nullptr) {
 
-			CVisualHost* visualView = visualDocument->GetFirstView() ?
+			CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 				visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 			wxASSERT(visualView);
@@ -133,7 +135,7 @@ void CValueTableBox::CreateColumnCollection(wxDataViewExtCtrl* dataViewCtrl)
 
 	if (visualDocument != nullptr) {
 
-		CVisualHost* visualView = visualDocument->GetFirstView() ?
+		CVisualClientHost* visualView = visualDocument->GetFirstView() ?
 			visualDocument->GetFirstView()->GetVisualHost() : nullptr;
 
 		wxASSERT(visualView);
@@ -236,7 +238,7 @@ m_need_calculate_pos(false)
 	m_propertySource->SetValue(CTypeDescription(g_valueTableCLSID));
 
 	//set default params
-	m_propertyMinSize->SetValue(wxSize(300, 100));
+	m_propertyMinSize->SetValue(wxSize(150, 75));
 	m_propertyBG->SetValue(wxColour(255, 255, 255));
 }
 
@@ -247,12 +249,12 @@ void CValueTableBox::CalculateColumnPos()
 	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(GetWxObject());
 	if (dataViewCtrl != nullptr) {
 
-		wxHeaderCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
+		dataViewCtrl->SetExpanderColumn(nullptr);
+
+		wxHeaderGenericCtrl* headerCtrl = dataViewCtrl->GenericGetHeader();
 		if (headerCtrl != nullptr) {
 
 			bool need_reset_columns_order = false;
-
-			dataViewCtrl->SetExpanderColumn(nullptr);
 
 			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
 
@@ -279,6 +281,28 @@ void CValueTableBox::CalculateColumnPos()
 
 			if (need_reset_columns_order) headerCtrl->ResetColumnsOrder();
 		}
+		else
+		{
+			for (unsigned int idx = 0; idx < GetChildCount(); idx++) {
+
+				const IValueFrame* valueFrame = GetChild(idx);
+				wxASSERT(valueFrame);
+
+				wxDataViewExtColumn* column = dynamic_cast<wxDataViewExtColumn*>(valueFrame->GetWxObject());
+
+				const unsigned int column_model_index = dataViewCtrl->GetColumnIndex(column);
+				const unsigned int real_column_index = valueFrame->GetParentPosition();
+
+				if (column_model_index != real_column_index) {
+					dataViewCtrl->DeleteColumn(column);
+					dataViewCtrl->InsertColumn(real_column_index, column);
+				}
+
+				if (column->IsShown() && dataViewCtrl->GetExpanderColumn() == nullptr) {
+					dataViewCtrl->SetExpanderColumn(column);
+				}
+			}
+		}
 	}
 }
 
@@ -291,7 +315,7 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		wxDefaultSize,
 		wxDV_SINGLE | wxDV_HORIZ_RULES | wxDV_VERT_RULES | wxDV_ROW_LINES | wxDV_VARIABLE_LINE_HEIGHT | wxBORDER_SIMPLE);
 
-	const CVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
+	const CFormVisualDocument* visualDoc = CValueTableBox::GetVisualDocument();
 
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 
@@ -320,6 +344,8 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP, &CValueTableBox::OnItemDrop, this);
 #endif // wxUSE_DRAG_AND_DROP
 
+		dataViewCtrl->Bind(wxEVT_DATAVIEW_VIEW_SET, &CValueTableBox::OnViewSet, this);
+
 		dataViewCtrl->GenericGetHeader()->Bind(wxEVT_HEADER_RESIZING, &CValueTableBox::OnHeaderResizing, this);
 
 		dataViewCtrl->Bind(wxEVT_SCROLLWIN_TOP, &CValueTableBox::HandleOnScroll, this);
@@ -346,7 +372,6 @@ wxObject* CValueTableBox::Create(wxWindow* wxparent, IVisualHost* visualHost)
 		dataViewCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &CValueTableBox::OnContextMenu, this);
 	}
 
-	dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
 	return dataViewCtrl;
 }
 
@@ -366,20 +391,11 @@ void CValueTableBox::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 
 void CValueTableBox::Update(wxObject* wxobject, IVisualHost* visualHost)
 {
-	wxTableViewCtrl* dataViewCtrl = dynamic_cast<wxTableViewCtrl*>(wxobject);
-
-	UpdateWindow(dataViewCtrl);
+	wxTableViewCtrl* dataViewCtrl =
+		dynamic_cast<wxTableViewCtrl*>(wxobject);
 
 	if (dataViewCtrl != nullptr) {
-
-		wxItemAttr attr(
-			dataViewCtrl->GetForegroundColour(),
-			dataViewCtrl->GetBackgroundColour(),
-			dataViewCtrl->GetFont()
-		);
-
-		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
-		dataViewCtrl->SetHeaderAttr(attr);
+		UpdateWindow(dataViewCtrl);
 	}
 }
 
@@ -398,6 +414,39 @@ void CValueTableBox::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHo
 			dataViewCtrl->AssociateModel(dataViewNewModel);
 			m_tableCurrentLine.Reset();
 		}
+
+		if (appData->DesignerMode()) {
+			if (!visualHost->IsDesignerHost() || m_propertyHeader->GetValueAsBoolean()) {
+				dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+				dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
+			}
+			else {
+				dataViewCtrl->ShowHeaderWindow(true);
+				dataViewCtrl->SetHeaderHeight(1);
+				dataViewCtrl->SetForegroundColour(*wxLIGHT_GREY);
+			}
+		}
+		else {
+			dataViewCtrl->ShowHeaderWindow(m_propertyHeader->GetValueAsBoolean());
+			dataViewCtrl->SetHeaderHeight(m_propertyHeaderHeight->GetValueAsUInteger());
+		}
+
+		dataViewCtrl->ShowFooterWindow(m_propertyFooter->GetValueAsBoolean());
+		dataViewCtrl->SetFooterHeight(m_propertyFooterHeight->GetValueAsUInteger());
+
+		dataViewCtrl->FreezeTo(
+			m_propertyFreezeRow->GetValueAsUInteger(), m_propertyFreezeCol->GetValueAsUInteger());
+
+		dataViewCtrl->SetSelectionMode(m_propertyRowSelectionMode->GetValueAsEnum());
+		dataViewCtrl->SetViewMode(m_propertyViewMode->GetValueAsEnum());
+
+		wxItemAttr attr(
+			dataViewCtrl->GetForegroundColour(),
+			dataViewCtrl->GetBackgroundColour(),
+			dataViewCtrl->GetFont()
+		);
+
+		dataViewCtrl->SetHeaderAttr(attr);
 
 		if (!appData->DesignerMode())
 			m_dataViewCreated = m_dataViewUpdated = true;
@@ -421,6 +470,14 @@ bool CValueTableBox::LoadData(CMemoryReader& reader)
 	if (!m_propertySource->LoadData(reader))
 		return false;
 
+	m_propertyHeader->LoadData(reader);
+	m_propertyHeaderHeight->LoadData(reader);
+	m_propertyFooter->LoadData(reader);
+	m_propertyFooterHeight->LoadData(reader);
+
+	m_propertyFreezeRow->LoadData(reader);
+	m_propertyFreezeCol->LoadData(reader);
+
 	m_propertyRowSelectionMode->LoadData(reader);
 
 	//events
@@ -436,6 +493,14 @@ bool CValueTableBox::SaveData(CMemoryWriter& writer)
 {
 	if (!m_propertySource->SaveData(writer))
 		return false;
+
+	m_propertyHeader->SaveData(writer);
+	m_propertyHeaderHeight->SaveData(writer);
+	m_propertyFooter->SaveData(writer);
+	m_propertyFooterHeight->SaveData(writer);
+
+	m_propertyFreezeRow->SaveData(writer);
+	m_propertyFreezeCol->SaveData(writer);
 
 	m_propertyRowSelectionMode->SaveData(writer);
 
@@ -523,4 +588,5 @@ bool CValueTableBox::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //***********************************************************************
 
 ENUM_TYPE_REGISTER(CValueEnumTableBoxSelectionMode, "TableboxRowSelectionMode", string_to_clsid("EN_TBXSL"));
+ENUM_TYPE_REGISTER(CValueEnumTableBoxViewMode, "TableboxViewMode", string_to_clsid("EN_TBXVM"));
 CONTROL_TYPE_REGISTER(CValueTableBox, "Tablebox", "Container", g_controlTableBoxCLSID);

@@ -49,7 +49,7 @@ class BACKEND_API IValueManagerDataObject;
 class BACKEND_API IValueRecordDataObject;
 class BACKEND_API IValueRecordDataObjectExt;
 class BACKEND_API IValueRecordDataObjectRef;
-class BACKEND_API IValueRecordDataObjectFolderRef;
+class BACKEND_API IValueRecordDataObjectHierarchyRef;
 
 class BACKEND_API CValueRecordKeyObject;
 class BACKEND_API IValueRecordManagerObject;
@@ -722,6 +722,17 @@ public:
 	class CPredefinedValueObject : public wxRefCounter {
 	public:
 
+		CPredefinedValueObject(bool valueIsFolder = false,
+			const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>())
+			:
+			m_predefinedItemGuid(wxNewUniqueGuid),
+			m_strPredefinedName(),
+			m_strCode(), m_strDescription(),
+			m_valueIsFolder(valueIsFolder),
+			m_valueParent(nullptr)
+		{
+		}
+
 		CPredefinedValueObject(
 			const CGuid& predefinedGuid, const wxString& strPredefinedName,
 			const wxString& strCode, const wxString& strDescription,
@@ -736,11 +747,21 @@ public:
 		}
 
 		CGuid GetPredefinedGuid() const { return m_predefinedItemGuid; }
+
+		wxString GetPredefinedParentName() const {
+			if (m_valueParent != nullptr)
+				return m_valueParent->GetPredefinedName();
+			return wxT("");
+		}
+
 		wxString GetPredefinedName() const { return m_strPredefinedName; }
 		wxString GetPredefinedCode() const { return m_strCode; }
 		wxString GetPredefinedDescription() const { return m_strDescription; }
+
 		bool IsPredefinedFolder() const { return m_valueIsFolder; }
 		wxObjectDataPtr<CPredefinedValueObject> GetPredefinedParent() const { return m_valueParent; }
+
+		friend class IValueMetaObjectRecordDataHierarchyMutableRef;
 
 	private:
 
@@ -800,21 +821,34 @@ public:
 	virtual bool OnAfterCloseMetaObject();
 
 	//is predefined value? 
-	bool IsPredefinedValue(const CGuid& valueGuid) const { return FindPredefinedValue(valueGuid) != nullptr; }
+	bool HasPredefinedValue(const CGuid& valueGuid) const { return FindPredefinedValue(valueGuid) != nullptr; }
+	bool HasPredefinedValue(const wxString& strPredefinedName) const { return FindPredefinedValue(strPredefinedName) != nullptr; }
 
 	//create associate value 	
-	IValueRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode);
-	IValueRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, const CGuid& guid);
-	IValueRecordDataObjectFolderRef* CreateObjectValue(eObjectMode mode, IValueRecordDataObjectRef* objSrc, bool generate = false);
+	IValueRecordDataObjectHierarchyRef* CreateObjectValue(eObjectMode mode);
+	IValueRecordDataObjectHierarchyRef* CreateObjectValue(eObjectMode mode, const CGuid& guid);
+	IValueRecordDataObjectHierarchyRef* CreateObjectValue(eObjectMode mode, IValueRecordDataObjectRef* objSrc, bool generate = false);
 
 	//copy associate value 	
-	IValueRecordDataObjectFolderRef* CopyObjectValue(eObjectMode mode, const CGuid& guid);
+	IValueRecordDataObjectHierarchyRef* CopyObjectValue(eObjectMode mode, const CGuid& guid);
 
 #pragma region _form_builder_h_
 	//support form 
 	virtual IBackendValueForm* GetFolderForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 	virtual IBackendValueForm* GetFolderSelectForm(const wxString& strFormName = wxEmptyString, IBackendControlFrame* ownerControl = nullptr, const CUniqueKey& formGuid = wxNullGuid) = 0;
 #pragma endregion 
+
+	//append predefined value
+	void AppendPredefinedValue(const wxString& strPredefinedName,
+		const wxString& strCode, const wxString& strDescription,
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>());
+
+	void SetPredefinedValue(const CGuid& predefinedGuid,
+		const wxString& strPredefinedName,
+		const wxString& strCode, const wxString& strDescription,
+		bool valueIsFolder = false, const wxObjectDataPtr<CPredefinedValueObject>& valueParent = wxObjectDataPtr<CPredefinedValueObject>());
+
+	void DeletePredefinedValue(const CGuid& predefinedGuid);
 
 	//find predefined value
 	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const {
@@ -857,7 +891,7 @@ protected:
 	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
 
 	//create empty object
-	virtual IValueRecordDataObjectFolderRef* CreateObjectRefValue(eObjectMode mode, const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
+	virtual IValueRecordDataObjectHierarchyRef* CreateObjectRefValue(eObjectMode mode, const CGuid& objGuid = wxNullGuid) = 0; //create object and read by guid 
 	virtual IValueRecordDataObjectRef* CreateObjectRefValue(const CGuid& objGuid = wxNullGuid) final;
 
 protected:
@@ -1542,13 +1576,13 @@ protected:
 };
 
 //Object with reference type and group/object type 
-class BACKEND_API IValueRecordDataObjectFolderRef : public IValueRecordDataObjectRef {
-	wxDECLARE_ABSTRACT_CLASS(IValueRecordDataObjectFolderRef);
+class BACKEND_API IValueRecordDataObjectHierarchyRef : public IValueRecordDataObjectRef {
+	wxDECLARE_ABSTRACT_CLASS(IValueRecordDataObjectHierarchyRef);
 protected:
-	IValueRecordDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
-	IValueRecordDataObjectFolderRef(const IValueRecordDataObjectFolderRef& src);
+	IValueRecordDataObjectHierarchyRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const CGuid& objGuid, eObjectMode objMode = eObjectMode::OBJECT_ITEM);
+	IValueRecordDataObjectHierarchyRef(const IValueRecordDataObjectHierarchyRef& src);
 public:
-	virtual ~IValueRecordDataObjectFolderRef();
+	virtual ~IValueRecordDataObjectHierarchyRef();
 
 	//support source data 
 	virtual CSourceExplorer GetSourceExplorer() const;

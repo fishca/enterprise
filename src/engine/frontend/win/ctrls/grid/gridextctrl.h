@@ -20,7 +20,7 @@
 
 
 // the default renderer for the cells containing string data
-class wxGridExtCellStringRenderer : public wxGridExtCellRenderer
+class FRONTEND_API wxGridExtCellStringRenderer : public wxGridExtCellRenderer
 {
 public:
 	wxGridExtCellStringRenderer()
@@ -65,7 +65,7 @@ private:
 };
 
 // the default renderer for the cells containing numeric (long) data
-class wxGridExtCellNumberRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API wxGridExtCellNumberRenderer : public wxGridExtCellStringRenderer
 {
 public:
 	explicit wxGridExtCellNumberRenderer(long minValue = LONG_MIN,
@@ -115,7 +115,7 @@ protected:
 		m_maxValue;
 };
 
-class wxGridExtCellFloatRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API wxGridExtCellFloatRenderer : public wxGridExtCellStringRenderer
 {
 public:
 	wxGridExtCellFloatRenderer(int width = -1,
@@ -174,7 +174,7 @@ private:
 };
 
 // renderer for boolean fields
-class wxGridExtCellBoolRenderer : public wxGridExtCellRenderer
+class FRONTEND_API wxGridExtCellBoolRenderer : public wxGridExtCellRenderer
 {
 public:
 	wxGridExtCellBoolRenderer()
@@ -219,7 +219,7 @@ public:
 namespace wxGridExtPrivate { class DateParseParams; }
 
 // renderer for the cells containing dates only, without time component
-class wxGridExtCellDateRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API wxGridExtCellDateRenderer : public wxGridExtCellStringRenderer
 {
 public:
 	explicit wxGridExtCellDateRenderer(const wxString& outformat = wxString());
@@ -269,7 +269,7 @@ protected:
 };
 
 // the default renderer for the cells containing times and dates
-class wxGridExtCellDateTimeRenderer : public wxGridExtCellDateRenderer
+class FRONTEND_API wxGridExtCellDateTimeRenderer : public wxGridExtCellDateRenderer
 {
 public:
 	wxGridExtCellDateTimeRenderer(const wxString& outformat = wxASCII_STR(wxDefaultDateTimeFormat),
@@ -297,7 +297,7 @@ protected:
 
 // Renderer for fields taking one of a limited set of values: this is the same
 // as the renderer for strings, except that it can implement GetMaxBestSize().
-class wxGridExtCellChoiceRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API wxGridExtCellChoiceRenderer : public wxGridExtCellStringRenderer
 {
 public:
 	explicit wxGridExtCellChoiceRenderer(const wxString& choices = wxString());
@@ -323,7 +323,7 @@ protected:
 
 
 // renders a number using the corresponding text string
-class wxGridExtCellEnumRenderer : public wxGridExtCellChoiceRenderer
+class FRONTEND_API wxGridExtCellEnumRenderer : public wxGridExtCellChoiceRenderer
 {
 public:
 	explicit wxGridExtCellEnumRenderer(const wxString& choices = wxString())
@@ -359,7 +359,7 @@ protected:
 };
 
 
-class wxGridExtCellAutoWrapStringRenderer : public wxGridExtCellStringRenderer
+class FRONTEND_API wxGridExtCellAutoWrapStringRenderer : public wxGridExtCellStringRenderer
 {
 public:
 	wxGridExtCellAutoWrapStringRenderer()

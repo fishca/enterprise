@@ -62,7 +62,7 @@
     <ClCompile Include="visualView\ctrl\form.cpp" />
     <ClCompile Include="visualView\ctrl\formAction.cpp" />
     <ClCompile Include="visualView\ctrl\formControl.cpp" />
-    <ClCompile Include="visualView\ctrl\formDocView.cpp" />
+    <ClCompile Include="visualView\ctrl\formVisualHost.cpp" />
     <ClCompile Include="visualView\ctrl\formFactory.cpp" />
     <ClCompile Include="visualView\ctrl\formMem.cpp" />
     <ClCompile Include="visualView\ctrl\formObject.cpp" />
@@ -109,6 +109,8 @@
     <ClCompile Include="visualView\ctrl\tableBoxMenu.cpp" />
     <ClCompile Include="visualView\ctrl\tableBoxProperty.cpp" />
     <ClCompile Include="visualView\ctrl\tableBox_res.cpp" />
+    <ClCompile Include="visualView\ctrl\textBox.cpp" />
+    <ClCompile Include="visualView\ctrl\textBox_res.cpp" />
     <ClCompile Include="visualView\ctrl\textctrl.cpp" />
     <ClCompile Include="visualView\ctrl\textctrlEvent.cpp" />
     <ClCompile Include="visualView\ctrl\textctrlProperty.cpp" />
@@ -126,10 +128,11 @@
     <ClCompile Include="visualView\ctrl\window.cpp" />
     <ClCompile Include="visualView\ctrl\wrapsizer.cpp" />
     <ClCompile Include="visualView\pageWindow.cpp" />
+    <ClCompile Include="visualView\visualHostClient.cpp" />
+    <ClCompile Include="visualView\visualHostClientDocView.cpp" />
+    <ClCompile Include="visualView\visualHostClient_impl.cpp" />
     <ClCompile Include="visualView\visualHost.cpp" />
-    <ClCompile Include="visualView\visualHost_impl.cpp" />
-    <ClCompile Include="visualView\visual.cpp" />
-    <ClCompile Include="visualView\visualEvent.cpp" />
+    <ClCompile Include="visualView\visualHostEvent.cpp" />
     <ClCompile Include="win\ctrls\charts\wxareachart.cpp" />
     <ClCompile Include="win\ctrls\charts\wxareachartctrl.cpp" />
     <ClCompile Include="win\ctrls\charts\wxareachartdatasetoptions.cpp" />
@@ -255,6 +258,8 @@
     <ClCompile Include="win\ctrls\checktree.cpp" />
     <ClCompile Include="win\ctrls\controlCheckboxEditor.cpp" />
     <ClCompile Include="win\ctrls\controlTextEditor.cpp" />
+    <ClCompile Include="win\ctrls\dataview\headerctrlcmn.cpp" />
+    <ClCompile Include="win\ctrls\dataview\headerctrlg.cpp" />
     <ClCompile Include="win\ctrls\tableView.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavcmn.cpp" />
     <ClCompile Include="win\ctrls\dataview\datavgen.cpp" />
@@ -327,14 +332,15 @@
     <ClInclude Include="visualView\ctrl\sizer.h" />
     <ClInclude Include="visualView\ctrl\tableBox.h" />
     <ClInclude Include="visualView\ctrl\tableBoxColumnRenderer.h" />
+    <ClInclude Include="visualView\ctrl\textBox.h" />
     <ClInclude Include="visualView\ctrl\toolBar.h" />
     <ClInclude Include="visualView\ctrl\typeControl.h" />
     <ClInclude Include="visualView\ctrl\widgets.h" />
     <ClInclude Include="visualView\ctrl\window.h" />
     <ClInclude Include="visualView\formdefs.h" />
     <ClInclude Include="visualView\pageWindow.h" />
+    <ClInclude Include="visualView\visualHostClient.h" />
     <ClInclude Include="visualView\visualHost.h" />
-    <ClInclude Include="visualView\visual.h" />
     <ClInclude Include="window_ptr.h" />
     <ClInclude Include="win\ctrls\charts\wxareachart.h" />
     <ClInclude Include="win\ctrls\charts\wxareachartctrl.h" />
@@ -463,6 +469,7 @@
     <ClInclude Include="win\ctrls\checktree.h" />
     <ClInclude Include="win\ctrls\controlCheckboxEditor.h" />
     <ClInclude Include="win\ctrls\controlTextEditor.h" />
+    <ClInclude Include="win\ctrls\dataview\headerctrlg.h" />
     <ClInclude Include="win\ctrls\tableView.h" />
     <ClInclude Include="win\ctrls\dataview\datavgen.h" />
     <ClInclude Include="win\ctrls\dataview\dataview.h" />

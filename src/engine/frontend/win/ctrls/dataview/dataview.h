@@ -28,28 +28,29 @@
 #include <wx/withimages.h>
 #include <wx/systhemectrl.h>
 #include <wx/vector.h>
-#include <wx/headerctrl.h>
 
 class WXDLLIMPEXP_FWD_CORE wxImageList;
 class wxItemAttr;
-class WXDLLIMPEXP_FWD_CORE wxHeaderCtrl;
+class wxHeaderGenericCtrl;
 
 #include "backend/tableView.h"
+#include "headerctrlg.h"
+#include "frontend/frontend.h"
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtCtrl globals
 // ----------------------------------------------------------------------------
 
 class BACKEND_API wxDataViewExtModel;
-class wxDataViewExtCtrl;
-class wxDataViewExtColumn;
-class wxDataViewExtRenderer;
+class FRONTEND_API wxDataViewExtCtrl;
+class FRONTEND_API wxDataViewExtColumn;
+class FRONTEND_API wxDataViewExtRenderer;
 class wxDataViewExtModelNotifier;
 #if wxUSE_ACCESSIBILITY
-class wxDataViewExtCtrlAccessible;
+class FRONTEND_API wxDataViewExtCtrlAccessible;
 #endif // wxUSE_ACCESSIBILITY
 
-extern const char wxDataViewExtCtrlNameStr[];
+extern const char FRONTEND_API wxDataViewExtCtrlNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxDataViewExtListModel: a model of a list, i.e. flat data structure without any
@@ -57,7 +58,7 @@ extern const char wxDataViewExtCtrlNameStr[];
 //      wxDataViewExtVirtualListModel
 // ----------------------------------------------------------------------------
 
-class wxDataViewExtListModel : public wxDataViewExtModel
+class FRONTEND_API wxDataViewExtListModel : public wxDataViewExtModel
 {
 public:
 	// derived classes should override these methods instead of
@@ -135,7 +136,7 @@ public:
 // wxDataViewExtIndexListModel
 // ---------------------------------------------------------
 
-class wxDataViewExtIndexListModel : public wxDataViewExtListModel
+class FRONTEND_API wxDataViewExtIndexListModel : public wxDataViewExtListModel
 {
 public:
 	wxDataViewExtIndexListModel(unsigned int initial_size = 0);
@@ -174,7 +175,7 @@ private:
 typedef wxDataViewExtIndexListModel wxDataViewExtVirtualListModel;
 #else
 
-class wxDataViewExtVirtualListModel : public wxDataViewExtListModel
+class FRONTEND_API wxDataViewExtVirtualListModel : public wxDataViewExtListModel
 {
 public:
 	wxDataViewExtVirtualListModel(unsigned int initial_size = 0);
@@ -231,7 +232,7 @@ enum wxDataViewExtColumnFlags
 	wxDATAVIEW_COL_HIDDEN = wxCOL_HIDDEN
 };
 
-class wxDataViewExtColumnBase : public wxSettableHeaderColumn
+class FRONTEND_API wxDataViewExtColumnBase : public wxSettableHeaderColumn
 {
 public:
 	// ctor for the text columns: takes ownership of renderer
@@ -276,12 +277,14 @@ public:
 	virtual int WXGetSpecifiedWidth() const { return GetWidth(); }
 
 protected:
+	
 	wxDataViewExtRenderer* m_renderer;
 	int                      m_model_column;
 	wxBitmapBundle           m_bitmap;
 	wxDataViewExtCtrl* m_owner;
 
 private:
+
 	// common part of all ctors
 	void Init(wxDataViewExtRenderer* renderer, unsigned int model_column);
 };
@@ -300,6 +303,8 @@ private:
 #define wxDV_ROW_LINES               0x0010     // alternating colour in rows
 #define wxDV_VARIABLE_LINE_HEIGHT    0x0020     // variable line height
 
+#define wxDV_FOOTER					 0x0040     // column footer visible
+
 // possible selection modes
 enum wxDataViewExtSelectionMode
 {
@@ -307,7 +312,14 @@ enum wxDataViewExtSelectionMode
 	wxDataViewExtSelectRow = 1,  // allow selecting only entire rows
 };
 
-class wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
+enum wxDataViewExtViewMode 
+{
+	wxDataViewExtTree, 
+	wxDataViewExtHierarchical, 
+	wxDataViewExtList
+};
+
+class FRONTEND_API wxDataViewExtCtrlBase : public wxSystemThemedControl<wxControl>
 {
 public:
 
@@ -513,9 +525,15 @@ public:
 	virtual void SetSelectionMode(wxDataViewExtSelectionMode selmode) = 0;
 	virtual wxDataViewExtSelectionMode GetSelectionMode() const = 0;
 
+	virtual void SetViewMode(wxDataViewExtViewMode viewMode) = 0;
+	virtual wxDataViewExtViewMode GetViewMode() const = 0;
+
+	virtual void SetTopParent(const wxDataViewExtItem& item) = 0;
+
 	void Expand(const wxDataViewExtItem& item);
 	void ExpandChildren(const wxDataViewExtItem& item);
 	void ExpandAncestors(const wxDataViewExtItem& item);
+	
 	virtual void Collapse(const wxDataViewExtItem& item) = 0;
 	virtual bool IsExpanded(const wxDataViewExtItem& item) const = 0;
 
@@ -525,6 +543,8 @@ public:
 	virtual wxRect GetItemRect(const wxDataViewExtItem& item, const wxDataViewExtColumn* column = NULL) const = 0;
 
 	virtual bool SetRowHeight(int WXUNUSED(rowHeight)) { return false; }
+	virtual int GetRowHeight() const { return 0; }
+	virtual int GetDefaultRowHeight() const { return 0; }
 
 	virtual void EditItem(const wxDataViewExtItem& item, const wxDataViewExtColumn* column) = 0;
 
@@ -625,8 +645,6 @@ protected:
 // wxDataViewExtEvent - the event class for the wxDataViewExtCtrl notifications
 // ----------------------------------------------------------------------------
 
-#include "frontend/frontend.h"
-
 class FRONTEND_API wxDataViewExtEvent : public wxNotifyEvent
 {
 public:
@@ -677,6 +695,7 @@ public:
 		m_dropEffect(event.m_dropEffect),
 		m_proposedDropIndex(event.m_proposedDropIndex)
 #endif
+		, m_viewMode(event.m_viewMode)
 	{
 	}
 
@@ -702,6 +721,9 @@ public:
 	int GetCacheTo() const { return m_cacheTo; }
 	void SetCache(int from, int to) { m_cacheFrom = from; m_cacheTo = to; }
 
+	// For wxEVT_DATAVIEW_VIEW_SET
+	wxDataViewExtViewMode GetViewMode() const { return m_viewMode; }
+	void SetViewMode(wxDataViewExtViewMode mode) { m_viewMode = mode; }
 
 #if wxUSE_DRAG_AND_DROP
 	// For drag operations
@@ -770,6 +792,8 @@ protected:
 	int                 m_proposedDropIndex;
 #endif // wxUSE_DRAG_AND_DROP
 
+	wxDataViewExtViewMode m_viewMode; 
+
 private:
 
 	// Common part of non-copy ctors.
@@ -807,6 +831,8 @@ wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_CACHE_HINT, wxDataViewExtE
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, wxDataViewExtEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, wxDataViewExtEvent);
 wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_ITEM_DROP, wxDataViewExtEvent);
+
+wxDECLARE_EXPORTED_EVENT(FRONTEND_API, wxEVT_DATAVIEW_VIEW_SET, wxDataViewExtEvent);
 
 typedef void (wxEvtHandler::* wxDataViewExtEventFunction)(wxDataViewExtEvent&);
 
@@ -849,7 +875,7 @@ typedef void (wxEvtHandler::* wxDataViewExtEventFunction)(wxDataViewExtEvent&);
 // wxDataViewExtListStore
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtListStoreLine
+class FRONTEND_API wxDataViewExtListStoreLine
 {
 public:
 	wxDataViewExtListStoreLine(wxUIntPtr data = 0)
@@ -872,8 +898,7 @@ private:
 	wxUIntPtr m_data;
 };
 
-
-class wxDataViewExtListStore : public wxDataViewExtIndexListModel
+class FRONTEND_API wxDataViewExtListStore : public wxDataViewExtIndexListModel
 {
 public:
 	wxDataViewExtListStore();
@@ -911,7 +936,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtListCtrl : public wxDataViewExtCtrl
+class FRONTEND_API wxDataViewExtListCtrl : public wxDataViewExtCtrl
 {
 public:
 	wxDataViewExtListCtrl();
@@ -1057,7 +1082,7 @@ private:
 // wxDataViewExtTreeStore
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreNode
 {
 public:
 	wxDataViewExtTreeStoreNode(wxDataViewExtTreeStoreNode* parent,
@@ -1119,7 +1144,7 @@ private:
 
 typedef wxVector<wxDataViewExtTreeStoreNode*> wxDataViewExtTreeStoreNodes;
 
-class wxDataViewExtTreeStoreContainerNode : public wxDataViewExtTreeStoreNode
+class FRONTEND_API wxDataViewExtTreeStoreContainerNode : public wxDataViewExtTreeStoreNode
 {
 public:
 	wxDataViewExtTreeStoreContainerNode(wxDataViewExtTreeStoreNode* parent,
@@ -1177,7 +1202,7 @@ private:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeStore : public wxDataViewExtModel
+class FRONTEND_API wxDataViewExtTreeStore : public wxDataViewExtModel
 {
 public:
 	wxDataViewExtTreeStore();
@@ -1258,7 +1283,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class wxDataViewExtTreeCtrl : public wxDataViewExtCtrl,
+class FRONTEND_API wxDataViewExtTreeCtrl : public wxDataViewExtCtrl,
 	public wxWithImages
 {
 public:
@@ -1384,6 +1409,7 @@ private:
 #define wxEVT_COMMAND_DATAVIEW_ITEM_BEGIN_DRAG             wxEVT_DATAVIEW_ITEM_BEGIN_DRAG
 #define wxEVT_COMMAND_DATAVIEW_ITEM_DROP_POSSIBLE          wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE
 #define wxEVT_COMMAND_DATAVIEW_ITEM_DROP                   wxEVT_DATAVIEW_ITEM_DROP
+#define wxEVT_COMMAND_DATAVIEW_VIEW_SET					   wxEVT_DATAVIEW_VIEW_SET
 
 #endif // wxUSE_DATAVIEWCTRL
 

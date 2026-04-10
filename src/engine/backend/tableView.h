@@ -72,7 +72,9 @@ public:
 
 	virtual unsigned int GetCurrentModelColumn() const = 0;
 	virtual void StartEditing(const wxDataViewExtItem& item, unsigned int col) const = 0;
+	
 	virtual bool ShowFilter(struct CFilterRow& filter) = 0;
+	virtual bool ShowViewMode() = 0;
 
 	virtual void Select(const wxDataViewExtItem& item) const = 0;
 	virtual int GetCountPerPage() const = 0;
@@ -200,11 +202,19 @@ public:
 	// define hierarchy
 	virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const = 0;
 	virtual bool IsContainer(const wxDataViewExtItem& item) const = 0;
+
+	// define current parent for hierarchical view 
+	virtual bool HasParentTopItem() const { return false; }
+
+	virtual bool SetParentTopItem(const wxDataViewExtItem& item) { return false; }
+	virtual wxDataViewExtItem GetParentTopItem() const { return wxDataViewExtItem(NULL); }
+
 	// Is the container just a header or an item with all columns
 	virtual bool HasContainerColumns(const wxDataViewExtItem& WXUNUSED(item)) const
 	{
 		return false;
 	}
+
 	virtual unsigned int GetChildren(const wxDataViewExtItem& item, wxDataViewExtItemArray& children) const = 0;
 
 	// delegated notifiers
@@ -221,7 +231,9 @@ public:
 
 	unsigned int GetCurrentModelColumn(int view_id = 0) const;
 	void StartEditing(const wxDataViewExtItem& item, unsigned int col, int view_id = 0) const;
+	
 	bool ShowFilter(struct CFilterRow& filterm, int view_id = 0);
+	bool ShowViewMode(int view_id = 0);
 
 	void Select(const wxDataViewExtItem& item, int view_id = 0) const;
 	int GetCountPerPage(int view_id = 0) const;

@@ -59,6 +59,11 @@ IValueModel::CActionCollection IValueModel::GetActionCollection(const form_ident
 		action.AddAction(wxT("FilterClear"), _("Filter clear"), g_picFilterClearCLSID, false, eFilterClear);
 	}
 
+	if (UseViewMode()) {
+		if (UseStandartCommand() || UseFilter()) action.AddSeparator();
+		action.AddAction(wxT("ViewMode"), _("View mode"), g_picHierarchyCLSID, false, eViewMode);
+	}
+
 	return action;
 }
 
@@ -99,6 +104,9 @@ void IValueModel::ExecuteAction(const action_identifier_t& lNumAction, IBackendV
 		m_filterRow.ResetFilter();
 		CallRefreshModel(wxDataViewExtItem(nullptr), m_modelProvider != nullptr ? m_modelProvider->GetCountPerPage() : defaultCountPerPage);
 		break;
+	case eViewMode:
+		ShowViewMode();
+		break;
 	}
 }
 
@@ -109,6 +117,13 @@ bool IValueModel::ShowFilter()
 	if (m_modelProvider == nullptr)
 		return false;
 	return m_modelProvider->ShowFilter(m_filterRow);
+}
+
+bool IValueModel::ShowViewMode()
+{
+	if (m_modelProvider == nullptr)
+		return false;
+	return m_modelProvider->ShowViewMode();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

@@ -97,6 +97,33 @@ public:
 	}
 };
 
+//base property for "general" - unique name or empty value 
+class BACKEND_API CPropertyUEString : public CPropertyUString {
+public:
+
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name,
+		const wxString& value) : CPropertyUString(cat, name, value)
+	{
+	}
+
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label,
+		const wxString& value) : CPropertyUString(cat, name, label, value)
+	{
+	}
+
+	CPropertyUEString(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString,
+		const wxString& value) : CPropertyUString(cat, name, label, helpString, value)
+	{
+	}
+
+	//get property for grid 
+	virtual wxPGProperty* GetPGProperty() const {
+		return new wxGeneralStringProperty(m_propLabel, m_propName, GetValueAsString(),
+			wxGeneralStringProperty::allow_empty);
+	}
+};
+
+
 //base property for "caption" - for translate 
 class BACKEND_API CPropertyTString : public IPropertyString {
 public:

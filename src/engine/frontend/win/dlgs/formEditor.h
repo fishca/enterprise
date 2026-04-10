@@ -12,7 +12,6 @@
 #include <map>
 
 #include "frontend/visualView/ctrl/form.h"
-#include "frontend/visualView/visual.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class CDialogFormEditor

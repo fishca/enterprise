@@ -126,23 +126,32 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 
 	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
 		dataViewColumn->SetTitle(GetControlTitle());
-		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
+		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
+		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
 		dataViewColumn->SetTitle(GetControlTitle());
-		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
+		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
+		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
 		dataViewColumn->SetTitle(wxEmptyString);
-		dataViewColumn->SetBitmap(m_propertyPicture->GetValueAsBitmap());
+		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
+		dataViewColumn->SetFooterTitle(wxEmptyString);
+		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
 	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
 		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(wxNullBitmap);
+		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
+		dataViewColumn->SetFooterBitmap(wxNullBitmap);
 	}
 
 	dataViewColumn->SetWidth(m_propertyWidth->GetValueAsUInteger());
-	dataViewColumn->SetAlignment(m_propertyAlign->GetValueAsEnum());
+	dataViewColumn->SetAlignment(m_propertyHeaderAlign->GetValueAsEnum());
+	dataViewColumn->SetFooterAlignment(m_propertyFooterAlign->GetValueAsEnum());
 
 	const form_identifier_t source_column = GetModelColumn();
 
@@ -237,7 +246,10 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 {
 	m_propertyTitle->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
-	m_propertyPicture->LoadData(reader);
+	m_propertyFooterText->LoadData(reader);
+
+	m_propertyHeaderPicture->LoadData(reader);
+	m_propertyFooterPicture->LoadData(reader);
 
 	m_propertyPasswordMode->LoadData(reader);
 	m_propertyMultilineMode->LoadData(reader);
@@ -247,7 +259,9 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 	m_propertyOpenButton->LoadData(reader);
 	m_propertyClearButton->LoadData(reader);
 
-	m_propertyAlign->LoadData(reader);
+	m_propertyHeaderAlign->LoadData(reader);
+	m_propertyFooterAlign->LoadData(reader);
+
 	m_propertyWidth->LoadData(reader);
 	m_propertyVisible->LoadData(reader);
 	m_propertyResizable->LoadData(reader);
@@ -273,7 +287,10 @@ bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
-	m_propertyPicture->SaveData(writer);
+	m_propertyFooterText->SaveData(writer);
+
+	m_propertyHeaderPicture->SaveData(writer);
+	m_propertyFooterPicture->SaveData(writer);
 
 	m_propertyPasswordMode->SaveData(writer);
 	m_propertyMultilineMode->SaveData(writer);
@@ -283,7 +300,9 @@ bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 	m_propertyOpenButton->SaveData(writer);
 	m_propertyClearButton->SaveData(writer);
 
-	m_propertyAlign->SaveData(writer);
+	m_propertyHeaderAlign->SaveData(writer);
+	m_propertyFooterAlign->SaveData(writer);
+
 	m_propertyWidth->SaveData(writer);
 	m_propertyVisible->SaveData(writer);
 	m_propertyResizable->SaveData(writer);

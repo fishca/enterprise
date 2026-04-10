@@ -8,9 +8,11 @@
 #include "frontend/mainFrame/mainFrame.h"
 #include "frontend/mainFrame/mainFrameChild.h"
 
+#include "backend/backend_exception.h"
+
 void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
 {
-	if (event.GetEventType() == wxEVT_KEY_DOWN && event.GetKeyCode() == WXK_ESCAPE) {
+	if (!CBackendException::IsErrorOutputProcessing() && event.GetEventType() == wxEVT_KEY_DOWN && event.GetKeyCode() == WXK_ESCAPE) {
 		wxAuiMDIChildFrame* childFrame = mainFrame->GetActiveChild();
 		if (childFrame != nullptr) CallAfter([childFrame]() {childFrame->Close(); });
 	}
@@ -18,7 +20,7 @@ void CEnterpriseApp::OnKeyEvent(wxKeyEvent& event)
 	event.Skip();
 }
 
-#include "frontend/visualView/visual.h"
+#include "frontend/visualView/visualHost.h"
 
 void CEnterpriseApp::OnMouseEvent(wxMouseEvent& event)
 {

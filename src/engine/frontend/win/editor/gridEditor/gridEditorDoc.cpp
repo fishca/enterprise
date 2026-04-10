@@ -147,6 +147,7 @@ bool CGridEditor::LoadDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>&
 		}
 
 		FreezeTo(spreadsheetDesc.GetRowFreeze(), spreadsheetDesc.GetColFreeze());
+		EnableEditing(doc->IsEditable());
 
 		wxGridExt::SetEvtHandlerEnabled(true);
 	}
@@ -226,6 +227,7 @@ void CGridEditor::PutDocument(const wxObjectDataPtr<CBackendSpreadsheetObject>& 
 	if (maxColBrake < doc->GetNumberCols())
 		SetColBrake(maxColBrake + doc->GetNumberCols());
 
+	wxGridExt::EnableEditing(doc->IsEditable());
 	wxGridExt::SetEvtHandlerEnabled(true);
 }
 

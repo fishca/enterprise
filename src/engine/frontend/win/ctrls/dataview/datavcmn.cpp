@@ -379,7 +379,8 @@ bool wxDataViewExtRendererBase::StartEditing(const wxDataViewExtItem& item, wxRe
 	unsigned int col = GetOwner()->GetModelColumn();
 	const wxVariant& value = CheckedGetValue(dv_ctrl->GetModel(), item, col);
 
-	m_editorCtrl = CreateEditorCtrl(dv_ctrl->GetMainWindow(), labelRect, value);
+	m_editorCtrl = CreateEditorCtrl(
+		(wxWindow*)dv_ctrl->CellToDataViewWindow(item, column), labelRect, value);
 
 	// there might be no editor control for the given item
 	if (!m_editorCtrl)
@@ -1427,6 +1428,8 @@ wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, wxDataViewExtEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE, wxDataViewExtEvent);
 wxDEFINE_EVENT(wxEVT_DATAVIEW_ITEM_DROP, wxDataViewExtEvent);
 
+wxDEFINE_EVENT(wxEVT_DATAVIEW_VIEW_SET, wxDataViewExtEvent);
+
 // Common part of non-copy ctors.
 void wxDataViewExtEvent::Init(wxDataViewExtCtrlBase* dvc,
 	wxDataViewExtColumn* column,
@@ -1448,6 +1451,8 @@ void wxDataViewExtEvent::Init(wxDataViewExtCtrlBase* dvc,
 	m_dropEffect = wxDragNone;
 	m_proposedDropIndex = -1;
 #endif // wxUSE_DRAG_AND_DROP
+
+	m_viewMode = wxDataViewExtViewMode::wxDataViewExtList;
 
 	SetEventObject(dvc);
 }
@@ -2110,7 +2115,6 @@ wxDataViewExtListCtrl::wxDataViewExtListCtrl(wxWindow* parent, wxWindowID id,
 wxDataViewExtListCtrl::~wxDataViewExtListCtrl()
 {
 }
-
 
 bool wxDataViewExtListCtrl::Create(wxWindow* parent, wxWindowID id,
 	const wxPoint& pos, const wxSize& size, long style,

@@ -120,8 +120,6 @@ void CFrontendDocMDIFrame::ActivateView(CMetaView* view, bool activate) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "frontend/win/dlgs/authorization.h"
-#include "frontend/visualView/ctrl/form.h"
-
 #include "backend/appData.h"
 
 bool CFrontendDocMDIFrame::AuthenticationUser(const wxString& userName, const wxString& userPassword) const
@@ -147,6 +145,8 @@ IMetaData* CFrontendDocMDIFrame::FindMetadataByPath(const wxString& strFileName)
 
 #pragma region _frontend_call_h__
 
+#include "frontend/visualView/visualHostClient.h"
+
 // Form support
 IBackendValueForm* CFrontendDocMDIFrame::ActiveWindow() const {
 
@@ -154,7 +154,7 @@ IBackendValueForm* CFrontendDocMDIFrame::ActiveWindow() const {
 		wxDocChildFrameAnyBase* activeChild =
 			dynamic_cast<wxDocChildFrameAnyBase*>(CFrontendDocMDIFrame::GetActiveChild());
 		if (activeChild != nullptr) {
-			CVisualDocument* const ownerFormDoc = dynamic_cast<CVisualDocument*>(activeChild->GetDocument());
+			CFormVisualDocument* const ownerFormDoc = dynamic_cast<CFormVisualDocument*>(activeChild->GetDocument());
 			if (ownerFormDoc != nullptr) {
 				return ownerFormDoc->GetValueForm();
 			}
@@ -173,32 +173,32 @@ IBackendValueForm* CFrontendDocMDIFrame::CreateNewForm(const IValueMetaObjectFor
 
 CUniqueKey CFrontendDocMDIFrame::CreateFormUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
 {
-	return CValueForm::CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
+	return CFormVisualDocument::CreateFormUniqueKey(ownerControl, sourceObject, formGuid);
 }
 
 IBackendValueForm* CFrontendDocMDIFrame::FindFormByUniqueKey(const IBackendControlFrame* ownerControl, const ISourceDataObject* sourceObject, const CUniqueKey& formGuid)
 {
-	return CValueForm::FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
+	return CFormVisualDocument::FindFormByUniqueKey(ownerControl, sourceObject, formGuid);
 }
 
 IBackendValueForm* CFrontendDocMDIFrame::FindFormByUniqueKey(const CUniqueKey& guid)
 {
-	return CValueForm::FindFormByUniqueKey(guid);
+	return CFormVisualDocument::FindFormByUniqueKey(guid);
 }
 
 IBackendValueForm* CFrontendDocMDIFrame::FindFormByControlUniqueKey(const CUniqueKey& guid)
 {
-	return CValueForm::FindFormByControlUniqueKey(guid);
+	return CFormVisualDocument::FindFormByControlUniqueKey(guid);
 }
 
 IBackendValueForm* CFrontendDocMDIFrame::FindFormBySourceUniqueKey(const CUniqueKey& guid)
 {
-	return CValueForm::FindFormBySourceUniqueKey(guid);
+	return CFormVisualDocument::FindFormBySourceUniqueKey(guid);
 }
 
 bool CFrontendDocMDIFrame::UpdateFormUniqueKey(const CUniquePairKey& guid)
 {
-	return CValueForm::UpdateFormUniqueKey(guid);
+	return CFormVisualDocument::UpdateFormUniqueKey(guid);
 }
 
 #include "frontend/docView/templates/docViewSpreadsheet.h"

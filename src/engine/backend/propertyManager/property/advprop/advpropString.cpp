@@ -49,7 +49,12 @@ bool wxGeneralStringProperty::StringToValue(wxVariant& variant,
 		return wxPGProperty::StringToValue(variant, text, argFlags);
 
 	if (variant != text) {
+
 		variant = text;
+
+		if (m_strFlags == allow_empty)
+			return true;
+
 		return text.length() > 0;
 	}
 

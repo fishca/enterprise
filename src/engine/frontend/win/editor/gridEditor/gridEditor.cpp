@@ -17,6 +17,7 @@ enum
 };
 
 wxBEGIN_EVENT_TABLE(CGridEditor, wxGridExt)
+EVT_GRID_CELL_LEFT_DCLICK(CGridEditor::OnMouseLeftDown)
 EVT_GRID_CELL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
 EVT_GRID_LABEL_RIGHT_CLICK(CGridEditor::OnMouseRightDown)
 EVT_KEY_DOWN(CGridEditor::OnKeyDown)
@@ -159,7 +160,7 @@ void CGridEditor::MergeCells()
 	const wxGridExtBlockCoords& cellRange = GetSelectedCellRange();
 	wxGridExt::SetCellSize(cellRange.GetTopRow(), cellRange.GetLeftCol(),
 		cellRange.GetBottomRow() - cellRange.GetTopRow() + 1, cellRange.GetRightCol() - cellRange.GetLeftCol() + 1);
-	
+
 	wxGridExt::ForceRefresh();
 }
 
@@ -176,9 +177,62 @@ void CGridEditor::DockTable()
 
 #pragma endregion
 
+#include "backend/metaCollection/metaSpreadsheetObject.h"
+
+void CGridEditor::GetCellDetailsParameter(int row, int col, wxString& s) const
+{
+	if (m_spreadsheetObject != nullptr)
+		m_spreadsheetObject->GetCellDetailsParameter(row, col, s);
+}
+
+void CGridEditor::SetCellDetailsParameter(int row, int col, const wxString& s)
+{
+	if (m_document != nullptr) {
+
+		IValueMetaObjectSpreadsheet* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectSpreadsheet>();
+
+		if (creator != nullptr) {
+			CSpreadsheetDescription& spreadsheetDescription = creator->GetSpreadsheetDesc();
+			spreadsheetDescription.SetCellDetailsParameter(row, col, s);
+		}
+
+		m_document->Modify(true);
+	}
+
+	if (m_spreadsheetObject != nullptr) 
+		m_spreadsheetObject->SetCellDetailsParameter(row, col, s);
+
+	// set new brake pos
+	SetRowBrake(row);
+	SetColBrake(col);
+}
+
+void CGridEditor::SetCellDetailsParameter(const wxGridExtBlockCoords& coords, const wxString& s, bool sendUndoCommand)
+{
+	for (int row = coords.GetTopRow(); row <= coords.GetBottomRow(); row++)
+	{
+		for (int col = coords.GetLeftCol(); col <= coords.GetRightCol(); col++)
+		{
+			SetCellDetailsParameter(row, col, s);
+		}
+	}
+
+	// set new brake pos
+	SetRowBrake(coords.GetBottomRow());
+	SetColBrake(coords.GetRightCol());
+}
+
 #pragma region events
 
 #include "frontend/artProvider/artProvider.h"
+
+void CGridEditor::OnMouseLeftDown(wxGridExtEvent& event)
+{
+	if (m_spreadsheetObject != nullptr && !IsEditable())
+		m_spreadsheetObject->OpenCellDetailsParameter(event.GetRow(), event.GetCol());
+
+	event.Skip();
+}
 
 void CGridEditor::OnMouseRightDown(wxGridExtEvent& event)
 {
@@ -311,8 +365,6 @@ void CGridEditor::OnKeyDown(wxKeyEvent& event)
 
 	event.Skip();
 }
-
-#include "backend/metaCollection/metaSpreadsheetObject.h"
 
 void CGridEditor::OnGridRowSize(wxGridExtSizeEvent& event)
 {

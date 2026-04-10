@@ -29,6 +29,11 @@ public:
 	virtual bool OpenFormMDI(IValueMetaObject* metaObject);
 	virtual bool OpenFormMDI(IValueMetaObject* metaObject, IBackendMetaDocument*& foundedDoc);
 	virtual bool CloseFormMDI(IValueMetaObject* metaObject);
+
+#pragma region __predefined_values_h__
+	virtual void EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* obj) {}
+#pragma endregion
+
 	virtual CMetaDocument* GetDocument(IValueMetaObject* metaObject) const;
 
 	virtual void CloseMetaObject(IValueMetaObject* metaObject) {
@@ -401,6 +406,10 @@ private:
 public:
 
 	bool RenameMetaObject(IValueMetaObject* metaObject, const wxString& newName);
+
+#pragma region __predefined_values_h__
+	virtual void EditPredefinedValues(IValueMetaObjectRecordDataHierarchyMutableRef* obj);
+#pragma endregion
 
 	virtual IMetaData* GetMetaData() const { return m_metaData; }
 

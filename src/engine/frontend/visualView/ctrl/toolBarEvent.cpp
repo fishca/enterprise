@@ -1,6 +1,6 @@
 #include "toolbar.h"
 #include "backend/metaCollection/partial/commonObject.h"
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 
 //**********************************************************************************
 //*                              Events                                            *
@@ -13,7 +13,7 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 	);
 	wxASSERT(toolBar);
 	if (g_visualHostContext != nullptr) {
-		const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+		const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
 		if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 			wxAuiToolBarItem* foundedItem = toolBar->FindToolByPosition(event.GetX(), event.GetY());
 			if (foundedItem == nullptr) g_visualHostContext->SelectControl(this);
@@ -27,7 +27,7 @@ void CValueToolbar::OnToolBarLeftDown(wxMouseEvent& event)
 
 void CValueToolbar::OnTool(wxCommandEvent& event)
 {
-	const CVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
+	const CFormVisualDocument* visualDoc = CValueToolbar::GetVisualDocument();
 	if (visualDoc == nullptr || (visualDoc != nullptr && !visualDoc->IsVisualDemonstrationDoc())) {
 
 		IValueFrame* parentToolControl = FindControlByID(event.GetId());

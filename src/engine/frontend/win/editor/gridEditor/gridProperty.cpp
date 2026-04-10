@@ -20,10 +20,13 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::ShowInspector()
 		m_selection.push_back(coords);
 	}
 
-	if (!objectInspector->IsShownInspector())
-		objectInspector->ShowInspector();
+	if (m_view->IsPropertyEnabled()) {
 
-	objectInspector->SelectObject(this, true);
+		if (!objectInspector->IsShownInspector())
+			objectInspector->ShowInspector();
+
+		objectInspector->SelectObject(this, true);
+	}
 }
 
 void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* property, const wxGridExtBlockCoords& coords)
@@ -122,6 +125,9 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyCreated(IProperty* p
 			wxSharedPtr<wxString>(static_cast<wxString*>(value));
 		m_propertyParameter->SetValue(*textString);
 	}
+	else if (m_propertyDetailsParameter == property) {
+		m_propertyDetailsParameter->SetValue(m_view->GetCellDetailsParameter(coords.GetTopRow(), coords.GetLeftCol()));
+	}
 }
 
 void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* property, const wxGridExtBlockCoords& coords)
@@ -193,6 +199,9 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnPropertyChanged(IProperty* p
 	else if (m_propertyParameter == property) {
 		m_view->SetCellValue(coords, m_propertyParameter->GetValueAsString());
 	}
+	else if (m_propertyDetailsParameter == property) {
+		m_view->SetCellDetailsParameter(coords, m_propertyDetailsParameter->GetValueAsString());
+	}
 }
 
 #include "backend/metadataConfiguration.h"
@@ -241,8 +250,11 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCell(wxGridExtEvent& e
 		m_selection.clear();
 	}
 
-	objectInspector->SelectObject(this, true);
-	m_view->ForceRefresh();
+	if (m_view->IsPropertyEnabled()) {
+		objectInspector->SelectObject(this, true);
+		m_view->ForceRefresh();
+	}
+
 	event.Skip();
 }
 
@@ -257,8 +269,11 @@ void CGridEditor::CPropertyGridEditorSpreadsheet::OnSelectCells(wxGridExtRangeSe
 		m_selection.clear();
 	}
 
-	objectInspector->SelectObject(this, true);
-	m_view->ForceRefresh();
+	if (m_view->IsPropertyEnabled()) {
+		objectInspector->SelectObject(this, true);
+		m_view->ForceRefresh();
+	}
+
 	event.Skip();
 }
 

@@ -8,7 +8,7 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#include "wx/wxprec.h"
+#include <wx/wxprec.h>
 
 
 #if wxUSE_GRID
@@ -17,21 +17,22 @@
 #include "gridexteditors.h"
 
 #ifndef WX_PRECOMP
-#include "wx/textctrl.h"
-#include "wx/dc.h"
-#include "wx/combobox.h"
-#include "wx/settings.h"
-#include "wx/log.h"
-#include "wx/checkbox.h"
+#include <wx/textctrl.h>
+#include <wx/dc.h>
+#include <wx/combobox.h>
+#include <wx/settings.h>
+#include <wx/log.h>
+#include <wx/checkbox.h>
 #endif // WX_PRECOMP
 
-#include "wx/numformatter.h"
-#include "wx/tokenzr.h"
-#include "wx/renderer.h"
-#include "wx/uilocale.h"
+#include <wx/numformatter.h>
+#include <wx/tokenzr.h>
+#include <wx/renderer.h>
+#include <wx/uilocale.h>
 
 #include "gridextprivate.h"
-#include "wx/private/window.h"
+
+#include <wx/private/window.h>
 
 // ----------------------------------------------------------------------------
 // wxGridExtCellRenderer

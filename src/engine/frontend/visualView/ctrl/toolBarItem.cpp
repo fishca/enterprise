@@ -1,4 +1,5 @@
 #include "toolbar.h"
+#include "backend/appData.h"
 
 //***********************************************************************************
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
@@ -43,6 +44,8 @@ void CValueToolBarItem::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisua
 		toolbar->SetToolDropDown(toolItem->GetId(), false);
 
 	toolbar->Realize();
+	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
+		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -153,8 +156,12 @@ void CValueToolBarItem::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisua
 		toolbar->SetToolDropDown(toolItem->GetId(), false);
 
 	toolbar->Realize();
+	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
+		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
+
+	toolbar->InvalidateBestSize();
 }
 
 void CValueToolBarItem::Cleanup(wxObject* obj, IVisualHost* visualHost)
@@ -164,6 +171,8 @@ void CValueToolBarItem::Cleanup(wxObject* obj, IVisualHost* visualHost)
 	toolbar->DestroyTool(GetControlID());
 
 	toolbar->Realize();
+	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
+		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -197,6 +206,8 @@ void CValueToolBarSeparator::OnCreated(wxObject* wxobject, wxWindow* wxparent, I
 	toolItem->SetId(GetControlID());
 
 	toolbar->Realize();
+	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
+		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }
@@ -219,6 +230,8 @@ void CValueToolBarSeparator::OnUpdated(wxObject* wxobject, wxWindow* wxparent, I
 	toolbar->InsertSeparator(idx, GetControlID());
 
 	toolbar->Realize();
+	if (!appData->DesignerMode() || !visualHost->IsDesignerHost())
+		toolbar->SetMinSize(wxSize(-1, toolbar->GetMinHeight()));
 	toolbar->Refresh();
 	toolbar->Update();
 }

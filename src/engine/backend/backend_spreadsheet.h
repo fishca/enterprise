@@ -8,6 +8,7 @@ public:
 
 	virtual ~IBackendSpreadsheetNotifier() {}
 	virtual void ClearSpreadsheet() = 0;
+	virtual void EnableEditing(bool editable) = 0;
 
 	//size 
 	virtual void SetRowSize(int row, int height = 0) = 0;
@@ -61,8 +62,8 @@ public:
 class BACKEND_API CBackendSpreadsheetObject : public wxRefCounter {
 public:
 
-	CBackendSpreadsheetObject() : m_docGuid(wxNewUniqueGuid), m_docReadOnly(false) {}
-	CBackendSpreadsheetObject(const CSpreadsheetDescription& spreadsheetDesc) : m_docGuid(wxNewUniqueGuid), m_spreadsheetDesc(spreadsheetDesc), m_docReadOnly(false) {}
+	CBackendSpreadsheetObject() : m_docGuid(wxNewUniqueGuid), m_editable(true) {}
+	CBackendSpreadsheetObject(const CSpreadsheetDescription& spreadsheetDesc) : m_docGuid(wxNewUniqueGuid), m_spreadsheetDesc(spreadsheetDesc), m_editable(true) {}
 
 	CSpreadsheetDescription& GetSpreadsheetDesc() { return m_spreadsheetDesc; }
 	const CSpreadsheetDescription& GetSpreadsheetDesc() const { return m_spreadsheetDesc; }
@@ -73,9 +74,10 @@ public:
 
 	void ClearSpreadsheet(int count = 0);
 
-	//read only 
-	bool GetReadOnly() { return m_docReadOnly; }
-	void SetReadOnly(bool readOnly) { m_docReadOnly = true; }
+	// ------ edit control functions
+	//
+	bool IsEditable() const { return m_editable; }
+	void EnableEditing(bool edit);
 
 	//lang 
 	wxString GetLangCode() const { return m_docLangCode; }
@@ -210,6 +212,11 @@ public:
 
 #pragma endregion 
 
+	void GetCellDetailsParameter(int row, int col, wxString& s) const { m_spreadsheetDesc.GetCellDetailsParameter(row, col, s); }
+	void SetCellDetailsParameter(int row, int col, const wxString& s);
+
+	bool OpenCellDetailsParameter(int row, int col) const;
+
 #pragma region __fs_h__
 
 	//load/save form file
@@ -249,7 +256,7 @@ private:
 	CGuid m_docGuid;
 
 	// read only 
-	bool m_docReadOnly;
+	bool m_editable;
 
 	//cell desc
 	CSpreadsheetDescription m_spreadsheetDesc;

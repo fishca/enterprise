@@ -12,6 +12,90 @@
 
 #include "backend/typeconv.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool CSpreadsheetCellDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetCellDescription& spreadsheetCellDesc)
+{
+	spreadsheetCellDesc.m_value = reader.r_stringZ();
+
+	spreadsheetCellDesc.m_alignHorz = reader.r_s32();
+	spreadsheetCellDesc.m_alignVert = reader.r_s32();
+	spreadsheetCellDesc.m_textOrient = reader.r_s32();
+
+	spreadsheetCellDesc.m_font = typeConv::StringToFont(reader.r_stringZ());
+	spreadsheetCellDesc.m_backgroundColour = typeConv::StringToColour(reader.r_stringZ());
+	spreadsheetCellDesc.m_textColour = typeConv::StringToColour(reader.r_stringZ());
+
+	spreadsheetCellDesc.m_borderAt[0].m_style = static_cast<wxPenStyle>(reader.r_s32());
+	spreadsheetCellDesc.m_borderAt[0].m_width = reader.r_s32();
+	spreadsheetCellDesc.m_borderAt[0].m_colour = typeConv::StringToColour(reader.r_stringZ());
+
+	spreadsheetCellDesc.m_borderAt[1].m_style = static_cast<wxPenStyle>(reader.r_s32());
+	spreadsheetCellDesc.m_borderAt[1].m_width = reader.r_s32();
+	spreadsheetCellDesc.m_borderAt[1].m_colour = typeConv::StringToColour(reader.r_stringZ());
+
+	spreadsheetCellDesc.m_borderAt[2].m_style = static_cast<wxPenStyle>(reader.r_s32());
+	spreadsheetCellDesc.m_borderAt[2].m_width = reader.r_s32();
+	spreadsheetCellDesc.m_borderAt[2].m_colour = typeConv::StringToColour(reader.r_stringZ());
+
+	spreadsheetCellDesc.m_borderAt[3].m_style = static_cast<wxPenStyle>(reader.r_s32());
+	spreadsheetCellDesc.m_borderAt[3].m_width = reader.r_s32();
+	spreadsheetCellDesc.m_borderAt[3].m_colour = typeConv::StringToColour(reader.r_stringZ());
+
+	spreadsheetCellDesc.m_row_size = reader.r_s32();
+	spreadsheetCellDesc.m_col_size = reader.r_s32();
+
+	spreadsheetCellDesc.m_fitMode = static_cast<CSpreadsheetCellDescription::EFitMode>(reader.r_s32());
+	spreadsheetCellDesc.m_isReadOnly = reader.r_u8();
+
+	spreadsheetCellDesc.m_fillSetType = static_cast<enSpreadsheetFillType>(reader.r_s32());
+
+	spreadsheetCellDesc.m_detailsParameter = reader.r_stringZ();
+	return true;
+}
+
+bool CSpreadsheetCellDescriptionMemory::SaveData(CMemoryWriter& writer, const CSpreadsheetCellDescription& spreadsheetCellDesc)
+{
+	writer.w_stringZ(spreadsheetCellDesc.m_value);
+
+	writer.w_s32(spreadsheetCellDesc.m_alignHorz);
+	writer.w_s32(spreadsheetCellDesc.m_alignVert);
+	writer.w_s32(spreadsheetCellDesc.m_textOrient);
+
+	writer.w_stringZ(typeConv::FontToString(spreadsheetCellDesc.m_font));
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_backgroundColour));
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_textColour));
+
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[0].m_style);
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[0].m_width);
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_borderAt[0].m_colour));
+
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[1].m_style);
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[1].m_width);
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_borderAt[1].m_colour));
+
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[2].m_style);
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[2].m_width);
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_borderAt[2].m_colour));
+
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[3].m_style);
+	writer.w_s32(spreadsheetCellDesc.m_borderAt[3].m_width);
+	writer.w_stringZ(typeConv::ColourToString(spreadsheetCellDesc.m_borderAt[3].m_colour));
+
+	writer.w_s32(spreadsheetCellDesc.m_row_size);
+	writer.w_s32(spreadsheetCellDesc.m_col_size);
+
+	writer.w_s32(spreadsheetCellDesc.m_fitMode);
+	writer.w_s8(spreadsheetCellDesc.m_isReadOnly);
+
+	writer.w_s32(spreadsheetCellDesc.m_fillSetType);
+
+	writer.w_stringZ(spreadsheetCellDesc.m_detailsParameter);
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheetDescription& spreadsheetDesc)
 {
 	wxMemoryBuffer mainBuffer;
@@ -43,42 +127,8 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 			int row = cellReader.r_s32();
 			int col = cellReader.r_s32();
 
-			CSpreadsheetCellDescription* cell =
-				spreadsheetDesc.GetOrCreateCell(row, col);
-
-			cell->m_value = cellReader.r_stringZ();	
-			
-			cell->m_alignHorz = cellReader.r_s32();
-			cell->m_alignVert = cellReader.r_s32();
-			cell->m_textOrient = cellReader.r_s32();
-
-			cell->m_font = typeConv::StringToFont(cellReader.r_stringZ());
-			cell->m_backgroundColour = typeConv::StringToColour(cellReader.r_stringZ());
-			cell->m_textColour = typeConv::StringToColour(cellReader.r_stringZ());
-
-			cell->m_borderAt[0].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-			cell->m_borderAt[0].m_width = cellReader.r_s32();
-			cell->m_borderAt[0].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
-
-			cell->m_borderAt[1].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-			cell->m_borderAt[1].m_width = cellReader.r_s32();
-			cell->m_borderAt[1].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
-
-			cell->m_borderAt[2].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-			cell->m_borderAt[2].m_width = cellReader.r_s32();
-			cell->m_borderAt[2].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
-
-			cell->m_borderAt[3].m_style = static_cast<wxPenStyle>(cellReader.r_s32());
-			cell->m_borderAt[3].m_width = cellReader.r_s32();
-			cell->m_borderAt[3].m_colour = typeConv::StringToColour(cellReader.r_stringZ());
-
-			cell->m_row_size = cellReader.r_s32();
-			cell->m_col_size = cellReader.r_s32();
-
-			cell->m_fitMode = static_cast<CSpreadsheetCellDescription::EFitMode>(cellReader.r_s32());
-			cell->m_isReadOnly = cellReader.r_u8();
-
-			cell->m_fillSetType = static_cast<enSpreadsheetFillType>(cellReader.r_s32());
+			CSpreadsheetCellDescriptionMemory::LoadData(cellReader,
+				*spreadsheetDesc.GetOrCreateCell(row, col));
 		}
 	}
 
@@ -93,7 +143,7 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 		for (u64 c = 0; c < capacity; c++) {
 
 			wxString areaLabel = areaReader.r_stringZ();
-			
+
 			int start = areaReader.r_s32(),
 				end = areaReader.r_s32();
 
@@ -147,7 +197,7 @@ bool CSpreadsheetDescriptionMemory::LoadData(CMemoryReader& reader, CSpreadsheet
 	return true;
 }
 
-bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheetDescription& spreadsheetDesc)
+bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, const CSpreadsheetDescription& spreadsheetDesc)
 {
 	CMemoryWriter mainWriter;
 
@@ -159,46 +209,15 @@ bool CSpreadsheetDescriptionMemory::SaveData(CMemoryWriter& writer, CSpreadsheet
 	CMemoryWriter cellWriter;
 	cellWriter.w_u64(spreadsheetDesc.GetCellCount());
 
-	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++)
-	{
+	for (int idx = 0; idx < spreadsheetDesc.GetCellCount(); idx++) {
+
 		const CSpreadsheetCellDescription* cell = spreadsheetDesc.GetCellByIdx(idx);
 
 		cellWriter.w_s32(cell->m_row);
 		cellWriter.w_s32(cell->m_col);
 
-		cellWriter.w_stringZ(cell->m_value);
-
-		cellWriter.w_s32(cell->m_alignHorz);
-		cellWriter.w_s32(cell->m_alignVert);
-		cellWriter.w_s32(cell->m_textOrient);
-
-		cellWriter.w_stringZ(typeConv::FontToString(cell->m_font));
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_backgroundColour));
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_textColour));
-
-		cellWriter.w_s32(cell->m_borderAt[0].m_style);
-		cellWriter.w_s32(cell->m_borderAt[0].m_width);
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[0].m_colour));
-
-		cellWriter.w_s32(cell->m_borderAt[1].m_style);
-		cellWriter.w_s32(cell->m_borderAt[1].m_width);
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[1].m_colour));
-
-		cellWriter.w_s32(cell->m_borderAt[2].m_style);
-		cellWriter.w_s32(cell->m_borderAt[2].m_width);
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[2].m_colour));
-
-		cellWriter.w_s32(cell->m_borderAt[3].m_style);
-		cellWriter.w_s32(cell->m_borderAt[3].m_width);
-		cellWriter.w_stringZ(typeConv::ColourToString(cell->m_borderAt[3].m_colour));
-
-		cellWriter.w_s32(cell->m_row_size);
-		cellWriter.w_s32(cell->m_col_size);
-
-		cellWriter.w_s32(cell->m_fitMode);
-		cellWriter.w_s8(cell->m_isReadOnly);
-
-		cellWriter.w_s32(cell->m_fillSetType);
+		CSpreadsheetCellDescriptionMemory::SaveData(cellWriter,
+			*spreadsheetDesc.GetCellByIdx(idx));
 	}
 
 	mainWriter.w_chunk(cell_block, cellWriter.buffer());

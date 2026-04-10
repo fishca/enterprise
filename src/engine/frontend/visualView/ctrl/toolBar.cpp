@@ -1,5 +1,5 @@
 #include "toolbar.h"
-#include "frontend/visualView/visualHost.h"
+#include "frontend/visualView/visualHostClient.h"
 #include "frontend/win/theme/luna_toolbarart.h"
 
 //***********************************************************************************

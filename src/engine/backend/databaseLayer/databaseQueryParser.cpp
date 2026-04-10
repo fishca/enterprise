@@ -16,8 +16,12 @@ bool IsEmptyQuery(const wxString& strQuery)
 	return true;
 }
 
+static wxCriticalSection m_csParseQueries;
+
 wxArrayString ParseQueries(const wxString& strQuery)
 {
+	wxCriticalSectionLocker enter(m_csParseQueries);
+
 	static wxArrayString arrString; arrString.Empty();
 	static wxString strRaw; static bool bInQuote = false;
 

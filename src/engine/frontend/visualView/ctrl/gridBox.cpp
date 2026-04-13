@@ -78,7 +78,7 @@ bool ibValueGridBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueGridBox::SaveData(ibWriterMemory writer)
+bool ibValueGridBox::SaveData(ibWriterMemory& writer)
 {
 	ibSpreadsheetDescriptionMemory::SaveData(writer, m_valueSpreadsheet->GetSpreadsheetDesc());
 	return ibValueWindow::SaveData(writer);

@@ -48,7 +48,7 @@ bool ibValueChoice::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueChoice::SaveData(ibWriterMemory writer)
+bool ibValueChoice::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

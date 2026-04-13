@@ -61,7 +61,7 @@ public:
 
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory writer = ibWriterMemory());
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	/**
 	* Support default menu
@@ -220,7 +220,7 @@ public:
 
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory writer = ibWriterMemory());
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 	bool GetToolAction(ibEventAction* evtList);
@@ -275,7 +275,7 @@ public:
 
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory writer = ibWriterMemory());
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	friend class ibValueForm;
 	friend class ibValueToolbar;

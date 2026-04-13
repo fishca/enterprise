@@ -177,7 +177,7 @@ bool ibValueCheckbox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueCheckbox::SaveData(ibWriterMemory writer)
+bool ibValueCheckbox::SaveData(ibWriterMemory& writer)
 {
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 	writer.w_s32(m_propertyTitleLocation->GetValueAsInteger());

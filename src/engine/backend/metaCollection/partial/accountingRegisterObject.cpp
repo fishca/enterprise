@@ -11,8 +11,8 @@
 //TODO: Implement WriteRecordSet, DeleteRecordSet, SaveVirtualTable, DeleteVirtualTable
 // Following the same pattern as accumulationRegisterObject.cpp
 
-bool ibValueRecordSetObjectAccountingRegister::WriteRecordSet(bool replace, bool clearTable) { return ibValueRecordSetObject::WriteRecordSet(replace, clearTable); }
-bool ibValueRecordSetObjectAccountingRegister::DeleteRecordSet() { return ibValueRecordSetObject::DeleteRecordSet(); }
+bool ibValueRecordSetObjectAccountingRegister::WriteRecordSet(bool replace, bool clearTable) { return false; }
+bool ibValueRecordSetObjectAccountingRegister::DeleteRecordSet() { return false; }
 bool ibValueRecordSetObjectAccountingRegister::SaveVirtualTable() { return true; }
 bool ibValueRecordSetObjectAccountingRegister::DeleteVirtualTable() { return true; }
 

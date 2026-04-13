@@ -232,7 +232,7 @@ bool ibValueSizerItem::LoadData(ibReaderMemory& reader)
 	return ibValueFrame::LoadData(reader);
 }
 
-bool ibValueSizerItem::SaveData(ibWriterMemory writer)
+bool ibValueSizerItem::SaveData(ibWriterMemory& writer)
 {
 	//writer.w_s32(m_propertyProportion->GetValueAsInteger());
 	//writer.w_s64(m_propertyFlagBorder->GetValueAsInteger());

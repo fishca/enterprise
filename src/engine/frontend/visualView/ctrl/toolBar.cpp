@@ -95,7 +95,7 @@ bool ibValueToolbar::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueToolbar::SaveData(ibWriterMemory writer)
+bool ibValueToolbar::SaveData(ibWriterMemory& writer)
 {
 	m_actSource->SaveData(writer);
 	return ibValueWindow::SaveData(writer);

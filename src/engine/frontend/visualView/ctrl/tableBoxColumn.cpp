@@ -283,7 +283,7 @@ bool ibValueModelTableBoxColumn::LoadData(ibReaderMemory& reader)
 	return ibValueControl::LoadData(reader);
 }
 
-bool ibValueModelTableBoxColumn::SaveData(ibWriterMemory writer)
+bool ibValueModelTableBoxColumn::SaveData(ibWriterMemory& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);

@@ -63,7 +63,7 @@ bool ibValueHTMLBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueHTMLBox::SaveData(ibWriterMemory writer)
+bool ibValueHTMLBox::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

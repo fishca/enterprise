@@ -70,7 +70,7 @@ bool ibValueButton::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueButton::SaveData(ibWriterMemory writer)
+bool ibValueButton::SaveData(ibWriterMemory& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);

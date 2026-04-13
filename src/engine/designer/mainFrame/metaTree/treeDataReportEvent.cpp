@@ -53,9 +53,7 @@ void ibDataReportTree::ibDataReportTreeCtrl::OnRightDown(wxMouseEvent &event)
 	if (curItem.IsOk())
 	{
 		SelectItem(curItem); SetFocus();
-#ifdef __WXOSX__
 		m_ownerTree->ShowContextMenu(this, curItem, event.GetPosition());
-#endif
 	}
 
 #ifndef __WXOSX__

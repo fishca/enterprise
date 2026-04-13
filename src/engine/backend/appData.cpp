@@ -109,11 +109,7 @@ bool ibApplicationData::CreateAppDataEnv(ibRunMode runMode)
 	return false;
 }
 
-#ifdef OES_USE_FIREBIRD
 #define sys_db wxT("sys.fdb")
-#else
-#define sys_db wxT("sys.sqlite")
-#endif
 
 bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale)
 {
@@ -121,11 +117,8 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-#ifdef OES_USE_FIREBIRD
 		std::shared_ptr<ibDatabaseLayerFirebird> db(new ibDatabaseLayerFirebird());
-#else
-		std::shared_ptr<ibDatabaseLayerSQLite> db(new ibDatabaseLayerSQLite());
-#endif
+
 		wxString pathSep = wxFileName::GetPathSeparator();
 		if (db->Open(strDirDatabase + pathSep + sys_db)) {
 
@@ -171,21 +164,8 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
-
-#ifdef OES_USE_FIREBIRD
-		// Try Firebird server first
-		std::shared_ptr<ibDatabaseLayerFirebird> db(new ibDatabaseLayerFirebird(strServer, strDatabase, strUser, strPassword));
-		if (db->Open()) {
-#elif defined(OES_USE_POSTGRESQL)
 		std::shared_ptr<ibDatabaseLayerPostgres> db(new ibDatabaseLayerPostgres());
 		if (db->Open(strServer, strPort, strDatabase, strUser, strPassword)) {
-#else
-		wxUnusedVar(runMode); wxUnusedVar(strServer); wxUnusedVar(strPort);
-		wxUnusedVar(strUser); wxUnusedVar(strPassword); wxUnusedVar(strDatabase); wxUnusedVar(strLocale);
-		return false;
-	}
-	if (false) {
-#endif
 
 			s_instance = new ibApplicationData(runMode);
 

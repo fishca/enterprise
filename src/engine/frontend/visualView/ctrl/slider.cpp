@@ -76,7 +76,7 @@ bool ibValueSlider::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueSlider::SaveData(ibWriterMemory writer)
+bool ibValueSlider::SaveData(ibWriterMemory& writer)
 {
 	writer.w_s32(m_propertyMinValue->GetValueAsInteger());
 	writer.w_s32(m_propertyMaxValue->GetValueAsInteger());

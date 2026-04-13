@@ -69,8 +69,8 @@ public:
 	virtual bool AuthenticationUser(const wxString& userName, const wxString& userPassword) const { return false; }
 
 public:
-	virtual void OnInitializeConfiguration(int cfg) {}
-	virtual void OnDestroyConfiguration(int cfg) {}
+	virtual void OnInitializeConfiguration(enum ibConfigType cfg) {}
+	virtual void OnDestroyConfiguration(enum ibConfigType cfg) {}
 private:
 	static ibBackendDocMDIFrame* ms_mainFrame;
 };

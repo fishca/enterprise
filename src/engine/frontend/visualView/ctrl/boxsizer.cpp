@@ -45,7 +45,7 @@ bool ibValueBoxSizer::LoadData(ibReaderMemory &reader)
 	return ibValueSizer::LoadData(reader);
 }
 
-bool ibValueBoxSizer::SaveData(ibWriterMemory writer)
+bool ibValueBoxSizer::SaveData(ibWriterMemory& writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
 	return ibValueSizer::SaveData(writer);

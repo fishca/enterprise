@@ -69,7 +69,7 @@ bool ibValueTextBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueTextBox::SaveData(ibWriterMemory writer)
+bool ibValueTextBox::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

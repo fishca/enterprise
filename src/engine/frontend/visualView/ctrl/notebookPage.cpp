@@ -130,7 +130,7 @@ bool ibValueNotebookPage::LoadData(ibReaderMemory& reader)
     return ibValueControl::LoadData(reader);
 }
 
-bool ibValueNotebookPage::SaveData(ibWriterMemory writer)
+bool ibValueNotebookPage::SaveData(ibWriterMemory& writer)
 {
     m_propertyTitle->SaveData(writer);
     m_propertyRepresentation->SaveData(writer);

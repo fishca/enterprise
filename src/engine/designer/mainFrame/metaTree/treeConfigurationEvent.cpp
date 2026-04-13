@@ -54,10 +54,9 @@ void ibMetadataTree::ibMetaTreeCtrl::OnRightDown(wxMouseEvent& event)
 	if (curItem.IsOk())
 	{
 		SelectItem(curItem); SetFocus();
-#ifdef __WXOSX__
+
 		// On macOS, show context menu on mouse-down
 		m_ownerTree->ShowContextMenu(this, curItem, event.GetPosition());
-#endif
 	}
 
 #ifndef __WXOSX__

@@ -266,7 +266,7 @@ bool ibValueToolBarItem::LoadData(ibReaderMemory& reader)
 	return ibValueControl::LoadData(reader);
 }
 
-bool ibValueToolBarItem::SaveData(ibWriterMemory writer)
+bool ibValueToolBarItem::SaveData(ibWriterMemory& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyPicture->SaveData(writer);
@@ -286,7 +286,7 @@ bool ibValueToolBarSeparator::LoadData(ibReaderMemory& reader)
 	return ibValueControl::LoadData(reader);
 }
 
-bool ibValueToolBarSeparator::SaveData(ibWriterMemory writer)
+bool ibValueToolBarSeparator::SaveData(ibWriterMemory& writer)
 {
 	return ibValueControl::SaveData(writer);
 }

@@ -51,7 +51,7 @@ bool ibValueRadioButton::LoadData(ibReaderMemory &reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueRadioButton::SaveData(ibWriterMemory writer)
+bool ibValueRadioButton::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

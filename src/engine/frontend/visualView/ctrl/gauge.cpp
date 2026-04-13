@@ -69,7 +69,7 @@ bool ibValueGauge::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueGauge::SaveData(ibWriterMemory writer)
+bool ibValueGauge::SaveData(ibWriterMemory& writer)
 {
 	writer.w_s32(m_propertyRange->GetValueAsInteger());
 	writer.w_s32(m_propertyValue->GetValueAsInteger());

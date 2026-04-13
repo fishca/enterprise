@@ -49,7 +49,7 @@ bool ibValueComboBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueComboBox::SaveData(ibWriterMemory writer)
+bool ibValueComboBox::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

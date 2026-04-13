@@ -97,7 +97,7 @@ bool ibValueStaticBoxSizer::LoadData(ibReaderMemory& reader)
 	return ibValueSizer::LoadData(reader);
 }
 
-bool ibValueStaticBoxSizer::SaveData(ibWriterMemory writer)
+bool ibValueStaticBoxSizer::SaveData(ibWriterMemory& writer)
 {
 	writer.w_u16(m_propertyOrient->GetValueAsInteger());
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());

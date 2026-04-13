@@ -78,7 +78,7 @@ bool ibValueForm::LoadData(ibReaderMemory& reader)
 	return ibValueFrame::LoadData(reader);
 }
 
-bool ibValueForm::SaveData(ibWriterMemory writer)
+bool ibValueForm::SaveData(ibWriterMemory& writer)
 {
 	writer.w_stringZ(m_propertyTitle->GetValueAsString());
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());

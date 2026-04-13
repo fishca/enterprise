@@ -110,7 +110,7 @@ bool ibValueNotebook::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueNotebook::SaveData(ibWriterMemory writer)
+bool ibValueNotebook::SaveData(ibWriterMemory& writer)
 {
 	writer.w_s32(m_propertyOrient->GetValueAsInteger());
 

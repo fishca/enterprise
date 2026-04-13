@@ -160,7 +160,7 @@ bool ibValueChartBox::LoadData(ibReaderMemory &reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueChartBox::SaveData(ibWriterMemory writer)
+bool ibValueChartBox::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

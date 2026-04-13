@@ -489,7 +489,7 @@ bool ibValueModelTableBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueModelTableBox::SaveData(ibWriterMemory writer)
+bool ibValueModelTableBox::SaveData(ibWriterMemory& writer)
 {
 	if (!m_propertySource->SaveData(writer))
 		return false;

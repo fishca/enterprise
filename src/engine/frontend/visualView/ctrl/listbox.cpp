@@ -50,7 +50,7 @@ bool ibValueListBox::LoadData(ibReaderMemory& reader)
 	return ibValueWindow::LoadData(reader);
 }
 
-bool ibValueListBox::SaveData(ibWriterMemory writer)
+bool ibValueListBox::SaveData(ibWriterMemory& writer)
 {
 	return ibValueWindow::SaveData(writer);
 }

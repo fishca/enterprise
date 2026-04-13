@@ -29,8 +29,8 @@ const ibClassID g_controlFormCLSID = string_to_clsid("CT_FRME");
 //*                                      Value Frame                                         *
 //********************************************************************************************
 
-class FRONTEND_API ibValueForm : 
-	public ibBackendValueForm, public ibValueFrame, public ibModuleDataObject 
+class FRONTEND_API ibValueForm :
+	public ibBackendValueForm, public ibValueFrame, public ibModuleDataObject
 {
 	wxDECLARE_DYNAMIC_CLASS(ibValueForm);
 
@@ -285,10 +285,10 @@ public:
 
 	//load & save object in control 
 	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory writer = ibWriterMemory());
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 	virtual int GetComponentType() const { return COMPONENT_TYPE_FRAME; }
-	
+
 private:
 
 	void ClearRecursive(ibValueFrame* control);

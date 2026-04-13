@@ -249,9 +249,8 @@ private:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Predefined tabular section "SubcontoKinds" — own meta class with predefined columns
 	// Created manually because ibPropertyInnerAttribute template can't pass args to non-default constructor via wxClassInfo
-	ibValueMetaObjectSubcontoKindsTable* m_subcontoKindsTable = nullptr;
-
-	void InitSubcontoKindsTable();
+	ibPropertyInnerAttribute<ibValueMetaObjectSubcontoKindsTable>* m_propertySubcontoKindsTable =
+		ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<ibValueMetaObjectSubcontoKindsTable>>(m_categoryAccounting, wxT("SubcontoKinds"), _("Subconto kinds"));
 
 	friend class ibValueRecordDataObjectChartOfAccounts;
 	friend class ibMetaData;

@@ -249,8 +249,31 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 {
 	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
+
 	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 	wxASSERT(moduleManager);
+
+	// Set SubcontoKind column type from ПВХ binding
+	const ibMetaDescription& metaDesc = m_propertyChartOfCharacteristicTypes->GetValueAsMetaDesc();
+	if (m_subcontoKindsTable != nullptr && metaDesc.GetTypeCount() > 0) {
+		ibTypeDescription typeDesc;
+		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+			const ibValueMetaObject* chartOfCharTypes = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+			if (chartOfCharTypes != nullptr) {
+				const ibCtorMetaValueType* so = m_metaData->GetTypeCtor(chartOfCharTypes, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
+				wxASSERT(so);
+				typeDesc.AppendMetaType(so->GetClassType());
+			}
+		}
+		// Update SubcontoKind column type in predefined table
+		ibValueMetaObjectAttributeBase* kindAttr = m_subcontoKindsTable->FindAnyAttributeObjectByFilter(wxT("SubcontoKind"));
+		if (kindAttr != nullptr) {
+			kindAttr->GetTypeDesc().SetDefaultMetaType(typeDesc);
+		}
+		// Prevent deletion of predefined tabular section
+		m_subcontoKindsTable->SetFlag(metaDisableFlag);
+	}
+
 	if (appData->DesignerMode()) {
 		if (ibValueMetaObjectRecordDataHierarchyMutableRef::OnAfterRunMetaObject(flags))
 			return moduleManager->AddCompileModule(m_propertyModuleObject->GetMetaObject(), CreateObjectValue(ibObjectMode::OBJECT_ITEM));

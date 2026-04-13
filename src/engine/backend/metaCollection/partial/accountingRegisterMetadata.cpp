@@ -4,6 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "accountingRegister.h"
+#include "chartOfAccounts.h"
 #include "list/objectList.h"
 #include "backend/metadataConfiguration.h"
 #include "backend/moduleManager/moduleManager.h"
@@ -177,6 +178,37 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 		(*m_propertyAttributeAccount)->ClearFlag(metaDisableFlag);
 	else
 		(*m_propertyAttributeAccount)->SetFlag(metaDisableFlag);
+
+	// Set Subconto1/2/3 types from ПВХ linked to the Chart of Accounts
+	// Find the Chart of Accounts and get its ПВХ binding
+	for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
+		const ibValueMetaObject* chartOfAccounts = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
+		if (chartOfAccounts != nullptr) {
+			// Cast to ibValueMetaObjectChartOfAccounts to access ПВХ binding
+			const ibValueMetaObjectChartOfAccounts* chartOfAccountsObj = nullptr;
+			if (chartOfAccounts->ConvertToValue(chartOfAccountsObj) && chartOfAccountsObj != nullptr) {
+				ibPropertyOwner* pvhBinding = chartOfAccountsObj->GetChartOfCharacteristicTypes();
+				if (pvhBinding != nullptr) {
+					const ibMetaDescription& pvhDesc = pvhBinding->GetValueAsMetaDesc();
+					ibTypeDescription subcontoTypeDesc;
+					for (unsigned int pvhIdx = 0; pvhIdx < pvhDesc.GetTypeCount(); pvhIdx++) {
+						const ibValueMetaObject* pvh = m_metaData->FindAnyObjectByFilter(pvhDesc.GetByIdx(pvhIdx));
+						if (pvh != nullptr) {
+							const ibCtorMetaValueType* pvhCtor = m_metaData->GetTypeCtor(pvh, ibCtorObjectMetaType::ibCtorObjectMetaType_Reference);
+							if (pvhCtor != nullptr)
+								subcontoTypeDesc.AppendMetaType(pvhCtor->GetClassType());
+						}
+					}
+					// Set all subconto fields to accept ПВХ reference types
+					if (subcontoTypeDesc.GetClsidCount() > 0) {
+						(*m_propertyAttributeSubconto1)->SetDefaultMetaType(subcontoTypeDesc);
+						(*m_propertyAttributeSubconto2)->SetDefaultMetaType(subcontoTypeDesc);
+						(*m_propertyAttributeSubconto3)->SetDefaultMetaType(subcontoTypeDesc);
+					}
+				}
+			}
+		}
+	}
 
 	if (appData->DesignerMode()) {
 		if (ibValueMetaObjectRegisterData::OnAfterRunMetaObject(flags)) {

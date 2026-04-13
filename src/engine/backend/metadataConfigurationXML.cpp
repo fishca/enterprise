@@ -7,6 +7,7 @@
 #include "metaCollection/metaObject.h"
 #include "metaCollection/metaObjectMetadata.h"
 #include "metaCollection/metaModuleObject.h"
+#include "metaCollection/metaFormObject.h"
 #include "metaCollection/attribute/metaAttributeObject.h"
 #include "metaCollection/table/metaTableObject.h"
 
@@ -20,23 +21,17 @@
 
 namespace {
 
-wxString TypeToString(const ibValueTypes& type)
-{
-	switch (type) {
-	case ibValueTypes::TYPE_BOOLEAN: return wxT("Boolean");
-	case ibValueTypes::TYPE_NUMBER: return wxT("Number");
-	case ibValueTypes::TYPE_DATE: return wxT("Date");
-	case ibValueTypes::TYPE_STRING: return wxT("String");
-	case ibValueTypes::TYPE_REFFER: return wxT("Reference");
-	case ibValueTypes::TYPE_ENUM: return wxT("Enum");
-	default: return wxT("Empty");
-	}
-}
-
 void AddTextNode(wxXmlNode* parent, const wxString& name, const wxString& value)
 {
 	wxXmlNode* node = new wxXmlNode(wxXML_ELEMENT_NODE, name);
 	node->AddChild(new wxXmlNode(wxXML_TEXT_NODE, wxEmptyString, value));
+	parent->AddChild(node);
+}
+
+void AddCDataNode(wxXmlNode* parent, const wxString& name, const wxString& value)
+{
+	wxXmlNode* node = new wxXmlNode(wxXML_ELEMENT_NODE, name);
+	node->AddChild(new wxXmlNode(wxXML_CDATA_SECTION_NODE, wxEmptyString, value));
 	parent->AddChild(node);
 }
 
@@ -47,8 +42,12 @@ void SaveAttributeToXML(wxXmlNode* parent, ibValueMetaObjectAttributeBase* attr)
 	xmlAttr->AddAttribute(wxT("id"), wxString::Format(wxT("%d"), attr->GetMetaID()));
 
 	AddTextNode(xmlAttr, wxT("Name"), attr->GetName());
-	AddTextNode(xmlAttr, wxT("Synonym"), attr->GetSynonym());
 
+	const wxString synonym = attr->GetSynonym();
+	if (!synonym.IsEmpty())
+		AddTextNode(xmlAttr, wxT("Synonym"), synonym);
+
+	// Type information
 	const ibTypeDescription& typeDesc = attr->GetTypeDesc();
 	const auto& clsidList = typeDesc.GetClsidList();
 	if (!clsidList.empty()) {
@@ -64,12 +63,15 @@ void SaveAttributeToXML(wxXmlNode* parent, ibValueMetaObjectAttributeBase* attr)
 
 void SaveTableToXML(wxXmlNode* parent, ibValueMetaObjectTableData* table)
 {
-	wxXmlNode* xmlTable = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Table"));
+	wxXmlNode* xmlTable = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("TabularSection"));
 	xmlTable->AddAttribute(wxT("guid"), table->GetGuid().str());
 	xmlTable->AddAttribute(wxT("id"), wxString::Format(wxT("%d"), table->GetMetaID()));
 
 	AddTextNode(xmlTable, wxT("Name"), table->GetName());
-	AddTextNode(xmlTable, wxT("Synonym"), table->GetSynonym());
+
+	const wxString synonym = table->GetSynonym();
+	if (!synonym.IsEmpty())
+		AddTextNode(xmlTable, wxT("Synonym"), synonym);
 
 	// Table attributes (columns)
 	wxXmlNode* xmlAttrs = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Attributes"));
@@ -82,6 +84,40 @@ void SaveTableToXML(wxXmlNode* parent, ibValueMetaObjectTableData* table)
 	parent->AddChild(xmlTable);
 }
 
+void SaveFormToXML(wxXmlNode* parent, ibValueMetaObjectFormBase* form)
+{
+	wxXmlNode* xmlForm = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Form"));
+	xmlForm->AddAttribute(wxT("guid"), form->GetGuid().str());
+	xmlForm->AddAttribute(wxT("id"), wxString::Format(wxT("%d"), form->GetMetaID()));
+	xmlForm->AddAttribute(wxT("type"), wxString::Format(wxT("%d"), form->GetTypeForm()));
+
+	AddTextNode(xmlForm, wxT("Name"), form->GetName());
+
+	// Form layout as base64 (binary)
+	wxMemoryBuffer formData = form->GetFormData();
+	if (formData.GetDataLen() > 0) {
+		AddTextNode(xmlForm, wxT("FormData"), wxBase64Encode(formData));
+	}
+
+	// Form module
+	ibValueMetaObjectModule* moduleObj = nullptr;
+	if (form->ConvertToValue(moduleObj)) {
+		const wxString moduleText = moduleObj->GetModuleText();
+		if (!moduleText.IsEmpty())
+			AddCDataNode(xmlForm, wxT("Module"), moduleText);
+	}
+
+	parent->AddChild(xmlForm);
+}
+
+void SaveModuleToXML(wxXmlNode* parent, const wxString& moduleName, ibValueMetaObjectModule* moduleObj)
+{
+	if (moduleObj == nullptr) return;
+	const wxString moduleText = moduleObj->GetModuleText();
+	if (!moduleText.IsEmpty())
+		AddCDataNode(parent, moduleName, moduleText);
+}
+
 void SaveMetaObjectToXML(wxXmlNode* parent, ibValueMetaObject* metaObject, const wxString& elementName)
 {
 	wxXmlNode* xmlObj = new wxXmlNode(wxXML_ELEMENT_NODE, elementName);
@@ -90,35 +126,57 @@ void SaveMetaObjectToXML(wxXmlNode* parent, ibValueMetaObject* metaObject, const
 	xmlObj->AddAttribute(wxT("clsid"), clsid_to_string(metaObject->GetClassType()));
 
 	AddTextNode(xmlObj, wxT("Name"), metaObject->GetName());
-	AddTextNode(xmlObj, wxT("Synonym"), metaObject->GetSynonym());
+
+	const wxString synonym = metaObject->GetSynonym();
+	if (!synonym.IsEmpty() && synonym != metaObject->GetName())
+		AddTextNode(xmlObj, wxT("Synonym"), synonym);
 
 	if (!metaObject->GetComment().IsEmpty())
 		AddTextNode(xmlObj, wxT("Comment"), metaObject->GetComment());
 
-	// Save child attributes
+	// Save child attributes and tables (for record-based objects)
 	ibValueMetaObjectRecordData* recordData = nullptr;
 	if (metaObject->ConvertToValue(recordData)) {
 		// User-defined attributes
-		wxXmlNode* xmlAttrs = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Attributes"));
-		for (auto attr : recordData->GetAttributeArrayObject()) {
-			if (attr->IsDeleted()) continue;
-			SaveAttributeToXML(xmlAttrs, attr);
+		auto attrs = recordData->GetAttributeArrayObject();
+		if (!attrs.empty()) {
+			wxXmlNode* xmlAttrs = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Attributes"));
+			for (auto attr : attrs) {
+				if (attr->IsDeleted()) continue;
+				SaveAttributeToXML(xmlAttrs, attr);
+			}
+			xmlObj->AddChild(xmlAttrs);
 		}
-		xmlObj->AddChild(xmlAttrs);
 
-		// Tables
-		wxXmlNode* xmlTables = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Tables"));
-		for (auto table : recordData->GetTableArrayObject()) {
-			if (table->IsDeleted()) continue;
-			SaveTableToXML(xmlTables, table);
+		// Tabular sections
+		auto tables = recordData->GetTableArrayObject();
+		if (!tables.empty()) {
+			wxXmlNode* xmlTables = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("TabularSections"));
+			for (auto table : tables) {
+				if (table->IsDeleted()) continue;
+				SaveTableToXML(xmlTables, table);
+			}
+			xmlObj->AddChild(xmlTables);
 		}
-		xmlObj->AddChild(xmlTables);
+
+		// Forms
+		auto forms = recordData->GetFormArrayObject();
+		if (!forms.empty()) {
+			wxXmlNode* xmlForms = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Forms"));
+			for (auto form : forms) {
+				if (form->IsDeleted()) continue;
+				SaveFormToXML(xmlForms, form);
+			}
+			xmlObj->AddChild(xmlForms);
+		}
 	}
 
-	// Save module code
-	ibValueMetaObjectModule* moduleObj = nullptr;
-	if (metaObject->ConvertToValue(moduleObj)) {
-		// Module source available — save as CDATA
+	// Save common module code (for CommonModule objects)
+	ibValueMetaObjectCommonModule* commonModule = nullptr;
+	if (metaObject->ConvertToValue(commonModule)) {
+		const wxString text = commonModule->GetModuleText();
+		if (!text.IsEmpty())
+			AddCDataNode(xmlObj, wxT("Module"), text);
 	}
 
 	parent->AddChild(xmlObj);
@@ -140,11 +198,37 @@ bool ibMetaDataConfigurationBase::SaveConfigToXML(const wxString& strFileName)
 	wxXmlNode* root = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Configuration"));
 	root->AddAttribute(wxT("guid"), GetConfigGuid().str());
 	root->AddAttribute(wxT("version"), wxT("1"));
+	root->AddAttribute(wxT("format"), wxT("OES-XML-1.0"));
 
 	AddTextNode(root, wxT("Name"), commonMetaObject->GetName());
-	AddTextNode(root, wxT("Synonym"), commonMetaObject->GetSynonym());
 
-	// Group metadata objects by type
+	const wxString synonym = commonMetaObject->GetSynonym();
+	if (!synonym.IsEmpty())
+		AddTextNode(root, wxT("Synonym"), synonym);
+
+	// Common modules
+	auto commonModules = GetAnyArrayObject(g_metaCommonModuleCLSID);
+	if (!commonModules.empty()) {
+		wxXmlNode* xmlGroup = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("CommonModules"));
+		for (auto obj : commonModules) {
+			if (obj->IsDeleted()) continue;
+			SaveMetaObjectToXML(xmlGroup, obj, wxT("CommonModule"));
+		}
+		root->AddChild(xmlGroup);
+	}
+
+	// Common forms
+	auto commonForms = GetAnyArrayObject(g_metaCommonFormCLSID);
+	if (!commonForms.empty()) {
+		wxXmlNode* xmlGroup = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("CommonForms"));
+		for (auto obj : commonForms) {
+			if (obj->IsDeleted()) continue;
+			SaveMetaObjectToXML(xmlGroup, obj, wxT("CommonForm"));
+		}
+		root->AddChild(xmlGroup);
+	}
+
+	// Business object groups
 	struct TypeGroup {
 		ibClassID clsid;
 		wxString groupName;
@@ -178,17 +262,6 @@ bool ibMetaDataConfigurationBase::SaveConfigToXML(const wxString& strFileName)
 		root->AddChild(xmlGroup);
 	}
 
-	// Common modules
-	auto commonModules = GetAnyArrayObject(g_metaCommonModuleCLSID);
-	if (!commonModules.empty()) {
-		wxXmlNode* xmlModules = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("CommonModules"));
-		for (auto obj : commonModules) {
-			if (obj->IsDeleted()) continue;
-			SaveMetaObjectToXML(xmlModules, obj, wxT("CommonModule"));
-		}
-		root->AddChild(xmlModules);
-	}
-
 	doc.SetRoot(root);
 
 	wxFileOutputStream stream(strFileName);
@@ -205,8 +278,5 @@ bool ibMetaDataConfigurationBase::SaveConfigToXML(const wxString& strFileName)
 bool ibMetaDataConfigurationBase::LoadConfigFromXML(const wxString& strFileName)
 {
 	//TODO: Implement XML import — parse XML, create metadata objects
-	// This requires creating metadata objects from XML elements,
-	// which involves the metadata factory system.
-	// For now, only export is implemented.
 	return false;
 }

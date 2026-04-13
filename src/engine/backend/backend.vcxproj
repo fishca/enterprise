@@ -489,6 +489,7 @@
     <ClCompile Include="metaCollection\table\metaTableObject_res.cpp" />
     <ClCompile Include="metadata.cpp" />
     <ClCompile Include="metadataConfiguration.cpp" />
+    <ClCompile Include="metadataConfigurationXML.cpp" />
     <ClCompile Include="metadataConfigurationQuery.cpp" />
     <ClCompile Include="metadataDataProcessor.cpp" />
     <ClCompile Include="metadataDataProcessorFactory.cpp" />

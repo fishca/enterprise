@@ -2,21 +2,25 @@
 
 bool ibValue::DoSerialize(wxString& strValue) const
 {
-	if (m_typeClass == ibValueTypes::TYPE_REFFER) 
+	if (m_typeClass == ibValueTypes::TYPE_REFFER)
 		return m_pRef->DoSerialize(strValue);
-	
+
 	switch (m_typeClass) {
 	case ibValueTypes::TYPE_NULL:
-		break;
+		strValue = wxEmptyString;
+		return true;
 	case ibValueTypes::TYPE_BOOLEAN:
-
-		break;
+		strValue = m_bData ? wxT("true") : wxT("false");
+		return true;
 	case ibValueTypes::TYPE_NUMBER:
-		break;
+		strValue = m_fData.ToString();
+		return true;
 	case ibValueTypes::TYPE_STRING:
-		break;
+		strValue = m_sData;
+		return true;
 	case ibValueTypes::TYPE_DATE:
-		break;
+		strValue = wxString::Format(wxT("%lld"), m_dData);
+		return true;
 	default:
 		break;
 	}
@@ -31,15 +35,29 @@ bool ibValue::DoDeserialize(const wxString& strValue)
 
 	switch (m_typeClass) {
 	case ibValueTypes::TYPE_NULL:
-		break;
+		return true;
 	case ibValueTypes::TYPE_BOOLEAN:
-		break;
-	case ibValueTypes::TYPE_NUMBER:
-		break;
+		m_bData = (strValue == wxT("true") || strValue == wxT("1"));
+		return true;
+	case ibValueTypes::TYPE_NUMBER: {
+		double dVal = 0;
+		if (strValue.ToDouble(&dVal)) {
+			m_fData = ibNumber(dVal);
+			return true;
+		}
+		return false;
+	}
 	case ibValueTypes::TYPE_STRING:
-		break;
-	case ibValueTypes::TYPE_DATE:
-		break;
+		m_sData = strValue;
+		return true;
+	case ibValueTypes::TYPE_DATE: {
+		wxLongLong_t val = 0;
+		if (strValue.ToLongLong(&val)) {
+			m_dData = val;
+			return true;
+		}
+		return false;
+	}
 	default:
 		break;
 	}

@@ -64,7 +64,7 @@ json SaveTypeDescriptionToJSON(const ibTypeDescription& typeDesc)
 
 	json jTypeIds = json::array();
 	for (const auto& clsid : clsidList) {
-		jTypeIds.push_back(WxToStd(clsid_to_string(clsid)));
+		jTypeIds.push_back((unsigned long long)clsid);
 	}
 	jType["typeIds"] = jTypeIds;
 
@@ -737,7 +737,7 @@ json SaveMetaObjectToJSON(ibValueMetaObject* metaObject)
 	json jObj = json::object();
 	jObj["guid"] = WxToStd(metaObject->GetGuid().str());
 	jObj["id"] = metaObject->GetMetaID();
-	jObj["clsid"] = WxToStd(clsid_to_string(metaObject->GetClassType()));
+	jObj["clsid"] = (unsigned long long)metaObject->GetClassType();
 	jObj["name"] = WxToStd(metaObject->GetName());
 
 	const wxString synonym = metaObject->GetSynonym();

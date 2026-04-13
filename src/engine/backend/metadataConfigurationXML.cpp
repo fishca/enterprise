@@ -63,7 +63,7 @@ void SaveTypeDescriptionToXML(wxXmlNode* parent, const ibTypeDescription& typeDe
 
 	wxXmlNode* xmlType = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Type"));
 	for (const auto& clsid : clsidList) {
-		AddTextNode(xmlType, wxT("TypeId"), clsid_to_string(clsid));
+		AddTextNode(xmlType, wxT("TypeId"), wxString::Format(wxT("%llu"), (unsigned long long)clsid));
 	}
 
 	// Number qualifiers
@@ -764,7 +764,7 @@ void SaveMetaObjectToXML(wxXmlNode* parent, ibValueMetaObject* metaObject, const
 	wxXmlNode* xmlObj = new wxXmlNode(wxXML_ELEMENT_NODE, elementName);
 	xmlObj->AddAttribute(wxT("guid"), metaObject->GetGuid().str());
 	xmlObj->AddAttribute(wxT("id"), wxString::Format(wxT("%d"), metaObject->GetMetaID()));
-	xmlObj->AddAttribute(wxT("clsid"), clsid_to_string(metaObject->GetClassType()));
+	xmlObj->AddAttribute(wxT("clsid"), wxString::Format(wxT("%llu"), (unsigned long long)metaObject->GetClassType()));
 
 	AddTextNode(xmlObj, wxT("Name"), metaObject->GetName());
 

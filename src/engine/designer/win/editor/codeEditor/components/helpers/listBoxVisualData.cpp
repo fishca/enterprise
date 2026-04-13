@@ -5,7 +5,7 @@
 #include <wx/rawbmp.h>
 #include <wx/xpmdecod.h>
 
-#if defined(__WXMSW__) || defined(__WXMAC__)
+#if defined(__WXMSW__) || defined(__WXOSX__)
 #define wxPy_premultiply(p, a)   ((p) * (a) / 0xff)
 #else
 #define wxPy_premultiply(p, a)   (p)
@@ -180,14 +180,9 @@ void ibListBoxVisualData::ComputeColours()
 	}
 	else
 	{
-#ifdef __WXOSX_COCOA__
-		if (m_useDefaultHighlightBgColour)
-			m_highlightBgColour = GetListHighlightColour();
-#else
 		if (m_useDefaultHighlightBgColour)
 			m_highlightBgColour =
 			wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
-#endif
 
 		if (m_useDefaultHighlightTextColour)
 			m_highlightTextColour =

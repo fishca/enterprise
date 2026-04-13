@@ -61,7 +61,7 @@ ibMetadataTree::ibMetadataTree(wxWindow* parent, int id)
 
 	//Create main tree
 	m_metaTreeCtrl = new ibMetaTreeCtrl(this);
-	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl->SetBackgroundColour(wxColour(250, 250, 250));
 
 	//set image list
 	m_metaTreeCtrl->AssignImageList(
@@ -112,7 +112,7 @@ ibMetadataTree::ibMetadataTree(ibMetaDocument* docParent, wxWindow* parent, int 
 
 	//Create main tree
 	m_metaTreeCtrl = new ibMetaTreeCtrl(this);
-	m_metaTreeCtrl->SetBackgroundColour(RGB(250, 250, 250));
+	m_metaTreeCtrl->SetBackgroundColour(wxColour(250, 250, 250));
 
 	//set image list
 	m_metaTreeCtrl->AssignImageList(
@@ -191,6 +191,8 @@ EVT_TREE_ITEM_EXPANDING(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnExpanding)
 
 EVT_TREE_BEGIN_DRAG(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnBeginDrag)
 EVT_TREE_END_DRAG(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnEndDrag)
+
+EVT_TREE_ITEM_ACTIVATED(wxID_ANY, ibMetadataTree::ibMetaTreeCtrl::OnItemActivated)
 
 EVT_MENU(ID_METATREE_NEW, ibMetadataTree::ibMetaTreeCtrl::OnCreateItem)
 EVT_MENU(ID_METATREE_EDIT, ibMetadataTree::ibMetaTreeCtrl::OnEditItem)

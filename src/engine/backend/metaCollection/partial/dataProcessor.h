@@ -92,7 +92,7 @@ protected:
 
 	//load & save metaData from DB 
 	virtual bool LoadData(ibReaderMemory& reader);
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
+	virtual bool SaveData(ibWriterMemory& writer);
 
 private:
 
@@ -129,7 +129,7 @@ public:
 		m_metaId = default_meta_id;
 	}
 
-	//Òreate from file?
+	//—Åreate from file?
 	virtual bool IsExternalCreate() const { return true; }
 };
 

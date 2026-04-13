@@ -96,6 +96,18 @@ int ibAppDesigner::OnRun()
 	// Get the data directory
 	bool ret = false;
 
+	if (m_strFile.IsEmpty() && m_strServer.IsEmpty()) {
+		// No command-line args â€” show folder picker
+		wxDirDialog dlg(nullptr, _("Select configuration database folder"),
+			wxStandardPaths::Get().GetDocumentsDir(),
+			wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST | wxDD_NEW_DIR_BUTTON);
+		if (dlg.ShowModal() == wxID_OK) {
+			m_strFile = dlg.GetPath();
+		} else {
+			return 0; // user cancelled
+		}
+	}
+
 	if (m_strFile.IsEmpty()) {
 		ret = appDataCreateServer(ibRunMode::eDESIGNER_MODE,
 			m_strServer, m_strPort, m_strUser, m_strPassword, m_strDatabase, m_strLocale
@@ -185,18 +197,22 @@ void ibAppDesigner::OnUnhandledException()
 {
 }
 
+#ifdef __WXMSW__
 #include "backend/system/value/valueOLE.h"
+#endif
 
 void ibAppDesigner::OnFatalException()
 {
 	//generate dump
 	wxDebugReport report;
 
-	report.AddCurrentDump();
-	report.AddExceptionDump();
+	report.AddCurrentContext();
+	report.AddCurrentContext();
 
 	//release all created com-objects
+#ifdef __WXMSW__
 	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
@@ -211,20 +227,24 @@ void ibAppDesigner::OnFatalException()
 int ibAppDesigner::OnExit()
 {
 	//release all created com-objects
+#ifdef __WXMSW__
 	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
 	mainFrameDestroy();
 
-	bool suñcess_exit = wxApp::OnExit();
+	bool suÑcess_exit = wxApp::OnExit();
 
 	appDataDestroy();
 
 	// Allow clipboard data to persist after close
-	wxTheClipboard->Flush();
-	wxTheClipboard->Close();
+	if (wxTheClipboard->Open()) {
+		wxTheClipboard->Flush();
+		wxTheClipboard->Close();
+	}
 
-	return suñcess_exit;
+	return suÑcess_exit;
 }

@@ -96,7 +96,9 @@ bool ibFrontendDocMDIFrame::Create(const wxString& title,
 	m_mgr.SetManagedWindow(this);
 	m_mgr.SetArtProvider(new wxAuiLunaDockArt());
 
+#ifdef __WXMSW__
 	SetIcon(wxICON(oes));
+#endif
 	return true;
 }
 
@@ -174,7 +176,14 @@ wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
 	class wxAuiMDIClientWindowImpl : public wxAuiMDIClientWindow {
 	public:
 		wxAuiMDIClientWindowImpl() : wxAuiMDIClientWindow() {}
-		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {}
+		wxAuiMDIClientWindowImpl(wxAuiMDIParentFrame* parent, long style = 0) : wxAuiMDIClientWindow(parent, style) {
+#ifdef __WXOSX__
+			SetBackgroundColour(wxColour(68, 88, 123)); // THEME_COLOUR_MAIN
+			SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+			Bind(wxEVT_PAINT, &wxAuiMDIClientWindowImpl::OnPaint, this);
+			Bind(wxEVT_ERASE_BACKGROUND, &wxAuiMDIClientWindowImpl::OnEraseBackground, this);
+#endif
+		}
 
 	protected:
 
@@ -185,6 +194,23 @@ wxAuiMDIClientWindow* ibFrontendDocMDIFrame::OnCreateClient()
 			wxAuiNotebook::Thaw();
 			return selection;
 		}
+
+#ifdef __WXOSX__
+		void OnPaint(wxPaintEvent& event) {
+			wxPaintDC dc(this);
+			dc.SetBackground(wxBrush(GetBackgroundColour()));
+			dc.Clear();
+			event.Skip();
+		}
+
+		void OnEraseBackground(wxEraseEvent& event) {
+			wxDC* dc = event.GetDC();
+			if (dc) {
+				dc->SetBackground(wxBrush(GetBackgroundColour()));
+				dc->Clear();
+			}
+		}
+#endif
 	};
 
 	return new wxAuiMDIClientWindowImpl(this);

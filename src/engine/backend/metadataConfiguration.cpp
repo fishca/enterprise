@@ -45,7 +45,7 @@ bool ibMetaDataConfigurationBase::Destroy()
 
 bool ibMetaDataConfigurationBase::LoadConfigFromFile(const wxString& strFileName)
 {
-	std::ifstream in(strFileName.ToStdWstring(), std::ios::in | std::ios::binary);
+	std::ifstream in(strFileName.ToStdString(), std::ios::in | std::ios::binary);
 
 	if (!in.is_open())
 		return false;
@@ -62,6 +62,7 @@ bool ibMetaDataConfigurationBase::LoadConfigFromFile(const wxString& strFileName
 	wxMemoryBuffer buffer(fsize);
 
 	in.read((char*)buffer.GetWriteBuf(fsize), fsize);
+	buffer.UngetWriteBuf(fsize);
 	in.close();
 
 	return LoadConfigFromBuffer(buffer);

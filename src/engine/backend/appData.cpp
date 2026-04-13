@@ -71,11 +71,13 @@ wxCriticalSection ibApplicationData::m_cs_force_exit;
 ///////////////////////////////////////////////////////////////////////////////
 
 ibApplicationData::ibApplicationData(ibRunMode runMode) :
-	m_db(nullptr), m_runMode(runMode), m_dbMode(ibDatabaseMode::eNONE),
-	m_sessionGuid(wxNewUniqueGuid),
-	m_startedDate(wxDateTime::Now()),
+	m_runMode(runMode),
 	m_strComputer(wxGetHostName()),
+	m_startedDate(wxDateTime::Now()),
+	m_sessionGuid(wxNewUniqueGuid),
+	m_db(nullptr),
 	m_sessionUpdater(nullptr),
+	m_dbMode(ibDatabaseMode::eNONE),
 	m_locale_lang(wxLanguage::wxLANGUAGE_UNKNOWN)
 {
 }
@@ -107,7 +109,11 @@ bool ibApplicationData::CreateAppDataEnv(ibRunMode runMode)
 	return false;
 }
 
+#ifdef OES_USE_FIREBIRD
 #define sys_db wxT("sys.fdb")
+#else
+#define sys_db wxT("sys.sqlite")
+#endif
 
 bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& strDirDatabase, const wxString& strLocale)
 {
@@ -115,9 +121,13 @@ bool ibApplicationData::CreateFileAppDataEnv(ibRunMode runMode, const wxString& 
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
+#ifdef OES_USE_FIREBIRD
 		std::shared_ptr<ibDatabaseLayerFirebird> db(new ibDatabaseLayerFirebird());
-
-		if (db->Open(strDirDatabase + wxT("\\") + sys_db)) {
+#else
+		std::shared_ptr<ibDatabaseLayerSQLite> db(new ibDatabaseLayerSQLite());
+#endif
+		wxString pathSep = wxFileName::GetPathSeparator();
+		if (db->Open(strDirDatabase + pathSep + sys_db)) {
 
 			s_instance = new ibApplicationData(runMode);
 			s_instance->m_strFile = strDirDatabase;
@@ -161,8 +171,21 @@ bool ibApplicationData::CreateServerAppDataEnv(ibRunMode runMode, const wxString
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
 	try {
 #endif
+
+#ifdef OES_USE_FIREBIRD
+		// Try Firebird server first
+		std::shared_ptr<ibDatabaseLayerFirebird> db(new ibDatabaseLayerFirebird(strServer, strDatabase, strUser, strPassword));
+		if (db->Open()) {
+#elif defined(OES_USE_POSTGRESQL)
 		std::shared_ptr<ibDatabaseLayerPostgres> db(new ibDatabaseLayerPostgres());
 		if (db->Open(strServer, strPort, strDatabase, strUser, strPassword)) {
+#else
+		wxUnusedVar(runMode); wxUnusedVar(strServer); wxUnusedVar(strPort);
+		wxUnusedVar(strUser); wxUnusedVar(strPassword); wxUnusedVar(strDatabase); wxUnusedVar(strLocale);
+		return false;
+	}
+	if (false) {
+#endif
 
 			s_instance = new ibApplicationData(runMode);
 
@@ -250,6 +273,8 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 #endif // WXDEBUG
 
 		m_locale_lang = wxLocale::GetSystemLanguage();
+		if (m_locale_lang == wxLanguage::wxLANGUAGE_UNKNOWN)
+			m_locale_lang = wxLanguage::wxLANGUAGE_DEFAULT;
 
 		if (!locale.IsEmpty()) {
 			const wxLanguageInfo* foundedLocale = wxLocale::FindLanguageInfo(locale);
@@ -276,6 +301,12 @@ bool ibApplicationData::InitLocale(const wxString& locale)
 
 		wxLocale::AddCatalogLookupPathPrefix(workingDir + wxFILE_SEP_PATH + wxT("lang"));
 		wxLocale::AddCatalogLookupPathPrefix(fn.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
+#if defined(__WXOSX__) || defined(__APPLE__)
+		// On macOS, also check outside .app bundle
+		wxFileName bundleLang(fn.GetPath());
+		bundleLang.RemoveLastDir(); bundleLang.RemoveLastDir(); bundleLang.RemoveLastDir();
+		wxLocale::AddCatalogLookupPathPrefix(bundleLang.GetPath() + wxFILE_SEP_PATH + wxT("lang"));
+#endif
 
 		if (!m_locale.Init(m_locale_lang)) {
 			if (!m_locale.Init(wxLanguage::wxLANGUAGE_ENGLISH))
@@ -345,8 +376,23 @@ void ibApplicationData::ReadEngineConfig()
 	}
 	else {
 		wxFileName fn(wxStandardPaths::Get().GetExecutablePath());
-		strConfigFile = fn.GetPath() +
-			wxFILE_SEP_PATH + BACKEND_CONF;
+		wxString exeDir = fn.GetPath();
+		if (wxFileName::FileExists(exeDir + wxFILE_SEP_PATH + BACKEND_CONF)) {
+			strConfigFile = exeDir + wxFILE_SEP_PATH + BACKEND_CONF;
+		}
+#if defined(__WXOSX__) || defined(__APPLE__)
+		// On macOS, exe is inside .app/Contents/MacOS/ — check 3 levels up
+		else {
+			wxFileName bundlePath(exeDir);
+			bundlePath.RemoveLastDir(); // MacOS
+			bundlePath.RemoveLastDir(); // Contents
+			bundlePath.RemoveLastDir(); // .app
+			wxString bundleDir = bundlePath.GetPath();
+			if (wxFileName::FileExists(bundleDir + wxFILE_SEP_PATH + BACKEND_CONF)) {
+				strConfigFile = bundleDir + wxFILE_SEP_PATH + BACKEND_CONF;
+			}
+		}
+#endif
 	}
 
 	wxFileConfig fc(wxT(""), wxT(""), wxT(""), strConfigFile);
@@ -654,7 +700,7 @@ wxMemoryBuffer ibApplicationData::SaveUserData_Role(const ibApplicationDataUserI
 {
 	ibWriterMemory writer;
 	writer.w_u32(userInfo.m_roleArray.size());
-	for (const auto role : userInfo.m_roleArray) {
+	for (const auto& role : userInfo.m_roleArray) {
 		writer.w_stringZ(role.m_strRoleGuid);
 		writer.w_s32(role.m_miRoleId);
 	}

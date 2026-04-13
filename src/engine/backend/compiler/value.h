@@ -4,7 +4,21 @@
 #include "backend/backend_core.h"
 #include "backend/compiler/typeCtor.h"
 
+// Forward declaration - full definition in value_ptr.h included at end of file
+template <class T> class ibValuePtr;
+
 extern BACKEND_API const ibValue wxEmptyValue;
+
+// Forward declarations for template classes used in ConvertToEnumType/ConvertToEnumValue
+template <typename valT> class ibValueEnumerationBase;
+template <typename valT> class ibValueEnumerationVariantBase;
+template <typename valT> class ibValueEnumeration;
+
+// Forward declarations for CastValue (defined in value_cast.h, included at end of file)
+template <typename T, typename U> static inline T* CastValue(U* ptr);
+template <typename T, typename U> static inline T* CastValue(const U* ptr);
+template <typename T, typename U> static inline T* CastValue(U& ptr);
+template <typename T, typename U> static inline T* CastValue(const U& ptr);
 
 class BACKEND_API ibBackendValue {
 public:
@@ -328,7 +342,7 @@ public:
 	virtual ~ibValue();
 
 	//clear values
-	inline void Reset();
+	void Reset();
 
 	//ref counter
 	void IncrRef() { wxAtomicInc(m_refCount); }
@@ -382,20 +396,20 @@ public:
 	}
 
 	template <typename enumType> inline enumType ConvertToEnumType() const {
-		class ibValueEnumerationBase<enumType>* enumValue =
-			CastValue<class ibValueEnumerationBase<enumType>>(this);
+		ibValueEnumerationBase<enumType>* enumValue =
+			CastValue<ibValueEnumerationBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType> inline enumType ConvertToEnumValue() {
-		class ibValueEnumerationVariantBase<enumType>* enumValue =
-			CastValue<class ibValueEnumerationVariantBase<enumType>>(this);
+		ibValueEnumerationVariantBase<enumType>* enumValue =
+			CastValue<ibValueEnumerationVariantBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType > inline enumType ConvertToEnumValue() const {
-		const class ibValueEnumerationVariantBase<enumType>* enumValue =
-			CastValue<class ibValueEnumerationVariantBase<enumType>>(this);
+		const ibValueEnumerationVariantBase<enumType>* enumValue =
+			CastValue<ibValueEnumerationVariantBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
@@ -497,11 +511,7 @@ public:
 	}
 
 	template<typename T, typename valT>
-	static ibValue* CreateAndConvertEnumObjectRef(const valT& v) {
-		ibValuePtr<ibValueEnumeration<valT>> createdEnum(ibValue::CreateAndConvertObjectRef<T>());
-		wxASSERT(createdEnum != nullptr);
-		return createdEnum->CreateEnumVariantValue(v);
-	}
+	static ibValue* CreateAndConvertEnumObjectRef(const valT& v);
 
 	static void RegisterCtor(ibCtorAbstractType* typeCtor);
 	static void UnRegisterCtor(ibCtorAbstractType*& typeCtor);
@@ -778,4 +788,51 @@ private:
 };
 #include "backend/value_ptr.h"
 #include "backend/value_cast.h"
-#endif 
+
+/////////////////////////////////////////////////////////////////////////
+// ibValue template implementations deferred until ibValuePtr is complete
+/////////////////////////////////////////////////////////////////////////
+
+template<typename T, typename valT>
+ibValue* ibValue::CreateAndConvertEnumObjectRef(const valT& v) {
+	ibValuePtr<ibValueEnumeration<valT>> createdEnum(ibValue::CreateAndConvertObjectRef<T>());
+	wxASSERT(createdEnum != nullptr);
+	return createdEnum->CreateEnumVariantValue(v);
+}
+
+/////////////////////////////////////////////////////////////////////////
+// value_register template implementations (deferred from typeCtor.h
+// because they require the complete ibValue type)
+/////////////////////////////////////////////////////////////////////////
+
+template<typename typeCtor>
+value_register<typeCtor>::value_register(typeCtor* so) : m_so(so) {
+	try {
+		if (m_so != nullptr) {
+			ibValue::RegisterCtor(m_so);
+		}
+	}
+	catch (...) {
+#ifdef DEBUG
+		wxLogDebug(wxT("! failed to register class: %s"), m_so->GetClassName());
+#endif
+		wxDELETE(m_so);
+	}
+}
+
+template<typename typeCtor>
+value_register<typeCtor>::~value_register() {
+	try {
+		if (m_so != nullptr) {
+			ibValue::UnRegisterCtor(m_so);
+		}
+	}
+	catch (...) {
+#ifdef DEBUG
+		wxLogDebug(wxT("! failed to unregister class: %s"), m_so->GetClassName());
+#endif
+		wxDELETE(m_so);
+	}
+}
+
+#endif

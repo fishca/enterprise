@@ -30,7 +30,7 @@ WX_PG_IMPLEMENT_INTERNAL_EDITOR_CLASS(ComboBoxAndButton,
 
 	// Position of button.
 	wxPoint bt_pos(pos.x + sz.x - bt_sz.x, pos.y);
-#ifdef __WXMAC__
+#ifdef __WXOSX__
 	bt_pos.y -= 1;
 #else
 	bt_pos.y += 1;
@@ -41,8 +41,8 @@ WX_PG_IMPLEMENT_INTERNAL_EDITOR_CLASS(ComboBoxAndButton,
 	// Size of choice.
 	wxSize ch_sz(sz.x - bt->GetSize().x, sz.y);
 
-#ifdef __WXMAC__
-	ch_sz.x -= wxPG_TEXTCTRL_AND_BUTTON_SPACING;
+#ifdef __WXOSX__
+	ch_sz.x -= 2; // was wxPG_TEXTCTRL_AND_BUTTON_SPACING, removed in wxWidgets 3.3
 #endif
 
 	wxWindow* ch = CreateControlsBase(propGrid, property,

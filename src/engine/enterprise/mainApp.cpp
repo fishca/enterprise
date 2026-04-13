@@ -192,18 +192,22 @@ void ibAppEnterprise::OnUnhandledException()
 {
 }
 
+#ifdef __WXMSW__
 #include "backend/system/value/valueOLE.h"
+#endif
 
 void ibAppEnterprise::OnFatalException()
 {
 	//generate dump
 	wxDebugReport report;
 
-	report.AddCurrentDump();
-	report.AddExceptionDump();
+	report.AddCurrentContext();
+	report.AddCurrentContext();
 
 	//release all created com-objects
+#ifdef __WXMSW__
 	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
@@ -218,20 +222,24 @@ void ibAppEnterprise::OnFatalException()
 int ibAppEnterprise::OnExit()
 {
 	//release all created com-objects
+#ifdef __WXMSW__
 	ibValueOLE::ReleaseComObjects();
+#endif
 
 	if (wxSocketBase::IsInitialized())
 		wxSocketBase::Shutdown();
 
 	mainFrameDestroy();
 
-	bool suñcess_exit = wxApp::OnExit();
+	bool suÑcess_exit = wxApp::OnExit();
 
 	appDataDestroy();
 
 	// Allow clipboard data to persist after close
-	wxTheClipboard->Flush();
-	wxTheClipboard->Close();
+	if (wxTheClipboard->Open()) {
+		wxTheClipboard->Flush();
+		wxTheClipboard->Close();
+	}
 
-	return suñcess_exit;
+	return suÑcess_exit;
 }

@@ -60,7 +60,7 @@ public:
 		m_listSession.emplace_back(runMode, startedTime, strUserName, strComputerName, strSession);
 	}
 
-	wxString GetSessionArrayHash() const { return m_sessionArrayHash; }
+	wxString GetSessionArrayHash() const { return wxString(m_sessionArrayHash.str()); }
 
 	wxString GetUserName(unsigned int idx) const;
 	wxString GetComputerName(unsigned int idx) const;
@@ -228,6 +228,8 @@ public:
 	inline wxString GetRunModeDescr(const ibRunMode& mode) const {
 		switch (mode)
 		{
+		case eLAUNCHER_MODE:
+			return wxEmptyString;
 		case eDESIGNER_MODE:
 			return _("Designer");
 		case eENTERPRISE_MODE:
@@ -245,6 +247,8 @@ public:
 	inline wxString GetDatabaseModeDescr(const ibDatabaseMode& mode) const {
 		switch (mode)
 		{
+		case eNONE:
+			return wxEmptyString;
 		case eFILE:
 			return _("File");
 		case eSERVER:

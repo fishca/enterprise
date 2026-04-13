@@ -136,7 +136,7 @@ public:
 	void SetHelpContent(const wxString& strHelpContent) { m_strHelpContent = strHelpContent; }
 
 	virtual void SetMetaData(ibMetaData* metaData) { m_metaData = metaData; }
-	virtual ibMetaData* GetMetaData() const { return m_metaData; }
+	virtual ibMetaData* GetMetaData() const override { return m_metaData; }
 
 	void ResetGuid();
 	void ResetId();
@@ -252,29 +252,29 @@ public:
 
 	//process choice 
 	virtual bool ProcessChoice(ibBackendControlFrame* ownerValue,
-		const wxString& strFormName, enum ibSelectMode selMode) {
+		const wxString& strFormName, int selMode) {
 		return true;
 	}
 
 	//methods 
-	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const override { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames();
 		return m_methodHelper;
 	}
 
-	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
+	virtual void PrepareNames() const override; // this method is automatically called to initialize attribute and method names.
 
-	//attributes 
-	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
+	//attributes
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal) override;        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal) override;                   //attribute value
 
 	//support icons
-	virtual wxIcon GetIcon() const { return wxNullIcon; }
+	virtual wxIcon GetIcon() const override { return wxNullIcon; }
 	static wxIcon GetIconGroup() { return wxNullIcon; }
 
 	//load & save object in metaObject 
 	bool LoadMeta(ibReaderMemory& dataReader);
-	bool SaveMeta(ibWriterMemory& dataWritter = ibWriterMemory());
+	bool SaveMeta(ibWriterMemory& dataWritter);
 
 	//load & save object
 	bool LoadMetaObject(ibMetaData* metaData, ibReaderMemory& dataReader);
@@ -313,13 +313,13 @@ public:
 	virtual void ProcessCommand(unsigned int id) {}
 
 	//check is empty
-	virtual bool IsEmpty() const { return false; }
+	virtual bool IsEmpty() const override { return false; }
 
 	virtual bool Init() final override;
 	virtual bool Init(ibValue** paParams, const long lSizeArray) final override;
 
 	//Is editable object? 
-	virtual bool IsEditable() const;
+	virtual bool IsEditable() const override;
 
 	//compare object 
 	virtual bool CompareObject(const ibValueMetaObject* metaObject) const;
@@ -327,10 +327,10 @@ public:
 	/**
 	* Property events
 	*/
-	virtual void OnPropertyCreated(ibProperty* property);
-	virtual void OnPropertySelected(ibProperty* property);
-	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue);
-	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue);
+	virtual void OnPropertyCreated(ibProperty* property) override;
+	virtual void OnPropertySelected(ibProperty* property) override;
+	virtual bool OnPropertyChanging(ibProperty* property, const wxVariant& newValue) override;
+	virtual void OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue) override;
 
 	/**
 	* Devuelve la posicion del hijo o GetChildCount() en caso de no encontrarlo
@@ -346,7 +346,7 @@ public:
 	//any
 	template <typename _T1 = ibValueMetaObject>
 	std::vector<_T1*> GetAnyArrayObject(
-		std::vector<_T1*>& array = std::vector<_T1*>()) const {
+		std::vector<_T1*> array = std::vector<_T1*>()) const {
 		FillArrayObjectByFilter<_T1>(array, {});
 		return array;
 	}
@@ -379,24 +379,24 @@ protected:
 
 	//load & save metaData from DB 
 	virtual bool LoadData(ibReaderMemory& reader) { return true; }
-	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory()) { return true; }
+	virtual bool SaveData(ibWriterMemory& writer) { return true; }
 	virtual bool DeleteData() { return true; }
 
 protected:
 
 #pragma region interface_h
-	virtual void DoSetInterface(const ibMetaID& id, const bool& val = true);
+	virtual void DoSetInterface(const ibMetaID& id, const bool& val = true) override;
 #pragma endregion
 
 #pragma region role_h
-	virtual void DoSetRight(const ibRole* role, const bool& val = true);
+	virtual void DoSetRight(const ibRole* role, const bool& val = true) override;
 #pragma endregion
 
 	//Check is full access 
-	virtual bool IsFullAccess() const;
+	virtual bool IsFullAccess() const override;
 
 	//Create user info
-	virtual ibRoleUserInfo GetUserRoleInfo() const;
+	virtual ibRoleUserInfo GetUserRoleInfo() const override;
 
 #pragma region __array_h__
 

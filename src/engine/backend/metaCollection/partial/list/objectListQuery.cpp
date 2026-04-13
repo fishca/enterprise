@@ -18,7 +18,7 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 
 	wxString queryText = wxT("");
 
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = wxString::Format("SELECT * FROM %s", tableName);
 	else
 		queryText = wxString::Format("SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM %s", tableName);
@@ -62,7 +62,7 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 		}
 	};
 
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
 	else
 		queryText = queryText + whereText + orderText;
@@ -70,7 +70,10 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 	ibValueMetaObjectAttributePredefined* metaReference = m_metaObject->GetDataReference();
 	ibValueMetaObjectAttributePredefined* metaOrder = m_metaObject->GetDataOrder();
 	ibValueModelTableBase::Clear();
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	if (statement == nullptr)
+		return;
+	int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
 			const ibValueMetaObjectAttributeBase* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
@@ -92,15 +95,16 @@ void ibValueListDataObjectEnumRef::RefreshModel(const ibDataViewItem& topItem, c
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	/////////////////////////////////////////////////////////
-	while (resultSet->Next()) {
-		ibGuid enumRow = resultSet->GetResultString(guidName);
-		ibValueTableEnumRow* rowData = new ibValueTableEnumRow(enumRow);
-		rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-		rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(enumRow)->GetParentPosition());
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
-	};
-
-	db_query->CloseResultSet(resultSet);
+	if (resultSet != nullptr) {
+		while (resultSet->Next()) {
+			ibGuid enumRow = resultSet->GetResultString(guidName);
+			ibValueTableEnumRow* rowData = new ibValueTableEnumRow(enumRow);
+			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			rowData->AppendTableValue(metaOrder->GetMetaID(), GetMetaObject()->FindEnumObjectByFilter(enumRow)->GetParentPosition());
+			ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		};
+		db_query->CloseResultSet(resultSet);
+	}
 	db_query->CloseStatement(statement);
 }
 
@@ -115,7 +119,7 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -168,7 +172,7 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 			}
 		};
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
@@ -227,7 +231,7 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -280,7 +284,7 @@ void ibValueListDataObjectEnumRef::RefreshItemModel(const ibDataViewItem& topIte
 			}
 		};
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
@@ -347,10 +351,10 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
 	wxString queryText;
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = wxString::Format("SELECT * FROM %s ", tableName);
 	else
-		queryText = wxString::Format("SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM % s ", tableName);
+		queryText = wxString::Format("SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM %s ", tableName);
 
 	wxString whereText; bool firstWhere = true;
 	for (auto& filter : m_filterRow.m_filters) {
@@ -416,7 +420,7 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 
 	const std::vector<ibValueMetaObjectAttributeBase*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
 	else
 		queryText = queryText + whereText + orderText;
@@ -425,7 +429,10 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 	/////////////////////////////////////////////////////////
 	ibValueModelTableBase::Clear();
 	/////////////////////////////////////////////////////////
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	if (statement == nullptr)
+		return;
+	int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
 			const ibValueMetaObjectAttributeBase* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
@@ -446,18 +453,19 @@ void ibValueListDataObjectRef::RefreshModel(const ibDataViewItem& topItem, const
 	ibValueModelTableBase::Reserve(countPerPage + 1);
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
-	while (resultSet->Next()) {
-		ibValueTableListRow* rowData = new ibValueTableListRow(resultSet->GetResultString(guidName));
-		for (auto& attribute : vec_attr) {
-			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
-				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
-		}
-		rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
-	};
-
-	db_query->CloseResultSet(resultSet);
+	if (resultSet != nullptr) {
+		while (resultSet->Next()) {
+			ibValueTableListRow* rowData = new ibValueTableListRow(resultSet->GetResultString(guidName));
+			for (auto& attribute : vec_attr) {
+				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
+					continue;
+				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			}
+			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+			ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
+		};
+		db_query->CloseResultSet(resultSet);
+	}
 	db_query->CloseStatement(statement);
 }
 
@@ -472,7 +480,7 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -557,7 +565,7 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		};
 		const std::vector<ibValueMetaObjectAttributeBase*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
@@ -627,7 +635,7 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -706,7 +714,7 @@ void ibValueListDataObjectRef::RefreshItemModel(const ibDataViewItem& topItem, c
 		};
 		const std::vector<ibValueMetaObjectAttributeBase*>& vec_attr = m_metaObject->GetGenericAttributeArrayObject();
 
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + orderText;
@@ -784,7 +792,7 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 
 	wxString queryText;
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = "SELECT * FROM " + tableName;
 	else
 		queryText = "SELECT FIRST " + stringUtils::IntToStr(countPerPage + 1) + " * FROM " + tableName;
@@ -830,13 +838,16 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 		}
 	};
 	/////////////////////////////////////////////////////////
-	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+	if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 		queryText = queryText + whereText + orderText + " LIMIT " + stringUtils::IntToStr(countPerPage + 1);
 	else
 		queryText = queryText + whereText + orderText;
 
 	ibValueModelTableBase::Clear();
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	if (statement == nullptr)
+		return;
+	int position = 1;
 	for (auto& filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
 			const ibValueMetaObjectAttributeBase* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
@@ -848,30 +859,31 @@ void ibValueListRegisterObject::RefreshModel(const ibDataViewItem& topItem, cons
 	ibValueModelTableBase::Reserve(countPerPage + 1);
 	/////////////////////////////////////////////////////////
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
-	while (resultSet->Next()) {
-		ibValueTableKeyRow* rowData = new ibValueTableKeyRow;
-		if (m_metaObject->HasRecorder()) {
-			ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
-			wxASSERT(attributeRecorder);
-			ibValueMetaObjectAttributeBase::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
-			ibValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
-			wxASSERT(attributeNumberLine);
-			ibValueMetaObjectAttributeBase::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
-		}
-		else {
-			for (auto& dimension : vec_dim) {
-				ibValueMetaObjectAttributeBase::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
+	if (resultSet != nullptr) {
+		while (resultSet->Next()) {
+			ibValueTableKeyRow* rowData = new ibValueTableKeyRow;
+			if (m_metaObject->HasRecorder()) {
+				ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+				wxASSERT(attributeRecorder);
+				ibValueMetaObjectAttributeBase::GetValueAttribute(attributeRecorder, rowData->AppendNodeValue(attributeRecorder->GetMetaID()), resultSet);
+				ibValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+				wxASSERT(attributeNumberLine);
+				ibValueMetaObjectAttributeBase::GetValueAttribute(attributeNumberLine, rowData->AppendNodeValue(attributeNumberLine->GetMetaID()), resultSet);
 			}
-		}
-		for (auto& attribute : vec_attr) {
-			ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
-		}
-		ibValueModelTableBase::Append(
-			rowData, !ibBackendException::IsEvalMode()
-		);
-	};
-
-	db_query->CloseResultSet(resultSet);
+			else {
+				for (auto& dimension : vec_dim) {
+					ibValueMetaObjectAttributeBase::GetValueAttribute(dimension, rowData->AppendNodeValue(dimension->GetMetaID()), resultSet);
+				}
+			}
+			for (auto& attribute : vec_attr) {
+				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			}
+			ibValueModelTableBase::Append(
+				rowData, !ibBackendException::IsEvalMode()
+			);
+		};
+		db_query->CloseResultSet(resultSet);
+	}
 	db_query->CloseStatement(statement);
 }
 
@@ -886,7 +898,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -953,7 +965,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 			vec_dim = m_metaObject->GetGenericDimentionArrayObject();
 
 		/////////////////////////////////////////////////////////
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText;
@@ -1022,7 +1034,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 		const wxString& tableName = m_metaObject->GetTableNameDB();
 
 		wxString queryText;
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = wxString::Format("SELECT * FROM %s ", tableName);
 		else
 			queryText = wxString::Format("SELECT FIRST 1 * FROM %s ", tableName);
@@ -1089,7 +1101,7 @@ void ibValueListRegisterObject::RefreshItemModel(const ibDataViewItem& topItem, 
 			vec_dim = m_metaObject->GetGenericDimentionArrayObject();
 
 		/////////////////////////////////////////////////////////
-		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
+		if (db_query->GetDatabaseLayerType() != DATABASELAYER_FIREBIRD)
 			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText + " LIMIT " + stringUtils::IntToStr(1);
 		else
 			queryText = queryText + whereText + " AND (" + dimText + ") " + orderText;
@@ -1195,7 +1207,10 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 	wxASSERT(metaReference);
 	queryText = queryText + whereText;
 	ibValueModelTreeBase::Clear();
-	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	if (statement == nullptr)
+		return;
+	int position = 1;
 	for (auto filter : m_filterRow.m_filters) {
 		if (filter.m_filterUse) {
 			const ibValueMetaObjectAttributeBase* attribute = m_metaObject->FindAnyAttributeObjectByFilter(filter.m_filterModel);
@@ -1215,36 +1230,39 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 	//////////////////////////////////////////////////
 	std::vector<ibValueTreeListNode*> arrTree;
 	//////////////////////////////////////////////////
-	
+
 	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
-	while (resultSet->Next()) {
+	if (resultSet != nullptr) {
+		while (resultSet->Next()) {
 
-		if (!ibValueMetaObjectAttributeBase::GetValueAttribute(metaIsFolder, isFolder, resultSet)) continue;
-		if (m_listMode == ibValueModelTreeDataObjectFolderRef::LIST_FOLDER && !isFolder.GetBoolean()) continue;
-		if (!ibValueMetaObjectAttributeBase::GetValueAttribute(metaParent, parent, resultSet)) continue;
+			if (!ibValueMetaObjectAttributeBase::GetValueAttribute(metaIsFolder, isFolder, resultSet)) continue;
+			if (m_listMode == ibValueModelTreeDataObjectFolderRef::LIST_FOLDER && !isFolder.GetBoolean()) continue;
+			if (!ibValueMetaObjectAttributeBase::GetValueAttribute(metaParent, parent, resultSet)) continue;
 
-		ibValueTreeListNode* rowData = new ibValueTreeListNode(nullptr, resultSet->GetResultString(guidName), this, isFolder.GetBoolean());
-		for (auto& attribute : vec_attr) {
-			if (m_metaObject->IsDataReference(attribute->GetMetaID()))
-				continue;
-			ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
-		}
-		rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
-		
-		//////////////////////////////////////////////////
-		arrTree.push_back(rowData);
-		//////////////////////////////////////////////////
-	};
+			ibValueTreeListNode* rowData = new ibValueTreeListNode(nullptr, resultSet->GetResultString(guidName), this, isFolder.GetBoolean());
+			for (auto& attribute : vec_attr) {
+				if (m_metaObject->IsDataReference(attribute->GetMetaID()))
+					continue;
+				ibValueMetaObjectAttributeBase::GetValueAttribute(attribute, rowData->AppendTableValue(attribute->GetMetaID()), resultSet);
+			}
+			rowData->AppendTableValue(metaReference->GetMetaID(), ibValueReferenceDataObject::CreateFromResultSet(resultSet, m_metaObject, rowData->GetGuid()));
+
+			//////////////////////////////////////////////////
+			arrTree.push_back(rowData);
+			//////////////////////////////////////////////////
+		};
+		db_query->CloseResultSet(resultSet);
+	}
 
 	/* wxDataViewModel::*/ m_modelProvider->BeforeReset();
 
 	static ibValue cReference;
 	for (const auto node : arrTree) {
-		
+
 		ibValueReferenceDataObject* reference = NULL;
 		if (node->GetValue(*m_metaObject->GetDataParent(), cReference)) {
 			if (cReference.ConvertToValue(reference)) {
-				
+
 				auto iterator = std::find_if(arrTree.begin(), arrTree.end(),
 					[reference](ibValueTreeListNode* node) { return reference->GetGuid() == node->GetGuid(); });
 
@@ -1258,7 +1276,6 @@ void ibValueModelTreeDataObjectFolderRef::RefreshModel(const ibDataViewItem& top
 
 	/* wxDataViewModel:: */ m_modelProvider->AfterReset();
 
-	db_query->CloseResultSet(resultSet);
 	db_query->CloseStatement(statement);
 }
 

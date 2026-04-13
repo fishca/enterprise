@@ -757,6 +757,40 @@ void ibMetadataTree::PrepareContextMenu(wxMenu* defaultMenu, const wxTreeItemId&
 	}
 }
 
+void ibMetadataTree::ShowContextMenu(wxWindow* eventSrc, const wxTreeItemId& item, const wxPoint& pos)
+{
+	wxMenu* innerMenu = new wxMenu;
+	PrepareContextMenu(innerMenu, item);
+
+	// Collect IDs of custom (non-standard) menu items
+	std::vector<int> boundIds;
+	for (auto def_menu : innerMenu->GetMenuItems())
+	{
+		const int id = def_menu->GetId();
+		if (id == ID_METATREE_NEW
+			|| id == ID_METATREE_EDIT
+			|| id == ID_METATREE_DELETE
+			|| id == ID_METATREE_PROPERTY
+			|| id == ID_METATREE_INSERT
+			|| id == ID_METATREE_REPLACE
+			|| id == ID_METATREE_SAVE
+			|| id == wxID_SEPARATOR)
+		{
+			continue;
+		}
+		m_metaTreeCtrl->Bind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, m_metaTreeCtrl, id);
+		boundIds.push_back(id);
+	}
+
+	m_metaTreeCtrl->PopupMenu(innerMenu, m_metaTreeCtrl->ScreenToClient(eventSrc->ClientToScreen(pos)));
+
+	for (int id : boundIds) {
+		m_metaTreeCtrl->Unbind(wxEVT_MENU, &ibMetadataTree::ibMetaTreeCtrl::OnCommandItem, m_metaTreeCtrl, id);
+	}
+
+	delete innerMenu;
+}
+
 void ibMetadataTree::UpdateToolbar(ibValueMetaObject* obj, const wxTreeItemId& item)
 {
 	m_metaTreeToolbar->EnableTool(ID_METATREE_NEW, item != m_metaTreeCtrl->GetRootItem() && !m_bReadOnly && item != m_treeCOMMON);

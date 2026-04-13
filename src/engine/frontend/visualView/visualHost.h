@@ -31,6 +31,10 @@ public:
 	{
 		wxScrolledCanvas::SetDoubleBuffered(true);
 		wxScrolledCanvas::SetScrollRate(5, 5);
+#ifdef __WXOSX__
+		wxScrolledCanvas::SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+		wxScrolledCanvas::SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+#endif
 	}
 
 	virtual ~ibVisualHost() {/* ClearVisualHost(); */ }
@@ -110,7 +114,7 @@ protected:
 	* @param wxobject The object which was just created.
 	* @param wxparent The wxWidgets parent - the wxObject that the created object was added to.
 	*/
-	virtual void OnCreated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent, bool first—reated = false);
+	virtual void OnCreated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent, bool first–°reated = false);
 
 	/**
 	* Allows components to respond when selected in object tree.

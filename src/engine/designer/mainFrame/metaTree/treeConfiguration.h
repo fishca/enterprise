@@ -269,6 +269,7 @@ private:
 		void OnStartSearch(wxCommandEvent& event);
 		void OnCancelSearch(wxCommandEvent& event);
 
+		void OnItemActivated(wxTreeEvent& event);
 		void OnCreateItem(wxCommandEvent& event);
 		void OnEditItem(wxCommandEvent& event);
 		void OnRemoveItem(wxCommandEvent& event);
@@ -384,6 +385,8 @@ private:
 	void CommandItem(unsigned int id);
 	void PrepareReplaceMenu(wxMenu* menu);
 	void PrepareContextMenu(wxMenu* menu, const wxTreeItemId& item);
+
+	void ShowContextMenu(wxWindow* eventSrc, const wxTreeItemId& item, const wxPoint& pos);
 
 	void AddInterfaceItem(ibValueMetaObject* obj, const wxTreeItemId& item);
 

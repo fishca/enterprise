@@ -275,8 +275,210 @@ bool ibMetaDataConfigurationBase::SaveConfigToXML(const wxString& strFileName)
 //*                    Load Configuration from XML                     *
 //***********************************************************************
 
+namespace {
+
+wxString GetChildText(wxXmlNode* parent, const wxString& childName)
+{
+	for (wxXmlNode* child = parent->GetChildren(); child != nullptr; child = child->GetNext()) {
+		if (child->GetName() == childName)
+			return child->GetNodeContent();
+	}
+	return wxEmptyString;
+}
+
+wxXmlNode* FindChildNode(wxXmlNode* parent, const wxString& childName)
+{
+	for (wxXmlNode* child = parent->GetChildren(); child != nullptr; child = child->GetNext()) {
+		if (child->GetName() == childName)
+			return child;
+	}
+	return nullptr;
+}
+
+void LoadAttributeFromXML(wxXmlNode* xmlAttr, ibMetaData* metaData, ibValueMetaObject* parent)
+{
+	wxString name = GetChildText(xmlAttr, wxT("Name"));
+	if (name.IsEmpty()) return;
+
+	ibValueMetaObject* attrObj = metaData->CreateMetaObject(g_metaAttributeCLSID, parent, false);
+	if (attrObj == nullptr) return;
+
+	attrObj->SetName(name);
+	wxString synonym = GetChildText(xmlAttr, wxT("Synonym"));
+	if (!synonym.IsEmpty()) attrObj->SetSynonym(synonym);
+
+	wxString guid;
+	if (xmlAttr->GetAttribute(wxT("guid"), &guid) && !guid.IsEmpty())
+		attrObj->SetCommonGuid(ibGuid(guid));
+}
+
+void LoadTableFromXML(wxXmlNode* xmlTable, ibMetaData* metaData, ibValueMetaObject* parent)
+{
+	wxString name = GetChildText(xmlTable, wxT("Name"));
+	if (name.IsEmpty()) return;
+
+	ibValueMetaObject* tableObj = metaData->CreateMetaObject(g_metaTableCLSID, parent, false);
+	if (tableObj == nullptr) return;
+
+	tableObj->SetName(name);
+	wxString synonym = GetChildText(xmlTable, wxT("Synonym"));
+	if (!synonym.IsEmpty()) tableObj->SetSynonym(synonym);
+
+	wxString guid;
+	if (xmlTable->GetAttribute(wxT("guid"), &guid) && !guid.IsEmpty())
+		tableObj->SetCommonGuid(ibGuid(guid));
+
+	// Load table columns
+	wxXmlNode* xmlAttrs = FindChildNode(xmlTable, wxT("Attributes"));
+	if (xmlAttrs != nullptr) {
+		for (wxXmlNode* child = xmlAttrs->GetChildren(); child != nullptr; child = child->GetNext()) {
+			if (child->GetName() == wxT("Attribute"))
+				LoadAttributeFromXML(child, metaData, tableObj);
+		}
+	}
+}
+
+bool LoadMetaObjectFromXML(wxXmlNode* xmlObj, ibMetaData* metaData, const ibClassID& clsid, ibValueMetaObjectConfiguration* configObj)
+{
+	wxString name = GetChildText(xmlObj, wxT("Name"));
+	if (name.IsEmpty()) return false;
+
+	ibValueMetaObject* newObj = metaData->CreateMetaObject(clsid, configObj, false);
+	if (newObj == nullptr) return false;
+
+	newObj->SetName(name);
+
+	wxString synonym = GetChildText(xmlObj, wxT("Synonym"));
+	if (!synonym.IsEmpty()) newObj->SetSynonym(synonym);
+
+	wxString comment = GetChildText(xmlObj, wxT("Comment"));
+	if (!comment.IsEmpty()) newObj->SetComment(comment);
+
+	wxString guid;
+	if (xmlObj->GetAttribute(wxT("guid"), &guid) && !guid.IsEmpty())
+		newObj->SetCommonGuid(ibGuid(guid));
+
+	// Load user-defined attributes
+	wxXmlNode* xmlAttrs = FindChildNode(xmlObj, wxT("Attributes"));
+	if (xmlAttrs != nullptr) {
+		for (wxXmlNode* child = xmlAttrs->GetChildren(); child != nullptr; child = child->GetNext()) {
+			if (child->GetName() == wxT("Attribute"))
+				LoadAttributeFromXML(child, metaData, newObj);
+		}
+	}
+
+	// Load tabular sections
+	wxXmlNode* xmlTables = FindChildNode(xmlObj, wxT("TabularSections"));
+	if (xmlTables != nullptr) {
+		for (wxXmlNode* child = xmlTables->GetChildren(); child != nullptr; child = child->GetNext()) {
+			if (child->GetName() == wxT("TabularSection"))
+				LoadTableFromXML(child, metaData, newObj);
+		}
+	}
+
+	// Load forms
+	wxXmlNode* xmlForms = FindChildNode(xmlObj, wxT("Forms"));
+	if (xmlForms != nullptr) {
+		for (wxXmlNode* child = xmlForms->GetChildren(); child != nullptr; child = child->GetNext()) {
+			if (child->GetName() == wxT("Form")) {
+				wxString formName = GetChildText(child, wxT("Name"));
+				if (!formName.IsEmpty()) {
+					ibValueMetaObject* formObj = metaData->CreateMetaObject(g_metaFormCLSID, newObj, false);
+					if (formObj != nullptr) {
+						formObj->SetName(formName);
+						// Form data (base64 binary layout)
+						wxString formDataB64 = GetChildText(child, wxT("FormData"));
+						if (!formDataB64.IsEmpty()) {
+							ibValueMetaObjectFormBase* formBase = nullptr;
+							if (formObj->ConvertToValue(formBase))
+								formBase->SetFormData(wxBase64Decode(formDataB64));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Load module code
+	wxXmlNode* xmlModule = FindChildNode(xmlObj, wxT("Module"));
+	if (xmlModule != nullptr) {
+		ibValueMetaObjectCommonModule* commonModule = nullptr;
+		if (newObj->ConvertToValue(commonModule)) {
+			commonModule->SetModuleText(xmlModule->GetNodeContent());
+		}
+	}
+
+	return true;
+}
+
+} // anonymous namespace (import helpers)
+
 bool ibMetaDataConfigurationBase::LoadConfigFromXML(const wxString& strFileName)
 {
-	//TODO: Implement XML import — parse XML, create metadata objects
-	return false;
+	wxFileInputStream stream(strFileName);
+	if (!stream.IsOk())
+		return false;
+
+	wxXmlDocument doc;
+	if (!doc.Load(stream))
+		return false;
+
+	wxXmlNode* root = doc.GetRoot();
+	if (root == nullptr || root->GetName() != wxT("Configuration"))
+		return false;
+
+	ibValueMetaObjectConfiguration* configObj = GetCommonMetaObject();
+	if (configObj == nullptr)
+		return false;
+
+	// Set configuration name
+	wxString configName = GetChildText(root, wxT("Name"));
+	if (!configName.IsEmpty())
+		configObj->SetName(configName);
+
+	wxString configSynonym = GetChildText(root, wxT("Synonym"));
+	if (!configSynonym.IsEmpty())
+		configObj->SetSynonym(configSynonym);
+
+	// CLSID mapping for element names
+	struct TypeMapping {
+		wxString groupName;
+		wxString itemName;
+		ibClassID clsid;
+	};
+
+	const TypeMapping mappings[] = {
+		{ wxT("CommonModules"), wxT("CommonModule"), g_metaCommonModuleCLSID },
+		{ wxT("CommonForms"), wxT("CommonForm"), g_metaCommonFormCLSID },
+		{ wxT("Constants"), wxT("Constant"), g_metaConstantCLSID },
+		{ wxT("Catalogs"), wxT("Catalog"), g_metaCatalogCLSID },
+		{ wxT("Documents"), wxT("Document"), g_metaDocumentCLSID },
+		{ wxT("Enumerations"), wxT("Enumeration"), g_metaEnumerationCLSID },
+		{ wxT("DataProcessors"), wxT("DataProcessor"), g_metaDataProcessorCLSID },
+		{ wxT("Reports"), wxT("Report"), g_metaReportCLSID },
+		{ wxT("InformationRegisters"), wxT("InformationRegister"), g_metaInformationRegisterCLSID },
+		{ wxT("AccumulationRegisters"), wxT("AccumulationRegister"), g_metaAccumulationRegisterCLSID },
+		{ wxT("ChartsOfCharacteristicTypes"), wxT("ChartOfCharacteristicTypes"), g_metaChartOfCharacteristicTypesCLSID },
+		{ wxT("ChartsOfAccounts"), wxT("ChartOfAccounts"), g_metaChartOfAccountsCLSID },
+		{ wxT("AccountingRegisters"), wxT("AccountingRegister"), g_metaAccountingRegisterCLSID },
+	};
+
+	// Parse each group
+	for (wxXmlNode* groupNode = root->GetChildren(); groupNode != nullptr; groupNode = groupNode->GetNext()) {
+		if (groupNode->GetType() != wxXML_ELEMENT_NODE)
+			continue;
+
+		for (const auto& mapping : mappings) {
+			if (groupNode->GetName() == mapping.groupName) {
+				for (wxXmlNode* itemNode = groupNode->GetChildren(); itemNode != nullptr; itemNode = itemNode->GetNext()) {
+					if (itemNode->GetName() == mapping.itemName) {
+						LoadMetaObjectFromXML(itemNode, this, mapping.clsid, configObj);
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	return true;
 }

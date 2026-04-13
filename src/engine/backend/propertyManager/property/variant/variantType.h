@@ -4,20 +4,20 @@
 #include "backend/metaCollection/metaObject.h"
 #include "backend/backend_type.h"
 
-class BACKEND_API wxVariantDataAttribute : public wxVariantData {
+class BACKEND_API ibVariantDataAttribute : public wxVariantData {
 	wxString MakeString() const;
 protected:
 	virtual void DoSetDefaultMetaType();
-	virtual void DoSetFromMetaId(const meta_identifier_t& id);
-	virtual void DoSetFromTypeId(const CTypeDescription& td);
+	virtual void DoSetFromMetaId(const ibMetaID& id);
+	virtual void DoSetFromTypeId(const ibTypeDescription& td);
 	virtual void DoRefreshTypeDesc();
 public:
 
-	eSelectorDataType GetFilterDataType() const { return m_ownerProperty->GetFilterDataType(); }
+	ibSelectorDataType GetFilterDataType() const { return m_ownerProperty->GetFilterDataType(); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	CTypeDescription& GetTypeDesc() {
+	ibTypeDescription& GetTypeDesc() {
 		if (m_typeDesc.GetClsidCount() > 0) 
 			RefreshTypeDesc();
 		return m_typeDesc;
@@ -29,8 +29,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	void SetFromMetaDesc(const meta_identifier_t& id) { DoSetFromMetaId(id); }
-	void SetFromTypeDesc(const CTypeDescription& td) { DoSetFromTypeId(td); }
+	void SetFromMetaDesc(const ibMetaID& id) { DoSetFromMetaId(id); }
+	void SetFromTypeDesc(const ibTypeDescription& td) { DoSetFromTypeId(td); }
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,22 +38,22 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 
-	wxVariantDataAttribute(const IBackendTypeConfigFactory* prop) : wxVariantData(), m_ownerProperty(prop) {}
+	ibVariantDataAttribute(const ibBackendTypeConfigFactory* prop) : wxVariantData(), m_ownerProperty(prop) {}
 
-	wxVariantDataAttribute(const IBackendTypeConfigFactory* prop, const eValueTypes type) : wxVariantData(), m_ownerProperty(prop) { m_typeDesc.SetDefaultMetaType(type); }
-	wxVariantDataAttribute(const IBackendTypeConfigFactory* prop, const class_identifier_t& clsid) : wxVariantData(), m_ownerProperty(prop) { m_typeDesc.SetDefaultMetaType(clsid); }
+	ibVariantDataAttribute(const ibBackendTypeConfigFactory* prop, const ibValueTypes type) : wxVariantData(), m_ownerProperty(prop) { m_typeDesc.SetDefaultMetaType(type); }
+	ibVariantDataAttribute(const ibBackendTypeConfigFactory* prop, const ibClassID& clsid) : wxVariantData(), m_ownerProperty(prop) { m_typeDesc.SetDefaultMetaType(clsid); }
 
-	wxVariantDataAttribute(const IBackendTypeConfigFactory* prop, const meta_identifier_t& id) : wxVariantData(), m_ownerProperty(prop) { DoSetFromMetaId(id); }
-	wxVariantDataAttribute(const IBackendTypeConfigFactory* prop, const CTypeDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_typeDesc(typeDesc) {}
+	ibVariantDataAttribute(const ibBackendTypeConfigFactory* prop, const ibMetaID& id) : wxVariantData(), m_ownerProperty(prop) { DoSetFromMetaId(id); }
+	ibVariantDataAttribute(const ibBackendTypeConfigFactory* prop, const ibTypeDescription& typeDesc) : wxVariantData(), m_ownerProperty(prop), m_typeDesc(typeDesc) {}
 
-	wxVariantDataAttribute(const wxVariantDataAttribute& list) : wxVariantData(), m_ownerProperty(list.m_ownerProperty), m_typeDesc(list.m_typeDesc) {}
+	ibVariantDataAttribute(const ibVariantDataAttribute& list) : wxVariantData(), m_ownerProperty(list.m_ownerProperty), m_typeDesc(list.m_typeDesc) {}
 
-	virtual wxVariantDataAttribute* Clone() const {
-		return new wxVariantDataAttribute(*this);
+	virtual ibVariantDataAttribute* Clone() const {
+		return new ibVariantDataAttribute(*this);
 	}
 
 	virtual bool Eq(wxVariantData& data) const {
-		wxVariantDataAttribute* srcAttr = dynamic_cast<wxVariantDataAttribute*>(&data);
+		ibVariantDataAttribute* srcAttr = dynamic_cast<ibVariantDataAttribute*>(&data);
 		if (srcAttr != nullptr)
 			return srcAttr->m_typeDesc == m_typeDesc;
 		return false;
@@ -71,14 +71,14 @@ public:
 	}
 
 	virtual wxString GetType() const {
-		return wxT("wxVariantDataAttribute");
+		return wxT("ibVariantDataAttribute");
 	}
 
 protected:
 
-	const IBackendTypeConfigFactory* m_ownerProperty = nullptr;
+	const ibBackendTypeConfigFactory* m_ownerProperty = nullptr;
 	unsigned int m_object_version = 0;
-	CTypeDescription m_typeDesc;
+	ibTypeDescription m_typeDesc;
 };
 
 #endif // !__TYPE_VARIANT_H__

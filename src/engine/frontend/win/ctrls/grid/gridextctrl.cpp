@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // Name:        src/generic/gridctrl.cpp
-// Purpose:     wxGridExt controls
+// Purpose:     ibGrid controls
 // Author:      Paul Gammans, Roger Gammans
 // Modified by:
 // Created:     11/04/2001
@@ -35,11 +35,11 @@
 #include <wx/private/window.h>
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellRenderer
+// ibGridCellRenderer
 // ----------------------------------------------------------------------------
 
-void wxGridExtCellRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rect,
 	int WXUNUSED(row), int WXUNUSED(col),
@@ -73,8 +73,8 @@ void wxGridExtCellRenderer::Draw(wxGridExt& grid,
 	dc.DrawRectangle(rect);
 }
 
-void wxGridExtCellRenderer::SetTextColoursAndFont(const wxGridExt& grid,
-	const wxGridExtCellAttr& attr,
+void ibGridCellRenderer::SetTextColoursAndFont(const ibGrid& grid,
+	const ibGridCellAttr& attr,
 	wxDC& dc,
 	bool isSelected)
 {
@@ -113,18 +113,18 @@ void wxGridExtCellRenderer::SetTextColoursAndFont(const wxGridExt& grid,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellDateTimeRenderer
+// ibGridCellDateTimeRenderer
 // ----------------------------------------------------------------------------
 
 #if wxUSE_DATETIME
 
 bool
-wxGridExtPrivate::TryGetValueAsDate(wxDateTime& result,
+ibGridPrivate::TryGetValueAsDate(wxDateTime& result,
 	const DateParseParams& params,
-	const wxGridExt& grid,
+	const ibGrid& grid,
 	int row, int col)
 {
-	wxGridExtTableBase* table = grid.GetTable();
+	ibGridTableBase* table = grid.GetTable();
 
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_DATETIME))
 	{
@@ -157,12 +157,12 @@ wxGridExtPrivate::TryGetValueAsDate(wxDateTime& result,
 	return false;
 }
 
-using namespace wxGridExtPrivate;
+using namespace ibGridPrivate;
 
 // Enables a grid cell to display a formatted date
 
-wxGridExtCellDateRenderer::wxGridExtCellDateRenderer(const wxString& outformat)
-	: wxGridExtCellStringRenderer()
+ibGridCellDateRenderer::ibGridCellDateRenderer(const wxString& outformat)
+	: ibGridCellStringRenderer()
 {
 	if (outformat.empty())
 	{
@@ -175,7 +175,7 @@ wxGridExtCellDateRenderer::wxGridExtCellDateRenderer(const wxString& outformat)
 	m_tz = wxDateTime::Local;
 }
 
-wxString wxGridExtCellDateRenderer::GetString(const wxGridExt& grid, int row, int col)
+wxString ibGridCellDateRenderer::GetString(const ibGrid& grid, int row, int col)
 {
 	wxString text;
 
@@ -191,19 +191,19 @@ wxString wxGridExtCellDateRenderer::GetString(const wxGridExt& grid, int row, in
 }
 
 void
-wxGridExtCellDateRenderer::GetDateParseParams(DateParseParams& params) const
+ibGridCellDateRenderer::GetDateParseParams(DateParseParams& params) const
 {
 	params = DateParseParams::WithFallback(m_oformat);
 }
 
-void wxGridExtCellDateRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellDateRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
 	bool isSelected)
 {
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
 
@@ -215,16 +215,16 @@ void wxGridExtCellDateRenderer::Draw(wxGridExt& grid,
 		wxALIGN_RIGHT);
 }
 
-wxSize wxGridExtCellDateRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellDateRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
 	return DoGetBestSize(attr, dc, GetString(grid, row, col));
 }
 
-wxSize wxGridExtCellDateRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellDateRenderer::GetMaxBestSize(ibGrid& WXUNUSED(grid),
+	ibGridCellAttr& attr,
 	wxDC& dc)
 {
 	wxSize size;
@@ -241,7 +241,7 @@ wxSize wxGridExtCellDateRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
 	return size;
 }
 
-void wxGridExtCellDateRenderer::SetParameters(const wxString& params)
+void ibGridCellDateRenderer::SetParameters(const wxString& params)
 {
 	if (!params.empty())
 		m_oformat = params;
@@ -250,14 +250,14 @@ void wxGridExtCellDateRenderer::SetParameters(const wxString& params)
 
 // Enables a grid cell to display a formatted date and or time
 
-wxGridExtCellDateTimeRenderer::wxGridExtCellDateTimeRenderer(const wxString& outformat, const wxString& informat)
-	: wxGridExtCellDateRenderer(outformat)
+ibGridCellDateTimeRenderer::ibGridCellDateTimeRenderer(const wxString& outformat, const wxString& informat)
+	: ibGridCellDateRenderer(outformat)
 	, m_iformat(informat)
 {
 }
 
 void
-wxGridExtCellDateTimeRenderer::GetDateParseParams(DateParseParams& params) const
+ibGridCellDateTimeRenderer::GetDateParseParams(DateParseParams& params) const
 {
 	params = DateParseParams::WithoutFallback(m_iformat);
 }
@@ -265,24 +265,24 @@ wxGridExtCellDateTimeRenderer::GetDateParseParams(DateParseParams& params) const
 #endif // wxUSE_DATETIME
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellChoiceRenderer
+// ibGridCellChoiceRenderer
 // ----------------------------------------------------------------------------
 
-wxGridExtCellChoiceRenderer::wxGridExtCellChoiceRenderer(const wxString& choices)
-	: wxGridExtCellStringRenderer()
+ibGridCellChoiceRenderer::ibGridCellChoiceRenderer(const wxString& choices)
+	: ibGridCellStringRenderer()
 {
 	if (!choices.empty())
 		SetParameters(choices);
 }
 
-wxGridExtCellChoiceRenderer::wxGridExtCellChoiceRenderer(const wxGridExtCellChoiceRenderer& other)
-	: wxGridExtCellStringRenderer(other),
+ibGridCellChoiceRenderer::ibGridCellChoiceRenderer(const ibGridCellChoiceRenderer& other)
+	: ibGridCellStringRenderer(other),
 	m_choices(other.m_choices)
 {
 }
 
-wxSize wxGridExtCellChoiceRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellChoiceRenderer::GetMaxBestSize(ibGrid& WXUNUSED(grid),
+	ibGridCellAttr& attr,
 	wxDC& dc)
 {
 	wxSize size;
@@ -295,7 +295,7 @@ wxSize wxGridExtCellChoiceRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
 	return size;
 }
 
-void wxGridExtCellChoiceRenderer::SetParameters(const wxString& params)
+void ibGridCellChoiceRenderer::SetParameters(const wxString& params)
 {
 	m_choices.clear();
 
@@ -310,15 +310,15 @@ void wxGridExtCellChoiceRenderer::SetParameters(const wxString& params)
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellEnumRenderer
+// ibGridCellEnumRenderer
 // ----------------------------------------------------------------------------
 // Renders a number as a textual equivalent.
 // eg data in cell is 0,1,2 ... n the cell could be rendered as "John","Fred"..."Bob"
 
 
-wxString wxGridExtCellEnumRenderer::GetString(const wxGridExt& grid, int row, int col)
+wxString ibGridCellEnumRenderer::GetString(const ibGrid& grid, int row, int col)
 {
-	wxGridExtTableBase* table = grid.GetTable();
+	ibGridTableBase* table = grid.GetTable();
 	wxString text;
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_NUMBER))
 	{
@@ -335,14 +335,14 @@ wxString wxGridExtCellEnumRenderer::GetString(const wxGridExt& grid, int row, in
 	return text;
 }
 
-void wxGridExtCellEnumRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellEnumRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
 	bool isSelected)
 {
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
 
@@ -354,8 +354,8 @@ void wxGridExtCellEnumRenderer::Draw(wxGridExt& grid,
 		wxALIGN_RIGHT);
 }
 
-wxSize wxGridExtCellEnumRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellEnumRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
@@ -363,20 +363,20 @@ wxSize wxGridExtCellEnumRenderer::GetBestSize(wxGridExt& grid,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellAutoWrapStringRenderer
+// ibGridCellAutoWrapStringRenderer
 // ----------------------------------------------------------------------------
 
 
 void
-wxGridExtCellAutoWrapStringRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+ibGridCellAutoWrapStringRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
 	bool isSelected) {
 
 
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	// now we only have to draw the text
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
@@ -395,9 +395,9 @@ wxGridExtCellAutoWrapStringRenderer::Draw(wxGridExt& grid,
 
 
 wxArrayString
-wxGridExtCellAutoWrapStringRenderer::GetTextLines(wxGridExt& grid,
+ibGridCellAutoWrapStringRenderer::GetTextLines(ibGrid& grid,
 	wxDC& dc,
-	const wxGridExtCellAttr& attr,
+	const ibGridCellAttr& attr,
 	const wxRect& rect,
 	int row, int col)
 {
@@ -435,7 +435,7 @@ wxGridExtCellAutoWrapStringRenderer::GetTextLines(wxGridExt& grid,
 }
 
 void
-wxGridExtCellAutoWrapStringRenderer::BreakLine(wxDC& dc,
+ibGridCellAutoWrapStringRenderer::BreakLine(wxDC& dc,
 	const wxString& logicalLine,
 	wxCoord maxWidth,
 	wxArrayString& lines)
@@ -488,7 +488,7 @@ wxGridExtCellAutoWrapStringRenderer::BreakLine(wxDC& dc,
 
 
 wxCoord
-wxGridExtCellAutoWrapStringRenderer::BreakWord(wxDC& dc,
+ibGridCellAutoWrapStringRenderer::BreakWord(wxDC& dc,
 	const wxString& word,
 	wxCoord maxWidth,
 	wxArrayString& lines,
@@ -538,14 +538,14 @@ wxGridExtCellAutoWrapStringRenderer::BreakWord(wxDC& dc,
 }
 
 wxSize
-wxGridExtCellAutoWrapStringRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+ibGridCellAutoWrapStringRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
 	// We have to make a choice here and fix either width or height because we
 	// don't have any naturally best size. This choice is mostly arbitrary, but
-	// we need to be consistent about it, otherwise wxGridExt auto-sizing code
+	// we need to be consistent about it, otherwise ibGrid auto-sizing code
 	// would get confused. For now we decide to use a single line of text and
 	// compute the width needed to fully display everything.
 	const int height = dc.GetCharHeight();
@@ -556,8 +556,8 @@ wxGridExtCellAutoWrapStringRenderer::GetBestSize(wxGridExt& grid,
 static const int AUTOWRAP_Y_MARGIN = 4;
 
 int
-wxGridExtCellAutoWrapStringRenderer::GetBestHeight(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+ibGridCellAutoWrapStringRenderer::GetBestHeight(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col,
 	int width)
@@ -571,8 +571,8 @@ wxGridExtCellAutoWrapStringRenderer::GetBestHeight(wxGridExt& grid,
 }
 
 int
-wxGridExtCellAutoWrapStringRenderer::GetBestWidth(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+ibGridCellAutoWrapStringRenderer::GetBestWidth(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col,
 	int height)
@@ -603,10 +603,10 @@ wxGridExtCellAutoWrapStringRenderer::GetBestWidth(wxGridExt& grid,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellStringRenderer
+// ibGridCellStringRenderer
 // ----------------------------------------------------------------------------
 
-wxSize wxGridExtCellStringRenderer::DoGetBestSize(const wxGridExtCellAttr& attr,
+wxSize ibGridCellStringRenderer::DoGetBestSize(const ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxString& text,
 	float scale)
@@ -615,8 +615,8 @@ wxSize wxGridExtCellStringRenderer::DoGetBestSize(const wxGridExtCellAttr& attr,
 	return dc.GetMultiLineTextExtent(text);
 }
 
-wxSize wxGridExtCellStringRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellStringRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
@@ -626,8 +626,8 @@ wxSize wxGridExtCellStringRenderer::GetBestSize(wxGridExt& grid,
 	return DoGetBestSize(attr, dc, grid.GetCellValue(row, col), grid.GetGridZoom());
 }
 
-void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellStringRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
@@ -637,7 +637,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 	rect.Inflate(-1);
 
 	// erase only this cells background, overflow cells should have been erased
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	if (attr.CanOverflow())
 	{
@@ -699,7 +699,7 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 			for (int i = col + cell_cols; i <= col_end; i++)
 			{
 				// redraw the cell to update the background
-				wxGridExtCellCoords coords(row, i);
+				ibGridCellCoords coords(row, i);
 				grid.DrawCell(dc, coords);
 
 				clip.width = grid.GetColSize(i, grid.GetGridZoom()) - 1;
@@ -729,12 +729,12 @@ void wxGridExtCellStringRenderer::Draw(wxGridExt& grid,
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellNumberRenderer
+// ibGridCellNumberRenderer
 // ----------------------------------------------------------------------------
 
-wxString wxGridExtCellNumberRenderer::GetString(const wxGridExt& grid, int row, int col)
+wxString ibGridCellNumberRenderer::GetString(const ibGrid& grid, int row, int col)
 {
-	wxGridExtTableBase* table = grid.GetTable();
+	ibGridTableBase* table = grid.GetTable();
 	wxString text;
 	if (table->CanGetValueAs(row, col, wxGRID_VALUE_NUMBER))
 	{
@@ -748,14 +748,14 @@ wxString wxGridExtCellNumberRenderer::GetString(const wxGridExt& grid, int row, 
 	return text;
 }
 
-void wxGridExtCellNumberRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellNumberRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
 	bool isSelected)
 {
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
 
@@ -767,16 +767,16 @@ void wxGridExtCellNumberRenderer::Draw(wxGridExt& grid,
 		wxALIGN_RIGHT);
 }
 
-wxSize wxGridExtCellNumberRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellNumberRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
 	return DoGetBestSize(attr, dc, GetString(grid, row, col));
 }
 
-wxSize wxGridExtCellNumberRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellNumberRenderer::GetMaxBestSize(ibGrid& WXUNUSED(grid),
+	ibGridCellAttr& attr,
 	wxDC& dc)
 {
 	// In theory, it's possible that there is a value in min..max range which
@@ -789,7 +789,7 @@ wxSize wxGridExtCellNumberRenderer::GetMaxBestSize(wxGridExt& WXUNUSED(grid),
 	return size;
 }
 
-void wxGridExtCellNumberRenderer::SetParameters(const wxString& params)
+void ibGridCellNumberRenderer::SetParameters(const wxString& params)
 {
 	if (params.empty())
 		return;
@@ -799,27 +799,27 @@ void wxGridExtCellNumberRenderer::SetParameters(const wxString& params)
 
 	if (!minStr.ToLong(&m_minValue) || !maxStr.ToLong(&m_maxValue))
 	{
-		wxLogDebug("Invalid wxGridExtCellNumberRenderer parameters \"%s\"", params);
+		wxLogDebug("Invalid ibGridCellNumberRenderer parameters \"%s\"", params);
 	}
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellFloatRenderer
+// ibGridCellFloatRenderer
 // ----------------------------------------------------------------------------
 
-wxGridExtCellFloatRenderer::wxGridExtCellFloatRenderer(int width,
+ibGridCellFloatRenderer::ibGridCellFloatRenderer(int width,
 	int precision,
 	int format)
-	: wxGridExtCellStringRenderer()
+	: ibGridCellStringRenderer()
 {
 	SetWidth(width);
 	SetPrecision(precision);
 	SetFormat(format);
 }
 
-wxString wxGridExtCellFloatRenderer::GetString(const wxGridExt& grid, int row, int col)
+wxString ibGridCellFloatRenderer::GetString(const ibGrid& grid, int row, int col)
 {
-	wxGridExtTableBase* table = grid.GetTable();
+	ibGridTableBase* table = grid.GetTable();
 
 	bool hasDouble;
 	double val;
@@ -877,14 +877,14 @@ wxString wxGridExtCellFloatRenderer::GetString(const wxGridExt& grid, int row, i
 	return text;
 }
 
-void wxGridExtCellFloatRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellFloatRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rectCell,
 	int row, int col,
 	bool isSelected)
 {
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rectCell, row, col, isSelected);
 
 	SetTextColoursAndFont(grid, attr, dc, isSelected);
 
@@ -896,15 +896,15 @@ void wxGridExtCellFloatRenderer::Draw(wxGridExt& grid,
 		wxALIGN_RIGHT);
 }
 
-wxSize wxGridExtCellFloatRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellFloatRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int row, int col)
 {
 	return DoGetBestSize(attr, dc, GetString(grid, row, col));
 }
 
-void wxGridExtCellFloatRenderer::SetParameters(const wxString& params)
+void ibGridCellFloatRenderer::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -926,7 +926,7 @@ void wxGridExtCellFloatRenderer::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug(wxT("Invalid wxGridExtCellFloatRenderer width parameter string '%s ignored"), params);
+				wxLogDebug(wxT("Invalid ibGridCellFloatRenderer width parameter string '%s ignored"), params);
 			}
 		}
 
@@ -940,7 +940,7 @@ void wxGridExtCellFloatRenderer::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug(wxT("Invalid wxGridExtCellFloatRenderer precision parameter string '%s ignored"), params);
+				wxLogDebug(wxT("Invalid ibGridCellFloatRenderer precision parameter string '%s ignored"), params);
 			}
 		}
 
@@ -976,7 +976,7 @@ void wxGridExtCellFloatRenderer::SetParameters(const wxString& params)
 			}
 			else
 			{
-				wxLogDebug("Invalid wxGridExtCellFloatRenderer format "
+				wxLogDebug("Invalid ibGridCellFloatRenderer format "
 					"parameter string '%s ignored", params);
 			}
 		}
@@ -984,11 +984,11 @@ void wxGridExtCellFloatRenderer::SetParameters(const wxString& params)
 }
 
 // ----------------------------------------------------------------------------
-// wxGridExtCellBoolRenderer
+// ibGridCellBoolRenderer
 // ----------------------------------------------------------------------------
 
-wxSize wxGridExtCellBoolRenderer::GetBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+wxSize ibGridCellBoolRenderer::GetBestSize(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	int WXUNUSED(row),
 	int WXUNUSED(col))
@@ -996,8 +996,8 @@ wxSize wxGridExtCellBoolRenderer::GetBestSize(wxGridExt& grid,
 	return GetMaxBestSize(grid, attr, dc);
 }
 
-wxSize wxGridExtCellBoolRenderer::GetMaxBestSize(wxGridExt& grid,
-	wxGridExtCellAttr& WXUNUSED(attr),
+wxSize ibGridCellBoolRenderer::GetMaxBestSize(ibGrid& grid,
+	ibGridCellAttr& WXUNUSED(attr),
 	wxDC& WXUNUSED(dc))
 {
 	static wxPrivate::DpiDependentValue<wxSize> s_sizeCheckMark;
@@ -1015,14 +1015,14 @@ wxSize wxGridExtCellBoolRenderer::GetMaxBestSize(wxGridExt& grid,
 	return s_sizeCheckMark.Get();
 }
 
-void wxGridExtCellBoolRenderer::Draw(wxGridExt& grid,
-	wxGridExtCellAttr& attr,
+void ibGridCellBoolRenderer::Draw(ibGrid& grid,
+	ibGridCellAttr& attr,
 	wxDC& dc,
 	const wxRect& rect,
 	int row, int col,
 	bool isSelected)
 {
-	wxGridExtCellRenderer::Draw(grid, attr, dc, rect, row, col, isSelected);
+	ibGridCellRenderer::Draw(grid, attr, dc, rect, row, col, isSelected);
 
 	int hAlign = wxALIGN_LEFT;
 	int vAlign = wxALIGN_CENTRE_VERTICAL;
@@ -1040,7 +1040,7 @@ void wxGridExtCellBoolRenderer::Draw(wxGridExt& grid,
 	else
 	{
 		wxString cellval(grid.GetTable()->GetValue(row, col));
-		value = wxGridExtCellBoolEditor::IsTrueValue(cellval);
+		value = ibGridCellBoolEditor::IsTrueValue(cellval);
 	}
 
 	int flags = wxCONTROL_CELL;

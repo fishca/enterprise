@@ -9,38 +9,38 @@
 //*                                  Model                                          *
 //***********************************************************************************
 
-void IValueTabularSectionDataObject::GetValueByRow(wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col) const
+void ibValueTabularSectionDataObjectBase::GetValueByRow(wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col) const
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr) return;
 
 	if (m_metaTable->IsNumberLine(col))
-		variant = new wxVariantDataValueNumberLine(GetRow(row) + 1);
+		variant = new ibVariantDataValueNumberLine(GetRow(row) + 1);
 	else if (node->HasColumnValue(col))
 		node->GetValue(col, variant);
 }
 
 #include "backend/metaData.h"
 
-bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
-	const wxDataViewExtItem& row, unsigned int col)
+bool ibValueTabularSectionDataObjectBase::SetValueByRow(const wxVariant& variant,
+	const ibDataViewItem& row, unsigned int col)
 {
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(row);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(row);
 	if (node == nullptr) return false;
 
 	if (!m_metaTable->IsNumberLine(col)) {
-		IMetaData* metaData = m_metaTable->GetMetaData();
+		ibMetaData* metaData = m_metaTable->GetMetaData();
 		wxASSERT(metaData);
 		if (node->HasColumnValue(col)) {
 
 			const wxString& strData = variant.GetString();
 
-			const CValue& selValue = node->GetTableValue(col);
-			const CValue& newValue = metaData->CreateObject(selValue.GetClassType());
+			const ibValue& selValue = node->GetTableValue(col);
+			const ibValue& newValue = metaData->CreateObject(selValue.GetClassType());
 
 			if (strData.Length() > 0) {
-				std::vector<CValue> listValue;
+				std::vector<ibValue> listValue;
 				if (newValue.FindValue(strData, listValue)) {
 					SetValueByMetaID(row, col, listValue.at(0));
 				}
@@ -61,7 +61,7 @@ bool IValueTabularSectionDataObject::SetValueByRow(const wxVariant& variant,
 	return true;
 }
 
-void IValueTabularSectionDataObject::AddValue(unsigned int before)
+void ibValueTabularSectionDataObjectBase::AddValue(unsigned int before)
 {
 	long row = GetRow(GetSelection());
 	if (row > 0) AppendRow(row);
@@ -70,37 +70,37 @@ void IValueTabularSectionDataObject::AddValue(unsigned int before)
 	RefreshTabularSection();
 }
 
-void IValueTabularSectionDataObject::CopyValue()
+void ibValueTabularSectionDataObjectBase::CopyValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
-	wxValueTableRow* rowData = new wxValueTableRow();
+	ibValueTableRow* rowData = new ibValueTableRow();
 	for (const auto object : m_metaTable->GetAttributeArrayObject()) {
 		if (!m_metaTable->IsNumberLine(object->GetMetaID())) {
 			rowData->AppendTableValue(object->GetMetaID(), node->GetTableValue(object->GetMetaID()));
 		}
 		else {
-			rowData->AppendTableValue(object->GetMetaID(), CValue());
+			rowData->AppendTableValue(object->GetMetaID(), ibValue());
 		}
 	}
 	long currentLine = GetRow(currentItem);
 	if (currentLine != wxNOT_FOUND) {
-		IValueTable::Insert(rowData, currentLine, !CBackendException::IsEvalMode());
+		ibValueModelTableBase::Insert(rowData, currentLine, !ibBackendException::IsEvalMode());
 	}
 	else {
-		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 	}
 
 	RefreshTabularSection();
 }
 
-void IValueTabularSectionDataObject::EditValue()
+void ibValueTabularSectionDataObjectBase::EditValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
 
@@ -109,37 +109,37 @@ void IValueTabularSectionDataObject::EditValue()
 		if (m_metaTable->IsNumberLine(m_modelProvider->GetCurrentModelColumn()))
 			return;
 
-		IValueTable::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
+		ibValueModelTableBase::RowValueStartEdit(currentItem, m_modelProvider->GetCurrentModelColumn());
 	}
 	else {
-		IValueTable::RowValueStartEdit(currentItem);
+		ibValueModelTableBase::RowValueStartEdit(currentItem);
 	}
 
 	RefreshTabularSection();
 }
 
-void IValueTabularSectionDataObject::DeleteValue()
+void ibValueTabularSectionDataObjectBase::DeleteValue()
 {
-	const wxDataViewExtItem& currentItem = GetSelection();
+	const ibDataViewItem& currentItem = GetSelection();
 	if (!currentItem.IsOk())
 		return;
-	wxValueTableRow* node = GetViewData<wxValueTableRow>(currentItem);
+	ibValueTableRow* node = GetViewData<ibValueTableRow>(currentItem);
 	if (node == nullptr)
 		return;
 
 	RefreshTabularSection();
 
-	if (!CBackendException::IsEvalMode()) {
-		IValueTable::Remove(node);
+	if (!ibBackendException::IsEvalMode()) {
+		ibValueModelTableBase::Remove(node);
 	}
 }
 
-void CValueTabularSectionDataObjectRef::CopyValue()
+void ibValueTabularSectionDataObjectRef::CopyValue()
 {
-	IValueTabularSectionDataObject::CopyValue();
+	ibValueTabularSectionDataObjectBase::CopyValue();
 
-	if (!CBackendException::IsEvalMode()) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(
+	if (!ibBackendException::IsEvalMode()) {
+		ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(
 			m_objectValue->GetGuid()
 		);
 		if (foundedForm != nullptr) {
@@ -150,12 +150,12 @@ void CValueTabularSectionDataObjectRef::CopyValue()
 	RefreshTabularSection();
 }
 
-void CValueTabularSectionDataObjectRef::DeleteValue()
+void ibValueTabularSectionDataObjectRef::DeleteValue()
 {
-	IValueTabularSectionDataObject::DeleteValue();
+	ibValueTabularSectionDataObjectBase::DeleteValue();
 
-	if (!CBackendException::IsEvalMode()) {
-		IBackendValueForm* const foundedForm = IBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());
+	if (!ibBackendException::IsEvalMode()) {
+		ibBackendValueForm* const foundedForm = ibBackendValueForm::FindFormByUniqueKey(m_objectValue->GetGuid());
 		if (foundedForm != nullptr) foundedForm->Modify(true);
 	}
 }

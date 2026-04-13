@@ -3,12 +3,12 @@
 
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API CValueRecordDataObjectConstant;
+class BACKEND_API ibValueRecordDataObjectConstant;
 
-class BACKEND_API CValueMetaObjectConstant : 
-	public CValueMetaObjectAttribute, public IBackendCommandItem {
+class BACKEND_API ibValueMetaObjectConstant : 
+	public ibValueMetaObjectAttribute, public ibBackendCommandItem {
 	
-	wxDECLARE_DYNAMIC_CLASS(CValueMetaObjectConstant);
+	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectConstant);
 protected:
 	enum
 	{
@@ -22,15 +22,15 @@ public:
 	bool AccessRight_Write() const { return IsFullAccess() || AccessRight(m_roleWrite); }
 #pragma endregion
 
-	CValueMetaObjectConstant();
-	virtual ~CValueMetaObjectConstant();
+	ibValueMetaObjectConstant();
+	virtual ~ibValueMetaObjectConstant();
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	virtual bool OnCreateMetaObject(IMetaData* metaData, int flags);
-	virtual bool OnLoadMetaObject(IMetaData* metaData);
+	virtual bool OnCreateMetaObject(ibMetaData* metaData, int flags);
+	virtual bool OnLoadMetaObject(ibMetaData* metaData);
 	virtual bool OnSaveMetaObject(int flags);
 	virtual bool OnDeleteMetaObject();
 
@@ -45,37 +45,37 @@ public:
 	static wxString GetTableNameDB() { return wxT("sys_const"); }
 
 	//get module object in compose object 
-	virtual CValueMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
+	virtual ibValueMetaObjectModule* GetModuleObject() const { return m_propertyModule->GetMetaObject(); }
 
 	//create empty object
-	virtual CValueRecordDataObjectConstant* CreateRecordDataObjectValue();
+	virtual ibValueRecordDataObjectConstant* CreateRecordDataObjectValue();
 
 	//support form 
-	virtual IBackendValueForm* GetObjectForm();
+	virtual ibBackendValueForm* GetObjectForm();
 
 	//create constant table  
 	static bool CreateConstantSQLTable();
 	static bool DeleteConstantSQLTable();
 
 	//get command section 
-	virtual EInterfaceCommandSection GetCommandSection() const { return EInterfaceCommandSection::EInterfaceCommandSection_Create; }
+	virtual ibInterfaceCommandSection GetCommandSection() const { return ibInterfaceCommandSection::ibInterfaceCommandSection_Create; }
 
 	//process default query
-	int ProcessAttribute(const wxString& tableName, IValueMetaObjectAttribute* srcAttr, IValueMetaObjectAttribute* dstAttr);
+	int ProcessAttribute(const wxString& tableName, ibValueMetaObjectAttributeBase* srcAttr, ibValueMetaObjectAttributeBase* dstAttr);
 
 	// load & save config data 
-	virtual bool LoadTableData(const CMemoryReader& reader);
-	virtual bool SaveTableData(CMemoryWriter& writer) const;
+	virtual bool LoadTableData(const ibReaderMemory& reader);
+	virtual bool SaveTableData(ibWriterMemory& writer) const;
 
 protected:
 
 	//create and update table 
-	virtual bool CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags);
+	virtual bool CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags);
 
 	//get default form 
-	virtual IBackendValueForm* GetFormByCommandType(EInterfaceCommandType cmdType = EInterfaceCommandType::EInterfaceCommandType_Default) {
+	virtual ibBackendValueForm* GetFormByCommandType(ibInterfaceCommandType cmdType = ibInterfaceCommandType::ibInterfaceCommandType_Default) {
 
-		if (cmdType == EInterfaceCommandType::EInterfaceCommandType_Create) {
+		if (cmdType == ibInterfaceCommandType::ibInterfaceCommandType_Create) {
 			return GetObjectForm();
 		}
 
@@ -83,8 +83,8 @@ protected:
 	}
 
 	//load & save metaData from DB 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 	virtual bool DeleteData();
 
 	//prepare menu for item
@@ -93,22 +93,22 @@ protected:
 
 private:
 
-	CPropertyInnerModule<CValueMetaObjectModule>* m_propertyModule = IPropertyObject::CreateProperty<CPropertyInnerModule<CValueMetaObjectModule>>(m_categoryContext, wxT("RecordModule"), _("Record module"));
+	ibPropertyInnerModule<ibValueMetaObjectModule>* m_propertyModule = ibPropertyObject::CreateProperty<ibPropertyInnerModule<ibValueMetaObjectModule>>(m_categoryContext, wxT("RecordModule"), _("Record module"));
 
 #pragma region role 
-	CRole* m_roleRead = IValueMetaObject::CreateRole(wxT("Read"), _("Read"));
-	CRole* m_roleWrite = IValueMetaObject::CreateRole(wxT("Write"), _("Write"));
+	ibRole* m_roleRead = ibValueMetaObject::CreateRole(wxT("Read"), _("Read"));
+	ibRole* m_roleWrite = ibValueMetaObject::CreateRole(wxT("Write"), _("Write"));
 #pragma endregion
 
-	friend class CValueRecordDataObjectConstant;
-	friend class IMetaData;
+	friend class ibValueRecordDataObjectConstant;
+	friend class ibMetaData;
 };
 
 #include "backend/moduleInfo.h"
 
-class BACKEND_API CValueRecordDataObjectConstant : public CValue, public IActionDataObject,
-	public ISourceDataObject, public IModuleDataObject {
-	virtual bool InitializeObject(const CValueRecordDataObjectConstant* source = nullptr);
+class BACKEND_API ibValueRecordDataObjectConstant : public ibValue, public ibActionDataObject,
+	public ibSourceDataObject, public ibModuleDataObject {
+	virtual bool InitializeObject(const ibValueRecordDataObjectConstant* source = nullptr);
 protected:
 	enum helperAlias {
 		eSystem,
@@ -120,27 +120,27 @@ protected:
 protected:
 
 	//override copy constructor
-	CValueRecordDataObjectConstant(CValueMetaObjectConstant* metaObject);
-	CValueRecordDataObjectConstant(const CValueRecordDataObjectConstant& source);
+	ibValueRecordDataObjectConstant(ibValueMetaObjectConstant* metaObject);
+	ibValueRecordDataObjectConstant(const ibValueRecordDataObjectConstant& source);
 
 	//standart override 
-	virtual CMethodHelper* GetPMethods() const final { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const final { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
 
 public:
 
-	virtual ~CValueRecordDataObjectConstant();
+	virtual ~ibValueRecordDataObjectConstant();
 
-	CValue GetConstValue() const;
-	bool SetConstValue(const CValue& cValue);
+	ibValue GetConstValue() const;
+	bool SetConstValue(const ibValue& cValue);
 
 	//standart override 
 	virtual void PrepareNames() const;
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
 
 	//override default type object 
 	virtual bool IsNewObject() const { return false; }
@@ -158,10 +158,10 @@ public:
 	virtual bool ModifiesData() { return true; }
 
 	//get metaData from object 
-	virtual IValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
+	virtual ibValueMetaObjectGenericData* GetSourceMetaObject() const final { return GetMetaObject(); }
 
 	//Get ref class 
-	virtual class_identifier_t GetSourceClassType() const final { return GetClassType(); };
+	virtual ibClassID GetSourceClassType() const final { return GetClassType(); };
 
 	//Get presentation 
 	virtual wxString GetSourceCaption() const {
@@ -169,44 +169,44 @@ public:
 	}
 
 	//support source data 
-	virtual CSourceExplorer GetSourceExplorer() const;
-	virtual bool GetModel(IValueModel*& tableValue, const meta_identifier_t& id);
+	virtual ibSourceExplorer GetSourceExplorer() const;
+	virtual bool GetModel(ibValueModel*& tableValue, const ibMetaID& id);
 
 	//support source set/get data 
-	virtual bool SetValueByMetaID(const meta_identifier_t& id, const CValue& varMetaVal);
-	virtual bool GetValueByMetaID(const meta_identifier_t& id, CValue& pvarMetaVal) const;
+	virtual bool SetValueByMetaID(const ibMetaID& id, const ibValue& varMetaVal);
+	virtual bool GetValueByMetaID(const ibMetaID& id, ibValue& pvarMetaVal) const;
 
 	//counter
-	virtual void SourceIncrRef() { CValue::IncrRef(); }
-	virtual void SourceDecrRef() { CValue::DecrRef(); }
+	virtual void SourceIncrRef() { ibValue::IncrRef(); }
+	virtual void SourceDecrRef() { ibValue::DecrRef(); }
 
 	//get metaData from object 
-	virtual IValueMetaObjectGenericData* GetMetaObject() const {
-		return (IValueMetaObjectGenericData*)m_metaObject;
+	virtual ibValueMetaObjectGenericData* GetMetaObject() const {
+		return (ibValueMetaObjectGenericData*)m_metaObject;
 	};
 
 	//get unique identifier 
-	virtual CUniqueKey GetGuid() const { return m_metaObject->GetGuid(); }
+	virtual ibUniqueKey GetGuid() const { return m_metaObject->GetGuid(); }
 	virtual bool SaveModify() override { return SetConstValue(m_constValue); }
 
 	//get frame
-	virtual IBackendValueForm* GetForm() const;
+	virtual ibBackendValueForm* GetForm() const;
 
 #pragma region _form_builder_h_
 	//support show 
 	virtual void ShowFormValue();
-	virtual IBackendValueForm* GetFormValue();
+	virtual ibBackendValueForm* GetFormValue();
 #pragma endregion
 
 	//support actionData
-	virtual CActionCollection GetActionCollection(const form_identifier_t& formType);
-	virtual void ExecuteAction(const action_identifier_t& lNumAction, IBackendValueForm* srcForm);
+	virtual ibActionCollection GetActionCollection(const ibFormID& formType);
+	virtual void ExecuteAction(const ibActionID& lNumAction, ibBackendValueForm* srcForm);
 
 	//default showing
 	virtual void ShowValue() override { ShowFormValue(); }
 
 	//Get ref class 
-	virtual class_identifier_t GetClassType() const;
+	virtual ibClassID GetClassType() const;
 	virtual wxString GetClassName() const;
 	virtual wxString GetString() const;
 
@@ -214,11 +214,11 @@ protected:
 
 	bool m_objModified;
 
-	CMethodHelper* m_methodHelper;
-	CValueMetaObjectConstant* m_metaObject;
-	CValue m_constValue;
+	ibValueMethodHelper* m_methodHelper;
+	ibValueMetaObjectConstant* m_metaObject;
+	ibValue m_constValue;
 
-	friend class CValue;
+	friend class ibValue;
 };
 
 #endif

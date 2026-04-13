@@ -6,7 +6,7 @@
 #include "constant.h"
 #include "backend/metaData.h"
 
-bool CValueMetaObjectConstant::PrepareContextMenu(wxMenu *defaultMenu)
+bool ibValueMetaObjectConstant::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = nullptr;
 	menuItem = defaultMenu->Append(ID_METATREE_OPEN_CONSTANT_MANAGER, _("Open constant module"));
@@ -15,9 +15,9 @@ bool CValueMetaObjectConstant::PrepareContextMenu(wxMenu *defaultMenu)
 	return false;
 }
 
-void CValueMetaObjectConstant::ProcessCommand(unsigned int id)
+void ibValueMetaObjectConstant::ProcessCommand(unsigned int id)
 {
-	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
+	ibBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_CONSTANT_MANAGER)

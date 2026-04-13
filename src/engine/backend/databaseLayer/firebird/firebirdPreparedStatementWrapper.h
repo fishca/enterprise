@@ -20,16 +20,16 @@
 #include "firebirdParameterCollection.h"
 #include "firebirdInterface.h"
 
-class IDatabaseResultSet;
+class ibDatabaseResultSet;
 
-class CFirebirdPreparedStatementWrapper : public CDatabaseErrorReporter, public CDatabaseStringConverter
+class ibPreparedStatementFirebirdWrapper : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
 {
 public:
 	// ctor
-	CFirebirdPreparedStatementWrapper(CFirebirdInterface* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL);
+	ibPreparedStatementFirebirdWrapper(ibInterfaceFirebird* pInterface, isc_db_handle pDatabase, isc_tr_handle pTransaction, const wxString& strSQL);
 
 	// dtor
-	virtual ~CFirebirdPreparedStatementWrapper();
+	virtual ~ibPreparedStatementFirebirdWrapper();
 
 	bool Prepare(const wxString& strSQL);
 	bool Prepare();
@@ -37,7 +37,7 @@ public:
 	// set field
 	void SetParam(int nPosition, int nValue);
 	void SetParam(int nPosition, double dblValue);
-	void SetParam(int nPosition, const number_t& numValue);
+	void SetParam(int nPosition, const ibNumber& numValue);
 	void SetParam(int nPosition, const wxString& strValue);
 	void SetParam(int nPosition);
 	void SetParam(int nPosition, const void* pData, long nDataLength);
@@ -46,7 +46,7 @@ public:
 	int GetParameterCount();
 
 	int DoRunQuery();
-	IDatabaseResultSet* DoRunQueryWithResults();
+	ibDatabaseResultSet* DoRunQueryWithResults();
 
 	void SetTransaction(isc_tr_handle pTransaction) { m_pTransaction = pTransaction; }
 	bool IsSelectQuery();
@@ -60,10 +60,10 @@ private:
 	isc_db_handle m_pDatabase;
 	isc_tr_handle m_pTransaction;
 
-	CFirebirdParameterCollection* m_pParameterCollection;
+	ibDatatabaseParameterFirebirdCollection* m_pParameterCollection;
 
 	ISC_STATUS_ARRAY m_Status;
-	CFirebirdInterface* m_pInterface;
+	ibInterfaceFirebird* m_pInterface;
 
 	bool m_bManageStatement;
 	bool m_bManageTransaction;

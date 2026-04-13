@@ -1,12 +1,12 @@
 #include "firebirdResultSetMetaData.h"
 
 // ctor
-CFirebirdResultSetMetaData::CFirebirdResultSetMetaData(XSQLDA* pFields)
+ibDatabaseResultSetMetaDataFirebird::ibDatabaseResultSetMetaDataFirebird(XSQLDA* pFields)
 {
 	m_pFields = pFields;
 }
 
-int CFirebirdResultSetMetaData::GetColumnType(int i)
+int ibDatabaseResultSetMetaDataFirebird::GetColumnType(int i)
 {
 	int returnType = COLUMN_UNKNOWN;
 	XSQLVAR* pVar = GetVariable(i);
@@ -48,7 +48,7 @@ int CFirebirdResultSetMetaData::GetColumnType(int i)
 	return returnType;
 }
 
-int CFirebirdResultSetMetaData::GetColumnSize(int i)
+int ibDatabaseResultSetMetaDataFirebird::GetColumnSize(int i)
 {
 	XSQLVAR* pVar = GetVariable(i);
 	if (pVar)
@@ -58,7 +58,7 @@ int CFirebirdResultSetMetaData::GetColumnSize(int i)
 	return -1;
 }
 
-wxString CFirebirdResultSetMetaData::GetColumnName(int i)
+wxString ibDatabaseResultSetMetaDataFirebird::GetColumnName(int i)
 {
 	XSQLVAR* pVar = GetVariable(i);
 	if (pVar)
@@ -69,12 +69,12 @@ wxString CFirebirdResultSetMetaData::GetColumnName(int i)
 	return wxEmptyString;
 }
 
-int CFirebirdResultSetMetaData::GetColumnCount()
+int ibDatabaseResultSetMetaDataFirebird::GetColumnCount()
 {
 	return m_pFields->sqln;
 }
 
-XSQLVAR* CFirebirdResultSetMetaData::GetVariable(int nField)
+XSQLVAR* ibDatabaseResultSetMetaDataFirebird::GetVariable(int nField)
 {
 	XSQLVAR* pVar = &(m_pFields->sqlvar[nField - 1]);
 	return pVar;

@@ -1,9 +1,13 @@
 #include "metaObjectMetadata.h"
+#include "backend/compiler/compileCode.h"
 
-void CValueMetaObjectConfiguration::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectConfiguration::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (m_propertyDefLanguage == property)
-		CBackendLocalization::SetUserLanguage(GetLangCode());
+		ibBackendLocalization::SetUserLanguage(GetLangCode());
+	
+	if (m_propertySyntax == property)
+		ibCompileCode::SetCodeStyle(m_propertySyntax->GetValueAsEnum());
 
-	IValueMetaObject::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObject::OnPropertyChanged(property, oldValue, newValue);
 }

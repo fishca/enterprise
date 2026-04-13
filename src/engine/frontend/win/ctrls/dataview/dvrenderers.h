@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Name:        wx/dvrenderers.h
-// Purpose:     Declare all wxDataViewExtCtrl classes
+// Purpose:     Declare all ibDataViewCtrl classes
 // Author:      Robert Roebling, Vadim Zeitlin
 // Created:     2009-11-08 (extracted from wx/dataview.h)
 // Copyright:   (c) 2006 Robert Roebling
@@ -18,25 +18,25 @@
 	one which can be included directly is wx/dataview.h. It, in turn, includes
 	this one to define all the renderer classes.
 
-	We define the base wxDataViewExtRendererBase class first and then include a
-	port-dependent wx/xxx/dvrenderer.h which defines wxDataViewExtRenderer itself.
-	After this we can define wxDataViewExtRendererCustomBase (and maybe in the
+	We define the base ibDataViewRendererBase class first and then include a
+	port-dependent wx/xxx/dvrenderer.h which defines ibDataViewRenderer itself.
+	After this we can define ibDataViewRendererCustomBase (and maybe in the
 	future base classes for other renderers if the need arises, i.e. if there
 	is any non-trivial code or API which it makes sense to keep in common code)
 	and include wx/xxx/dvrenderers.h (notice the plural) which defines all the
 	rest of the renderer classes.
  */
 
-class FRONTEND_API wxDataViewExtCustomRenderer;
+class FRONTEND_API ibDataViewCustomRenderer;
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtIconText: helper class used by wxDataViewExtIconTextRenderer
+// ibDataViewIconText: helper class used by ibDataViewIconTextRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtIconText : public wxObject
+class FRONTEND_API ibDataViewIconText : public wxObject
 {
 public:
-	wxDataViewExtIconText(const wxString& text = wxEmptyString,
+	ibDataViewIconText(const wxString& text = wxEmptyString,
 		const wxBitmapBundle& bitmap = wxBitmapBundle())
 		: m_text(text),
 		m_bitmap(bitmap)
@@ -53,17 +53,17 @@ public:
 	void SetIcon(const wxIcon& icon) { m_bitmap = wxBitmapBundle(icon); }
 	wxIcon GetIcon() const { return m_bitmap.GetIcon(wxDefaultSize); }
 
-	bool IsSameAs(const wxDataViewExtIconText& other) const
+	bool IsSameAs(const ibDataViewIconText& other) const
 	{
 		return m_text == other.m_text && m_bitmap.IsSameAs(other.m_bitmap);
 	}
 
-	bool operator==(const wxDataViewExtIconText& other) const
+	bool operator==(const ibDataViewIconText& other) const
 	{
 		return IsSameAs(other);
 	}
 
-	bool operator!=(const wxDataViewExtIconText& other) const
+	bool operator!=(const ibDataViewIconText& other) const
 	{
 		return !IsSameAs(other);
 	}
@@ -72,22 +72,22 @@ private:
 	wxString    m_text;
 	wxBitmapBundle m_bitmap;
 
-	wxDECLARE_DYNAMIC_CLASS(wxDataViewExtIconText);
+	wxDECLARE_DYNAMIC_CLASS(ibDataViewIconText);
 };
 
-DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewExtIconText, FRONTEND_API)
+DECLARE_VARIANT_OBJECT_EXPORTED(ibDataViewIconText, FRONTEND_API)
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtCheckIconText: value class used by wxDataViewExtCheckIconTextRenderer
+// ibDataViewCheckIconText: value class used by ibDataViewCheckIconTextRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtCheckIconText : public wxDataViewExtIconText
+class FRONTEND_API ibDataViewCheckIconText : public ibDataViewIconText
 {
 public:
-	wxDataViewExtCheckIconText(const wxString& text = wxString(),
+	ibDataViewCheckIconText(const wxString& text = wxString(),
 		const wxBitmapBundle& icon = wxBitmapBundle(),
 		wxCheckBoxState checkedState = wxCHK_UNDETERMINED)
-		: wxDataViewExtIconText(text, icon),
+		: ibDataViewIconText(text, icon),
 		m_checkedState(checkedState)
 	{
 	}
@@ -98,23 +98,23 @@ public:
 private:
 	wxCheckBoxState m_checkedState;
 
-	wxDECLARE_DYNAMIC_CLASS(wxDataViewExtCheckIconText);
+	wxDECLARE_DYNAMIC_CLASS(ibDataViewCheckIconText);
 };
 
-DECLARE_VARIANT_OBJECT_EXPORTED(wxDataViewExtCheckIconText, FRONTEND_API)
+DECLARE_VARIANT_OBJECT_EXPORTED(ibDataViewCheckIconText, FRONTEND_API)
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtRendererBase
+// ibDataViewRendererBase
 // ----------------------------------------------------------------------------
 
-enum wxDataViewExtCellMode
+enum ibDataViewCellMode
 {
 	wxDATAVIEW_CELL_INERT,
 	wxDATAVIEW_CELL_ACTIVATABLE,
 	wxDATAVIEW_CELL_EDITABLE
 };
 
-enum wxDataViewExtCellRenderState
+enum ibDataViewCellRenderState
 {
 	wxDATAVIEW_CELL_SELECTED = 1,
 	wxDATAVIEW_CELL_PRELIT = 2,
@@ -123,30 +123,30 @@ enum wxDataViewExtCellRenderState
 };
 
 // helper for fine-tuning rendering of values depending on row's state
-class FRONTEND_API wxDataViewExtValueAdjuster
+class FRONTEND_API ibDataViewValueAdjuster
 {
 public:
-	virtual ~wxDataViewExtValueAdjuster() {}
+	virtual ~ibDataViewValueAdjuster() {}
 
 	// changes the value to have appearance suitable for highlighted rows
 	virtual wxVariant MakeHighlighted(const wxVariant& value) const { return value; }
 };
 
-class FRONTEND_API wxDataViewExtRendererBase : public wxObject
+class FRONTEND_API ibDataViewRendererBase : public wxObject
 {
 public:
-	wxDataViewExtRendererBase(const wxString& varianttype,
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewRendererBase(const wxString& varianttype,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int alignment = wxDVR_DEFAULT_ALIGNMENT);
-	virtual ~wxDataViewExtRendererBase();
+	virtual ~ibDataViewRendererBase();
 
 	virtual bool Validate(wxVariant& WXUNUSED(value))
 	{
 		return true;
 	}
 
-	void SetOwner(wxDataViewExtColumn* owner) { m_owner = owner; }
-	wxDataViewExtColumn* GetOwner() const { return m_owner; }
+	void SetOwner(ibDataViewColumn* owner) { m_owner = owner; }
+	ibDataViewColumn* GetOwner() const { return m_owner; }
 
 	// renderer value and attributes: SetValue() and SetAttr() are called
 	// before a cell is rendered using this renderer
@@ -178,13 +178,13 @@ public:
 	// the model returned a value of the wrong type, i.e. such that our
 	// IsCompatibleVariantType() returned false for it, in which case a debug
 	// error is also logged).
-	bool PrepareForItem(const wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+	bool PrepareForItem(const ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned column);
 
 	// renderer properties:
-	virtual void SetMode(wxDataViewExtCellMode mode) = 0;
-	virtual wxDataViewExtCellMode GetMode() const = 0;
+	virtual void SetMode(ibDataViewCellMode mode) = 0;
+	virtual ibDataViewCellMode GetMode() const = 0;
 
 	// NOTE: Set/GetAlignment do not take/return a wxAlignment enum but
 	//       rather an "int"; that's because for rendering cells it's allowed
@@ -217,7 +217,7 @@ public:
 		return false;
 	}
 
-	virtual bool StartEditing(const wxDataViewExtItem& item, wxRect labelRect);
+	virtual bool StartEditing(const ibDataViewItem& item, wxRect labelRect);
 	virtual void CancelEditing();
 	virtual bool FinishEditing();
 
@@ -242,10 +242,10 @@ public:
 	int GetEffectiveAlignmentIfKnown() const;
 
 	// Send wxEVT_DATAVIEW_ITEM_EDITING_STARTED event.
-	void NotifyEditingStarted(const wxDataViewExtItem& item);
+	void NotifyEditingStarted(const ibDataViewItem& item);
 
 	// Sets the transformer for fine-tuning rendering of values depending on row's state
-	void SetValueAdjuster(wxDataViewExtValueAdjuster* transformer)
+	void SetValueAdjuster(ibDataViewValueAdjuster* transformer)
 	{
 		delete m_valueAdjuster; m_valueAdjuster = transformer;
 	}
@@ -254,7 +254,7 @@ protected:
 	// These methods are called from PrepareForItem() and should do whatever is
 	// needed for the current platform to ensure that the item is rendered
 	// using the given attributes and enabled/disabled state.
-	virtual void SetAttr(const wxDataViewExtItemAttr& attr) = 0;
+	virtual void SetAttr(const ibDataViewItemAttr& attr) = 0;
 	virtual void SetEnabled(bool enabled) = 0;
 
 	// Return whether the currently rendered item is on a highlighted row
@@ -263,8 +263,8 @@ protected:
 
 	// Helper of PrepareForItem() also used in StartEditing(): returns the
 	// value checking that its type matches our GetVariantType().
-	wxVariant CheckedGetValue(const wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+	wxVariant CheckedGetValue(const ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned column) const;
 
 	// Validates the given value (if it is non-null) and sends (in any case)
@@ -274,48 +274,48 @@ protected:
 
 
 	wxString                m_variantType;
-	wxDataViewExtColumn* m_owner;
+	ibDataViewColumn* m_owner;
 	wxWeakRef<wxWindow>     m_editorCtrl;
-	wxDataViewExtItem          m_item; // Item being currently edited, if valid.
+	ibDataViewItem          m_item; // Item being currently edited, if valid.
 
-	wxDataViewExtValueAdjuster* m_valueAdjuster;
+	ibDataViewValueAdjuster* m_valueAdjuster;
 
 	// internal utility, may be used anywhere the window associated with the
 	// renderer is required
-	wxDataViewExtCtrl* GetView() const;
+	ibDataViewCtrl* GetView() const;
 
 private:
 	// Called from {Called,Finish}Editing() and dtor to cleanup m_editorCtrl
 	void DestroyEditControl();
 
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtRendererBase);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewRendererBase);
 };
 
-// in the generic implementation there is no real wxDataViewExtRenderer, all
-// renderers are custom so it's the same as wxDataViewExtCustomRenderer and
-// wxDataViewExtCustomRendererBase derives from wxDataViewExtRendererBase directly
+// in the generic implementation there is no real ibDataViewRenderer, all
+// renderers are custom so it's the same as ibDataViewCustomRenderer and
+// ibDataViewCustomRendererBase derives from ibDataViewRendererBase directly
 //
 // this is a rather ugly hack but unfortunately it just doesn't seem to be
 // possible to have the same class hierarchy in all ports and avoid
-// duplicating the entire wxDataViewExtCustomRendererBase in the generic
-// wxDataViewExtRenderer class (well, we could use a mix-in but this would
+// duplicating the entire ibDataViewCustomRendererBase in the generic
+// ibDataViewRenderer class (well, we could use a mix-in but this would
 // make classes hierarchy non linear and arguably even more complex)
-#define wxDataViewExtCustomRendererRealBase wxDataViewExtRendererBase
+#define ibDataViewCustomRendererRealBase ibDataViewRendererBase
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtCustomRendererBase
+// ibDataViewCustomRendererBase
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtCustomRendererBase
-	: public wxDataViewExtCustomRendererRealBase
+class FRONTEND_API ibDataViewCustomRendererBase
+	: public ibDataViewCustomRendererRealBase
 {
 public:
 	// Constructor must specify the usual renderer parameters which we simply
 	// pass to the base class
-	wxDataViewExtCustomRendererBase(const wxString& varianttype = wxASCII_STR("string"),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewCustomRendererBase(const wxString& varianttype = wxASCII_STR("string"),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT)
-		: wxDataViewExtCustomRendererRealBase(varianttype, mode, align)
+		: ibDataViewCustomRendererRealBase(varianttype, mode, align)
 	{
 	}
 
@@ -331,15 +331,15 @@ public:
 	// return false indicating that the events are not handled
 
 	virtual bool ActivateCell(const wxRect& cell,
-		wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+		ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent);
 
 	virtual bool StartDrag(const wxPoint& WXUNUSED(cursor),
 		const wxRect& WXUNUSED(cell),
-		wxDataViewExtModel* WXUNUSED(model),
-		const wxDataViewExtItem& WXUNUSED(item),
+		ibDataViewModel* WXUNUSED(model),
+		const ibDataViewItem& WXUNUSED(item),
 		unsigned int WXUNUSED(col))
 	{
 		return false;
@@ -357,8 +357,8 @@ public:
 
 	// Override the base class virtual method to simply store the attribute so
 	// that it can be accessed using GetAttr() from Render() if needed.
-	virtual void SetAttr(const wxDataViewExtItemAttr& attr) wxOVERRIDE { m_attr = attr; }
-	const wxDataViewExtItemAttr& GetAttr() const { return m_attr; }
+	virtual void SetAttr(const ibDataViewItemAttr& attr) wxOVERRIDE { m_attr = attr; }
+	const ibDataViewItemAttr& GetAttr() const { return m_attr; }
 
 	// Store the enabled state of the item so that it can be accessed from
 	// Render() via GetEnabled() if needed.
@@ -372,7 +372,7 @@ public:
 	// platform-specific classes.
 	virtual wxDC* GetDC() = 0;
 
-	// To draw background use the background colour in wxDataViewExtItemAttr
+	// To draw background use the background colour in ibDataViewItemAttr
 	virtual void RenderBackground(wxDC* dc, const wxRect& rect);
 
 	// Prepare DC to use attributes and call Render().
@@ -385,23 +385,23 @@ protected:
 	wxSize GetTextExtent(const wxString& str) const;
 
 private:
-	wxDataViewExtItemAttr m_attr;
+	ibDataViewItemAttr m_attr;
 	bool m_enabled;
 
-	wxDECLARE_NO_COPY_CLASS(wxDataViewExtCustomRendererBase);
+	wxDECLARE_NO_COPY_CLASS(ibDataViewCustomRendererBase);
 };
 
 // ----------------------------------------------------------------------------
 // wxDataViewRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtRenderer : public wxDataViewExtCustomRendererBase
+class FRONTEND_API ibDataViewRenderer : public ibDataViewCustomRendererBase
 {
 public:
-	wxDataViewExtRenderer(const wxString& varianttype,
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewRenderer(const wxString& varianttype,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
-	virtual ~wxDataViewExtRenderer();
+	virtual ~ibDataViewRenderer();
 
 	virtual wxDC* GetDC() wxOVERRIDE;
 
@@ -417,11 +417,11 @@ public:
 		return m_ellipsizeMode;
 	}
 
-	virtual void SetMode(wxDataViewExtCellMode mode) wxOVERRIDE
+	virtual void SetMode(ibDataViewCellMode mode) wxOVERRIDE
 	{
 		m_mode = mode;
 	}
-	virtual wxDataViewExtCellMode GetMode() const wxOVERRIDE
+	virtual ibDataViewCellMode GetMode() const wxOVERRIDE
 	{
 		return m_mode;
 	}
@@ -434,8 +434,8 @@ public:
 	// uses this one for all of them, including the standard ones.
 
 	virtual bool WXActivateCell(const wxRect& WXUNUSED(cell),
-		wxDataViewExtModel* WXUNUSED(model),
-		const wxDataViewExtItem& WXUNUSED(item),
+		ibDataViewModel* WXUNUSED(model),
+		const ibDataViewItem& WXUNUSED(item),
 		unsigned int WXUNUSED(col),
 		const wxMouseEvent* WXUNUSED(mouseEvent))
 	{
@@ -452,7 +452,7 @@ protected:
 
 private:
 	int                          m_align;
-	wxDataViewExtCellMode           m_mode;
+	ibDataViewCellMode           m_mode;
 
 	wxEllipsizeMode m_ellipsizeMode;
 
@@ -460,28 +460,28 @@ private:
 
 	int m_state;
 
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewRenderer);
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtCustomRenderer
+// ibDataViewCustomRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtCustomRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewCustomRenderer : public ibDataViewRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("string"); }
 
-	wxDataViewExtCustomRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewCustomRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 
 	// see the explanation of the following WXOnXXX() methods in wx/generic/dvrenderer.h
 
 	virtual bool WXActivateCell(const wxRect& cell,
-		wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+		ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent) wxOVERRIDE
 	{
@@ -493,23 +493,23 @@ public:
 #endif // wxUSE_ACCESSIBILITY
 
 private:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtCustomRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewCustomRenderer);
 };
 
 
 // ---------------------------------------------------------
-// wxDataViewExtTextRenderer
+// ibDataViewTextRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtTextRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewTextRenderer : public ibDataViewRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("string"); }
 
-	wxDataViewExtTextRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewTextRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
-	virtual ~wxDataViewExtTextRenderer();
+	virtual ~ibDataViewTextRenderer();
 
 #if wxUSE_MARKUP
 	void EnableMarkup(bool enable = true);
@@ -538,20 +538,20 @@ private:
 	class wxItemMarkupText* m_markupText;
 #endif // wxUSE_MARKUP
 
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtTextRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewTextRenderer);
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtBitmapRenderer
+// ibDataViewBitmapRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtBitmapRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewBitmapRenderer : public ibDataViewRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("wxBitmapBundle"); }
 
-	wxDataViewExtBitmapRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewBitmapRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 	virtual bool SetValue(const wxVariant& value) wxOVERRIDE;
@@ -571,20 +571,20 @@ private:
 	wxBitmapBundle m_bitmapBundle;
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtBitmapRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewBitmapRenderer);
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtToggleRenderer
+// ibDataViewToggleRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtToggleRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewToggleRenderer : public ibDataViewRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("bool"); }
 
-	wxDataViewExtToggleRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewToggleRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 	void ShowAsRadio() { m_radio = true; }
@@ -600,8 +600,8 @@ public:
 
 	// Implementation only, don't use nor override
 	virtual bool WXActivateCell(const wxRect& cell,
-		wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+		ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent) wxOVERRIDE;
 private:
@@ -609,21 +609,21 @@ private:
 	bool    m_radio;
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtToggleRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewToggleRenderer);
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtProgressRenderer
+// ibDataViewProgressRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtProgressRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewProgressRenderer : public ibDataViewRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("long"); }
 
-	wxDataViewExtProgressRenderer(const wxString& label = wxEmptyString,
+	ibDataViewProgressRenderer(const wxString& label = wxEmptyString,
 		const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 	virtual bool SetValue(const wxVariant& value) wxOVERRIDE;
@@ -640,20 +640,20 @@ private:
 	int         m_value;
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtProgressRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewProgressRenderer);
 };
 
 // ---------------------------------------------------------
-// wxDataViewExtIconTextRenderer
+// ibDataViewIconTextRenderer
 // ---------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtIconTextRenderer : public wxDataViewExtRenderer
+class FRONTEND_API ibDataViewIconTextRenderer : public ibDataViewRenderer
 {
 public:
-	static wxString GetDefaultType() { return wxS("wxDataViewExtIconText"); }
+	static wxString GetDefaultType() { return wxS("ibDataViewIconText"); }
 
-	wxDataViewExtIconTextRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_INERT,
+	ibDataViewIconTextRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 	virtual bool SetValue(const wxVariant& value) wxOVERRIDE;
@@ -671,23 +671,23 @@ public:
 	virtual bool GetValueFromEditorCtrl(wxWindow* editor, wxVariant& value) wxOVERRIDE;
 
 private:
-	wxDataViewExtIconText   m_value;
+	ibDataViewIconText   m_value;
 
 protected:
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtIconTextRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewIconTextRenderer);
 };
 
 #if wxUSE_SPINCTRL
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtSpinRenderer
+// ibDataViewSpinRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtSpinRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API ibDataViewSpinRenderer : public ibDataViewCustomRenderer
 {
 public:
-	wxDataViewExtSpinRenderer(int min, int max,
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_EDITABLE,
+	ibDataViewSpinRenderer(int min, int max,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
 		int alignment = wxDVR_DEFAULT_ALIGNMENT);
 	virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
 	virtual wxWindow* CreateEditorCtrl(wxWindow* parent, wxRect labelRect, const wxVariant& value) wxOVERRIDE;
@@ -708,14 +708,14 @@ private:
 #endif // wxUSE_SPINCTRL
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtChoiceRenderer
+// ibDataViewChoiceRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtChoiceRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API ibDataViewChoiceRenderer : public ibDataViewCustomRenderer
 {
 public:
-	wxDataViewExtChoiceRenderer(const wxArrayString& choices,
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_EDITABLE,
+	ibDataViewChoiceRenderer(const wxArrayString& choices,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
 		int alignment = wxDVR_DEFAULT_ALIGNMENT);
 	virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
 	virtual wxWindow* CreateEditorCtrl(wxWindow* parent, wxRect labelRect, const wxVariant& value) wxOVERRIDE;
@@ -737,14 +737,14 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtChoiceByIndexRenderer
+// ibDataViewChoiceByIndexRenderer
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtChoiceByIndexRenderer : public wxDataViewExtChoiceRenderer
+class FRONTEND_API ibDataViewChoiceByIndexRenderer : public ibDataViewChoiceRenderer
 {
 public:
-	wxDataViewExtChoiceByIndexRenderer(const wxArrayString& choices,
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_EDITABLE,
+	ibDataViewChoiceByIndexRenderer(const wxArrayString& choices,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
 		int alignment = wxDVR_DEFAULT_ALIGNMENT);
 
 	virtual wxWindow* CreateEditorCtrl(wxWindow* parent, wxRect labelRect, const wxVariant& value) wxOVERRIDE;
@@ -758,17 +758,17 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtDateRenderer
+// ibDataViewDateRenderer
 // ----------------------------------------------------------------------------
 
 #if wxUSE_DATEPICKCTRL
-class FRONTEND_API wxDataViewExtDateRenderer : public wxDataViewExtCustomRenderer
+class FRONTEND_API ibDataViewDateRenderer : public ibDataViewCustomRenderer
 {
 public:
 	static wxString GetDefaultType() { return wxS("datetime"); }
 
-	wxDataViewExtDateRenderer(const wxString& varianttype = GetDefaultType(),
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_EDITABLE,
+	ibDataViewDateRenderer(const wxString& varianttype = GetDefaultType(),
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_EDITABLE,
 		int align = wxDVR_DEFAULT_ALIGNMENT);
 
 	virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
@@ -788,22 +788,22 @@ private:
 	wxDateTime    m_date;
 };
 #else // !wxUSE_DATEPICKCTRL
-typedef wxDataViewExtTextRenderer wxDataViewExtDateRenderer;
+typedef ibDataViewTextRenderer ibDataViewDateRenderer;
 #endif
 
 // ----------------------------------------------------------------------------
-// wxDataViewExtCheckIconTextRenderer: 3-state checkbox + text + optional icon
+// ibDataViewCheckIconTextRenderer: 3-state checkbox + text + optional icon
 // ----------------------------------------------------------------------------
 
-class FRONTEND_API wxDataViewExtCheckIconTextRenderer
-	: public wxDataViewExtCustomRenderer
+class FRONTEND_API ibDataViewCheckIconTextRenderer
+	: public ibDataViewCustomRenderer
 {
 public:
-	static wxString GetDefaultType() { return wxS("wxDataViewExtCheckIconText"); }
+	static wxString GetDefaultType() { return wxS("ibDataViewCheckIconText"); }
 
-	explicit wxDataViewExtCheckIconTextRenderer
+	explicit ibDataViewCheckIconTextRenderer
 	(
-		wxDataViewExtCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE,
+		ibDataViewCellMode mode = wxDATAVIEW_CELL_ACTIVATABLE,
 		int align = wxDVR_DEFAULT_ALIGNMENT
 	);
 
@@ -823,8 +823,8 @@ public:
 	virtual wxSize GetSize() const wxOVERRIDE;
 	virtual bool Render(wxRect cell, wxDC* dc, int state) wxOVERRIDE;
 	virtual bool ActivateCell(const wxRect& cell,
-		wxDataViewExtModel* model,
-		const wxDataViewExtItem& item,
+		ibDataViewModel* model,
+		const ibDataViewItem& item,
 		unsigned int col,
 		const wxMouseEvent* mouseEvent) wxOVERRIDE;
 
@@ -838,16 +838,16 @@ private:
 		MARGIN_ICON_TEXT = 4
 	};
 
-	wxDataViewExtCheckIconText m_value;
+	ibDataViewCheckIconText m_value;
 
 	bool m_allow3rdStateForUser;
 
-	wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxDataViewExtCheckIconTextRenderer);
+	wxDECLARE_DYNAMIC_CLASS_NO_COPY(ibDataViewCheckIconTextRenderer);
 };
 
 // this class is obsolete, its functionality was merged in
-// wxDataViewExtTextRenderer itself now, don't use it any more
-#define wxDataViewExtTextRendererAttr wxDataViewExtTextRenderer
+// ibDataViewTextRenderer itself now, don't use it any more
+#define ibDataViewTextRendererAttr ibDataViewTextRenderer
 
 #endif // _WX_DVRENDERERS_H_
 

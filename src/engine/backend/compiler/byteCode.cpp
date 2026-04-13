@@ -1,10 +1,10 @@
 #include "byteCode.h"
 
 ////////////////////////////////////////////////////////////////////////
-// CByteCode CByteCode CByteCode CByteCode						      //
+// ibByteCode ibByteCode ibByteCode ibByteCode						      //
 ////////////////////////////////////////////////////////////////////////
 
-long CByteCode::FindMethod(const wxString& strMethodName) const
+long ibByteCode::FindMethod(const wxString& strMethodName) const
 {
 	auto iterator = std::find_if(m_listFunc.begin(), m_listFunc.end(),
 		[strMethodName](const auto pair) { return stringUtils::CompareString(strMethodName, pair.first); });
@@ -13,7 +13,7 @@ long CByteCode::FindMethod(const wxString& strMethodName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindExportMethod(const wxString& strMethodName) const
+long ibByteCode::FindExportMethod(const wxString& strMethodName) const
 {
 	auto iterator = std::find_if(m_listExportFunc.begin(), m_listExportFunc.end(),
 		[strMethodName](const auto pair) {return stringUtils::CompareString(strMethodName, pair.first); });
@@ -22,7 +22,7 @@ long CByteCode::FindExportMethod(const wxString& strMethodName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindFunction(const wxString& funcName) const
+long ibByteCode::FindFunction(const wxString& funcName) const
 {
 	auto iterator = std::find_if(m_listFunc.begin(), m_listFunc.end(),
 		[funcName](const auto pair) { return stringUtils::CompareString(funcName, pair.first) && pair.second.m_bCodeRet; });
@@ -31,7 +31,7 @@ long CByteCode::FindFunction(const wxString& funcName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindExportFunction(const wxString& funcName) const
+long ibByteCode::FindExportFunction(const wxString& funcName) const
 {
 	auto iterator = std::find_if(m_listExportFunc.begin(), m_listExportFunc.end(),
 		[funcName](const auto pair) { return stringUtils::CompareString(funcName, pair.first) && pair.second.m_bCodeRet; });
@@ -40,7 +40,7 @@ long CByteCode::FindExportFunction(const wxString& funcName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindProcedure(const wxString& procName) const
+long ibByteCode::FindProcedure(const wxString& procName) const
 {
 	auto iterator = std::find_if(m_listFunc.begin(), m_listFunc.end(),
 		[procName](const auto pair) { return stringUtils::CompareString(procName, pair.first) && !pair.second.m_bCodeRet; });
@@ -49,7 +49,7 @@ long CByteCode::FindProcedure(const wxString& procName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindExportProcedure(const wxString& procName) const
+long ibByteCode::FindExportProcedure(const wxString& procName) const
 {
 	auto iterator = std::find_if(m_listExportFunc.begin(), m_listExportFunc.end(),
 		[procName](const auto pair) { return stringUtils::CompareString(procName, pair.first) && !pair.second.m_bCodeRet; });
@@ -58,7 +58,7 @@ long CByteCode::FindExportProcedure(const wxString& procName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindVariable(const wxString& strVarName) const
+long ibByteCode::FindVariable(const wxString& strVarName) const
 {
 	auto iterator = std::find_if(m_listVar.begin(), m_listVar.end(),
 		[strVarName](const std::pair<const wxString, long>& pair) { return stringUtils::CompareString(strVarName, pair.first); });
@@ -67,7 +67,7 @@ long CByteCode::FindVariable(const wxString& strVarName) const
 	return wxNOT_FOUND;
 }
 
-long CByteCode::FindExportVariable(const wxString& strVarName) const
+long ibByteCode::FindExportVariable(const wxString& strVarName) const
 {
 	auto iterator = std::find_if(m_listExportVar.begin(), m_listExportVar.end(),
 		[strVarName](const std::pair<const wxString, long>& pair) { return stringUtils::CompareString(strVarName, pair.first); });

@@ -7,48 +7,48 @@
 
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueForm::CValueFormCollectionControl, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueForm::ibValueFormCollectionControl, ibValue);
 //////////////////////////////////////////////////////////////////////
 
-CValueForm::CValueFormCollectionControl::CValueFormCollectionControl() : CValue(eValueTypes::TYPE_VALUE, true),
+ibValueForm::ibValueFormCollectionControl::ibValueFormCollectionControl() : ibValue(ibValueTypes::TYPE_VALUE, true),
 m_formOwner(nullptr), m_methodHelper(nullptr)
 {
 }
 
-CValueForm::CValueFormCollectionControl::CValueFormCollectionControl(CValueForm* ownerFrame) : CValue(eValueTypes::TYPE_VALUE, true),
-m_formOwner(ownerFrame), m_methodHelper(new CMethodHelper())
+ibValueForm::ibValueFormCollectionControl::ibValueFormCollectionControl(ibValueForm* ownerFrame) : ibValue(ibValueTypes::TYPE_VALUE, true),
+m_formOwner(ownerFrame), m_methodHelper(new ibValueMethodHelper())
 {
 }
 
 #include "backend/system/value/valueMap.h"
 
-CValueForm::CValueFormCollectionControl::~CValueFormCollectionControl()
+ibValueForm::ibValueFormCollectionControl::~ibValueFormCollectionControl()
 {
 	wxDELETE(m_methodHelper);
 }
 
-CValue CValueForm::CValueFormCollectionControl::GetIteratorEmpty()
+ibValue ibValueForm::ibValueFormCollectionControl::GetIteratorEmpty()
 {
-	return CValue::CreateAndPrepareValueRef<CValueContainer::CValueReturnContainer>();
+	return ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>();
 }
 
-CValue CValueForm::CValueFormCollectionControl::GetIteratorAt(unsigned int idx)
+ibValue ibValueForm::ibValueFormCollectionControl::GetIteratorAt(unsigned int idx)
 {
 	if (m_formOwner->m_listControl.size() < idx)
-		return CValue();
+		return ibValue();
 
 	auto structurePos = m_formOwner->m_listControl.begin();
 	std::advance(structurePos, idx);
 
-	return CValue::CreateAndPrepareValueRef<CValueContainer::CValueReturnContainer>(
+	return ibValue::CreateAndPrepareValueRef<ibValueContainer::ibValueReturnContainer>(
 		(*structurePos)->GetControlName(),
-		CValue(*structurePos)
+		ibValue(*structurePos)
 	);
 }
 
-bool CValueForm::CValueFormCollectionControl::GetAt(const CValue& varKeyValue, CValue& pvarValue)
+bool ibValueForm::ibValueFormCollectionControl::GetAt(const ibValue& varKeyValue, ibValue& pvarValue)
 {
-	const number_t& number = varKeyValue.GetNumber();
+	const ibNumber& number = varKeyValue.GetNumber();
 	if (m_formOwner->m_listControl.size() < number.ToUInt())
 		return false;
 
@@ -59,11 +59,11 @@ bool CValueForm::CValueFormCollectionControl::GetAt(const CValue& varKeyValue, C
 	return true;
 }
 
-bool CValueForm::CValueFormCollectionControl::Property(const CValue& varKeyValue, CValue& cValueFound)
+bool ibValueForm::ibValueFormCollectionControl::Property(const ibValue& varKeyValue, ibValue& cValueFound)
 {
 	const wxString& key = varKeyValue.GetString();
 	auto it = std::find_if(m_formOwner->m_listControl.begin(), m_formOwner->m_listControl.end(),
-		[key](IValueControl* control) {
+		[key](ibValueControl* control) {
 			return stringUtils::CompareString(key, control->GetControlName());
 		}
 	);
@@ -85,7 +85,7 @@ enum
 	enControlCount
 };
 
-void CValueForm::CValueFormCollectionControl::PrepareNames() const
+void ibValueForm::ibValueFormCollectionControl::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
@@ -111,7 +111,7 @@ void CValueForm::CValueFormCollectionControl::PrepareNames() const
 	}
 }
 
-bool CValueForm::CValueFormCollectionControl::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueForm::ibValueFormCollectionControl::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	wxASSERT(m_formOwner);
 	pvarPropVal = m_formOwner->FindControlByID(
@@ -122,29 +122,29 @@ bool CValueForm::CValueFormCollectionControl::GetPropVal(const long lPropNum, CV
 
 #include "backend/system/value/valueType.h"
 
-bool CValueForm::CValueFormCollectionControl::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueForm::ibValueFormCollectionControl::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case enControlRemove:
-		m_formOwner->RemoveControl(paParams[0]->ConvertToType<IValueFrame>());
+		m_formOwner->RemoveControl(paParams[0]->ConvertToType<ibValueFrame>());
 		return true;
 	}
 	return false;
 }
 
-bool CValueForm::CValueFormCollectionControl::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueForm::ibValueFormCollectionControl::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
 	case enControlCreate:
-		pvarRetValue = m_formOwner->CreateControl(paParams[0]->ConvertToType<CValueType>(), lSizeArray > 1 ? paParams[1]->ConvertToType<IValueFrame>() : CValue());
+		pvarRetValue = m_formOwner->CreateControl(paParams[0]->ConvertToType<ibValueType>(), lSizeArray > 1 ? paParams[1]->ConvertToType<ibValueFrame>() : ibValue());
 		return true;
 	case enControlFind:
 		pvarRetValue = m_formOwner->FindControl(paParams[0]->GetString());
 		return true;
 	case enControlProperty:
-		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : CValue());
+		pvarRetValue = Property(*paParams[0], lSizeArray > 1 ? *paParams[1] : ibValue());
 		return true;
 	case enControlCount:
 		pvarRetValue = Count();
@@ -158,4 +158,4 @@ bool CValueForm::CValueFormCollectionControl::CallAsFunc(const long lMethodNum, 
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValueForm::CValueFormCollectionControl, "FormControl", string_to_clsid("VL_CNTR"));
+SYSTEM_TYPE_REGISTER(ibValueForm::ibValueFormCollectionControl, "FormControl", string_to_clsid("VL_CNTR"));

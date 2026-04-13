@@ -4,44 +4,44 @@
 #include "backend/backend_core.h"
 #include "backend/compiler/typeCtor.h"
 
-extern BACKEND_API const CValue wxEmptyValue;
+extern BACKEND_API const ibValue wxEmptyValue;
 
-class BACKEND_API IBackendValue {
+class BACKEND_API ibBackendValue {
 public:
-	virtual CValue* GetImplValueRef() const = 0;
+	virtual ibValue* GetImplValueRef() const = 0;
 };
 
-const class_identifier_t g_valueUndefinedCLSID = string_to_clsid("VL_UNDF");
+const ibClassID g_valueUndefinedCLSID = string_to_clsid("VL_UNDF");
 
-const class_identifier_t g_valueBooleanCLSID = string_to_clsid("VL_BOOL");
-const class_identifier_t g_valueNumberCLSID = string_to_clsid("VL_NUMB");
-const class_identifier_t g_valueDateCLSID = string_to_clsid("VL_DATE");
-const class_identifier_t g_valueStringCLSID = string_to_clsid("VL_STRI");
+const ibClassID g_valueBooleanCLSID = string_to_clsid("VL_BOOL");
+const ibClassID g_valueNumberCLSID = string_to_clsid("VL_NUMB");
+const ibClassID g_valueDateCLSID = string_to_clsid("VL_DATE");
+const ibClassID g_valueStringCLSID = string_to_clsid("VL_STRI");
 
-const class_identifier_t g_valueNullCLSID = string_to_clsid("VL_NULL");
+const ibClassID g_valueNullCLSID = string_to_clsid("VL_NULL");
 
 //simple type date
-class BACKEND_API CValue : public wxObject {
-	wxDECLARE_DYNAMIC_CLASS(CValue);
+class BACKEND_API ibValue : public wxObject {
+	wxDECLARE_DYNAMIC_CLASS(ibValue);
 public:
 	bool m_bReadOnly;
 	//ATTRIBUTES:
-	eValueTypes m_typeClass;
+	ibValueTypes m_typeClass;
 	union {
 		bool          m_bData;  //TYPE_BOOL
-		number_t      m_fData;  //TYPE_NUMBER
+		ibNumber      m_fData;  //TYPE_NUMBER
 		wxLongLong_t  m_dData;  //TYPE_DATE
-		CValue* m_pRef;	//TYPE_REFFER
+		ibValue* m_pRef;	//TYPE_REFFER
 	};
 	wxString m_sData;  //TYPE_STRING
 public:
 
-	class BACKEND_API CMethodHelper {
+	class BACKEND_API ibValueMethodHelper {
 
 		//List of keywords that cannot be variable and function names
-		struct CFieldConstructor {
+		struct ibValueMethodHelperConstructor {
 
-			CFieldConstructor(const wxString& strHelper, const long paramCount, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+			ibValueMethodHelperConstructor(const wxString& strHelper, const long paramCount, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
 				: m_strHelper(strHelper), m_paramCount(paramCount), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
@@ -51,9 +51,9 @@ public:
 			long m_lAlias, m_lData;
 		};
 
-		struct CFieldProperty {
+		struct ibValueMethodHelperProperty {
 
-			CFieldProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+			ibValueMethodHelperProperty(const wxString& strPropName, bool readable, bool writable, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
 				: m_fieldName(strPropName), m_readable(readable), m_writable(writable), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
@@ -64,9 +64,9 @@ public:
 			long m_lAlias, m_lData;
 		};
 
-		struct CFieldMethod {
+		struct ibValueMethodHelperMethod {
 
-			CFieldMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
+			ibValueMethodHelperMethod(const wxString& strMethodName, const wxString& strHelper, const long paramCount, bool hasRet, const long lPropAlias = wxNOT_FOUND, const long lData = wxNOT_FOUND)
 				: m_fieldName(strMethodName), m_strHelper(strHelper), m_paramCount(paramCount), m_hasRet(hasRet), m_lAlias(lPropAlias), m_lData(lData)
 			{
 			}
@@ -79,13 +79,13 @@ public:
 		};
 
 		// constructors & props & methods
-		std::vector<CFieldConstructor> m_constructorHelper; // tree of constructor names
-		std::vector<CFieldProperty> m_propHelper; // tree of attribute names
-		std::vector<CFieldMethod> m_methodHelper; // tree of method names
+		std::vector<ibValueMethodHelperConstructor> m_constructorHelper; // tree of constructor names
+		std::vector<ibValueMethodHelperProperty> m_propHelper; // tree of attribute names
+		std::vector<ibValueMethodHelperMethod> m_methodHelper; // tree of method names
 
 	public:
 
-		CMethodHelper() {}
+		ibValueMethodHelper() {}
 
 		void ClearHelper() {
 			m_constructorHelper.clear();
@@ -109,7 +109,7 @@ public:
 			return m_constructorHelper.size();
 		}
 
-		void CopyConstructor(const CMethodHelper* src, const long lCtorNum) {
+		void CopyConstructor(const ibValueMethodHelper* src, const long lCtorNum) {
 			if (lCtorNum < src->GetNConstructors()) {
 				m_constructorHelper.push_back(src->m_constructorHelper[lCtorNum]);
 			}
@@ -154,7 +154,7 @@ public:
 			return m_propHelper.size();
 		}
 
-		void CopyProp(const CMethodHelper* src, const long lPropNum) {
+		void CopyProp(const ibValueMethodHelper* src, const long lPropNum) {
 			if (lPropNum < src->GetNProps()) {
 				m_propHelper.push_back(src->m_propHelper[lPropNum]);
 			}
@@ -238,7 +238,7 @@ public:
 			return m_methodHelper.size();
 		}
 
-		void CopyMethod(const CMethodHelper* src, const long lMethodNum) {
+		void CopyMethod(const ibValueMethodHelper* src, const long lMethodNum) {
 			if (lMethodNum < src->GetNMethods()) {
 				m_methodHelper.push_back(src->m_methodHelper[lMethodNum]);
 			}
@@ -302,30 +302,30 @@ public:
 
 	//METHODS:
 	 //constructors:
-	CValue();
-	CValue(const CValue& cParam);
-	CValue(CValue&& cParam);
-	CValue(CValue* pParam);
-	CValue(IBackendValue* pParam);
-	CValue(eValueTypes nType, bool readOnly = false);
+	ibValue();
+	ibValue(const ibValue& cParam);
+	ibValue(ibValue&& cParam);
+	ibValue(ibValue* pParam);
+	ibValue(ibBackendValue* pParam);
+	ibValue(ibValueTypes nType, bool readOnly = false);
 
 	//copy constructors:
-	CValue(bool cParam); //boolean
-	CValue(signed int cParam); //number
-	CValue(unsigned int cParam); //number
-	CValue(double cParam); //number
-	CValue(const number_t& cParam); //number
-	CValue(wxLongLong_t cParam); //date
-	CValue(const wxDateTime& cParam); //date
-	CValue(int nYear, int nMonth, int nDay, unsigned short nHour = 0, unsigned short nMinute = 0, unsigned short nSecond = 0); //date
+	ibValue(bool cParam); //boolean
+	ibValue(signed int cParam); //number
+	ibValue(unsigned int cParam); //number
+	ibValue(double cParam); //number
+	ibValue(const ibNumber& cParam); //number
+	ibValue(wxLongLong_t cParam); //date
+	ibValue(const wxDateTime& cParam); //date
+	ibValue(int nYear, int nMonth, int nDay, unsigned short nHour = 0, unsigned short nMinute = 0, unsigned short nSecond = 0); //date
 
-	CValue(char* sParam); //string
-	CValue(wchar_t* sParam); //string
-	CValue(const wxStringImpl& sParam); //string
-	CValue(const wxString& sParam); //string
+	ibValue(char* sParam); //string
+	ibValue(wchar_t* sParam); //string
+	ibValue(const wxStringImpl& sParam); //string
+	ibValue(const wxString& sParam); //string
 
 	//destructor:
-	virtual ~CValue();
+	virtual ~ibValue();
 
 	//clear values
 	inline void Reset();
@@ -338,8 +338,8 @@ public:
 	}
 
 	//operators:
-	void operator = (const CValue& cParam);
-	void operator = (CValue&& cParam);
+	void operator = (const ibValue& cParam);
+	void operator = (ibValue&& cParam);
 
 	void operator = (bool cParam);
 	void operator = (short cParam);
@@ -348,33 +348,33 @@ public:
 	void operator = (unsigned int cParam);
 	void operator = (float cParam);
 	void operator = (double cParam);
-	void operator = (const number_t& cParam);
+	void operator = (const ibNumber& cParam);
 	void operator = (const wxDateTime& cParam);
 	void operator = (wxLongLong_t cParam);
 	void operator = (const wxString& cParam);
 
-	void operator = (eValueTypes cParam);
-	void operator = (IBackendValue* pParam);
-	void operator = (CValue* pParam);
+	void operator = (ibValueTypes cParam);
+	void operator = (ibBackendValue* pParam);
+	void operator = (ibValue* pParam);
 
 	//Implementation of comparison operators:
-	bool operator > (const CValue& cParam) const { return CompareValueGT(cParam); }
-	bool operator >= (const CValue& cParam) const { return CompareValueGE(cParam); }
-	bool operator < (const CValue& cParam) const { return CompareValueLS(cParam); }
-	bool operator <= (const CValue& cParam) const { return CompareValueLE(cParam); }
-	bool operator == (const CValue& cParam) const { return CompareValueEQ(cParam); }
-	bool operator != (const CValue& cParam) const { return CompareValueNE(cParam); }
+	bool operator > (const ibValue& cParam) const { return CompareValueGT(cParam); }
+	bool operator >= (const ibValue& cParam) const { return CompareValueGE(cParam); }
+	bool operator < (const ibValue& cParam) const { return CompareValueLS(cParam); }
+	bool operator <= (const ibValue& cParam) const { return CompareValueLE(cParam); }
+	bool operator == (const ibValue& cParam) const { return CompareValueEQ(cParam); }
+	bool operator != (const ibValue& cParam) const { return CompareValueNE(cParam); }
 
-	const CValue& operator+(const CValue& cParam);
-	const CValue& operator-(const CValue& cParam);
+	const ibValue& operator+(const ibValue& cParam);
+	const ibValue& operator-(const ibValue& cParam);
 
 	//Implementation of comparison operators:
-	virtual bool CompareValueGT(const CValue& cParam) const;
-	virtual bool CompareValueGE(const CValue& cParam) const;
-	virtual bool CompareValueLS(const CValue& cParam) const;
-	virtual bool CompareValueLE(const CValue& cParam) const;
-	virtual bool CompareValueEQ(const CValue& cParam) const;
-	virtual bool CompareValueNE(const CValue& cParam) const;
+	virtual bool CompareValueGT(const ibValue& cParam) const;
+	virtual bool CompareValueGE(const ibValue& cParam) const;
+	virtual bool CompareValueLS(const ibValue& cParam) const;
+	virtual bool CompareValueLE(const ibValue& cParam) const;
+	virtual bool CompareValueEQ(const ibValue& cParam) const;
+	virtual bool CompareValueNE(const ibValue& cParam) const;
 
 	//special converting
 	template <typename valueType> inline valueType* ConvertToType() const {
@@ -382,32 +382,32 @@ public:
 	}
 
 	template <typename enumType> inline enumType ConvertToEnumType() const {
-		class IEnumerationValue<enumType>* enumValue =
-			CastValue<class IEnumerationValue<enumType>>(this);
+		class ibValueEnumerationBase<enumType>* enumValue =
+			CastValue<class ibValueEnumerationBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType> inline enumType ConvertToEnumValue() {
-		class IEnumerationVariant<enumType>* enumValue =
-			CastValue<class IEnumerationVariant<enumType>>(this);
+		class ibValueEnumerationVariantBase<enumType>* enumValue =
+			CastValue<class ibValueEnumerationVariantBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	template <typename enumType > inline enumType ConvertToEnumValue() const {
-		const class IEnumerationVariant<enumType>* enumValue =
-			CastValue<class IEnumerationVariant<enumType>>(this);
+		const class ibValueEnumerationVariantBase<enumType>* enumValue =
+			CastValue<class ibValueEnumerationVariantBase<enumType>>(this);
 		return enumValue ? enumValue->GetEnumValue() : enumType();
 	}
 
 	//convert to value
 	template <typename T> inline bool ConvertToValue(T*& ptr) const {
-		if (m_typeClass == eValueTypes::TYPE_REFFER) {
-			CValue* non_const_value = GetRef();
+		if (m_typeClass == ibValueTypes::TYPE_REFFER) {
+			ibValue* non_const_value = GetRef();
 			ptr = dynamic_cast<T*>(non_const_value);
 			return ptr != nullptr;
 		}
-		else if (m_typeClass != eValueTypes::TYPE_EMPTY) {
-			ptr = dynamic_cast<T*>(const_cast<CValue*>(this));
+		else if (m_typeClass != ibValueTypes::TYPE_EMPTY) {
+			ptr = dynamic_cast<T*>(const_cast<ibValue*>(this));
 			return ptr != nullptr;
 		}
 		return false;
@@ -426,112 +426,112 @@ public:
 	}
 
 	template<typename T>
-	static CValue CreateObject(CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static ibValue CreateObject(ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef<T>(paParams, lSizeArray);
 	}
-	static CValue CreateObject(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static ibValue CreateObject(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef(clsid, paParams, lSizeArray);
 	}
-	static CValue CreateObject(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static ibValue CreateObject(const wxClassInfo* classInfo, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef(classInfo, paParams, lSizeArray);
 	}
-	static CValue CreateObject(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static ibValue CreateObject(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef(className, paParams, lSizeArray);
 	}
 	template<typename T, typename... Args>
-	static CValue CreateObjectValue(Args&&... args) {
+	static ibValue CreateObjectValue(Args&&... args) {
 		return CreateObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
 	template<typename T>
-	static CValue* CreateObjectRef(CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static ibValue* CreateObjectRef(ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CreateObjectRef(CLASSINFO(T), paParams, lSizeArray);
 	}
-	static CValue* CreateObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0);
-	static CValue* CreateObjectRef(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
-		const class_identifier_t& clsid = GetTypeIDByRef(classInfo);
+	static ibValue* CreateObjectRef(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0);
+	static ibValue* CreateObjectRef(const wxClassInfo* classInfo, ibValue** paParams = nullptr, const long lSizeArray = 0) {
+		const ibClassID& clsid = GetTypeIDByRef(classInfo);
 		return CreateObjectRef(clsid, paParams, lSizeArray);
 	}
-	static CValue* CreateObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) {
-		const class_identifier_t& clsid = GetIDObjectFromString(className);
+	static ibValue* CreateObjectRef(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) {
+		const ibClassID& clsid = GetIDObjectFromString(className);
 		return CreateObjectRef(clsid, paParams, lSizeArray);
 	}
 	template<typename T, typename... Args>
-	static CValue* CreateObjectValueRef(Args&&... args) {
+	static ibValue* CreateObjectValueRef(Args&&... args) {
 		return CreateAndConvertObjectValueRef<T>(std::forward<Args>(args)...);
 	}
 
 	template<typename T>
-	static T* CreateAndConvertObjectRef(CValue** paParams = nullptr, const long lSizeArray = 0) {
+	static T* CreateAndConvertObjectRef(ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CastValue<T>(CreateObjectRef(CLASSINFO(T), paParams, lSizeArray));
 	}
-	template<class T = CValue>
-	static T* CreateAndConvertObjectRef(const class_identifier_t& clsid, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	template<class T = ibValue>
+	static T* CreateAndConvertObjectRef(const ibClassID& clsid, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CastValue<T>(CreateObjectRef(clsid, paParams, lSizeArray));
 	}
-	template<class T = CValue>
-	static T* CreateAndConvertObjectRef(const wxClassInfo* classInfo, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	template<class T = ibValue>
+	static T* CreateAndConvertObjectRef(const wxClassInfo* classInfo, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CastValue<T>(CreateObjectRef(classInfo, paParams, lSizeArray));
 	}
-	template<class T = CValue>
-	static T* CreateAndConvertObjectRef(const wxString& className, CValue** paParams = nullptr, const long lSizeArray = 0) {
+	template<class T = ibValue>
+	static T* CreateAndConvertObjectRef(const wxString& className, ibValue** paParams = nullptr, const long lSizeArray = 0) {
 		return CastValue<T>(CreateObjectRef(className, paParams, lSizeArray));
 	}
 	template<typename T, typename... Args>
 	static T* CreateAndConvertObjectValueRef(Args&&... args) {
-		const class_identifier_t& clsid = CValue::GetTypeIDByRef(CLASSINFO(T));
-		if (CValue::IsRegisterCtor(clsid))
+		const ibClassID& clsid = ibValue::GetTypeIDByRef(CLASSINFO(T));
+		if (ibValue::IsRegisterCtor(clsid))
 			return CreateAndPrepareValueRef<T>(args...);
 		wxASSERT_MSG(false, "CreateAndConvertObjectValueRef ret null!");
 		return nullptr;
 	}
 
 	template<typename T, typename valT>
-	static CValue CreateEnumObject(const valT& v) {
+	static ibValue CreateEnumObject(const valT& v) {
 		return CreateEnumObjectRef<T>(v);
 	}
 
 	template<typename T, typename valT>
-	static CValue* CreateEnumObjectRef(const valT& v) {
+	static ibValue* CreateEnumObjectRef(const valT& v) {
 		return CreateAndConvertEnumObjectRef<T>(v);
 	}
 
 	template<typename T, typename valT>
-	static CValue* CreateAndConvertEnumObjectRef(const valT& v) {
-		CValuePtr<IEnumeration<valT>> createdEnum(CValue::CreateAndConvertObjectRef<T>());
+	static ibValue* CreateAndConvertEnumObjectRef(const valT& v) {
+		ibValuePtr<ibValueEnumeration<valT>> createdEnum(ibValue::CreateAndConvertObjectRef<T>());
 		wxASSERT(createdEnum != nullptr);
 		return createdEnum->CreateEnumVariantValue(v);
 	}
 
-	static void RegisterCtor(IAbstractTypeCtor* typeCtor);
-	static void UnRegisterCtor(IAbstractTypeCtor*& typeCtor);
+	static void RegisterCtor(ibCtorAbstractType* typeCtor);
+	static void UnRegisterCtor(ibCtorAbstractType*& typeCtor);
 	static void UnRegisterCtor(const wxString& className);
 
 	static bool IsRegisterCtor(const wxString& className);
-	static bool IsRegisterCtor(const wxString& className, eCtorObjectType objectType);
-	static bool IsRegisterCtor(const class_identifier_t& clsid);
+	static bool IsRegisterCtor(const wxString& className, ibCtorObjectType objectType);
+	static bool IsRegisterCtor(const ibClassID& clsid);
 
-	static class_identifier_t GetTypeIDByRef(const wxClassInfo* classInfo);
-	static class_identifier_t GetTypeIDByRef(const CValue* objectRef);
+	static ibClassID GetTypeIDByRef(const wxClassInfo* classInfo);
+	static ibClassID GetTypeIDByRef(const ibValue* objectRef);
 
-	static class_identifier_t GetIDObjectFromString(const wxString& className);
-	static bool CompareObjectName(const wxString& className, eValueTypes valueType) {
+	static ibClassID GetIDObjectFromString(const wxString& className);
+	static bool CompareObjectName(const wxString& className, ibValueTypes valueType) {
 		return stringUtils::CompareString(className, GetNameObjectFromVT(valueType));
 	}
 
-	static wxString GetNameObjectFromID(const class_identifier_t& clsid, bool upper = false);
-	static wxString GetNameObjectFromVT(eValueTypes valueType, bool upper = false);
-	static eValueTypes GetVTByID(const class_identifier_t& clsid);
-	static class_identifier_t GetIDByVT(const eValueTypes& valueType);
+	static wxString GetNameObjectFromID(const ibClassID& clsid, bool upper = false);
+	static wxString GetNameObjectFromVT(ibValueTypes valueType, bool upper = false);
+	static ibValueTypes GetVTByID(const ibClassID& clsid);
+	static ibClassID GetIDByVT(const ibValueTypes& valueType);
 
-	static IAbstractTypeCtor* GetAvailableCtor(const wxString& className);
-	static IAbstractTypeCtor* GetAvailableCtor(const class_identifier_t& clsid);
-	static IAbstractTypeCtor* GetAvailableCtor(const wxClassInfo* classInfo);
+	static ibCtorAbstractType* GetAvailableCtor(const wxString& className);
+	static ibCtorAbstractType* GetAvailableCtor(const ibClassID& clsid);
+	static ibCtorAbstractType* GetAvailableCtor(const wxClassInfo* classInfo);
 
-	static std::vector<IAbstractTypeCtor*> GetListCtorsByType(eCtorObjectType objectType = eCtorObjectType::eCtorObjectType_object_value);
+	static std::vector<ibCtorAbstractType*> GetListCtorsByType(ibCtorObjectType objectType = ibCtorObjectType::ibCtorObjectType_object_value);
 
 	//static event 
-	static void OnRegisterObject(const wxString& className, IAbstractTypeCtor* typeCtor) {}
+	static void OnRegisterObject(const wxString& className, ibCtorAbstractType* typeCtor) {}
 	static void OnUnRegisterObject(const wxString& className) {}
 
 	//factory version 
@@ -540,8 +540,8 @@ public:
 public:
 
 	//special copy & move function
-	inline void Copy(const CValue& cOld);
-	inline void Move(CValue&& cOld);
+	inline void Copy(const ibValue& cOld);
+	inline void Move(ibValue&& cOld);
 
 	void FromDate(int& nYear, int& nMonth, int& nDay) const;
 	void FromDate(int& nYear, int& nMonth, int& nDay, unsigned short& nHour, unsigned short& nMinute, unsigned short& nSecond) const;
@@ -553,38 +553,38 @@ public:
 #pragma endregion
 
 	//Virtual methods:
-	virtual void SetType(eValueTypes type);
-	virtual eValueTypes GetType() const;
+	virtual void SetType(ibValueTypes type);
+	virtual ibValueTypes GetType() const;
 
 	virtual bool IsEmpty() const;
 
 	virtual wxString GetClassName() const;
-	virtual class_identifier_t GetClassType() const;
+	virtual ibClassID GetClassType() const;
 
 	virtual bool Init() {
-		if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+		if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 			return m_pRef->Init();
 		return true;
 	}
 
-	virtual bool Init(CValue** paParams, const long lSizeArray) {
-		if (m_pRef != nullptr && m_typeClass == eValueTypes::TYPE_REFFER)
+	virtual bool Init(ibValue** paParams, const long lSizeArray) {
+		if (m_pRef != nullptr && m_typeClass == ibValueTypes::TYPE_REFFER)
 			return m_pRef->Init(paParams, lSizeArray);
 		return true;
 	}
 
-	virtual void SetValue(const CValue& varValue);
+	virtual void SetValue(const ibValue& varValue);
 
 	virtual bool SetBoolean(const wxString& strValue);
 	virtual bool SetNumber(const wxString& strValue);
 	virtual bool SetDate(const wxString& strValue);
 	virtual bool SetString(const wxString& strValue);
 
-	virtual bool FindValue(const wxString& findData, std::vector<CValue>& listValue) const;
+	virtual bool FindValue(const wxString& findData, std::vector<ibValue>& listValue) const;
 
-	void SetData(const CValue& varValue); //setting the value without changing the type
+	void SetData(const ibValue& varValue); //setting the value without changing the type
 
-	virtual CValue GetValue(bool getThis = false);
+	virtual ibValue GetValue(bool getThis = false);
 
 	virtual bool GetBoolean() const;
 	virtual int GetInteger() const { return GetNumber().ToInt(); }
@@ -592,13 +592,13 @@ public:
 	virtual double GetDouble() const { return GetNumber().ToDouble(); }
 	virtual wxDateTime GetDateTime() const { return wxLongLong(GetDate()); }
 
-	virtual number_t GetNumber() const;
+	virtual ibNumber GetNumber() const;
 	virtual wxString GetString() const;
 	virtual wxLongLong_t GetDate() const;
 
 	/////////////////////////////////////////////////////////////////////////
 
-	virtual CValue* GetRef() const;
+	virtual ibValue* GetRef() const;
 
 	/////////////////////////////////////////////////////////////////////////
 
@@ -608,8 +608,8 @@ public:
 
 #pragma region attribute_support
 
-	virtual CMethodHelper* GetPMethods() const {
-		return m_typeClass == eValueTypes::TYPE_REFFER && m_pRef != nullptr ?
+	virtual ibValueMethodHelper* GetPMethods() const {
+		return m_typeClass == ibValueTypes::TYPE_REFFER && m_pRef != nullptr ?
 			m_pRef->GetPMethods() : nullptr;
 	}
 
@@ -641,7 +641,7 @@ public:
 	 *  @param lPropNum - property index (starting with 0)
 	 *  @return the result of
 	 */
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);
 
 	/// Sets the property value
 	/**
@@ -649,7 +649,7 @@ public:
 	 *  @param varPropVal - the pointer to a variable for property value
 	 *  @return the result of
 	 */
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);
 
 	/// Is property readable?
 	/**
@@ -708,7 +708,7 @@ public:
 	 */
 	virtual bool GetParamDefValue(const long lMethodNum,
 		const long lParamNum,
-		CValue& pvarParamDefValue) const;
+		ibValue& pvarParamDefValue) const;
 
 	/// Does the method have a return value?
 	/**
@@ -725,7 +725,7 @@ public:
 	 *  @return the result of
 	 */
 	virtual bool CallAsProc(const long lMethodNum,
-		CValue** paParams,
+		ibValue** paParams,
 		const long lSizeArray);
 
 	/// Calls the method as a function
@@ -737,31 +737,31 @@ public:
 	 *  @return the result of
 	 */
 	virtual bool CallAsFunc(const long lMethodNum,
-		CValue& pvarRetValue,
-		CValue** paParams,
+		ibValue& pvarRetValue,
+		ibValue** paParams,
 		const long lSizeArray);
 
 public:
 
-	CValue* GetThis() { return this; }
+	ibValue* GetThis() { return this; }
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
-	virtual bool SetAt(const CValue& varKeyValue, const CValue& varValue);
-	virtual bool GetAt(const CValue& varKeyValue, CValue& pvarValue);
+	virtual bool SetAt(const ibValue& varKeyValue, const ibValue& varValue);
+	virtual bool GetAt(const ibValue& varKeyValue, ibValue& pvarValue);
 
-	CValue operator[](const CValue& varKeyValue) {
-		CValue retValue;
+	ibValue operator[](const ibValue& varKeyValue) {
+		ibValue retValue;
 		GetAt(varKeyValue, retValue);
 		return retValue;
 	}
 #pragma region iterator_support 
 	virtual bool HasIterator() const;
 
-	virtual CValue GetIteratorEmpty();
-	virtual CValue GetIteratorAt(unsigned int idx);
+	virtual ibValue GetIteratorEmpty();
+	virtual ibValue GetIteratorAt(unsigned int idx);
 	virtual unsigned int GetIteratorCount() const;
 #pragma endregion
 

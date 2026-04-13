@@ -1,11 +1,11 @@
 #include "popupWnd.h"
 
 //----------------------------------------------------------------------
-// COESPopupBase and COESPopupWindow
+// ibOESPopupBase and ibOESPopupWindow
 
 #ifdef __WXOSX_COCOA__
 
-COESPopupBase::COESPopupBase(wxWindow* parent) :wxNonOwnedWindow()
+ibOESPopupBase::ibOESPopupBase(wxWindow* parent) :wxNonOwnedWindow()
 {
 	m_nativeWin = CreateFloatingWindow(this);
 	wxNonOwnedWindow::Create(parent, m_nativeWin);
@@ -14,26 +14,26 @@ COESPopupBase::COESPopupBase(wxWindow* parent) :wxNonOwnedWindow()
 	m_cursorSetByPopup = false;
 	m_prevCursor = wxSTC_CURSORNORMAL;
 
-	Bind(wxEVT_ENTER_WINDOW, &COESPopupBase::OnMouseEnter, this);
-	Bind(wxEVT_LEAVE_WINDOW, &COESPopupBase::OnMouseLeave, this);
+	Bind(wxEVT_ENTER_WINDOW, &ibOESPopupBase::OnMouseEnter, this);
+	Bind(wxEVT_LEAVE_WINDOW, &ibOESPopupBase::OnMouseLeave, this);
 
 	if (m_stc)
-		m_stc->Bind(wxEVT_DESTROY, &COESPopupBase::OnParentDestroy, this);
+		m_stc->Bind(wxEVT_DESTROY, &ibOESPopupBase::OnParentDestroy, this);
 }
 
-COESPopupBase::~COESPopupBase()
+ibOESPopupBase::~ibOESPopupBase()
 {
 	UnsubclassWin();
 	CloseFloatingWindow(m_nativeWin);
 
 	if (m_stc)
 	{
-		m_stc->Unbind(wxEVT_DESTROY, &COESPopupBase::OnParentDestroy, this);
+		m_stc->Unbind(wxEVT_DESTROY, &ibOESPopupBase::OnParentDestroy, this);
 		RestoreSTCCursor();
 	}
 }
 
-bool COESPopupBase::Show(bool show)
+bool ibOESPopupBase::Show(bool show)
 {
 	if (!wxWindowBase::Show(show))
 		return false;
@@ -54,7 +54,7 @@ bool COESPopupBase::Show(bool show)
 	return true;
 }
 
-void COESPopupBase::DoSetSize(int x, int y, int width, int ht, int flags)
+void ibOESPopupBase::DoSetSize(int x, int y, int width, int ht, int flags)
 {
 	wxSize oldSize = GetSize();
 	wxNonOwnedWindow::DoSetSize(x, y, width, ht, flags);
@@ -63,7 +63,7 @@ void COESPopupBase::DoSetSize(int x, int y, int width, int ht, int flags)
 		SendSizeEvent();
 }
 
-void COESPopupBase::SetSTCCursor(int cursor)
+void ibOESPopupBase::SetSTCCursor(int cursor)
 {
 	if (m_stc)
 	{
@@ -73,7 +73,7 @@ void COESPopupBase::SetSTCCursor(int cursor)
 	}
 }
 
-void COESPopupBase::RestoreSTCCursor()
+void ibOESPopupBase::RestoreSTCCursor()
 {
 	if (m_stc != nullptr && m_cursorSetByPopup)
 		m_stc->SetSTCCursor(m_prevCursor);
@@ -82,31 +82,31 @@ void COESPopupBase::RestoreSTCCursor()
 	m_prevCursor = wxSTC_CURSORNORMAL;
 }
 
-void COESPopupBase::OnMouseEnter(wxMouseEvent& WXUNUSED(event))
+void ibOESPopupBase::OnMouseEnter(wxMouseEvent& WXUNUSED(event))
 {
 	SetSTCCursor(wxSTC_CURSORARROW);
 }
 
-void COESPopupBase::OnMouseLeave(wxMouseEvent& WXUNUSED(event))
+void ibOESPopupBase::OnMouseLeave(wxMouseEvent& WXUNUSED(event))
 {
 	RestoreSTCCursor();
 }
 
-void COESPopupBase::OnParentDestroy(wxWindowDestroyEvent& WXUNUSED(event))
+void ibOESPopupBase::OnParentDestroy(wxWindowDestroyEvent& WXUNUSED(event))
 {
 	m_stc = nullptr;
 }
 
 #elif wxUSE_POPUPWIN
 
-COESPopupBase::COESPopupBase(wxWindow* parent)
+ibOESPopupBase::ibOESPopupBase(wxWindow* parent)
 	: wxPopupWindow(parent, wxPU_CONTAINS_CONTROLS)
 {
 }
 
 #ifdef __WXGTK__
 
-COESPopupBase::~COESPopupBase()
+ibOESPopupBase::~ibOESPopupBase()
 {
 	wxRect rect = GetRect();
 	GetParent()->ScreenToClient(&(rect.x), &(rect.y));
@@ -116,7 +116,7 @@ COESPopupBase::~COESPopupBase()
 #elif defined(__WXMSW__)
 
 // Do not activate the window when it is shown.
-bool COESPopupBase::Show(bool show)
+bool ibOESPopupBase::Show(bool show)
 {
 	if (show) {
 		// Check if the window is changing from hidden to shown.
@@ -146,7 +146,7 @@ bool COESPopupBase::Show(bool show)
 }
 
 // Do not activate in response to mouse clicks on this window.
-bool COESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
+bool ibOESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
 	WXWPARAM wParam, WXLPARAM lParam)
 {
 	if (msg == WM_MOUSEACTIVATE)
@@ -162,7 +162,7 @@ bool COESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
 
 #else
 
-COESPopupBase::COESPopupBase(wxWindow* parent)
+ibOESPopupBase::ibOESPopupBase(wxWindow* parent)
 	:wxFrame(parent, wxID_ANY, wxEmptyString,
 		wxDefaultPosition, wxDefaultSize,
 		wxFRAME_FLOAT_ON_PARENT | wxBORDER_NONE)
@@ -175,7 +175,7 @@ COESPopupBase::COESPopupBase(wxWindow* parent)
 #ifdef __WXMSW__
 
 // Use ShowWithoutActivating instead of show.
-bool COESPopupBase::Show(bool show) override
+bool ibOESPopupBase::Show(bool show) override
 {
 	if (show)
 	{
@@ -192,7 +192,7 @@ bool COESPopupBase::Show(bool show) override
 }
 
 // Do not activate in response to mouse clicks on this window.
-bool COESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
+bool ibOESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
 	WXWPARAM wParam, WXLPARAM lParam) override
 {
 	if (msg == WM_MOUSEACTIVATE)
@@ -206,7 +206,7 @@ bool COESPopupBase::MSWHandleMessage(WXLRESULT *res, WXUINT msg,
 
 #elif !wxOES_POPUP_IS_CUSTOM
 
-void COESPopupBase::ActivateParent()
+void ibOESPopupBase::ActivateParent()
 {
 	// Although we're a valueForm, we always want the parent to be active,
 	// so raise it whenever we get shown, focused, etc.
@@ -216,7 +216,7 @@ void COESPopupBase::ActivateParent()
 		valueForm->Raise();
 }
 
-bool COESPopupBase::Show(bool show)
+bool ibOESPopupBase::Show(bool show)
 {
 	bool rv = wxFrame::Show(show);
 	if (rv && show)
@@ -231,35 +231,35 @@ bool COESPopupBase::Show(bool show)
 
 #endif // __WXOSX_COCOA__
 
-COESPopupWindow::COESPopupWindow(wxWindow* parent)
-	: COESPopupBase(parent), m_lastKnownPosition(wxDefaultPosition)
+ibOESPopupWindow::ibOESPopupWindow(wxWindow* parent)
+	: ibOESPopupBase(parent), m_lastKnownPosition(wxDefaultPosition)
 {
 #if !wxOES_POPUP_IS_CUSTOM
-	Bind(wxEVT_SET_FOCUS, &COESPopupWindow::OnFocus, this);
+	Bind(wxEVT_SET_FOCUS, &ibOESPopupWindow::OnFocus, this);
 #endif
 
 	m_tlw = wxDynamicCast(wxGetTopLevelParent(parent), wxTopLevelWindow);
 	if (m_tlw)
 	{
-		m_tlw->Bind(wxEVT_MOVE, &COESPopupWindow::OnParentMove, this);
+		m_tlw->Bind(wxEVT_MOVE, &ibOESPopupWindow::OnParentMove, this);
 #if defined(__WXOSX_COCOA__) || (defined(__WXGTK__)&&!wxOES_POPUP_IS_FRAME)
-		m_tlw->Bind(wxEVT_ICONIZE, &COESPopupWindow::OnIconize, this);
+		m_tlw->Bind(wxEVT_ICONIZE, &ibOESPopupWindow::OnIconize, this);
 #endif
 	}
 }
 
-COESPopupWindow::~COESPopupWindow()
+ibOESPopupWindow::~ibOESPopupWindow()
 {
 	if (m_tlw)
 	{
-		m_tlw->Unbind(wxEVT_MOVE, &COESPopupWindow::OnParentMove, this);
+		m_tlw->Unbind(wxEVT_MOVE, &ibOESPopupWindow::OnParentMove, this);
 #if defined(__WXOSX_COCOA__) || (defined(__WXGTK__)&&!wxOES_POPUP_IS_FRAME)
-		m_tlw->Unbind(wxEVT_ICONIZE, &COESPopupWindow::OnIconize, this);
+		m_tlw->Unbind(wxEVT_ICONIZE, &ibOESPopupWindow::OnIconize, this);
 #endif
 	}
 }
 
-bool COESPopupWindow::Destroy()
+bool ibOESPopupWindow::Destroy()
 {
 #if defined(__WXMAC__) && wxOES_POPUP_IS_FRAME && !wxOES_POPUP_IS_CUSTOM
 	// The bottom edge of this window is not getting properly
@@ -276,12 +276,12 @@ bool COESPopupWindow::Destroy()
 	return true;
 }
 
-bool COESPopupWindow::AcceptsFocus() const
+bool ibOESPopupWindow::AcceptsFocus() const
 {
 	return false;
 }
 
-void COESPopupWindow::DoSetSize(int x, int y, int width, int height, int flags)
+void ibOESPopupWindow::DoSetSize(int x, int y, int width, int height, int flags)
 {
 	m_lastKnownPosition = wxPoint(x, y);
 
@@ -292,10 +292,10 @@ void COESPopupWindow::DoSetSize(int x, int y, int width, int height, int flags)
 	if (y != wxDefaultCoord)
 		GetParent()->ClientToScreen(nullptr, &y);
 
-	COESPopupBase::DoSetSize(x, y, width, height, flags);
+	ibOESPopupBase::DoSetSize(x, y, width, height, flags);
 }
 
-void COESPopupWindow::OnParentMove(wxMoveEvent& event)
+void ibOESPopupWindow::OnParentMove(wxMoveEvent& event)
 {
 	if (m_lastKnownPosition.IsFullySpecified())
 		SetPosition(m_lastKnownPosition);
@@ -304,14 +304,14 @@ void COESPopupWindow::OnParentMove(wxMoveEvent& event)
 
 #if defined(__WXOSX_COCOA__) || (defined(__WXGTK__) && !wxOES_POPUP_IS_FRAME)
 
-void COESPopupWindow::OnIconize(wxIconizeEvent& event)
+void ibOESPopupWindow::OnIconize(wxIconizeEvent& event)
 {
 	Show(!event.IsIconized());
 }
 
 #elif !wxOES_POPUP_IS_CUSTOM
 
-void COESPopupWindow::OnFocus(wxFocusEvent& event)
+void ibOESPopupWindow::OnFocus(wxFocusEvent& event)
 {
 #if wxOES_POPUP_IS_FRAME
 	ActivateParent();
@@ -323,10 +323,10 @@ void COESPopupWindow::OnFocus(wxFocusEvent& event)
 
 #endif // __WXOSX_COCOA__
 
-COESListBoxWin::COESListBoxWin(wxWindow* parent, CListBoxVisualData *visualData, int h)
-	: COESPopupWindow(parent), m_visualData(visualData)
+ibOESListBoxWin::ibOESListBoxWin(wxWindow* parent, ibListBoxVisualData *visualData, int h)
+	: ibOESPopupWindow(parent), m_visualData(visualData)
 {
-	m_listBox = new COESListBox(this, m_visualData, h);
+	m_listBox = new ibListBox(this, m_visualData, h);
 
 	// Use the background of this window to form a valueForm around the listbox
 	// except on macos where the native Scintilla popup has no valueForm.
@@ -346,14 +346,14 @@ COESListBoxWin::COESListBoxWin(wxWindow* parent, CListBoxVisualData *visualData,
 	// the colours used seem to be based on the background of the parent window.
 	// So manually paint this window to give it the border colour instead of
 	// setting the background colour.
-	Bind(wxEVT_PAINT, &COESListBoxWin::OnPaint, this);
+	Bind(wxEVT_PAINT, &ibOESListBoxWin::OnPaint, this);
 
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	m_listBox->Clear();
 }
 
-void COESListBoxWin::OnPaint(wxPaintEvent& WXUNUSED(evt))
+void ibOESListBoxWin::OnPaint(wxPaintEvent& WXUNUSED(evt))
 {
 	wxPaintDC dc(this);
 	dc.SetBackground(m_visualData->GetBorderColour());

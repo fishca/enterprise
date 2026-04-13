@@ -1,8 +1,8 @@
 #include "dynamicBorder.h"
 
-wxScreenDC wxDynamicStaticText::ms_calcLabelDC;
+wxScreenDC ibDynamicStaticText::ms_calcLabelDC;
 
-wxSize wxDynamicStaticText::DoGetBestClientSize() const
+wxSize ibDynamicStaticText::DoGetBestClientSize() const
 {
 	if (m_staticTextCache.IsSameAs(m_labelOrig, m_font)) {
 		return m_staticTextCache.m_sizeLabel;

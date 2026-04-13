@@ -3,13 +3,13 @@
 
 #include <wx/app.h>
 
-class CMainApp : public wxApp
+class ibAppClassChecker : public wxApp
 {
 	wxLocale m_locale;
 public:
 	virtual bool OnInit();
 };
 
-wxDECLARE_APP(CMainApp);
+wxDECLARE_APP(ibAppClassChecker);
 
 #endif 

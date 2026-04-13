@@ -7,16 +7,16 @@
 #include "metaModuleObject.h"
 #include "backend/metaData.h"
 
-bool CValueMetaObjectConfiguration::PrepareContextMenu(wxMenu *defaultMenu)
+bool ibValueMetaObjectConfiguration::PrepareContextMenu(wxMenu *defaultMenu)
 {
 	wxMenuItem *menuItem = defaultMenu->Append(ID_METATREE_OPEN_INIT_MODULE, _("Open configuration module"));
 	menuItem->SetBitmap((*m_propertyModuleConfiguration)->GetIcon());
 	return true;
 }
 
-void CValueMetaObjectConfiguration::ProcessCommand(unsigned int id)
+void ibValueMetaObjectConfiguration::ProcessCommand(unsigned int id)
 {
-	IBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
+	ibBackendMetadataTree *metaTree = m_metaData->GetMetaTree();
 	wxASSERT(metaTree);
 
 	if (id == ID_METATREE_OPEN_INIT_MODULE)

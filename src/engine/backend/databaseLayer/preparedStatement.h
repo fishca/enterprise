@@ -20,18 +20,18 @@
 #include "databaseResultSet.h"
 #include "databaseQueryParser.h"
 
-WX_DECLARE_HASH_SET(IDatabaseResultSet*, wxPointerHash, wxPointerEqual, StatementResultSetHashSet);
+WX_DECLARE_HASH_SET(ibDatabaseResultSet*, wxPointerHash, wxPointerEqual, StatementResultSetHashSet);
 
-class BACKEND_API IPreparedStatement : public CDatabaseErrorReporter, public CDatabaseStringConverter
+class BACKEND_API ibPreparedStatement : public ibDatabaseErrorReporter, public ibDatabaseStringConverter
 {
 public:
 	/// Constructor
-	IPreparedStatement() {};
+	ibPreparedStatement() {};
 
 	/// Destructor
-	virtual ~IPreparedStatement() {};
+	virtual ~ibPreparedStatement() {};
 
-	/// Close the result set (call IDatabaseLayer::ClosePreparedStatement() instead on the statement)
+	/// Close the result set (call ibDatabaseLayer::ClosePreparedStatement() instead on the statement)
 	virtual void Close() = 0;
 
 	// set parameters
@@ -40,7 +40,7 @@ public:
 	/// Set the parameter at the 1-based position to a double value
 	virtual void SetParamDouble(int nPosition, double dblValue) = 0;
 	/// Set the parameter at the 1-based position to a number value
-	virtual void SetParamNumber(int nPosition, const number_t& dblValue) = 0;
+	virtual void SetParamNumber(int nPosition, const ibNumber& dblValue) = 0;
 	/// Set the parameter at the 1-based position to a wxString value
 	virtual void SetParamString(int nPosition, const wxString& strValue) = 0;
 	/// Set the parameter at the 1-based position to a nullptr  value
@@ -62,7 +62,7 @@ public:
 	virtual int RunQuery() = 0;
 
 	/// Run an insert, update, or delete query on the database
-	virtual IDatabaseResultSet* RunQueryWithResults() = 0;
+	virtual ibDatabaseResultSet* RunQueryWithResults() = 0;
 
 	// function names more consistent with JDBC and wxSQLite3
 	// these just provide wrappers for existing functions
@@ -70,17 +70,17 @@ public:
 	int ExecuteUpdate() { return RunQuery(); }
 	
 	/// See RunQueryWithResults
-	IDatabaseResultSet* ExecuteQuery() { return RunQueryWithResults(); }
+	ibDatabaseResultSet* ExecuteQuery() { return RunQueryWithResults(); }
 
 	/// Close a result set returned by the database or a prepared statement previously
-	virtual bool CloseResultSet(IDatabaseResultSet* pResultSet) { return false; }
+	virtual bool CloseResultSet(ibDatabaseResultSet* pResultSet) { return false; }
 
 protected:
 	/// Close all result set objects that have been generated but not yet closed
 	void CloseResultSets() {};
 
 	/// Add result set object pointer to the list for "garbage collection"
-	void LogResultSetForCleanup(IDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }
+	void LogResultSetForCleanup(ibDatabaseResultSet* pResultSet) { m_ResultSets.insert(pResultSet); }
 
 private:
 	StatementResultSetHashSet m_ResultSets;

@@ -185,25 +185,8 @@
     <ClInclude Include="number.h" />
     <ClInclude Include="objCtor.h" />
     <ClInclude Include="picturePredefined.h" />
-    <ClInclude Include="propertyManager\propertyEditor.h" />
     <ClInclude Include="propertyManager\propertyManager.h" />
     <ClInclude Include="propertyManager\propertyObject.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropEvent.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropEventTool.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropFont.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropGeneration.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropHyperLink.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropList.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropNumber.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropOwner.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropPicture.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropPoint.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropRecord.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropSize.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropSource.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropString.h" />
-    <ClInclude Include="propertyManager\property\advprop\advpropType.h" />
-    <ClInclude Include="propertyManager\property\advprop\ctrl\checktree.h" />
     <ClInclude Include="propertyManager\property\eventControl.h" />
     <ClInclude Include="propertyManager\property\eventAction.h" />
     <ClInclude Include="propertyManager\property\propertyBoolean.h" />
@@ -265,7 +248,7 @@
     <ClInclude Include="typeconv.h" />
     <ClInclude Include="typeDescription.h" />
     <ClInclude Include="uniqueKey.h" />
-    <ClInclude Include="utils\wxmd5.hpp" />
+    <ClInclude Include="utils\md5.hpp" />
     <ClInclude Include="valueInfo.h" />
     <ClInclude Include="value_cast.h" />
     <ClInclude Include="value_ptr.h" />
@@ -487,24 +470,7 @@
     <ClCompile Include="moduleManager\moduleManagerUnit.cpp" />
     <ClCompile Include="objCtor.cpp" />
     <ClCompile Include="picturePredefined.cpp" />
-    <ClCompile Include="propertyManager\propertyEditor.cpp" />
     <ClCompile Include="propertyManager\propertyObject.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropEvent.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropEventTool.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropFont.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropGeneration.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropHyperLink.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropList.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropNumber.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropOwner.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropPicture.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropPoint.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropRecord.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropSize.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropSource.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropString.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\advpropType.cpp" />
-    <ClCompile Include="propertyManager\property\advprop\ctrl\checktree.cpp" />
     <ClCompile Include="propertyManager\property\eventControl.cpp" />
     <ClCompile Include="propertyManager\property\eventAction.cpp" />
     <ClCompile Include="propertyManager\property\propertyBoolean.cpp" />
@@ -568,7 +534,7 @@
     <ClCompile Include="tableView.cpp" />
     <ClCompile Include="typeDescription.cpp" />
     <ClCompile Include="uniqueKey.cpp" />
-    <ClCompile Include="utils\wxmd5.cpp" />
+    <ClCompile Include="utils\md5.cpp" />
     <ClCompile Include="value_cast.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -804,14 +770,6 @@
     <CopyFileToFolders Include="backend.conf">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <None Include="propertyManager\property\advprop\ctrl\res\checked2.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_d.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_ld.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\checked_mo.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked2.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_d.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_ld.xpm" />
-    <None Include="propertyManager\property\advprop\ctrl\res\unchecked_mo.xpm" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\backend.rc" />
@@ -901,7 +859,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll;$(oesLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxmsw32ud_aui.lib;wxmsw32ud_qa.lib;wxmsw32ud_html.lib;wxmsw32ud_propgrid.lib;wxmsw32ud_adv.lib;wxmsw32ud_core.lib;wxbase32ud_xml.lib;wxbase32ud_net.lib;wxmsw32ud_stc.lib;wxmsw32ud_xrc.lib;wxbase32ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw33ud_aui.lib;wxmsw33ud_qa.lib;wxmsw33ud_html.lib;wxmsw33ud_propgrid.lib;wxmsw33ud_adv.lib;wxmsw33ud_core.lib;wxbase33ud_xml.lib;wxbase33ud_net.lib;wxmsw33ud_stc.lib;wxmsw33ud_xrc.lib;wxbase33ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -921,7 +879,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(oes3rdParty)wxWidgets\lib\vc_x64_dll;$(oesLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxmsw32ud_aui.lib;wxmsw32ud_qa.lib;wxmsw32ud_html.lib;wxmsw32ud_propgrid.lib;wxmsw32ud_adv.lib;wxmsw32ud_core.lib;wxbase32ud_xml.lib;wxbase32ud_net.lib;wxmsw32ud_stc.lib;wxmsw32ud_xrc.lib;wxbase32ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw33ud_aui.lib;wxmsw33ud_qa.lib;wxmsw33ud_html.lib;wxmsw33ud_propgrid.lib;wxmsw33ud_adv.lib;wxmsw33ud_core.lib;wxbase33ud_xml.lib;wxbase33ud_net.lib;wxmsw33ud_stc.lib;wxmsw33ud_xrc.lib;wxbase33ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
@@ -949,7 +907,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(oes3rdParty)wxWidgets\lib\vc_dll;$(oesLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxmsw32u_aui.lib;wxmsw32u_qa.lib;wxmsw32u_html.lib;wxmsw32u_propgrid.lib;wxmsw32u_adv.lib;wxmsw32u_core.lib;wxbase32u_xml.lib;wxbase32u_net.lib;wxmsw32u_stc.lib;wxmsw32u_xrc.lib;wxbase32u.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw33u_aui.lib;wxmsw33u_qa.lib;wxmsw33u_html.lib;wxmsw33u_propgrid.lib;wxmsw33u_adv.lib;wxmsw33u_core.lib;wxbase33u_xml.lib;wxbase33u_net.lib;wxmsw33u_stc.lib;wxmsw33u_xrc.lib;wxbase33u.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -977,7 +935,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(oes3rdParty)wxWidgets\lib\vc_x64_dll;$(oesLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxmsw32u_aui.lib;wxmsw32u_qa.lib;wxmsw32u_html.lib;wxmsw32u_propgrid.lib;wxmsw32u_adv.lib;wxmsw32u_core.lib;wxbase32u_xml.lib;wxbase32u_net.lib;wxmsw32u_stc.lib;wxmsw32u_xrc.lib;wxbase32u.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxmsw33u_aui.lib;wxmsw33u_qa.lib;wxmsw33u_html.lib;wxmsw33u_propgrid.lib;wxmsw33u_adv.lib;wxmsw33u_core.lib;wxbase33u_xml.lib;wxbase33u_net.lib;wxmsw33u_stc.lib;wxmsw33u_xrc.lib;wxbase33u.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxscintillad.lib;wxregexud.lib;wxexpatd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

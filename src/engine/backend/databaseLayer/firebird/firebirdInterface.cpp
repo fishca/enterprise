@@ -1,6 +1,6 @@
 #include "firebirdInterface.h"
 
-bool CFirebirdInterface::Init()
+bool ibInterfaceFirebird::Init()
 {
 	bool bLoaded = m_FirebirdDLL.Load(wxDynamicLibrary::CanonicalizeName(wxT("fbclient")));
 	if (!bLoaded)

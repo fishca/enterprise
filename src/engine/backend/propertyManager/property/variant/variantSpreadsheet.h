@@ -3,18 +3,18 @@
 
 #include "backend/backend_spreadsheet.h"
 
-class BACKEND_API wxVariantDataSpreadsheet : public wxVariantData {
+class BACKEND_API ibVariantDataSpreadsheet : public wxVariantData {
 	wxString MakeString() const;
 public:
 
 	bool IsEmptySpreadsheet() const { return m_spreadsheetDesc.IsEmptySpreadsheet(); }
 
-	CSpreadsheetDescription& GetSpreadsheetDesc() { return m_spreadsheetDesc; }
+	ibSpreadsheetDescription& GetSpreadsheetDesc() { return m_spreadsheetDesc; }
 
-	wxVariantDataSpreadsheet(const CSpreadsheetDescription& val) : wxVariantData(), m_spreadsheetDesc(val) {}
+	ibVariantDataSpreadsheet(const ibSpreadsheetDescription& val) : wxVariantData(), m_spreadsheetDesc(val) {}
 
 	virtual bool Eq(wxVariantData& data) const {
-		wxVariantDataSpreadsheet* srcData = dynamic_cast<wxVariantDataSpreadsheet*>(&data);
+		ibVariantDataSpreadsheet* srcData = dynamic_cast<ibVariantDataSpreadsheet*>(&data);
 		if (srcData != nullptr)
 			return srcData->m_spreadsheetDesc == m_spreadsheetDesc;
 		return false;
@@ -32,10 +32,10 @@ public:
 		return true;
 	}
 
-	virtual wxString GetType() const { return wxT("wxVariantDataSpreadsheet"); }
+	virtual wxString GetType() const { return wxT("ibVariantDataSpreadsheet"); }
 
 private:
-	CSpreadsheetDescription m_spreadsheetDesc;
+	ibSpreadsheetDescription m_spreadsheetDesc;
 };
 
 #endif

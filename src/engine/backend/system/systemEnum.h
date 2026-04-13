@@ -1,36 +1,36 @@
 #ifndef _SYSTEM_ENUMS_H__
 #define _SYSTEM_ENUMS_H__
 
-enum eStatusMessage
+enum ibStatusMessage
 {
-	eStatusMessage_Information = 1,
-	eStatusMessage_Warning,
-	eStatusMessage_Error
+	ibStatusMessage_Information = 1,
+	ibStatusMessage_Warning,
+	ibStatusMessage_Error
 };
 
-enum eQuestionMode
+enum ibQuestionMode
 {
-	eQuestionMode_YesNo = 1,
-	eQuestionMode_YesNoCancel,
-	eQuestionMode_OK,
-	eQuestionMode_OKCancel
+	ibQuestionMode_YesNo = 1,
+	ibQuestionMode_YesNoCancel,
+	ibQuestionMode_OK,
+	ibQuestionMode_OKCancel
 };
 
-enum eQuestionReturnCode
+enum ibQuestionReturnCode
 {
-	eQuestionReturnCode_Yes = 1,
-	eQuestionReturnCode_No,
-	eQuestionReturnCode_OK,
-	eQuestionReturnCode_Cancel
+	ibQuestionReturnCode_Yes = 1,
+	ibQuestionReturnCode_No,
+	ibQuestionReturnCode_OK,
+	ibQuestionReturnCode_Cancel
 };
 
-enum eRoundMode
+enum ibRoundMode
 {
-	eRoundMode_Round15as10 = 1,
-	eRoundMode_Round15as20
+	ibRoundMode_Round15as10 = 1,
+	ibRoundMode_Round15as20
 };
 
-enum enChars {
+enum ibChars {
 	eCR = 13,
 	eFF = 12,
 	eLF = 10,

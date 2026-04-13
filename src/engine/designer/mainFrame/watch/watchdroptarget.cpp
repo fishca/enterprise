@@ -6,12 +6,12 @@
 #include "watchdroptarget.h"    
 #include "watchwindow.h"
 
-CWatchDropTarget::CWatchDropTarget(CWatchWindow* watch)
+ibWatchDropTarget::ibWatchDropTarget(ibWatchWindow* watch)
 {
     m_watch = watch;
 }
 
-bool CWatchDropTarget::OnDropText(wxCoord x, wxCoord y, const wxString& data)
+bool ibWatchDropTarget::OnDropText(wxCoord x, wxCoord y, const wxString& data)
 {
     m_watch->AddWatch(data);    
     // Return false since we want to effectively copy the text, not move it.

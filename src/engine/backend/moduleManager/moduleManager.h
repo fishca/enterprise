@@ -7,33 +7,33 @@
 #include "backend/metaCollection/metaModuleObject.h"
 #include "backend/metaCollection/partial/commonObject.h"
 
-class BACKEND_API IValueModuleManager :
-	public IModuleDataObject, public CValue {
+class BACKEND_API ibValueModuleManager :
+	public ibModuleDataObject, public ibValue {
 protected:
 	enum helperAlias {
 		eProcUnit
 	};
 public:
 
-	class BACKEND_API CValueModuleUnit :
-		public IModuleDataObject, public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CValueModuleUnit);
+	class BACKEND_API ibValueModuleUnit :
+		public ibModuleDataObject, public ibValue {
+		wxDECLARE_DYNAMIC_CLASS(ibValueModuleUnit);
 	protected:
 		enum helperAlias {
 			eProcUnit
 		};
 	public:
 
-		CValueModuleUnit() {}
-		CValueModuleUnit(IValueModuleManager* moduleManager, IValueMetaObjectModule* moduleObject, bool managerModule = false);
-		virtual ~CValueModuleUnit();
+		ibValueModuleUnit() {}
+		ibValueModuleUnit(ibValueModuleManager* moduleManager, ibValueMetaObjectModuleBase* moduleObject, bool managerModule = false);
+		virtual ~ibValueModuleUnit();
 
 		//initalize common module
 		bool CreateCommonModule();
 		bool DestroyCommonModule();
 
 		//get common module 
-		IValueMetaObjectModule* GetModuleObject() const {
+		ibValueMetaObjectModuleBase* GetModuleObject() const {
 			return m_moduleObject;
 		}
 
@@ -61,7 +61,7 @@ public:
 		//WORK AS AN AGGREGATE OBJECT
 
 		// these methods need to be overridden in your aggregate objects:
-		virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+		virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 			//PrepareNames();
 			return m_methodHelper;
 		}
@@ -70,8 +70,8 @@ public:
 		virtual void PrepareNames() const;
 
 		//method call
-		virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) override;
-		virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) override;
+		virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray) override;
+		virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) override;
 
 		virtual wxString GetString() const override {
 			return m_moduleObject->GetName();
@@ -83,9 +83,9 @@ public:
 		}
 
 		//operator '=='
-		virtual bool CompareValueEQ(const CValue& cParam) const override
+		virtual bool CompareValueEQ(const ibValue& cParam) const override
 		{
-			CValueModuleUnit* compareModule = dynamic_cast<CValueModuleUnit*>(cParam.GetRef());
+			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
 				return m_moduleObject == compareModule->GetModuleObject();
 			}
@@ -94,9 +94,9 @@ public:
 		}
 
 		//operator '!='
-		virtual bool CompareValueNE(const CValue& cParam) const override
+		virtual bool CompareValueNE(const ibValue& cParam) const override
 		{
-			CValueModuleUnit* compareModule = dynamic_cast<CValueModuleUnit*>(cParam.GetRef());
+			ibValueModuleUnit* compareModule = dynamic_cast<ibValueModuleUnit*>(cParam.GetRef());
 			if (compareModule) {
 				return m_moduleObject != compareModule->GetModuleObject();
 			}
@@ -105,31 +105,31 @@ public:
 		}
 
 	protected:
-		IValueModuleManager* m_moduleManager;
-		IValueMetaObjectModule* m_moduleObject;
+		ibValueModuleManager* m_moduleManager;
+		ibValueMetaObjectModuleBase* m_moduleObject;
 	private:
-		CMethodHelper* m_methodHelper;
+		ibValueMethodHelper* m_methodHelper;
 	};
 
-	class BACKEND_API CValueMetadataUnit :
-		public CValue {
-		wxDECLARE_DYNAMIC_CLASS(CValueMetadataUnit);
+	class BACKEND_API ibValueMetadataUnit :
+		public ibValue {
+		wxDECLARE_DYNAMIC_CLASS(ibValueMetadataUnit);
 	public:
 
-		CValueMetadataUnit() {}
-		CValueMetadataUnit(IMetaData* metaData);
-		virtual ~CValueMetadataUnit();
+		ibValueMetadataUnit() {}
+		ibValueMetadataUnit(ibMetaData* metaData);
+		virtual ~ibValueMetadataUnit();
 
 		//get common module 
-		IMetaData* GetMetaData() const { return m_metaData; }
+		ibMetaData* GetMetaData() const { return m_metaData; }
 
 		//check is empty
 		virtual bool IsEmpty() const { return false; }
 
 		//operator '=='
-		virtual bool CompareValueEQ(const CValue& cParam) const override
+		virtual bool CompareValueEQ(const ibValue& cParam) const override
 		{
-			CValueMetadataUnit* compareMetadata = dynamic_cast<CValueMetadataUnit*>(cParam.GetRef());
+			ibValueMetadataUnit* compareMetadata = dynamic_cast<ibValueMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
 				return m_metaData == compareMetadata->GetMetaData();
 			}
@@ -138,8 +138,8 @@ public:
 		}
 
 		//operator '!='
-		virtual bool CompareValueNE(const CValue& cParam) const override {
-			CValueMetadataUnit* compareMetadata = dynamic_cast<CValueMetadataUnit*>(cParam.GetRef());
+		virtual bool CompareValueNE(const ibValue& cParam) const override {
+			ibValueMetadataUnit* compareMetadata = dynamic_cast<ibValueMetadataUnit*>(cParam.GetRef());
 			if (compareMetadata) {
 				return m_metaData != compareMetadata->GetMetaData();
 			}
@@ -148,7 +148,7 @@ public:
 		}
 
 		// these methods need to be overridden in your aggregate objects:
-		virtual CMethodHelper* GetPMethods() const {
+		virtual ibValueMethodHelper* GetPMethods() const {
 			//PrepareNames();  
 			return m_methodHelper;
 		}
@@ -159,12 +159,12 @@ public:
 		//*                              Override attribute                          *
 		//****************************************************************************
 
-		virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal) override;        //setting attribute
-		virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal) override;                   //attribute value
+		virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal) override;        //setting attribute
+		virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal) override;                   //attribute value
 
 	private:
-		IMetaData* m_metaData;
-		CMethodHelper* m_methodHelper;
+		ibMetaData* m_metaData;
+		ibValueMethodHelper* m_methodHelper;
 	};
 
 private:
@@ -174,11 +174,11 @@ private:
 protected:
 
 	//metaData and external variant
-	IValueModuleManager(IMetaData* metaData, CValueMetaObjectModule* metaObject);
+	ibValueModuleManager(ibMetaData* metaData, ibValueMetaObjectModule* metaObject);
 
 public:
 
-	virtual ~IValueModuleManager();
+	virtual ~ibValueModuleManager();
 
 	//Create common module
 	virtual bool CreateMainModule() = 0;
@@ -193,7 +193,7 @@ public:
 	virtual bool ExitMainModule(bool force = false) = 0;
 
 	// these methods need to be overridden in your aggregate objects:
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names
 		//PrepareNames(); 
 		return m_methodHelper;
 	}
@@ -202,22 +202,22 @@ public:
 	virtual void PrepareNames() const;
 
 	//method call
-	virtual bool CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray);
-	virtual bool CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray);
+	virtual bool CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray);
+	virtual bool CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray);
 
-	virtual bool SetPropVal(const long lPropNum, const CValue& varPropVal);        //setting attribute
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool SetPropVal(const long lPropNum, const ibValue& varPropVal);        //setting attribute
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 	virtual long FindProp(const wxString& strName) const;
 
 	//check is empty
 	virtual bool IsEmpty() const { return false; }
 
 	//compile modules:
-	bool AddCompileModule(const IValueMetaObject* moduleObject, CValue* object);
-	bool RemoveCompileModule(const IValueMetaObject* moduleObject);
+	bool AddCompileModule(const ibValueMetaObject* moduleObject, ibValue* object);
+	bool RemoveCompileModule(const ibValueMetaObject* moduleObject);
 
 	//templates:
-	template <class T> inline bool FindCompileModule(const IValueMetaObject* moduleObject, T*& objValue) const {
+	template <class T> inline bool FindCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
 		auto& it = m_listCommonModuleValue.find(moduleObject);
 		if (it != m_listCommonModuleValue.end()) {
 			objValue = dynamic_cast<T*>(&(*it->second));
@@ -227,62 +227,62 @@ public:
 		return false;
 	}
 
-	template <class T> inline bool FindParentCompileModule(const IValueMetaObject* moduleObject, T*& objValue) const {
-		IValueMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
+	template <class T> inline bool FindParentCompileModule(const ibValueMetaObject* moduleObject, T*& objValue) const {
+		ibValueMetaObject* parentMetadata = moduleObject ? moduleObject->GetParent() : nullptr;
 		if (parentMetadata != nullptr)
 			return FindCompileModule(parentMetadata, objValue);
 		return false;
 	}
 
 	//common modules:
-	bool AddCommonModule(CValueMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
+	bool AddCommonModule(ibValueMetaObjectCommonModule* commonModule, bool managerModule = false, bool runModule = false);
 
-	CValueModuleUnit* FindCommonModule(CValueMetaObjectCommonModule* commonModule) const;
-	bool RenameCommonModule(CValueMetaObjectCommonModule* commonModule, const wxString& newName);
-	bool RemoveCommonModule(CValueMetaObjectCommonModule* commonModule);
+	ibValueModuleUnit* FindCommonModule(ibValueMetaObjectCommonModule* commonModule) const;
+	bool RenameCommonModule(ibValueMetaObjectCommonModule* commonModule, const wxString& newName);
+	bool RemoveCommonModule(ibValueMetaObjectCommonModule* commonModule);
 
 	//system object:
-	CValue* GetObjectManager() const { return m_objectManager; }
-	CValueMetadataUnit* GetMetaManager() const { return m_metaManager; }
+	ibValue* GetObjectManager() const { return m_objectManager; }
+	ibValueMetadataUnit* GetMetaManager() const { return m_metaManager; }
 
-	virtual std::vector<CValuePtr<CValueModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
+	virtual std::vector<ibValuePtr<ibValueModuleUnit>>& GetCommonModules() { return m_listCommonModuleManager; }
 
 	//associated map
-	virtual std::map<wxString, CValuePtr<CValue>>& GetGlobalVariables() { return m_listGlConstValue; }
-	virtual std::map<wxString, CValue*>& GetContextVariables() { return m_compileModule->m_listContextValue; }
+	virtual std::map<wxString, ibValuePtr<ibValue>>& GetGlobalVariables() { return m_listGlConstValue; }
+	virtual std::map<wxString, ibValue*>& GetContextVariables() { return m_compileModule->m_listContextValue; }
 
 	//return external module
-	virtual CValue* GetObjectValue() const { return nullptr; }
+	virtual ibValue* GetObjectValue() const { return nullptr; }
 
 protected:
 
 	bool m_initialized;
 
 	//global manager
-	CValuePtr<CValue> m_objectManager;
+	ibValuePtr<ibValue> m_objectManager;
 
 	// global metamanager
-	CValuePtr<CValueMetadataUnit> m_metaManager;
+	ibValuePtr<ibValueMetadataUnit> m_metaManager;
 
 	//map with compile data
-	std::map<const IValueMetaObject*, CValuePtr<CValue>> m_listCommonModuleValue;
+	std::map<const ibValueMetaObject*, ibValuePtr<ibValue>> m_listCommonModuleValue;
 
 	//array of common modules
-	std::vector<CValuePtr<CValueModuleUnit>> m_listCommonModuleManager;
+	std::vector<ibValuePtr<ibValueModuleUnit>> m_listCommonModuleManager;
 
 	//array of global variables
-	std::map<wxString, CValuePtr<CValue>> m_listGlConstValue;
+	std::map<wxString, ibValuePtr<ibValue>> m_listGlConstValue;
 
-	friend class CMetaDataConfiguration;
-	friend class CMetaDataDataProcessor;
+	friend class ibMetaDataConfiguration;
+	friend class ibMetaDataDataProcessor;
 
-	friend class CValueModuleUnit;
+	friend class ibValueModuleUnit;
 
-	CMethodHelper* m_methodHelper;
+	ibValueMethodHelper* m_methodHelper;
 };
 
-class BACKEND_API CValueModuleManagerConfiguration :
-	public IValueModuleManager {
+class BACKEND_API ibValueModuleManagerConfiguration :
+	public ibValueModuleManager {
 	//system events:
 	bool BeforeStart();
 	void OnStart();
@@ -291,7 +291,7 @@ class BACKEND_API CValueModuleManagerConfiguration :
 public:
 
 	//metaData and external variant
-	CValueModuleManagerConfiguration(IMetaData* metaData = nullptr, CValueMetaObjectConfiguration* metaObject = nullptr);
+	ibValueModuleManagerConfiguration(ibMetaData* metaData = nullptr, ibValueMetaObjectConfiguration* metaObject = nullptr);
 
 	//Create common module
 	virtual bool CreateMainModule();

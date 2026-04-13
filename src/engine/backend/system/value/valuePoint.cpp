@@ -6,21 +6,21 @@
 #include "valuePoint.h"
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValuePoint, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValuePoint, ibValue);
 
-CValue::CMethodHelper CValuePoint::m_methodHelper;
+ibValue::ibValueMethodHelper ibValuePoint::m_methodHelper;
 
-CValuePoint::CValuePoint() : CValue(eValueTypes::TYPE_VALUE), m_point(wxDefaultPosition)
+ibValuePoint::ibValuePoint() : ibValue(ibValueTypes::TYPE_VALUE), m_point(wxDefaultPosition)
 {
 }
 
-CValuePoint::CValuePoint(const wxPoint& point) : CValue(eValueTypes::TYPE_VALUE), m_point(point)
+ibValuePoint::ibValuePoint(const wxPoint& point) : ibValue(ibValueTypes::TYPE_VALUE), m_point(point)
 {
 }
 
-bool CValuePoint::Init(CValue** paParams, const long lSizeArray)
+bool ibValuePoint::Init(ibValue** paParams, const long lSizeArray)
 {
-	if (lSizeArray == 1 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray == 1 && paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
 		m_point = typeConv::StringToPoint(paParams[0]->GetString());
 		return true;
 	}
@@ -33,26 +33,26 @@ bool CValuePoint::Init(CValue** paParams, const long lSizeArray)
 
 enum
 {
-	eX,
-	eY
+	eLeft,
+	eTop
 };
 
-void CValuePoint::PrepareNames() const
+void ibValuePoint::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("X"));
-	m_methodHelper.AppendProp(wxT("Y"));
+	m_methodHelper.AppendProp(wxT("Left"));
+	m_methodHelper.AppendProp(wxT("Top"));
 }
 
-bool CValuePoint::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValuePoint::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eLeft:
 		m_point.x = varPropVal.GetInteger();
 		return true;
-	case eY:
+	case eTop:
 		m_point.y = varPropVal.GetInteger();
 		return true;
 	}
@@ -60,14 +60,14 @@ bool CValuePoint::SetPropVal(const long lPropNum, const CValue& varPropVal)
 	return false;
 }
 
-bool CValuePoint::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValuePoint::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-	case eX:
+	case eLeft:
 		pvarPropVal = m_point.x;
 		return true;
-	case eY:
+	case eTop:
 		pvarPropVal = m_point.y;
 		return true;
 	}
@@ -79,4 +79,4 @@ bool CValuePoint::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValuePoint, "Point", string_to_clsid("VL_PONT"));
+VALUE_TYPE_REGISTER(ibValuePoint, "Point", string_to_clsid("VL_PONT"));

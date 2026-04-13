@@ -4,16 +4,16 @@
 
 #define ICON_SIZE 16
 
-class CMetaDataItem : public wxTreeItemData {
-	IValueMetaObject* m_metaObject;
+class ibMetaDataItem : public wxTreeItemData {
+	ibValueMetaObject* m_metaObject;
 public:
-	CMetaDataItem(IValueMetaObject* metaObject) : m_metaObject(metaObject) {}
-	IValueMetaObject* GetMetaObject() const { return m_metaObject; }
+	ibMetaDataItem(ibValueMetaObject* metaObject) : m_metaObject(metaObject) {}
+	ibValueMetaObject* GetMetaObject() const { return m_metaObject; }
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-CDialogFunctionAll::CDialogFunctionAll(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
+ibDialogFunctionAll::ibDialogFunctionAll(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
 	: wxDialog(parent, id, title, pos, size, style)
 {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -24,7 +24,7 @@ CDialogFunctionAll::CDialogFunctionAll(wxWindow* parent, wxWindowID id, const wx
 	bSizer->Add(m_treeCtrlElements, 1, wxALL | wxEXPAND, 5);
 
 	// Connect Events
-	m_treeCtrlElements->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(CDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick), nullptr, this);
+	m_treeCtrlElements->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(ibDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick), nullptr, this);
 
 	//set image list
 	m_treeCtrlElements->AssignImageList(
@@ -37,15 +37,15 @@ CDialogFunctionAll::CDialogFunctionAll(wxWindow* parent, wxWindowID id, const wx
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picStructureCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picStructureCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
 }
 
-wxTreeItemId CDialogFunctionAll::AppendGroupItem(const wxTreeItemId& parent,
-	const class_identifier_t& clsid, const wxString& name) const {
-	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(clsid);
+wxTreeItemId ibDialogFunctionAll::AppendGroupItem(const wxTreeItemId& parent,
+	const ibClassID& clsid, const wxString& name) const {
+	const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(clsid);
 	wxASSERT(typeCtor);
 	wxImageList* imageList = m_treeCtrlElements->GetImageList();
 	wxASSERT(imageList);
@@ -53,7 +53,7 @@ wxTreeItemId CDialogFunctionAll::AppendGroupItem(const wxTreeItemId& parent,
 	return m_treeCtrlElements->AppendItem(parent, name.IsEmpty() ? typeCtor->GetClassName() : name, imageIndex, imageIndex);
 }
 
-void CDialogFunctionAll::BuildTree()
+void ibDialogFunctionAll::BuildTree()
 {
 	wxImageList* imageList = m_treeCtrlElements->GetImageList();
 	wxASSERT(imageList);
@@ -61,51 +61,51 @@ void CDialogFunctionAll::BuildTree()
 	wxTreeItemId constants = AppendGroupItem(root, g_metaConstantCLSID, _("Constants"));
 	for (auto constant : activeMetaData->GetAnyArrayObject(g_metaConstantCLSID)) {
 		const int imageIndex = imageList->Add(constant->GetIcon());
-		m_treeCtrlElements->AppendItem(constants, constant->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(constant));
+		m_treeCtrlElements->AppendItem(constants, constant->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(constant));
 	}
 	wxTreeItemId catalogs = AppendGroupItem(root, g_metaCatalogCLSID, _("Catalogs"));
 	for (auto catalog : activeMetaData->GetAnyArrayObject(g_metaCatalogCLSID)) {
 		const int imageIndex = imageList->Add(catalog->GetIcon());
-		m_treeCtrlElements->AppendItem(catalogs, catalog->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(catalog));
+		m_treeCtrlElements->AppendItem(catalogs, catalog->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(catalog));
 	}
 	wxTreeItemId documents = AppendGroupItem(root, g_metaDocumentCLSID, _("Documents"));
 	for (auto document : activeMetaData->GetAnyArrayObject(g_metaDocumentCLSID)) {
 		const int imageIndex = imageList->Add(document->GetIcon());
-		m_treeCtrlElements->AppendItem(documents, document->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(document));
+		m_treeCtrlElements->AppendItem(documents, document->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(document));
 	}
 	wxTreeItemId dataProcessors = AppendGroupItem(root, g_metaDataProcessorCLSID, _("Data processors"));
 	for (auto dataProcessor : activeMetaData->GetAnyArrayObject(g_metaDataProcessorCLSID)) {
 		const int imageIndex = imageList->Add(dataProcessor->GetIcon());
-		m_treeCtrlElements->AppendItem(dataProcessors, dataProcessor->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(dataProcessor));
+		m_treeCtrlElements->AppendItem(dataProcessors, dataProcessor->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(dataProcessor));
 	}
 	wxTreeItemId reports = AppendGroupItem(root, g_metaReportCLSID, _("Reports"));
 	for (auto report : activeMetaData->GetAnyArrayObject(g_metaReportCLSID)) {
 		const int imageIndex = imageList->Add(report->GetIcon());
-		m_treeCtrlElements->AppendItem(reports, report->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(report));
+		m_treeCtrlElements->AppendItem(reports, report->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(report));
 	}
 	wxTreeItemId informationRegisters = AppendGroupItem(root, g_metaInformationRegisterCLSID, _("Information registers"));
 	for (auto informationRegister : activeMetaData->GetAnyArrayObject(g_metaInformationRegisterCLSID)) {
 		const int imageIndex = imageList->Add(informationRegister->GetIcon());
-		m_treeCtrlElements->AppendItem(informationRegisters, informationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(informationRegister));
+		m_treeCtrlElements->AppendItem(informationRegisters, informationRegister->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(informationRegister));
 	}
 	wxTreeItemId accumulationRegisters = AppendGroupItem(root, g_metaAccumulationRegisterCLSID, _("Accumulation registers"));
 	for (auto accumulationRegister : activeMetaData->GetAnyArrayObject(g_metaAccumulationRegisterCLSID)) {
 		const int imageIndex = imageList->Add(accumulationRegister->GetIcon());
-		m_treeCtrlElements->AppendItem(accumulationRegisters, accumulationRegister->GetSynonym(), imageIndex, imageIndex, new CMetaDataItem(accumulationRegister));
+		m_treeCtrlElements->AppendItem(accumulationRegisters, accumulationRegister->GetSynonym(), imageIndex, imageIndex, new ibMetaDataItem(accumulationRegister));
 	}
 
 	m_treeCtrlElements->ExpandAll();
 }
 
-void CDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick(wxMouseEvent& event)
+void ibDialogFunctionAll::OnTreeCtrlElementsOnLeftDClick(wxMouseEvent& event)
 {
 	const wxTreeItemId& selItem = m_treeCtrlElements->GetSelection();
 	if (!selItem.IsOk())
 		return;
 
-	CMetaDataItem* itemData = dynamic_cast<CMetaDataItem*>(m_treeCtrlElements->GetItemData(selItem));
+	ibMetaDataItem* itemData = dynamic_cast<ibMetaDataItem*>(m_treeCtrlElements->GetItemData(selItem));
 	if (itemData != nullptr) {
-		IBackendCommandItem* metaObject = dynamic_cast<IBackendCommandItem*>(itemData->GetMetaObject());
+		ibBackendCommandItem* metaObject = dynamic_cast<ibBackendCommandItem*>(itemData->GetMetaObject());
 		if (metaObject != nullptr && metaObject->ShowFormByCommandType())
 			Close(true);
 	}

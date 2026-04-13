@@ -1,37 +1,37 @@
 #include "docViewRole.h"
 
 // ----------------------------------------------------------------------------
-// CRoleEditView implementation
+// ibRoleEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CRoleEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibRoleEditView, ibMetaView);
 
-wxBEGIN_EVENT_TABLE(CRoleEditView, CMetaView)
+wxBEGIN_EVENT_TABLE(ibRoleEditView, ibMetaView)
 wxEND_EVENT_TABLE()
 
 #include "win/editor/roleEditor/roleEditor.h"
 
-bool CRoleEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibRoleEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_roleEditor = new CRoleEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
+	m_roleEditor = new ibRoleEditor(m_viewFrame, wxID_ANY, doc->GetMetaObject());
 	m_roleEditor->SetReadOnly(flags == wxDOC_READONLY);
 	
 	m_roleEditor->RefreshRole();	
-	return CMetaView::OnCreate(doc, flags);
+	return ibMetaView::OnCreate(doc, flags);
 }
 
-void CRoleEditView::OnUpdate(wxView* sender, wxObject* hint)
+void ibRoleEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
 	if (m_roleEditor != nullptr) 
 		m_roleEditor->RefreshRole();	
 }
 
-void CRoleEditView::OnDraw(wxDC* WXUNUSED(dc))
+void ibRoleEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxGrid draws itself
 }
 
-bool CRoleEditView::OnClose(bool deleteWindow)
+bool ibRoleEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -40,7 +40,7 @@ bool CRoleEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
+	if (ibMetaView::OnClose(deleteWindow)) {
 	
 		m_roleEditor->Freeze();
 	
@@ -57,39 +57,39 @@ bool CRoleEditView::OnClose(bool deleteWindow)
 // CGridDocument: wxDocument and wxGrid married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(CRoleDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(ibRolibDocument, ibMetaDocument);
 
-bool CRoleDocument::OnCreate(const wxString& path, long flags)
+bool ibRolibDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!CMetaDocument::OnCreate(path, flags))
+	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
 	return true;
 }
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CRoleDocument::DoSaveDocument(const wxString& filename)
+bool ibRolibDocument::DoSaveDocument(const wxString& filename)
 {
 	return true;
 }
 
-bool CRoleDocument::DoOpenDocument(const wxString& filename)
+bool ibRolibDocument::DoOpenDocument(const wxString& filename)
 {
 	return true;
 }
 
-bool CRoleDocument::IsModified() const
+bool ibRolibDocument::IsModified() const
 {
-	return CMetaDocument::IsModified();
+	return ibMetaDocument::IsModified();
 }
 
-void CRoleDocument::Modify(bool modified)
+void ibRolibDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }
 
 // ----------------------------------------------------------------------------
-// CRoleEditDocument implementation
+// ibRoleEditDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CRoleEditDocument, CMetaDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibRoleEditDocument, ibMetaDocument);

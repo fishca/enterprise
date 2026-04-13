@@ -10,55 +10,55 @@ enum {
 };
 
 // ----------------------------------------------------------------------------
-// CTextEditView implementation
+// ibTextEditView implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CModuleEditView, CMetaView);
+wxIMPLEMENT_DYNAMIC_CLASS(ibModuleEditView, ibMetaView);
 
-wxBEGIN_EVENT_TABLE(CModuleEditView, CMetaView)
-EVT_MENU(wxID_COPY, CModuleEditView::OnCopy)
-EVT_MENU(wxID_PASTE, CModuleEditView::OnPaste)
-EVT_MENU(wxID_SELECTALL, CModuleEditView::OnSelectAll)
-EVT_FIND(wxID_ANY, CModuleEditView::OnFind)
-EVT_FIND_NEXT(wxID_ANY, CModuleEditView::OnFind)
+wxBEGIN_EVENT_TABLE(ibModuleEditView, ibMetaView)
+EVT_MENU(wxID_COPY, ibModuleEditView::OnCopy)
+EVT_MENU(wxID_PASTE, ibModuleEditView::OnPaste)
+EVT_MENU(wxID_SELECTALL, ibModuleEditView::OnSelectAll)
+EVT_FIND(wxID_ANY, ibModuleEditView::OnFind)
+EVT_FIND_NEXT(wxID_ANY, ibModuleEditView::OnFind)
 
-EVT_MENU(wxID_ADD_COMMENTS, CModuleEditView::OnMenuEvent)
-EVT_MENU(wxID_REMOVE_COMMENTS, CModuleEditView::OnMenuEvent)
-EVT_MENU(wxID_SYNTAX_CONTROL, CModuleEditView::OnMenuEvent)
-EVT_MENU(wxID_GOTOLINE, CModuleEditView::OnMenuEvent)
-EVT_MENU(wxID_PROCEDURES_FUNCTIONS, CModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_ADD_COMMENTS, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_REMOVE_COMMENTS, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_SYNTAX_CONTROL, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_GOTOLINE, ibModuleEditView::OnMenuEvent)
+EVT_MENU(wxID_PROCEDURES_FUNCTIONS, ibModuleEditView::OnMenuEvent)
 
 wxEND_EVENT_TABLE()
 
-bool CModuleEditView::OnCreate(CMetaDocument* doc, long flags)
+bool ibModuleEditView::OnCreate(ibMetaDocument* doc, long flags)
 {
-	m_codeEditor = new CCodeEditor(doc, m_viewFrame, wxID_ANY,
+	m_codeEditor = new ibCodeEditor(doc, m_viewFrame, wxID_ANY,
 		wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
 	m_codeEditor->SetSTCFocus(true);
 
-	return CMetaView::OnCreate(doc, flags)
+	return ibMetaView::OnCreate(doc, flags)
 		&& m_codeEditor->LoadModule();
 }
 
-void CModuleEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
+void ibModuleEditView::OnActivateView(bool activate, wxView* activeView, wxView* deactiveView)
 {
 	if (activate) m_codeEditor->ActivateEditor();
 }
 
-void CModuleEditView::OnDraw(wxDC* WXUNUSED(dc))
+void ibModuleEditView::OnDraw(wxDC* WXUNUSED(dc))
 {
 	// nothing to do here, wxTextCtrl draws itself
 }
 
-void CModuleEditView::OnUpdate(wxView* sender, wxObject* hint)
+void ibModuleEditView::OnUpdate(wxView* sender, wxObject* hint)
 {
 	if (m_codeEditor != nullptr)
 		m_codeEditor->RefreshEditor();
 }
 
-bool CModuleEditView::OnClose(bool deleteWindow)
+bool ibModuleEditView::OnClose(bool deleteWindow)
 {
 	//Activate(false);
 
@@ -67,7 +67,7 @@ bool CModuleEditView::OnClose(bool deleteWindow)
 		SetFrame(nullptr);
 	}
 
-	if (CMetaView::OnClose(deleteWindow)) {
+	if (ibMetaView::OnClose(deleteWindow)) {
 
 		m_codeEditor->Freeze();
 
@@ -82,14 +82,14 @@ bool CModuleEditView::OnClose(bool deleteWindow)
 
 #include "win/editor/codeEditor/codeEditorPrintOut.h"
 
-wxPrintout* CModuleEditView::OnCreatePrintout()
+wxPrintout* ibModuleEditView::OnCreatePrintout()
 {
-	return new CCodeEditorPrintout(m_codeEditor, m_viewDocument->GetTitle());
+	return new ibCodeEditorPrintout(m_codeEditor, m_viewDocument->GetTitle());
 }
 
 #include "frontend/artProvider/artProvider.h"
 
-void CModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
+void ibModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 {
 	if (m_codeEditor == nullptr)
 		return;
@@ -111,7 +111,7 @@ void CModuleEditView::OnCreateToolbar(wxAuiToolBar* toolbar)
 #include "win/dlg/lineInput/lineInput.h"
 #include "win/dlg/functionSearcher/functionSearcher.h"
 
-void CModuleEditView::OnMenuEvent(wxCommandEvent& event)
+void ibModuleEditView::OnMenuEvent(wxCommandEvent& event)
 {
 	if (event.GetId() == wxID_ADD_COMMENTS) {
 		int nStartLine, nEndLine;
@@ -146,48 +146,48 @@ void CModuleEditView::OnMenuEvent(wxCommandEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-// CModuleDocument: wxDocument and wxTextCtrl married
+// ibModulibDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_CLASS(CModuleDocument, CMetaDocument);
+wxIMPLEMENT_CLASS(ibModulibDocument, ibMetaDocument);
 
-bool CModuleDocument::OnCreate(const wxString& path, long flags)
+bool ibModulibDocument::OnCreate(const wxString& path, long flags)
 {
-	if (!CMetaDocument::OnCreate(path, flags))
+	if (!ibMetaDocument::OnCreate(path, flags))
 		return false;
 
 	return true;
 }
 
-bool CModuleDocument::OnOpenDocument(const wxString& filename)
+bool ibModulibDocument::OnOpenDocument(const wxString& filename)
 {
-	return CMetaDocument::OnOpenDocument(filename);
+	return ibMetaDocument::OnOpenDocument(filename);
 }
 
-bool CModuleDocument::OnSaveDocument(const wxString& filename)
+bool ibModulibDocument::OnSaveDocument(const wxString& filename)
 {
 	return GetCodeEditor()->SaveModule();
 }
 
-bool CModuleDocument::OnSaveModified()
+bool ibModulibDocument::OnSaveModified()
 {
-	return CMetaDocument::OnSaveModified();
+	return ibMetaDocument::OnSaveModified();
 }
 
-bool CModuleDocument::OnCloseDocument()
+bool ibModulibDocument::OnCloseDocument()
 {
-	CCodeEditor* codeEditor = GetCodeEditor();
+	ibCodeEditor* codeEditor = GetCodeEditor();
 	if (codeEditor != nullptr &&
 		codeEditor->IsEditable()) {
 		if (!codeEditor->SyntaxControl(false))
 			return false;
 	}
-	return CMetaDocument::OnCloseDocument();
+	return ibMetaDocument::OnCloseDocument();
 }
 
-wxCommandProcessor* CModuleDocument::OnCreateCommandProcessor()
+wxCommandProcessor* ibModulibDocument::OnCreateCommandProcessor()
 {
-	CModuleCommandProcessor* commandProcessor = new CModuleCommandProcessor(GetCodeEditor());
+	ibModuleCommandProcessor* commandProcessor = new ibModuleCommandProcessor(GetCodeEditor());
 	commandProcessor->SetEditMenu(mainFrame->GetDefaultMenu(wxID_EDIT));
 	commandProcessor->Initialize();
 	return commandProcessor;
@@ -195,12 +195,12 @@ wxCommandProcessor* CModuleDocument::OnCreateCommandProcessor()
 
 // Since text windows have their own method for saving to/loading from files,
 // we override DoSave/OpenDocument instead of Save/LoadObject
-bool CModuleDocument::DoSaveDocument(const wxString& filename)
+bool ibModulibDocument::DoSaveDocument(const wxString& filename)
 {
 	return GetCodeEditor()->SaveFile(filename);
 }
 
-bool CModuleDocument::DoOpenDocument(const wxString& filename)
+bool ibModulibDocument::DoOpenDocument(const wxString& filename)
 {
 	if (!GetCodeEditor()->LoadFile(filename))
 		return false;
@@ -208,58 +208,58 @@ bool CModuleDocument::DoOpenDocument(const wxString& filename)
 	return true;
 }
 
-bool CModuleDocument::IsModified() const
+bool ibModulibDocument::IsModified() const
 {
 	//wxStyledTextCtrl* wnd = GetCodeEditor();
-	return CMetaDocument::IsModified();// || (wnd && wnd->IsModified());
+	return ibMetaDocument::IsModified();// || (wnd && wnd->IsModified());
 }
 
-void CModuleDocument::Modify(bool modified)
+void ibModulibDocument::Modify(bool modified)
 {
-	CMetaDocument::Modify(modified);
+	ibMetaDocument::Modify(modified);
 }
 
-bool CModuleDocument::Save()
+bool ibModulibDocument::Save()
 {
-	CCodeEditor* codeEditor = GetCodeEditor();
+	ibCodeEditor* codeEditor = GetCodeEditor();
 	if (codeEditor != nullptr &&
 		codeEditor->IsEditable()) {
 		if (!codeEditor->SyntaxControl(false))
 			return false;
 	}
-	return CMetaDocument::Save();
+	return ibMetaDocument::Save();
 }
 
 // ----------------------------------------------------------------------------
-// CTextFileDocument implementation
+// ibTextFilibDocument implementation
 // ----------------------------------------------------------------------------
 
-wxIMPLEMENT_DYNAMIC_CLASS(CModuleEditDocument, CModuleDocument);
+wxIMPLEMENT_DYNAMIC_CLASS(ibModuleEditDocument, ibModulibDocument);
 
-CCodeEditor* CModuleEditDocument::GetCodeEditor() const
+ibCodeEditor* ibModuleEditDocument::GetCodeEditor() const
 {
 	wxView* view = GetFirstView();
-	return view ? wxDynamicCast(view, CModuleEditView)->GetCodeEditor() : nullptr;
+	return view ? wxDynamicCast(view, ibModuleEditView)->GetCodeEditor() : nullptr;
 }
 
-void CModuleEditDocument::SetCurrentLine(int lineBreakpoint, bool setBreakpoint)
+void ibModuleEditDocument::SetCurrentLine(int lineBreakpoint, bool setBreakpoint)
 {
-	CCodeEditor* autoComplete = GetCodeEditor();
+	ibCodeEditor* autoComplete = GetCodeEditor();
 	wxASSERT(autoComplete);
 	autoComplete->SetCurrentLine(lineBreakpoint, setBreakpoint);
 }
 
-void CModuleEditDocument::SetToolTip(const wxString& resultStr) {
-	CCodeEditor* codeEditor = GetCodeEditor();
+void ibModuleEditDocument::SetToolTip(const wxString& resultStr) {
+	ibCodeEditor* codeEditor = GetCodeEditor();
 	wxASSERT(codeEditor);
 	if (codeEditor != nullptr) {
 		codeEditor->SetToolTip(resultStr);
 	}
 }
 
-void CModuleEditDocument::ShowAutoComplete(const CDebugAutoCompleteData& debugData)
+void ibModuleEditDocument::ShowAutoComplete(const ibDebugAutoCompleteData& debugData)
 {
-	CCodeEditor* codeEditor = GetCodeEditor();
+	ibCodeEditor* codeEditor = GetCodeEditor();
 	wxASSERT(codeEditor);
 	if (codeEditor != nullptr) {
 		codeEditor->ShowAutoComplete(debugData);

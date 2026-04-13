@@ -10,11 +10,11 @@
 //*                                   Events "moduleManager"                                              *
 //*********************************************************************************************************
 
-bool CValueModuleManagerConfiguration::BeforeStart()
+bool ibValueModuleManagerConfiguration::BeforeStart()
 {
 	if (!appData->DesignerMode()) {
 		try {
-			CValue bCancel = false;
+			ibValue bCancel = false;
 			if (m_procUnit != nullptr) {
 				m_procUnit->CallAsProc(wxT("beforeStart"), bCancel);
 			}
@@ -29,7 +29,7 @@ bool CValueModuleManagerConfiguration::BeforeStart()
 	return true;
 }
 
-void CValueModuleManagerConfiguration::OnStart()
+void ibValueModuleManagerConfiguration::OnStart()
 {
 	if (!appData->DesignerMode()) {
 		try {
@@ -42,11 +42,11 @@ void CValueModuleManagerConfiguration::OnStart()
 	};
 }
 
-bool CValueModuleManagerConfiguration::BeforeExit()
+bool ibValueModuleManagerConfiguration::BeforeExit()
 {
 	if (!appData->DesignerMode()) {
 		try {
-			CValue bCancel = false;
+			ibValue bCancel = false;
 			if (m_procUnit != nullptr) {
 				m_procUnit->CallAsProc(wxT("beforeExit"), bCancel);
 			}
@@ -60,7 +60,7 @@ bool CValueModuleManagerConfiguration::BeforeExit()
 	return true;
 }
 
-void CValueModuleManagerConfiguration::OnExit()
+void ibValueModuleManagerConfiguration::OnExit()
 {
 	if (!appData->DesignerMode()) {
 		try {

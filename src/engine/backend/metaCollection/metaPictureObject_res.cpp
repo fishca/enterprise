@@ -3,7 +3,7 @@
 /* PNG */
 static const wxString s_picture_64_png = wxT("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC7klEQVR4nO3W3U4TQRwF8PWBvALeA/RFSqDKV6cUKBQKpQTCCls+FkujgIlBTFTUoCYoVIsI5YIuV16oiRpqAqQBeswsbAFLsdsuDJ2dSc5Ntxf/8+vMbCVJLLHEsvVSVRV2jsR6ANaRWA/AOhLrAa4dQDp6k+uo6rgAUAWAKgDUfAE2ECrpCICoAIAAiHIGkEj1IqlV4SBWpieZqIS257cHQCLVi/2Viqw592Pl+jPuAZJaVc5X3LZWxT/AQawsJwB9ZnOAcv4BkonKnAD0eHAPoO359Qsv6xJcqYC2180/wMbxm2Bbu6VveZrtrdvYTAXP/S6XABsmIgCiAgBMAJZ/DtoX4PlqDzz11Yg8abUfwON3nXDfcYA4jzI524p4WuEfIH4YwsSjlkzx06Gfs0K4EoAvqWHII03nls8gzHiKQlg/UPDyQwBrKeV6AXxKyugN1l1Y3og6Q3eC+fKrO0OYjngx0unCQ7UNq7vD1wNg8dsAfF5nXuWNjE+bQ4h+H0RYbtbLG4mEWrDyZ4gtwOvNIFpdNabKZxCm6HH4//Bv430Y63GfKW8kLHsQ+y2zAZhb6kJzXXVB5Y2MTLqxfqjkvFCfLXSfW/x0Jgaa8fGHfHUA8bSCqRftRRX/F4GWPXPed4cx/eDovOeT8aAbS18HLh9gbV/BaMRtWXkjofAJAv01w/c8eZc3MhYgWNzqvzyAzztD6JcbLS9vRLnvxht63gPEdHkjo34XFtb6rAdY/jWI7q67l1beiK+xFiFfYeVPQvAqGrAWwOsp7KYvJB2WILgw/77HOgByReWtRng679dftSUHQAyEIgFoZud8pQlALNwJJQtAKEJDLRSfjQGI04H2xpqiEEoegDgd8DbUINTZZF8AQndCgQjZAGOlCUDoTqg3fxy4AiDHx8EMAncAxNgJHU32BSBOB9ryRCgaIM1ZBIAqACAA1AsAVP2fEs8521fKBrBXJNYDsI7EegDWkQDcsHMkscSSbL3+AqmLREqRmuxoAAAAAElFTkSuQmCC");
 
-wxIcon CValueMetaObjectPicture::GetIcon() const
+wxIcon ibValueMetaObjectPicture::GetIcon() const
 {
 	//if (!m_propertyPicture->IsEmptyProperty()) {
 	//	wxIcon icon;
@@ -14,10 +14,10 @@ wxIcon CValueMetaObjectPicture::GetIcon() const
 	return GetIconGroup();
 }
 
-wxIcon CValueMetaObjectPicture::GetIconGroup()
+wxIcon ibValueMetaObjectPicture::GetIconGroup()
 {
 	static wxIcon icon =
-		CBackendPicture::GetIconFromBase64(s_picture_64_png, wxSize(16, 16));
+		ibBackendPicture::GetIconFromBase64(s_picture_64_png, wxSize(16, 16));
 
 	return icon;
 }

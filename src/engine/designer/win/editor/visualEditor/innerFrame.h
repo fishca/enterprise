@@ -4,7 +4,7 @@
 #include <wx/aui/aui.h>
 #include <wx/wx.h>
 
-class CInnerFrame : public wxPanel {
+class ibInnerFrame : public wxPanel {
 	wxDECLARE_EVENT_TABLE();
 private:
 	enum {
@@ -29,7 +29,7 @@ protected:
 	virtual wxSize DoGetBestSize() const override;
 
 public:
-	CInnerFrame(wxWindow *parent, wxWindowID id,
+	ibInnerFrame(wxWindow *parent, wxWindowID id,
 		const wxPoint &pos = wxDefaultPosition,
 		const wxSize &size = wxDefaultSize,
 		long style = 0);

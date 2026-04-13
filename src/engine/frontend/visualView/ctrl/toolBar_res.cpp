@@ -59,12 +59,12 @@ static char* s_toolbar_xpm[] = {
 	"                "
 };
 
-wxIcon CValueToolbar::GetIcon() const
+wxIcon ibValueToolbar::GetIcon() const
 {
 	return wxIcon(s_toolbar_xpm);
 }
 
-wxIcon CValueToolbar::GetIconGroup()
+wxIcon ibValueToolbar::GetIconGroup()
 {
 	return wxIcon(s_toolbar_xpm);
 }

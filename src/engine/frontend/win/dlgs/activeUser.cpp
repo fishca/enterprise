@@ -3,9 +3,9 @@
 #include "backend/metadataConfiguration.h"
 #include "backend/appData.h"
 
-void CDialogActiveUser::RefreshActiveUserTable()
+void ibDialogActiveUser::RefreshActiveUserTable()
 {
-	const CApplicationDataSessionArray& arr = appData->GetSessionArray();
+	const ibApplicationDataSessionArray& arr = appData->GetSessionArray();
 
 	if (m_sessionArrayHash != arr.GetSessionArrayHash()) {
 
@@ -26,7 +26,7 @@ void CDialogActiveUser::RefreshActiveUserTable()
 		m_activeTable->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
 		const int imageUser =
-			imageList->Add(CBackendPicture::GetPicture(g_picUserCLSID));
+			imageList->Add(ibBackendPicture::GetPicture(g_picUserCLSID));
 
 		for (unsigned int idx = 0; idx < arr.GetSessionCount(); idx++) {
 
@@ -50,7 +50,7 @@ void CDialogActiveUser::RefreshActiveUserTable()
 
 #include "frontend/visualView/ctrl/frame.h"
 
-CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
+ibDialogActiveUser::ibDialogActiveUser(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) :
 	wxDialog(parent, id, title, pos, size, style), m_activeTableScanner(new wxTimer)
 {
 	wxDialog::SetSizeHints(wxDefaultSize, wxDefaultSize);
@@ -65,7 +65,7 @@ CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxSt
 	wxDialog::Centre(wxBOTH);
 
 	wxIcon dlg_icon;
-	dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_picUserActiveCLSID));
+	dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_picUserActiveCLSID));
 
 	wxDialog::SetIcon(dlg_icon);
 	wxDialog::SetFocus();
@@ -75,12 +75,12 @@ CDialogActiveUser::CDialogActiveUser(wxWindow* parent, wxWindowID id, const wxSt
 
 	RefreshActiveUserTable();
 
-	m_activeTableScanner->Bind(wxEVT_TIMER, &CDialogActiveUser::OnIdleHandler, this);
+	m_activeTableScanner->Bind(wxEVT_TIMER, &ibDialogActiveUser::OnIdleHandler, this);
 	m_activeTableScanner->Start(1000);
 }
 
-CDialogActiveUser::~CDialogActiveUser()
+ibDialogActiveUser::~ibDialogActiveUser()
 {
 	if (m_activeTableScanner->IsRunning())  m_activeTableScanner->Stop();
-	m_activeTableScanner->Unbind(wxEVT_TIMER, &CDialogActiveUser::OnIdleHandler, this);
+	m_activeTableScanner->Unbind(wxEVT_TIMER, &ibDialogActiveUser::OnIdleHandler, this);
 }

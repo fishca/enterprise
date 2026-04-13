@@ -16,7 +16,7 @@
 //*                                          Common functions                                              *
 //**********************************************************************************************************
 
-wxString IValueMetaObjectRecordDataRef::GetTableNameDB() const
+wxString ibValueMetaObjectRecordDataRef::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
 	wxASSERT(m_metaId != 0);
@@ -24,7 +24,7 @@ wxString IValueMetaObjectRecordDataRef::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IValueMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
+int ibValueMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& tableName, const ibValueMetaObjectAttributeBase* srcAttr, const ibValueMetaObjectAttributeBase* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -40,10 +40,10 @@ int IValueMetaObjectRecordDataMutableRef::ProcessAttribute(const wxString& table
 		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
 	}
 
-	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return ibValueMetaObjectAttributeBase::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IValueMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, const CValueMetaObjectTableData* srcTable, const CValueMetaObjectTableData* dstTable)
+int ibValueMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularName, const ibValueMetaObjectTableData* srcTable, const ibValueMetaObjectTableData* dstTable)
 {
 	int retCode = 1;
 	//is null - create
@@ -95,7 +95,7 @@ int IValueMetaObjectRecordDataMutableRef::ProcessTable(const wxString& tabularNa
 	return retCode;
 }
 
-bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
+bool ibValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
@@ -114,7 +114,7 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 		for (const auto object : GetPredefinedAttributeArrayObject()) {
 			if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 				return false;
-			if (IValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
+			if (ibValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 				continue;
 			retCode = ProcessAttribute(tableName,
 				object, nullptr);
@@ -149,7 +149,7 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IValueMetaObjectRecordDataRef* dstValue = nullptr;
+		ibValueMetaObjectRecordDataRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!dstValue->CompareObject(this))
@@ -157,8 +157,8 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRecordDataRef::FindPredefinedAttributeObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRecordDataRef::FindPredefinedAttributeObjectByFilter(object->GetGuid());
 				if (dstValue->IsDataReference(object->GetMetaID()))
 					continue;
 				if (foundedMeta == nullptr) {
@@ -170,7 +170,7 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 
 			//attributes current
 			for (const auto object : GetPredefinedAttributeArrayObject()) {
-				if (IValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
+				if (ibValueMetaObjectRecordDataRef::IsDataReference(object->GetMetaID()))
 					continue;
 				retCode = ProcessAttribute(tableName,
 					object, dstValue->FindPredefinedAttributeObjectByFilter(object->GetGuid())
@@ -181,8 +181,8 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetAttributeArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRecordDataRef::FindAttributeObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRecordDataRef::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -201,8 +201,8 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 
 			//tables from dst 
 			for (const auto object : dstValue->GetTableArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRecordDataRef::FindTableObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRecordDataRef::FindTableObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessTable(object->GetTableNameDB(), nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -248,7 +248,7 @@ bool IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(IMetaDataConfi
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& reader)
+bool ibValueMetaObjectRecordDataMutableRef::LoadTableData(const ibReaderMemory& reader)
 {
 	wxMemoryBuffer objectBuffer;
 
@@ -263,21 +263,21 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 		else
 			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
-		std::map<meta_identifier_t, int> assoc; int position = 2;
+		std::map<ibMetaID, int> assoc; int position = 2;
 
 		for (const auto object : GetGenericAttributeArrayObject()) {
 			if (IsDataReference(object->GetMetaID()))
 				continue;
-			queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
+			queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 			assoc.insert_or_assign(object->GetMetaID(),
 				position);
-			position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			position += ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 		}
 		queryText += ") VALUES (?";
 		for (const auto object : GetGenericAttributeArrayObject()) {
 			if (IsDataReference(object->GetMetaID()))
 				continue;
-			unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 			for (unsigned int i = 0; i < fieldCount; i++) {
 				queryText += ", ?";
 			}
@@ -290,19 +290,19 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 		else
 			queryText += wxT("MATCHING(uuid);");
 
-		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 		if (statement == nullptr)
 			return false;
 
-		CMemoryReader* rowReaderPrev = nullptr;
-		CMemoryReader objectReader(objectBuffer);
+		ibReaderMemory* rowReaderPrev = nullptr;
+		ibReaderMemory objectReader(objectBuffer);
 
 		while (true) {
 
-			CMemoryReader* colReaderPrev = nullptr;
+			ibReaderMemory* colReaderPrev = nullptr;
 
 			u64 row = 0;
-			CMemoryReader* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
+			ibReaderMemory* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
 
 			if (rowReader == nullptr)
 				break;
@@ -310,17 +310,17 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 			while (!rowReader->eof()) {
 
 				u64 col = 0;
-				CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+				ibReaderMemory* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
 
 				if (colReader == nullptr)
 					break;
 
-				IValueMetaObjectAttribute* attribute = FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+				ibValueMetaObjectAttributeBase* attribute = FindAnyObjectByFilter<ibValueMetaObjectAttributeBase, ibMetaID>(col);
 				while (!colReader->eof()) {
 					if (col > 0) {
 						wxASSERT(attribute);
 						int position = assoc[col];
-						IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+						ibValueMetaObjectAttributeBase::SetBinaryData(attribute, *colReader, statement, position);
 					}
 					else {
 						statement->SetParamString(1, colReader->r_stringZ());
@@ -340,37 +340,37 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 	wxMemoryBuffer tableBuffer;
 	if (reader.r_chunk(2, tableBuffer)) {
 
-		CMemoryReader* tableReaderPrev = nullptr;
-		CMemoryReader objectReader(tableBuffer);
+		ibReaderMemory* tableReaderPrev = nullptr;
+		ibReaderMemory objectReader(tableBuffer);
 
 		while (true) {
 
-			CMemoryReader* rowReaderPrev = nullptr;
+			ibReaderMemory* rowReaderPrev = nullptr;
 
 			u64 table = 0;
-			CMemoryReader* tableReader(objectReader.open_chunk_iterator(table, tableReaderPrev));
+			ibReaderMemory* tableReader(objectReader.open_chunk_iterator(table, tableReaderPrev));
 
 			if (tableReader == nullptr)
 				break;
 
-			CValueMetaObjectTableData* object = FindAnyObjectByFilter<CValueMetaObjectTableData, meta_identifier_t>(table);
+			ibValueMetaObjectTableData* object = FindAnyObjectByFilter<ibValueMetaObjectTableData, ibMetaID>(table);
 			if (object != nullptr) {
 
 				const wxString& tableName = object->GetTableNameDB();
 				wxString queryText = "INSERT INTO " + tableName + " (";
 				queryText += "uuid";
 
-				std::map<meta_identifier_t, int> assoc; int position = 2;
+				std::map<ibMetaID, int> assoc; int position = 2;
 
 				for (const auto object : object->GetGenericAttributeArrayObject()) {
-					queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
+					queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 					assoc.insert_or_assign(object->GetMetaID(),
 						position);
-					position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+					position += ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 				}
 				queryText += ") VALUES (?";
 				for (const auto object : object->GetGenericAttributeArrayObject()) {
-					unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+					unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 					for (unsigned int i = 0; i < fieldCount; i++) {
 						queryText += ", ?";
 					}
@@ -378,16 +378,16 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 
 				queryText += ");";
 
-				IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+				ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 				if (statement == nullptr)
 					return false;
 
 				while (!tableReader->eof()) {
 
-					CMemoryReader* colReaderPrev = nullptr;
+					ibReaderMemory* colReaderPrev = nullptr;
 
 					u64 row = 0;
-					CMemoryReader* rowReader(tableReader->open_chunk_iterator(row, rowReaderPrev));
+					ibReaderMemory* rowReader(tableReader->open_chunk_iterator(row, rowReaderPrev));
 
 					if (rowReader == nullptr)
 						break;
@@ -395,17 +395,17 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 					while (!rowReader->eof()) {
 
 						u64 col = 0;
-						CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+						ibReaderMemory* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
 
 						if (colReader == nullptr)
 							break;
 
-						IValueMetaObjectAttribute* attribute = object->FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+						ibValueMetaObjectAttributeBase* attribute = object->FindAnyObjectByFilter<ibValueMetaObjectAttributeBase, ibMetaID>(col);
 						while (!colReader->eof()) {
 							if (col > 0) {
 								wxASSERT(attribute);
 								int position = assoc[col];
-								IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+								ibValueMetaObjectAttributeBase::SetBinaryData(attribute, *colReader, statement, position);
 							}
 							else {
 								statement->SetParamString(1, colReader->r_stringZ());
@@ -429,21 +429,21 @@ bool IValueMetaObjectRecordDataMutableRef::LoadTableData(const CMemoryReader& re
 	return true;
 }
 
-bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) const
+bool ibValueMetaObjectRecordDataMutableRef::SaveTableData(ibWriterMemory& writer) const
 {
-	IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
+	ibDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
 	if (dbResultSet == nullptr)
 		return false;
 
 	unsigned int row = 0;
 
-	CMemoryWriter objectWriter;
+	ibWriterMemory objectWriter;
 
 	while (dbResultSet->Next()) {
 
-		CMemoryWriter rowWriter;
+		ibWriterMemory rowWriter;
 
-		CMemoryWriter rowGuidWriter;
+		ibWriterMemory rowGuidWriter;
 		rowGuidWriter.w_stringZ(dbResultSet->GetResultString(wxT("uuid")));
 		rowWriter.w_chunk(0, rowGuidWriter.buffer());
 
@@ -452,8 +452,8 @@ bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) 
 			if (IsDataReference(object->GetMetaID()))
 				continue;
 
-			CMemoryWriter attrWriter;
-			IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+			ibWriterMemory attrWriter;
+			ibValueMetaObjectAttributeBase::GetBinaryData(object, attrWriter, dbResultSet);
 			rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
 		}
 
@@ -464,27 +464,27 @@ bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) 
 
 	db_query->CloseResultSet(dbResultSet);
 
-	CMemoryWriter tableObjectWriter;
+	ibWriterMemory tableObjectWriter;
 	for (const auto table : GetTableArrayObject()) {
 
-		IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), table->GetTableNameDB());
+		ibDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), table->GetTableNameDB());
 		if (dbResultSet == nullptr)
 			return false;
 
 		unsigned int row = 0;
 
-		CMemoryWriter tableWriter;
+		ibWriterMemory tableWriter;
 
 		while (dbResultSet->Next()) {
 
-			CMemoryWriter rowWriter;
-			CMemoryWriter rowGuidWriter;
+			ibWriterMemory rowWriter;
+			ibWriterMemory rowGuidWriter;
 			rowGuidWriter.w_stringZ(dbResultSet->GetResultString(wxT("uuid")));
 			rowWriter.w_chunk(0, rowGuidWriter.buffer());
 
 			for (const auto object : table->GetGenericAttributeArrayObject()) {
-				CMemoryWriter attrWriter;
-				IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+				ibWriterMemory attrWriter;
+				ibValueMetaObjectAttributeBase::GetBinaryData(object, attrWriter, dbResultSet);
 				rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
 			}
 
@@ -502,7 +502,7 @@ bool IValueMetaObjectRecordDataMutableRef::SaveTableData(CMemoryWriter& writer) 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int IValueMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, const CValueMetaObjectEnum* srcEnum, const CValueMetaObjectEnum* dstEnum)
+int ibValueMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableName, const ibValueMetaObjectEnum* srcEnum, const ibValueMetaObjectEnum* dstEnum)
 {
 	int retCode = 1;
 
@@ -538,7 +538,7 @@ int IValueMetaObjectRecordDataEnumRef::ProcessEnumeration(const wxString& tableN
 	return retCode;
 }
 
-bool IValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
+bool ibValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
 
@@ -590,7 +590,7 @@ bool IValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfigur
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IValueMetaObjectRecordDataEnumRef* dstValue = nullptr;
+		ibValueMetaObjectRecordDataEnumRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!dstValue->CompareObject(this))
@@ -598,8 +598,8 @@ bool IValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfigur
 
 			//enums from dst 
 			for (const auto object : dstValue->GetEnumObjectArray()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRecordDataEnumRef::FindEnumObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRecordDataEnumRef::FindEnumObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessEnumeration(tableName,
 						nullptr, object);
@@ -637,8 +637,8 @@ bool IValueMetaObjectRecordDataEnumRef::CreateAndUpdateTableDB(IMetaDataConfigur
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxString& tableName,
-	const wxObjectDataPtr<CPredefinedValueObject>& srcPredefined, const wxObjectDataPtr<CPredefinedValueObject>& dstPredefined)
+int ibValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const wxString& tableName,
+	const wxObjectDataPtr<ibPredefinedValueObject>& srcPredefined, const wxObjectDataPtr<ibPredefinedValueObject>& dstPredefined)
 {
 	int retCode = 1;
 
@@ -649,40 +649,40 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 
 		queryText = wxT("INSERT INTO ") + tableName + wxT(" (uuid");
 
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeCode->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDescription->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeIsFolder->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeCode->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeDescription->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeIsFolder->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
 
 		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeCode->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDescription->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeIsFolder->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeCode->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeDescription->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeIsFolder->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
 
 		queryText += wxT(");");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;
 
 		dbStatement->SetParamString(1, srcPredefined->GetPredefinedGuid().str());
 
-		const wxObjectDataPtr<CPredefinedValueObject>& predefinedParentValue = srcPredefined->GetPredefinedParent();
-		CValuePtr<CValueReferenceDataObject> referenceValue =
-			CValueReferenceDataObject::Create(this, predefinedParentValue != nullptr ? predefinedParentValue->GetPredefinedGuid() : wxNullGuid);
+		const wxObjectDataPtr<ibPredefinedValueObject>& predefinedParentValue = srcPredefined->GetPredefinedParent();
+		ibValuePtr<ibValueReferenceDataObject> referenceValue =
+			ibValueReferenceDataObject::Create(this, predefinedParentValue != nullptr ? predefinedParentValue->GetPredefinedGuid() : wxNullGuid);
 
 		int position = 2;
 
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), srcPredefined->GetPredefinedName(), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeCode->GetMetaObject(), srcPredefined->GetPredefinedCode(), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeDescription->GetMetaObject(), srcPredefined->GetPredefinedDescription(), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeIsFolder->GetMetaObject(), srcPredefined->IsPredefinedFolder(), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeParent->GetMetaObject(), referenceValue, dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), srcPredefined->GetPredefinedName(), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeCode->GetMetaObject(), srcPredefined->GetPredefinedCode(), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeDescription->GetMetaObject(), srcPredefined->GetPredefinedDescription(), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeIsFolder->GetMetaObject(), srcPredefined->IsPredefinedFolder(), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeParent->GetMetaObject(), referenceValue, dbStatement, position);
 
 		retCode =
 			dbStatement->RunQuery();
@@ -699,13 +699,13 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 		else
 			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeParent->GetMetaObject());
 
 		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeParent->GetMetaObject()); i++) queryText += wxT(", ?");
 
 		queryText += wxT(") ");
 
@@ -714,21 +714,21 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 		else
 			queryText += wxT("MATCHING(uuid);");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;
 
 		dbStatement->SetParamString(1, srcPredefined->GetPredefinedGuid().str());
 
-		const wxObjectDataPtr<CPredefinedValueObject>& predefinedParentValue = srcPredefined->GetPredefinedParent();
-		CValuePtr<CValueReferenceDataObject> referenceValue =
-			CValueReferenceDataObject::Create(this, predefinedParentValue != nullptr ? predefinedParentValue->GetPredefinedGuid() : wxNullGuid);
+		const wxObjectDataPtr<ibPredefinedValueObject>& predefinedParentValue = srcPredefined->GetPredefinedParent();
+		ibValuePtr<ibValueReferenceDataObject> referenceValue =
+			ibValueReferenceDataObject::Create(this, predefinedParentValue != nullptr ? predefinedParentValue->GetPredefinedGuid() : wxNullGuid);
 
 		int position = 2;
 
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), srcPredefined->GetPredefinedName(), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeParent->GetMetaObject(), referenceValue, dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), srcPredefined->GetPredefinedName(), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeParent->GetMetaObject(), referenceValue, dbStatement, position);
 
 		retCode =
 			dbStatement->RunQuery();
@@ -745,13 +745,13 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 		else
 			queryText = wxT("UPDATE OR INSERT INTO ") + tableName + wxT(" (uuid");
 
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(m_propertyAttributeDeletionMark->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributePredefined->GetMetaObject());
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(m_propertyAttributeDeletionMark->GetMetaObject());
 
 		queryText += wxT(") VALUES (?");
 
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
-		for (unsigned int i = 0; i < IValueMetaObjectAttribute::GetSQLFieldCount(m_propertyAttributeDeletionMark->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributePredefined->GetMetaObject()); i++) queryText += wxT(", ?");
+		for (unsigned int i = 0; i < ibValueMetaObjectAttributeBase::GetSQLFieldCount(m_propertyAttributeDeletionMark->GetMetaObject()); i++) queryText += wxT(", ?");
 
 		queryText += wxT(") ");
 
@@ -760,7 +760,7 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 		else
 			queryText += wxT("MATCHING(uuid);");
 
-		IPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* dbStatement = db_query->PrepareStatement(queryText);
 
 		if (dbStatement == nullptr)
 			return false;
@@ -769,8 +769,8 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 
 		int position = 2;
 
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), wxT(""), dbStatement, position);
-		IValueMetaObjectAttribute::SetValueAttribute(m_propertyAttributeDeletionMark->GetMetaObject(), true, dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributePredefined->GetMetaObject(), wxT(""), dbStatement, position);
+		ibValueMetaObjectAttributeBase::SetValueAttribute(m_propertyAttributeDeletionMark->GetMetaObject(), true, dbStatement, position);
 
 		retCode =
 			dbStatement->RunQuery();
@@ -781,9 +781,9 @@ int IValueMetaObjectRecordDataHierarchyMutableRef::ProcessPredefinedValue(const 
 	return retCode;
 }
 
-bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
+bool ibValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
-	if (!IValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags))
+	if (!ibValueMetaObjectRecordDataMutableRef::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags))
 		return false;
 
 	const wxString& tableName = GetTableNameDB(); int retCode = 1;
@@ -801,7 +801,7 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMeta
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 					retCode = ProcessPredefinedValue(tableName,
-						object, wxObjectDataPtr<CPredefinedValueObject>(nullptr));
+						object, wxObjectDataPtr<ibPredefinedValueObject>(nullptr));
 				}
 			}
 
@@ -816,7 +816,7 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMeta
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 					retCode = ProcessPredefinedValue(tableName,
-						object, wxObjectDataPtr<CPredefinedValueObject>(nullptr));
+						object, wxObjectDataPtr<ibPredefinedValueObject>(nullptr));
 				}
 			}
 		}
@@ -824,16 +824,16 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMeta
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IValueMetaObjectRecordDataHierarchyMutableRef* dstValue = nullptr;
+		ibValueMetaObjectRecordDataHierarchyMutableRef* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			//values from dst 
 			for (const auto object : dstValue->m_predefinedObjectVector) {
-				const wxObjectDataPtr<CPredefinedValueObject>& predefinedValue =
-					IValueMetaObjectRecordDataHierarchyMutableRef::FindPredefinedValue(object->GetPredefinedGuid());
+				const wxObjectDataPtr<ibPredefinedValueObject>& predefinedValue =
+					ibValueMetaObjectRecordDataHierarchyMutableRef::FindPredefinedValue(object->GetPredefinedGuid());
 				if (predefinedValue == nullptr) {
 					retCode = ProcessPredefinedValue(tableName,
-						wxObjectDataPtr<CPredefinedValueObject>(nullptr), object);
+						wxObjectDataPtr<ibPredefinedValueObject>(nullptr), object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
 						return false;
 				}
@@ -857,7 +857,7 @@ bool IValueMetaObjectRecordDataHierarchyMutableRef::CreateAndUpdateTableDB(IMeta
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wxString IValueMetaObjectRegisterData::GetTableNameDB() const
+wxString ibValueMetaObjectRegisterData::GetTableNameDB() const
 {
 	const wxString& className = GetClassName();
 	wxASSERT(m_metaId != 0);
@@ -865,7 +865,7 @@ wxString IValueMetaObjectRegisterData::GetTableNameDB() const
 		className, GetMetaID());
 }
 
-int IValueMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
+int ibValueMetaObjectRegisterData::ProcessDimension(const wxString& tableName, const ibValueMetaObjectAttributeBase* srcAttr, const ibValueMetaObjectAttributeBase* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -881,10 +881,10 @@ int IValueMetaObjectRegisterData::ProcessDimension(const wxString& tableName, co
 		s_restructureInfo.AppendInfo(_("Removed dimension ") + dstAttr->GetFullName());
 	}
 
-	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return ibValueMetaObjectAttributeBase::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IValueMetaObjectRegisterData::ProcessResource(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
+int ibValueMetaObjectRegisterData::ProcessResource(const wxString& tableName, const ibValueMetaObjectAttributeBase* srcAttr, const ibValueMetaObjectAttributeBase* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -900,10 +900,10 @@ int IValueMetaObjectRegisterData::ProcessResource(const wxString& tableName, con
 		s_restructureInfo.AppendInfo(_("Removed resource ") + dstAttr->GetFullName());
 	}
 
-	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return ibValueMetaObjectAttributeBase::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
-int IValueMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const IValueMetaObjectAttribute* srcAttr, const IValueMetaObjectAttribute* dstAttr)
+int ibValueMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, const ibValueMetaObjectAttributeBase* srcAttr, const ibValueMetaObjectAttributeBase* dstAttr)
 {
 	//is null - create
 	if (dstAttr == nullptr) {
@@ -919,18 +919,18 @@ int IValueMetaObjectRegisterData::ProcessAttribute(const wxString& tableName, co
 		s_restructureInfo.AppendInfo(_("Removed attribute ") + dstAttr->GetFullName());
 	}
 
-	return IValueMetaObjectAttribute::ProcessAttribute(tableName, srcAttr, dstAttr);
+	return ibValueMetaObjectAttributeBase::ProcessAttribute(tableName, srcAttr, dstAttr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, IValueMetaObjectRegisterData* dst)
+bool ibValueMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableName, ibValueMetaObjectRegisterData* dst)
 {
 	if (HasRecorder()) {
-		CValueMetaObjectAttributePredefined* metaRec = dst->GetRegisterRecorder();
+		ibValueMetaObjectAttributePredefined* metaRec = dst->GetRegisterRecorder();
 		if (metaRec == nullptr)
 			return false;
-		const CTypeDescription& typeDesc = metaRec->GetTypeDesc();
+		const ibTypeDescription& typeDesc = metaRec->GetTypeDesc();
 		for (auto& clsid : typeDesc.GetClsidList()) {
 			if (!(*m_propertyAttributeRecorder)->ContainType(clsid)) {
 				int retCode = DATABASE_LAYER_QUERY_RESULT_ERROR; wxString clsStr; clsStr << wxLongLong_t(clsid);
@@ -946,7 +946,7 @@ bool IValueMetaObjectRegisterData::UpdateCurrentRecords(const wxString& tableNam
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration* srcMetaData, IValueMetaObject* srcMetaObject, int flags)
+bool ibValueMetaObjectRegisterData::CreateAndUpdateTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
 	const wxString& tableName = GetTableNameDB();
 
@@ -1003,17 +1003,17 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 		wxString queryText;
 		if (HasRecorder()) {
-			CValueMetaObjectAttributePredefined* attributeRecorder = GetRegisterRecorder();
+			ibValueMetaObjectAttributePredefined* attributeRecorder = GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
-			queryText += IValueMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CValueMetaObjectAttributePredefined* attributeNumberLine = GetRegisterLineNumber();
+			queryText += ibValueMetaObjectAttributeBase::GetSQLFieldName(attributeRecorder);
+			ibValueMetaObjectAttributePredefined* attributeNumberLine = GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
-			queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
+			queryText += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(attributeNumberLine);
 		}
 		else {
 			bool firstMatching = true;
 			for (const auto object : GetGenericDimentionArrayObject()) {
-				queryText += (firstMatching ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
+				queryText += (firstMatching ? "" : ",") + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -1028,7 +1028,7 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 	else if ((flags & updateMetaTable) != 0) {
 
 		//if src is null then delete
-		IValueMetaObjectRegisterData* dstValue = nullptr;
+		ibValueMetaObjectRegisterData* dstValue = nullptr;
 		if (srcMetaObject->ConvertToValue(dstValue)) {
 
 			if (!UpdateCurrentRecords(tableName, dstValue))
@@ -1039,8 +1039,8 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetPredefinedAttributeArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRegisterData::FindPredefinedAttributeObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRegisterData::FindPredefinedAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -1059,8 +1059,8 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 			//dimensions from dst 
 			for (const auto object : dstValue->GetDimentionArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRegisterData::FindDimensionObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessDimension(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -1079,8 +1079,8 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 			//resources from dst 
 			for (const auto object : dstValue->GetResourceArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRegisterData::FindResourceObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessResource(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -1099,8 +1099,8 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 			//attributes from dst 
 			for (const auto object : dstValue->GetAttributeArrayObject()) {
-				IValueMetaObject* foundedMeta =
-					IValueMetaObjectRegisterData::FindAttributeObjectByFilter(object->GetGuid());
+				ibValueMetaObject* foundedMeta =
+					ibValueMetaObjectRegisterData::FindAttributeObjectByFilter(object->GetGuid());
 				if (foundedMeta == nullptr) {
 					retCode = ProcessAttribute(tableName, nullptr, object);
 					if (retCode == DATABASE_LAYER_QUERY_RESULT_ERROR)
@@ -1133,7 +1133,7 @@ bool IValueMetaObjectRegisterData::CreateAndUpdateTableDB(IMetaDataConfiguration
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
+bool ibValueMetaObjectRegisterData::LoadTableData(const ibReaderMemory& reader)
 {
 	wxMemoryBuffer objectBuffer;
 
@@ -1142,18 +1142,18 @@ bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
 		const wxString& tableName = GetTableNameDB();
 		wxString queryText = "INSERT INTO " + tableName + " (";
 
-		std::map<meta_identifier_t, int> assoc; int position = 1;
+		std::map<ibMetaID, int> assoc; int position = 1;
 		bool firstInsert = true, firstValue = true;
 		for (const auto object : GetGenericAttributeArrayObject()) {
-			queryText = queryText + (firstInsert ? wxT(" ") : wxT(", ")) + IValueMetaObjectAttribute::GetSQLFieldName(object);
+			queryText = queryText + (firstInsert ? wxT(" ") : wxT(", ")) + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 			assoc.insert_or_assign(object->GetMetaID(),
 				position);
-			position += IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			position += ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 			firstInsert = false;
 		}
 		queryText += ") VALUES (";
 		for (const auto object : GetGenericAttributeArrayObject()) {
-			unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+			unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 			for (unsigned int i = 0; i < fieldCount; i++) {
 				queryText += (firstValue ? wxT("?") : wxT(", ?"));
 				firstValue = false;
@@ -1162,19 +1162,19 @@ bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
 
 		queryText += ");";
 
-		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 		if (statement == nullptr)
 			return false;
 
-		CMemoryReader* rowReaderPrev = nullptr;
-		CMemoryReader objectReader(objectBuffer);
+		ibReaderMemory* rowReaderPrev = nullptr;
+		ibReaderMemory objectReader(objectBuffer);
 
 		while (true) {
 
-			CMemoryReader* colReaderPrev = nullptr;
+			ibReaderMemory* colReaderPrev = nullptr;
 
 			u64 row = 0;
-			CMemoryReader* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
+			ibReaderMemory* rowReader(objectReader.open_chunk_iterator(row, rowReaderPrev));
 
 			if (rowReader == nullptr)
 				break;
@@ -1182,16 +1182,16 @@ bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
 			while (!rowReader->eof()) {
 
 				u64 col = 0;
-				CMemoryReader* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
+				ibReaderMemory* colReader(rowReader->open_chunk_iterator(col, colReaderPrev));
 
 				if (colReader == nullptr)
 					break;
 
-				IValueMetaObjectAttribute* attribute = FindAnyObjectByFilter<IValueMetaObjectAttribute, meta_identifier_t>(col);
+				ibValueMetaObjectAttributeBase* attribute = FindAnyObjectByFilter<ibValueMetaObjectAttributeBase, ibMetaID>(col);
 				while (!colReader->eof()) {
 					wxASSERT(attribute);
 					int position = assoc[col];
-					IValueMetaObjectAttribute::SetBinaryData(attribute, *colReader, statement, position);
+					ibValueMetaObjectAttributeBase::SetBinaryData(attribute, *colReader, statement, position);
 				}
 
 				colReaderPrev = colReader;
@@ -1207,24 +1207,24 @@ bool IValueMetaObjectRegisterData::LoadTableData(const CMemoryReader& reader)
 	return true;
 }
 
-bool IValueMetaObjectRegisterData::SaveTableData(CMemoryWriter& writer) const
+bool ibValueMetaObjectRegisterData::SaveTableData(ibWriterMemory& writer) const
 {
-	IDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
+	ibDatabaseResultSet* dbResultSet = db_query->RunQueryWithResults(wxT("SELECT * FROM %s"), GetTableNameDB());
 	if (dbResultSet == nullptr)
 		return false;
 
 	unsigned int row = 0;
 
-	CMemoryWriter objectWriter;
+	ibWriterMemory objectWriter;
 
 	while (dbResultSet->Next()) {
 
-		CMemoryWriter rowWriter;
+		ibWriterMemory rowWriter;
 
 		for (const auto object : GetGenericAttributeArrayObject()) {
 
-			CMemoryWriter attrWriter;
-			IValueMetaObjectAttribute::GetBinaryData(object, attrWriter, dbResultSet);
+			ibWriterMemory attrWriter;
+			ibValueMetaObjectAttributeBase::GetBinaryData(object, attrWriter, dbResultSet);
 			rowWriter.w_chunk(object->GetMetaID(), attrWriter.buffer());
 		}
 
@@ -1243,17 +1243,17 @@ bool IValueMetaObjectRegisterData::SaveTableData(CMemoryWriter& writer) const
 
 #include "backend/system/systemManager.h"
 
-bool IValueRecordDataObjectRef::ReadData()
+bool ibValueRecordDataObjectRef::ReadData()
 {
 	return ReadData(m_objGuid);
 }
 
-bool IValueRecordDataObjectRef::ReadData(const CGuid& srcGuid)
+bool ibValueRecordDataObjectRef::ReadData(const ibGuid& srcGuid)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_newObject && !srcGuid.isValid())
 		return false;
@@ -1261,7 +1261,7 @@ bool IValueRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 	wxString tableName = m_metaObject->GetTableNameDB();
 	if (db_query->TableExists(tableName)) {
 
-		IDatabaseResultSet* resultSet = nullptr;
+		ibDatabaseResultSet* resultSet = nullptr;
 		if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL)
 			resultSet = db_query->RunQueryWithResults("SELECT * FROM " + tableName + " WHERE uuid = '" + srcGuid.str() + "' LIMIT 1;");
 		else
@@ -1274,11 +1274,11 @@ bool IValueRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 			//load other attributes 
 			for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 				if (!m_metaObject->IsDataReference(object->GetMetaID())) {
-					IValueMetaObjectAttribute::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
+					ibValueMetaObjectAttributeBase::GetValueAttribute(object, m_listObjectValue[object->GetMetaID()], resultSet);
 				}
 			}
 			for (const auto object : m_metaObject->GetTableArrayObject()) {
-				CValueTabularSectionDataObjectRef* tabularSection = new CValueTabularSectionDataObjectRef(this, object);
+				ibValueTabularSectionDataObjectRef* tabularSection = new ibValueTabularSectionDataObjectRef(this, object);
 				if (!tabularSection->LoadData(srcGuid)) succes = false;
 				m_listObjectValue.insert_or_assign(object->GetMetaID(), tabularSection);
 			}
@@ -1289,12 +1289,12 @@ bool IValueRecordDataObjectRef::ReadData(const CGuid& srcGuid)
 	return false;
 }
 
-bool IValueRecordDataObjectRef::SaveData()
+bool ibValueRecordDataObjectRef::SaveData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	//check fill attributes 
 	bool fillCheck = true;
@@ -1304,7 +1304,7 @@ bool IValueRecordDataObjectRef::SaveData()
 			if (m_listObjectValue[object->GetMetaID()].IsEmpty()) {
 				wxString fillError =
 					wxString::Format(_("""%s"" is a required field"), object->GetSynonym());
-				CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
+				ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
 				fillCheck = false;
 			}
 		}
@@ -1313,7 +1313,7 @@ bool IValueRecordDataObjectRef::SaveData()
 	if (!fillCheck)
 		return false;
 
-	if (!IValueRecordDataObjectRef::DeleteData())
+	if (!ibValueRecordDataObjectRef::DeleteData())
 		return false;
 
 	const wxString& tableName = m_metaObject->GetTableNameDB();
@@ -1322,20 +1322,20 @@ bool IValueRecordDataObjectRef::SaveData()
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		queryText = queryText + ", " + IValueMetaObjectAttribute::GetSQLFieldName(object);
+		queryText = queryText + ", " + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 	}
 	queryText += ") VALUES (?";
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+		unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += ", ?";
 		}
 	}
 	queryText += ");";
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
@@ -1347,7 +1347,7 @@ bool IValueRecordDataObjectRef::SaveData()
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 		if (m_metaObject->IsDataReference(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_listObjectValue.at(object->GetMetaID()),
 			statement,
@@ -1363,7 +1363,7 @@ bool IValueRecordDataObjectRef::SaveData()
 	//table parts
 	if (!hasError) {
 		for (const auto object : m_metaObject->GetTableArrayObject()) {
-			IValueTabularSectionDataObject* tabularSection = nullptr;
+			ibValueTabularSectionDataObjectBase* tabularSection = nullptr;
 			if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 				if (!tabularSection->SaveData()) {
 					hasError = true;
@@ -1384,19 +1384,19 @@ bool IValueRecordDataObjectRef::SaveData()
 	return !hasError;
 }
 
-bool IValueRecordDataObjectRef::DeleteData()
+bool ibValueRecordDataObjectRef::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_newObject)
 		return true;
 	const wxString& tableName = m_metaObject->GetTableNameDB();
 	//table parts
 	for (const auto object : m_metaObject->GetTableArrayObject()) {
-		IValueTabularSectionDataObject* tabularSection = nullptr;
+		ibValueTabularSectionDataObjectBase* tabularSection = nullptr;
 		if (m_listObjectValue[object->GetMetaID()].ConvertToValue(tabularSection)) {
 			if (!tabularSection->DeleteData())
 				return false;
@@ -1411,7 +1411,7 @@ bool IValueRecordDataObjectRef::DeleteData()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueRecordDataObjectRef::IsSetUniqueIdentifier() const
+bool ibValueRecordDataObjectRef::IsSetUniqueIdentifier() const
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr)
@@ -1419,7 +1419,7 @@ bool IValueRecordDataObjectRef::IsSetUniqueIdentifier() const
 	return false;
 }
 
-bool IValueRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
+bool ibValueRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPrefix)
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr && !IsSetUniqueIdentifier()) {
@@ -1430,7 +1430,7 @@ bool IValueRecordDataObjectRef::GenerateUniqueIdentifier(const wxString& strPref
 	return false;
 }
 
-bool IValueRecordDataObjectRef::ResetUniqueIdentifier()
+bool ibValueRecordDataObjectRef::ResetUniqueIdentifier()
 {
 	const auto object = m_metaObject->GetAttributeForCode();
 	if (object != nullptr && IsSetUniqueIdentifier()) {
@@ -1442,31 +1442,31 @@ bool IValueRecordDataObjectRef::ResetUniqueIdentifier()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueRecordDataObjectHierarchyRef::ReadData()
+bool ibValueRecordDataObjectHierarchyRef::ReadData()
 {
-	if (IValueRecordDataObjectRef::ReadData()) {
-		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+	if (ibValueRecordDataObjectRef::ReadData()) {
+		ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		ibValue isFolder; ibValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
-			m_objMode = eObjectMode::OBJECT_FOLDER;
+			m_objMode = ibObjectMode::OBJECT_FOLDER;
 		else
-			m_objMode = eObjectMode::OBJECT_ITEM;
+			m_objMode = ibObjectMode::OBJECT_ITEM;
 		return true;
 	}
 	return false;
 }
 
-bool IValueRecordDataObjectHierarchyRef::ReadData(const CGuid& srcGuid)
+bool ibValueRecordDataObjectHierarchyRef::ReadData(const ibGuid& srcGuid)
 {
-	if (IValueRecordDataObjectRef::ReadData(srcGuid)) {
-		IValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
+	if (ibValueRecordDataObjectRef::ReadData(srcGuid)) {
+		ibValueMetaObjectRecordDataHierarchyMutableRef* metaFolder = GetMetaObject();
 		wxASSERT(metaFolder);
-		CValue isFolder; IValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
+		ibValue isFolder; ibValueRecordDataObjectHierarchyRef::GetValueByMetaID(*metaFolder->GetDataIsFolder(), isFolder);
 		if (isFolder.GetBoolean())
-			m_objMode = eObjectMode::OBJECT_FOLDER;
+			m_objMode = ibObjectMode::OBJECT_FOLDER;
 		else
-			m_objMode = eObjectMode::OBJECT_ITEM;
+			m_objMode = ibObjectMode::OBJECT_ITEM;
 		return true;
 	}
 	return false;
@@ -1474,15 +1474,15 @@ bool IValueRecordDataObjectHierarchyRef::ReadData(const CGuid& srcGuid)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
+void ibValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 {
 	if (m_newObject)
 		return;
 
 	if (m_metaObject != nullptr) {
-		CValueMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
+		ibValueMetaObjectAttributePredefined* attributeDeletionMark = m_metaObject->GetDataDeletionMark();
 		wxASSERT(attributeDeletionMark);
-		IValueRecordDataObjectRef::SetValueByMetaID(*attributeDeletionMark, deletionMark);
+		ibValueRecordDataObjectRef::SetValueByMetaID(*attributeDeletionMark, deletionMark);
 	}
 
 	SaveModify();
@@ -1490,12 +1490,12 @@ void IValueRecordDataObjectRef::SetDeletionMark(bool deletionMark)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueRecordManagerObject::ExistData()
+bool ibValueRecordManagerObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	bool success = false;
 
@@ -1511,18 +1511,18 @@ bool IValueRecordManagerObject::ExistData()
 				queryText = queryText + " WHERE ";
 			}
 			queryText = queryText +
-				(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+				(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 			if (firstWhere) {
 				firstWhere = false;
 			}
 		}
 
-		IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+		ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 
 		if (statement != nullptr) {
 			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-				CValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
-				IValueMetaObjectAttribute::SetValueAttribute(
+				ibValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
+				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					retValue,
 					statement,
@@ -1530,7 +1530,7 @@ bool IValueRecordManagerObject::ExistData()
 				);
 			}
 
-			IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+			ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 			if (resultSet != nullptr) {
 				success = resultSet->Next();
 				db_query->CloseResultSet(resultSet);
@@ -1545,12 +1545,12 @@ bool IValueRecordManagerObject::ExistData()
 	return success;
 }
 
-bool IValueRecordManagerObject::ReadData(const CUniquePairKey& key)
+bool ibValueRecordManagerObject::ReadData(const ibUniqueKeyPair& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_recordSet->ReadData(key)) {
 		if (m_recordLine == nullptr) {
@@ -1564,12 +1564,12 @@ bool IValueRecordManagerObject::ReadData(const CUniquePairKey& key)
 	return false;
 }
 
-bool IValueRecordManagerObject::SaveData(bool replace)
+bool ibValueRecordManagerObject::SaveData(bool replace)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	if (m_recordSet->Selected()
 		&& !DeleteData())
@@ -1578,14 +1578,14 @@ bool IValueRecordManagerObject::SaveData(bool replace)
 	if (ExistData()) {
 		wxString fillError =
 			wxString::Format(_("This entry already exists. It is not possible to write a new value!"));
-		CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
+		ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
 		return false;
 	}
 
 	m_recordSet->m_keyValues.clear();
 	wxASSERT(m_recordLine);
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		CValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
+		ibValue retValue; m_recordLine->GetValueByMetaID(object->GetMetaID(), retValue);
 		m_recordSet->m_keyValues.insert_or_assign(
 			object->GetMetaID(), retValue
 		);
@@ -1597,48 +1597,48 @@ bool IValueRecordManagerObject::SaveData(bool replace)
 	return false;
 }
 
-bool IValueRecordManagerObject::DeleteData()
+bool ibValueRecordManagerObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	return m_recordSet->DeleteRecordSet();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IValueRecordSetObject::ExistData()
+bool ibValueRecordSetObject::ExistData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1646,7 +1646,7 @@ bool IValueRecordSetObject::ExistData()
 		);
 	}
 
-	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
 	bool founded = false;
@@ -1657,37 +1657,37 @@ bool IValueRecordSetObject::ExistData()
 	return founded;
 }
 
-bool IValueRecordSetObject::ExistData(number_t& lastNum)
+bool ibValueRecordSetObject::ExistData(ibNumber& lastNum)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB(); int position = 1;
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -1695,12 +1695,12 @@ bool IValueRecordSetObject::ExistData(number_t& lastNum)
 		);
 	}
 
-	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
 	bool founded = false; lastNum = 1;
 	while (resultSet->Next()) {
-		CValue numLine; IValueMetaObjectAttribute::GetValueAttribute(m_metaObject->GetRegisterLineNumber(), numLine, resultSet);
+		ibValue numLine; ibValueMetaObjectAttributeBase::GetValueAttribute(m_metaObject->GetRegisterLineNumber(), numLine, resultSet);
 		if (numLine > lastNum) {
 			lastNum = numLine.GetNumber();
 		}
@@ -1711,14 +1711,14 @@ bool IValueRecordSetObject::ExistData(number_t& lastNum)
 	return founded;
 }
 
-bool IValueRecordSetObject::ReadData(const CUniquePairKey& key)
+bool ibValueRecordSetObject::ReadData(const ibUniqueKeyPair& key)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
-	IValueTable::Clear(); int position = 1;
+	ibValueModelTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
@@ -1730,36 +1730,36 @@ bool IValueRecordSetObject::ReadData(const CUniquePairKey& key)
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
 		if (!key.FindKey(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			key.GetKey(object->GetMetaID()),
 			statement,
 			position
 		);
 	}
-	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		wxValueTableRow* rowData = new wxValueTableRow();
+		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -1769,55 +1769,55 @@ bool IValueRecordSetObject::ReadData(const CUniquePairKey& key)
 	return GetRowCount() > 0;
 }
 
-bool IValueRecordSetObject::ReadData()
+bool ibValueRecordSetObject::ReadData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
-	IValueTable::Clear(); int position = 1;
+	ibValueModelTableBase::Clear(); int position = 1;
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "SELECT * FROM " + tableName; bool firstWhere = true;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
 			position
 		);
 	}
-	IDatabaseResultSet* resultSet = statement->RunQueryWithResults();
+	ibDatabaseResultSet* resultSet = statement->RunQueryWithResults();
 	if (resultSet == nullptr)
 		return false;
 	while (resultSet->Next()) {
-		wxValueTableRow* rowData = new wxValueTableRow();
+		ibValueTableRow* rowData = new ibValueTableRow();
 		for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-			IValueMetaObjectAttribute::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
+			ibValueMetaObjectAttributeBase::GetValueAttribute(object, rowData->AppendTableValue(object->GetMetaID()), resultSet);
 		}
-		IValueTable::Append(rowData, !CBackendException::IsEvalMode());
+		ibValueModelTableBase::Append(rowData, !ibBackendException::IsEvalMode());
 		m_selected = true;
 	}
 
@@ -1827,24 +1827,24 @@ bool IValueRecordSetObject::ReadData()
 	return GetRowCount() > 0;
 }
 
-bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
+bool ibValueRecordSetObject::SaveData(bool replace, bool clearTable)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	//check fill attributes 
 	bool fillCheck = true; long currLine = 1;
 	for (long row = 0; row < GetRowCount(); row++) {
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			if (object->FillCheck()) {
-				wxValueTableRow* node = GetViewData<wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData<ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
 				if (node->IsEmptyValue(object->GetMetaID())) {
 					wxString fillError =
 						wxString::Format(_("The %s is required on line %i of the %s"), object->GetSynonym(), currLine, m_metaObject->GetSynonym());
-					CSystemFunction::Message(fillError, eStatusMessage::eStatusMessage_Information);
+					ibValueSystemFunction::Message(fillError, ibStatusMessage::ibStatusMessage_Information);
 					fillCheck = false;
 				}
 			}
@@ -1855,18 +1855,18 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 	if (!fillCheck)
 		return false;
 
-	number_t numberLine = 1, oldNumberLine = 1;
+	ibNumber numberLine = 1, oldNumberLine = 1;
 
 	if (m_metaObject->HasRecorder() &&
-		IValueRecordSetObject::ExistData(oldNumberLine)) {
-		if (replace && !IValueRecordSetObject::DeleteData())
+		ibValueRecordSetObject::ExistData(oldNumberLine)) {
+		if (replace && !ibValueRecordSetObject::DeleteData())
 			return false;
 		if (!replace) {
 			numberLine = oldNumberLine;
 		}
 	}
-	else if (IValueRecordSetObject::ExistData()) {
-		if (replace && !IValueRecordSetObject::DeleteData())
+	else if (ibValueRecordSetObject::ExistData()) {
+		if (replace && !ibValueRecordSetObject::DeleteData())
 			return false;
 		if (!replace) {
 			numberLine = oldNumberLine;
@@ -1881,14 +1881,14 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		queryText = "UPDATE OR INSERT INTO " + tableName + " (";
 	}
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		queryText += (firstUpdate ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
+		queryText += (firstUpdate ? "" : ",") + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 		if (firstUpdate) {
 			firstUpdate = false;
 		}
 	}
 	queryText += ") VALUES ("; bool firstInsert = true;
 	for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
-		unsigned int fieldCount = IValueMetaObjectAttribute::GetSQLFieldCount(object);
+		unsigned int fieldCount = ibValueMetaObjectAttributeBase::GetSQLFieldCount(object);
 		for (unsigned int i = 0; i < fieldCount; i++) {
 			queryText += (firstInsert ? "?" : ",?");
 			if (firstInsert) {
@@ -1903,18 +1903,18 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 	else {
 		queryText += ") MATCHING (";
 		if (m_metaObject->HasRecorder()) {
-			CValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
+			ibValueMetaObjectAttributePredefined* attributeRecorder = m_metaObject->GetRegisterRecorder();
 			wxASSERT(attributeRecorder);
-			queryText += IValueMetaObjectAttribute::GetSQLFieldName(attributeRecorder);
-			CValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
+			queryText += ibValueMetaObjectAttributeBase::GetSQLFieldName(attributeRecorder);
+			ibValueMetaObjectAttributePredefined* attributeNumberLine = m_metaObject->GetRegisterLineNumber();
 			wxASSERT(attributeNumberLine);
-			queryText += "," + IValueMetaObjectAttribute::GetSQLFieldName(attributeNumberLine);
+			queryText += "," + ibValueMetaObjectAttributeBase::GetSQLFieldName(attributeNumberLine);
 		}
 		else
 		{
 			bool firstMatching = true;
 			for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-				queryText += (firstMatching ? "" : ",") + IValueMetaObjectAttribute::GetSQLFieldName(object);
+				queryText += (firstMatching ? "" : ",") + ibValueMetaObjectAttributeBase::GetSQLFieldName(object);
 				if (firstMatching) {
 					firstMatching = false;
 				}
@@ -1923,7 +1923,7 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		queryText += ");";
 	}
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText);
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText);
 	if (statement == nullptr)
 		return false;
 
@@ -1936,7 +1936,7 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		for (const auto object : m_metaObject->GetGenericAttributeArrayObject()) {
 			auto foundedKey = m_keyValues.find(object->GetMetaID());
 			if (foundedKey != m_keyValues.end()) {
-				IValueMetaObjectAttribute::SetValueAttribute(
+				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					foundedKey->second,
 					statement,
@@ -1944,7 +1944,7 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 				);
 			}
 			else if (m_metaObject->IsRegisterLineNumber(object->GetMetaID())) {
-				IValueMetaObjectAttribute::SetValueAttribute(
+				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					numberLine++,
 					statement,
@@ -1952,9 +1952,9 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 				);
 			}
 			else {
-				wxValueTableRow* node = GetViewData< wxValueTableRow>(GetItem(row));
+				ibValueTableRow* node = GetViewData< ibValueTableRow>(GetItem(row));
 				wxASSERT(node);
-				IValueMetaObjectAttribute::SetValueAttribute(
+				ibValueMetaObjectAttributeBase::SetValueAttribute(
 					object,
 					node->GetTableValue(object->GetMetaID()),
 					statement,
@@ -1972,44 +1972,44 @@ bool IValueRecordSetObject::SaveData(bool replace, bool clearTable)
 		return false;
 
 	if (!hasError && clearTable)
-		IValueTable::Clear();
+		ibValueModelTableBase::Clear();
 	else if (!clearTable)
 		m_selected = true;
 
 	return !hasError;
 }
 
-bool IValueRecordSetObject::DeleteData()
+bool ibValueRecordSetObject::DeleteData()
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	wxString tableName = m_metaObject->GetTableNameDB();
 	wxString queryText = "DELETE FROM " + tableName; bool firstWhere = true;
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
 		if (firstWhere) {
 			queryText = queryText + " WHERE ";
 		}
 		queryText = queryText +
-			(firstWhere ? " " : " AND ") + IValueMetaObjectAttribute::GetCompositeSQLFieldName(object);
+			(firstWhere ? " " : " AND ") + ibValueMetaObjectAttributeBase::GetCompositeSQLFieldName(object);
 		if (firstWhere) {
 			firstWhere = false;
 		}
 	}
 
-	IPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
+	ibPreparedStatement* statement = db_query->PrepareStatement(queryText); int position = 1;
 
 	if (statement == nullptr)
 		return false;
 
 	for (const auto object : m_metaObject->GetGenericDimentionArrayObject()) {
-		if (!IValueRecordSetObject::FindKeyValue(object->GetMetaID()))
+		if (!ibValueRecordSetObject::FindKeyValue(object->GetMetaID()))
 			continue;
-		IValueMetaObjectAttribute::SetValueAttribute(
+		ibValueMetaObjectAttributeBase::SetValueAttribute(
 			object,
 			m_keyValues.at(object->GetMetaID()),
 			statement,
@@ -2026,23 +2026,23 @@ bool IValueRecordSetObject::DeleteData()
 //*                                          Code generator												   *
 //**********************************************************************************************************
 
-CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribute* attribute, const wxString& strPrefix)
+ibValue ibValueRecordDataObjectRef::GenerateNextIdentifier(ibValueMetaObjectAttributeBase* attribute, const wxString& strPrefix)
 {
 	if (db_query != nullptr && !db_query->IsOpen())
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 	else if (db_query == nullptr)
-		CBackendCoreException::Error(_("Database is not open!"));
+		ibBackendCoreException::Error(_("Database is not open!"));
 
 	wxASSERT(attribute);
 
 	const int interval = 20000101;
 
-	number_t resultCode = 1;
-	const CTypeDescription& typeDesc = attribute->GetTypeDesc();
+	ibNumber resultCode = 1;
+	const ibTypeDescription& typeDesc = attribute->GetTypeDesc();
 
 	if (db_query->GetDatabaseLayerType() == DATABASELAYER_POSTGRESQL) {
 
-		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
+		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
 			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE;"),
 			sequence_table,
 			stringUtils::IntToStr(interval),
@@ -2069,7 +2069,7 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 	}
 	else {
 
-		IDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
+		ibDatabaseResultSet* resultSet = db_query->RunQueryWithResults(
 			wxT("SELECT interval, meta_guid, prefix, number FROM %s WHERE interval = %s AND meta_guid = '%s' AND prefix = '%s' FOR UPDATE WITH LOCK;"),
 			sequence_table,
 			stringUtils::IntToStr(interval),
@@ -2095,10 +2095,10 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 		db_query->CloseResultSet(resultSet);
 	}
 
-	if (attribute->ContainType(eValueTypes::TYPE_NUMBER)) {
+	if (attribute->ContainType(ibValueTypes::TYPE_NUMBER)) {
 		return resultCode;
 	}
-	else if (attribute->ContainType(eValueTypes::TYPE_STRING)) {
+	else if (attribute->ContainType(ibValueTypes::TYPE_STRING)) {
 
 		wxString strNumber;
 
@@ -2116,8 +2116,8 @@ CValue IValueRecordDataObjectRef::GenerateNextIdentifier(IValueMetaObjectAttribu
 		return strNumber;
 	}
 
-	wxASSERT_MSG(false, "m_metaAttribute->GetClsidList() != eValueTypes::TYPE_NUMBER"
-		"|| m_metaAttribute->GetClsidList() != eValueTypes::TYPE_STRING");
+	wxASSERT_MSG(false, "m_metaAttribute->GetClsidList() != ibValueTypes::TYPE_NUMBER"
+		"|| m_metaAttribute->GetClsidList() != ibValueTypes::TYPE_STRING");
 
 	return wxEmptyValue;
 }

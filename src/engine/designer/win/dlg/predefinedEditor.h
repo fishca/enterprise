@@ -6,7 +6,7 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "frontend/win/ctrls/dataview/dataview.h"
 
-class CDialogPredefinedEditor : public wxDialog {
+class ibDialogPredefinedEditor : public wxDialog {
 
 	enum {
 		wxID_TOOL_ADD = wxID_HIGHEST + 1,
@@ -15,26 +15,26 @@ class CDialogPredefinedEditor : public wxDialog {
 		wxID_TOOL_DELETE,
 	};
 
-	typedef IValueMetaObjectRecordDataHierarchyMutableRef::CPredefinedValueObject
-		CPredefinedValueObject;
+	typedef ibValueMetaObjectRecordDataHierarchyMutableRef::ibPredefinedValueObject
+		ibPredefinedValueObject;
 
-	class CDataViewPredefinedTreeStore : public wxDataViewExtModel
+	class ibDataViewPredefinedTreeStore : public ibDataViewModel
 	{
 	public:
 
-		CDataViewPredefinedTreeStore(IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
-			: wxDataViewExtModel(), m_valueMetaObjectHierarchy(valueMetaObjectHierarchy) {
+		ibDataViewPredefinedTreeStore(ibValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+			: ibDataViewModel(), m_valueMetaObjectHierarchy(valueMetaObjectHierarchy) {
 		}
 
 
 		// and implement some others by forwarding them to our own ones
 		virtual void GetValue(wxVariant& variant,
-			const wxDataViewExtItem& item, unsigned int col) const override;
+			const ibDataViewItem& item, unsigned int col) const override;
 
 		// return true if the given item has a value to display in the given
 		// column: this is always true except for container items which by default
 		// only show their label in the first column (but see HasContainerColumns())
-		virtual bool HasValue(const wxDataViewExtItem& item, unsigned col) const override
+		virtual bool HasValue(const ibDataViewItem& item, unsigned col) const override
 		{
 			if (HasContainerColumns(item))
 				return false;
@@ -42,39 +42,39 @@ class CDialogPredefinedEditor : public wxDialog {
 		}
 
 		virtual bool SetValue(const wxVariant& variant,
-			const wxDataViewExtItem& item, unsigned int col) override {
+			const ibDataViewItem& item, unsigned int col) override {
 			return false;
 		}
 
-		virtual bool GetAttr(const wxDataViewExtItem& item, unsigned int col,
-			wxDataViewExtItemAttr& attr) const override {
+		virtual bool GetAttr(const ibDataViewItem& item, unsigned int col,
+			ibDataViewItemAttr& attr) const override {
 
 			return false;
 		}
 
-		virtual bool IsEnabled(const wxDataViewExtItem& item, unsigned int col) const override
+		virtual bool IsEnabled(const ibDataViewItem& item, unsigned int col) const override
 		{
 			return m_valueMetaObjectHierarchy->IsEditable();
 		}
 
-		virtual wxDataViewExtItem GetParent(const wxDataViewExtItem& item) const override {
+		virtual ibDataViewItem GetParent(const ibDataViewItem& item) const override {
 			// the invisible root node has no parent
 			if (!item.IsOk())
-				return wxDataViewExtItem(nullptr);
+				return ibDataViewItem(nullptr);
 
-			return wxDataViewExtItem(nullptr);
+			return ibDataViewItem(nullptr);
 		}
 
-		virtual bool IsContainer(const wxDataViewExtItem& item) const override;
+		virtual bool IsContainer(const ibDataViewItem& item) const override;
 
 		// define current parent for hierarchical view 
-		virtual unsigned int GetChildren(const wxDataViewExtItem& parent,
-			wxDataViewExtItemArray& array) const override;
+		virtual unsigned int GetChildren(const ibDataViewItem& parent,
+			ibDataViewItemArray& array) const override;
 
 		// override sorting to always sort branches ascendingly
 		virtual bool HasDefaultCompare() const override { return true; }
 
-		virtual int Compare(const wxDataViewExtItem& item1, const wxDataViewExtItem& item2,
+		virtual int Compare(const ibDataViewItem& item1, const ibDataViewItem& item2,
 			unsigned int col, bool ascending) const override {
 
 			// items must be different
@@ -87,7 +87,7 @@ class CDialogPredefinedEditor : public wxDialog {
 		virtual bool IsVirtualListModel() const { return false; }
 
 		//is predefined value? 
-		bool HasPredefinedValue(const CGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->HasPredefinedValue(predefinedGuid); }
+		bool HasPredefinedValue(const ibGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->HasPredefinedValue(predefinedGuid); }
 		bool HasPredefinedValue(const wxString& strPredefinedName) const { return m_valueMetaObjectHierarchy->HasPredefinedValue(strPredefinedName); }
 
 		//append predefined value
@@ -97,28 +97,28 @@ class CDialogPredefinedEditor : public wxDialog {
 				strCode, strDescription);
 		}
 
-		void SetPredefinedValue(const CGuid& predefinedGuid, const wxString& strPredefinedName,
+		void SetPredefinedValue(const ibGuid& predefinedGuid, const wxString& strPredefinedName,
 			const wxString& strCode, const wxString& strDescription) {
 			m_valueMetaObjectHierarchy->SetPredefinedValue(predefinedGuid,
 				strPredefinedName, strCode, strDescription);
 		}
 
-		void DeletePredefinedValue(const CGuid& predefinedGuid) { m_valueMetaObjectHierarchy->DeletePredefinedValue(predefinedGuid); }
+		void DeletePredefinedValue(const ibGuid& predefinedGuid) { m_valueMetaObjectHierarchy->DeletePredefinedValue(predefinedGuid); }
 
 		//find predefined value
-		wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedGuid); }
-		wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedName); }
+		wxObjectDataPtr<ibPredefinedValueObject> FindPredefinedValue(const ibGuid& predefinedGuid) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedGuid); }
+		wxObjectDataPtr<ibPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_valueMetaObjectHierarchy->FindPredefinedValue(predefinedName); }
 
 	private:
 
-		IValueMetaObjectRecordDataHierarchyMutableRef* m_valueMetaObjectHierarchy;
+		ibValueMetaObjectRecordDataHierarchyMutableRef* m_valueMetaObjectHierarchy;
 	};
 
-	class CDialogPredefinedItem : public wxDialog {
+	class ibDialogPredefinedItem : public wxDialog {
 	public:
 
-		CDialogPredefinedItem(wxWindow* parent,
-			const CGuid& itemGuid = wxNullGuid,
+		ibDialogPredefinedItem(wxWindow* parent,
+			const ibGuid& itemGuid = wxNullGuid,
 			const wxString& strPredefinedParentName = wxT(""),
 			const wxString& strPredefinedName = wxT(""), const wxString& strCode = wxT(""), const wxString& strDescription = wxT("")) :
 			wxDialog(parent, wxID_ANY, _("Predefined value"), wxDefaultPosition, wxSize(350, 200)), m_itemGuid(itemGuid)
@@ -166,10 +166,10 @@ class CDialogPredefinedEditor : public wxDialog {
 
 			m_sdbSizer = new wxStdDialogButtonSizer();
 			m_sdbSizerOK = new wxButton(this, wxID_OK);
-			m_sdbSizerOK->Bind(wxEVT_BUTTON, &CDialogPredefinedItem::OnCommandOK, this);
+			m_sdbSizerOK->Bind(wxEVT_BUTTON, &ibDialogPredefinedItem::OnCommandOK, this);
 			m_sdbSizer->AddButton(m_sdbSizerOK);
 			m_sdbSizerCancel = new wxButton(this, wxID_CANCEL);
-			m_sdbSizerCancel->Bind(wxEVT_BUTTON, &CDialogPredefinedItem::OnCommandCancel, this);
+			m_sdbSizerCancel->Bind(wxEVT_BUTTON, &ibDialogPredefinedItem::OnCommandCancel, this);
 			m_sdbSizer->AddButton(m_sdbSizerCancel);
 			m_sdbSizer->Realize();
 
@@ -180,7 +180,7 @@ class CDialogPredefinedEditor : public wxDialog {
 			wxDialog::Centre(wxBOTH);
 
 			wxIcon dlg_icon;
-			dlg_icon.CopyFromBitmap(CBackendPicture::GetPicture(g_metaAttributeCLSID));
+			dlg_icon.CopyFromBitmap(ibBackendPicture::GetPicture(g_metaAttributeCLSID));
 
 			wxDialog::SetIcon(dlg_icon);
 			wxDialog::SetFocus();
@@ -219,7 +219,7 @@ class CDialogPredefinedEditor : public wxDialog {
 
 			if (m_itemGuid.isValid()) {
 
-				const wxObjectDataPtr<CPredefinedValueObject>& predefinedValue =
+				const wxObjectDataPtr<ibPredefinedValueObject>& predefinedValue =
 					GetOwner()->FindPredefinedValue(strName);
 
 				if (predefinedValue != nullptr && predefinedValue->GetPredefinedGuid() != m_itemGuid) {
@@ -255,9 +255,9 @@ class CDialogPredefinedEditor : public wxDialog {
 
 	private:
 
-		CDialogPredefinedEditor* GetOwner() const { return static_cast<CDialogPredefinedEditor*>(m_parent); }
+		ibDialogPredefinedEditor* GetOwner() const { return static_cast<ibDialogPredefinedEditor*>(m_parent); }
 
-		CGuid m_itemGuid;
+		ibGuid m_itemGuid;
 
 		wxStaticText* m_staticTextParent;
 		wxTextCtrl* m_textParent;
@@ -275,14 +275,14 @@ class CDialogPredefinedEditor : public wxDialog {
 public:
 
 	// full ctor
-	CDialogPredefinedEditor(wxWindow* parent, IValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
+	ibDialogPredefinedEditor(wxWindow* parent, ibValueMetaObjectRecordDataHierarchyMutableRef* valueMetaObjectHierarchy)
 		:
 		wxDialog(parent, wxID_ANY, _("Predefined values editor"),
 			wxDefaultPosition, wxSize(500, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
 		m_tableModelStore(nullptr)
 	{
 		// add our own reference to the new model:
-		m_tableModelStore = new CDataViewPredefinedTreeStore(valueMetaObjectHierarchy);
+		m_tableModelStore = new ibDataViewPredefinedTreeStore(valueMetaObjectHierarchy);
 
 		if (m_tableModelStore)
 		{
@@ -292,7 +292,7 @@ public:
 		CreateDialogView();
 	}
 
-	~CDialogPredefinedEditor()
+	~ibDialogPredefinedEditor()
 	{
 		if (m_tableModelStore)
 		{
@@ -303,7 +303,7 @@ public:
 	void CreateDialogView();
 
 	//is predefined value? 
-	bool HasPredefinedValue(const CGuid& predefinedGuid) const { return m_tableModelStore->HasPredefinedValue(predefinedGuid); }
+	bool HasPredefinedValue(const ibGuid& predefinedGuid) const { return m_tableModelStore->HasPredefinedValue(predefinedGuid); }
 	bool HasPredefinedValue(const wxString& strPredefinedName) const { return m_tableModelStore->HasPredefinedValue(strPredefinedName); }
 
 	//append predefined value
@@ -312,23 +312,23 @@ public:
 		m_tableModelStore->AppendPredefinedValue(strPredefinedName, strCode, strDescription);
 	}
 
-	void SetPredefinedValue(const CGuid& predefinedGuid, const wxString& strPredefinedName,
+	void SetPredefinedValue(const ibGuid& predefinedGuid, const wxString& strPredefinedName,
 		const wxString& strCode, const wxString& strDescription) {
 		m_tableModelStore->SetPredefinedValue(predefinedGuid,
 			strPredefinedName, strCode, strDescription);
 	}
 
-	void DeletePredefinedValue(const CGuid& predefinedGuid) { m_tableModelStore->DeletePredefinedValue(predefinedGuid); }
+	void DeletePredefinedValue(const ibGuid& predefinedGuid) { m_tableModelStore->DeletePredefinedValue(predefinedGuid); }
 
 	//find predefined value
-	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const CGuid& predefinedGuid) const { return m_tableModelStore->FindPredefinedValue(predefinedGuid); }
-	wxObjectDataPtr<CPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_tableModelStore->FindPredefinedValue(predefinedName); }
+	wxObjectDataPtr<ibPredefinedValueObject> FindPredefinedValue(const ibGuid& predefinedGuid) const { return m_tableModelStore->FindPredefinedValue(predefinedGuid); }
+	wxObjectDataPtr<ibPredefinedValueObject> FindPredefinedValue(const wxString& predefinedName) const { return m_tableModelStore->FindPredefinedValue(predefinedName); }
 
 protected:
 
-	void OnContextMenu(wxDataViewExtEvent& event);
+	void OnContextMenu(ibDataViewEvent& event);
 	void OnCommandMenu(wxCommandEvent& event);
-	void OnItemActivated(wxDataViewExtEvent& event);
+	void OnItemActivated(ibDataViewEvent& event);
 
 private:
 
@@ -339,9 +339,9 @@ private:
 	wxAuiToolBarItem* m_toolEdit;
 	wxAuiToolBarItem* m_toolDelete;
 
-	wxDataViewExtCtrl* m_tableEditor;
+	ibDataViewCtrl* m_tableEditor;
 
-	CDataViewPredefinedTreeStore* m_tableModelStore;
+	ibDataViewPredefinedTreeStore* m_tableModelStore;
 };
 
 #endif

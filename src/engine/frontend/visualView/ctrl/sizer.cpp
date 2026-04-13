@@ -1,12 +1,12 @@
 #include "sizer.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueSizer, IValueFrame)
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueSizer, ibValueFrame)
 
 //*******************************************************************
 //*                            Control                              *
 //*******************************************************************
 
-void IValueSizer::UpdateSizer(wxSizer* sizer)
+void ibValueSizer::UpdateSizer(wxSizer* sizer)
 {
 	if (sizer == nullptr)
 		return;
@@ -22,21 +22,21 @@ void IValueSizer::UpdateSizer(wxSizer* sizer)
 //*                                    Data										   *
 //**********************************************************************************
 
-bool IValueSizer::LoadData(CMemoryReader& reader)
+bool ibValueSizer::LoadData(ibReaderMemory& reader)
 {
 	wxString propValue = wxEmptyString;
 	reader.r_stringZ(propValue);
 	m_propertyMinSize->SetValue(typeConv::StringToSize(propValue));
 	reader.r_stringZ(propValue);
 
-	return IValueFrame::LoadData(reader);
+	return ibValueFrame::LoadData(reader);
 }
 
-bool IValueSizer::SaveData(CMemoryWriter& writer)
+bool ibValueSizer::SaveData(ibWriterMemory& writer)
 {
 	writer.w_stringZ(
 		m_propertyMinSize->GetValueAsString()
 	);
 
-	return IValueFrame::SaveData(writer);
+	return ibValueFrame::SaveData(writer);
 }

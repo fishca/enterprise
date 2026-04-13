@@ -169,12 +169,12 @@ static char* s_htmlwin_xpm[] = {
 	"  f.v.> > < b.b.n.- - : : $ m.  "
 };
 
-wxIcon CValueHTMLBox::GetIcon() const
+wxIcon ibValueHTMLBox::GetIcon() const
 {
 	return wxIcon(s_htmlwin_xpm);
 }
 
-wxIcon CValueHTMLBox::GetIconGroup()
+wxIcon ibValueHTMLBox::GetIconGroup()
 {
 	return wxIcon(s_htmlwin_xpm);
 }

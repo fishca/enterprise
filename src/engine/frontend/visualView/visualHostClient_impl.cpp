@@ -5,22 +5,22 @@
 
 #include "visualHostClient.h"
 
-void CVisualClientHost::ShowForm()
+void ibVisualHostClient::ShowForm()
 {
 	m_valueForm->ShowForm(nullptr); //has no parent
 }
 
-void CVisualClientHost::ActivateForm()
+void ibVisualHostClient::ActivateForm()
 {
 	m_valueForm->ActivateForm();
 }
 
-void CVisualClientHost::UpdateForm()
+void ibVisualHostClient::UpdateForm()
 {
 	m_valueForm->UpdateForm();
 }
 
-bool CVisualClientHost::CloseForm()
+bool ibVisualHostClient::CloseForm()
 {
 	return m_valueForm->CloseForm();
 }

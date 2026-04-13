@@ -4,14 +4,14 @@
 #include "value.h"
 
 //realization factory pattern 
-class CEnumFactory : public CValue {
+class ibValueEnumFactory : public ibValue {
 public:
 
-	CEnumFactory();
-	virtual ~CEnumFactory();
+	ibValueEnumFactory();
+	virtual ~ibValueEnumFactory();
 
 	// these methods need to be overridden in your aggregate objects:
-	virtual CMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names	
+	virtual ibValueMethodHelper* GetPMethods() const { // get a reference to the class helper for parsing attribute and method names	
 		//PrepareNames(); 
 		return m_methodHelper; 
 	}
@@ -19,10 +19,10 @@ public:
 	virtual void PrepareNames() const; // this method is automatically called to initialize attribute and method names.
 
 	// this method is automatically called to initialize attribute and method names.
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal);                   //attribute value
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal);                   //attribute value
 
 protected:
-	CMethodHelper *m_methodHelper;
+	ibValueMethodHelper *m_methodHelper;
 };
 
 #endif 

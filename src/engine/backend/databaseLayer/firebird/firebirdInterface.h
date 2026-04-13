@@ -63,10 +63,10 @@ typedef void (ISC_EXPORT *isc_decode_sql_timeType)(const ISC_TIME*, void*);
 typedef ISC_STATUS(ISC_EXPORT *isc_get_segmentType)(ISC_STATUS*, isc_blob_handle*,
 	unsigned short*, unsigned short, ISC_SCHAR*);
 
-class CFirebirdInterface
+class ibInterfaceFirebird
 {
 public:
-	CFirebirdInterface() { }
+	ibInterfaceFirebird() { }
 	bool Init();
 
 	fb_interpretType GetFbInterpret() { return m_pFbInterpret; }

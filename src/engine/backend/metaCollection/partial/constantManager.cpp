@@ -5,58 +5,58 @@
 
 #include "constantManager.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueManagerDataObjectConstant, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueManagerDataObjectConstant, ibValue);
 
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-class_identifier_t CValueManagerDataObjectConstant::GetClassType() const
+ibClassID ibValueManagerDataObjectConstant::GetClassType() const
 {
-	const IMetaData* metaData = m_metaObject->GetMetaData();
+	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueManagerDataObjectConstant::GetClassName() const
+wxString ibValueManagerDataObjectConstant::GetClassName() const
 {
-	const IMetaData* metaData = m_metaObject->GetMetaData();
+	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString CValueManagerDataObjectConstant::GetString() const
+wxString ibValueManagerDataObjectConstant::GetString() const
 {
-	const IMetaData* metaData = m_metaObject->GetMetaData();
+	const ibMetaData* metaData = m_metaObject->GetMetaData();
 	wxASSERT(metaData);
-	const IMetaValueTypeCtor* clsFactory =
-		metaData->GetTypeCtor(m_metaObject, eCtorMetaType::eCtorMetaType_Manager);
+	const ibCtorMetaValueType* clsFactory =
+		metaData->GetTypeCtor(m_metaObject, ibCtorObjectMetaType::ibCtorObjectMetaType_Manager);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-CValue::CMethodHelper CValueManagerDataObjectConstant::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueManagerDataObjectConstant::m_methodHelper;
 
 enum Func {
 	enSet = 0,
 	enGet
 };
 
-void CValueManagerDataObjectConstant::PrepareNames() const
+void ibValueManagerDataObjectConstant::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendFunc(wxT("Set"), 1, wxT("Set(value : any)"));
 	m_methodHelper.AppendFunc(wxT("Get"), wxT("Get()"));
 }
 
-bool CValueManagerDataObjectConstant::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray)
+bool ibValueManagerDataObjectConstant::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray)
 {
-	CValuePtr<CValueRecordDataObjectConstant> recordDataObjectValue = m_metaObject->CreateRecordDataObjectValue();
+	ibValuePtr<ibValueRecordDataObjectConstant> recordDataObjectValue = m_metaObject->CreateRecordDataObjectValue();
 
 	switch (lMethodNum)
 	{

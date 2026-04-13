@@ -8,25 +8,25 @@
 #include "backend/metaCollection/partial/commonObject.h"
 #include "backend/appData.h"
 
-void CValueMetaObjectForm::OnPropertyCreated(IProperty* property)
+void ibValueMetaObjectForm::OnPropertyCreated(ibProperty* property)
 {
-	IValueMetaObjectForm::OnPropertyCreated(property);
+	ibValueMetaObjectFormBase::OnPropertyCreated(property);
 }
 
-void CValueMetaObjectForm::OnPropertySelected(IProperty* property)
+void ibValueMetaObjectForm::OnPropertySelected(ibProperty* property)
 {
-	IValueMetaObjectForm::OnPropertySelected(property);
+	ibValueMetaObjectFormBase::OnPropertySelected(property);
 }
 
-void CValueMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
+void ibValueMetaObjectForm::OnPropertyChanged(ibProperty* property, const wxVariant& oldValue, const wxVariant& newValue)
 {
 	if (property == m_properyFormType) {
 		if (appData->DesignerMode()) {
-			IValueModuleManager* moduleManager = m_metaData->GetModuleManager();
+			ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
 			wxASSERT(moduleManager);
-			IValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, IValueMetaObjectGenericData);
+			ibValueMetaObjectGenericData* metaObjectValue = wxDynamicCast(m_parent, ibValueMetaObjectGenericData);
 			wxASSERT(metaObjectValue);
-			IBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
+			ibBackendMetadataTree* metaTree = m_metaData->GetMetaTree();
 			if (metaTree != nullptr) {
 				metaTree->CloseMetaObject(this);
 			}
@@ -39,5 +39,5 @@ void CValueMetaObjectForm::OnPropertyChanged(IProperty* property, const wxVarian
 		}
 	}
 
-	IValueMetaObjectForm::OnPropertyChanged(property, oldValue, newValue);
+	ibValueMetaObjectFormBase::OnPropertyChanged(property, oldValue, newValue);
 }

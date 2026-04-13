@@ -1,6 +1,6 @@
 #include "metadata.h"
 
-wxString IMetaData::Serialize(const CValue& cValue)
+wxString ibMetaData::Serialize(const ibValue& cValue)
 {
 	wxString strSerialize;
 	if (cValue.Serialize(strSerialize)) {
@@ -21,14 +21,14 @@ wxString IMetaData::Serialize(const CValue& cValue)
 
 #include <wx/tokenzr.h>
 
-CValue IMetaData::Deserialize(const wxString& strValue)
+ibValue ibMetaData::Deserialize(const wxString& strValue)
 {
-	CValue createdValue;
+	ibValue createdValue;
 
 	wxStringTokenizer str(wxT(";;;"));
 
 	try {
-		createdValue = IMetaData::CreateObject(g_valueStringCLSID);
+		createdValue = ibMetaData::CreateObject(g_valueStringCLSID);
 	}
 	catch (...)
 	{

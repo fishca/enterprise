@@ -10,32 +10,32 @@
 //*                                   Singleton class "enumFactory"                                       *
 //*********************************************************************************************************
 
-CEnumFactory::CEnumFactory() :
-	CValue(eValueTypes::TYPE_VALUE, true), m_methodHelper(new CMethodHelper())
+ibValueEnumFactory::ibValueEnumFactory() :
+	ibValue(ibValueTypes::TYPE_VALUE, true), m_methodHelper(new ibValueMethodHelper())
 {
-	for (auto &ctor : CValue::GetListCtorsByType(eCtorObjectType_object_enum)) {
+	for (auto &ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_enum)) {
 		m_methodHelper->AppendProp(ctor->GetClassName());
 	}
 }
 
-CEnumFactory::~CEnumFactory() {
+ibValueEnumFactory::~ibValueEnumFactory() {
 	wxDELETE(m_methodHelper);
 }
 
-void CEnumFactory::PrepareNames() const
+void ibValueEnumFactory::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
-	for (auto& ctor : CValue::GetListCtorsByType(eCtorObjectType_object_enum)) {
+	for (auto& ctor : ibValue::GetListCtorsByType(ibCtorObjectType_object_enum)) {
 		m_methodHelper->AppendProp(ctor->GetClassName());
 	}
 }
 
-bool CEnumFactory::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueEnumFactory::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	const wxString &strEnumeration = GetPropName(lPropNum);
-	if (!CValue::IsRegisterCtor(strEnumeration))
+	if (!ibValue::IsRegisterCtor(strEnumeration))
 		return false;
-	pvarPropVal = CValue::CreateObject(strEnumeration);
+	pvarPropVal = ibValue::CreateObject(strEnumeration);
 	return true;
 }
 
@@ -43,4 +43,4 @@ bool CEnumFactory::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-CONTEXT_TYPE_REGISTER(CEnumFactory, "EnumManager", string_to_clsid("CO_ENMR"));
+CONTEXT_TYPE_REGISTER(ibValueEnumFactory, "EnumManager", string_to_clsid("CO_ENMR"));

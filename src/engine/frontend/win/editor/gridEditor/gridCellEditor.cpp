@@ -3,11 +3,11 @@
 #if wxUSE_TEXTCTRL
 
 // ----------------------------------------------------------------------------
-// CGridEditor::CGridEditorCellTextEditor
+// ibGridEditor::ibGridEditorCellTextEditor
 // ----------------------------------------------------------------------------
 
-CGridEditor::CGridEditorCellTextEditor::CGridEditorCellTextEditor(const CGridEditorCellTextEditor& other)
-	: wxGridExtCellEditor(other),
+ibGridEditor::ibGridEditorCellTextEditor::ibGridEditorCellTextEditor(const ibGridEditorCellTextEditor& other)
+	: ibGridCellEditor(other),
 	m_maxChars(other.m_maxChars),
 	m_value(other.m_value)
 {
@@ -19,14 +19,14 @@ CGridEditor::CGridEditorCellTextEditor::CGridEditorCellTextEditor(const CGridEdi
 #endif
 }
 
-void CGridEditor::CGridEditorCellTextEditor::Create(wxWindow* parent,
+void ibGridEditor::ibGridEditorCellTextEditor::Create(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler)
 {
 	DoCreate(parent, id, evtHandler);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
+void ibGridEditor::ibGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 	wxWindowID id,
 	wxEvtHandler* evtHandler,
 	long style)
@@ -107,10 +107,10 @@ void CGridEditor::CGridEditorCellTextEditor::DoCreate(wxWindow* parent,
 	}
 #endif
 
-	wxGridExtCellEditor::Create(parent, id, evtHandler);
+	ibGridCellEditor::Create(parent, id, evtHandler);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
+void ibGridEditor::ibGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
 {
 	wxRect rect(rectOrig);
 
@@ -138,19 +138,19 @@ void CGridEditor::CGridEditorCellTextEditor::SetSize(const wxRect& rectOrig)
 	rect.SetBottom(rect.GetBottom() + 2 * extra_y);
 #endif
 
-	wxGridExtCellEditor::SetSize(rect);
+	ibGridCellEditor::SetSize(rect);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::BeginEdit(int row, int col, wxGridExt* grid)
+void ibGridEditor::ibGridEditorCellTextEditor::BeginEdit(int row, int col, ibGrid* grid)
 {
-	wxASSERT_MSG(m_control, wxT("The wxGridExtCellEditor must be created first!"));
+	wxASSERT_MSG(m_control, wxT("The ibGridCellEditor must be created first!"));
 
 	m_value = grid->GetTable()->GetValue(row, col);
 
 	DoBeginEdit(m_value);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::DoBeginEdit(const wxString& startValue)
+void ibGridEditor::ibGridEditorCellTextEditor::DoBeginEdit(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
@@ -158,14 +158,14 @@ void CGridEditor::CGridEditorCellTextEditor::DoBeginEdit(const wxString& startVa
 	Text()->SetFocus();
 }
 
-bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
+bool ibGridEditor::ibGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 	int WXUNUSED(col),
-	const wxGridExt* WXUNUSED(grid),
+	const ibGrid* WXUNUSED(grid),
 	const wxString& WXUNUSED(oldval),
 	wxString* newval)
 {
 	wxCHECK_MSG(m_control, false,
-		"CGridEditor::CGridEditorCellTextEditor must be created first!");
+		"ibGridEditor::ibGridEditorCellTextEditor must be created first!");
 
 	const wxString value = Text()->GetValue();
 	if (value == m_value)
@@ -179,7 +179,7 @@ bool CGridEditor::CGridEditorCellTextEditor::EndEdit(int WXUNUSED(row),
 	return true;
 }
 
-void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridExt* grid)
+void ibGridEditor::ibGridEditorCellTextEditor::ApplyEdit(int row, int col, ibGrid* grid)
 {
 	if (!m_value.IsEmpty()) {
 
@@ -212,20 +212,20 @@ void CGridEditor::CGridEditorCellTextEditor::ApplyEdit(int row, int col, wxGridE
 	m_value.clear();
 }
 
-void CGridEditor::CGridEditorCellTextEditor::Reset()
+void ibGridEditor::ibGridEditorCellTextEditor::Reset()
 {
-	wxASSERT_MSG(m_control, "CGridEditor::CGridEditorCellTextEditor must be created first!");
+	wxASSERT_MSG(m_control, "ibGridEditor::ibGridEditorCellTextEditor must be created first!");
 
 	DoReset(m_value);
 }
 
-void CGridEditor::CGridEditorCellTextEditor::DoReset(const wxString& startValue)
+void ibGridEditor::ibGridEditorCellTextEditor::DoReset(const wxString& startValue)
 {
 	Text()->SetValue(startValue);
 	Text()->SetInsertionPointEnd();
 }
 
-bool CGridEditor::CGridEditorCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
+bool ibGridEditor::ibGridEditorCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode())
 	{
@@ -233,11 +233,11 @@ bool CGridEditor::CGridEditorCellTextEditor::IsAcceptedKey(wxKeyEvent& event)
 		return true;
 
 	default:
-		return wxGridExtCellEditor::IsAcceptedKey(event);
+		return ibGridCellEditor::IsAcceptedKey(event);
 	}
 }
 
-void CGridEditor::CGridEditorCellTextEditor::StartingKey(wxKeyEvent& event)
+void ibGridEditor::ibGridEditorCellTextEditor::StartingKey(wxKeyEvent& event)
 {
 	// Since this is now happening in the EVT_CHAR event EmulateKeyPress is no
 	// longer an appropriate way to get the character into the text control.
@@ -282,7 +282,7 @@ void CGridEditor::CGridEditorCellTextEditor::StartingKey(wxKeyEvent& event)
 	}
 }
 
-void CGridEditor::CGridEditorCellTextEditor::HandleReturn(wxKeyEvent& event)
+void ibGridEditor::ibGridEditorCellTextEditor::HandleReturn(wxKeyEvent& event)
 {
 #if defined(__WXMOTIF__) || defined(__WXGTK__)
 	// wxMotif needs a little extra help...
@@ -298,7 +298,7 @@ void CGridEditor::CGridEditorCellTextEditor::HandleReturn(wxKeyEvent& event)
 #endif
 }
 
-void CGridEditor::CGridEditorCellTextEditor::SetParameters(const wxString& params)
+void ibGridEditor::ibGridEditorCellTextEditor::SetParameters(const wxString& params)
 {
 	if (!params)
 	{
@@ -314,13 +314,13 @@ void CGridEditor::CGridEditorCellTextEditor::SetParameters(const wxString& param
 		}
 		else
 		{
-			wxLogDebug(wxT("Invalid CGridEditor::CGridEditorCellTextEditor parameter string '%s' ignored"), params);
+			wxLogDebug(wxT("Invalid ibGridEditor::ibGridEditorCellTextEditor parameter string '%s' ignored"), params);
 		}
 	}
 }
 
 #if wxUSE_VALIDATORS
-void CGridEditor::CGridEditorCellTextEditor::SetValidator(const wxValidator& validator)
+void ibGridEditor::ibGridEditorCellTextEditor::SetValidator(const wxValidator& validator)
 {
 	m_validator.reset(static_cast<wxValidator*>(validator.Clone()));
 	if (m_validator && IsCreated())
@@ -329,7 +329,7 @@ void CGridEditor::CGridEditorCellTextEditor::SetValidator(const wxValidator& val
 #endif
 
 // return the value in the text control
-wxString CGridEditor::CGridEditorCellTextEditor::GetValue() const
+wxString ibGridEditor::ibGridEditorCellTextEditor::GetValue() const
 {
 	return Text()->GetValue();
 }

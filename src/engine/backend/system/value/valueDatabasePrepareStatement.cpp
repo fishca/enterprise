@@ -2,9 +2,9 @@
 #include "backend/databaseLayer/databaseLayer.h"
 #include "backend/appData.h"
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValuePreparedStatement, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValuePreparedStatement, ibValue);
 
-CValue::CMethodHelper CValuePreparedStatement::m_methodHelper;
+ibValue::ibValueMethodHelper ibValuePreparedStatement::m_methodHelper;
 
 enum
 {
@@ -13,18 +13,18 @@ enum
 	eRunQueryWithResults,
 };
 
-CValuePreparedStatement::CValuePreparedStatement(IPreparedStatement* preparedStatement) :
-	CValue(eValueTypes::TYPE_VALUE), m_preparedStatement(preparedStatement)
+ibValuePreparedStatement::ibValuePreparedStatement(ibPreparedStatement* preparedStatement) :
+	ibValue(ibValueTypes::TYPE_VALUE), m_preparedStatement(preparedStatement)
 {
 }
 
-CValuePreparedStatement::~CValuePreparedStatement()
+ibValuePreparedStatement::~ibValuePreparedStatement()
 {
 	if (m_preparedStatement != nullptr)
 		db_query->CloseStatement(m_preparedStatement);
 }
 
-void CValuePreparedStatement::PrepareNames() const
+void ibValuePreparedStatement::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 	m_methodHelper.AppendProc(wxT("SetParam"), 2, wxT("SetParam(number: position, any: value)"));
@@ -35,7 +35,7 @@ void CValuePreparedStatement::PrepareNames() const
 
 #include "backend/backend_exception.h"
 
-bool CValuePreparedStatement::CallAsFunc(const long lMethodNum, CValue& pvarRetValue, CValue** paParams, const long lSizeArray) //function call
+bool ibValuePreparedStatement::CallAsFunc(const long lMethodNum, ibValue& pvarRetValue, ibValue** paParams, const long lSizeArray) //function call
 {
 	if (lMethodNum == eRunQuery)
 	{
@@ -46,39 +46,39 @@ bool CValuePreparedStatement::CallAsFunc(const long lMethodNum, CValue& pvarRetV
 	else if (lMethodNum == eRunQueryWithResults)
 	{
 		if (m_preparedStatement != nullptr) {
-			IDatabaseResultSet* resultSet = m_preparedStatement->RunQueryWithResults();
+			ibDatabaseResultSet* resultSet = m_preparedStatement->RunQueryWithResults();
 			if (resultSet == nullptr) {
-				CBackendCoreException::Error(CBackendCoreException::GetLastError());
+				ibBackendCoreException::Error(ibBackendCoreException::GetLastError());
 				return false;
 			}
-			pvarRetValue = CValue::CreateAndPrepareValueRef<CValueResultSet>(resultSet);
+			pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueResultSet>(resultSet);
 			return true;
 		}
 
-		pvarRetValue = CValue::CreateAndPrepareValueRef<CValueResultSet>();
+		pvarRetValue = ibValue::CreateAndPrepareValueRef<ibValueResultSet>();
 		return true;
 	}
 
 	return false;
 }
 
-bool CValuePreparedStatement::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray) //procudre call
+bool ibValuePreparedStatement::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray) //procudre call
 {
 	if (m_preparedStatement != nullptr && lMethodNum == eSetParam)
 	{
 		const int position = paParams[0]->GetInteger();
 		if (position == 0 || position > m_preparedStatement->GetParameterCount()) {
-			CBackendCoreException::Error(_("Index goes beyond statement"));
+			ibBackendCoreException::Error(_("Index goes beyond statement"));
 			return false;
 		}
 
-		if (paParams[1]->GetType() == eValueTypes::TYPE_BOOLEAN)
+		if (paParams[1]->GetType() == ibValueTypes::TYPE_BOOLEAN)
 			m_preparedStatement->SetParamBool(position, paParams[1]->GetBoolean());
-		else if (paParams[1]->GetType() == eValueTypes::TYPE_NUMBER)
+		else if (paParams[1]->GetType() == ibValueTypes::TYPE_NUMBER)
 			m_preparedStatement->SetParamNumber(position, paParams[1]->GetNumber());
-		else if (paParams[1]->GetType() == eValueTypes::TYPE_DATE)
+		else if (paParams[1]->GetType() == ibValueTypes::TYPE_DATE)
 			m_preparedStatement->SetParamDate(position, paParams[1]->GetDateTime());
-		else if (paParams[1]->GetType() == eValueTypes::TYPE_STRING)
+		else if (paParams[1]->GetType() == ibValueTypes::TYPE_STRING)
 			m_preparedStatement->SetParamString(position, paParams[1]->GetString());
 		else
 			m_preparedStatement->SetParamNull(position);
@@ -93,4 +93,4 @@ bool CValuePreparedStatement::CallAsProc(const long lMethodNum, CValue** paParam
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(CValuePreparedStatement, "DatabasePreparedStatement", string_to_clsid("VL_DBPS"));
+SYSTEM_TYPE_REGISTER(ibValuePreparedStatement, "DatabasePreparedStatement", string_to_clsid("VL_DBPS"));

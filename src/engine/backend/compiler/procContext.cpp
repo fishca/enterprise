@@ -5,7 +5,7 @@
 //*                                        RunContextSmall                                        *
 //*************************************************************************************************
 
-CRunContextSmall::~CRunContextSmall()
+ibRunContextSmall::~ibRunContextSmall()
 {
 	if (m_lVarCount > MAX_STATIC_VAR) {
 		wxDELETEA(m_pLocVars);
@@ -17,7 +17,7 @@ CRunContextSmall::~CRunContextSmall()
 //*                                        RunContext                                             *
 //*************************************************************************************************
 
-CRunContext::~CRunContext()
+ibRunContext::~ibRunContext()
 {
 	//erase loc vars 
 	if (m_lVarCount > MAX_STATIC_VAR) {
@@ -26,7 +26,7 @@ CRunContext::~CRunContext()
 	}
 }
 
-CByteCode* CRunContext::GetByteCode() const
+ibByteCode* ibRunContext::GetByteCode() const
 {
 	return m_procUnit != nullptr ?
 		m_procUnit->GetByteCode() : nullptr;

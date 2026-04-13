@@ -41,12 +41,12 @@ static char* s_gauge_xpm[] = {
 	"                "
 };
 
-wxIcon CValueGauge::GetIcon() const
+wxIcon ibValueGauge::GetIcon() const
 {
 	return wxIcon(s_gauge_xpm);
 }
 
-wxIcon CValueGauge::GetIconGroup()
+wxIcon ibValueGauge::GetIconGroup()
 {
 	return wxIcon(s_gauge_xpm);
 }

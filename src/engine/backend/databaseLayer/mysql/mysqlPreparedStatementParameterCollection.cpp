@@ -1,10 +1,10 @@
 #include "mysqlPreparedStatementParameterCollection.h"
 
-CMysqlPreparedStatementParameterCollection::CMysqlPreparedStatementParameterCollection()
+ibPreparedStatementMySQLParameterCollection::ibPreparedStatementMySQLParameterCollection()
 {
 }
 
-CMysqlPreparedStatementParameterCollection::~CMysqlPreparedStatementParameterCollection()
+ibPreparedStatementMySQLParameterCollection::~ibPreparedStatementMySQLParameterCollection()
 {
 	MysqlParameterArray::iterator start = m_Parameters.begin();
 	MysqlParameterArray::iterator stop = m_Parameters.end();
@@ -13,7 +13,7 @@ CMysqlPreparedStatementParameterCollection::~CMysqlPreparedStatementParameterCol
 	{
 		if ((*start) != nullptr)
 		{
-			CMysqlParameter* pParameter = (CMysqlParameter*)(*start);
+			ibDatabaseParameterMySQL* pParameter = (ibDatabaseParameterMySQL*)(*start);
 			wxDELETE(pParameter);
 			(*start) = nullptr;
 		}
@@ -21,12 +21,12 @@ CMysqlPreparedStatementParameterCollection::~CMysqlPreparedStatementParameterCol
 	}
 }
 
-int CMysqlPreparedStatementParameterCollection::GetSize()
+int ibPreparedStatementMySQLParameterCollection::GetSize()
 {
 	return m_Parameters.size();
 }
 
-MYSQL_BIND* CMysqlPreparedStatementParameterCollection::GetMysqlParameterBindings()
+MYSQL_BIND* ibPreparedStatementMySQLParameterCollection::GetMysqlParameterBindings()
 {
 	MYSQL_BIND* pBindings = new MYSQL_BIND[m_Parameters.size()];
 
@@ -43,84 +43,84 @@ MYSQL_BIND* CMysqlPreparedStatementParameterCollection::GetMysqlParameterBinding
 	return pBindings;
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, int nValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, int nValue)
 {
-	//CMysqlParameter Parameter(nValue);
+	//ibDatabaseParameterMySQL Parameter(nValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(nValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(nValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, double dblValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, double dblValue)
 {
-	//CMysqlParameter Parameter(dblValue);
+	//ibDatabaseParameterMySQL Parameter(dblValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(dblValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(dblValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, const number_t &numValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, const ibNumber &numValue)
 {
-	//CMysqlParameter Parameter(dblValue);
+	//ibDatabaseParameterMySQL Parameter(dblValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(numValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(numValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, const wxString& strValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, const wxString& strValue)
 {
-	//CMysqlParameter Parameter(strValue);
+	//ibDatabaseParameterMySQL Parameter(strValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(strValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(strValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition)
 {
-	//CMysqlParameter Parameter;
+	//ibDatabaseParameterMySQL Parameter;
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter();
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL();
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, const void* pData, long nDataLength)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, const void* pData, long nDataLength)
 {
-	//CMysqlParameter Parameter(pData, nDataLength);
+	//ibDatabaseParameterMySQL Parameter(pData, nDataLength);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(pData, nDataLength);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(pData, nDataLength);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, const wxDateTime& dateValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, const wxDateTime& dateValue)
 {
-	//CMysqlParameter Parameter(dateValue);
+	//ibDatabaseParameterMySQL Parameter(dateValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(dateValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(dateValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, bool bValue)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, bool bValue)
 {
-	//CMysqlParameter Parameter(bValue);
+	//ibDatabaseParameterMySQL Parameter(bValue);
 	//SetParam(nPosition, Parameter);
-	CMysqlParameter* pParameter = new CMysqlParameter(bValue);
+	ibDatabaseParameterMySQL* pParameter = new ibDatabaseParameterMySQL(bValue);
 	pParameter->SetEncoding(GetEncoding());
 	SetParam(nPosition, pParameter);
 }
 
-void CMysqlPreparedStatementParameterCollection::SetParam(int nPosition, CMysqlParameter* pParameter)
+void ibPreparedStatementMySQLParameterCollection::SetParam(int nPosition, ibDatabaseParameterMySQL* pParameter)
 {
 	// First make sure that there are enough elements in the collection
 	while (m_Parameters.size() < (unsigned int)(nPosition))
 	{
-		//CMysqlParameter EmptyParameter;
+		//ibDatabaseParameterMySQL EmptyParameter;
 		m_Parameters.push_back(nullptr);//EmptyParameter);
 	}
 	// Free up any data that is being replaced so the allocated memory isn't lost

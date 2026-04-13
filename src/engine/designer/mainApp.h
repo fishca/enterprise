@@ -5,7 +5,7 @@
 #include <wx/aui/framemanager.h>
 #include <wx/socket.h>
 
-class CDesignerApp : public wxApp {
+class ibAppDesigner : public wxApp {
 
 	// FILE ENTRY
 	wxString m_strFile;
@@ -57,6 +57,6 @@ protected:
 	void OnSetFocus(wxFocusEvent& event);
 };
 
-wxDECLARE_APP(CDesignerApp);
+wxDECLARE_APP(ibAppDesigner);
 
 #endif 

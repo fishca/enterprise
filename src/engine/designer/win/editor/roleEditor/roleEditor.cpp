@@ -14,22 +14,22 @@
 
 #define ICON_SIZE 16
 
-CRoleEditor::CRoleEditor(wxWindow* parent,
-	wxWindowID winid, IValueMetaObject* metaObject) :
+ibRoleEditor::ibRoleEditor(wxWindow* parent,
+	wxWindowID winid, ibValueMetaObject* metaObject) :
 	wxSplitterWindow(parent, winid, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_LIVE_UPDATE), m_metaRole(metaObject)
 {
 	m_roleCtrl = new wxTreeCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_ROW_LINES | wxTR_NO_LINES | wxTR_SINGLE | wxTR_TWIST_BUTTONS);
 	m_roleCtrl->SetDoubleBuffered(true);
-	m_roleCtrl->Bind(wxEVT_TREE_SEL_CHANGED, &CRoleEditor::OnSelectedItem, this);
+	m_roleCtrl->Bind(wxEVT_TREE_SEL_CHANGED, &ibRoleEditor::OnSelectedItem, this);
 
 	//set image list
 	m_roleCtrl->AssignImageList(
 		new wxImageList(ICON_SIZE, ICON_SIZE)
 	);
 
-	m_checkCtrl = new wxCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxCR_EMPTY_CHECK | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
+	m_checkCtrl = new ibCheckTree(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_NO_LINES | wxTR_HIDE_ROOT | wxCR_EMPTY_CHECK | wxSUNKEN_BORDER | wxTR_TWIST_BUTTONS);
 	m_checkCtrl->SetDoubleBuffered(true);
-	m_checkCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &CRoleEditor::OnCheckItem, this);
+	m_checkCtrl->Bind(wxEVT_CHECKTREE_CHOICE, &ibRoleEditor::OnCheckItem, this);
 
 	InitRole();
 
@@ -49,20 +49,20 @@ CRoleEditor::CRoleEditor(wxWindow* parent,
 	wxSplitterWindow::Layout();
 }
 
-CRoleEditor::~CRoleEditor() {
-	m_roleCtrl->Unbind(wxEVT_TREE_SEL_CHANGED, &CRoleEditor::OnSelectedItem, this);
-	m_checkCtrl->Unbind(wxEVT_CHECKTREE_CHOICE, &CRoleEditor::OnCheckItem, this);
+ibRoleEditor::~ibRoleEditor() {
+	m_roleCtrl->Unbind(wxEVT_TREE_SEL_CHANGED, &ibRoleEditor::OnSelectedItem, this);
+	m_checkCtrl->Unbind(wxEVT_CHECKTREE_CHOICE, &ibRoleEditor::OnCheckItem, this);
 }
 
-void CRoleEditor::OnCheckItem(wxTreeEvent& event)
+void ibRoleEditor::OnCheckItem(wxTreeEvent& event)
 {
 	wxTreeItemRoleData* data = dynamic_cast<wxTreeItemRoleData*>(
 		m_roleCtrl->GetItemData(event.GetItem())
 		);
 	if (data != nullptr) {
-		CRole* role = data->GetRole();
+		ibRole* role = data->GetRole();
 		wxASSERT(role);
-		IAccessObject* metaObject = data->GetMetaObject();
+		ibAccessObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
 		metaObject->SetRight(role, m_metaRole->GetMetaID(), event.GetExtraLong());
 	}
@@ -70,21 +70,21 @@ void CRoleEditor::OnCheckItem(wxTreeEvent& event)
 	event.Skip();
 }
 
-void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
+void ibRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 	wxTreeItemMetaData* data = dynamic_cast<wxTreeItemMetaData*>(
 		m_roleCtrl->GetItemData(event.GetItem())
 		);
 	m_checkCtrl->Freeze();
 	m_checkCtrl->DeleteAllItems();
 	if (data != nullptr) {
-		IAccessObject* metaObject = data->GetMetaObject();
+		ibAccessObject* metaObject = data->GetMetaObject();
 		wxASSERT(metaObject);
 		wxTreeItemId root = m_checkCtrl->AddRoot(wxEmptyString);
 		for (unsigned int idx = 0; idx < metaObject->GetRoleCount(); idx++) {
-			CRole* role = metaObject->GetRole(idx);
+			ibRole* role = metaObject->GetRole(idx);
 			wxASSERT(role);
 			wxTreeItemId newItem = m_checkCtrl->AppendItem(root, role->GetLabel(), wxNOT_FOUND, wxNOT_FOUND, new wxTreeItemRoleData(role));
-			m_checkCtrl->SetItemState(newItem, m_metaRole->IsEditable() ? wxCheckTree::UNCHECKED : wxCheckTree::UNCHECKED_DISABLED);
+			m_checkCtrl->SetItemState(newItem, m_metaRole->IsEditable() ? ibCheckTree::UNCHECKED : ibCheckTree::UNCHECKED_DISABLED);
 			m_checkCtrl->Check(newItem, metaObject->AccessRight(role, m_metaRole->GetMetaID()));
 		}
 	}
@@ -92,9 +92,9 @@ void CRoleEditor::OnSelectedItem(wxTreeEvent& event) {
 	event.Skip();
 }
 
-void CRoleEditor::AddInterfaceItem(IValueMetaObject* metaObject, const wxTreeItemId& hParentID)
+void ibRoleEditor::AddInterfaceItem(ibValueMetaObject* metaObject, const wxTreeItemId& hParentID)
 {
-	CValueMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<CValueMetaObjectInterface>();
+	ibValueMetaObjectInterface* metaObjectValue = metaObject->ConvertToType<ibValueMetaObjectInterface>();
 	wxASSERT(metaObject);
 
 	for (auto commonInterface : metaObjectValue->GetInterfaceArrayObject()) {
@@ -109,9 +109,9 @@ void CRoleEditor::AddInterfaceItem(IValueMetaObject* metaObject, const wxTreeIte
 
 #include "frontend/artProvider/artProvider.h"
 
-void CRoleEditor::InitRole()
+void ibRoleEditor::InitRole()
 {
-	const IAbstractTypeCtor* typeCtor = CValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
+	const ibCtorAbstractType* typeCtor = ibValue::GetAvailableCtor(g_metaCommonMetadataCLSID);
 	wxASSERT(typeCtor);
 
 	wxImageList* imageList = m_roleCtrl->GetImageList();
@@ -151,7 +151,7 @@ void CRoleEditor::InitRole()
 	m_roleCtrl->ExpandAll();
 }
 
-void CRoleEditor::ClearRole() {
+void ibRoleEditor::ClearRole() {
 
 	//*****************************************************************************************************
 	//*                                      Common objects                                               *
@@ -191,11 +191,11 @@ void CRoleEditor::ClearRole() {
 	InitRole();
 }
 
-void CRoleEditor::FillData()
+void ibRoleEditor::FillData()
 {
-	const IMetaData* metaData = m_metaRole->GetMetaData();
+	const ibMetaData* metaData = m_metaRole->GetMetaData();
 	wxASSERT(metaData);
-	const IValueMetaObject* commonObject = metaData->GetCommonMetaObject();
+	const ibValueMetaObject* commonObject = metaData->GetCommonMetaObject();
 	wxASSERT(commonObject);
 
 	m_roleCtrl->SetItemText(m_treeMETADATA, commonObject->GetName());

@@ -8,23 +8,23 @@
 
 
 //////////////////////////////////////////////////////////////////////
-wxIMPLEMENT_DYNAMIC_CLASS(CValueColour, CValue);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueColour, ibValue);
 
-CValue::CMethodHelper CValueColour::m_methodHelper;
+ibValue::ibValueMethodHelper ibValueColour::m_methodHelper;
 
-CValueColour::CValueColour() :
-	CValue(eValueTypes::TYPE_VALUE), m_colour()
+ibValueColour::ibValueColour() :
+	ibValue(ibValueTypes::TYPE_VALUE), m_colour()
 {
 }
 
-CValueColour::CValueColour(const wxColour& colour) :
-	CValue(eValueTypes::TYPE_VALUE), m_colour(colour)
+ibValueColour::ibValueColour(const wxColour& colour) :
+	ibValue(ibValueTypes::TYPE_VALUE), m_colour(colour)
 {
 }
 
-bool CValueColour::Init(CValue** paParams, const long lSizeArray)
+bool ibValueColour::Init(ibValue** paParams, const long lSizeArray)
 {
-	if (lSizeArray > 0 && paParams[0]->GetType() == eValueTypes::TYPE_STRING) {
+	if (lSizeArray > 0 && paParams[0]->GetType() == ibValueTypes::TYPE_STRING) {
 		m_colour = typeConv::StringToColour(paParams[0]->GetString());
 		return true;
 	}
@@ -41,48 +41,48 @@ bool CValueColour::Init(CValue** paParams, const long lSizeArray)
 
 enum
 {
-	enColorR,
-	enColorG,
-	enColorB
+	enColorRed,
+	enColorGreen,
+	enColorBlue
 };
 
-void CValueColour::PrepareNames() const
+void ibValueColour::PrepareNames() const
 {
 	m_methodHelper.ClearHelper();
 
-	m_methodHelper.AppendProp(wxT("R"));
-	m_methodHelper.AppendProp(wxT("G"));
-	m_methodHelper.AppendProp(wxT("B"));
+	m_methodHelper.AppendProp(wxT("Red"));
+	m_methodHelper.AppendProp(wxT("Green"));
+	m_methodHelper.AppendProp(wxT("Blue"));
 }
 
-bool CValueColour::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueColour::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	switch (lPropNum)
 	{
-	case enColorR:
+	case enColorRed:
 		m_colour.Set((unsigned char)varPropVal.GetUInteger(), m_colour.Green(), m_colour.Blue());
 		return true;
-	case enColorG:
+	case enColorGreen:
 		m_colour.Set(m_colour.Red(), (unsigned char)varPropVal.GetUInteger(), m_colour.Blue());
 		return true;
-	case enColorB:
+	case enColorBlue:
 		m_colour.Set(m_colour.Red(), m_colour.Green(), (unsigned char)varPropVal.GetUInteger());
 		return true;
 	}
 	return false;
 }
 
-bool CValueColour::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueColour::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	switch (lPropNum)
 	{
-	case enColorR:
+	case enColorRed:
 		pvarPropVal = m_colour.Red();
 		return true;
-	case enColorG:
+	case enColorGreen:
 		pvarPropVal = m_colour.Green();
 		return true;
-	case enColorB:
+	case enColorBlue:
 		pvarPropVal = m_colour.Blue();
 		return true;
 	}
@@ -93,4 +93,4 @@ bool CValueColour::GetPropVal(const long lPropNum, CValue& pvarPropVal)
 //*                       Runtime register                             *
 //**********************************************************************
 
-VALUE_TYPE_REGISTER(CValueColour, "Colour", string_to_clsid("VL_COLOR"));
+VALUE_TYPE_REGISTER(ibValueColour, "Colour", string_to_clsid("VL_COLOR"));

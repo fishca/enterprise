@@ -3,20 +3,18 @@
 
 #include <wx/aui/auibar.h>
 
-class CAuiToolBar : public wxAuiToolBar
+class ibAuiToolBar : public wxAuiToolBar
 {
 public:
 
-	CAuiToolBar() : wxAuiToolBar() {}
+	ibAuiToolBar() : wxAuiToolBar() {}
 
-	CAuiToolBar(wxWindow* parent,
+	ibAuiToolBar(wxWindow* parent,
 		wxWindowID id = wxID_ANY,
 		const wxPoint& pos = wxDefaultPosition,
 		const wxSize& size = wxDefaultSize,
 		long style = wxAUI_TB_DEFAULT_STYLE) : wxAuiToolBar(parent, id, pos, size, style)
 	{
-
-		SetMinSize(wxSize(0, 0));
 	}
 
 	wxAuiToolBarItem* InsertTool(int idx, int tool_id,

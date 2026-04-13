@@ -1,42 +1,42 @@
 #ifndef __ATTRIBUTE_OBJECT_ENUM_H__
 #define __ATTRIBUTE_OBJECT_ENUM_H__
 
-enum eItemMode {
-	eItemMode_Item,
-	eItemMode_Folder,
-	eItemMode_Folder_Item
+enum ibItemMode {
+	ibItemMode_Item,
+	ibItemMode_Folder,
+	ibItemMode_Folder_Item
 };
 
-enum eSelectMode {
-	eSelectMode_Items = 1,
-	eSelectMode_Folders,
-	eSelectMode_FoldersAndItems
+enum ibSelectMode {
+	ibSelectMode_Items = 1,
+	ibSelectMode_Folders,
+	ibSelectMode_FoldersAndItems
 };
 
 #pragma region enumeration
 #include "backend/compiler/enumUnit.h"
-class CValueEnumItemMode : public IEnumeration<eItemMode> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumItemMode);
+class ibValueEnumItemMode : public ibValueEnumeration<ibItemMode> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumItemMode);
 public:
-	CValueEnumItemMode() : IEnumeration() {}
-	//CValueEnumItemMode(const eItemMode &mode) : IEnumeration(mode) {}
+	ibValueEnumItemMode() : ibValueEnumeration() {}
+	//ibValueEnumItemMode(const ibItemMode &mode) : ibValueEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eItemMode_Item, wxT("Items"), _("Items"));
-		AddEnumeration(eItemMode_Folder, wxT("Folders"), _("Folders"));
-		AddEnumeration(eItemMode_Folder_Item, wxT("FoldersAndItems"), _("Folders and items"));
+		AddEnumeration(ibItemMode_Item, wxT("Items"), _("Items"));
+		AddEnumeration(ibItemMode_Folder, wxT("Folders"), _("Folders"));
+		AddEnumeration(ibItemMode_Folder_Item, wxT("FoldersAndItems"), _("Folders and items"));
 	}
 };
-class CValueEnumSelectMode : public IEnumeration<eSelectMode> {
-	wxDECLARE_DYNAMIC_CLASS(CValueEnumSelectMode);
+class ibValueEnumSelectMode : public ibValueEnumeration<ibSelectMode> {
+	wxDECLARE_DYNAMIC_CLASS(ibValueEnumSelectMode);
 public:
-	CValueEnumSelectMode() : IEnumeration() {}
-	//CValueEnumSelectMode(const eSelectMode &mode) : IEnumeration(mode) {}
+	ibValueEnumSelectMode() : ibValueEnumeration() {}
+	//ibValueEnumSelectMode(const ibSelectMode &mode) : ibValueEnumeration(mode) {}
 
 	virtual void CreateEnumeration() {
-		AddEnumeration(eSelectMode_Items, wxT("Items"), _("Items"));
-		AddEnumeration(eSelectMode_Folders, wxT("Folders"), _("Folders"));
-		AddEnumeration(eSelectMode_FoldersAndItems, wxT("FoldersAndItems"), _("Folders and items"));
+		AddEnumeration(ibSelectMode_Items, wxT("Items"), _("Items"));
+		AddEnumeration(ibSelectMode_Folders, wxT("Folders"), _("Folders"));
+		AddEnumeration(ibSelectMode_FoldersAndItems, wxT("FoldersAndItems"), _("Folders and items"));
 	}
 };
 #pragma endregion 

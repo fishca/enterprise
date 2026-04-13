@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------
 
 // The view using a standard wxTextCtrl to show its contents
-class CFormEditView : public CMetaView {
+class ibFormEditView : public ibMetaView {
 
 	void OnCopy(wxCommandEvent& WXUNUSED(event)) { m_visualNotebook->Copy(); }
 	void OnPaste(wxCommandEvent& WXUNUSED(event)) { m_visualNotebook->Paste(); }
@@ -23,15 +23,15 @@ class CFormEditView : public CMetaView {
 
 public:
 
-	CVisualEditorNotebook* GetVisualNotebook() const { return m_visualNotebook; }
+	ibVisualEditorNotebook* GetVisualNotebook() const { return m_visualNotebook; }
 
 public:
 
-	CFormEditView() : CMetaView(), m_visualNotebook(nullptr) {}
+	ibFormEditView() : ibMetaView(), m_visualNotebook(nullptr) {}
 
 	virtual wxPrintout* OnCreatePrintout() override;
 	virtual void OnCreateToolbar(wxAuiToolBar* toolbar) override;
-	virtual bool OnCreate(CMetaDocument* doc, long flags) override;
+	virtual bool OnCreate(ibMetaDocument* doc, long flags) override;
 	virtual void OnActivateView(bool activate, wxView* activeView, wxView* deactiveView) override;
 	virtual void OnUpdate(wxView* sender, wxObject* hint) override;
 	virtual void OnDraw(wxDC* dc) override;
@@ -47,29 +47,29 @@ protected:
 
 private:
 
-	struct CControlData {
+	struct ibControlData {
 
 		wxString m_name;
 		wxBitmap m_bmp;
 		wxWindowID m_id;
 	};
 
-	std::vector< CControlData> m_controlDataArray;
+	std::vector< ibControlData> m_controlDataArray;
 
-	CVisualEditorNotebook* m_visualNotebook;
+	ibVisualEditorNotebook* m_visualNotebook;
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_DYNAMIC_CLASS(CFormEditView);
+	wxDECLARE_DYNAMIC_CLASS(ibFormEditView);
 };
 
 // ----------------------------------------------------------------------------
 // ITextDocument: wxDocument and wxTextCtrl married
 // ----------------------------------------------------------------------------
 
-class CFormDocument : public IValueModuleDocument {
+class ibFormDocument : public ibValueModulibDocument {
 public:
 
-	CFormDocument() : IValueModuleDocument() {}
+	ibFormDocument() : ibValueModulibDocument() {}
 
 	virtual bool OnCreate(const wxString& path, long flags) override;
 	virtual bool OnOpenDocument(const wxString& filename) override;
@@ -78,7 +78,7 @@ public:
 	virtual bool OnCloseDocument() override;
 	virtual wxCommandProcessor* OnCreateCommandProcessor() override;
 
-	virtual CVisualEditorNotebook* GetVisualNotebook() const = 0;
+	virtual ibVisualEditorNotebook* GetVisualNotebook() const = 0;
 
 	virtual bool IsModified() const override;
 	virtual void Modify(bool mod) override;
@@ -87,62 +87,62 @@ public:
 
 protected:
 
-	wxDECLARE_NO_COPY_CLASS(CFormDocument);
-	wxDECLARE_ABSTRACT_CLASS(CFormDocument);
+	wxDECLARE_NO_COPY_CLASS(ibFormDocument);
+	wxDECLARE_ABSTRACT_CLASS(ibFormDocument);
 };
 
-class CFormEditDocument : public CFormDocument
+class ibFormEditDocument : public ibFormDocument
 {
 public:
 
-	CFormEditDocument() : CFormDocument() {}
+	ibFormEditDocument() : ibFormDocument() {}
 
-	virtual CVisualEditorNotebook* GetVisualNotebook() const override;
+	virtual ibVisualEditorNotebook* GetVisualNotebook() const override;
 
 	virtual void SetCurrentLine(int lineBreakpoint, bool setBreakpoint) override {
 
 		if (lineBreakpoint > 0) {
-			CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+			ibVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
 			if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
 				visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
 			}
 		}
 
-		CCodeEditor* const autoComplete = GetCodeEditor();
+		ibCodeEditor* const autoComplete = GetCodeEditor();
 		wxASSERT(autoComplete);
 		autoComplete->SetCurrentLine(lineBreakpoint, setBreakpoint);
 	}
 
 	virtual void SetToolTip(const wxString& resultStr) override {
-		//CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+		//ibVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
 		//if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
 		//	visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
 		//}
-		CCodeEditor* const codeEditor = GetCodeEditor();
+		ibCodeEditor* const codeEditor = GetCodeEditor();
 		wxASSERT(codeEditor);
 		codeEditor->SetToolTip(resultStr);
 
 	}
 
-	virtual void ShowAutoComplete(const CDebugAutoCompleteData& debugData) override {
-		CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+	virtual void ShowAutoComplete(const ibDebugAutoCompleteData& debugData) override {
+		ibVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
 		if (visualNotebook != nullptr && visualNotebook->GetSelection() != wxNOTEBOOK_PAGE_CODE_EDITOR) {
 			visualNotebook->SetSelection(wxNOTEBOOK_PAGE_CODE_EDITOR);
 		}
-		CCodeEditor* const codeEditor = GetCodeEditor();
+		ibCodeEditor* const codeEditor = GetCodeEditor();
 		wxASSERT(codeEditor);
 		codeEditor->ShowAutoComplete(debugData);
 	}
 
-	virtual CCodeEditor* GetCodeEditor() const {
-		CVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
+	virtual ibCodeEditor* GetCodeEditor() const {
+		ibVisualEditorNotebook* const visualNotebook = GetVisualNotebook();
 		if (visualNotebook != nullptr)
 			return visualNotebook->GetCodeEditor();
 		return nullptr;
 	};
 
-	wxDECLARE_NO_COPY_CLASS(CFormEditDocument);
-	wxDECLARE_DYNAMIC_CLASS(CFormEditDocument);
+	wxDECLARE_NO_COPY_CLASS(ibFormEditDocument);
+	wxDECLARE_DYNAMIC_CLASS(ibFormEditDocument);
 };
 
 #endif

@@ -4,7 +4,7 @@
 
 #include "win/editor/codeEditor/codeEditorParser.h"
 
-void CVisualEditorNotebook::CreateVisualEditor(CMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
+void ibVisualEditorNotebook::CreateVisualEditor(ibMetaDocument* document, wxWindow* parent, wxWindowID id, long flags)
 {
 	wxAuiNotebook::AddPage(m_visualEditor, _("Designer"), false, wxArtProvider::GetBitmap(wxART_DESIGNER_PAGE, wxART_DOC_FORM));
 	wxAuiNotebook::AddPage(m_codeEditor, _("Code"), false, wxArtProvider::GetBitmap(wxART_CODE_PAGE, wxART_DOC_FORM));
@@ -12,16 +12,16 @@ void CVisualEditorNotebook::CreateVisualEditor(CMetaDocument* document, wxWindow
 	m_codeEditor->SetReadOnly(flags == wxDOC_READONLY);
 	wxAuiNotebook::SetSelection(wxNOTEBOOK_PAGE_DESIGNER);
 
-	wxAuiNotebook::Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CVisualEditorNotebook::OnPageChanged, this);
+	wxAuiNotebook::Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &ibVisualEditorNotebook::OnPageChanged, this);
 	wxAuiNotebook::SetArtProvider(new wxAuiLunaTabArt());
 }
 
-void CVisualEditorNotebook::DestroyVisualEditor()
+void ibVisualEditorNotebook::DestroyVisualEditor()
 {
-	wxAuiNotebook::Unbind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &CVisualEditorNotebook::OnPageChanged, this);
+	wxAuiNotebook::Unbind(wxEVT_AUINOTEBOOK_PAGE_CHANGED, &ibVisualEditorNotebook::OnPageChanged, this);
 }
 
-bool CVisualEditorNotebook::Undo()
+bool ibVisualEditorNotebook::Undo()
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		m_visualEditor->Undo();
@@ -30,7 +30,7 @@ bool CVisualEditorNotebook::Undo()
 	return false;
 }
 
-bool CVisualEditorNotebook::Redo()
+bool ibVisualEditorNotebook::Redo()
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		m_visualEditor->Redo();
@@ -39,7 +39,7 @@ bool CVisualEditorNotebook::Redo()
 	return false;
 }
 
-bool CVisualEditorNotebook::CanUndo() const
+bool ibVisualEditorNotebook::CanUndo() const
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		return m_visualEditor->CanUndo();
@@ -48,7 +48,7 @@ bool CVisualEditorNotebook::CanUndo() const
 	return false;
 }
 
-bool CVisualEditorNotebook::CanRedo() const
+bool ibVisualEditorNotebook::CanRedo() const
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		return m_visualEditor->CanRedo();
@@ -57,9 +57,9 @@ bool CVisualEditorNotebook::CanRedo() const
 	return false;
 }
 
-void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
+void ibVisualEditorNotebook::ModifyEvent(ibEvent* event, const wxVariant& oldValue, const wxVariant& newValue)
 {
-	CParserModule parser; bool procFounded = false;
+	ibParserModule parser; bool procFounded = false;
 
 	const wxString& strEvent = newValue.GetString();
 
@@ -78,10 +78,10 @@ void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue
 
 	if (parser.ParseModule(m_codeEditor->GetText())) {
 		for (auto content : parser.GetAllContent()) {
-			if (content.eType == eContentType::eProcedure ||
-				content.eType == eContentType::eFunction ||
-				content.eType == eContentType::eExportProcedure ||
-				content.eType == eContentType::eExportFunction) {
+			if (content.eType == ibContentType::eProcedure ||
+				content.eType == ibContentType::eFunction ||
+				content.eType == ibContentType::eExportProcedure ||
+				content.eType == ibContentType::eExportFunction) {
 				lineStart = content.nLineStart; lineEnd = content.nLineEnd;
 				if (stringUtils::CompareString(content.strName, oldValue) && !stringUtils::CompareString(content.strName, newValue) && changeSel) {
 					int answer = wxMessageBox(_("Do you rename an existing procedure?"), _("Rename"), wxYES_NO | wxCENTRE);
@@ -145,7 +145,7 @@ void CVisualEditorNotebook::ModifyEvent(IEvent* event, const wxVariant& oldValue
 	m_visualEditor->ModifyEvent(event, oldValue, newValue);
 }
 
-void CVisualEditorNotebook::ActivateEditor()
+void ibVisualEditorNotebook::ActivateEditor()
 {
 	if (wxAuiNotebook::GetSelection() == wxNOTEBOOK_PAGE_DESIGNER)
 		m_visualEditor->ActivateEditor();
@@ -153,7 +153,7 @@ void CVisualEditorNotebook::ActivateEditor()
 		m_codeEditor->ActivateEditor();
 }
 
-void CVisualEditorNotebook::OnPageChanged(wxAuiNotebookEvent& event) {
+void ibVisualEditorNotebook::OnPageChanged(wxAuiNotebookEvent& event) {
 	m_visualEditor->Activate();
 	event.Skip();
 }

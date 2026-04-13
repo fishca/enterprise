@@ -5,10 +5,10 @@
 #include "backend/databaseLayer/databaseLayer.h"
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-class CFirebirdInterface;
+class ibInterfaceFirebird;
 #endif
 
-class BACKEND_API CFirebirdDatabaseLayer : public IDatabaseLayer
+class BACKEND_API ibDatabaseLayerFirebird : public ibDatabaseLayer
 {
 	const int16_t m_pageSize = 8192;
 
@@ -23,22 +23,22 @@ class BACKEND_API CFirebirdDatabaseLayer : public IDatabaseLayer
 
 public:
 	// ctor()
-	CFirebirdDatabaseLayer();
-	CFirebirdDatabaseLayer(const wxString& strDatabase);
-	CFirebirdDatabaseLayer(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
-	CFirebirdDatabaseLayer(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole);
+	ibDatabaseLayerFirebird();
+	ibDatabaseLayerFirebird(const wxString& strDatabase);
+	ibDatabaseLayerFirebird(const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword);
+	ibDatabaseLayerFirebird(const wxString& strServer, const wxString& strDatabase, const wxString& strUser, const wxString& strPassword, const wxString& strRole);
 
 #if defined(_LP64) || defined(__LP64__) || defined(__arch64__) || defined(_WIN64)
-	CFirebirdDatabaseLayer(unsigned int pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerFirebird(unsigned int pDatabase) { m_pDatabase = pDatabase; }
 #else 
-	CFirebirdDatabaseLayer(void* pDatabase) { m_pDatabase = pDatabase; }
+	ibDatabaseLayerFirebird(void* pDatabase) { m_pDatabase = pDatabase; }
 #endif
 
-	CFirebirdDatabaseLayer(const CFirebirdDatabaseLayer& src);
+	ibDatabaseLayerFirebird(const ibDatabaseLayerFirebird& src);
 
 	// dtor()
-	virtual ~CFirebirdDatabaseLayer();
+	virtual ~ibDatabaseLayerFirebird();
 
 	// open database
 	virtual bool Open();
@@ -53,7 +53,7 @@ public:
 	virtual bool IsOpen();
 
 	/// clone database  
-	virtual IDatabaseLayer* Clone() { return new CFirebirdDatabaseLayer(*this); }
+	virtual ibDatabaseLayer* Clone() { return new ibDatabaseLayerFirebird(*this); }
 
 	// transaction support
 	virtual void BeginTransaction();
@@ -63,8 +63,8 @@ public:
 	virtual bool IsActiveTransaction();
 
 	static int TranslateErrorCode(int nCode);
-	//static wxString TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, ISC_STATUS_ARRAY status);
-	static wxString TranslateErrorCodeToString(CFirebirdInterface* pInterface, int nCode, void* status);
+	//static wxString TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, ISC_STATUS_ARRAY status);
+	static wxString TranslateErrorCodeToString(ibInterfaceFirebird* pInterface, int nCode, void* status);
 	static bool IsAvailable();
 
 	void SetServer(const wxString& strServer) { m_strServer = strServer; }
@@ -88,17 +88,17 @@ protected:
 
 	// query database
 	virtual int DoRunQuery(const wxString& strQuery, bool bParseQuery);
-	virtual IDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
+	virtual ibDatabaseResultSet* DoRunQueryWithResults(const wxString& strQuery);
 
-	// IPreparedStatement support
-	virtual IPreparedStatement* DoPrepareStatement(const wxString& strQuery);
+	// ibPreparedStatement support
+	virtual ibPreparedStatement* DoPrepareStatement(const wxString& strQuery);
 
 private:
 
 	void InterpretErrorCodes();
 
 #if _USE_DYNAMIC_DATABASE_LAYER_LINKING == 1
-	CFirebirdInterface* m_pInterface;
+	ibInterfaceFirebird* m_pInterface;
 #endif
 
 	wxString m_strServer;

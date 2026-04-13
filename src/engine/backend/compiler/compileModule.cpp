@@ -5,8 +5,8 @@
 #pragma warning(push)
 #pragma warning(disable : 4018)
 
-CCompileModule::CCompileModule(const IValueMetaObjectModule* moduleObject, bool onlyFunction) :
-	CCompileCode(moduleObject->GetFullName(), moduleObject->GetDocPath(), onlyFunction),
+ibCompileModule::ibCompileModule(const ibValueMetaObjectModuleBase* moduleObject, bool onlyFunction) :
+	ibCompileCode(moduleObject->GetFullName(), moduleObject->GetDocPath(), onlyFunction),
 	m_moduleObject(moduleObject)
 {
 	InitializeCompileModule();
@@ -31,7 +31,7 @@ CCompileModule::CCompileModule(const IValueMetaObjectModule* moduleObject, bool 
  * true,false
  */
 
-bool CCompileModule::Compile()
+bool ibCompileModule::Compile()
 {
 	//clear functions & variables 
 	Reset();
@@ -54,9 +54,9 @@ bool CCompileModule::Compile()
 	//recursively compile modules in case of any changes
 	if (m_parent != nullptr && appData->DesignerMode()) {
 
-		std::stack<CCompileModule*> compileModule; bool callRecompile = false;
+		std::stack<ibCompileModule*> compileModule; bool callRecompile = false;
 
-		CCompileModule* parentModule = GetParent();
+		ibCompileModule* parentModule = GetParent();
 
 		while (parentModule != nullptr) {
 			if (parentModule->m_changedCode) callRecompile = true;
@@ -65,7 +65,7 @@ bool CCompileModule::Compile()
 		}
 
 		while (!compileModule.empty()) {
-			CCompileModule* compileCode = compileModule.top();
+			ibCompileModule* compileCode = compileModule.top();
 			if (!compileCode->Recompile()) return false;
 			compileModule.pop();
 		}
@@ -112,7 +112,7 @@ bool CCompileModule::Compile()
  * true,false
  */
 
-bool CCompileModule::Recompile()
+bool ibCompileModule::Recompile()
 {
 	//clear functions & variables 
 	Reset();

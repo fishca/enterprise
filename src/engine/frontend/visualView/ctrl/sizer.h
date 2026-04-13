@@ -3,30 +3,30 @@
 
 #include "control.h"
 
-class FRONTEND_API IValueSizer : public IValueControl {
-	wxDECLARE_ABSTRACT_CLASS(IValueSizer);
+class FRONTEND_API ibValueSizer : public ibValueControl {
+	wxDECLARE_ABSTRACT_CLASS(ibValueSizer);
 public:
 
-	IValueSizer() : IValueControl() {}
+	ibValueSizer() : ibValueControl() {}
 
 	virtual int GetComponentType() const { return COMPONENT_TYPE_SIZER; }
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 protected:
 	void UpdateSizer(wxSizer* sizer);
 
 protected:
-	CPropertyCategory* m_categorySizer = IPropertyObject::CreatePropertyCategory(wxT("SizerItem"), _("Sizer"));
-	CPropertySize* m_propertyMinSize = IPropertyObject::CreateProperty<CPropertySize>(m_categorySizer, wxT("MinimumSize"), _("Minimum size"), _("Sets the minimum size of the window, to indicate to the sizer layout mechanism that this is the minimum required size."), wxDefaultSize);
+	ibPropertyCategory* m_categorySizer = ibPropertyObject::CreatePropertyCategory(wxT("SizerItem"), _("Sizer"));
+	ibPropertySize* m_propertyMinSize = ibPropertyObject::CreateProperty<ibPropertySize>(m_categorySizer, wxT("MinimumSize"), _("Minimum size"), _("Sets the minimum size of the window, to indicate to the sizer layout mechanism that this is the minimum required size."), wxDefaultSize);
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-class FRONTEND_API CValueSizerItem : public IValueFrame {
-	wxDECLARE_DYNAMIC_CLASS(CValueSizerItem);
+class FRONTEND_API ibValueSizerItem : public ibValueFrame {
+	wxDECLARE_DYNAMIC_CLASS(ibValueSizerItem);
 public:
 
 	void SetProportion(int proportion) {
@@ -69,20 +69,20 @@ public:
 		m_propertyBorder->SetValue(border);
 	}
 
-	CValueSizerItem();
+	ibValueSizerItem();
 
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated) override;
+	virtual void OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost) override;
 
 	virtual int GetComponentType() const {
 		return COMPONENT_TYPE_SIZERITEM;
 	}
 
 	//get metadata
-	virtual IMetaData* GetMetaData() const override;
+	virtual ibMetaData* GetMetaData() const override;
 
-	virtual CValueForm* GetOwnerForm() const { return m_formOwner; }
-	virtual void SetOwnerForm(CValueForm* ownerForm) { m_formOwner = ownerForm; }
+	virtual ibValueForm* GetOwnerForm() const { return m_formOwner; }
+	virtual void SetOwnerForm(ibValueForm* ownerForm) { m_formOwner = ownerForm; }
 
 	// allow getting value in control
 	virtual bool HasValueInControl() const { return false; }
@@ -93,142 +93,140 @@ public:
 	virtual bool CanDeleteControl() const { return true; }
 
 	//runtime 
-	virtual CProcUnit* GetFormProcUnit() const;
+	virtual ibProcUnit* GetFormProcUnit() const;
 
 	/**
 	* Get type form
 	*/
-	virtual form_identifier_t GetTypeForm() const;
+	virtual ibFormID GetTypeForm() const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
-
-	friend class CVisualEditorDatabase;
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
 
 	//frame owner 
-	CValueForm* m_formOwner;
+	ibValueForm* m_formOwner;
 
-	CPropertyCategory* m_categorySizerItem = IPropertyObject::CreatePropertyCategory(wxT("SizerItem"), _("Sizer item"));
-	CPropertyUInteger* m_propertyProportion = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categorySizerItem, wxT("Proportion"), _("Proportion"), 0);
-	CPropertyCategory* m_categorySizerBorder = IPropertyObject::CreatePropertyCategory(wxT("SizerItemBorder"), _("Border"));
-	CPropertyUInteger* m_propertyBorder = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categorySizerBorder, wxT("BorderSize"), _("Size"), 5);
-	CPropertyBoolean* m_propertyFlagBorderLeft = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizerBorder, wxT("BorderLeft"), _("Left"), true);
-	CPropertyBoolean* m_propertyFlagBorderRight = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizerBorder, wxT("BorderRight"), _("Right"), true);
-	CPropertyBoolean* m_propertyFlagBorderTop = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizerBorder, wxT("BorderTop"), _("Top"), true);
-	CPropertyBoolean* m_propertyFlagBorderBottom = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizerBorder, wxT("BorderBottom"), _("Bottom"), true);
-	CPropertyEnum<CValueEnumStretch>* m_propertyFlagState = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumStretch>>(m_categorySizerItem, wxT("Stretch"), _("Stretch"), wxStretch::wxSHRINK);
+	ibPropertyCategory* m_categorySizerItem = ibPropertyObject::CreatePropertyCategory(wxT("SizerItem"), _("Sizer item"));
+	ibPropertyUInteger* m_propertyProportion = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categorySizerItem, wxT("Proportion"), _("Proportion"), 0);
+	ibPropertyCategory* m_categorySizerBorder = ibPropertyObject::CreatePropertyCategory(wxT("SizerItemBorder"), _("Border"));
+	ibPropertyUInteger* m_propertyBorder = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categorySizerBorder, wxT("BorderSize"), _("Size"), 5);
+	ibPropertyBoolean* m_propertyFlagBorderLeft = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizerBorder, wxT("BorderLeft"), _("Left"), true);
+	ibPropertyBoolean* m_propertyFlagBorderRight = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizerBorder, wxT("BorderRight"), _("Right"), true);
+	ibPropertyBoolean* m_propertyFlagBorderTop = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizerBorder, wxT("BorderTop"), _("Top"), true);
+	ibPropertyBoolean* m_propertyFlagBorderBottom = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizerBorder, wxT("BorderBottom"), _("Bottom"), true);
+	ibPropertyEnum<ibValueEnumStretch>* m_propertyFlagState = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumStretch>>(m_categorySizerItem, wxT("Stretch"), _("Stretch"), wxStretch::wxSHRINK);
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-class CValueBoxSizer : public IValueSizer {
-	wxDECLARE_DYNAMIC_CLASS(CValueBoxSizer);
+class ibValueBoxSizer : public ibValueSizer {
+	wxDECLARE_DYNAMIC_CLASS(ibValueBoxSizer);
 public:
 
-	CValueBoxSizer();
+	ibValueBoxSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
+	ibPropertyEnum<ibValueEnumOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxVERTICAL);
 };
 
 #include <wx/wrapsizer.h>
 
-class CValueWrapSizer : public IValueSizer {
-	wxDECLARE_DYNAMIC_CLASS(CValueWrapSizer);
+class ibValueWrapSizer : public ibValueSizer {
+	wxDECLARE_DYNAMIC_CLASS(ibValueWrapSizer);
 public:
 
-	CValueWrapSizer();
+	ibValueWrapSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxHORIZONTAL);
+	ibPropertyEnum<ibValueEnumOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxHORIZONTAL);
 };
 
-class CValueStaticBoxSizer : public IValueSizer {
-	wxDECLARE_DYNAMIC_CLASS(CValueStaticBoxSizer);
+class ibValueStaticBoxSizer : public ibValueSizer {
+	wxDECLARE_DYNAMIC_CLASS(ibValueStaticBoxSizer);
 public:
 
-	CValueStaticBoxSizer();
+	ibValueStaticBoxSizer();
 
 	//get title
 	virtual wxString GetControlTitle() const { return m_propertyTitle->GetValueAsTranslateString(); }
 
 	//control factory
-	virtual wxObject* Create(wxWindow* parent, IVisualHost* visualHost) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* parent, ibVisualHost* visualHost) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
-	CPropertyEnum<CValueEnumOrient>* m_propertyOrient = IPropertyObject::CreateProperty<CPropertyEnum<CValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxHORIZONTAL);
-	CPropertyTString* m_propertyTitle = IPropertyObject::CreateProperty<CPropertyTString>(m_categorySizer, wxT("Title"), _("Title"), wxT(""));
-	CPropertyFont* m_propertyFont = IPropertyObject::CreateProperty<CPropertyFont>(m_categorySizer, wxT("Font"), _("Font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
-	CPropertyColour* m_propertyFG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("ForegroundColour"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
-	CPropertyColour* m_propertyBG = IPropertyObject::CreateProperty<CPropertyColour>(m_categorySizer, wxT("BackgroundColour"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
-	CPropertyString* m_propertyTooltip = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("Tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxT(""));
-	CPropertyBoolean* m_propertyContextMenu = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("ContextMenu"), _("Context menu"), _("Generates event handler for displaying of menu assigned to this widgets as a context menu."));
-	CPropertyString* m_propertyContextHelp = IPropertyObject::CreateProperty<CPropertyString>(m_categorySizer, wxT("ContextHelp"), _("Context help"), _("Attach context-sensitive help to the window. Note: The Project's &quot;help_provider&quot; property must be set for context-sensitive help to work."), wxEmptyString);
-	CPropertyBoolean* m_propertyEnabled = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("Enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
-	CPropertyBoolean* m_propertyVisible = IPropertyObject::CreateProperty<CPropertyBoolean>(m_categorySizer, wxT("Visible"), _("Visible"), _("Indicates that a pane caption should be visible."), true);
+	ibPropertyEnum<ibValueEnumOrient>* m_propertyOrient = ibPropertyObject::CreateProperty<ibPropertyEnum<ibValueEnumOrient>>(m_categorySizer, wxT("Orient"), _("Orient"), wxHORIZONTAL);
+	ibPropertyTString* m_propertyTitle = ibPropertyObject::CreateProperty<ibPropertyTString>(m_categorySizer, wxT("Title"), _("Title"), wxT(""));
+	ibPropertyFont* m_propertyFont = ibPropertyObject::CreateProperty<ibPropertyFont>(m_categorySizer, wxT("Font"), _("Font"), _("Sets the font for this window. This should not be use for a parent window if you don't want its font to be inherited by its children"));
+	ibPropertyColour* m_propertyFG = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categorySizer, wxT("ForegroundColour"), _("Foreground"), _("Sets the foreground colour of the window."), wxDefaultStypeFGColour);
+	ibPropertyColour* m_propertyBG = ibPropertyObject::CreateProperty<ibPropertyColour>(m_categorySizer, wxT("BackgroundColour"), _("Background"), _("Sets the background colour of the window."), wxDefaultStypeBGColour);
+	ibPropertyString* m_propertyTooltip = ibPropertyObject::CreateProperty<ibPropertyString>(m_categorySizer, wxT("Tooltip"), _("Tooltip"), _("Attach a tooltip to the window."), wxT(""));
+	ibPropertyBoolean* m_propertyContextMenu = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizer, wxT("ContextMenu"), _("Context menu"), _("Generates event handler for displaying of menu assigned to this widgets as a context menu."));
+	ibPropertyString* m_propertyContextHelp = ibPropertyObject::CreateProperty<ibPropertyString>(m_categorySizer, wxT("ContextHelp"), _("Context help"), _("Attach context-sensitive help to the window. Note: The Project's &quot;help_provider&quot; property must be set for context-sensitive help to work."), wxEmptyString);
+	ibPropertyBoolean* m_propertyEnabled = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizer, wxT("Enabled"), _("Enabled"), _("Enable or disable the window for user input.Note that when a parent window is disabled, all of its children are disabled as well and they are reenabled again when the parent is."), true);
+	ibPropertyBoolean* m_propertyVisible = ibPropertyObject::CreateProperty<ibPropertyBoolean>(m_categorySizer, wxT("Visible"), _("Visible"), _("Indicates that a pane caption should be visible."), true);
 };
 
-class CValueGridSizer : public IValueSizer {
-	wxDECLARE_DYNAMIC_CLASS(CValueGridSizer);
+class ibValueGridSizer : public ibValueSizer {
+	wxDECLARE_DYNAMIC_CLASS(ibValueGridSizer);
 public:
 
-	CValueGridSizer();
+	ibValueGridSizer();
 
 	//control factory
-	virtual wxObject* Create(wxWindow* /*parent*/, IVisualHost* /*visualHost*/) override;
-	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated) override;
-	virtual void Update(wxObject* wxobject, IVisualHost* visualHost) override;
-	virtual void Cleanup(wxObject* obj, IVisualHost* visualHost) override;
+	virtual wxObject* Create(wxWindow* /*parent*/, ibVisualHost* /*visualHost*/) override;
+	virtual void OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated) override;
+	virtual void Update(wxObject* wxobject, ibVisualHost* visualHost) override;
+	virtual void Cleanup(wxObject* obj, ibVisualHost* visualHost) override;
 
 	//support icons
 	virtual wxIcon GetIcon() const;
 	static wxIcon GetIconGroup();
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer = CMemoryWriter());
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer = ibWriterMemory());
 
 private:
-	CPropertyUInteger* m_propertyRows = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categorySizer, wxT("Rows"), _("Rows"), 0);
-	CPropertyUInteger* m_propertyCols = IPropertyObject::CreateProperty<CPropertyUInteger>(m_categorySizer, wxT("Cols"), _("Cols"), 2);
+	ibPropertyUInteger* m_propertyRows = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categorySizer, wxT("Rows"), _("Rows"), 0);
+	ibPropertyUInteger* m_propertyCols = ibPropertyObject::CreateProperty<ibPropertyUInteger>(m_categorySizer, wxT("Cols"), _("Cols"), 2);
 };
 
 #endif 

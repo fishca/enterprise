@@ -17,7 +17,7 @@
 #include <wx/dialog.h>
 #include <wx/checkbox.h>
 
-class CDialogEnterpriseOption : public wxDialog {
+class ibDialogEnterpriseOption : public wxDialog {
 	wxAuiNotebook* m_mainNotebook;
 	wxPanel* m_generalPanel;
 	wxPanel* m_systemPanel;
@@ -25,7 +25,7 @@ class CDialogEnterpriseOption : public wxDialog {
 private:
 	void FillOption();
 public:
-	CDialogEnterpriseOption(wxWindow* parent, wxWindowID id = wxID_ANY,
+	ibDialogEnterpriseOption(wxWindow* parent, wxWindowID id = wxID_ANY,
 		const wxString& title = _("Options"), 
 		const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(400, 300), long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 protected:

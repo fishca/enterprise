@@ -5,14 +5,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static std::vector<CBackendPictureEntry> s_arrayPicture;
+static std::vector<ibBackendPictureEntry> s_arrayPicture;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const char* const* data)
+bool RegisterBackendPicture(const wxString name, const ibPictureID& id, const char* const* data)
 {
-	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::RegisterPicture(name, id, wxImage(data));
+	if (!ibBackendPicture::IsRegisterPicture(id)) {
+		ibBackendPicture::RegisterPicture(name, id, wxImage(data));
 		return true;
 	}
 
@@ -20,10 +20,10 @@ bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id,
 	return false;
 }
 
-bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxString& base64)
+bool RegisterBackendPicture(const wxString name, const ibPictureID& id, const wxString& base64)
 {
-	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::RegisterPicture(name, id, CBackendPicture::GetImageFromBase64(base64));
+	if (!ibBackendPicture::IsRegisterPicture(id)) {
+		ibBackendPicture::RegisterPicture(name, id, ibBackendPicture::GetImageFromBase64(base64));
 		return true;
 	}
 
@@ -31,10 +31,10 @@ bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id,
 	return false;
 }
 
-bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
+bool RegisterBackendPicture(const wxString name, const ibPictureID& id, const wxBitmap& bitmap)
 {
-	if (!CBackendPicture::IsRegisterPicture(id)) {
-		CBackendPicture::RegisterPicture(name, id, bitmap);
+	if (!ibBackendPicture::IsRegisterPicture(id)) {
+		ibBackendPicture::RegisterPicture(name, id, bitmap);
 		return true;
 	}
 
@@ -44,7 +44,7 @@ bool RegisterBackendPicture(const wxString name, const picture_identifier_t& id,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CBackendPicture::LoadFromFile(const wxString& strFileName, CExternalPictureDescription& pictureDesc)
+bool ibBackendPicture::LoadFromFile(const wxString& strFileName, ibExternalPictureDescription& pictureDesc)
 {
 	wxFileName filename = strFileName;
 
@@ -75,17 +75,17 @@ bool CBackendPicture::LoadFromFile(const wxString& strFileName, CExternalPicture
 	return false;
 }
 
-bool CBackendPicture::LoadFromFile(const wxString& strFileName, CPictureDescription& pictureDesc)
+bool ibBackendPicture::LoadFromFile(const wxString& strFileName, ibPictureDescription& pictureDesc)
 {
-	if (CBackendPicture::LoadFromFile(strFileName, pictureDesc.m_img_data)) {
-		pictureDesc.m_type = EPictureType::eFromFile;
+	if (ibBackendPicture::LoadFromFile(strFileName, pictureDesc.m_img_data)) {
+		pictureDesc.m_type = ibPictureType::eFromFile;
 		return true;
 	}
 
 	return false;
 }
 
-wxBitmap CBackendPicture::CreatePicture(const CExternalPictureDescription& pictureDesc, const wxSize& size)
+wxBitmap ibBackendPicture::CreatePicture(const ibExternalPictureDescription& pictureDesc, const wxSize& size)
 {
 	if (!pictureDesc.m_img_buffer.empty()) {
 		wxMemoryInputStream inputStream(
@@ -104,35 +104,35 @@ wxBitmap CBackendPicture::CreatePicture(const CExternalPictureDescription& pictu
 #include "backend/metadataConfiguration.h"
 #include "backend/metaCollection/metaPictureObject.h"
 
-wxBitmap CBackendPicture::CreatePicture(const CPictureDescription& pictureDesc, const IMetaData* metaData, const wxSize& size)
+wxBitmap ibBackendPicture::CreatePicture(const ibPictureDescription& pictureDesc, const ibMetaData* metaData, const wxSize& size)
 {
-	if (pictureDesc.m_type == EPictureType::eFromBackend) {
-		return CBackendPicture::GetPicture(pictureDesc.m_class_identifier);
+	if (pictureDesc.m_type == ibPictureType::eFromBackend) {
+		return ibBackendPicture::GetPicture(pictureDesc.m_class_identifier);
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromConfiguration) {
+	else if (pictureDesc.m_type == ibPictureType::eFromConfiguration) {
 		if (metaData != nullptr && pictureDesc.m_meta_guid.isValid()) {
-			IMetaData* metaDataOwner = nullptr;
+			ibMetaData* metaDataOwner = nullptr;
 			if (metaData != nullptr && metaData->GetOwner(metaDataOwner) && metaDataOwner != nullptr) {
-				const CValueMetaObjectPicture* picture =
-					metaDataOwner->FindAnyObjectByFilter<CValueMetaObjectPicture>(pictureDesc.m_meta_guid);
+				const ibValueMetaObjectPicture* picture =
+					metaDataOwner->FindAnyObjectByFilter<ibValueMetaObjectPicture>(pictureDesc.m_meta_guid);
 				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
 			}
 			else if (metaData != nullptr) {
-				const CValueMetaObjectPicture* picture =
-					metaData->FindAnyObjectByFilter<CValueMetaObjectPicture>(pictureDesc.m_meta_guid);
+				const ibValueMetaObjectPicture* picture =
+					metaData->FindAnyObjectByFilter<ibValueMetaObjectPicture>(pictureDesc.m_meta_guid);
 				return picture != nullptr && picture->IsAllowed() ? picture->GetValueAsBitmap() : wxNullBitmap;
 			}
 		}
 	}
-	else if (pictureDesc.m_type == EPictureType::eFromFile) {
-		return CBackendPicture::CreatePicture(pictureDesc.m_img_data, size);
+	else if (pictureDesc.m_type == ibPictureType::eFromFile) {
+		return ibBackendPicture::CreatePicture(pictureDesc.m_img_data, size);
 	}
 
 	return wxNullBitmap;
 }
 
 #pragma region __picture_factory_h__
-bool CBackendPicture::IsRegisterPicture(const picture_identifier_t& id)
+bool ibBackendPicture::IsRegisterPicture(const ibPictureID& id)
 {
 	auto iterator = std::find_if(s_arrayPicture.begin(), s_arrayPicture.end(),
 		[id](const auto entry) { return entry.m_id == id; });
@@ -140,23 +140,23 @@ bool CBackendPicture::IsRegisterPicture(const picture_identifier_t& id)
 	if (iterator != s_arrayPicture.end())
 		return true;
 
-	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
-	if (so != nullptr && (so->GetObjectTypeCtor() == eCtorObjectType_object_control || so->GetObjectTypeCtor() == eCtorObjectType_object_metadata))
+	const ibCtorAbstractType* so = ibValue::GetAvailableCtor(id);
+	if (so != nullptr && (so->GetObjectTypeCtor() == ibCtorObjectType_object_control || so->GetObjectTypeCtor() == ibCtorObjectType_object_metadata))
 		return true;
 
 	return false;
 }
 
-void CBackendPicture::RegisterPicture(const wxString name, const picture_identifier_t& id, const wxBitmap& bitmap)
+void ibBackendPicture::RegisterPicture(const wxString name, const ibPictureID& id, const wxBitmap& bitmap)
 {
-	CBackendPictureEntry entry;
+	ibBackendPictureEntry entry;
 	entry.m_name = name;
 	entry.m_id = id;
 	entry.m_data = bitmap;
 	s_arrayPicture.push_back(entry);
 }
 
-wxBitmap CBackendPicture::GetPicture(const picture_identifier_t& id)
+wxBitmap ibBackendPicture::GetPicture(const ibPictureID& id)
 {
 	auto iterator = std::find_if(s_arrayPicture.begin(), s_arrayPicture.end(),
 		[id](const auto entry) { return entry.m_id == id; });
@@ -164,14 +164,14 @@ wxBitmap CBackendPicture::GetPicture(const picture_identifier_t& id)
 	if (iterator != s_arrayPicture.end())
 		return iterator->m_data;
 
-	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
+	const ibCtorAbstractType* so = ibValue::GetAvailableCtor(id);
 	if (so != nullptr)
 		return so->GetClassIcon();
 	
 	return wxNullBitmap;
 }
 
-wxIcon CBackendPicture::GetPictureAsIcon(const picture_identifier_t& id)
+wxIcon ibBackendPicture::GetPictureAsIcon(const ibPictureID& id)
 {
 	auto iterator = std::find_if(s_arrayPicture.begin(), s_arrayPicture.end(),
 		[id](const auto entry) { return entry.m_id == id; });
@@ -182,21 +182,21 @@ wxIcon CBackendPicture::GetPictureAsIcon(const picture_identifier_t& id)
 		return icon;
 	}
 
-	const IAbstractTypeCtor* so = CValue::GetAvailableCtor(id);
+	const ibCtorAbstractType* so = ibValue::GetAvailableCtor(id);
 	if (so != nullptr)
 		return so->GetClassIcon();
 	
 	return wxNullIcon;
 }
 
-std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
+std::vector<ibBackendPictureEntry> ibBackendPicture::GetArrayPicture()
 {
-	std::vector<CBackendPictureEntry> arrayPicture = { s_arrayPicture };
+	std::vector<ibBackendPictureEntry> arrayPicture = { s_arrayPicture };
 
-	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_metadata)) {
+	for (auto so : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_metadata)) {
 		const wxIcon backend_icon = so->GetClassIcon();
 		if (backend_icon.IsOk()) {
-			CBackendPictureEntry entry;
+			ibBackendPictureEntry entry;
 			entry.m_name = so->GetClassName();
 			entry.m_id = so->GetClassType();
 			entry.m_data = backend_icon;
@@ -204,10 +204,10 @@ std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
 		}
 	}
 
-	for (auto so : CValue::GetListCtorsByType(eCtorObjectType::eCtorObjectType_object_control)) {
+	for (auto so : ibValue::GetListCtorsByType(ibCtorObjectType::ibCtorObjectType_object_control)) {
 		const wxIcon backend_icon = so->GetClassIcon();
 		if (backend_icon.IsOk()) {
-			CBackendPictureEntry entry;
+			ibBackendPictureEntry entry;
 			entry.m_name = so->GetClassName();
 			entry.m_id = so->GetClassType();
 			entry.m_data = backend_icon;
@@ -219,7 +219,7 @@ std::vector<CBackendPictureEntry> CBackendPicture::GetArrayPicture()
 }
 #pragma endregion
 #pragma region __picture_conv_h__
-wxString CBackendPicture::CreateBase64Image(const wxImage& image) {
+wxString ibBackendPicture::CreateBase64Image(const wxImage& image) {
 	wxMemoryOutputStream outputStream;
 	if (image.SaveFile(outputStream, wxBitmapType::wxBITMAP_TYPE_PNG)) {
 		const wxStreamBuffer* buffer =
@@ -229,7 +229,7 @@ wxString CBackendPicture::CreateBase64Image(const wxImage& image) {
 	return wxEmptyString;
 }
 
-wxImage CBackendPicture::GetImageFromBase64(const wxString& src, const wxSize& size) {
+wxImage ibBackendPicture::GetImageFromBase64(const wxString& src, const wxSize& size) {
 	const wxMemoryBuffer& buffer = wxBase64Decode(src);
 	const wxImage& image(wxMemoryInputStream(
 		buffer.GetData(), buffer.GetDataLen()));
@@ -237,12 +237,12 @@ wxImage CBackendPicture::GetImageFromBase64(const wxString& src, const wxSize& s
 		size.x, size.y, wxIMAGE_QUALITY_HIGH) : image;
 }
 
-wxBitmap CBackendPicture::GetBitmapFromBase64(const wxString& src, const wxSize& size)
+wxBitmap ibBackendPicture::GetBitmapFromBase64(const wxString& src, const wxSize& size)
 {
 	return GetImageFromBase64(src, size);
 }
 
-wxIcon CBackendPicture::GetIconFromBase64(const wxString& src, const wxSize& size)
+wxIcon ibBackendPicture::GetIconFromBase64(const wxString& src, const wxSize& size)
 {
 	wxIcon icon;
 	icon.CopyFromBitmap(GetBitmapFromBase64(src, size));

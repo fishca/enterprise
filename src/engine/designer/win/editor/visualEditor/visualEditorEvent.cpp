@@ -7,84 +7,78 @@
 
 #include "backend/metaCollection/metaFormObject.h"
 
-void CVisualEditorNotebook::CVisualEditor::Execute(CVisualEditorCmd* cmd)
-{
-	if (m_cmdProc != nullptr) m_cmdProc->Execute(cmd);
-	NotifyEditorSaved();
-}
-
 //////////////////////////////////////////////////////////////////////////////////////
 
-void CVisualEditorNotebook::CVisualEditor::NotifyEditorLoaded()
+void ibVisualEditorNotebook::ibVisualEditor::NotifyEditorLoaded()
 {
 	m_objectTree->OnEditorLoaded();
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyEditorSaved()
+void ibVisualEditorNotebook::ibVisualEditor::NotifyEditorSaved()
 {
-	IValueMetaObjectForm* creator = m_document->ConvertMetaObjectToType<IValueMetaObjectForm>();
+	ibValueMetaObjectFormBase* creator = m_document->ConvertMetaObjectToType<ibValueMetaObjectFormBase>();
 	wxASSERT(creator);
 	// Create a std::string and copy your document data in to the string    
 	if (creator != nullptr) creator->SaveFormData(m_valueForm);	
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyEditorRefresh()
+void ibVisualEditorNotebook::ibVisualEditor::NotifyEditorRefresh()
 {
 	m_objectTree->OnEditorRefresh();
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectCreated(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyObjectCreated(ibValueFrame* obj)
 {
 	m_objectTree->OnObjectCreated(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectSelected(IValueFrame* obj, bool force)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyObjectSelected(ibValueFrame* obj, bool force)
 {
 	m_objectTree->OnObjectSelected(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectExpanded(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyObjectExpanded(ibValueFrame* obj)
 {
 	m_objectTree->OnObjectExpanded(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyObjectRemoved(IValueFrame* obj)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyObjectRemoved(ibValueFrame* obj)
 {
 	m_objectTree->OnObjectRemoved(obj);
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyPropertyModified(IProperty* prop)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyPropertyModified(ibProperty* prop)
 {
 	m_objectTree->OnPropertyModified(prop);
 }
 
-void CVisualEditorNotebook::CVisualEditor::NotifyEventModified(IEvent* event)
+void ibVisualEditorNotebook::ibVisualEditor::NotifyEventModified(ibEvent* event)
 {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-wxObject* CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::Create(IValueFrame* control, wxWindow* wxparent)
+wxObject* ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::Create(ibValueFrame* control, wxWindow* wxparent)
 {
 	return control->Create(wxparent, this);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnCreated(IValueFrame* control, wxObject* obj, wxWindow* wndParent, bool firstÑreated)
+void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnCreated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent, bool firstÑreated)
 {
 	control->OnCreated(obj, wndParent, this, firstÑreated);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::Update(IValueFrame* control, wxObject* obj)
+void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::Update(ibValueFrame* control, wxObject* obj)
 {
 	control->Update(obj, this);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::OnUpdated(IValueFrame* control, wxObject* obj, wxWindow* wndParent)
+void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::OnUpdated(ibValueFrame* control, wxObject* obj, wxWindow* wndParent)
 {
 	control->OnUpdated(obj, wndParent, this);
 }
 
-void CVisualEditorNotebook::CVisualEditor::CVisualEditorHost::Cleanup(IValueFrame* control, wxObject* obj)
+void ibVisualEditorNotebook::ibVisualEditor::ibVisualEditorHost::Cleanup(ibValueFrame* control, wxObject* obj)
 {
 	control->Cleanup(obj, this);
 }

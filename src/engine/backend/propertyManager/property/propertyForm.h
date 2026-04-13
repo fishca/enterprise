@@ -2,10 +2,9 @@
 #define __PROPERTY_FORM_H__
 
 #include "backend/propertyManager/propertyObject.h"
-#include "backend/propertyManager/property/advprop/advpropHyperLink.h"
 
 //base property for "form"
-class BACKEND_API CPropertyForm : public IProperty {
+class BACKEND_API ibPropertyForm : public ibProperty {
 	wxVariantData* CreateVariantData();
 public:
 
@@ -14,37 +13,43 @@ public:
 	void SetValue(const wxString& val);
 	void SetValue(const wxMemoryBuffer& val);
 
-	CPropertyForm(CPropertyCategory* cat, const wxString& name)
-		: IProperty(cat, name, CreateVariantData())
+	ibPropertyForm(ibPropertyCategory* cat, const wxString& name)
+		: ibProperty(cat, name, CreateVariantData())
 	{
 	}
 
-	CPropertyForm(CPropertyCategory* cat, const wxString& name, const wxString& label)
-		: IProperty(cat, name, label, CreateVariantData())
+	ibPropertyForm(ibPropertyCategory* cat, const wxString& name, const wxString& label)
+		: ibProperty(cat, name, label, CreateVariantData())
 	{
 	}
 
-	CPropertyForm(CPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
-		: IProperty(cat, name, label, helpString, CreateVariantData())
+	ibPropertyForm(ibPropertyCategory* cat, const wxString& name, const wxString& label, const wxString& helpString)
+		: ibProperty(cat, name, label, helpString, CreateVariantData())
 	{
 	}
 
 	//get property for grid 
-	virtual wxPGProperty* GetPGProperty() const {
-		return new wxPGHyperLinkProperty(m_owner, m_propLabel, m_propName, m_propValue);
+	virtual wxObject* GetPGProperty() const {
+		if (ms_propertyForm != nullptr)
+			return ms_propertyForm(m_owner, m_propLabel, m_propName, m_propValue);
+		return nullptr;
 	}
 
 	// set/get property data
-	virtual bool SetDataValue(const CValue& varPropVal);
-	virtual bool GetDataValue(CValue& pvarPropVal) const;
+	virtual bool SetDataValue(const ibValue& varPropVal);
+	virtual bool GetDataValue(ibValue& pvarPropVal) const;
 
 	//load & save object in control 
-	virtual bool LoadData(CMemoryReader& reader);
-	virtual bool SaveData(CMemoryWriter& writer);
+	virtual bool LoadData(ibReaderMemory& reader);
+	virtual bool SaveData(ibWriterMemory& writer);
 
 	//copy & paste object in control 
-	virtual bool PasteData(CMemoryReader& reader); 
-	virtual bool CopyData(CMemoryWriter& writer); 
+	virtual bool PasteData(ibReaderMemory& reader);
+	virtual bool CopyData(ibWriterMemory& writer);
+
+public:
+
+	static wxObject* (*ms_propertyForm)(ibPropertyObject*, const wxString&, const wxString&, const wxVariant&);
 };
 
 #endif

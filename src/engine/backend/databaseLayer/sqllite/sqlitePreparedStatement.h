@@ -19,18 +19,18 @@
 
 WX_DEFINE_ARRAY_PTR(sqlite3_stmt*, StatementVector);
 
-class IDatabaseResultSet;
+class ibDatabaseResultSet;
 
-class CSqlitePreparedStatement : public IPreparedStatement
+class ibPreparedStatementSQLite : public ibPreparedStatement
 {
 public:
   // ctor
-  CSqlitePreparedStatement(sqlite3* pDatabase);
-  CSqlitePreparedStatement(sqlite3* pDatabase, sqlite3_stmt* pStatement);
-  CSqlitePreparedStatement(sqlite3* pDatabase, StatementVector statements);
+  ibPreparedStatementSQLite(sqlite3* pDatabase);
+  ibPreparedStatementSQLite(sqlite3* pDatabase, sqlite3_stmt* pStatement);
+  ibPreparedStatementSQLite(sqlite3* pDatabase, StatementVector statements);
 
   // dtor
-  virtual ~CSqlitePreparedStatement();
+  virtual ~ibPreparedStatementSQLite();
 
   virtual void Close();
   
@@ -39,7 +39,7 @@ public:
   // get field
   virtual void SetParamInt(int nPosition, int nValue);
   virtual void SetParamDouble(int nPosition, double dblValue);
-  virtual void SetParamNumber(int nPosition, const number_t& dblValue);
+  virtual void SetParamNumber(int nPosition, const ibNumber& dblValue);
   virtual void SetParamString(int nPosition, const wxString& strValue);
   virtual void SetParamNull(int nPosition);
   virtual void SetParamBlob(int nPosition, const void* pData, long nDataLength);
@@ -48,7 +48,7 @@ public:
   virtual int GetParameterCount();
 
   virtual int RunQuery();
-  virtual IDatabaseResultSet* RunQueryWithResults();
+  virtual ibDatabaseResultSet* RunQueryWithResults();
 
   sqlite3_stmt* GetLastStatement() { return (m_Statements.size() > 0) ? m_Statements[m_Statements.size()-1] : nullptr; }
 

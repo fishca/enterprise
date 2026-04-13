@@ -5,47 +5,47 @@
 //*                           IMPLEMENT_DYNAMIC_CLASS                               *
 //***********************************************************************************
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTableBoxColumn, IValueControl);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTableBoxColumn, ibValueControl);
 
 //****************************************************************************
 #include "backend/metaData.h"
 #include "backend/objCtor.h"
 
-bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
+bool ibValueModelTableBoxColumn::GetChoiceForm(ibPropertyList* property)
 {
-	const IMetaData* metaData = GetMetaData();
+	const ibMetaData* metaData = GetMetaData();
 	if (metaData != nullptr) {
-		IValueMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
+		ibValueMetaObjectRecordDataRef* metaObjectRefValue = nullptr;
 		if (!m_propertySource->IsEmptyProperty()) {
 
-			IValueMetaObjectGenericData* metaObjectValue =
+			ibValueMetaObjectGenericData* metaObjectValue =
 				m_formOwner->GetMetaObject();
 
 			if (metaObjectValue != nullptr) {
-				IValueMetaObject* metaobject =
+				ibValueMetaObject* metaobject =
 					metaObjectValue->FindAnyObjectByFilter(m_propertySource->GetValueAsSource());
 
-				IValueMetaObjectAttribute* attribute = wxDynamicCast(
-					metaobject, IValueMetaObjectAttribute
+				ibValueMetaObjectAttributeBase* attribute = wxDynamicCast(
+					metaobject, ibValueMetaObjectAttributeBase
 				);
 				if (attribute != nullptr) {
 
-					const IMetaValueTypeCtor* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
+					const ibCtorMetaValueType* so = metaData->GetTypeCtor(attribute->GetFirstClsid());
 					if (so != nullptr) {
-						metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
+						metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), ibValueMetaObjectRecordDataRef);
 					}
 				}
 				else
 				{
 					metaObjectRefValue = wxDynamicCast(
-						metaobject, IValueMetaObjectRecordDataRef);
+						metaobject, ibValueMetaObjectRecordDataRef);
 				}
 			}
 		}
 		else {
-			const IMetaValueTypeCtor* so = metaData->GetTypeCtor(ITypeControlFactory::GetFirstClsid());
+			const ibCtorMetaValueType* so = metaData->GetTypeCtor(ibTypeControlFactory::GetFirstClsid());
 			if (so != nullptr) {
-				metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), IValueMetaObjectRecordDataRef);
+				metaObjectRefValue = wxDynamicCast(so->GetMetaObject(), ibValueMetaObjectRecordDataRef);
 			}
 		}
 
@@ -65,27 +65,27 @@ bool CValueTableBoxColumn::GetChoiceForm(CPropertyList* property)
 }
 
 //***********************************************************************************
-//*                            CValueTableBoxColumn                                 *
+//*                            ibValueModelTableBoxColumn                                 *
 //***********************************************************************************
 
-CValueTableBoxColumn::CValueTableBoxColumn() :
-	IValueControl(), ITypeControlFactory(), m_model_id(wxNOT_FOUND)
+ibValueModelTableBoxColumn::ibValueModelTableBoxColumn() :
+	ibValueControl(), ibTypeControlFactory(), m_model_id(wxNOT_FOUND)
 {
 }
 
-IMetaData* CValueTableBoxColumn::GetMetaData() const
+ibMetaData* ibValueModelTableBoxColumn::GetMetaData() const
 {
 	return m_formOwner ?
 		m_formOwner->GetMetaData() : nullptr;
 }
 
-wxString CValueTableBoxColumn::GetControlTitle() const
+wxString ibValueModelTableBoxColumn::GetControlTitle() const
 {
 	if (!m_propertyTitle->IsEmptyProperty()) {
 		return m_propertyTitle->GetValueAsTranslateString();
 	}
 	else if (!m_propertySource->IsEmptyProperty()) {
-		const IValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
+		const ibValueMetaObject* metaObject = m_propertySource->GetSourceAttributeObject();
 		wxASSERT(metaObject);
 		return metaObject->GetSynonym();
 	}
@@ -93,20 +93,20 @@ wxString CValueTableBoxColumn::GetControlTitle() const
 	return m_propertyName->GetValueAsString();
 }
 
-wxObject* CValueTableBoxColumn::Create(wxWindow* wxparent, IVisualHost* visualHost)
+wxObject* ibValueModelTableBoxColumn::Create(wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	CDataViewColumnObject* dataViewColumn = new CDataViewColumnObject(this, wxT(""),
+	ibDataViewColumnObject* dataViewColumn = new ibDataViewColumnObject(this, wxT(""),
 		wxNOT_FOUND, wxDVC_DEFAULT_WIDTH, wxALIGN_CENTER, wxDATAVIEW_COL_REORDERABLE);
 
 	dataViewColumn->SetControl(this);
 	return dataViewColumn;
 }
 
-void CValueTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost, bool first—reated)
+void ibValueModelTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost, bool first—reated)
 {
-	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(wxparent);
+	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(wxobject);
+	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->AppendColumn(dataViewColumn);
@@ -115,34 +115,34 @@ void CValueTableBoxColumn::OnCreated(wxObject* wxobject, wxWindow* wxparent, IVi
 
 #include "backend/appData.h"
 
-void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVisualHost* visualHost)
+void ibValueModelTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, ibVisualHost* visualHost)
 {
-	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(wxparent);
+	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(wxparent);
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(wxobject);
+	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(wxobject);
 	wxASSERT(dataViewColumn);
 
 	const unsigned int order_position = GetParentPosition();
 
-	if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Auto) {
+	if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Auto) {
 		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
 		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
 		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_PictureAndText) {
+	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_PictureAndText) {
 		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
 		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
 		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Picture) {
+	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Picture) {
 		dataViewColumn->SetTitle(wxEmptyString);
 		dataViewColumn->SetBitmap(m_propertyHeaderPicture->GetValueAsBitmap());
 		dataViewColumn->SetFooterTitle(wxEmptyString);
 		dataViewColumn->SetFooterBitmap(m_propertyFooterPicture->GetValueAsBitmap());
 	}
-	else if (m_propertyRepresentation->GetValueAsEnum() == enRepresentation::eRepresentation_Text) {
+	else if (m_propertyRepresentation->GetValueAsEnum() == ibRepresentation::ibRepresentation_Text) {
 		dataViewColumn->SetTitle(GetControlTitle());
 		dataViewColumn->SetBitmap(wxNullBitmap);
 		dataViewColumn->SetFooterTitle(m_propertyFooterText->GetValueAsTranslateString());
@@ -153,10 +153,10 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	dataViewColumn->SetAlignment(m_propertyHeaderAlign->GetValueAsEnum());
 	dataViewColumn->SetFooterAlignment(m_propertyFooterAlign->GetValueAsEnum());
 
-	const form_identifier_t source_column = GetModelColumn();
+	const ibFormID source_column = GetModelColumn();
 
-	IValueModel* modelValue = GetOwner()->GetModel();
-	CSortOrder::CSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
+	ibValueModel* modelValue = GetOwner()->GetModel();
+	ibSortOrder::ibSortData* sort = modelValue != nullptr ? modelValue->GetSortByID(source_column) : nullptr;
 
 	dataViewColumn->SetHidden(!m_propertyVisible->GetValueAsBoolean());
 	dataViewColumn->SetSortable(sort != nullptr && !appData->DesignerMode());
@@ -168,18 +168,18 @@ void CValueTableBoxColumn::OnUpdated(wxObject* wxobject, wxWindow* wxparent, IVi
 	dataViewColumn->SetColumnModel(source_column);
 }
 
-void CValueTableBoxColumn::Cleanup(wxObject* obj, IVisualHost* visualHost)
+void ibValueModelTableBoxColumn::Cleanup(wxObject* obj, ibVisualHost* visualHost)
 {
-	wxDataViewExtCtrl* dataViewCtrl = dynamic_cast<wxDataViewExtCtrl*>(visualHost->GetWxObject(GetOwner()));
+	ibDataViewCtrl* dataViewCtrl = dynamic_cast<ibDataViewCtrl*>(visualHost->GetWxObject(GetOwner()));
 	wxASSERT(dataViewCtrl);
-	CDataViewColumnObject* dataViewColumn = dynamic_cast<CDataViewColumnObject*>(obj);
+	ibDataViewColumnObject* dataViewColumn = dynamic_cast<ibDataViewColumnObject*>(obj);
 	wxASSERT(dataViewColumn);
 
 	dataViewCtrl->DeleteColumn(dataViewColumn);
 	GetOwner()->SetCalculateColumnPos();
 }
 
-bool CValueTableBoxColumn::CanDeleteControl() const
+bool ibValueModelTableBoxColumn::CanDeleteControl() const
 {
 	return m_parent->GetChildCount() > 1;
 }
@@ -190,29 +190,29 @@ bool CValueTableBoxColumn::CanDeleteControl() const
 //*							 Control value	                        *
 //*******************************************************************
 
-bool CValueTableBoxColumn::FilterSource(const CSourceExplorer& src, const meta_identifier_t& id) const
+bool ibValueModelTableBoxColumn::FilterSource(const ibSourceExplorer& src, const ibMetaID& id) const
 {
 	return id == GetOwner()->GetSource();
 }
 
 #include "frontend/win/ctrls/controlTextEditor.h"
 
-bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
+bool ibValueModelTableBoxColumn::SetControlValue(const ibValue& varControlVal)
 {
-	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
+	ibValueModelTableBase::ibValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		currentLine->SetValueByMetaID(
 			GetModelColumn(), varControlVal
 		);
 	}
 
-	CDataViewColumnObject* dataViewColumn =
-		dynamic_cast<CDataViewColumnObject*>(GetWxObject());
+	ibDataViewColumnObject* dataViewColumn =
+		dynamic_cast<ibDataViewColumnObject*>(GetWxObject());
 
 	if (dataViewColumn != nullptr) {
-		CDataViewValueRenderer* renderer = dataViewColumn->GetRenderer();
+		ibDataViewValueRenderer* renderer = dataViewColumn->GetRenderer();
 		wxASSERT(renderer);
-		wxControlTextEditor* textEditor = dynamic_cast<wxControlTextEditor*>(renderer->GetEditorCtrl());
+		ibControlTextEditor* textEditor = dynamic_cast<ibControlTextEditor*>(renderer->GetEditorCtrl());
 		if (textEditor != nullptr) {
 			textEditor->SetValue(varControlVal.GetString());
 			textEditor->SetInsertionPointEnd();
@@ -226,9 +226,9 @@ bool CValueTableBoxColumn::SetControlValue(const CValue& varControlVal)
 	return true;
 }
 
-bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
+bool ibValueModelTableBoxColumn::GetControlValue(ibValue& pvarControlVal) const
 {
-	IValueTable::IValueModelReturnLine* currentLine = GetCurrentLine();
+	ibValueModelTableBase::ibValueModelReturnLine* currentLine = GetCurrentLine();
 	if (currentLine != nullptr) {
 		return currentLine->GetValueByMetaID(
 			GetModelColumn(), pvarControlVal
@@ -242,7 +242,7 @@ bool CValueTableBoxColumn::GetControlValue(CValue& pvarControlVal) const
 //*                                  Data											*
 //***********************************************************************************
 
-bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
+bool ibValueModelTableBoxColumn::LoadData(ibReaderMemory& reader)
 {
 	m_propertyTitle->LoadData(reader);
 	m_propertyRepresentation->LoadData(reader);
@@ -280,10 +280,10 @@ bool CValueTableBoxColumn::LoadData(CMemoryReader& reader)
 	m_eventClearing->LoadData(reader);
 	m_eventOpening->LoadData(reader);
 	m_eventChoiceProcessing->LoadData(reader);
-	return IValueControl::LoadData(reader);
+	return ibValueControl::LoadData(reader);
 }
 
-bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
+bool ibValueModelTableBoxColumn::SaveData(ibWriterMemory& writer)
 {
 	m_propertyTitle->SaveData(writer);
 	m_propertyRepresentation->SaveData(writer);
@@ -321,11 +321,11 @@ bool CValueTableBoxColumn::SaveData(CMemoryWriter& writer)
 	m_eventClearing->SaveData(writer);
 	m_eventOpening->SaveData(writer);
 	m_eventChoiceProcessing->SaveData(writer);
-	return IValueControl::SaveData(writer);
+	return ibValueControl::SaveData(writer);
 }
 
 //***********************************************************************
 //*                       Register in runtime                           *
 //***********************************************************************
 
-S_CONTROL_TYPE_REGISTER(CValueTableBoxColumn, "TableboxColumn", "TableboxColumn", g_controlTableBoxColumnCLSID);
+S_CONTROL_TYPE_REGISTER(ibValueModelTableBoxColumn, "TableboxColumn", "TableboxColumn", g_controlTableBoxColumnCLSID);

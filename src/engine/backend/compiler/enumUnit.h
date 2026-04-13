@@ -3,17 +3,17 @@
 
 #include "value.h"
 
-class BACKEND_API IEnumerationWrapper : public CValue {
-	CMethodHelper* m_methodHelper;
+class BACKEND_API ibValueEnumerationWrapper : public ibValue {
+	ibValueMethodHelper* m_methodHelper;
 public:
 
-	IEnumerationWrapper(bool createInstance = false);
-	virtual ~IEnumerationWrapper();
+	ibValueEnumerationWrapper(bool createInstance = false);
+	virtual ~ibValueEnumerationWrapper();
 
-	virtual CMethodHelper* GetPMethods() const { return m_methodHelper; }
+	virtual ibValueMethodHelper* GetPMethods() const { return m_methodHelper; }
 	virtual void PrepareNames() const;
 
-	virtual CValue* GetEnumVariantValue() const = 0;
+	virtual ibValue* GetEnumVariantValue() const = 0;
 	virtual wxString GetClassName() const = 0;
 	virtual wxString GetString() const = 0;
 
@@ -22,14 +22,14 @@ protected:
 };
 
 //***************************************************************************************************
-//*                                 Current variant from IEnumerationValue                          *
+//*                                 Current variant from ibValueEnumerationBase                     *
 //***************************************************************************************************
 
 template <typename valT>
-class IEnumerationVariant : public CValue {
+class ibValueEnumerationVariantBase : public ibValue {
 public:
 
-	IEnumerationVariant() : CValue(eValueTypes::TYPE_ENUM, true) {}
+	ibValueEnumerationVariantBase() : ibValue(ibValueTypes::TYPE_ENUM, true) {}
 
 	virtual valT GetEnumValue() const = 0;
 	virtual void SetEnumValue(const valT& v) = 0;
@@ -40,17 +40,17 @@ public:
 //***************************************************************************************************
 
 template <typename valT>
-class IEnumerationValue : public IEnumerationWrapper {
+class ibValueEnumerationBase : public ibValueEnumerationWrapper {
 public:
 
-	IEnumerationValue(bool createInstance = false) :
-		IEnumerationWrapper(createInstance)
+	ibValueEnumerationBase(bool createInstance = false) :
+		ibValueEnumerationWrapper(createInstance)
 	{
 	}
 
 	virtual bool Init() { return true; }
 
-	virtual bool Init(CValue** paParams, const long lSizeArray) {
+	virtual bool Init(ibValue** paParams, const long lSizeArray) {
 		if (lSizeArray < 1)
 			return false;
 		SetEnumValue(
@@ -65,15 +65,15 @@ public:
 
 //default base class for all enumerations
 template <typename valT>
-class IEnumeration : public IEnumerationValue<valT> {
+class ibValueEnumeration : public ibValueEnumerationBase<valT> {
 	std::map<valT, wxString> m_listEnumData, m_listEnumDesc;
 protected:
 
 	template <typename valType>
-	class CEnumerationVariant : public IEnumerationVariant<valType> {
+	class ibValueEnumerationVariant : public ibValueEnumerationVariantBase<valType> {
 	public:
 
-		CEnumerationVariant(const valType& v, const class_identifier_t& clsid) : IEnumerationVariant(), m_value(v), m_clsid(clsid) {}
+		ibValueEnumerationVariant(const valType& v, const ibClassID& clsid) : ibValueEnumerationVariantBase(), m_value(v), m_clsid(clsid) {}
 
 		void CreateEnumeration(
 			const wxString& name, const wxString& descr,
@@ -86,11 +86,11 @@ protected:
 		virtual valT GetEnumValue() const override { return m_value; }
 		virtual void SetEnumValue(const valT& v) override { m_value = v; }
 
-		virtual bool FindValue(const wxString& findData, std::vector<CValue>& listValue) const {
-			CValuePtr<IEnumeration<valType>> enumOwner(CValue::CreateAndConvertObjectRef<IEnumeration<valType>>(m_clsid));
+		virtual bool FindValue(const wxString& findData, std::vector<ibValue>& listValue) const {
+			ibValuePtr<ibValueEnumeration<valType>> enumOwner(ibValue::CreateAndConvertObjectRef<ibValueEnumeration<valType>>(m_clsid));
 			for (auto& e : enumOwner->m_listEnumData) {
 				if (e.second.Contains(findData)) {
-					CEnumerationVariant<valType>* enumValue = new CEnumerationVariant<valType>(e.first, m_clsid);
+					ibValueEnumerationVariant<valType>* enumValue = new ibValueEnumerationVariant<valType>(e.first, m_clsid);
 					if (enumValue != nullptr) {
 						enumValue->CreateEnumeration(
 							enumOwner->GetEnumName(e.first),
@@ -101,45 +101,45 @@ protected:
 					}
 				}
 			}
-			std::sort(listValue.begin(), listValue.end(), [](const CValue& a, const CValue& b) { return a.GetString() < b.GetString(); });
+			std::sort(listValue.begin(), listValue.end(), [](const ibValue& a, const ibValue& b) { return a.GetString() < b.GetString(); });
 			return listValue.size() > 0;
 		}
 
 		//operator '=='
-		virtual bool CompareValueEQ(const CValue& cParam) const override {
-			CEnumerationVariant<valType>* compareEnumeration = dynamic_cast<CEnumerationVariant<valType> *>(cParam.GetRef());
+		virtual bool CompareValueEQ(const ibValue& cParam) const override {
+			ibValueEnumerationVariant<valType>* compareEnumeration = dynamic_cast<ibValueEnumerationVariant<valType> *>(cParam.GetRef());
 			if (compareEnumeration) return m_value == compareEnumeration->m_value;
-			IEnumeration<valType>* compareEnumerationOwner = dynamic_cast<IEnumeration<valType> *>(cParam.GetRef());
+			ibValueEnumeration<valType>* compareEnumerationOwner = dynamic_cast<ibValueEnumeration<valType> *>(cParam.GetRef());
 			if (compareEnumerationOwner) return m_value == compareEnumerationOwner->GetEnumValue();
 			return false;
 		}
 
 		//operator '!='
-		virtual bool CompareValueNE(const CValue& cParam) const override {
-			CEnumerationVariant<valType>* compareEnumeration = dynamic_cast<CEnumerationVariant<valType> *>(cParam.GetRef());
+		virtual bool CompareValueNE(const ibValue& cParam) const override {
+			ibValueEnumerationVariant<valType>* compareEnumeration = dynamic_cast<ibValueEnumerationVariant<valType> *>(cParam.GetRef());
 			if (compareEnumeration) return m_value != compareEnumeration->m_value;
-			IEnumeration<valType>* compareEnumerationOwner = dynamic_cast<IEnumeration<valType> *>(cParam.GetRef());
+			ibValueEnumeration<valType>* compareEnumerationOwner = dynamic_cast<ibValueEnumeration<valType> *>(cParam.GetRef());
 			if (compareEnumerationOwner) return m_value != compareEnumerationOwner->GetEnumValue();
 			return true;
 		}
 
 		//get type id
-		virtual class_identifier_t GetClassType() const override { return m_clsid; }
+		virtual ibClassID GetClassType() const override { return m_clsid; }
 
 		//check is empty
 		virtual bool IsEmpty() const { return false; }
 
 		//type info
-		virtual wxString GetClassName() const { return CValue::GetNameObjectFromID(m_clsid); }
+		virtual wxString GetClassName() const { return ibValue::GetNameObjectFromID(m_clsid); }
 
 		//type conversion
 		virtual wxString GetString() const override { return m_name; }
-		virtual number_t GetNumber() const override { return m_value; }
+		virtual ibNumber GetNumber() const override { return m_value; }
 
 	private:
 		wxString m_name;
 		wxString m_description;
-		class_identifier_t m_clsid;
+		ibClassID m_clsid;
 		valType m_value;
 	};
 
@@ -171,15 +171,15 @@ public:
 		m_listEnumStr.push_back(name);
 	}
 
-	IEnumeration() : IEnumerationValue(true), m_value(nullptr) { InitializeEnumeration(); }
-	virtual ~IEnumeration() {}
+	ibValueEnumeration() : ibValueEnumerationBase(true), m_value(nullptr) { InitializeEnumeration(); }
+	virtual ~ibValueEnumeration() {}
 
 	virtual bool Init() { return true; }
-	virtual bool Init(CValue** paParams, const long lSizeArray) {
+	virtual bool Init(ibValue** paParams, const long lSizeArray) {
 		if (lSizeArray < 1)
 			return false;
 		const valT& defValue = static_cast<valT>(paParams[0]->GetInteger());
-		IEnumeration::InitializeEnumeration(defValue);
+		ibValueEnumeration::InitializeEnumeration(defValue);
 		return true;
 	}
 
@@ -211,9 +211,9 @@ public:
 	//create enumeration 
 	virtual void CreateEnumeration() = 0;
 
-	CEnumerationVariant<valT>* CreateEnumVariantValue(const valT& v) const {
+	ibValueEnumerationVariant<valT>* CreateEnumVariantValue(const valT& v) const {
 
-		CEnumerationVariant<valT>* enumValue = new CEnumerationVariant<valT>(v, CValue::GetClassType());
+		ibValueEnumerationVariant<valT>* enumValue = new ibValueEnumerationVariant<valT>(v, ibValue::GetClassType());
 		if (enumValue != nullptr) {
 			enumValue->CreateEnumeration(
 				GetEnumName(v),
@@ -236,7 +236,7 @@ public:
 		CreateEnumeration(v);
 	}
 
-	virtual CValue* GetEnumVariantValue() const { return m_value; }
+	virtual ibValue* GetEnumVariantValue() const { return m_value; }
 
 	wxString GetEnumName(unsigned int idx) const {
 		if (idx > m_listEnumData.size())
@@ -264,12 +264,12 @@ public:
 
 	unsigned int GetEnumCount() const { return m_listEnumData.size(); }
 
-	virtual bool GetPropVal(const long lPropNum, CValue& pvarPropVal) override { //attribute value
+	virtual bool GetPropVal(const long lPropNum, ibValue& pvarPropVal) override { //attribute value
 		auto itEnums = m_listEnumData.begin();
 		std::advance(itEnums, lPropNum);
 		if (itEnums != m_listEnumData.end()) {
-			CEnumerationVariant<valT>* enumValue =
-				new CEnumerationVariant<valT>(itEnums->first, CValue::GetClassType());
+			ibValueEnumerationVariant<valT>* enumValue =
+				new ibValueEnumerationVariant<valT>(itEnums->first, ibValue::GetClassType());
 			if (enumValue != nullptr) {
 				enumValue->CreateEnumeration(
 					GetEnumName(itEnums->first),
@@ -284,10 +284,10 @@ public:
 		return false;
 	}
 
-	virtual bool FindValue(const wxString& findData, std::vector<CValue>& listValue) const {
+	virtual bool FindValue(const wxString& findData, std::vector<ibValue>& listValue) const {
 		for (auto& e : m_listEnumData) {
 			if (e.second.Contains(findData)) {
-				CEnumerationVariant<valT>* enumValue = new CEnumerationVariant<valT>(e.first, CValue::GetClassType());
+				ibValueEnumerationVariant<valT>* enumValue = new ibValueEnumerationVariant<valT>(e.first, ibValue::GetClassType());
 				if (enumValue != nullptr) {
 					enumValue->CreateEnumeration(
 						GetEnumName(e.first),
@@ -298,24 +298,24 @@ public:
 				}
 			}
 		}
-		std::sort(listValue.begin(), listValue.end(), [](const CValue& a, const CValue& b) { return a.GetString() < b.GetString(); });
+		std::sort(listValue.begin(), listValue.end(), [](const ibValue& a, const ibValue& b) { return a.GetString() < b.GetString(); });
 		return listValue.size() > 0;
 	}
 
 	//operator '=='
-	virtual bool CompareValueEQ(const CValue& cParam) const override {
+	virtual bool CompareValueEQ(const ibValue& cParam) const override {
 		if (m_value != nullptr) {
 			return m_value->CompareValueEQ(cParam);
 		}
-		return CValue::CompareValueEQ(cParam);
+		return ibValue::CompareValueEQ(cParam);
 	}
 
 	//operator '!='
-	virtual bool CompareValueNE(const CValue& cParam) const override {
+	virtual bool CompareValueNE(const ibValue& cParam) const override {
 		if (m_value != nullptr) {
 			return m_value->CompareValueNE(cParam);
 		}
-		return CValue::CompareValueNE(cParam);
+		return ibValue::CompareValueNE(cParam);
 	}
 
 	//check is empty
@@ -324,7 +324,7 @@ public:
 	//type info
 	virtual wxString GetClassName() const final {
 		return m_value ? m_value->GetClassName() :
-			CValue::GetClassName();
+			ibValue::GetClassName();
 	};
 
 	//type conversion
@@ -333,14 +333,14 @@ public:
 			wxEmptyString;
 	}
 
-	virtual number_t GetNumber() const final {
+	virtual ibNumber GetNumber() const final {
 		return m_value ? m_value->GetNumber() :
 			wxNOT_FOUND;
 	}
 
 protected:
 
-	CValuePtr<CEnumerationVariant<valT>> m_value; //current enum value
+	ibValuePtr<ibValueEnumerationVariant<valT>> m_value; //current enum value
 };
 
 #endif

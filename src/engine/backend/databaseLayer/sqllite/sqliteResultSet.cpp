@@ -7,16 +7,16 @@
 #include "backend/databaseLayer/databaseErrorCodes.h"
 
 // ctor
-CSqliteResultSet::CSqliteResultSet()
-	: IDatabaseResultSet()
+ibDatabaseResultSetSQLite::ibDatabaseResultSetSQLite()
+	: ibDatabaseResultSet()
 {
 	m_pStatement = nullptr;
 	m_pSqliteStatement = nullptr;
 	m_bManageStatement = false;
 }
 
-CSqliteResultSet::CSqliteResultSet(CSqlitePreparedStatement* pStatement, bool bManageStatement /*= false*/)
-	: IDatabaseResultSet()
+ibDatabaseResultSetSQLite::ibDatabaseResultSetSQLite(ibPreparedStatementSQLite* pStatement, bool bManageStatement /*= false*/)
+	: ibDatabaseResultSet()
 {
 	m_pStatement = pStatement;
 	m_pSqliteStatement = m_pStatement->GetLastStatement();
@@ -32,13 +32,13 @@ CSqliteResultSet::CSqliteResultSet(CSqlitePreparedStatement* pStatement, bool bM
 }
 
 // dtor
-CSqliteResultSet::~CSqliteResultSet()
+ibDatabaseResultSetSQLite::~ibDatabaseResultSetSQLite()
 {
 	Close();
 }
 
 
-void CSqliteResultSet::Close()
+void ibDatabaseResultSetSQLite::Close()
 {
 	CloseMetaData();
 
@@ -53,7 +53,7 @@ void CSqliteResultSet::Close()
 }
 
 
-bool CSqliteResultSet::Next()
+bool ibDatabaseResultSetSQLite::Next()
 {
 	if (m_pSqliteStatement == nullptr)
 		m_pSqliteStatement = m_pStatement->GetLastStatement();
@@ -65,7 +65,7 @@ bool CSqliteResultSet::Next()
 	if ((nReturn != SQLITE_ROW) && (nReturn != SQLITE_DONE))
 	{
 		wxLogError(wxT("Error with RunQueryWithResults\n"));
-		SetErrorCode(CSqliteDatabaseLayer::TranslateErrorCode(nReturn));
+		SetErrorCode(ibDatabaseLayerSQLite::TranslateErrorCode(nReturn));
 #if SQLITE_VERSION_NUMBER>=3002002
 		// sqlite3_db_handle wasn't added to the SQLite3 API until version 3.2.2
 		SetErrorMessage(ConvertFromUnicodeStream(sqlite3_errmsg(sqlite3_db_handle(m_pSqliteStatement))));
@@ -81,7 +81,7 @@ bool CSqliteResultSet::Next()
 
 
 // get field
-int CSqliteResultSet::GetResultInt(int nField)
+int ibDatabaseResultSetSQLite::GetResultInt(int nField)
 {
 	int nValue = -1;
 	if (m_pSqliteStatement == nullptr)
@@ -91,7 +91,7 @@ int CSqliteResultSet::GetResultInt(int nField)
 	return nValue;
 }
 
-wxString CSqliteResultSet::GetResultString(int nField)
+wxString ibDatabaseResultSetSQLite::GetResultString(int nField)
 {
 	wxString strValue = wxEmptyString;
 	if (m_pSqliteStatement == nullptr)
@@ -101,7 +101,7 @@ wxString CSqliteResultSet::GetResultString(int nField)
 	return strValue;
 }
 
-long long CSqliteResultSet::GetResultLong(int nField)
+long long ibDatabaseResultSetSQLite::GetResultLong(int nField)
 {
 	long long nValue = -1;
 	if (m_pSqliteStatement == nullptr)
@@ -111,7 +111,7 @@ long long CSqliteResultSet::GetResultLong(int nField)
 	return nValue;
 }
 
-bool CSqliteResultSet::GetResultBool(int nField)
+bool ibDatabaseResultSetSQLite::GetResultBool(int nField)
 {
 	int nValue = 0;
 	if (m_pSqliteStatement == nullptr)
@@ -121,7 +121,7 @@ bool CSqliteResultSet::GetResultBool(int nField)
 	return (nValue != 0);
 }
 
-wxDateTime CSqliteResultSet::GetResultDate(int nField)
+wxDateTime ibDatabaseResultSetSQLite::GetResultDate(int nField)
 {
 	// Don't use nField-1 here since GetResultString will take care of that
 	wxString strDate = GetResultString(nField);
@@ -145,7 +145,7 @@ wxDateTime CSqliteResultSet::GetResultDate(int nField)
 	}
 }
 
-double CSqliteResultSet::GetResultDouble(int nField)
+double ibDatabaseResultSetSQLite::GetResultDouble(int nField)
 {
 	double dblValue = -1;
 	if (m_pSqliteStatement == nullptr)
@@ -155,9 +155,9 @@ double CSqliteResultSet::GetResultDouble(int nField)
 	return dblValue;
 }
 
-number_t CSqliteResultSet::GetResultNumber(int nField)
+ibNumber ibDatabaseResultSetSQLite::GetResultNumber(int nField)
 {
-	number_t dblValue = -1;
+	ibNumber dblValue = -1;
 	if (m_pSqliteStatement == nullptr)
 		m_pSqliteStatement = m_pStatement->GetLastStatement();
 	dblValue = sqlite3_column_double(m_pSqliteStatement, nField - 1);
@@ -165,7 +165,7 @@ number_t CSqliteResultSet::GetResultNumber(int nField)
 	return dblValue;
 }
 
-void* CSqliteResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
+void* ibDatabaseResultSetSQLite::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 {
 	int nLength = 0;
 	if (m_pSqliteStatement == nullptr)
@@ -194,14 +194,14 @@ void* CSqliteResultSet::GetResultBlob(int nField, wxMemoryBuffer& buffer)
 	return buffer.GetData();
 }
 
-bool CSqliteResultSet::IsFieldNull(int nField)
+bool ibDatabaseResultSetSQLite::IsFieldNull(int nField)
 {
 	if (m_pSqliteStatement == nullptr)
 		m_pSqliteStatement = m_pStatement->GetLastStatement();
 	return (nullptr == sqlite3_column_text(m_pSqliteStatement, nField - 1));
 }
 
-int CSqliteResultSet::LookupField(const wxString& strField)
+int ibDatabaseResultSetSQLite::LookupField(const wxString& strField)
 {
 	StringToIntMap::iterator SearchIterator = std::find_if(m_FieldLookupMap.begin(), m_FieldLookupMap.end(),
 		[strField](const auto pair) { return stringUtils::CompareString(pair.first, strField); });
@@ -210,7 +210,7 @@ int CSqliteResultSet::LookupField(const wxString& strField)
 	{
 		wxString msg(wxT("Field '") + strField + wxT("' not found in the resultset"));
 #if _USE_DATABASE_LAYER_EXCEPTIONS == 1
-		DatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
+		ibDatabaseLayerException error(DATABASE_LAYER_FIELD_NOT_IN_RESULTSET, msg);
 		throw error;
 #else
 		wxLogError(msg);
@@ -223,9 +223,9 @@ int CSqliteResultSet::LookupField(const wxString& strField)
 	}
 }
 
-IResultSetMetaData* CSqliteResultSet::GetMetaData()
+ibResultSetMetaData* ibDatabaseResultSetSQLite::GetMetaData()
 {
-	IResultSetMetaData* pMetaData = new CSqliteResultSetMetaData(m_pSqliteStatement);
+	ibResultSetMetaData* pMetaData = new ibResultSetMetaDataSQLite(m_pSqliteStatement);
 	LogMetaDataForCleanup(pMetaData);
 	return pMetaData;
 }

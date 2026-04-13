@@ -9,26 +9,26 @@
 
 #include "backend/appData.h"
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueListDataObject, IValueTable);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueListDataObject, ibValueModelTableBase);
 
-wxIMPLEMENT_DYNAMIC_CLASS(CValueListDataObjectEnumRef, IValueListDataObject);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueListDataObjectRef, IValueListDataObject);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueListRegisterObject, IValueListDataObject);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObjectEnumRef, ibValueListDataObject);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObjectRef, ibValueListDataObject);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListRegisterObject, ibValueListDataObject);
 
-wxIMPLEMENT_ABSTRACT_CLASS(IValueTreeDataObject, IValueTree);
-wxIMPLEMENT_DYNAMIC_CLASS(CValueTreeDataObjectFolderRef, IValueTreeDataObject);
+wxIMPLEMENT_ABSTRACT_CLASS(ibValueModelTreeDataObject, ibValueModelTreeBase);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObjectFolderRef, ibValueModelTreeDataObject);
 
-IValueListDataObject::IValueListDataObject(IValueMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	ISourceDataObject(),
-	m_recordColumnCollection(new CValueDataObjectListColumnCollection(this, metaObject)),
-	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
+ibValueListDataObject::ibValueListDataObject(ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
+	ibSourceDataObject(),
+	m_recordColumnCollection(new ibValueDataObjectListColumnCollection(this, metaObject)),
+	m_objGuid(choiceMode ? ibGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new ibValueMethodHelper())
 {
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_filterRow.AppendFilter(
 			object->GetMetaID(),
 			object->GetName(),
 			object->GetSynonym(),
-			eComparisonType_Equal,
+			ibComparisonType_Equal,
 			object->GetTypeDesc(),
 			object->CreateValue(),
 			false
@@ -36,17 +36,17 @@ IValueListDataObject::IValueListDataObject(IValueMetaObjectGenericData* metaObje
 	}
 }
 
-IValueListDataObject::~IValueListDataObject()
+ibValueListDataObject::~ibValueListDataObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IValueTreeDataObject::IValueTreeDataObject(IValueMetaObjectGenericData* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	ISourceDataObject(),
-	m_recordColumnCollection(new CValueDataObjectTreeColumnCollection(this, metaObject)),
-	m_objGuid(choiceMode ? CGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new CMethodHelper())
+ibValueModelTreeDataObject::ibValueModelTreeDataObject(ibValueMetaObjectGenericData* metaObject, const ibFormID& formType, bool choiceMode) :
+	ibSourceDataObject(),
+	m_recordColumnCollection(new ibValueDataObjectTreeColumnCollection(this, metaObject)),
+	m_objGuid(choiceMode ? ibGuid::newGuid() : metaObject->GetGuid()), m_methodHelper(new ibValueMethodHelper())
 {
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_filterRow.AppendFilter(
@@ -59,48 +59,48 @@ IValueTreeDataObject::IValueTreeDataObject(IValueMetaObjectGenericData* metaObje
 	}
 }
 
-IValueTreeDataObject::~IValueTreeDataObject()
+ibValueModelTreeDataObject::~ibValueModelTreeDataObject()
 {
 	wxDELETE(m_methodHelper);
 }
 
 //////////////////////////////////////////////////////////////////////
-//					  CValueDataObjectListColumnCollection               //
+//					  ibValueDataObjectListColumnCollection               //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection, IValueTable::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection, ibValueModelTableBase::ibValueModelColumnCollection);
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnCollection() :
-	IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnCollection() :
+	ibValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
 {
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnCollection(IValueListDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
-	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnCollection(ibValueListDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject) :
+	ibValueModelColumnCollection(), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
-		m_listColumnInfo.insert_or_assign(object->GetMetaID(), new CValueDataObjectListColumnInfo(object));
+		m_listColumnInfo.insert_or_assign(object->GetMetaID(), new ibValueDataObjectListColumnInfo(object));
 	}
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::~CValueDataObjectListColumnCollection()
+ibValueListDataObject::ibValueDataObjectListColumnCollection::~ibValueDataObjectListColumnCollection()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IValueListDataObject::CValueDataObjectListColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool ibValueListDataObject::ibValueDataObjectListColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool IValueListDataObject::CValueDataObjectListColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool ibValueListDataObject::ibValueDataObjectListColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendCoreException::Error("Index goes beyond array");
+		ibBackendCoreException::Error("Index goes beyond array");
 		return false;
 	}
 
@@ -111,39 +111,39 @@ bool IValueListDataObject::CValueDataObjectListColumnCollection::GetAt(const CVa
 	return true;
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, IValueTree::IValueModelColumnCollection);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection, ibValueModelTreeBase::ibValueModelColumnCollection);
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnCollection() :
-	IValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnCollection() :
+	ibValueModelColumnCollection(), m_methodHelper(nullptr), m_ownerTable(nullptr)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnCollection(IValueTreeDataObject* ownerTable, IValueMetaObjectGenericData* metaObject) :
-	IValueModelColumnCollection(), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnCollection(ibValueModelTreeDataObject* ownerTable, ibValueMetaObjectGenericData* metaObject) :
+	ibValueModelColumnCollection(), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 	wxASSERT(metaObject);
 
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_listColumnInfo.insert_or_assign(object->GetMetaID(),
-			new CValueDataObjectTreeColumnInfo(object));
+			new ibValueDataObjectTreeColumnInfo(object));
 	}
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::~CValueDataObjectTreeColumnCollection()
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::~ibValueDataObjectTreeColumnCollection()
 {
 	wxDELETE(m_methodHelper);
 }
 
-bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::SetAt(const CValue& varKeyValue, const CValue& varValue)//индекс массива должен начинаться с 0
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::SetAt(const ibValue& varKeyValue, const ibValue& varValue)//индекс массива должен начинаться с 0
 {
 	return false;
 }
 
-bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::GetAt(const CValue& varKeyValue, CValue& pvarValue) //индекс массива должен начинаться с 0
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::GetAt(const ibValue& varKeyValue, ibValue& pvarValue) //индекс массива должен начинаться с 0
 {
 	unsigned int index = varKeyValue.GetUInteger();
 	if ((index < 0 || index >= m_listColumnInfo.size() && !appData->DesignerMode())) {
-		CBackendCoreException::Error("Index goes beyond array");
+		ibBackendCoreException::Error("Index goes beyond array");
 		return false;
 	}
 	auto it = m_listColumnInfo.begin();
@@ -154,62 +154,62 @@ bool IValueTreeDataObject::CValueDataObjectTreeColumnCollection::GetAt(const CVa
 
 
 //////////////////////////////////////////////////////////////////////
-//							 CValueDataObjectListColumnInfo              //
+//							 ibValueDataObjectListColumnInfo              //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, IValueTable::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo, ibValueModelTableBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::CValueDataObjectListColumnInfo() :
-	IValueModelColumnInfo(), m_metaAttribute(nullptr)
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo::ibValueDataObjectListColumnInfo() :
+	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::CValueDataObjectListColumnInfo(IValueMetaObjectAttribute* attribute) :
-	IValueModelColumnInfo(), m_metaAttribute(attribute)
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo::ibValueDataObjectListColumnInfo(ibValueMetaObjectAttributeBase* attribute) :
+	ibValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo::~CValueDataObjectListColumnInfo()
+ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo::~ibValueDataObjectListColumnInfo()
 {
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, IValueTree::IValueModelColumnCollection::IValueModelColumnInfo);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo, ibValueModelTreeBase::ibValueModelColumnCollection::ibValueModelColumnInfo);
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::CValueDataObjectTreeColumnInfo() :
-	IValueModelColumnInfo(), m_metaAttribute(nullptr)
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo::ibValueDataObjectTreeColumnInfo() :
+	ibValueModelColumnInfo(), m_metaAttribute(nullptr)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::CValueDataObjectTreeColumnInfo(IValueMetaObjectAttribute* attribute) :
-	IValueModelColumnInfo(), m_metaAttribute(attribute)
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo::ibValueDataObjectTreeColumnInfo(ibValueMetaObjectAttributeBase* attribute) :
+	ibValueModelColumnInfo(), m_metaAttribute(attribute)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo::~CValueDataObjectTreeColumnInfo()
+ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo::~ibValueDataObjectTreeColumnInfo()
 {
 }
 
 //////////////////////////////////////////////////////////////////////
-//					  CValueDataObjectListReturnLine                     //
+//					  ibValueDataObjectListReturnLine                     //
 //////////////////////////////////////////////////////////////////////
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueListDataObject::CValueDataObjectListReturnLine, IValueTable::IValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueListDataObject::ibValueDataObjectListReturnLine, ibValueModelTableBase::ibValueModelReturnLine);
 
-IValueListDataObject::CValueDataObjectListReturnLine::CValueDataObjectListReturnLine(IValueListDataObject* ownerTable, const wxDataViewExtItem& line) :
-	IValueModelReturnLine(line), m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+ibValueListDataObject::ibValueDataObjectListReturnLine::ibValueDataObjectListReturnLine(ibValueListDataObject* ownerTable, const ibDataViewItem& line) :
+	ibValueModelReturnLine(line), m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 }
 
-IValueListDataObject::CValueDataObjectListReturnLine::~CValueDataObjectListReturnLine()
+ibValueListDataObject::ibValueDataObjectListReturnLine::~ibValueDataObjectListReturnLine()
 {
 	wxDELETE(m_methodHelper);
 }
 
-void IValueListDataObject::CValueDataObjectListReturnLine::PrepareNames() const
+void ibValueListDataObject::ibValueDataObjectListReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	IValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
+	ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
 			object->GetName(),
@@ -218,40 +218,40 @@ void IValueListDataObject::CValueDataObjectListReturnLine::PrepareNames() const
 	}
 }
 
-bool IValueListDataObject::CValueDataObjectListReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueListDataObject::ibValueDataObjectListReturnLine::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueListDataObject::CValueDataObjectListReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueListDataObject::ibValueDataObjectListReturnLine::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
-	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
-	wxValueTableRow* node = m_ownerTable->GetViewData<wxValueTableRow>(m_lineItem);
+	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
+	ibValueTableRow* node = m_ownerTable->GetViewData<ibValueTableRow>(m_lineItem);
 	if (node == nullptr)
 		return false;
 	return node->GetValue(id, pvarPropVal);
 }
 
-wxIMPLEMENT_DYNAMIC_CLASS(IValueTreeDataObject::CValueDataObjectTreeReturnLine, IValueTree::IValueModelReturnLine);
+wxIMPLEMENT_DYNAMIC_CLASS(ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine, ibValueModelTreeBase::ibValueModelReturnLine);
 
-IValueTreeDataObject::CValueDataObjectTreeReturnLine::CValueDataObjectTreeReturnLine(IValueTreeDataObject* ownerTable, const wxDataViewExtItem& line) :
-	IValueModelReturnLine(line),
-	m_methodHelper(new CMethodHelper()), m_ownerTable(ownerTable)
+ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::ibValueDataObjectTreeReturnLine(ibValueModelTreeDataObject* ownerTable, const ibDataViewItem& line) :
+	ibValueModelReturnLine(line),
+	m_methodHelper(new ibValueMethodHelper()), m_ownerTable(ownerTable)
 {
 }
 
-IValueTreeDataObject::CValueDataObjectTreeReturnLine::~CValueDataObjectTreeReturnLine()
+ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::~ibValueDataObjectTreeReturnLine()
 {
 	wxDELETE(m_methodHelper);
 }
 
-void IValueTreeDataObject::CValueDataObjectTreeReturnLine::PrepareNames() const
+void ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 
-	IValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
+	ibValueMetaObjectGenericData* metaObject = m_ownerTable->GetMetaObject();
 	for (const auto object : metaObject->GetGenericAttributeArrayObject()) {
 		m_methodHelper->AppendProp(
 			object->GetName(),
@@ -260,17 +260,17 @@ void IValueTreeDataObject::CValueDataObjectTreeReturnLine::PrepareNames() const
 	}
 }
 
-bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::SetPropVal(const long lPropNum, const CValue& varPropVal)
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::SetPropVal(const long lPropNum, const ibValue& varPropVal)
 {
 	return false;
 }
 
-bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::GetPropVal(const long lPropNum, CValue& pvarPropVal)
+bool ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine::GetPropVal(const long lPropNum, ibValue& pvarPropVal)
 {
 	if (appData->DesignerMode())
 		return false;
-	const meta_identifier_t& id = m_methodHelper->GetPropData(lPropNum);
-	wxValueTreeNode* node = m_ownerTable->GetViewData<wxValueTreeNode>(m_lineItem);
+	const ibMetaID& id = m_methodHelper->GetPropData(lPropNum);
+	ibValueTreeNode* node = m_ownerTable->GetViewData<ibValueTreeNode>(m_lineItem);
 	if (node != nullptr) {
 		return node->GetValue(id, pvarPropVal);
 	}
@@ -279,44 +279,44 @@ bool IValueTreeDataObject::CValueDataObjectTreeReturnLine::GetPropVal(const long
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewExtItem CValueListDataObjectEnumRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
-	CValueReferenceDataObject* pRefData = nullptr;
+	ibValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewExtItem item = GetItem(row);
+			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(item);
+				ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
 					return item;
 			}
 		}
 	}
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-wxDataViewExtItem CValueListDataObjectEnumRef::FindRowValue(IValueModelReturnLine* retLine) const
+ibDataViewItem ibValueListDataObjectEnumRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
+	ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
 		{
-			return node->GetGuid() == ((wxValueTableEnumRow*)row)->GetGuid();
+			return node->GetGuid() == ((ibValueTableEnumRow*)row)->GetGuid();
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
-	return wxDataViewExtItem(nullptr);
+	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
+	return ibDataViewItem(nullptr);
 }
 
-CValueListDataObjectEnumRef::CValueListDataObjectEnumRef(IValueMetaObjectRecordDataEnumRef* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	IValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
+ibValueListDataObjectEnumRef::ibValueListDataObjectEnumRef(ibValueMetaObjectRecordDataEnumRef* metaObject, const ibFormID& formType, bool choiceMode) :
+	ibValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
-	IValueListDataObject::AppendSort(m_metaObject->GetDataOrder(), true, true, true);
-	IValueListDataObject::AppendSort(m_metaObject->GetDataReference(), true, true, true);
+	ibValueListDataObject::AppendSort(m_metaObject->GetDataOrder(), true, true, true);
+	ibValueListDataObject::AppendSort(m_metaObject->GetDataReference(), true, true, true);
 }
 
-CSourceExplorer CValueListDataObjectEnumRef::GetSourceExplorer() const
+ibSourceExplorer ibValueListDataObjectEnumRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -324,7 +324,7 @@ CSourceExplorer CValueListDataObjectEnumRef::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool CValueListDataObjectEnumRef::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool ibValueListDataObjectEnumRef::GetModel(ibValueModel*& tableValue, const ibMetaID& id)
 {
 	if (id == m_metaObject->GetMetaID()) {
 		tableValue = this;
@@ -334,13 +334,13 @@ bool CValueListDataObjectEnumRef::GetModel(IValueModel*& tableValue, const meta_
 }
 
 //events 
-void CValueListDataObjectEnumRef::ChooseValue(IBackendValueForm* srcForm)
+void ibValueListDataObjectEnumRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTableEnumRow* node = GetViewData<wxValueTableEnumRow>(GetSelection());
+	ibValueTableEnumRow* node = GetViewData<ibValueTableEnumRow>(GetSelection());
 	if (node == nullptr)
 		return;
 	wxASSERT(srcForm);
-	CValueReferenceDataObject* dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
+	ibValueReferenceDataObject* dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
 	if (dataValueRef != nullptr) {
 		srcForm->NotifyChoice(dataValueRef->GetValue());
 	}
@@ -348,68 +348,68 @@ void CValueListDataObjectEnumRef::ChooseValue(IBackendValueForm* srcForm)
 
 #include "backend/objCtor.h"
 
-class_identifier_t CValueListDataObjectEnumRef::GetClassType() const
+ibClassID ibValueListDataObjectEnumRef::GetClassType() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueListDataObjectEnumRef::GetClassName() const
+wxString ibValueListDataObjectEnumRef::GetClassName() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString CValueListDataObjectEnumRef::GetString() const
+wxString ibValueListDataObjectEnumRef::GetString() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewExtItem CValueListDataObjectRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueListDataObjectRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
-	CValueReferenceDataObject* pRefData = nullptr;
+	ibValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewExtItem item = GetItem(row);
+			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableListRow* node = GetViewData<wxValueTableListRow>(item);
+				ibValueTableListRow* node = GetViewData<ibValueTableListRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetGuid())
 					return item;
 			}
 		}
 	}
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-wxDataViewExtItem CValueListDataObjectRef::FindRowValue(IValueModelReturnLine* retLine) const
+ibDataViewItem ibValueListDataObjectRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTableListRow* node = GetViewData<wxValueTableListRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](wxValueTableRow* row)
+	ibValueTableListRow* node = GetViewData<ibValueTableListRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node](ibValueTableRow* row)
 		{
-			return node->GetGuid() == ((wxValueTableListRow*)row)->GetGuid();
+			return node->GetGuid() == ((ibValueTableListRow*)row)->GetGuid();
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
-	return wxDataViewExtItem(nullptr);
+	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
+	return ibDataViewItem(nullptr);
 }
 
-CValueListDataObjectRef::CValueListDataObjectRef(IValueMetaObjectRecordDataMutableRef* metaObject, const form_identifier_t& formType, bool choiceMode) :
-	IValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
+ibValueListDataObjectRef::ibValueListDataObjectRef(ibValueMetaObjectRecordDataMutableRef* metaObject, const ibFormID& formType, bool choiceMode) :
+	ibValueListDataObject(metaObject, formType, choiceMode), m_metaObject(metaObject), m_choiceMode(choiceMode)
 {
 }
 
-CSourceExplorer CValueListDataObjectRef::GetSourceExplorer() const
+ibSourceExplorer ibValueListDataObjectRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -426,7 +426,7 @@ CSourceExplorer CValueListDataObjectRef::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool CValueListDataObjectRef::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool ibValueListDataObjectRef::GetModel(ibValueModel*& tableValue, const ibMetaID& id)
 {
 	if (id == m_metaObject->GetMetaID()) {
 		tableValue = this;
@@ -436,167 +436,167 @@ bool CValueListDataObjectRef::GetModel(IValueModel*& tableValue, const meta_iden
 }
 
 //events 
-void CValueListDataObjectRef::AddValue(unsigned int before)
+void ibValueListDataObjectRef::AddValue(unsigned int before)
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
 		try {
-			CValuePtr<IValueRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue());
+			ibValuePtr<ibValueRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue());
 			if (dataValueObject != nullptr)
-				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
-		}
-		catch (...) {
-		}
-	}
-}
-
-void CValueListDataObjectRef::CopyValue()
-{
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
-	if (m_metaObject->ConvertToValue(metaObject)) {
-
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
-		if (node == nullptr)
-			return;
-
-		try {
-			CValuePtr<IValueRecordDataObjectRef> dataValueObject(metaObject->CopyObjectValue(node->GetGuid()));
-			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
-		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueListDataObjectRef::EditValue()
+void ibValueListDataObjectRef::CopyValue()
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
 		try {
-			IValueRecordDataObjectRef* dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
-			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			ibValuePtr<ibValueRecordDataObjectRef> dataValueObject(metaObject->CopyObjectValue(node->GetGuid()));
+			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueListDataObjectRef::DeleteValue()
+void ibValueListDataObjectRef::EditValue()
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
 		try {
-			CValuePtr<IValueRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
+			ibValueRecordDataObjectRef* dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
+			if (dataValueObject != nullptr) dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		}
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
+		}
+		catch (...) {
+		}
+	}
+}
+
+void ibValueListDataObjectRef::DeleteValue()
+{
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	if (m_metaObject->ConvertToValue(metaObject)) {
+
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
+		if (node == nullptr)
+			return;
+
+		try {
+			ibValuePtr<ibValueRecordDataObjectRef> dataValueObject(metaObject->CreateObjectValue(node->GetGuid()));
 			if (dataValueObject != nullptr)
 				dataValueObject->DeleteObject();
-			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueListDataObjectRef::MarkAsDeleteValue()
+void ibValueListDataObjectRef::MarkAsDeleteValue()
 {
-	IValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+		ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 		if (node == nullptr)
 			return;
 
 		try {
-			CValuePtr<IValueRecordDataObjectRef> dataValueObject = metaObject->CreateObjectValue(node->GetGuid());
+			ibValuePtr<ibValueRecordDataObjectRef> dataValueObject = metaObject->CreateObjectValue(node->GetGuid());
 			if (dataValueObject != nullptr)
 				dataValueObject->SetDeletionMark(true);
-			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 			if (valueListForm != nullptr)
 				valueListForm->UpdateForm();
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueListDataObjectRef::ChooseValue(IBackendValueForm* srcForm)
+void ibValueListDataObjectRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTableListRow* node = GetViewData<wxValueTableListRow>(GetSelection());
+	ibValueTableListRow* node = GetViewData<ibValueTableListRow>(GetSelection());
 	if (node == nullptr)
 		return;
 
 	wxASSERT(srcForm);
 
 	try {
-		CValuePtr<CValueReferenceDataObject> dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
+		ibValuePtr<ibValueReferenceDataObject> dataValueRef = m_metaObject->FindObjectValue(node->GetGuid());
 		if (dataValueRef != nullptr)
 			srcForm->NotifyChoice(dataValueRef->GetValue());
 	}
-	catch (const CBackendCoreException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 	}
 	catch (...) {
 	}
 }
 
-class_identifier_t CValueListDataObjectRef::GetClassType() const
+ibClassID ibValueListDataObjectRef::GetClassType() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueListDataObjectRef::GetClassName() const
+wxString ibValueListDataObjectRef::GetClassName() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString CValueListDataObjectRef::GetString() const
+wxString ibValueListDataObjectRef::GetString() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewExtItem CValueTreeDataObjectFolderRef::FindRowValue(const CValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
-	CValueReferenceDataObject* pRefData = nullptr;
+	ibValueReferenceDataObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
-		std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const CGuid&)> findGuid = [&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const CGuid& guid)
+		std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid = [&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
 			{
 				if (guid == parent->GetGuid()) {
 					foundedNode = parent; return;
@@ -605,66 +605,66 @@ wxDataViewExtItem CValueTreeDataObjectFolderRef::FindRowValue(const CValue& varV
 					return;
 				}
 				for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-					wxValueTreeListNode* node = dynamic_cast<wxValueTreeListNode*>(parent->GetChild(n));
+					ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
 					if (node != nullptr)
 						findGuid(node, foundedNode, guid);
 					if (foundedNode != nullptr)
 						break;
 				}
 			};
-		wxValueTreeListNode* foundedNode = nullptr;
+		ibValueTreeListNode* foundedNode = nullptr;
 		for (unsigned int child = 0; child < GetRoot()->GetChildCount(); child++) {
-			wxValueTreeListNode* node = dynamic_cast<wxValueTreeListNode*>(GetRoot()->GetChild(child));
+			ibValueTreeListNode* node = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(child));
 			if (node != nullptr)
 				findGuid(node, foundedNode, pRefData->GetGuid());
 			if (foundedNode != nullptr)
 				break;
 		}
 		if (foundedNode != nullptr)
-			return wxDataViewExtItem(foundedNode);
+			return ibDataViewItem(foundedNode);
 	}
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-wxDataViewExtItem CValueTreeDataObjectFolderRef::FindRowValue(IValueModelReturnLine* retLine) const
+ibDataViewItem ibValueModelTreeDataObjectFolderRef::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(retLine->GetLineItem());
-	std::function<void(wxValueTreeListNode*, wxValueTreeListNode*&, const CGuid&)> findGuid =
-		[&findGuid](wxValueTreeListNode* parent, wxValueTreeListNode*& foundedNode, const CGuid& guid)
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(retLine->GetLineItem());
+	std::function<void(ibValueTreeListNode*, ibValueTreeListNode*&, const ibGuid&)> findGuid =
+		[&findGuid](ibValueTreeListNode* parent, ibValueTreeListNode*& foundedNode, const ibGuid& guid)
 		{
 			if (guid == parent->GetGuid()) { foundedNode = parent; return; }
 			else if (foundedNode != nullptr) { return; }
 
 			for (unsigned int n = 0; n < parent->GetChildCount(); n++) {
-				wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(parent->GetChild(n));
+				ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(parent->GetChild(n));
 				if (child != nullptr)
 					findGuid(child, foundedNode, guid);
 				if (foundedNode != nullptr) break;
 			}
 		};
-	wxValueTreeListNode* foundedNode = nullptr;
+	ibValueTreeListNode* foundedNode = nullptr;
 	for (unsigned int c = 0; c < GetRoot()->GetChildCount(); c++) {
-		wxValueTreeListNode* child = dynamic_cast<wxValueTreeListNode*>(GetRoot()->GetChild(c));
+		ibValueTreeListNode* child = dynamic_cast<ibValueTreeListNode*>(GetRoot()->GetChild(c));
 		if (child != nullptr) findGuid(child, foundedNode, node->GetGuid());
 		if (foundedNode != nullptr) break;
 	}
-	if (foundedNode != nullptr) return wxDataViewExtItem(foundedNode);
-	return wxDataViewExtItem(nullptr);
+	if (foundedNode != nullptr) return ibDataViewItem(foundedNode);
+	return ibDataViewItem(nullptr);
 }
 
-CValueTreeDataObjectFolderRef::CValueTreeDataObjectFolderRef(IValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const form_identifier_t& formType,
-	int listMode, bool choiceMode) : IValueTreeDataObject(metaObject, formType, choiceMode),
+ibValueModelTreeDataObjectFolderRef::ibValueModelTreeDataObjectFolderRef(ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject, const ibFormID& formType,
+	int listMode, bool choiceMode) : ibValueModelTreeDataObject(metaObject, formType, choiceMode),
 	m_metaObject(metaObject), m_listMode(listMode), m_choiceMode(choiceMode)
 {
-	//IValueTreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);
-	IValueTreeDataObject::AppendSort(m_metaObject->GetDataCode(), true, false);
-	IValueTreeDataObject::AppendSort(m_metaObject->GetDataDescription(), true);
-	IValueTreeDataObject::AppendSort(m_metaObject->GetDataReference());
+	//ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataIsFolder(), false, true, true);
+	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataCode(), true, false);
+	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataDescription(), true);
+	ibValueModelTreeDataObject::AppendSort(m_metaObject->GetDataReference());
 }
 
-CSourceExplorer CValueTreeDataObjectFolderRef::GetSourceExplorer() const
+ibSourceExplorer ibValueModelTreeDataObjectFolderRef::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -687,7 +687,7 @@ CSourceExplorer CValueTreeDataObjectFolderRef::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool CValueTreeDataObjectFolderRef::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool ibValueModelTreeDataObjectFolderRef::GetModel(ibValueModel*& tableValue, const ibMetaID& id)
 {
 	if (id == m_metaObject->GetMetaID()) {
 		tableValue = this;
@@ -697,15 +697,15 @@ bool CValueTreeDataObjectFolderRef::GetModel(IValueModel*& tableValue, const met
 }
 
 //events 
-void CValueTreeDataObjectFolderRef::AddValue(unsigned int before)
+void ibValueModelTreeDataObjectFolderRef::AddValue(unsigned int before)
 {
-	CValue cParent; CValue isFolder = true;
+	ibValue cParent; ibValue isFolder = true;
 
 	if (m_topParentGuid.isValid()) {
-		cParent = CValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
+		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
 	}
 	else {
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node != nullptr) {
 			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 			if (!isFolder.GetBoolean())
@@ -715,23 +715,23 @@ void CValueTreeDataObjectFolderRef::AddValue(unsigned int before)
 		}
 	}
 
-	CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_ITEM));
+	ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_ITEM));
 
 	if (dataValueFolderObject != nullptr) {
 		dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
-		dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+		dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
 }
 
-void CValueTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
+void ibValueModelTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 {
-	CValue cParent; CValue isFolder = true;
+	ibValue cParent; ibValue isFolder = true;
 
 	if (m_topParentGuid.isValid()) {
-		cParent = CValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
+		cParent = ibValueReferenceDataObject::Create(m_metaObject, m_topParentGuid);
 	}
 	else {
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node != nullptr) {
 			node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 			if (!isFolder.GetBoolean())
@@ -742,123 +742,123 @@ void CValueTreeDataObjectFolderRef::AddFolderValue(unsigned int before)
 	}
 
 	try {
-		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(eObjectMode::OBJECT_FOLDER));
+		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(ibObjectMode::OBJECT_FOLDER));
 		if (dataValueFolderObject != nullptr) {
 			dataValueFolderObject->SetValueByMetaID(*m_metaObject->GetDataParent(), cParent);
-			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
 	}
-	catch (const CBackendCoreException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 	}
 	catch (...) {
 	}
 }
 
-void CValueTreeDataObjectFolderRef::CopyValue()
+void ibValueModelTreeDataObjectFolderRef::CopyValue()
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
-	CValue isFolder = false;
+	ibValue isFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 	try {
-		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject = m_metaObject->CopyObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid());
+		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject = m_metaObject->CopyObjectValue(isFolder.GetBoolean() ? ibObjectMode::OBJECT_FOLDER : ibObjectMode::OBJECT_ITEM, node->GetGuid());
 		if (dataValueFolderObject != nullptr)
-			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+			dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 	}
-	catch (const CBackendCoreException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
-	}
-	catch (...) {
-	}
-}
-
-void CValueTreeDataObjectFolderRef::EditValue()
-{
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
-	if (node == nullptr)
-		return;
-
-	CValue isFolder = false;
-	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
-
-	try {
-		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
-		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
-	}
-	catch (const CBackendCoreException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 	}
 	catch (...) {
 	}
 }
 
-void CValueTreeDataObjectFolderRef::DeleteValue()
+void ibValueModelTreeDataObjectFolderRef::EditValue()
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
-	CValue isFolder = false;
+	ibValue isFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 	try {
-		CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? ibObjectMode::OBJECT_FOLDER : ibObjectMode::OBJECT_ITEM, node->GetGuid()));
+		if (dataValueFolderObject != nullptr) dataValueFolderObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+	}
+	catch (const ibBackendCoreException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
+	}
+	catch (...) {
+	}
+}
+
+void ibValueModelTreeDataObjectFolderRef::DeleteValue()
+{
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
+	if (node == nullptr)
+		return;
+
+	ibValue isFolder = false;
+	node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
+
+	try {
+		ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(m_metaObject->CreateObjectValue(isFolder.GetBoolean() ? ibObjectMode::OBJECT_FOLDER : ibObjectMode::OBJECT_ITEM, node->GetGuid()));
 		if (dataValueFolderObject != nullptr)
 			dataValueFolderObject->DeleteObject();
-		IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+		ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 		if (valueListForm != nullptr) valueListForm->UpdateForm();
 	}
-	catch (const CBackendCoreException *err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException *err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 	}
 	catch (...) {
 	}
 }
 
-void CValueTreeDataObjectFolderRef::MarkAsDeleteValue()
+void ibValueModelTreeDataObjectFolderRef::MarkAsDeleteValue()
 {
-	IValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr;
+	ibValueMetaObjectRecordDataHierarchyMutableRef* metaObject = nullptr;
 	if (m_metaObject->ConvertToValue(metaObject)) {
 
-		wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+		ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 		if (node == nullptr)
 			return;
 
-		CValue isFolder = false;
+		ibValue isFolder = false;
 		node->GetValue(*m_metaObject->GetDataIsFolder(), isFolder);
 
 		try {
-			CValuePtr<IValueRecordDataObjectHierarchyRef> dataValueFolderObject(metaObject->CreateObjectValue(isFolder.GetBoolean() ? eObjectMode::OBJECT_FOLDER : eObjectMode::OBJECT_ITEM, node->GetGuid()));
+			ibValuePtr<ibValueRecordDataObjectHierarchyRef> dataValueFolderObject(metaObject->CreateObjectValue(isFolder.GetBoolean() ? ibObjectMode::OBJECT_FOLDER : ibObjectMode::OBJECT_ITEM, node->GetGuid()));
 			if (dataValueFolderObject != nullptr)
 				dataValueFolderObject->SetDeletionMark(true);
-			IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+			ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 			if (valueListForm != nullptr) valueListForm->UpdateForm();
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
+void ibValueModelTreeDataObjectFolderRef::ChooseValue(ibBackendValueForm* srcForm)
 {
-	wxValueTreeListNode* node = GetViewData<wxValueTreeListNode>(GetSelection());
+	ibValueTreeListNode* node = GetViewData<ibValueTreeListNode>(GetSelection());
 	if (node == nullptr)
 		return;
 
 	wxASSERT(srcForm);
 
-	CValue cIsFolder = false;
+	ibValue cIsFolder = false;
 	node->GetValue(*m_metaObject->GetDataIsFolder(), cIsFolder);
 
 	try {
-		CValuePtr<CValueReferenceDataObject> dataValueFolderRef(m_metaObject->FindObjectValue(node->GetGuid()));
+		ibValuePtr<ibValueReferenceDataObject> dataValueFolderRef(m_metaObject->FindObjectValue(node->GetGuid()));
 		if (m_listMode == LIST_FOLDER && cIsFolder.GetBoolean())
 			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
 		else if (m_listMode == LIST_ITEM && !cIsFolder.GetBoolean())
@@ -866,8 +866,8 @@ void CValueTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
 		else if (m_listMode == LIST_ITEM_FOLDER)
 			srcForm->NotifyChoice(dataValueFolderRef->GetValue());
 	}
-	catch (const CBackendCoreException* err) {
-		CSystemFunction::Alert(err->GetErrorDescription());
+	catch (const ibBackendCoreException* err) {
+		ibValueSystemFunction::Alert(err->GetErrorDescription());
 	}
 	catch (...) {
 	}
@@ -875,85 +875,85 @@ void CValueTreeDataObjectFolderRef::ChooseValue(IBackendValueForm* srcForm)
 
 #include "backend/objCtor.h"
 
-class_identifier_t CValueTreeDataObjectFolderRef::GetClassType() const
+ibClassID ibValueModelTreeDataObjectFolderRef::GetClassType() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueTreeDataObjectFolderRef::GetClassName() const
+wxString ibValueModelTreeDataObjectFolderRef::GetClassName() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString CValueTreeDataObjectFolderRef::GetString() const
+wxString ibValueModelTreeDataObjectFolderRef::GetString() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-wxDataViewExtItem CValueListRegisterObject::FindRowValue(const CValue& varValue, const wxString& colName) const
+ibDataViewItem ibValueListRegisterObject::FindRowValue(const ibValue& varValue, const wxString& colName) const
 {
-	IValueRecordManagerObject* pRefData = nullptr;
+	ibValueRecordManagerObject* pRefData = nullptr;
 	if (varValue.ConvertToValue(pRefData)) {
-		IValueMetaObjectRegisterData* metaObject = GetMetaObject();
+		ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 		wxASSERT(metaObject);
 		for (long row = 0; row < GetRowCount(); row++) {
-			wxDataViewExtItem item = GetItem(row);
+			ibDataViewItem item = GetItem(row);
 			if (item.IsOk()) {
-				wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(item);
+				ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(item);
 				if (node != nullptr && pRefData->GetGuid() == node->GetUniquePairKey(metaObject))
 					return item;
 			}
 		}
 	}
 
-	return wxDataViewExtItem(nullptr);
+	return ibDataViewItem(nullptr);
 }
 
-wxDataViewExtItem CValueListRegisterObject::FindRowValue(IValueModelReturnLine* retLine) const
+ibDataViewItem ibValueListRegisterObject::FindRowValue(ibValueModelReturnLine* retLine) const
 {
-	IValueMetaObjectRegisterData* metaObject = GetMetaObject();
+	ibValueMetaObjectRegisterData* metaObject = GetMetaObject();
 	wxASSERT(metaObject);
-	wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(retLine->GetLineItem());
-	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](wxValueTableRow* row)
+	ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(retLine->GetLineItem());
+	auto it = std::find_if(m_nodeValues.begin(), m_nodeValues.end(), [node, metaObject](ibValueTableRow* row)
 		{
-			return node->GetUniquePairKey(metaObject) == ((wxValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
+			return node->GetUniquePairKey(metaObject) == ((ibValueTableKeyRow*)row)->GetUniquePairKey(metaObject);
 		}
 	);
-	if (it != m_nodeValues.end()) return wxDataViewExtItem(*it);
-	return wxDataViewExtItem(nullptr);
+	if (it != m_nodeValues.end()) return ibDataViewItem(*it);
+	return ibDataViewItem(nullptr);
 }
 
-CValueListRegisterObject::CValueListRegisterObject(IValueMetaObjectRegisterData* metaObject, const form_identifier_t& formType) :
-	IValueListDataObject(metaObject, formType), m_metaObject(metaObject)
+ibValueListRegisterObject::ibValueListRegisterObject(ibValueMetaObjectRegisterData* metaObject, const ibFormID& formType) :
+	ibValueListDataObject(metaObject, formType), m_metaObject(metaObject)
 {
 	if (m_metaObject->HasRecorder()) {
-		if (m_metaObject->HasPeriod()) IValueListDataObject::AppendSort(metaObject->GetRegisterPeriod());
-		IValueListDataObject::AppendSort(metaObject->GetRegisterRecorder());
-		IValueListDataObject::AppendSort(metaObject->GetRegisterLineNumber());
+		if (m_metaObject->HasPeriod()) ibValueListDataObject::AppendSort(metaObject->GetRegisterPeriod());
+		ibValueListDataObject::AppendSort(metaObject->GetRegisterRecorder());
+		ibValueListDataObject::AppendSort(metaObject->GetRegisterLineNumber());
 	}
 	else if (m_metaObject->HasPeriod()) {
-		IValueListDataObject::AppendSort(metaObject->GetRegisterPeriod());
+		ibValueListDataObject::AppendSort(metaObject->GetRegisterPeriod());
 	}
 
 	for (auto& dimension : m_metaObject->GetGenericDimentionArrayObject()) {
-		IValueListDataObject::AppendSort(dimension, true, true, true);
+		ibValueListDataObject::AppendSort(dimension, true, true, true);
 	}
 }
 
-CSourceExplorer CValueListRegisterObject::GetSourceExplorer() const
+ibSourceExplorer ibValueListRegisterObject::GetSourceExplorer() const
 {
-	CSourceExplorer srcHelper(
+	ibSourceExplorer srcHelper(
 		m_metaObject, GetClassType(),
 		true, true
 	);
@@ -965,7 +965,7 @@ CSourceExplorer CValueListRegisterObject::GetSourceExplorer() const
 	return srcHelper;
 }
 
-bool CValueListRegisterObject::GetModel(IValueModel*& tableValue, const meta_identifier_t& id)
+bool ibValueListRegisterObject::GetModel(ibValueModel*& tableValue, const ibMetaID& id)
 {
 	if (id == m_metaObject->GetMetaID()) {
 		tableValue = this;
@@ -975,35 +975,35 @@ bool CValueListRegisterObject::GetModel(IValueModel*& tableValue, const meta_ide
 }
 
 //events 
-void CValueListRegisterObject::AddValue(unsigned int before)
+void ibValueListRegisterObject::AddValue(unsigned int before)
 {
 	if (m_metaObject != nullptr && m_metaObject->HasRecordManager()) {
 		try {
-			CValuePtr<IValueRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue());
+			ibValuePtr<ibValueRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue());
 			if (dataValueObject != nullptr)
-				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+				dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 		}
-		catch (const CBackendCoreException* err) {
-			CSystemFunction::Alert(err->GetErrorDescription());
+		catch (const ibBackendCoreException* err) {
+			ibValueSystemFunction::Alert(err->GetErrorDescription());
 		}
 		catch (...) {
 		}
 	}
 }
 
-void CValueListRegisterObject::CopyValue()
+void ibValueListRegisterObject::CopyValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {
-				CValuePtr<IValueRecordManagerObject> dataValueObject(m_metaObject->CopyRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
+				ibValuePtr<ibValueRecordManagerObject> dataValueObject(m_metaObject->CopyRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
 				if (dataValueObject != nullptr)
-					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (const CBackendCoreException* err) {
-				CSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException* err) {
+				ibValueSystemFunction::Alert(err->GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1011,33 +1011,33 @@ void CValueListRegisterObject::CopyValue()
 	}
 }
 
-void CValueListRegisterObject::EditValue()
+void ibValueListRegisterObject::EditValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {
-				CValuePtr<IValueRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
+				ibValuePtr<ibValueRecordManagerObject> dataValueObject(m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject)));
 				if (dataValueObject != nullptr)
-					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<IBackendControlFrame*>(IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
+					dataValueObject->ShowFormValue(wxEmptyString, dynamic_cast<ibBackendControlFrame*>(ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid)));
 			}
-			catch (const CBackendCoreException* err) {
-				CSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException* err) {
+				ibValueSystemFunction::Alert(err->GetErrorDescription());
 			}
 			catch (...) {
 			}
 		}
 		else {
 			try {
-				const CValueMetaObjectAttributePredefined* metaRecorder = m_metaObject->GetRegisterRecorder();
+				const ibValueMetaObjectAttributePredefined* metaRecorder = m_metaObject->GetRegisterRecorder();
 				if (metaRecorder != nullptr) {
-					CValue recorderVal = node->GetTableValue(metaRecorder->GetMetaID());
+					ibValue recorderVal = node->GetTableValue(metaRecorder->GetMetaID());
 					recorderVal.ShowValue();
 				}
 			}
-			catch (const CBackendCoreException* err) {
-				CSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException* err) {
+				ibValueSystemFunction::Alert(err->GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1045,21 +1045,21 @@ void CValueListRegisterObject::EditValue()
 	}
 }
 
-void CValueListRegisterObject::DeleteValue()
+void ibValueListRegisterObject::DeleteValue()
 {
 	if (m_metaObject != nullptr) {
-		wxValueTableKeyRow* node = GetViewData<wxValueTableKeyRow>(GetSelection());
+		ibValueTableKeyRow* node = GetViewData<ibValueTableKeyRow>(GetSelection());
 		if (node == nullptr) return;
 		if (m_metaObject->HasRecordManager()) {
 			try {
-				CValuePtr<IValueRecordManagerObject> dataValueObject = m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject));
+				ibValuePtr<ibValueRecordManagerObject> dataValueObject = m_metaObject->CreateRecordManagerObjectValue(node->GetUniquePairKey(m_metaObject));
 				if (dataValueObject != nullptr)
 					dataValueObject->DeleteRegister();
-				IBackendValueForm* valueListForm = IBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
+				ibBackendValueForm* valueListForm = ibBackendValueForm::FindFormBySourceUniqueKey(m_objGuid);
 				if (valueListForm != nullptr) valueListForm->UpdateForm();
 			}
-			catch (const CBackendCoreException* err) {
-				CSystemFunction::Alert(err->GetErrorDescription());
+			catch (const ibBackendCoreException* err) {
+				ibValueSystemFunction::Alert(err->GetErrorDescription());
 			}
 			catch (...) {
 			}
@@ -1067,26 +1067,26 @@ void CValueListRegisterObject::DeleteValue()
 	}
 }
 
-class_identifier_t CValueListRegisterObject::GetClassType() const
+ibClassID ibValueListRegisterObject::GetClassType() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassType();
 }
 
-wxString CValueListRegisterObject::GetClassName() const
+wxString ibValueListRegisterObject::GetClassName() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
 
-wxString CValueListRegisterObject::GetString() const
+wxString ibValueListRegisterObject::GetString() const
 {
-	const IMetaValueTypeCtor* clsFactory =
-		m_metaObject->GetTypeCtor(eCtorMetaType::eCtorMetaType_List);
+	const ibCtorMetaValueType* clsFactory =
+		m_metaObject->GetTypeCtor(ibCtorObjectMetaType::ibCtorObjectMetaType_List);
 	wxASSERT(clsFactory);
 	return clsFactory->GetClassName();
 }
@@ -1095,14 +1095,14 @@ wxString CValueListRegisterObject::GetString() const
 //*                              Support methods                             *
 //****************************************************************************
 
-void CValueListDataObjectEnumRef::PrepareNames() const
+void ibValueListDataObjectEnumRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp(wxT("ChoiceMode"));
 	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
-bool CValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -1115,14 +1115,14 @@ bool CValueListDataObjectEnumRef::CallAsProc(const long lMethodNum, CValue** paP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CValueListDataObjectRef::PrepareNames() const
+void ibValueListDataObjectRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp(wxT("ChoiceMode"));
 	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
-bool CValueListDataObjectRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueListDataObjectRef::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -1135,14 +1135,14 @@ bool CValueListDataObjectRef::CallAsProc(const long lMethodNum, CValue** paParam
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CValueTreeDataObjectFolderRef::PrepareNames() const
+void ibValueModelTreeDataObjectFolderRef::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProp(wxT("ChoiceMode"));
 	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
-bool CValueTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueModelTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -1155,13 +1155,13 @@ bool CValueTreeDataObjectFolderRef::CallAsProc(const long lMethodNum, CValue** p
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void CValueListRegisterObject::PrepareNames() const
+void ibValueListRegisterObject::PrepareNames() const
 {
 	m_methodHelper->ClearHelper();
 	m_methodHelper->AppendProc(wxT("Refresh"), wxT("Refresh()"));
 }
 
-bool CValueListRegisterObject::CallAsProc(const long lMethodNum, CValue** paParams, const long lSizeArray)
+bool ibValueListRegisterObject::CallAsProc(const long lMethodNum, ibValue** paParams, const long lSizeArray)
 {
 	switch (lMethodNum)
 	{
@@ -1181,26 +1181,12 @@ enum
 	enChoiceMode
 };
 
-bool CValueListDataObjectEnumRef::SetPropVal(const long lPropNum, const CValue& value) //setting attribute
+bool ibValueListDataObjectEnumRef::SetPropVal(const long lPropNum, const ibValue& value) //setting attribute
 {
 	return false;
 }
 
-bool CValueListDataObjectEnumRef::GetPropVal(const long lPropNum, CValue& pvarPropVal) //attribute value
-{
-	if (lPropNum == enChoiceMode) {
-		pvarPropVal = m_choiceMode;
-		return true;
-	}
-	return false;
-}
-
-bool CValueListDataObjectRef::SetPropVal(const long lPropNum, const CValue& value) //setting attribute
-{
-	return false;
-}
-
-bool CValueListDataObjectRef::GetPropVal(const long lPropNum, CValue& pvarPropVal) //attribute value
+bool ibValueListDataObjectEnumRef::GetPropVal(const long lPropNum, ibValue& pvarPropVal) //attribute value
 {
 	if (lPropNum == enChoiceMode) {
 		pvarPropVal = m_choiceMode;
@@ -1209,12 +1195,12 @@ bool CValueListDataObjectRef::GetPropVal(const long lPropNum, CValue& pvarPropVa
 	return false;
 }
 
-bool CValueTreeDataObjectFolderRef::SetPropVal(const long lPropNum, const CValue& value) //setting attribute
+bool ibValueListDataObjectRef::SetPropVal(const long lPropNum, const ibValue& value) //setting attribute
 {
 	return false;
 }
 
-bool CValueTreeDataObjectFolderRef::GetPropVal(const long lPropNum, CValue& pvarPropVal) //attribute value
+bool ibValueListDataObjectRef::GetPropVal(const long lPropNum, ibValue& pvarPropVal) //attribute value
 {
 	if (lPropNum == enChoiceMode) {
 		pvarPropVal = m_choiceMode;
@@ -1223,12 +1209,26 @@ bool CValueTreeDataObjectFolderRef::GetPropVal(const long lPropNum, CValue& pvar
 	return false;
 }
 
-bool CValueListRegisterObject::SetPropVal(const long lPropNum, const CValue& value) //setting attribute
+bool ibValueModelTreeDataObjectFolderRef::SetPropVal(const long lPropNum, const ibValue& value) //setting attribute
 {
 	return false;
 }
 
-bool CValueListRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropVal) //attribute value
+bool ibValueModelTreeDataObjectFolderRef::GetPropVal(const long lPropNum, ibValue& pvarPropVal) //attribute value
+{
+	if (lPropNum == enChoiceMode) {
+		pvarPropVal = m_choiceMode;
+		return true;
+	}
+	return false;
+}
+
+bool ibValueListRegisterObject::SetPropVal(const long lPropNum, const ibValue& value) //setting attribute
+{
+	return false;
+}
+
+bool ibValueListRegisterObject::GetPropVal(const long lPropNum, ibValue& pvarPropVal) //attribute value
 {
 	return false;
 }
@@ -1237,10 +1237,10 @@ bool CValueListRegisterObject::GetPropVal(const long lPropNum, CValue& pvarPropV
 //*                       Runtime register                             *
 //**********************************************************************
 
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection, "ListColumn", string_to_clsid("VL_LVC"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListColumnCollection::CValueDataObjectListColumnInfo, "ListColumnInfo", string_to_clsid("VL_LCI"));
-SYSTEM_TYPE_REGISTER(IValueListDataObject::CValueDataObjectListReturnLine, "ListValueRow", string_to_clsid("VL_LVR"));
+SYSTEM_TYPE_REGISTER(ibValueListDataObject::ibValueDataObjectListColumnCollection, "ListColumn", string_to_clsid("VL_LVC"));
+SYSTEM_TYPE_REGISTER(ibValueListDataObject::ibValueDataObjectListColumnCollection::ibValueDataObjectListColumnInfo, "ListColumnInfo", string_to_clsid("VL_LCI"));
+SYSTEM_TYPE_REGISTER(ibValueListDataObject::ibValueDataObjectListReturnLine, "ListValueRow", string_to_clsid("VL_LVR"));
 
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection, "TreeColumn", string_to_clsid("VL_TVC"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeColumnCollection::CValueDataObjectTreeColumnInfo, "TreeColumnInfo", string_to_clsid("VL_TCI"));
-SYSTEM_TYPE_REGISTER(IValueTreeDataObject::CValueDataObjectTreeReturnLine, "TreeValueRow", string_to_clsid("VL_TVR"));
+SYSTEM_TYPE_REGISTER(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection, "TreeColumn", string_to_clsid("VL_TVC"));
+SYSTEM_TYPE_REGISTER(ibValueModelTreeDataObject::ibValueDataObjectTreeColumnCollection::ibValueDataObjectTreeColumnInfo, "TreeColumnInfo", string_to_clsid("VL_TCI"));
+SYSTEM_TYPE_REGISTER(ibValueModelTreeDataObject::ibValueDataObjectTreeReturnLine, "TreeValueRow", string_to_clsid("VL_TVR"));

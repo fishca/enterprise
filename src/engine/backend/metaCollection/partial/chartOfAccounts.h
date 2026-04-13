@@ -227,7 +227,7 @@ private:
 	ibPropertyCategory* m_categoryAccounting = ibPropertyObject::CreatePropertyCategory(wxT("Accounting"), _("Accounting"));
 
 	ibPropertyInnerAttribute<>* m_propertyAttributeAccountType = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
-		ibValueMetaObjectCompositeData::CreateNumber(wxT("AccountType"), _("Account type"), wxEmptyString, 1, 0, ibItemMode::ibItemMode_Folder_Item));
+		ibValueMetaObjectCompositeData::CreateSpecialType(wxT("AccountType"), _("Account type"), wxEmptyString, g_enumAccountTypeCLSID, false, ibValueEnumAccountType::CreateDefEnumValue()));
 
 	ibPropertyInnerAttribute<>* m_propertyAttributeOffBalance = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryAccounting,
 		ibValueMetaObjectCompositeData::CreateBoolean(wxT("OffBalance"), _("Off-balance"), wxEmptyString, ibItemMode::ibItemMode_Folder_Item));

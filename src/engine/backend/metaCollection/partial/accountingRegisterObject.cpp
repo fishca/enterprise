@@ -90,27 +90,27 @@ bool ibValueRecordSetObjectAccountingRegister::DeleteRecordSet()
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("BeforeWrite"), cancel);
+					m_procUnit->CallAsProc(wxT("BeforeDelete"), cancel);
 
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 				}
 
 				if (!DeleteData()) {
 					db_query_active_transaction.RollBackTransaction();
-					ibBackendCoreException::Error(_("Failed to write object in db!"));
+					ibBackendCoreException::Error(_("Failed to delete object in db!"));
 					return false;
 				}
 
 				{
 					ibValue cancel = false;
-					m_procUnit->CallAsProc(wxT("OnWrite"), cancel);
+					m_procUnit->CallAsProc(wxT("OnDelete"), cancel);
 					if (cancel.GetBoolean()) {
 						db_query_active_transaction.RollBackTransaction();
-						ibBackendCoreException::Error(_("Failed to write object in db!"));
+						ibBackendCoreException::Error(_("Failed to delete object in db!"));
 						return false;
 					}
 				}

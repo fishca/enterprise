@@ -787,11 +787,6 @@ ibValue ibValueManagerDataObjectAccountingRegister::DrCrTurnovers(const ibValue&
 		}
 	}
 
-	// Join on LineNumber
-	{
-		sqlQuery += " AND dr." + sqlColLineNumber.m_types[0].m_field.m_fieldName + " = cr." + sqlColLineNumber.m_types[0].m_field.m_fieldName;
-	}
-
 	// WHERE clause
 	sqlQuery += " WHERE ";
 

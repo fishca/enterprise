@@ -148,7 +148,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfCharacteristicTypes::GetFolderSelect
 	return ibValueMetaObjectGenericData::CreateAndBuildForm(
 		strFormName,
 		ibValueMetaObjectChartOfCharacteristicTypes::eFormFolderSelect,
-		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, ibValueMetaObjectChartOfCharacteristicTypes::eFormSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true),
+		ownerControl, ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, ibValueMetaObjectChartOfCharacteristicTypes::eFormFolderSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true),
 		formGuid
 	);
 }
@@ -177,6 +177,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::LoadData(ibReaderMemory& dataR
 	m_propertyDefFormFolder->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
+	m_propertyDefFormFolderSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::LoadData(dataReader);
 }
@@ -192,6 +193,7 @@ bool ibValueMetaObjectChartOfCharacteristicTypes::SaveData(ibWriterMemory& dataW
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolder->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormSelect->GetValueAsInteger()));
+	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolderSelect->GetValueAsInteger()));
 
 	//create or update table:
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);

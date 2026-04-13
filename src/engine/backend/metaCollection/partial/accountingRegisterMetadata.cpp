@@ -261,7 +261,7 @@ void ibValueMetaObjectAccountingRegister::OnCreateFormObject(ibValueMetaObjectFo
 void ibValueMetaObjectAccountingRegister::OnRemoveMetaForm(ibValueMetaObjectFormBase* metaForm)
 {
 	if (metaForm->GetTypeForm() == eFormList && m_propertyDefFormList->GetValueAsInteger() == metaForm->GetMetaID())
-		m_propertyDefFormList->SetValue(metaForm->GetMetaID());
+		m_propertyDefFormList->SetValue(wxNOT_FOUND);
 }
 
 #include "accountingRegisterManager.h"

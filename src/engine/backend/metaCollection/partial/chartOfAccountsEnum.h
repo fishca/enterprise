@@ -12,6 +12,10 @@ enum ibAccountType {
 class ibValueEnumAccountType : public ibValueEnumeration<ibAccountType> {
 	wxDECLARE_DYNAMIC_CLASS(ibValueEnumAccountType);
 public:
+	static ibValue CreateDefEnumValue() {
+		return ibValue::CreateEnumObject<ibValueEnumAccountType>(ibAccountType::eActive);
+	}
+
 	ibValueEnumAccountType() : ibValueEnumeration() {}
 
 	virtual void CreateEnumeration() {

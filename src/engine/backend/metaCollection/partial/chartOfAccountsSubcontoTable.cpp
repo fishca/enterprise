@@ -72,6 +72,14 @@ bool ibValueMetaObjectSubcontoKindsTable::OnAfterRunMetaObject(int flags)
 	return ibValueMetaObjectTableData::OnAfterRunMetaObject(flags);
 }
 
+bool ibValueMetaObjectSubcontoKindsTable::OnBeforeCloseMetaObject()
+{
+	if (!(*m_propertySubcontoKind)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertyOrder)->OnBeforeCloseMetaObject()) return false;
+	if (!(*m_propertySummaryOnly)->OnBeforeCloseMetaObject()) return false;
+	return ibValueMetaObjectTableData::OnBeforeCloseMetaObject();
+}
+
 bool ibValueMetaObjectSubcontoKindsTable::OnAfterCloseMetaObject()
 {
 	if (!(*m_propertySubcontoKind)->OnAfterCloseMetaObject()) return false;

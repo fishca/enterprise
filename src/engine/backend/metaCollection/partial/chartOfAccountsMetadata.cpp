@@ -241,8 +241,7 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 
 	// Set SubcontoKind column type from ПВХ binding
 	const ibMetaDescription& metaDesc = m_propertyChartOfCharacteristicTypes->GetValueAsMetaDesc();
-	ibValueMetaObjectSubcontoKindsTable* subcontoKindsTable = m_propertySubcontoKindsTable->GetMetaObject();
-	if (subcontoKindsTable != nullptr && metaDesc.GetTypeCount() > 0) {
+	if (m_subcontoKindsTable != nullptr && metaDesc.GetTypeCount() > 0) {
 		ibTypeDescription typeDesc;
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 			const ibValueMetaObject* chartOfCharTypes = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));
@@ -253,12 +252,12 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 			}
 		}
 		// Update SubcontoKind column type in predefined table
-		ibValueMetaObjectAttributeBase* kindAttr = subcontoKindsTable->GetSubcontoKind();
+		ibValueMetaObjectAttributeBase* kindAttr = m_subcontoKindsTable->GetSubcontoKind();
 		if (kindAttr != nullptr) {
 			kindAttr->GetTypeDesc().SetDefaultMetaType(typeDesc);
 		}
 		// Prevent deletion of predefined tabular section
-		subcontoKindsTable->SetFlag(metaDisableFlag);
+		m_subcontoKindsTable->SetFlag(metaDisableFlag);
 	}
 
 	if (appData->DesignerMode()) {

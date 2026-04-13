@@ -3,7 +3,7 @@
 
 #include "commonObject.h"
 #include "accountingRegisterEnum.h"
-#include "backend/propertyManager/property/propertyOwner.h"
+#include "backend/propertyManager/property/propertyChartOfAccounts.h"
 
 class ibValueMetaObjectAccountingRegister : public ibValueMetaObjectRegisterData {
 	wxDECLARE_DYNAMIC_CLASS(ibValueMetaObjectAccountingRegister);
@@ -187,7 +187,7 @@ private:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Chart of Accounts binding — determines the type of Account field
 	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	ibPropertyOwner* m_propertyChartOfAccounts = ibPropertyObject::CreateProperty<ibPropertyOwner>(m_categoryData, wxT("ChartOfAccounts"), _("Chart of accounts"));
+	ibPropertyChartOfAccounts* m_propertyChartOfAccounts = ibPropertyObject::CreateProperty<ibPropertyChartOfAccounts>(m_categoryData, wxT("ChartOfAccounts"), _("Chart of accounts"));
 
 	// Predefined attributes: RecordType (Debit/Credit)
 	ibPropertyInnerAttribute<>* m_propertyAttributeRecordType = ibPropertyObject::CreateProperty<ibPropertyInnerAttribute<>>(m_categoryCommon,

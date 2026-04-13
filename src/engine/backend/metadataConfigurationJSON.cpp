@@ -32,6 +32,12 @@
 #include <wx/wfstream.h>
 #include <wx/base64.h>
 
+#include "propertyManager/property/propertyGeneration.h"
+#include "propertyManager/property/propertyRecord.h"
+#include "propertyManager/property/propertyOwner.h"
+#include "propertyManager/property/propertyChartOfCharacteristicTypes.h"
+#include "propertyManager/property/propertyChartOfAccounts.h"
+
 #include <fstream>
 
 using json = nlohmann::json;
@@ -956,6 +962,21 @@ bool ibMetaDataConfigurationBase::SaveConfigToJSON(const wxString& strFileName)
 
 namespace {
 
+bool LoadMetaDescriptionFromJSON(const json& jDesc, ibMetaDescription& metaDesc)
+{
+	if (!jDesc.is_array())
+		return false;
+
+	metaDesc.ClearMetaType();
+
+	for (const auto& jId : jDesc) {
+		if (jId.is_number())
+			metaDesc.AppendMetaType((ibMetaID)jId.get<int>());
+	}
+
+	return true;
+}
+
 bool LoadTypeDescriptionFromJSON(const json& jType, ibTypeDescription& typeDesc)
 {
 	if (jType.empty() || !jType.is_object())
@@ -965,10 +986,20 @@ bool LoadTypeDescriptionFromJSON(const json& jType, ibTypeDescription& typeDesc)
 
 	if (jType.contains("typeIds") && jType["typeIds"].is_array()) {
 		for (const auto& jClsid : jType["typeIds"]) {
-			wxString clsidStr = StdToWx(jClsid.get<std::string>());
-			if (!clsidStr.IsEmpty()) {
-				ibClassID clsid = string_to_clsid(clsidStr);
-				typeDesc.AppendMetaType(clsid);
+			if (jClsid.is_number_unsigned()) {
+				typeDesc.AppendMetaType((ibClassID)jClsid.get<unsigned long long>());
+			}
+			else if (jClsid.is_number()) {
+				typeDesc.AppendMetaType((ibClassID)jClsid.get<long long>());
+			}
+			else if (jClsid.is_string()) {
+				// Fallback: try parsing as numeric string
+				wxString clsidStr = StdToWx(jClsid.get<std::string>());
+				if (!clsidStr.IsEmpty()) {
+					unsigned long long clsidVal = 0;
+					clsidStr.ToULongLong(&clsidVal);
+					typeDesc.AppendMetaType((ibClassID)clsidVal);
+				}
 			}
 		}
 	}
@@ -1026,6 +1057,27 @@ void LoadAttributeFromJSON(const json& jAttr, ibMetaData* metaData, ibValueMetaO
 				typedAttr->GetTypeDesc().LoadMetaType(typeDesc);
 		}
 	}
+
+	// FillCheck
+	if (jAttr.contains("fillCheck")) {
+		ibProperty* prop = attrObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(jAttr["fillCheck"].get<bool>()));
+	}
+
+	// ItemMode
+	if (jAttr.contains("itemMode")) {
+		ibProperty* prop = attrObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jAttr["itemMode"].get<int>()));
+	}
+
+	// SelectMode
+	if (jAttr.contains("selectMode")) {
+		ibProperty* prop = attrObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jAttr["selectMode"].get<int>()));
+	}
 }
 
 void LoadDimensionFromJSON(const json& jDim, ibMetaData* metaData, ibValueMetaObject* parent)
@@ -1055,6 +1107,27 @@ void LoadDimensionFromJSON(const json& jDim, ibMetaData* metaData, ibValueMetaOb
 				typedDim->GetTypeDesc().LoadMetaType(typeDesc);
 		}
 	}
+
+	// FillCheck
+	if (jDim.contains("fillCheck")) {
+		ibProperty* prop = dimObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(jDim["fillCheck"].get<bool>()));
+	}
+
+	// ItemMode
+	if (jDim.contains("itemMode")) {
+		ibProperty* prop = dimObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jDim["itemMode"].get<int>()));
+	}
+
+	// SelectMode
+	if (jDim.contains("selectMode")) {
+		ibProperty* prop = dimObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jDim["selectMode"].get<int>()));
+	}
 }
 
 void LoadResourceFromJSON(const json& jRes, ibMetaData* metaData, ibValueMetaObject* parent)
@@ -1083,6 +1156,27 @@ void LoadResourceFromJSON(const json& jRes, ibMetaData* metaData, ibValueMetaObj
 			if (LoadTypeDescriptionFromJSON(jRes["type"], typeDesc))
 				typedRes->GetTypeDesc().LoadMetaType(typeDesc);
 		}
+	}
+
+	// FillCheck
+	if (jRes.contains("fillCheck")) {
+		ibProperty* prop = resObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(jRes["fillCheck"].get<bool>()));
+	}
+
+	// ItemMode
+	if (jRes.contains("itemMode")) {
+		ibProperty* prop = resObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jRes["itemMode"].get<int>()));
+	}
+
+	// SelectMode
+	if (jRes.contains("selectMode")) {
+		ibProperty* prop = resObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jRes["selectMode"].get<int>()));
 	}
 }
 
@@ -1208,6 +1302,13 @@ bool LoadMetaObjectFromJSON(const json& jObj, ibMetaData* metaData, const ibClas
 					if (jForm.contains("synonym"))
 						formObj->SetSynonym(StdToWx(jForm["synonym"].get<std::string>()));
 
+					// Form type
+					if (jForm.contains("type")) {
+						ibProperty* prop = formObj->GetProperty(wxT("FormType"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)jForm["type"].get<int>()));
+					}
+
 					// Form data (base64 binary layout)
 					if (jForm.contains("formData")) {
 						ibValueMetaObjectFormBase* formBase = dynamic_cast<ibValueMetaObjectFormBase*>(formObj);
@@ -1236,17 +1337,21 @@ bool LoadMetaObjectFromJSON(const json& jObj, ibMetaData* metaData, const ibClas
 
 	// Load globalModule flag (for CommonModule)
 	if (jObj.contains("globalModule")) {
-		ibValueMetaObjectCommonModule* commonModule = dynamic_cast<ibValueMetaObjectCommonModule*>(newObj);
-		if (commonModule != nullptr) {
-			// globalModule is set through property system in designer
-		}
+		ibProperty* prop = newObj->GetProperty(wxT("GlobalModule"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(jObj["globalModule"].get<bool>()));
 	}
 
 	// Load form data (for CommonForm)
-	if (jObj.contains("formData") && clsid == g_metaCommonFormCLSID) {
+	if (clsid == g_metaCommonFormCLSID) {
 		ibValueMetaObjectCommonForm* commonForm = dynamic_cast<ibValueMetaObjectCommonForm*>(newObj);
 		if (commonForm != nullptr) {
-			commonForm->SetFormData(wxBase64Decode(StdToWx(jObj["formData"].get<std::string>())));
+			if (jObj.contains("formData")) {
+				commonForm->SetFormData(wxBase64Decode(StdToWx(jObj["formData"].get<std::string>())));
+			}
+			if (jObj.contains("module")) {
+				commonForm->SetModuleText(StdToWx(jObj["module"].get<std::string>()));
+			}
 		}
 	}
 
@@ -1346,6 +1451,142 @@ bool LoadMetaObjectFromJSON(const json& jObj, ibMetaData* metaData, const ibClas
 			ibTypeDescription typeDesc;
 			if (LoadTypeDescriptionFromJSON(jObj["type"], typeDesc))
 				constant->GetTypeDesc().LoadMetaType(typeDesc);
+		}
+	}
+
+	// QuickChoice (for Catalog, Document, Enumeration, ChartOfCharacteristicTypes, ChartOfAccounts)
+	if (jObj.contains("quickChoice")) {
+		ibProperty* prop = newObj->GetProperty(wxT("QuickChoice"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(jObj["quickChoice"].get<bool>()));
+	}
+
+	// WriteMode (for InformationRegister)
+	if (jObj.contains("writeMode")) {
+		ibProperty* prop = newObj->GetProperty(wxT("WriteMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jObj["writeMode"].get<int>()));
+	}
+
+	// Periodicity (for InformationRegister)
+	if (jObj.contains("periodicity")) {
+		ibProperty* prop = newObj->GetProperty(wxT("Periodicity"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jObj["periodicity"].get<int>()));
+	}
+
+	// RegisterType (for AccumulationRegister)
+	if (jObj.contains("registerType")) {
+		ibProperty* prop = newObj->GetProperty(wxT("RegisterType"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant((long)jObj["registerType"].get<int>()));
+	}
+
+	// Generation MetaDescription binding
+	if (jObj.contains("generation") && jObj["generation"].is_array()) {
+		ibMetaDescription metaDesc;
+		if (LoadMetaDescriptionFromJSON(jObj["generation"], metaDesc)) {
+			ibPropertyGeneration* genProp = dynamic_cast<ibPropertyGeneration*>(
+				newObj->GetProperty(wxT("ListGeneration"))
+			);
+			if (genProp != nullptr)
+				genProp->SetValue(metaDesc);
+		}
+	}
+
+	// RegisterRecord MetaDescription binding (for Document)
+	if (jObj.contains("registerRecord") && jObj["registerRecord"].is_array()) {
+		ibMetaDescription metaDesc;
+		if (LoadMetaDescriptionFromJSON(jObj["registerRecord"], metaDesc)) {
+			ibPropertyRecord* recProp = dynamic_cast<ibPropertyRecord*>(
+				newObj->GetProperty(wxT("ListRegisterRecord"))
+			);
+			if (recProp != nullptr)
+				recProp->SetValue(metaDesc);
+		}
+	}
+
+	// ChartOfCharacteristicTypes MetaDescription binding (for ChartOfAccounts)
+	if (jObj.contains("chartOfCharacteristicTypes") && jObj["chartOfCharacteristicTypes"].is_array()) {
+		ibMetaDescription metaDesc;
+		if (LoadMetaDescriptionFromJSON(jObj["chartOfCharacteristicTypes"], metaDesc)) {
+			ibPropertyChartOfCharacteristicTypes* chrtProp = dynamic_cast<ibPropertyChartOfCharacteristicTypes*>(
+				newObj->GetProperty(wxT("ChartOfCharacteristicTypes"))
+			);
+			if (chrtProp != nullptr)
+				chrtProp->SetValue(metaDesc);
+		}
+	}
+
+	// Default forms - resolve GUID strings to metaIDs after all forms are created
+	if (jObj.contains("defaultForms") && jObj["defaultForms"].is_object()) {
+		const json& jDefForms = jObj["defaultForms"];
+		ibValueMetaObjectCompositeData* compositeObj = dynamic_cast<ibValueMetaObjectCompositeData*>(newObj);
+		if (compositeObj != nullptr) {
+			// DefaultFormObject
+			if (jDefForms.contains("object")) {
+				std::string guidStr = jDefForms["object"].get<std::string>();
+				if (!guidStr.empty()) {
+					ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(StdToWx(guidStr)));
+					if (formId != wxNOT_FOUND) {
+						ibProperty* prop = newObj->GetProperty(wxT("DefaultFormObject"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)formId));
+					}
+				}
+			}
+
+			// DefaultFormFolder
+			if (jDefForms.contains("folder")) {
+				std::string guidStr = jDefForms["folder"].get<std::string>();
+				if (!guidStr.empty()) {
+					ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(StdToWx(guidStr)));
+					if (formId != wxNOT_FOUND) {
+						ibProperty* prop = newObj->GetProperty(wxT("DefaultFormFolder"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)formId));
+					}
+				}
+			}
+
+			// DefaultFormList
+			if (jDefForms.contains("list")) {
+				std::string guidStr = jDefForms["list"].get<std::string>();
+				if (!guidStr.empty()) {
+					ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(StdToWx(guidStr)));
+					if (formId != wxNOT_FOUND) {
+						ibProperty* prop = newObj->GetProperty(wxT("DefaultFormList"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)formId));
+					}
+				}
+			}
+
+			// DefaultFormSelect
+			if (jDefForms.contains("select")) {
+				std::string guidStr = jDefForms["select"].get<std::string>();
+				if (!guidStr.empty()) {
+					ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(StdToWx(guidStr)));
+					if (formId != wxNOT_FOUND) {
+						ibProperty* prop = newObj->GetProperty(wxT("DefaultFormSelect"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)formId));
+					}
+				}
+			}
+
+			// DefaultFormRecord (for InformationRegister)
+			if (jDefForms.contains("record")) {
+				std::string guidStr = jDefForms["record"].get<std::string>();
+				if (!guidStr.empty()) {
+					ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(StdToWx(guidStr)));
+					if (formId != wxNOT_FOUND) {
+						ibProperty* prop = newObj->GetProperty(wxT("DefaultFormRecord"));
+						if (prop != nullptr)
+							prop->SetValue(wxVariant((long)formId));
+					}
+				}
+			}
 		}
 	}
 

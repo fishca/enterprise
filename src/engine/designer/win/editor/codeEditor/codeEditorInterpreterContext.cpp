@@ -9,7 +9,7 @@
  * ����� ���������� � ��� �������
  * ���������� 1 - ���� ���������� �������
  */
-bool CPrecompileContext::FindVariable(const wxString& strName, ibValue vContext, bool bContext)
+bool CPrecompileContext::FindVariable(const wxString& strName, ibValue& vContext, bool bContext)
 {
 	if (bContext)
 	{
@@ -31,7 +31,7 @@ bool CPrecompileContext::FindVariable(const wxString& strName, ibValue vContext,
  * ����� ���������� � ��� �������
  * ���������� 1 - ���� ���������� �������
  */
-bool CPrecompileContext::FindFunction(const wxString& strName, ibValue vContext, bool bContext)
+bool CPrecompileContext::FindFunction(const wxString& strName, ibValue& vContext, bool bContext)
 {
 	if (bContext)
 	{
@@ -87,7 +87,7 @@ ibParamValue CPrecompileContext::AddVariable(const wxString& paramName, const wx
 void CPrecompileContext::SetVariable(const wxString& strVarName, const ibValue& valVar)
 {
 	if (FindVariable(strVarName)) {
-		cVariables[stringUtils::MakeUpper(strVarName)].m_valObject = valVar; 
+		cVariables[stringUtils::MakeUpper(strVarName)].m_valObject = valVar;
 	}
 }
 

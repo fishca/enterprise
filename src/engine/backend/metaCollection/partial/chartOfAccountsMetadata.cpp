@@ -98,7 +98,7 @@ ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetSelectForm(const wxStri
 ibBackendValueForm* ibValueMetaObjectChartOfAccounts::GetFolderSelectForm(const wxString& strFormName, ibBackendControlFrame* ownerControl, const ibUniqueKey& formGuid)
 {
 	return CreateAndBuildForm(strFormName, eFormFolderSelect, ownerControl,
-		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid);
+		ibValue::CreateAndPrepareValueRef<ibValueModelTreeDataObjectFolderRef>(this, eFormFolderSelect, ibValueModelTreeDataObjectFolderRef::LIST_FOLDER, true), formGuid);
 }
 #pragma endregion
 
@@ -118,6 +118,7 @@ bool ibValueMetaObjectChartOfAccounts::LoadData(ibReaderMemory& dataReader)
 	m_propertyDefFormFolder->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormList->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 	m_propertyDefFormSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
+	m_propertyDefFormFolderSelect->SetValue(GetIdByGuid(dataReader.r_stringZ()));
 
 	if (!m_propertyChartOfCharacteristicTypes->LoadData(dataReader))
 		return false;
@@ -133,6 +134,7 @@ bool ibValueMetaObjectChartOfAccounts::SaveData(ibWriterMemory& dataWritter)
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolder->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormList->GetValueAsInteger()));
 	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormSelect->GetValueAsInteger()));
+	dataWritter.w_stringZ(GetGuidByID(m_propertyDefFormFolderSelect->GetValueAsInteger()));
 
 	if (!m_propertyChartOfCharacteristicTypes->SaveData(dataWritter))
 		return false;
@@ -241,7 +243,7 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 
 	// Set SubcontoKind column type from ПВХ binding
 	const ibMetaDescription& metaDesc = m_propertyChartOfCharacteristicTypes->GetValueAsMetaDesc();
-	if ((*m_propertySubcontoKindsTable) != nullptr && metaDesc.GetTypeCount() > 0) {
+	if (m_propertySubcontoKindsTable->GetMetaObject() != nullptr && metaDesc.GetTypeCount() > 0) {
 		ibTypeDescription typeDesc;
 		for (unsigned int idx = 0; idx < metaDesc.GetTypeCount(); idx++) {
 			const ibValueMetaObject* chartOfCharTypes = m_metaData->FindAnyObjectByFilter(metaDesc.GetByIdx(idx));

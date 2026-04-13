@@ -27,6 +27,12 @@
 #include "metaCollection/partial/chartOfAccounts.h"
 #include "metaCollection/partial/accountingRegister.h"
 
+#include "propertyManager/property/propertyGeneration.h"
+#include "propertyManager/property/propertyRecord.h"
+#include "propertyManager/property/propertyOwner.h"
+#include "propertyManager/property/propertyChartOfCharacteristicTypes.h"
+#include "propertyManager/property/propertyChartOfAccounts.h"
+
 #include <wx/xml/xml.h>
 #include <wx/wfstream.h>
 #include <wx/base64.h>
@@ -1004,6 +1010,27 @@ wxXmlNode* FindChildNode(wxXmlNode* parent, const wxString& childName)
 	return nullptr;
 }
 
+bool LoadMetaDescriptionFromXML(wxXmlNode* xmlDesc, ibMetaDescription& metaDesc)
+{
+	if (xmlDesc == nullptr)
+		return false;
+
+	metaDesc.ClearMetaType();
+
+	for (wxXmlNode* child = xmlDesc->GetChildren(); child != nullptr; child = child->GetNext()) {
+		if (child->GetName() == wxT("MetaId")) {
+			wxString idStr = child->GetNodeContent();
+			if (!idStr.IsEmpty()) {
+				long metaId = 0;
+				idStr.ToLong(&metaId);
+				metaDesc.AppendMetaType((ibMetaID)metaId);
+			}
+		}
+	}
+
+	return true;
+}
+
 bool LoadTypeDescriptionFromXML(wxXmlNode* xmlType, ibTypeDescription& typeDesc)
 {
 	if (xmlType == nullptr)
@@ -1015,8 +1042,9 @@ bool LoadTypeDescriptionFromXML(wxXmlNode* xmlType, ibTypeDescription& typeDesc)
 		if (child->GetName() == wxT("TypeId")) {
 			wxString clsidStr = child->GetNodeContent();
 			if (!clsidStr.IsEmpty()) {
-				ibClassID clsid = string_to_clsid(clsidStr);
-				typeDesc.AppendMetaType(clsid);
+				unsigned long long clsidVal = 0;
+				clsidStr.ToULongLong(&clsidVal);
+				typeDesc.AppendMetaType((ibClassID)clsidVal);
 			}
 		}
 	}
@@ -1085,6 +1113,34 @@ void LoadAttributeFromXML(wxXmlNode* xmlAttr, ibMetaData* metaData, ibValueMetaO
 				typedAttr->GetTypeDesc().LoadMetaType(typeDesc);
 		}
 	}
+
+	// FillCheck
+	wxString fillCheckStr = GetChildText(xmlAttr, wxT("FillCheck"));
+	if (!fillCheckStr.IsEmpty()) {
+		ibProperty* prop = attrObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(fillCheckStr == wxT("true")));
+	}
+
+	// ItemMode
+	wxString itemModeStr = GetChildText(xmlAttr, wxT("ItemMode"));
+	if (!itemModeStr.IsEmpty()) {
+		long itemMode = 0;
+		itemModeStr.ToLong(&itemMode);
+		ibProperty* prop = attrObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(itemMode));
+	}
+
+	// SelectMode
+	wxString selectModeStr = GetChildText(xmlAttr, wxT("SelectMode"));
+	if (!selectModeStr.IsEmpty()) {
+		long selectMode = 0;
+		selectModeStr.ToLong(&selectMode);
+		ibProperty* prop = attrObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(selectMode));
+	}
 }
 
 void LoadDimensionFromXML(wxXmlNode* xmlDim, ibMetaData* metaData, ibValueMetaObject* parent)
@@ -1112,6 +1168,34 @@ void LoadDimensionFromXML(wxXmlNode* xmlDim, ibMetaData* metaData, ibValueMetaOb
 				typedDim->GetTypeDesc().LoadMetaType(typeDesc);
 		}
 	}
+
+	// FillCheck
+	wxString fillCheckStr = GetChildText(xmlDim, wxT("FillCheck"));
+	if (!fillCheckStr.IsEmpty()) {
+		ibProperty* prop = dimObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(fillCheckStr == wxT("true")));
+	}
+
+	// ItemMode
+	wxString itemModeStr = GetChildText(xmlDim, wxT("ItemMode"));
+	if (!itemModeStr.IsEmpty()) {
+		long itemMode = 0;
+		itemModeStr.ToLong(&itemMode);
+		ibProperty* prop = dimObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(itemMode));
+	}
+
+	// SelectMode
+	wxString selectModeStr = GetChildText(xmlDim, wxT("SelectMode"));
+	if (!selectModeStr.IsEmpty()) {
+		long selectMode = 0;
+		selectModeStr.ToLong(&selectMode);
+		ibProperty* prop = dimObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(selectMode));
+	}
 }
 
 void LoadResourceFromXML(wxXmlNode* xmlRes, ibMetaData* metaData, ibValueMetaObject* parent)
@@ -1138,6 +1222,34 @@ void LoadResourceFromXML(wxXmlNode* xmlRes, ibMetaData* metaData, ibValueMetaObj
 			if (LoadTypeDescriptionFromXML(xmlType, typeDesc))
 				typedRes->GetTypeDesc().LoadMetaType(typeDesc);
 		}
+	}
+
+	// FillCheck
+	wxString fillCheckStr = GetChildText(xmlRes, wxT("FillCheck"));
+	if (!fillCheckStr.IsEmpty()) {
+		ibProperty* prop = resObj->GetProperty(wxT("FillCheck"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(fillCheckStr == wxT("true")));
+	}
+
+	// ItemMode
+	wxString itemModeStr = GetChildText(xmlRes, wxT("ItemMode"));
+	if (!itemModeStr.IsEmpty()) {
+		long itemMode = 0;
+		itemModeStr.ToLong(&itemMode);
+		ibProperty* prop = resObj->GetProperty(wxT("ItemMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(itemMode));
+	}
+
+	// SelectMode
+	wxString selectModeStr = GetChildText(xmlRes, wxT("SelectMode"));
+	if (!selectModeStr.IsEmpty()) {
+		long selectMode = 0;
+		selectModeStr.ToLong(&selectMode);
+		ibProperty* prop = resObj->GetProperty(wxT("Select"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(selectMode));
 	}
 }
 
@@ -1268,6 +1380,16 @@ bool LoadMetaObjectFromXML(wxXmlNode* xmlObj, ibMetaData* metaData, const ibClas
 						if (!formSynonym.IsEmpty())
 							formObj->SetSynonym(formSynonym);
 
+						// Form type
+						wxString formTypeStr;
+						if (child->GetAttribute(wxT("type"), &formTypeStr) && !formTypeStr.IsEmpty()) {
+							long formType = 0;
+							formTypeStr.ToLong(&formType);
+							ibProperty* prop = formObj->GetProperty(wxT("FormType"));
+							if (prop != nullptr)
+								prop->SetValue(wxVariant(formType));
+						}
+
 						// Form data (base64 binary layout)
 						wxString formDataB64 = GetChildText(child, wxT("FormData"));
 						if (!formDataB64.IsEmpty()) {
@@ -1295,6 +1417,28 @@ bool LoadMetaObjectFromXML(wxXmlNode* xmlObj, ibMetaData* metaData, const ibClas
 		ibValueMetaObjectCommonModule* commonModule = dynamic_cast<ibValueMetaObjectCommonModule*>(newObj);
 		if (commonModule != nullptr) {
 			commonModule->SetModuleText(xmlModule->GetNodeContent());
+		}
+	}
+
+	// Load GlobalModule flag (for CommonModule)
+	wxString globalModuleStr = GetChildText(xmlObj, wxT("GlobalModule"));
+	if (!globalModuleStr.IsEmpty()) {
+		ibProperty* prop = newObj->GetProperty(wxT("GlobalModule"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(globalModuleStr == wxT("true")));
+	}
+
+	// Load form data (for CommonForm)
+	if (clsid == g_metaCommonFormCLSID) {
+		ibValueMetaObjectCommonForm* commonForm = dynamic_cast<ibValueMetaObjectCommonForm*>(newObj);
+		if (commonForm != nullptr) {
+			wxString formDataB64 = GetChildText(xmlObj, wxT("FormData"));
+			if (!formDataB64.IsEmpty())
+				commonForm->SetFormData(wxBase64Decode(formDataB64));
+
+			wxXmlNode* moduleNode = FindChildNode(xmlObj, wxT("Module"));
+			if (moduleNode != nullptr)
+				commonForm->SetModuleText(moduleNode->GetNodeContent());
 		}
 	}
 
@@ -1389,6 +1533,148 @@ bool LoadMetaObjectFromXML(wxXmlNode* xmlObj, ibMetaData* metaData, const ibClas
 				ibTypeDescription typeDesc;
 				if (LoadTypeDescriptionFromXML(xmlType, typeDesc))
 					constant->GetTypeDesc().LoadMetaType(typeDesc);
+			}
+		}
+	}
+
+	// QuickChoice (for Catalog, Document, Enumeration, ChartOfCharacteristicTypes, ChartOfAccounts)
+	wxString quickChoiceStr = GetChildText(xmlObj, wxT("QuickChoice"));
+	if (!quickChoiceStr.IsEmpty()) {
+		ibProperty* prop = newObj->GetProperty(wxT("QuickChoice"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(quickChoiceStr == wxT("true")));
+	}
+
+	// WriteMode (for InformationRegister)
+	wxString writeModeStr = GetChildText(xmlObj, wxT("WriteMode"));
+	if (!writeModeStr.IsEmpty()) {
+		long writeMode = 0;
+		writeModeStr.ToLong(&writeMode);
+		ibProperty* prop = newObj->GetProperty(wxT("WriteMode"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(writeMode));
+	}
+
+	// Periodicity (for InformationRegister)
+	wxString periodicityStr = GetChildText(xmlObj, wxT("Periodicity"));
+	if (!periodicityStr.IsEmpty()) {
+		long periodicity = 0;
+		periodicityStr.ToLong(&periodicity);
+		ibProperty* prop = newObj->GetProperty(wxT("Periodicity"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(periodicity));
+	}
+
+	// RegisterType (for AccumulationRegister)
+	wxString registerTypeStr = GetChildText(xmlObj, wxT("RegisterType"));
+	if (!registerTypeStr.IsEmpty()) {
+		long registerType = 0;
+		registerTypeStr.ToLong(&registerType);
+		ibProperty* prop = newObj->GetProperty(wxT("RegisterType"));
+		if (prop != nullptr)
+			prop->SetValue(wxVariant(registerType));
+	}
+
+	// Generation MetaDescription binding
+	wxXmlNode* xmlGeneration = FindChildNode(xmlObj, wxT("Generation"));
+	if (xmlGeneration != nullptr) {
+		ibValueMetaObjectRecordData* recordData = dynamic_cast<ibValueMetaObjectRecordData*>(newObj);
+		if (recordData != nullptr) {
+			ibMetaDescription metaDesc;
+			if (LoadMetaDescriptionFromXML(xmlGeneration, metaDesc)) {
+				ibPropertyGeneration* genProp = dynamic_cast<ibPropertyGeneration*>(
+					newObj->GetProperty(wxT("ListGeneration"))
+				);
+				if (genProp != nullptr)
+					genProp->SetValue(metaDesc);
+			}
+		}
+	}
+
+	// RegisterRecord MetaDescription binding (for Document)
+	wxXmlNode* xmlRegisterRecord = FindChildNode(xmlObj, wxT("RegisterRecord"));
+	if (xmlRegisterRecord != nullptr) {
+		ibMetaDescription metaDesc;
+		if (LoadMetaDescriptionFromXML(xmlRegisterRecord, metaDesc)) {
+			ibPropertyRecord* recProp = dynamic_cast<ibPropertyRecord*>(
+				newObj->GetProperty(wxT("ListRegisterRecord"))
+			);
+			if (recProp != nullptr)
+				recProp->SetValue(metaDesc);
+		}
+	}
+
+	// ChartOfCharacteristicTypes MetaDescription binding (for ChartOfAccounts)
+	wxXmlNode* xmlChrtOfChrt = FindChildNode(xmlObj, wxT("ChartOfCharacteristicTypes"));
+	if (xmlChrtOfChrt != nullptr) {
+		ibMetaDescription metaDesc;
+		if (LoadMetaDescriptionFromXML(xmlChrtOfChrt, metaDesc)) {
+			ibPropertyChartOfCharacteristicTypes* chrtProp = dynamic_cast<ibPropertyChartOfCharacteristicTypes*>(
+				newObj->GetProperty(wxT("ChartOfCharacteristicTypes"))
+			);
+			if (chrtProp != nullptr)
+				chrtProp->SetValue(metaDesc);
+		}
+	}
+
+	// Default forms - resolve GUID strings to metaIDs after all forms are created
+	wxXmlNode* xmlDefForms = FindChildNode(xmlObj, wxT("DefaultForms"));
+	if (xmlDefForms != nullptr) {
+		ibValueMetaObjectCompositeData* compositeObj = dynamic_cast<ibValueMetaObjectCompositeData*>(newObj);
+		if (compositeObj != nullptr) {
+			// DefaultFormObject (form ID 1)
+			wxString defFormObjGuid = GetChildText(xmlDefForms, wxT("DefaultFormObject"));
+			if (!defFormObjGuid.IsEmpty()) {
+				ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(defFormObjGuid));
+				if (formId != wxNOT_FOUND) {
+					ibProperty* prop = newObj->GetProperty(wxT("DefaultFormObject"));
+					if (prop != nullptr)
+						prop->SetValue(wxVariant((long)formId));
+				}
+			}
+
+			// DefaultFormFolder (form ID 4)
+			wxString defFormFolderGuid = GetChildText(xmlDefForms, wxT("DefaultFormFolder"));
+			if (!defFormFolderGuid.IsEmpty()) {
+				ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(defFormFolderGuid));
+				if (formId != wxNOT_FOUND) {
+					ibProperty* prop = newObj->GetProperty(wxT("DefaultFormFolder"));
+					if (prop != nullptr)
+						prop->SetValue(wxVariant((long)formId));
+				}
+			}
+
+			// DefaultFormList (form ID 2)
+			wxString defFormListGuid = GetChildText(xmlDefForms, wxT("DefaultFormList"));
+			if (!defFormListGuid.IsEmpty()) {
+				ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(defFormListGuid));
+				if (formId != wxNOT_FOUND) {
+					ibProperty* prop = newObj->GetProperty(wxT("DefaultFormList"));
+					if (prop != nullptr)
+						prop->SetValue(wxVariant((long)formId));
+				}
+			}
+
+			// DefaultFormSelect (form ID 3)
+			wxString defFormSelectGuid = GetChildText(xmlDefForms, wxT("DefaultFormSelect"));
+			if (!defFormSelectGuid.IsEmpty()) {
+				ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(defFormSelectGuid));
+				if (formId != wxNOT_FOUND) {
+					ibProperty* prop = newObj->GetProperty(wxT("DefaultFormSelect"));
+					if (prop != nullptr)
+						prop->SetValue(wxVariant((long)formId));
+				}
+			}
+
+			// DefaultFormRecord (for InformationRegister, form ID 1)
+			wxString defFormRecordGuid = GetChildText(xmlDefForms, wxT("DefaultFormRecord"));
+			if (!defFormRecordGuid.IsEmpty()) {
+				ibMetaID formId = compositeObj->GetIdByGuid(ibGuid(defFormRecordGuid));
+				if (formId != wxNOT_FOUND) {
+					ibProperty* prop = newObj->GetProperty(wxT("DefaultFormRecord"));
+					if (prop != nullptr)
+						prop->SetValue(wxVariant((long)formId));
+				}
 			}
 		}
 	}

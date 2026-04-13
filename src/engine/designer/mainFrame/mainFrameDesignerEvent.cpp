@@ -334,6 +334,20 @@ void ibFrontendDocMDIFrameDesigner::OnConfiguration(wxCommandEvent& event)
 			wxMessageBox(_("Successfully unloaded to: ") + saveFileDialog.GetPath());
 		}
 	}
+	else if (wxID_DESIGNER_CONFIGURATION_EXPORT_XML == event.GetId())
+	{
+		wxFileDialog saveFileDialog(this, _("Export configuration to XML"), "", "",
+			wxT("XML files (*.xml)|*.xml"), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+		if (saveFileDialog.ShowModal() == wxID_CANCEL)
+			return;
+
+		if (activeMetaData->SaveConfigToXML(saveFileDialog.GetPath())) {
+			wxMessageBox(_("Configuration exported to: ") + saveFileDialog.GetPath());
+		}
+		else {
+			wxMessageBox(_("Failed to export configuration"), _("Error"), wxOK | wxICON_ERROR);
+		}
+	}
 }
 
 void ibFrontendDocMDIFrameDesigner::OnRunDebugCommand(wxCommandEvent& event)

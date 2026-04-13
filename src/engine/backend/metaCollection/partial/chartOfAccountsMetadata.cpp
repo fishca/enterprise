@@ -140,9 +140,21 @@ bool ibValueMetaObjectChartOfAccounts::SaveData(ibWriterMemory& dataWritter)
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::SaveData(dataWritter);
 }
 
+void ibValueMetaObjectChartOfAccounts::InitSubcontoKindsTable()
+{
+	if (m_subcontoKindsTable == nullptr) {
+		m_subcontoKindsTable = CreateMetaObjectAndSetParent<ibValueMetaObjectSubcontoKindsTable>();
+		m_subcontoKindsTable->SetName(wxT("SubcontoKinds"));
+		m_subcontoKindsTable->SetSynonym(_("Subconto kinds"));
+	}
+}
+
 bool ibValueMetaObjectChartOfAccounts::OnCreateMetaObject(ibMetaData* metaData, int flags)
 {
 	if (!ibValueMetaObjectRecordDataHierarchyMutableRef::OnCreateMetaObject(metaData, flags)) return false;
+
+	// Create predefined SubcontoKinds table
+	InitSubcontoKindsTable();
 
 	return (*m_propertyAttributeAccountType)->OnCreateMetaObject(metaData, flags) &&
 		(*m_propertyAttributeOffBalance)->OnCreateMetaObject(metaData, flags) &&
@@ -161,7 +173,15 @@ bool ibValueMetaObjectChartOfAccounts::OnLoadMetaObject(ibMetaData* metaData)
 	if (!(*m_propertyAttributeQuantitative)->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyAttributeCurrency)->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnLoadMetaObject(metaData)) return false;
-	if (!m_subcontoKindsTable->OnLoadMetaObject(metaData)) return false;
+
+	// Find SubcontoKinds table from loaded children
+	for (auto table : GetTableArrayObject()) {
+		if (table->GetName() == wxT("SubcontoKinds")) {
+			m_subcontoKindsTable = dynamic_cast<ibValueMetaObjectSubcontoKindsTable*>(table);
+			break;
+		}
+	}
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyModuleObject)->OnLoadMetaObject(metaData)) return false;
 	if (!(*m_propertyModuleManager)->OnLoadMetaObject(metaData)) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnLoadMetaObject(metaData);
@@ -174,7 +194,7 @@ bool ibValueMetaObjectChartOfAccounts::OnSaveMetaObject(int flags)
 	if (!(*m_propertyAttributeQuantitative)->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeCurrency)->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnSaveMetaObject(flags)) return false;
-	if (!m_subcontoKindsTable->OnSaveMetaObject(flags)) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyModuleObject)->OnSaveMetaObject(flags)) return false;
 	if (!(*m_propertyModuleManager)->OnSaveMetaObject(flags)) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnSaveMetaObject(flags);
@@ -187,7 +207,7 @@ bool ibValueMetaObjectChartOfAccounts::OnDeleteMetaObject()
 	if (!(*m_propertyAttributeQuantitative)->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyAttributeCurrency)->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnDeleteMetaObject()) return false;
-	if (!m_subcontoKindsTable->OnDeleteMetaObject()) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyModuleObject)->OnDeleteMetaObject()) return false;
 	if (!(*m_propertyModuleManager)->OnDeleteMetaObject()) return false;
 	return ibValueMetaObjectRecordDataHierarchyMutableRef::OnDeleteMetaObject();
@@ -214,7 +234,7 @@ bool ibValueMetaObjectChartOfAccounts::OnBeforeRunMetaObject(int flags)
 	if (!(*m_propertyAttributeQuantitative)->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeCurrency)->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnBeforeRunMetaObject(flags)) return false;
-	if (!m_subcontoKindsTable->OnBeforeRunMetaObject(flags)) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleObject)->OnBeforeRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleManager)->OnBeforeRunMetaObject(flags)) return false;
 	registerSelection();
@@ -232,7 +252,7 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterRunMetaObject(int flags)
 	if (!(*m_propertyAttributeQuantitative)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeCurrency)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnAfterRunMetaObject(flags)) return false;
-	if (!m_subcontoKindsTable->OnAfterRunMetaObject(flags)) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleObject)->OnAfterRunMetaObject(flags)) return false;
 	if (!(*m_propertyModuleManager)->OnAfterRunMetaObject(flags)) return false;
 
@@ -275,7 +295,7 @@ bool ibValueMetaObjectChartOfAccounts::OnBeforeCloseMetaObject()
 	if (!(*m_propertyAttributeQuantitative)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeCurrency)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnBeforeCloseMetaObject()) return false;
-	if (!m_subcontoKindsTable->OnBeforeCloseMetaObject()) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleObject)->OnBeforeCloseMetaObject()) return false;
 	if (!(*m_propertyModuleManager)->OnBeforeCloseMetaObject()) return false;
 	ibValueModuleManager* moduleManager = m_metaData->GetModuleManager();
@@ -295,7 +315,7 @@ bool ibValueMetaObjectChartOfAccounts::OnAfterCloseMetaObject()
 	if (!(*m_propertyAttributeQuantitative)->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeCurrency)->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyAttributeMaxSubcontoCount)->OnAfterCloseMetaObject()) return false;
-	if (!m_subcontoKindsTable->OnAfterCloseMetaObject()) return false;
+	if (m_subcontoKindsTable != nullptr && !m_subcontoKindsTable->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyModuleObject)->OnAfterCloseMetaObject()) return false;
 	if (!(*m_propertyModuleManager)->OnAfterCloseMetaObject()) return false;
 	unregisterSelection();

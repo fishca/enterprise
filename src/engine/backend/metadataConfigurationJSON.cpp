@@ -673,7 +673,7 @@ void SaveChartOfAccountsToJSON(json& jObj, ibValueMetaObjectChartOfAccounts* cha
 	jObj["defaultForms"] = jDefForms;
 
 	// ChartOfCharacteristicTypes owner property
-	ibPropertyOwner* chrtProp = chart->GetChartOfCharacteristicTypes();
+	ibPropertyChartOfCharacteristicTypes* chrtProp = chart->GetChartOfCharacteristicTypes();
 	if (chrtProp != nullptr) {
 		jObj["chartOfCharacteristicTypes"] = SaveMetaDescriptionToJSON(chrtProp->GetValueAsMetaDesc());
 	}

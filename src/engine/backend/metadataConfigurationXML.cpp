@@ -47,7 +47,14 @@ void SaveAttributeToXML(wxXmlNode* parent, ibValueMetaObjectAttributeBase* attr)
 	if (!synonym.IsEmpty())
 		AddTextNode(xmlAttr, wxT("Synonym"), synonym);
 
-	// Type information
+	// Fill check
+	if (attr->FillCheck())
+		AddTextNode(xmlAttr, wxT("FillCheck"), wxT("true"));
+
+	// Item mode
+	AddTextNode(xmlAttr, wxT("ItemMode"), wxString::Format(wxT("%d"), (int)attr->GetItemMode()));
+
+	// Type information with qualifiers
 	const ibTypeDescription& typeDesc = attr->GetTypeDesc();
 	const auto& clsidList = typeDesc.GetClsidList();
 	if (!clsidList.empty()) {
@@ -55,6 +62,18 @@ void SaveAttributeToXML(wxXmlNode* parent, ibValueMetaObjectAttributeBase* attr)
 		for (const auto& clsid : clsidList) {
 			AddTextNode(xmlType, wxT("TypeId"), clsid_to_string(clsid));
 		}
+		// Number qualifiers
+		if (typeDesc.GetPrecision() > 0)
+			AddTextNode(xmlType, wxT("Precision"), wxString::Format(wxT("%d"), typeDesc.GetPrecision()));
+		if (typeDesc.GetScale() > 0)
+			AddTextNode(xmlType, wxT("Scale"), wxString::Format(wxT("%d"), typeDesc.GetScale()));
+		// String qualifiers
+		if (typeDesc.GetLength() > 0)
+			AddTextNode(xmlType, wxT("Length"), wxString::Format(wxT("%d"), typeDesc.GetLength()));
+		// Date qualifiers
+		if (typeDesc.GetDateFraction() != ibDateFractions::ibDateFractions_DateTime)
+			AddTextNode(xmlType, wxT("DateFractions"), wxString::Format(wxT("%d"), (int)typeDesc.GetDateFraction()));
+
 		xmlAttr->AddChild(xmlType);
 	}
 
@@ -110,12 +129,27 @@ void SaveFormToXML(wxXmlNode* parent, ibValueMetaObjectFormBase* form)
 	parent->AddChild(xmlForm);
 }
 
-void SaveModuleToXML(wxXmlNode* parent, const wxString& moduleName, ibValueMetaObjectModule* moduleObj)
+void SavePredefinedValuesToXML(wxXmlNode* parent, ibValueMetaObjectRecordDataHierarchyMutableRef* hierarchyObj)
 {
-	if (moduleObj == nullptr) return;
-	const wxString moduleText = moduleObj->GetModuleText();
-	if (!moduleText.IsEmpty())
-		AddCDataNode(parent, moduleName, moduleText);
+	const auto& predefinedValues = hierarchyObj->GetPredefinedValueArray();
+	if (predefinedValues.empty()) return;
+
+	wxXmlNode* xmlPredefined = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("PredefinedValues"));
+	for (const auto& pv : predefinedValues) {
+		wxXmlNode* xmlItem = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("PredefinedValue"));
+		xmlItem->AddAttribute(wxT("guid"), pv->GetPredefinedGuid().str());
+		if (pv->IsPredefinedFolder())
+			xmlItem->AddAttribute(wxT("isFolder"), wxT("true"));
+		AddTextNode(xmlItem, wxT("Name"), pv->GetPredefinedName());
+		if (!pv->GetPredefinedCode().IsEmpty())
+			AddTextNode(xmlItem, wxT("Code"), pv->GetPredefinedCode());
+		if (!pv->GetPredefinedDescription().IsEmpty())
+			AddTextNode(xmlItem, wxT("Description"), pv->GetPredefinedDescription());
+		if (!pv->GetPredefinedParentName().IsEmpty())
+			AddTextNode(xmlItem, wxT("Parent"), pv->GetPredefinedParentName());
+		xmlPredefined->AddChild(xmlItem);
+	}
+	parent->AddChild(xmlPredefined);
 }
 
 void SaveMetaObjectToXML(wxXmlNode* parent, ibValueMetaObject* metaObject, const wxString& elementName)
@@ -171,12 +205,54 @@ void SaveMetaObjectToXML(wxXmlNode* parent, ibValueMetaObject* metaObject, const
 		}
 	}
 
+	// Save predefined values (for hierarchical objects: Catalog, ChartOfAccounts, ПВХ)
+	ibValueMetaObjectRecordDataHierarchyMutableRef* hierarchyObj = nullptr;
+	if (metaObject->ConvertToValue(hierarchyObj))
+		SavePredefinedValuesToXML(xmlObj, hierarchyObj);
+
 	// Save common module code (for CommonModule objects)
 	ibValueMetaObjectCommonModule* commonModule = nullptr;
 	if (metaObject->ConvertToValue(commonModule)) {
 		const wxString text = commonModule->GetModuleText();
 		if (!text.IsEmpty())
 			AddCDataNode(xmlObj, wxT("Module"), text);
+	}
+
+	// Save object/manager modules (for Catalog, Document, etc.)
+	// Modules are children with g_metaModuleCLSID and g_metaManagerCLSID
+	ibValueMetaObjectCompositeData* compositeData = nullptr;
+	if (metaObject->ConvertToValue(compositeData)) {
+		wxXmlNode* xmlModules = nullptr;
+		// Find module children
+		for (unsigned int i = 0; i < compositeData->GetChildCount(); i++) {
+			ibValueMetaObject* child = compositeData->GetChild(i);
+			if (child == nullptr) continue;
+			ibClassID childClsid = child->GetClassType();
+			if (childClsid == g_metaModuleCLSID) {
+				ibValueMetaObjectModule* moduleObj = nullptr;
+				if (child->ConvertToValue(moduleObj)) {
+					const wxString text = moduleObj->GetModuleText();
+					if (!text.IsEmpty()) {
+						if (xmlModules == nullptr)
+							xmlModules = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Modules"));
+						AddCDataNode(xmlModules, wxT("ObjectModule"), text);
+					}
+				}
+			}
+			else if (childClsid == g_metaManagerCLSID) {
+				ibValueMetaObjectCommonModule* managerObj = nullptr;
+				if (child->ConvertToValue(managerObj)) {
+					const wxString text = managerObj->GetModuleText();
+					if (!text.IsEmpty()) {
+						if (xmlModules == nullptr)
+							xmlModules = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Modules"));
+						AddCDataNode(xmlModules, wxT("ManagerModule"), text);
+					}
+				}
+			}
+		}
+		if (xmlModules != nullptr)
+			xmlObj->AddChild(xmlModules);
 	}
 
 	parent->AddChild(xmlObj);

@@ -5,7 +5,7 @@
 #include "reference/reference.h"
 #include "chartOfAccountsEnum.h"
 #include "chartOfAccountsSubcontoTable.h"
-#include "backend/propertyManager/property/propertyOwner.h"
+#include "backend/propertyManager/property/propertyChartOfCharacteristicTypes.h"
 
 //********************************************************************************************
 //*                                  Factory & metaData                                      *
@@ -50,7 +50,7 @@ public:
 	ibValueMetaObjectAttributePredefined* GetMaxSubcontoCount() const { return m_propertyAttributeMaxSubcontoCount->GetMetaObject(); }
 
 	// Chart of Characteristic Types binding (determines available subconto types)
-	ibPropertyOwner* GetChartOfCharacteristicTypes() const { return m_propertyChartOfCharacteristicTypes; }
+	ibPropertyChartOfCharacteristicTypes* GetChartOfCharacteristicTypes() const { return m_propertyChartOfCharacteristicTypes; }
 
 	//default constructor
 	ibValueMetaObjectChartOfAccounts();
@@ -244,7 +244,7 @@ private:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Chart of Characteristic Types binding (determines subconto types available for this chart of accounts)
 	ibPropertyCategory* m_categoryData = ibPropertyObject::CreatePropertyCategory(wxT("Data"), _("Data"));
-	ibPropertyOwner* m_propertyChartOfCharacteristicTypes = ibPropertyObject::CreateProperty<ibPropertyOwner>(m_categoryData, wxT("ChartOfCharacteristicTypes"), _("Chart of characteristic types"));
+	ibPropertyChartOfCharacteristicTypes* m_propertyChartOfCharacteristicTypes = ibPropertyObject::CreateProperty<ibPropertyChartOfCharacteristicTypes>(m_categoryData, wxT("ChartOfCharacteristicTypes"), _("Chart of characteristic types"));
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Predefined tabular section "SubcontoKinds" — own meta class with predefined columns

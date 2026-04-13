@@ -187,7 +187,7 @@ bool ibValueMetaObjectAccountingRegister::OnAfterRunMetaObject(int flags)
 			// Cast to ibValueMetaObjectChartOfAccounts to access ПВХ binding
 			const ibValueMetaObjectChartOfAccounts* chartOfAccountsObj = nullptr;
 			if (chartOfAccounts->ConvertToValue(chartOfAccountsObj) && chartOfAccountsObj != nullptr) {
-				ibPropertyOwner* pvhBinding = chartOfAccountsObj->GetChartOfCharacteristicTypes();
+				ibPropertyChartOfCharacteristicTypes* pvhBinding = chartOfAccountsObj->GetChartOfCharacteristicTypes();
 				if (pvhBinding != nullptr) {
 					const ibMetaDescription& pvhDesc = pvhBinding->GetValueAsMetaDesc();
 					ibTypeDescription subcontoTypeDesc;

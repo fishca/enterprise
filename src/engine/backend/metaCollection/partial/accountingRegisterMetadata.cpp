@@ -299,9 +299,9 @@ bool ibValueMetaObjectAccountingRegister::CreateAndUpdateTableDB(ibMetaDataConfi
 
 bool ibValueMetaObjectAccountingRegister::CreateAndUpdateRegisterTableDB(ibMetaDataConfiguration* srcMetaData, ibValueMetaObject* srcMetaObject, int flags)
 {
-	//TODO: Implement DDL for accounting register table
-	// Uses same pattern as AccumulationRegister::CreateAndUpdateBalancesTableDB
-	// but with Account, RecordType, Subconto1..3 predefined columns
+	// Delegates to the base class which handles all predefined attributes
+	// (LineActive, Period, RecordType, Account, Subconto1-3, Recorder, LineNumber)
+	// via FillArrayObjectByPredefined, plus user-defined dimensions and resources.
 	return ibValueMetaObjectRegisterData::CreateAndUpdateTableDB(srcMetaData, srcMetaObject, flags);
 }
 
